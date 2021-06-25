@@ -87,7 +87,7 @@ DriverManager list, otherwise another driver can be selected at the time of init
 Calling `OpenTelemetryDriver.ensureRegisteredAsTheFirstDriver()` method along with
 `setInterceptorMode(true)` will fix that problem.
 
-Please note drivers like Oracle JDBC may fail since it's destroyed forever after deregistration.
+Please note drivers like Oracle JDBC may fail since they're destroyed forever after deregistration.
 
 ### Datasource way
 
