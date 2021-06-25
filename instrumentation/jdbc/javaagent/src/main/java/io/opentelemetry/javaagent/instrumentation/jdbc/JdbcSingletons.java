@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
-public final class JavaAgentJdbcSingletons {
+public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
@@ -39,5 +39,5 @@ public final class JavaAgentJdbcSingletons {
     return INSTRUMENTER;
   }
 
-  private JavaAgentJdbcSingletons() {}
+  private JdbcSingletons() {}
 }
