@@ -124,12 +124,11 @@ public final class OpenTelemetryDriver implements Driver {
    * @throws SQLException if deregistering the driver fails
    */
   public static void deregister() throws SQLException {
-    if (!REGISTERED.get()) {
+    if (!REGISTERED.compareAndSet(true, false)) {
       throw new IllegalStateException(
           "Driver is not registered (or it has not been registered using Driver.register() method)");
     }
     DriverManager.deregisterDriver(INSTANCE);
-    REGISTERED.set(false);
   }
 
   /** Returns {@code true} if the driver is registered against {@link DriverManager}. */
