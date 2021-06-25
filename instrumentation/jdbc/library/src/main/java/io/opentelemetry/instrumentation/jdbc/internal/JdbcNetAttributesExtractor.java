@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest, Void> {
+public final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest, Void> {
 
   @Nullable
   @Override

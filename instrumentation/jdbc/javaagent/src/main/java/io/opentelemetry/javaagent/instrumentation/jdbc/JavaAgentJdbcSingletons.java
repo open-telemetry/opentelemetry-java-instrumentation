@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jdbc.internal;
+package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -11,8 +11,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesExtractor;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
-public final class JdbcSingletons {
+public final class JavaAgentJdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
@@ -27,6 +31,7 @@ public final class JdbcSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
@@ -34,5 +39,5 @@ public final class JdbcSingletons {
     return INSTRUMENTER;
   }
 
-  private JdbcSingletons() {}
+  private JavaAgentJdbcSingletons() {}
 }
