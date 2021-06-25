@@ -137,10 +137,6 @@ public final class OpenTelemetryDriver implements Driver {
   }
 
   private static Driver findDriver(String realUrl) {
-    if (realUrl == null || realUrl.trim().length() == 0) {
-      throw new IllegalArgumentException("url is required");
-    }
-
     for (Driver candidate : Collections.list(DriverManager.getDrivers())) {
       try {
         if (!(candidate instanceof OpenTelemetryDriver) && candidate.acceptsURL(realUrl)) {
