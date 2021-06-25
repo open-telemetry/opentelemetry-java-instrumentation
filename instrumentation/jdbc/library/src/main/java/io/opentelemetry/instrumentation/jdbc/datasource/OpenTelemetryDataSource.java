@@ -36,10 +36,17 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 
+/** OpenTelemetry {@link DataSource} implementation. */
 public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
 
   private final DataSource delegate;
 
+  /**
+   * Create a OpenTelemetry DataSource wrapping another DataSource. This constructor is primarily
+   * used by dependency injection frameworks.
+   *
+   * @param delegate the DataSource to wrap
+   */
   public OpenTelemetryDataSource(DataSource delegate) {
     this.delegate = delegate;
   }

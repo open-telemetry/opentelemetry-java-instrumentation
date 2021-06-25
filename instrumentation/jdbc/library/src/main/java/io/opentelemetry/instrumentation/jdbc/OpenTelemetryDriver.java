@@ -28,6 +28,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/** JDBC driver for OpenTelemetry. */
 public final class OpenTelemetryDriver implements Driver {
 
   // visible for testing
@@ -154,6 +156,12 @@ public final class OpenTelemetryDriver implements Driver {
     throw new IllegalStateException("Unable to find a driver that accepts url: " + realUrl);
   }
 
+  /**
+   * Parses out the real JDBC connection URL by removing "otel:" prefix.
+   *
+   * @param url the connection URL
+   * @return the parsed URL
+   */
   private static String extractRealUrl(String url) {
     return url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)
         ? url.replace(INTERCEPTOR_MODE_URL_PREFIX, "jdbc:")
@@ -222,7 +230,7 @@ public final class OpenTelemetryDriver implements Driver {
   }
 
   @Override
-  public Logger getParentLogger() {
-    return null;
+  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException("Feature not supported");
   }
 }

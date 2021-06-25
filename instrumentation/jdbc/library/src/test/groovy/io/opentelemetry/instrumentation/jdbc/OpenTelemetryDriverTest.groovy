@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import spock.lang.Specification
 
 import java.sql.DriverManager
+import java.sql.SQLFeatureNotSupportedException
 
 class OpenTelemetryDriverTest extends Specification {
 
@@ -35,9 +36,17 @@ class OpenTelemetryDriverTest extends Specification {
   def "verify standard properties"() {
     expect:
     !OpenTelemetryDriver.INSTANCE.jdbcCompliant()
-    OpenTelemetryDriver.INSTANCE.parentLogger == null
     OpenTelemetryDriver.INSTANCE.majorVersion == 1
     OpenTelemetryDriver.INSTANCE.minorVersion == 4
+  }
+
+  def "verify parent logger thrown an exception"() {
+    when:
+    OpenTelemetryDriver.INSTANCE.parentLogger
+
+    then:
+    def e = thrown(SQLFeatureNotSupportedException)
+    e.message == "Feature not supported"
   }
 
   def "verify driver registered as a first driver"() {
