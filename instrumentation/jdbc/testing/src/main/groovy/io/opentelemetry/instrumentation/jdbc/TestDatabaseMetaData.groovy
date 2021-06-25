@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import java.sql.*
+import java.sql.Connection
+import java.sql.DatabaseMetaData
+import java.sql.ResultSet
+import java.sql.RowIdLifetime
+import java.sql.SQLException
 
 class TestDatabaseMetaData implements DatabaseMetaData {
   final String url

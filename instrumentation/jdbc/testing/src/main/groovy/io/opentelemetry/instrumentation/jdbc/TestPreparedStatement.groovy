@@ -5,7 +5,22 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import java.sql.*
+import java.sql.Array
+import java.sql.Blob
+import java.sql.Clob
+import java.sql.Connection
+import java.sql.Date
+import java.sql.NClob
+import java.sql.ParameterMetaData
+import java.sql.PreparedStatement
+import java.sql.Ref
+import java.sql.ResultSet
+import java.sql.ResultSetMetaData
+import java.sql.RowId
+import java.sql.SQLException
+import java.sql.SQLXML
+import java.sql.Time
+import java.sql.Timestamp
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
 
