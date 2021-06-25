@@ -39,7 +39,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OpenTelemetryDriver implements Driver {
 
-  public static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
+  // visible for testing
+  static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
