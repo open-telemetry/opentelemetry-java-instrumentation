@@ -55,11 +55,10 @@ Class.forName("io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver");
 
 This mode can be useful for activating tracing for all JDBC connections without modifying the URL.
 
-In "interceptor mode", the `OpenTelemetryDriver` will intercept calls to
-`DriverManager.getConnection(url,...)` for all URLs. The `OpenTelemetryDriver` provides connections
-to the `DriverManager` that are instrumented. Please note that the `OpenTelemetryDriver` must be
-registered before the underlying driver, It's recommended to turn on "interceptor mode" in the first
-place.
+In the "interceptor mode", the `OpenTelemetryDriver` will intercept calls to
+`DriverManager.getConnection(url,...)` for all URLs. The `OpenTelemetryDriver` will return instrumented
+connections that will delegate calls to the actual DB driver. Please note that the `OpenTelemetryDriver` must be
+registered before the underlying driver - it's recommended to turn on the "interceptor mode" as early as possible.
 
 For most applications:
 
