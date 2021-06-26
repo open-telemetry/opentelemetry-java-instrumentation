@@ -29,11 +29,13 @@ otelJava {
 // internal file.
 if (!(findProperty("testLatestDeps") as Boolean)) {
   configurations.configureEach {
-    resolutionStrategy {
-      eachDependency {
-        //specifying a fixed version for all libraries with io.netty' group
-        if (requested.group == "io.netty" && requested.name != "netty-bom") {
-          useVersion("4.0.34.Final")
+    if (!name.contains("muzzle")) {
+      resolutionStrategy {
+        eachDependency {
+          //specifying a fixed version for all libraries with io.netty' group
+          if (requested.group == "io.netty" && requested.name != "netty-bom") {
+            useVersion("4.0.34.Final")
+          }
         }
       }
     }

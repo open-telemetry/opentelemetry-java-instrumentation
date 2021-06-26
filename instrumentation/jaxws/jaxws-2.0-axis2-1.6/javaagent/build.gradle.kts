@@ -17,8 +17,10 @@ muzzle {
 }
 
 configurations.configureEach {
-  // axis has a dependency on servlet api, get rid of it
-  exclude("javax.servlet", "servlet-api")
+  if (!name.contains("muzzle")) {
+    // axis has a dependency on servlet api, get rid of it
+    exclude("javax.servlet", "servlet-api")
+  }
 }
 
 dependencies {
