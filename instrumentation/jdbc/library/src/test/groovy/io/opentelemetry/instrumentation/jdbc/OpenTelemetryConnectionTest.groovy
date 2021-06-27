@@ -41,7 +41,6 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_CONNECTION_STRING.key" dbInfo.shortUrl
             "$SemanticAttributes.NET_PEER_NAME.key" dbInfo.host
             "$SemanticAttributes.NET_PEER_PORT.key" dbInfo.port
-            "$SemanticAttributes.NET_PEER_IP.key" null
             "$SemanticAttributes.DB_STATEMENT.key" query
             "$SemanticAttributes.DB_OPERATION.key" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE.key" "users"
@@ -90,7 +89,6 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_CONNECTION_STRING.key" dbInfo.shortUrl
             "$SemanticAttributes.NET_PEER_NAME.key" dbInfo.host
             "$SemanticAttributes.NET_PEER_PORT.key" dbInfo.port
-            "$SemanticAttributes.NET_PEER_IP.key" null
             "$SemanticAttributes.DB_STATEMENT.key" query
             "$SemanticAttributes.DB_OPERATION.key" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE.key" "users"
@@ -142,7 +140,6 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_CONNECTION_STRING.key" dbInfo.shortUrl
             "$SemanticAttributes.NET_PEER_NAME.key" dbInfo.host
             "$SemanticAttributes.NET_PEER_PORT.key" dbInfo.port
-            "$SemanticAttributes.NET_PEER_IP.key" null
             "$SemanticAttributes.DB_STATEMENT.key" query
             "$SemanticAttributes.DB_OPERATION.key" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE.key" "users"
