@@ -137,9 +137,8 @@ class TestConnection implements Connection {
   DatabaseMetaData getMetaData() throws SQLException {
     if (url) {
       return new TestDatabaseMetaData(url)
-    } else {
-      return new TestDatabaseMetaData()
     }
+    return new TestDatabaseMetaData()
   }
 
   @Override
