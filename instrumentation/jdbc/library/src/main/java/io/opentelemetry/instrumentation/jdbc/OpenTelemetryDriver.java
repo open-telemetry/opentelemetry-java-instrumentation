@@ -165,7 +165,7 @@ public final class OpenTelemetryDriver implements Driver {
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
-    if (url == null || url.trim().length() == 0) {
+    if (url == null || url.trim().isEmpty()) {
       throw new IllegalArgumentException("url is required");
     }
 
