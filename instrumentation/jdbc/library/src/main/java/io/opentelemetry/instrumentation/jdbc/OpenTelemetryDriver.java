@@ -20,6 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -162,6 +163,22 @@ public final class OpenTelemetryDriver implements Driver {
         : url;
   }
 
+  private static int[] parseInstrumentationVersion() {
+    String[] parts = InstrumentationVersion.VERSION.split("\\.");
+    if (parts.length >= 2) {
+      try {
+        int majorVersion = Integer.parseInt(parts[0]);
+        int minorVersion = Integer.parseInt(parts[1]);
+
+        return new int[] {majorVersion, minorVersion};
+      } catch (NumberFormatException ignored) {
+        // ignore incorrect version
+      }
+    }
+    // return 0.0 as a fallback
+    return new int[] {0, 0};
+  }
+
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
@@ -209,12 +226,12 @@ public final class OpenTelemetryDriver implements Driver {
 
   @Override
   public int getMajorVersion() {
-    return 1;
+    return parseInstrumentationVersion()[0];
   }
 
   @Override
   public int getMinorVersion() {
-    return 4;
+    return parseInstrumentationVersion()[1];
   }
 
   /** Returns {@literal false} because not all delegated drivers are JDBC compliant. */
