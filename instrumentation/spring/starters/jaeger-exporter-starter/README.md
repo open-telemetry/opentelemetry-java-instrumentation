@@ -28,7 +28,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 #### Gradle
 
 ```groovy
-implementation 'io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Starter Guide
