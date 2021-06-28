@@ -1,0 +1,13 @@
+plugins {
+  id("otel.java-conventions")
+}
+
+dependencies {
+  api(project(":instrumentation:mongo:mongo-testing"))
+
+  compileOnly("org.mongodb:mongo-java-driver:3.1.0")
+
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
+}

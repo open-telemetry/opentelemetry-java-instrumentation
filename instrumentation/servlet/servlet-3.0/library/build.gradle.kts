@@ -1,0 +1,9 @@
+plugins {
+  id("otel.library-instrumentation")
+}
+
+dependencies {
+  api(project(":instrumentation:servlet:servlet-javax-common:library"))
+
+  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
+}
