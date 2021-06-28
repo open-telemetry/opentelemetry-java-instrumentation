@@ -45,6 +45,9 @@ public final class OpenTelemetryDriver implements Driver {
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
+  private static final int MAJOR_VERSION;
+  private static final int MINOR_VERSION;
+
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
@@ -52,6 +55,10 @@ public final class OpenTelemetryDriver implements Driver {
 
   static {
     try {
+      int[] version = parseInstrumentationVersion();
+      MAJOR_VERSION = version[0];
+      MINOR_VERSION = version[1];
+
       register();
     } catch (SQLException e) {
       throw new ExceptionInInitializerError(e);
@@ -226,12 +233,12 @@ public final class OpenTelemetryDriver implements Driver {
 
   @Override
   public int getMajorVersion() {
-    return parseInstrumentationVersion()[0];
+    return MAJOR_VERSION;
   }
 
   @Override
   public int getMinorVersion() {
-    return parseInstrumentationVersion()[1];
+    return MINOR_VERSION;
   }
 
   /** Returns {@literal false} because not all delegated drivers are JDBC compliant. */
