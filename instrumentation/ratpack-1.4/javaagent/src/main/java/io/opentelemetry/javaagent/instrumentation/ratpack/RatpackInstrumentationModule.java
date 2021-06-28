@@ -23,6 +23,7 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
     return asList(
         new ContinuationInstrumentation(),
         new DefaultExecutionInstrumentation(),
+        new DefaultExecStarterInstrumentation(),
         new ServerErrorHandlerInstrumentation(),
         new ServerRegistryInstrumentation());
   }

@@ -12,9 +12,17 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import ratpack.error.ServerErrorHandler
+import ratpack.exec.Execution
 import ratpack.exec.Promise
+import ratpack.exec.Result
+import ratpack.exec.util.ParallelBatch
 import ratpack.server.RatpackServer
 
 class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
@@ -109,11 +117,47 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
+        it.prefix("fork_and_yieldAll") {
+          it.all {context ->
+            def promise = Promise.async { upstream ->
+              Execution.fork().start({
+                upstream.accept(Result.success(SUCCESS))
+              })
+            }
+            ParallelBatch.of(promise).yieldAll().flatMap { list ->
+              Promise.sync { list.get(0).value }
+            } then { endpoint ->
+              controller(endpoint) {
+                context.response.status(endpoint.status).send(endpoint.body)
+              }
+            }
+          }
+        }
       }
     }
 
     assert ratpack.bindPort == bindPort
     assert ratpack.bindHost == 'localhost'
     return ratpack
+  }
+
+  def "test fork and yieldAll"() {
+    setup:
+    def url =  address.resolve("fork_and_yieldAll").toString()
+    url = url.replace("http://", "h1c://")
+    def request = AggregatedHttpRequest.of(HttpMethod.GET, url)
+    AggregatedHttpResponse response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
+
+    assertTraces(1) {
+      trace(0, 3) {
+        basicServerSpan(it, 0, "/fork_and_yieldAll")
+        basicSpan(it, 1, "/fork_and_yieldAll", span(0))
+        basicSpan(it, 2, "controller", span(1))
+      }
+    }
   }
 }
