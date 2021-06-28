@@ -56,7 +56,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         }
         span(3) {
           // span created by rabbitmq instrumentation
-          name "testTopic -> testTopic send"
+          name "testTopic send"
           childOf span(1)
           kind PRODUCER
           attributes {
