@@ -78,7 +78,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
         }
         span(1) {
           // created by rabbitmq instrumentation
-          name "<default> -> testQueue send"
+          name "<default> send"
           kind PRODUCER
           childOf span(0)
           attributes {

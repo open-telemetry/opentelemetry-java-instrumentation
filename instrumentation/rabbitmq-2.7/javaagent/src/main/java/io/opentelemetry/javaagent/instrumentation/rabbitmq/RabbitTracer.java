@@ -66,7 +66,9 @@ public class RabbitTracer extends BaseTracer {
           SemanticAttributes.MESSAGING_DESTINATION,
           normalizeExchangeName(response.getEnvelope().getExchange()));
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-        spanBuilder.setAttribute("rabbitmq.routing_key", response.getEnvelope().getRoutingKey());
+        spanBuilder.setAttribute(
+            SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY,
+            response.getEnvelope().getRoutingKey());
       }
       spanBuilder.setAttribute(
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
@@ -113,15 +115,11 @@ public class RabbitTracer extends BaseTracer {
   public void onPublish(Span span, String exchange, String routingKey) {
     String exchangeName = normalizeExchangeName(exchange);
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, exchangeName);
-    String routing =
-        routingKey == null || routingKey.isEmpty()
-            ? "<all>"
-            : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-    span.updateName(exchangeName + " -> " + routing + " send");
+    span.updateName(exchangeName + " send");
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute("rabbitmq.command", "basic.publish");
       if (routingKey != null && !routingKey.isEmpty()) {
-        span.setAttribute("rabbitmq.routing_key", routingKey);
+        span.setAttribute(SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY, routingKey);
       }
     }
   }
@@ -167,7 +165,7 @@ public class RabbitTracer extends BaseTracer {
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         String routingKey = envelope.getRoutingKey();
         if (routingKey != null && !routingKey.isEmpty()) {
-          span.setAttribute("rabbitmq.routing_key", routingKey);
+          span.setAttribute(SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY, routingKey);
         }
       }
     }
