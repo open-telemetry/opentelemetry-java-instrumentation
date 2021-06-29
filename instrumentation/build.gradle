@@ -33,6 +33,8 @@ configurations {
   // exclude bootstrap dependencies from shadowJar
   implementation.exclude group: 'org.slf4j'
   implementation.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
+  implementation.exclude group: 'io.opentelemetry', module: 'opentelemetry-api-metrics'
+  implementation.exclude group: 'io.opentelemetry', module: 'opentelemetry-semconv'
 }
 
 shadowJar {
