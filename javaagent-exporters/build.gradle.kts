@@ -19,3 +19,11 @@ dependencies {
   // TODO(anuraaga): Move version to dependency management
   implementation("io.grpc:grpc-netty-shaded:1.38.0")
 }
+
+configurations {
+  implementation {
+    exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-api-metrics")
+    exclude("io.opentelemetry", "opentelemetry-semconv")
+  }
+}

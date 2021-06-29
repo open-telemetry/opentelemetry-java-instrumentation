@@ -59,6 +59,7 @@ shadowJar {
     dependsOn("${it.path}:shadowJar")
   }
   with isolateSpec(projectsWithShadowJar)
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 //Includes instrumentations, but not exporters

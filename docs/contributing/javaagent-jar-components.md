@@ -34,7 +34,7 @@ later and separately. These classes should be available from all possible
 classloaders in the running application. For this reason the `javaagent` module puts
 all these classes into JVM's bootstrap classloader. For the same reason this
 module should be as small as possible and have as few dependencies as
-possible. Otherwise, there is a risk of accidentally exposing this classes to
+possible. Otherwise, there is a risk of accidentally exposing these classes to
 the actual application.
 
 `instrumentation-api` contains classes that are needed for both library and auto-instrumentation,
