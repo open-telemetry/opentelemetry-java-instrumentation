@@ -76,3 +76,12 @@ afterEvaluate {
     dependsOn shadowJar
   }
 }
+
+// Because shadow does not use default configurations
+publishing {
+  publications {
+    maven {
+      project.shadow.component(it)
+    }
+  }
+}

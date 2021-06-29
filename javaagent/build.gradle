@@ -53,6 +53,7 @@ CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
 
 //Includes everything needed for OOTB experience
 shadowJar {
+  archiveClassifier.set("all")
   def projectsWithShadowJar = [project(':instrumentation'), project(":javaagent-exporters")]
   projectsWithShadowJar.each {
     dependsOn("${it.path}:shadowJar")
@@ -62,10 +63,14 @@ shadowJar {
 
 //Includes instrumentations, but not exporters
 task lightShadow(type: ShadowJar) {
+  archiveClassifier.set("")
   dependsOn ':instrumentation:shadowJar'
   def projectsWithShadowJar = [project(':instrumentation')]
   with isolateSpec(projectsWithShadowJar)
 }
+
+// lightShadow is the default classifier we publish so disable the default jar.
+jar.enabled = false
 
 publishing {
   publications {
