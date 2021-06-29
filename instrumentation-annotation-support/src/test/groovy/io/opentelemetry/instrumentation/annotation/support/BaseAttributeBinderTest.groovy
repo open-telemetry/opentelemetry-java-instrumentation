@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.annotation.support
 
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter
 import spock.lang.Shared
 import spock.lang.Specification
 

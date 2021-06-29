@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.annotation.support
 
 import io.opentelemetry.api.common.AttributeType
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter
 import spock.lang.Specification
 
 class AttributeBindingFactoryTest extends Specification {
