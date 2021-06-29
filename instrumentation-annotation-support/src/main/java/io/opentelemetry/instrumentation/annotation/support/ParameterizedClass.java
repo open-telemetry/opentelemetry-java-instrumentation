@@ -134,7 +134,6 @@ final class ParameterizedClass {
     return new ParameterizedClass(rawSuperClass, superTypeArguments);
   }
 
-  /** */
   private static Type mapTypeVariableToArgument(
       TypeVariable<?> superTypeVariable,
       TypeVariable<?>[] typeParameters,
