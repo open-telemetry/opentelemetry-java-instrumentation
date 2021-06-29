@@ -28,6 +28,7 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.LoggerFactory;
 
 /*
  * Some class loaders do not delegate to their parent, so classes in those class loaders
@@ -90,6 +91,8 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         //noinspection unchecked
         return (List<String>) methodHandle.invokeExact();
       } catch (Throwable e) {
+        LoggerFactory.getLogger(Holder.class)
+            .warn("Unable to load bootstrap package prefixes from the bootstrap CL", e);
         return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }
