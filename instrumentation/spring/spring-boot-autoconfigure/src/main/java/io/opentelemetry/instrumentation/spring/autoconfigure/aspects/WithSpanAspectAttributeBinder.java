@@ -7,16 +7,16 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.instrumentation.annotation.support.AttributeBindings;
 import io.opentelemetry.instrumentation.annotation.support.BaseAttributeBinder;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.core.ParameterNameDiscoverer;
 
 public class WithSpanAspectAttributeBinder extends BaseAttributeBinder {
-  private static final ConcurrentMap<Method, AttributeBindings> bindings =
-      new ConcurrentHashMap<>();
+
+  private static final Cache<Method, AttributeBindings> bindings =
+      Cache.newBuilder().setWeakKeys().build();
 
   private final ParameterNameDiscoverer parameterNameDiscoverer;
 
