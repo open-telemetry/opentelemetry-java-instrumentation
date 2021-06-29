@@ -13,7 +13,7 @@ class DubboInjectAdapter implements TextMapSetter<RpcInvocation> {
   static final DubboInjectAdapter SETTER = new DubboInjectAdapter();
 
   @Override
-  public void set(RpcInvocation rpcInvocation, String key, String value) {
-    rpcInvocation.setAttachment(key, value);
+  public void set(RpcContext rpcContext, String key, String value) {
+    rpcContext.setAttachment(key, value);
   }
 }
