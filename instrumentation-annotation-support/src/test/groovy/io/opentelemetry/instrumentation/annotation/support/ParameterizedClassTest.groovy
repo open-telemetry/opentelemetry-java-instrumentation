@@ -7,6 +7,12 @@ package io.opentelemetry.instrumentation.annotation.support
 
 import spock.lang.Shared
 import spock.lang.Specification
+import org.hamcrest.Description
+import org.hamcrest.Matcher
+import org.hamcrest.TypeSafeMatcher
+
+import static spock.util.matcher.HamcrestSupport.*
+import static org.hamcrest.Matchers.*
 
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
@@ -23,10 +29,8 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(ArrayList)
 
     then:
-    underTest.getRawType() == ArrayList
-    underTest.getOwnerType() == null
+    underTest.getRawClass() == ArrayList
     underTest.getActualTypeArguments()[0] instanceof TypeVariable
-    underTest.getTypeName() == "java.util.ArrayList<E>"
   }
 
   def "reflects ParameterizedType"() {
@@ -34,10 +38,8 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(stringArrayListType)
 
     then:
-    underTest.getRawType() == ArrayList
-    underTest.getOwnerType() == null
+    underTest.getRawClass() == ArrayList
     underTest.getActualTypeArguments() == [ String ] as Type[]
-    underTest.getTypeName() == "java.util.ArrayList<java.lang.String>"
   }
 
   def "gets parameterized superclass with mapped type arguments"() {
@@ -45,10 +47,8 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(stringArrayListType).getParameterizedSuperclass()
 
     then:
-    underTest.getRawType() == AbstractList
-    underTest.getOwnerType() == null
+    underTest.getRawClass() == AbstractList
     underTest.getActualTypeArguments() == [ String ] as Type[]
-    underTest.getTypeName() == "java.util.AbstractList<java.lang.String>"
   }
 
   def "gets parameterized interfaces with mapped type arguments"() {
@@ -56,7 +56,12 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(stringArrayListType).getParameterizedInterfaces()
 
     then:
-    underTest.contains(ParameterizedClass.of(stringListType))
+    expect underTest, arrayContainingInAnyOrder(
+      matchesParameterizedClass(List, [ String ] as Type[]),
+      matchesParameterizedClass(Cloneable, [ ] as Type[]),
+      matchesParameterizedClass(RandomAccess, [ ] as Type[]),
+      matchesParameterizedClass(Serializable, [ ] as Type[]),
+    )
   }
 
   def "finds parameterized interface with mapped type arguments"() {
@@ -65,10 +70,18 @@ class ParameterizedClassTest extends Specification {
 
     then:
     underTest.isPresent()
-    underTest.get().getRawType() == List
-    underTest.get().getOwnerType() == null
+    underTest.get().getRawClass() == List
     underTest.get().getActualTypeArguments() == [ String ] as Type[]
-    underTest.get().getTypeName() == "java.util.List<java.lang.String>"
+  }
+
+  def "finds parameterized interface of superclass with mapped type arguments"() {
+    when:
+    def underTest = ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(Collection)
+
+    then:
+    underTest.isPresent()
+    underTest.get().getRawClass() == Collection
+    underTest.get().getActualTypeArguments() == [ String ] as Type[]
   }
 
   def "does not find parameterized superclass that type does not extend"() {
@@ -93,5 +106,23 @@ class ParameterizedClassTest extends Specification {
   static class TestFields {
     public static List<String> stringListField
     public static ArrayList<String> stringArrayListField
+  }
+
+  static Matcher<ParameterizedClass> matchesParameterizedClass(Class<?> rawClass, Type[] typeArguments) {
+    return new TypeSafeMatcher<ParameterizedClass>() {
+      @Override
+      boolean matchesSafely(ParameterizedClass item) {
+        item != null && item.getRawClass() == rawClass && Arrays.equals(item.getActualTypeArguments(), typeArguments)
+      }
+
+      @Override
+      void describeTo(Description description) {
+        description
+          .appendText("a ParameterizedClass with raw type ")
+          .appendValue(rawClass)
+          .appendText(" and type parameters ")
+          .appendValue(typeArguments)
+      }
+    }
   }
 }
