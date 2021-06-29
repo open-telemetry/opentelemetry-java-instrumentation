@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer
+package io.opentelemetry.instrumentation.annotation.support
 
 import spock.lang.Shared
 import spock.lang.Specification
@@ -30,7 +30,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*_)
+    0 * setter.setAttribute(*spock.lang.Specification._)
   }
 
   def "returns empty bindings for empty attribute names array"() {
@@ -43,7 +43,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*_)
+    0 * setter.setAttribute(*spock.lang.Specification._)
   }
 
   def "returns empty bindings for attribute names array with all null elements"() {
@@ -56,7 +56,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*_)
+    0 * setter.setAttribute(*spock.lang.Specification._)
   }
 
   def "returns empty bindings for attribute names array with fewer elements than parameters"() {
@@ -69,7 +69,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*_)
+    0 * setter.setAttribute(*spock.lang.Specification._)
   }
 
   def "returns bindings for attribute names array"() {
@@ -98,7 +98,7 @@ class BaseAttributeBinderTest extends Specification {
     then:
     !bindings.isEmpty()
     1 * setter.setAttribute({ it.getKey() == "x" }, "a")
-    0 * setter.setAttribute(_, "b")
+    0 * setter.setAttribute(spock.lang.Specification._, "b")
     1 * setter.setAttribute({ it.getKey() == "z" }, "c")
   }
 

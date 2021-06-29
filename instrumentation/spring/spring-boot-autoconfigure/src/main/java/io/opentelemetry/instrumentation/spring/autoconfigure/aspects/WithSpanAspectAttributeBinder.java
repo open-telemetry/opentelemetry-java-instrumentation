@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
-import io.opentelemetry.instrumentation.api.tracer.AttributeBindings;
-import io.opentelemetry.instrumentation.api.tracer.BaseAttributeBinder;
+import io.opentelemetry.instrumentation.annotation.support.AttributeBindings;
+import io.opentelemetry.instrumentation.annotation.support.BaseAttributeBinder;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.concurrent.ConcurrentHashMap;

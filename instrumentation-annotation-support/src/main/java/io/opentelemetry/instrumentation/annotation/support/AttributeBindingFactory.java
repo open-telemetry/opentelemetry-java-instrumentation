@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.annotation.support;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.ParameterizedClass;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
 import java.util.ArrayList;

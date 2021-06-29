@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.annotation.support;
+
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 
 /** Represents the bindings of method parameters to attributes of a traced method. */
 public interface AttributeBindings {

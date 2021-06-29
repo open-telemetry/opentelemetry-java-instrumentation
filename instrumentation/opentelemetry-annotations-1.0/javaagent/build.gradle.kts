@@ -5,6 +5,8 @@ plugins {
 val versions: Map<String, String> by project
 
 dependencies {
+  implementation(project(":instrumentation-annotation-support"))
+
   compileOnly(project(":javaagent-tooling"))
 
   // this instrumentation needs to do similar shading dance as opentelemetry-api-1.0 because
