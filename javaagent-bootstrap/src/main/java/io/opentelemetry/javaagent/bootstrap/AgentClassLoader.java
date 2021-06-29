@@ -94,7 +94,7 @@ public class AgentClassLoader extends URLClassLoader {
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
       codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
-      manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
+      manifest = jarFile.getManifest();
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
@@ -121,18 +121,6 @@ public class AgentClassLoader extends URLClassLoader {
       return 8;
     }
     return Integer.parseInt(javaSpecVersion);
-  }
-
-  private static Manifest getManifest(JarFile jarFile, String manifestPath) {
-    JarEntry manifestEntry = jarFile.getJarEntry(manifestPath);
-    if (manifestEntry == null) {
-      throw new IllegalStateException("Manifest entry not found");
-    }
-    try (InputStream is = jarFile.getInputStream(manifestEntry)) {
-      return new Manifest(is);
-    } catch (IOException exception) {
-      throw new IllegalStateException("Failed to read manifest", exception);
-    }
   }
 
   @Override
