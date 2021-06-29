@@ -56,7 +56,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         }
         span(3) {
           // span created by rabbitmq instrumentation
-          name "testTopic -> testTopic send"
+          name "testTopic send"
           childOf span(1)
           kind PRODUCER
           attributes {
@@ -67,6 +67,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
@@ -82,6 +83,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
         // spring-integration will detect that spring-rabbit has already created a consumer span and back off
