@@ -38,7 +38,6 @@ dependencies {
   implementation "io.opentelemetry:opentelemetry-exporter-logging"
 
   api "net.bytebuddy:byte-buddy"
-  implementation "net.bytebuddy:byte-buddy-agent"
   annotationProcessor "com.google.auto.service:auto-service"
   compileOnly "com.google.auto.service:auto-service"
   implementation "org.slf4j:slf4j-api"
