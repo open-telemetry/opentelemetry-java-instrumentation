@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.apache.dubbo.rpc.RpcInvocation;
+import org.apache.dubbo.rpc.RpcContext;
 
-class DubboInjectAdapter implements TextMapSetter<RpcInvocation> {
+class DubboInjectAdapter implements TextMapSetter<RpcContext> {
 
   static final DubboInjectAdapter SETTER = new DubboInjectAdapter();
 
