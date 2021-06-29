@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.ShadowExtension
-
 plugins {
   `maven-publish`
   signing
@@ -8,18 +6,11 @@ plugins {
 publishing {
   publications {
     register<MavenPublication>("maven") {
-      if (tasks.names.contains("shadowJar") && findProperty("noShadowPublish") != true) {
-        the<ShadowExtension>().component(this)
-        // These two are here just to satisfy Maven Central
-        artifact(tasks["sourcesJar"])
-        artifact(tasks["javadocJar"])
-      } else {
-        plugins.withId("java-platform") {
-          from(components["javaPlatform"])
-        }
-        plugins.withId("java-library") {
-          from(components["java"])
-        }
+      plugins.withId("java-platform") {
+        from(components["javaPlatform"])
+      }
+      plugins.withId("java-library") {
+        from(components["java"])
       }
 
       versionMapping {
