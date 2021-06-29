@@ -5,8 +5,8 @@ plugins {
 dependencies {
   // For testing javaagent-bootstrap's Caffeine patch, we need to compile against our cache API
   // but make sure to run against javaagent-bootstrap
-  testCompileOnly project(':instrumentation-api-caching')
-  testRuntimeOnly project(":javaagent-bootstrap")
+  testCompileOnly(project(":instrumentation-api-caching"))
+  testRuntimeOnly(project(":javaagent-bootstrap"))
 
-  testImplementation "org.assertj:assertj-core"
+  testImplementation("org.assertj:assertj-core")
 }
