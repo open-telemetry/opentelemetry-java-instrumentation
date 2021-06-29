@@ -8,11 +8,9 @@ package io.opentelemetry.instrumentation.annotation.support;
 import io.opentelemetry.api.common.AttributeKey;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -54,10 +52,6 @@ class AttributeBindingFactory {
       return arrayBinding(name, type);
     }
 
-    if (isEnumSetType(type)) {
-      return enumSetBinding(name);
-    }
-
     return resolveListComponentType(type)
         .map(componentType -> listBinding(name, componentType))
         .orElseGet(() -> defaultBinding(name));
@@ -68,14 +62,6 @@ class AttributeBindingFactory {
       return ((Class<?>) type).isArray();
     }
     return false;
-  }
-
-  private static boolean isEnumSetType(Type type) {
-    return ParameterizedClass.of(type)
-        .findParameterizedSuperclass(Set.class)
-        .map(pc -> pc.getActualTypeArguments()[0])
-        .filter(typeArgument -> typeArgument instanceof Class && ((Class<?>) typeArgument).isEnum())
-        .isPresent();
   }
 
   private static Optional<Type> resolveListComponentType(Type type) {
@@ -346,16 +332,6 @@ class AttributeBindingFactory {
   private static AttributeBinding defaultListBinding(String name) {
     AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
     return mappedListBinding(Object.class, key, Object::toString);
-  }
-
-  private static AttributeBinding enumSetBinding(String name) {
-    AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
-    return (setter, arg) -> {
-      Set<?> set = (Set<?>) arg;
-      List<String> list = new ArrayList<>(set.size());
-      set.forEach(value -> list.add(value.toString()));
-      setter.setAttribute(key, list);
-    };
   }
 
   private static AttributeBinding defaultBinding(String name) {

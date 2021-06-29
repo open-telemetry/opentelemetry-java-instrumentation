@@ -205,24 +205,6 @@ class AttributeBindingFactoryTest extends Specification {
     1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, ["TestClass{value = foo}", "TestClass{value = bar}", null ])
   }
 
-  def "creates attribute binding for EnumSet<?>"() {
-    when:
-    def type = TestFields.getDeclaredField("enumSet").getGenericType()
-    AttributeBindingFactory.createBinding("key", type).apply(setter, EnumSet.of(TestEnum.FOO, TestEnum.BAR))
-
-    then:
-    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, ["FOO", "BAR" ])
-  }
-
-  def "creates attribute binding for Set<? extends Enum>"() {
-    when:
-    def type = TestFields.getDeclaredField("setOfEnum").getGenericType()
-    AttributeBindingFactory.createBinding("key", type).apply(setter, EnumSet.of(TestEnum.FOO, TestEnum.BAR))
-
-    then:
-    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, ["FOO", "BAR" ])
-  }
-
   def "creates attribute binding for List<String>"() {
     when:
     def type = TestFields.getDeclaredField("stringList").getGenericType()
