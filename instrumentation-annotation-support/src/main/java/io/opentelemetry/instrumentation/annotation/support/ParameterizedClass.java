@@ -21,10 +21,12 @@ import java.util.Optional;
  * loses the mapping with the actual type arguments. This helper class tracks the association
  * between the type variables of the class with the type parameters of the superclass in order to
  * map the actual type arguments to those type parameters. This makes it possible to determine the
- * actual type arguments to the generic interfaces and superclasses in the type hierarchy. For
- * example, given the parameterized type {@code ArrayList<String>} you can determine that the
- * superclass is {@code AbstractList<String>} which implements generic interfaces such as {@code
- * List<String>} and {@code Collection<String>}.>
+ * actual type arguments to the generic interfaces and superclasses in the type hierarchy.
+ *
+ * <p>For example, given the parameterized type {@link java.util.ArrayList ArrayList&lt;String&gt;}
+ * you can determine that the superclass is {@link java.util.AbstractList
+ * AbstractList&lt;String&gt;} which implements generic interfaces such as {@link java.util.List
+ * List&lt;String&gt;} and {@link java.util.Collection Collection&lt;String&gt;}.
  */
 final class ParameterizedClass {
   private final Class<?> rawClass;
