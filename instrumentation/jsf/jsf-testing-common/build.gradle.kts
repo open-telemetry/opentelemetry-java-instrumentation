@@ -11,9 +11,7 @@ dependencies {
   compileOnly("jakarta.faces:jakarta.faces-api:2.3.2")
   compileOnly("jakarta.el:jakarta.el-api:3.0.3")
 
-  implementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
+  implementation(project(":testing-common"))
   implementation("org.jsoup:jsoup:1.13.1")
 
   val jettyVersion = "9.4.35.v20201120"

@@ -23,9 +23,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
   testLibrary("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")

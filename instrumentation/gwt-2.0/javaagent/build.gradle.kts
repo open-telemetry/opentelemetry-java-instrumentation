@@ -44,9 +44,6 @@ dependencies {
   testImplementation("org.testcontainers:selenium:${versions["org.testcontainers"]}")
   testImplementation("org.seleniumhq.selenium:selenium-java:3.141.59")
 
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
 }
 

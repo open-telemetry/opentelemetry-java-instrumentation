@@ -18,11 +18,6 @@ dependencies {
   implementation(project(":instrumentation:jetty:jetty-common:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  // Don't want to conflict with jetty from the test server.
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
-
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
   testLibrary("org.eclipse.jetty:jetty-continuation:8.0.0.v20110901")
 
