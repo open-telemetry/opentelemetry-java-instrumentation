@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id("otel.shadow-conventions")
 
@@ -5,83 +7,77 @@ plugins {
   id("otel.publish-conventions")
 }
 
-description = 'OpenTelemetry Javaagent for testing'
-group = 'io.opentelemetry.javaagent'
+description = "OpenTelemetry Javaagent for testing"
+group = "io.opentelemetry.javaagent"
 
-jar {
-  manifest {
-    attributes(
-      "Main-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
-      "Agent-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
-      "Premain-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
-      "Can-Redefine-Classes": true,
-      "Can-Retransform-Classes": true,
-    )
+fun isolateSpec(shadowJarTasks: Collection<Jar>): CopySpec = copySpec {
+  from(shadowJarTasks.map { zipTree(it.archiveFile) }) {
+    // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+    into("inst")
+    rename("""(^.*)\.class$""", "$1.classdata")
+    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+    rename("""^LICENSE$""", "LICENSE.renamed")
   }
 }
 
-CopySpec isolateSpec(Collection<Jar> shadowJarTasks) {
-  return copySpec {
-    from({ shadowJarTasks.collect { zipTree(it.archiveFile) } }) {
-      // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
-      into 'inst'
-      rename '(^.*)\\.class$', '$1.classdata'
-      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-      rename '^LICENSE$', 'LICENSE.renamed'
-    }
-  }
-}
-
-configurations {
-  shadowInclude {
-    canBeResolved = true
-    canBeConsumed = false
-  }
+val shadowInclude by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
 }
 
 evaluationDependsOn(":testing:agent-exporter")
 
-shadowJar {
-  configurations = [project.configurations.shadowInclude]
+tasks {
+  jar.configure {
+    enabled = false
 
-  archiveClassifier.set("")
-
-  dependsOn ':testing:agent-exporter:shadowJar'
-  with isolateSpec([project(':testing:agent-exporter').tasks.shadowJar])
-
-  manifest {
-    inheritFrom project.tasks.jar.manifest
+    manifest {
+      attributes(
+        "Main-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Premain-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Can-Redefine-Classes" to true,
+        "Can-Retransform-Classes" to true
+      )
+    }
   }
-}
 
-jar {
-  enabled = false
+  val shadowJar by existing(ShadowJar::class) {
+    configurations = listOf(shadowInclude)
+
+    archiveClassifier.set("")
+
+    dependsOn(":testing:agent-exporter:shadowJar")
+    with(isolateSpec(listOf(project(":testing:agent-exporter").tasks.getByName<ShadowJar>("shadowJar"))))
+
+    manifest.inheritFrom(jar.get().manifest)
+  }
+
+  afterEvaluate {
+    withType<Test>().configureEach {
+      inputs.file(shadowJar.get().archiveFile)
+
+      jvmArgs("-Dotel.javaagent.debug=true")
+      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile.absolutePath}")
+
+      dependsOn(shadowJar)
+    }
+  }
 }
 
 dependencies {
   // Dependencies to include without obfuscation.
-  shadowInclude project(':javaagent-bootstrap')
+  shadowInclude(project(":javaagent-bootstrap"))
 
-  testImplementation project(':testing-common')
-  testImplementation "io.opentelemetry:opentelemetry-api"
-}
-
-afterEvaluate {
-  tasks.withType(Test).configureEach {
-    inputs.file(shadowJar.archiveFile)
-
-    jvmArgs "-Dotel.javaagent.debug=true"
-    jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
-
-    dependsOn shadowJar
-  }
+  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry:opentelemetry-api")
 }
 
 // Because shadow does not use default configurations
 publishing {
   publications {
-    maven {
-      project.shadow.component(it)
+    named<MavenPublication>("maven") {
+      project.shadow.component(this)
     }
   }
 }
