@@ -28,7 +28,7 @@ dependencies {
 afterEvaluate {
   dependencies {
     constraints {
-      rootProject.subprojects.sortedBy { "$it.archivesBaseName" }
+      rootProject.subprojects
         .filter { it.name != project.name && it.name != "javaagent" }
         .forEach { proj ->
           proj.plugins.withId("maven-publish") {
