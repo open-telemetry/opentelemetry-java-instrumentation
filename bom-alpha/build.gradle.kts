@@ -6,9 +6,9 @@ plugins {
 
 description = "OpenTelemetry Instrumentation Bill of Materials (Alpha)"
 group = "io.opentelemetry.instrumentation"
-archivesBaseName = "opentelemetry-instrumentation-bom-alpha"
+base.archivesName.set("opentelemetry-instrumentation-bom-alpha")
 
-rootProject.subprojects.forEach { subproject ->
+for (subproject in rootProject.subprojects) {
   if (!subproject.name.startsWith("bom")) {
     evaluationDependsOn(subproject.path)
   }
@@ -18,7 +18,7 @@ javaPlatform {
   allowDependencies()
 }
 
-def otelVersion = findProperty("otelVersion")
+val otelVersion: String by project
 
 dependencies {
   api(platform("io.opentelemetry:opentelemetry-bom:${otelVersion}"))
@@ -27,14 +27,12 @@ dependencies {
 
 afterEvaluate {
   dependencies {
-
     constraints {
-      rootProject.subprojects.sort { "$it.archivesBaseName" }
-        .collect { it }
-        .findAll { it.name != project.name && it.name != 'javaagent'}
-        .forEach { project ->
-          project.plugins.withId("maven-publish") {
-            api(project)
+      rootProject.subprojects.sortedBy { "$it.archivesBaseName" }
+        .filter { it.name != project.name && it.name != "javaagent" }
+        .forEach { proj ->
+          proj.plugins.withId("maven-publish") {
+            api(proj)
           }
         }
     }
