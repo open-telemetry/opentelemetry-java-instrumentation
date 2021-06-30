@@ -47,8 +47,8 @@ tasks {
 // Because shadow does not use default configurations
 publishing {
   publications {
-    named("maven") {
-      project.shadow.component(this as MavenPublication)
+    named<MavenPublication>("maven") {
+      project.shadow.component(this)
     }
   }
 }
