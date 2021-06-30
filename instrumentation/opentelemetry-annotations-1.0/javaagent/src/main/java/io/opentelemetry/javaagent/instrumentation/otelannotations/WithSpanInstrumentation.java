@@ -53,8 +53,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         hasParameters(
             whereAny(
                 isAnnotatedWith(
-                    named(
-                        "application.io.opentelemetry.javaagent.instrumentation.otelannotations.SpanAttribute"))));
+                    named("application.io.opentelemetry.extension.annotations.SpanAttribute"))));
     excludedMethodsMatcher = configureExcludedMethods();
   }
 
@@ -74,17 +73,14 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethods, WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
-
-    // TODO: To avoid copying/boxing parameters only use WithSpanAttributesAdvice
-    //      if method has any parameters annotated with @SpanAttribute
-    /*
-    transformer.applyAdviceToMethod(tracedMethodsWithoutParameters,
+        tracedMethodsWithoutParameters,
         WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
 
-    transformer.applyAdviceToMethod(tracedMethodsWithParameters,
+    // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
+    // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
+    transformer.applyAdviceToMethod(
+        tracedMethodsWithParameters,
         WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
-     */
   }
 
   /*
@@ -153,6 +149,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class WithSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

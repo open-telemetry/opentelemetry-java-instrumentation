@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
+import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotation.support.AttributeBindings;
 import io.opentelemetry.instrumentation.annotation.support.BaseAttributeBinder;
 import io.opentelemetry.instrumentation.api.caching.Cache;
