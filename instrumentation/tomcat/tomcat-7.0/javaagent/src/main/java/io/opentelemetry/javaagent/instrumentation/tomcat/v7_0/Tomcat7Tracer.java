@@ -16,6 +16,6 @@ public class Tomcat7Tracer extends TomcatTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.tomcat-7.0";
+    return "io.opentelemetry.tomcat-7.0";
   }
 }

@@ -35,7 +35,7 @@ public class JdkHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.java-http-client";
+    return "io.opentelemetry.java-http-client";
   }
 
   @Override

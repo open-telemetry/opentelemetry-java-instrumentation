@@ -19,7 +19,7 @@ public class FinatraTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.finatra-2.9";
+    return "io.opentelemetry.finatra-2.9";
   }
 
   public Context startSpan(Context parentContext, Class<?> clazz) {

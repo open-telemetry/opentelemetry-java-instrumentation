@@ -16,8 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAt
 import org.apache.commons.httpclient.HttpMethod;
 
 public final class ApacheHttpClientSingletons {
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.apache-httpclient-2.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-2.0";
 
   private static final Instrumenter<HttpMethod, HttpMethod> INSTRUMENTER;
 

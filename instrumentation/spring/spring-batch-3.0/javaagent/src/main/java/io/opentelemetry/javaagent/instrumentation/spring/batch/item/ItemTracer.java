@@ -65,6 +65,6 @@ public class ItemTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-batch-3.0";
+    return "io.opentelemetry.spring-batch-3.0";
   }
 }

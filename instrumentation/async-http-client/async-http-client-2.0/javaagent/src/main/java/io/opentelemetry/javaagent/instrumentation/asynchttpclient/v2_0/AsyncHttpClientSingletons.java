@@ -17,8 +17,7 @@ import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
 public final class AsyncHttpClientSingletons {
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.async-http-client-2.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-2.0";
 
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 

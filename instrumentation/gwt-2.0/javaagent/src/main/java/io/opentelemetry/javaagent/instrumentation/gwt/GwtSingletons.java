@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 
 public final class GwtSingletons {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.gwt-2.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.gwt-2.0";
 
   public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");

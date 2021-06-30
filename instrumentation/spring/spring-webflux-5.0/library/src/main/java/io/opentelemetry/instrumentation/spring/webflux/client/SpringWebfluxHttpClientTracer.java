@@ -87,7 +87,7 @@ class SpringWebfluxHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-webflux-5.0";
+    return "io.opentelemetry.spring-webflux-5.0";
   }
 
   // rawStatusCode() method was introduced in webflux 5.1

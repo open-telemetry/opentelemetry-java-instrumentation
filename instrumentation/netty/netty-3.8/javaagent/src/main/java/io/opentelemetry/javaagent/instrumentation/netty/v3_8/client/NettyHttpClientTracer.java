@@ -105,6 +105,6 @@ public class NettyHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.netty-3.8";
+    return "io.opentelemetry.netty-3.8";
   }
 }

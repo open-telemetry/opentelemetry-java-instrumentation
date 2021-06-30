@@ -19,7 +19,7 @@ public class ResponseTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet-javax-common";
+    return "io.opentelemetry.servlet-javax-common";
   }
 
   public Context startSpan(Method method) {

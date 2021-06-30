@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JdbcSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
