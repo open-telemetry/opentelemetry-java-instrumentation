@@ -5,17 +5,17 @@ plugins {
 }
 
 dependencies {
-  implementation project(':javaagent-bootstrap')
-  implementation project(':benchmark-integration')
+  implementation(project(":javaagent-bootstrap"))
+  implementation(project(":benchmark-integration"))
 
-  implementation "org.eclipse.jetty:jetty-server:9.4.1.v20170120"
-  implementation "org.eclipse.jetty:jetty-servlet:9.4.1.v20170120"
+  implementation("org.eclipse.jetty:jetty-server:9.4.1.v20170120")
+  implementation("org.eclipse.jetty:jetty-servlet:9.4.1.v20170120")
 }
 
-jar {
-  manifest {
-    attributes(
-      "Main-Class": "io.opentelemetry.perftest.jetty.JettyPerftest"
-    )
+tasks {
+  jar {
+    manifest {
+      attributes("Main-Class" to "io.opentelemetry.perftest.jetty.JettyPerftest")
+    }
   }
 }

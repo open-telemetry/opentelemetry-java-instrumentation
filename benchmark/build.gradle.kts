@@ -6,40 +6,42 @@ plugins {
 }
 
 dependencies {
-  jmh platform(project(":dependencyManagement"))
+  jmh(platform(project(":dependencyManagement")))
 
-  jmh "io.opentelemetry:opentelemetry-api"
-  jmh "net.bytebuddy:byte-buddy-agent"
+  jmh("io.opentelemetry:opentelemetry-api")
+  jmh("net.bytebuddy:byte-buddy-agent")
 
-  jmh project(':instrumentation-api')
-  jmh project(':javaagent-api')
-  jmh project(':javaagent-tooling')
-  jmh project(':javaagent-extension-api')
+  jmh(project(":instrumentation-api"))
+  jmh(project(":javaagent-api"))
+  jmh(project(":javaagent-tooling"))
+  jmh(project(":javaagent-extension-api"))
 
-  jmh "com.github.ben-manes.caffeine:caffeine"
+  jmh("com.github.ben-manes.caffeine:caffeine")
 
-  jmh 'javax.servlet:javax.servlet-api:4.0.1'
-  jmh 'com.google.http-client:google-http-client:1.19.0'
-  jmh 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
-  jmh 'org.eclipse.jetty:jetty-servlet:9.4.1.v20170120'
+  jmh("javax.servlet:javax.servlet-api:4.0.1")
+  jmh("com.google.http-client:google-http-client:1.19.0")
+  jmh("org.eclipse.jetty:jetty-server:9.4.1.v20170120")
+  jmh("org.eclipse.jetty:jetty-servlet:9.4.1.v20170120")
 
   // used to provide lots of classes for TypeMatchingBenchmark
-  jmh 'org.springframework:spring-web:4.3.28.RELEASE'
+  jmh("org.springframework:spring-web:4.3.28.RELEASE")
 }
 
 jmh {
-  profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
+  profilers.set(listOf("io.opentelemetry.benchmark.UsedMemoryProfiler", "gc"))
 
-  duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
+  duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE)
 
-  def jmhIncludeSingleClass = project.findProperty('jmhIncludeSingleClass')
+  val jmhIncludeSingleClass: String? by project
   if (jmhIncludeSingleClass != null) {
-    includes = [jmhIncludeSingleClass]
+    includes.set(listOf(jmhIncludeSingleClass))
   }
 }
 
-tasks.named('jmh').configure {
-  dependsOn(':javaagent:shadowJar')
+tasks {
+  named("jmh") {
+    dependsOn(":javaagent:shadowJar")
+  }
 }
 
 /*
