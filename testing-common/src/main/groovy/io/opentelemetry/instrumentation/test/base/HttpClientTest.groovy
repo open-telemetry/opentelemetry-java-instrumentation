@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.test.base
 
+import io.opentelemetry.context.ContextKey
+import io.opentelemetry.context.Scope
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
@@ -389,6 +393,31 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method << BODY_METHODS
   }
 
+  def "should suppress nested spans if instrumentation is suppressed (#method)"() {
+    when:
+    def uri = resolveAddress("/success")
+    def responseCode = runUnderParentClientSpan {
+      Scope s = Context.current().with(BaseTracer.SUPPRESS_INSTRUMENTATION_KEY, true).makeCurrent();
+      try {
+        doRequest(method, uri)
+      } finally {
+        s.close();
+      }
+    }
+
+    then:
+    responseCode == 200
+    // there should be 2 separate traces since the nested CLIENT span is suppressed
+    // (and the span context propagation along with it)
+    assertTraces(1) {
+      trace(0, 1) {
+        serverSpan(it, 0)
+      }
+    }
+
+    where:
+    method << BODY_METHODS
+  }
 
   //FIXME: add tests for POST with large/chunked data
 

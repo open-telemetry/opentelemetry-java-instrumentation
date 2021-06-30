@@ -7,6 +7,7 @@
 - Fix incorrect dependency in published BOM (#3376)
 - Fix UnsupportedOperationException with reactor-rabbitmq (#3381)
 - Fix Spring JMS not being instrumented (#3359)
+- Allow suppressing  
 
 ## Version 1.3.0 - 2021-06-17
 

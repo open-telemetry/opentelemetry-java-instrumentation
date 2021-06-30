@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -50,6 +51,7 @@ public abstract class BaseTracer {
 
   private final Tracer tracer;
   private final ContextPropagators propagators;
+  public static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION_KEY = ContextKey.named("otel.suppress_instrumentation");
 
   /**
    * Instead of using this always pass an OpenTelemetry instance; javaagent tracers should
@@ -101,17 +103,20 @@ public abstract class BaseTracer {
    * @see #withServerSpan(Context, Span)
    */
   public final boolean shouldStartSpan(Context context, SpanKind proposedKind) {
-    boolean suppressed = false;
-    switch (proposedKind) {
-      case CLIENT:
-        suppressed = ClientSpan.exists(context);
-        break;
-      case SERVER:
-      case CONSUMER:
-        suppressed = ServerSpan.exists(context) || ConsumerSpan.exists(context);
-        break;
-      default:
-        break;
+    Boolean suppresedContext = context.get(SUPPRESS_INSTRUMENTATION_KEY);
+    boolean suppressed = suppresedContext != null && suppresedContext.booleanValue();
+    if (!suppressed) {
+      switch (proposedKind) {
+        case CLIENT:
+          suppressed = ClientSpan.exists(context);
+          break;
+        case SERVER:
+        case CONSUMER:
+          suppressed = ServerSpan.exists(context) || ConsumerSpan.exists(context);
+          break;
+        default:
+          break;
+      }
     }
     if (suppressed) {
       supportability.recordSuppressedSpan(proposedKind, getInstrumentationName());
