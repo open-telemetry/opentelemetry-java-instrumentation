@@ -14,7 +14,6 @@ import java.sql.SQLFeatureNotSupportedException
 class OpenTelemetryDriverTest extends Specification {
 
   def cleanup() {
-    OpenTelemetryDriver.setInterceptorMode(false)
     if (!OpenTelemetryDriver.registered) {
       OpenTelemetryDriver.register()
     }
@@ -36,6 +35,7 @@ class OpenTelemetryDriverTest extends Specification {
   def "verify standard properties"() {
     expect:
     !OpenTelemetryDriver.INSTANCE.jdbcCompliant()
+    // replace with actual version of instrumentation library
     OpenTelemetryDriver.INSTANCE.majorVersion == 1
     OpenTelemetryDriver.INSTANCE.minorVersion == 4
   }
@@ -49,50 +49,20 @@ class OpenTelemetryDriverTest extends Specification {
     e.message == "Feature not supported"
   }
 
-  def "verify driver registered as a first driver"() {
-    given:
-    DriverManager.drivers.each { driver ->
-      if (driver instanceof OpenTelemetryDriver) {
-        OpenTelemetryDriver.deregister()
-      } else {
-        DriverManager.deregisterDriver(driver)
-      }
-    }
-    DriverManager.registerDriver(new TestDriver())
-    DriverManager.registerDriver(new AnotherTestDriver())
-    OpenTelemetryDriver.ensureRegisteredAsTheFirstDriver()
-
-    when:
-    def firstDriver = DriverManager.drivers.nextElement()
-
-    then:
-    OpenTelemetryDriver.registered
-    firstDriver != null
-    firstDriver instanceof OpenTelemetryDriver
-  }
-
   def "verify accepted urls"() {
     expect:
     def driver = OpenTelemetryDriver.INSTANCE
-    OpenTelemetryDriver.setInterceptorMode(interceptorMode)
     driver.acceptsURL(url) == expected
 
     where:
-    url                                            | interceptorMode | expected
-    null                                           | false           | false
-    ""                                             | false           | false
-    "jdbc:"                                        | false           | false
-    "jdbc::"                                       | false           | false
-    "bogus:string"                                 | false           | false
-    "jdbc:postgresql://127.0.0.1:5432/dbname"      | false           | false
-    "jdbc:otel:postgresql://127.0.0.1:5432/dbname" | false           | true
-    null                                           | true            | false
-    ""                                             | true            | false
-    "jdbc:"                                        | true            | false
-    "jdbc::"                                       | true            | true
-    "bogus:string"                                 | true            | false
-    "jdbc:postgresql://127.0.0.1:5432/dbname"      | true            | true
-    "jdbc:otel:postgresql://127.0.0.1:5432/dbname" | true            | true
+    url                                            | expected
+    null                                           | false
+    ""                                             | false
+    "jdbc:"                                        | false
+    "jdbc::"                                       | false
+    "bogus:string"                                 | false
+    "jdbc:postgresql://127.0.0.1:5432/dbname"      | false
+    "jdbc:otel:postgresql://127.0.0.1:5432/dbname" | true
   }
 
   def "verify deregister"() {
@@ -148,29 +118,10 @@ class OpenTelemetryDriverTest extends Specification {
     connection == null
   }
 
-  def "verify connection with disabled interceptor mode"() {
-    when:
-    OpenTelemetryDriver.interceptorMode = false
-    def connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:test:", null)
-
-    then:
-    connection == null
-
+  def "verify connection with accepted url"() {
     when:
     registerTestDriver()
-    OpenTelemetryDriver.interceptorMode = false
-    connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)
-
-    then:
-    connection != null
-    connection instanceof OpenTelemetryConnection
-  }
-
-  def "verify connection with enabled interceptor mode"() {
-    when:
-    registerTestDriver()
-    OpenTelemetryDriver.interceptorMode = true
-    def connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:test:", null)
+    def connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)
 
     then:
     connection != null

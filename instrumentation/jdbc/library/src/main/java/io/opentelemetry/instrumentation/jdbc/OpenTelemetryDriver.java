@@ -30,10 +30,7 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -48,10 +45,8 @@ public final class OpenTelemetryDriver implements Driver {
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
 
-  private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
+  private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
-
-  private static volatile boolean interceptorMode = false;
 
   static {
     try {
@@ -63,48 +58,6 @@ public final class OpenTelemetryDriver implements Driver {
     } catch (SQLException e) {
       throw new ExceptionInInitializerError(e);
     }
-  }
-
-  /**
-   * Ensure {@code TracingDriver} be the first driver of {@link DriverManager} to make sure
-   * "interceptor mode" works. WARNING: Driver like Oracle JDBC may fail since it's destroyed
-   * forever after deregistration.
-   */
-  public static synchronized void ensureRegisteredAsTheFirstDriver() {
-    try {
-      Enumeration<Driver> enumeration = DriverManager.getDrivers();
-      List<Driver> drivers = new ArrayList<>();
-      for (int i = 0; enumeration.hasMoreElements(); ++i) {
-        Driver driver = enumeration.nextElement();
-        if (i == 0 && driver == INSTANCE) {
-          // the first driver is OTEL driver, skip all this verification
-          return;
-        }
-        if (!(driver instanceof OpenTelemetryDriver)) {
-          drivers.add(driver);
-        }
-        DriverManager.deregisterDriver(driver);
-      }
-
-      // register OTEL driver first
-      register();
-
-      // register other drivers
-      for (Driver driver : drivers) {
-        DriverManager.registerDriver(driver);
-      }
-    } catch (SQLException e) {
-      throw new ExceptionInInitializerError(e);
-    }
-  }
-
-  /**
-   * Turns "interceptor mode" on or off.
-   *
-   * @param interceptorMode The {@code interceptorMode} value.
-   */
-  public static void setInterceptorMode(final boolean interceptorMode) {
-    OpenTelemetryDriver.interceptorMode = interceptorMode;
   }
 
   /**
@@ -165,9 +118,7 @@ public final class OpenTelemetryDriver implements Driver {
    * @return the parsed URL
    */
   private static String extractRealUrl(String url) {
-    return url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)
-        ? url.replace(INTERCEPTOR_MODE_URL_PREFIX, "jdbc:")
-        : url;
+    return url.startsWith(URL_PREFIX) ? url.replace(URL_PREFIX, "jdbc:") : url;
   }
 
   private static int[] parseInstrumentationVersion() {
@@ -214,10 +165,7 @@ public final class OpenTelemetryDriver implements Driver {
     if (url == null) {
       return false;
     }
-    if (url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)) {
-      return true;
-    }
-    return interceptorMode && url.startsWith("jdbc:") && url.length() > 5;
+    return url.startsWith(URL_PREFIX) && url.length() > URL_PREFIX.length();
   }
 
   @Override

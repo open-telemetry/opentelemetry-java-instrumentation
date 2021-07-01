@@ -30,20 +30,17 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jdbc:OPENTELEMETR
 
 ##### Usage
 
-There are three possible ways to activate the OpenTelemetry JDBC instrumentation. The first way is more preferable 
-for DI frameworks which uses connection pools, as it wraps a `DataSource` with a special OpenTelemetry wrapper. The 
-second one requires to change the connection URL and switch to use a special OpenTelemetry driver. And the third method 
-only requires minimal changes in your application without needing to change the connection URL, but it's necessary to 
-remove the explicit driver selection.
+There are three possible ways to activate the OpenTelemetry JDBC instrumentation. The first way is more preferable for
+DI frameworks which uses connection pools, as it wraps a `DataSource` with a special OpenTelemetry wrapper. The second
+one requires to change the connection URL and switch to use a special OpenTelemetry driver.
 
 ### Datasource way
 
-If your application uses a DataSource, simply wrap your current DataSource object with
-`OpenTelemetryDataSource`. `OpenTelemetryDataSource` has a constructor method that accepts the
-`DataSource` to wrap. This is by far the simplest method especially if you use a dependency
-injection (DI) frameworks such as [Spring Framework](https://spring.io/projects/spring-framework),
-[Micronaut](https://micronaut.io), [Quarkus](https://quarkus.io), or
-[Guice](https://github.com/google/guice).
+If your application uses a DataSource, simply wrap your current DataSource object with `OpenTelemetryDataSource`.
+`OpenTelemetryDataSource` has a constructor method that accepts the `DataSource` to wrap. This is by far the simplest
+method especially if you use a dependency injection (DI) frameworks such as
+[Spring Framework](https://spring.io/projects/spring-framework), [Micronaut](https://micronaut.io),
+[Quarkus](https://quarkus.io), or [Guice](https://github.com/google/guice).
 
 ```java
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -66,7 +63,7 @@ public class DataSourceConfig {
 }
 ```
 
-### Driver: non-interceptor mode.
+### Driver way
 
 1. Activate tracing for JDBC connections by setting `jdbc:otel:` prefix to the JDBC URL:
 
@@ -74,47 +71,8 @@ public class DataSourceConfig {
 jdbc:otel:h2:mem:test
 ```
 
-2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver` and
-   initialize the driver with:
+2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver` and initialize the driver with:
 
 ```java
 Class.forName("io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver");
 ```
-
-### Driver: interceptor mode.
-
-This mode can be useful for activating tracing for all JDBC connections without modifying the URL.
-
-In the "interceptor mode", the `OpenTelemetryDriver` will intercept calls to
-`DriverManager.getConnection(url,...)` for all URLs. The `OpenTelemetryDriver` will return instrumented
-connections that will delegate calls to the actual DB driver. Please note that the `OpenTelemetryDriver` must be
-registered before the underlying driver - it's recommended to turn on the "interceptor mode" as early as possible.
-
-For most applications:
-
-```java
-public static void main(String[] args) {
-  io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver.setInterceptorMode(true);
-
-  // ...
-}
-
-```
-
-For web applications based on Servlet API:
-
-```java
-public void contextInitialized(ServletContextEvent event) {
-  io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver.setInterceptorMode(true);
-
-  // ...
-}
-```
-
-Sometimes it's also required to register the OpenTelemetry driver as a first driver in the
-DriverManager list, otherwise another driver can be selected at the time of initialization.
-
-Calling `OpenTelemetryDriver.ensureRegisteredAsTheFirstDriver()` method along with
-`setInterceptorMode(true)` will fix that problem.
-
-Please note drivers like Oracle JDBC may fail since they're destroyed forever after deregistration.
