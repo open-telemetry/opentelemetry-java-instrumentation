@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.spi.config.PropertySource;
+import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.util.HashMap;
 import java.util.Map;
 
-@AutoService(PropertySource.class)
-public class AgentTestingExporterPropertySource implements PropertySource {
+@AutoService(ConfigPropertySource.class)
+public class AgentTestingExporterPropertySource implements ConfigPropertySource {
   @Override
   public Map<String, String> getProperties() {
     Map<String, String> properties = new HashMap<>();
