@@ -35,6 +35,8 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
 
   static final String EXPORTER_JAR_CONFIG = "otel.javaagent.experimental.exporter.jar";
 
+  private static final String ADD_THREAD_DETAILS = "otel.javaagent.add-thread-details";
+
   @Override
   public void configure(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
     if (!Config.get().getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true)) {
@@ -42,7 +44,9 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     }
 
     // Register additional thread details logging span processor
-    sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+    if (Config.get().getBooleanProperty(ADD_THREAD_DETAILS, true)) {
+      sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+    }
 
     maybeConfigureExporterJar(sdkTracerProviderBuilder);
     maybeEnableLoggingExporter(sdkTracerProviderBuilder);
