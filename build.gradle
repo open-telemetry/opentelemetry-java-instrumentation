@@ -2,19 +2,12 @@ import java.time.Duration
 import nebula.plugin.release.git.opinion.Strategies
 
 plugins {
-  id 'idea'
+  id("idea")
 
-  id "io.github.gradle-nexus.publish-plugin"
-  id "nebula.release"
-
-  id 'org.gradle.test-retry' apply false
-
-  id 'org.unbroken-dome.test-sets' apply false
-  id 'com.github.ben-manes.versions'
-
-  id "com.diffplug.spotless"
-  id "net.ltgt.errorprone" apply false
-  id "net.ltgt.nullaway" apply false
+  id("com.github.ben-manes.versions")
+  id("com.diffplug.spotless")
+  id("io.github.gradle-nexus.publish-plugin")
+  id("nebula.release")
 }
 
 release {
@@ -50,28 +43,6 @@ nexusPublishing {
 // tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
 description = 'OpenTelemetry instrumentations for Java'
-
-allprojects {
-  plugins.withId('net.ltgt.nullaway') {
-    dependencies {
-      errorprone "com.uber.nullaway:nullaway"
-    }
-
-    nullaway {
-      annotatedPackages.addAll("io.opentelemetry", "com.linecorp.armeria,com.google.common")
-    }
-
-    tasks.withType(JavaCompile).configureEach {
-      if (!name.toLowerCase().contains("test")) {
-        options.errorprone {
-          nullaway {
-            severity = net.ltgt.gradle.errorprone.CheckSeverity.ERROR
-          }
-        }
-      }
-    }
-  }
-}
 
 spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules
