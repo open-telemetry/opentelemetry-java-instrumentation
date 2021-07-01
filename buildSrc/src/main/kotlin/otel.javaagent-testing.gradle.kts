@@ -71,6 +71,10 @@ afterEvaluate {
     // prevent sporadic gradle deadlocks, see SafeLogger for more details
     jvmArgs("-Dotel.javaagent.testing.transform-safe-logging.enabled=true")
 
+    // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
+    // in smoke tests instead.
+    jvmArgs("-Dotel.javaagent.add-thread-details=false")
+
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
     classpath = classpath.filter {
