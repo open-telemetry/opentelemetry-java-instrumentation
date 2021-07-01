@@ -59,7 +59,8 @@ class OpenTelemetryAutoConfigurationTest {
   }
 
   @Test
-  @DisplayName("when Auto Configuration is set up OpenTelemetry should have default propagators set")
+  @DisplayName(
+      "when Auto Configuration is set up OpenTelemetry should have default propagators set")
   void setPropagators() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
