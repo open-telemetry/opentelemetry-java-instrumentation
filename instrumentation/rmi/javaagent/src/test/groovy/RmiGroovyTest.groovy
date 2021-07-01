@@ -18,7 +18,7 @@ import rmi.app.Greeter
 import rmi.app.Server
 import rmi.app.ServerLegacy
 
-class RmiTest extends AgentInstrumentationSpecification {
+class RmiGroovyTest extends AgentInstrumentationSpecification {
   def registryPort = PortUtils.findOpenPort()
   def serverRegistry = LocateRegistry.createRegistry(registryPort)
   def clientRegistry = LocateRegistry.getRegistry("localhost", registryPort)

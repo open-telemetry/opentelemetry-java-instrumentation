@@ -17,6 +17,8 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-testing")
 
+  api("org.assertj:assertj-core")
+
   api(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry:opentelemetry-proto") {
@@ -38,8 +40,6 @@ dependencies {
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
-
-  testImplementation("org.assertj:assertj-core")
 
   testImplementation(project(":javaagent-api"))
   testImplementation(project(":javaagent-tooling"))
