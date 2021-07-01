@@ -317,6 +317,4 @@ include ':instrumentation:wicket-8.0:javaagent'
 
 // benchmark
 include ':benchmark'
-include ':benchmark-integration'
-include ':benchmark-integration:jetty-perftest'
 include ':benchmark-e2e'
