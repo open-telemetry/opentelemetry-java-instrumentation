@@ -1,10 +1,15 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-//import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.CompositePropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-//import org.springframework.beans.factory.BeanFactory;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -12,9 +17,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.ArrayList;
-import java.util.List;
 
+/** Configures {@link ContextPropagators} bean for propagation. */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
@@ -34,11 +38,9 @@ public class PropagationAutoConfiguration {
   static class PropagatorsConfiguration {
 
     @Bean
-    TextMapPropagator compositeTextMapPropagator(BeanFactory beanFactory, PropagationProperties properties) {
+    TextMapPropagator compositeTextMapPropagator(
+        BeanFactory beanFactory, PropagationProperties properties) {
       return new CompositeTextMapPropagator(beanFactory, properties.getType());
     }
-
   }
-
-
 }
