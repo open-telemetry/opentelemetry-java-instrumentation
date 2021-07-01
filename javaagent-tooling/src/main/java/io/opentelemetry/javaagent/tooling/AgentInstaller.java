@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
+import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -14,12 +15,13 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
-import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
+import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
@@ -70,9 +72,9 @@ public class AgentInstaller {
     log = LoggerFactory.getLogger(AgentInstaller.class);
 
     addByteBuddyRawSetting();
-    BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
+
     // ensure java.lang.reflect.Proxy is loaded, as transformation code uses it internally
     // loading java.lang.reflect.Proxy after the bytebuddy transformer is set up causes
     // the internal-proxy instrumentation module to transform it, and then the bytebuddy
@@ -115,6 +117,9 @@ public class AgentInstaller {
     WeakRefAsyncOperationEndStrategies.initialize();
 
     Config config = Config.get();
+
+    setBootstrapPackages(config);
+
     runBeforeAgentListeners(agentListeners, config);
 
     instrumentation = inst;
@@ -167,6 +172,14 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     runAfterAgentListeners(agentListeners, config);
     return resettableClassFileTransformer;
+  }
+
+  private static void setBootstrapPackages(Config config) {
+    BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
+    for (BootstrapPackagesConfigurer configurer : load(BootstrapPackagesConfigurer.class)) {
+      configurer.configure(config, builder);
+    }
+    BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
   }
 
   private static void runBeforeAgentListeners(
@@ -237,21 +250,6 @@ public class AgentInstaller {
         System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, savedPropertyValue);
       }
     }
-  }
-
-  private static List<String> loadBootstrapPackagePrefixes() {
-    List<String> bootstrapPackages = new ArrayList<>(Constants.BOOTSTRAP_PACKAGE_PREFIXES);
-    Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
-        SafeServiceLoader.load(BootstrapPackagesProvider.class);
-    for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {
-      List<String> packagePrefixes = provider.getPackagePrefixes();
-      log.debug(
-          "Loaded bootstrap package prefixes from {}: {}",
-          provider.getClass().getName(),
-          packagePrefixes);
-      bootstrapPackages.addAll(packagePrefixes);
-    }
-    return bootstrapPackages;
   }
 
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {

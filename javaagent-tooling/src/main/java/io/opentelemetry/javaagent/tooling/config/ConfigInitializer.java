@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.spi.config.PropertySource;
-import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
+import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,7 +42,7 @@ public final class ConfigInitializer {
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
   private static Properties loadSpiConfiguration() {
     Properties propertiesFromSpi = new Properties();
-    for (PropertySource propertySource : SafeServiceLoader.load(PropertySource.class)) {
+    for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
     return propertiesFromSpi;
