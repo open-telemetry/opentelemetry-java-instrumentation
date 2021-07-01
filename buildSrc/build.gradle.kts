@@ -51,6 +51,7 @@ dependencies {
   // When updating, also update dependencyManagement/dependencyManagement.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.1.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
