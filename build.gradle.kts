@@ -11,25 +11,25 @@ plugins {
 }
 
 release {
-  defaultVersionStrategy = Strategies.SNAPSHOT
+  defaultVersionStrategy = Strategies.getSNAPSHOT()
 }
 
 nebulaRelease {
-  addReleaseBranchPattern(/v\d+\.\d+\.x/)
+  addReleaseBranchPattern("""v\d+\.\d+\.x""")
 }
 
 nexusPublishing {
-  packageGroup = "io.opentelemetry"
+  packageGroup.set("io.opentelemetry")
 
   repositories {
     sonatype {
-      username = System.getenv('SONATYPE_USER')
-      password = System.getenv('SONATYPE_KEY')
+      username.set(System.getenv("SONATYPE_USER"))
+      password.set(System.getenv("SONATYPE_KEY"))
     }
   }
 
-  connectTimeout = Duration.ofMinutes(5)
-  clientTimeout = Duration.ofMinutes(5)
+  connectTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(5))
 
   transitionCheckOptions {
     // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets
@@ -42,13 +42,13 @@ nexusPublishing {
 // Enable after verifying Maven Central publishing once through manual closing
 // tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
-description = 'OpenTelemetry instrumentations for Java'
+description = "OpenTelemetry instrumentations for Java"
 
 spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules
   // and would be missed otherwise
-  format 'misc', {
-    target '.gitignore', '*.md', 'docs/**/*.md'
+  format("misc") {
+    target(".gitignore", "*.md", "docs/**/*.md")
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()
