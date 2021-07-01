@@ -1,9 +1,15 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** Configuration for {@link CompositeTextMapPropagator}. */
 @ConfigurationProperties("otel.propagators")
 public final class PropagationProperties {
 
@@ -13,9 +19,7 @@ public final class PropagationProperties {
     return type;
   }
 
-  public void setType(List<PropagationType> type){
+  public void setType(List<PropagationType> type) {
     this.type = type;
   }
-
-
 }
