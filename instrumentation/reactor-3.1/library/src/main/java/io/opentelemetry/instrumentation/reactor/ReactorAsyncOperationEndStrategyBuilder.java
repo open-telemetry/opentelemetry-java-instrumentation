@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
-public final class ReactorAsyncSpanEndStrategyBuilder {
+public final class ReactorAsyncOperationEndStrategyBuilder {
   private boolean captureExperimentalSpanAttributes;
 
-  ReactorAsyncSpanEndStrategyBuilder() {}
+  ReactorAsyncOperationEndStrategyBuilder() {}
 
-  public ReactorAsyncSpanEndStrategyBuilder setCaptureExperimentalSpanAttributes(
+  public ReactorAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public ReactorAsyncSpanEndStrategy build() {
-    return new ReactorAsyncSpanEndStrategy(captureExperimentalSpanAttributes);
+  public ReactorAsyncOperationEndStrategy build() {
+    return new ReactorAsyncOperationEndStrategy(captureExperimentalSpanAttributes);
   }
 }
