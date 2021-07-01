@@ -8,12 +8,12 @@ plugins {
 }
 
 dependencies {
-  implementation project(':instrumentation-api')
+  implementation(project(":instrumentation-api"))
 
-  compileOnly "com.google.auto.value:auto-value-annotations"
-  annotationProcessor "com.google.auto.value:auto-value"
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation "org.slf4j:slf4j-api"
+  implementation("org.slf4j:slf4j-api")
 
-  testImplementation project(':instrumentation:jdbc:testing')
+  testImplementation(project(":instrumentation:jdbc:testing"))
 }
