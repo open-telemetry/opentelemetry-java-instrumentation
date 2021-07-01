@@ -43,7 +43,6 @@ public class AgentClassLoader extends URLClassLoader {
       System.getProperty("otel.javaagent.experimental.initializer.jar", "");
 
   private static final String META_INF = "META-INF/";
-  private static final String META_INF_MANIFEST_MF = META_INF + "MANIFEST.MF";
   private static final String META_INF_VERSIONS = META_INF + "versions/";
 
   // multi release jars were added in java 9
