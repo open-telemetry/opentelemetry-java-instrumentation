@@ -37,7 +37,7 @@ public class RmiClientTracer extends RpcClientTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rmi";
+    return "io.opentelemetry.rmi";
   }
 
   @Override

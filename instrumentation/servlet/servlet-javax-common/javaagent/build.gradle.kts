@@ -22,10 +22,6 @@ dependencies {
 
   compileOnly("javax.servlet:servlet-api:2.3")
 
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
-
   // We don't check testLatestDeps for this module since we have coverage in others like servlet-3.0
   testImplementation("org.eclipse.jetty:jetty-server:7.0.0.v20091005")
   testImplementation("org.eclipse.jetty:jetty-servlet:7.0.0.v20091005")

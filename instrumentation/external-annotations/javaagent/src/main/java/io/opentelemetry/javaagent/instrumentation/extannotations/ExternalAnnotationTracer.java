@@ -19,7 +19,7 @@ public class ExternalAnnotationTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.external-annotations";
+    return "io.opentelemetry.external-annotations";
   }
 
   public Context startSpan(Method method) {

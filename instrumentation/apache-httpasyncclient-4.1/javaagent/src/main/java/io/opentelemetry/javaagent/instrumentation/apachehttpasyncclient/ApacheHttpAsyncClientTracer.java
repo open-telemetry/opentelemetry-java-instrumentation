@@ -101,7 +101,7 @@ public class ApacheHttpAsyncClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.apache-httpasyncclient-4.1";
+    return "io.opentelemetry.apache-httpasyncclient-4.1";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */

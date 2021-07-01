@@ -42,10 +42,6 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
 
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
-
   latestDepTestLibrary("org.grails:grails-plugin-url-mappings:4.0.+")
   latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.1.17.RELEASE")
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.1.17.RELEASE")

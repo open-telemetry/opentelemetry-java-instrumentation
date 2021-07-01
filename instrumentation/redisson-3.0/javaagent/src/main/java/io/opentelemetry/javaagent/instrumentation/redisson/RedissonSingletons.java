@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 
 public final class RedissonSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.redisson-3.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-3.0";
 
   private static final Instrumenter<RedissonRequest, Void> INSTRUMENTER;
 

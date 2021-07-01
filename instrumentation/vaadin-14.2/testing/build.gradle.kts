@@ -8,8 +8,6 @@ dependencies {
   compileOnly("com.vaadin:vaadin-spring-boot-starter:14.2.0")
 
   api("org.testcontainers:selenium:${versions["org.testcontainers"]}")
-  implementation(project(":testing-common")) {
-    exclude(module = "jetty-server")
-  }
+  implementation(project(":testing-common"))
   implementation("org.seleniumhq.selenium:selenium-java:3.141.59")
 }

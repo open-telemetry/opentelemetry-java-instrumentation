@@ -47,6 +47,6 @@ public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method, Vo
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.couchbase-2.0";
+    return "io.opentelemetry.couchbase-2.0";
   }
 }

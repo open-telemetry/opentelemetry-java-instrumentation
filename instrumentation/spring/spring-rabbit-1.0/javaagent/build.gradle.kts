@@ -7,6 +7,8 @@ muzzle {
     group.set("org.springframework.amqp")
     module.set("spring-rabbit")
     versions.set("(,)")
+    // Problematic release depending on snapshots
+    skip("2.1.1.RELEASE")
   }
 }
 

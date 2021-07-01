@@ -57,7 +57,6 @@ dependencies {
   add("vaadin142TestImplementation", "com.vaadin:vaadin-spring-boot-starter:14.2.0")
 
   testImplementation(project(":instrumentation:vaadin-14.2:testing"))
-  testImplementation(project(":testing-common"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))

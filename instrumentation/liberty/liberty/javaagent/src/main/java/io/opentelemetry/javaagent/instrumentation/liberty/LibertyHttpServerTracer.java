@@ -22,6 +22,6 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.liberty";
+    return "io.opentelemetry.liberty";
   }
 }

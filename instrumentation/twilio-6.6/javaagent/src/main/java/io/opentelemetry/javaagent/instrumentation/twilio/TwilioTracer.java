@@ -128,6 +128,6 @@ public class TwilioTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.twilio-6.6";
+    return "io.opentelemetry.twilio-6.6";
   }
 }

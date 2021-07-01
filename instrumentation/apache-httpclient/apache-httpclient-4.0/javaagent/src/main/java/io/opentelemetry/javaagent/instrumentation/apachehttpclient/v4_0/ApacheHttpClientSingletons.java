@@ -17,8 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientSingletons {
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.apache-httpclient-4.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.0";
 
   private static final Instrumenter<HttpUriRequest, HttpResponse> INSTRUMENTER;
 

@@ -28,7 +28,7 @@ public class VertxClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.vertx-core-3.0";
+    return "io.opentelemetry.vertx-web-3.0";
   }
 
   @Override

@@ -41,6 +41,6 @@ public class GrailsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.grails-3.0";
+    return "io.opentelemetry.grails-3.0";
   }
 }

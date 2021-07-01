@@ -39,7 +39,7 @@ class CamelTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.apache-camel-2.20";
+    return "io.opentelemetry.apache-camel-2.20";
   }
 
   public Scope startClientScope(Span span) {

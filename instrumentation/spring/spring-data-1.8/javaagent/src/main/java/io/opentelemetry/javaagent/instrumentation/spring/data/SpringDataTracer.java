@@ -21,7 +21,7 @@ public final class SpringDataTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-data-1.8";
+    return "io.opentelemetry.spring-data-1.8";
   }
 
   public Context startSpan(Method method) {

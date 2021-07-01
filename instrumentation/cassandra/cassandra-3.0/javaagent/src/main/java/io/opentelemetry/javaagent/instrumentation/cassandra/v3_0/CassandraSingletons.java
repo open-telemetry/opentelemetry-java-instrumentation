@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 
 public final class CassandraSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.cassandra-3.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
 
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
   // instrumentation (see comment over there for why), so also using here for consistency

@@ -46,7 +46,7 @@ final class MongoClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.mongo-common";
+    return "io.opentelemetry.mongo-3.1";
   }
 
   @Override

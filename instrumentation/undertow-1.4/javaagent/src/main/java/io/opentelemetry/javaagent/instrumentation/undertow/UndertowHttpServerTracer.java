@@ -31,7 +31,7 @@ public class UndertowHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.undertow";
+    return "io.opentelemetry.undertow-1.4";
   }
 
   public Context startServerSpan(HttpServerExchange exchange) {

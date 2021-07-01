@@ -24,9 +24,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation(project(":testing-common")) {
-    exclude("org.eclipse.jetty", "jetty-server")
-  }
   testLibrary("org.eclipse.jetty:jetty-server:7.0.0.v20091005")
   testLibrary("org.eclipse.jetty:jetty-servlet:7.0.0.v20091005")
 
