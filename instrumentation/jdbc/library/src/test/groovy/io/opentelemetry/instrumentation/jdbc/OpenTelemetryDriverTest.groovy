@@ -36,7 +36,7 @@ class OpenTelemetryDriverTest extends Specification {
     expect:
     !OpenTelemetryDriver.INSTANCE.jdbcCompliant()
 
-    String[] parts = InstrumentationVersion.class.getPackage().getImplementationVersion().split("\\.");
+    String[] parts = InstrumentationVersion.getPackage().getImplementationVersion().split("\\.")
 
     OpenTelemetryDriver.INSTANCE.majorVersion == Integer.parseInt(parts[0])
     OpenTelemetryDriver.INSTANCE.minorVersion == Integer.parseInt(parts[1])
