@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // this project will run in isolation under the agent's classloader
 plugins {
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
   id("otel.java-conventions")
 }
 
