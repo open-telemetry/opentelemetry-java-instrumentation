@@ -20,9 +20,9 @@ import org.springframework.context.annotation.Configuration;
 
 /** Configures {@link ContextPropagators} bean for propagation. */
 @Configuration
+@EnableConfigurationProperties(PropagationProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
-@EnableConfigurationProperties(PropagationProperties.class)
 public class PropagationAutoConfiguration {
 
   @Bean

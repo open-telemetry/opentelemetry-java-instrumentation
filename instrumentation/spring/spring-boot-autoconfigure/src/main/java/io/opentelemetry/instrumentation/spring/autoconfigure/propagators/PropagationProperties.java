@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for {@link CompositeTextMapPropagator}. */
-@ConfigurationProperties("otel.propagators")
+@ConfigurationProperties(prefix = "otel.propagation")
 public final class PropagationProperties {
 
-  private List<PropagationType> type = Collections.singletonList(PropagationType.W3C);
+  private List<PropagationType> type = Arrays.asList(PropagationType.W3C, PropagationType.BAGGAGE);
 
   public List<PropagationType> getType() {
     return type;

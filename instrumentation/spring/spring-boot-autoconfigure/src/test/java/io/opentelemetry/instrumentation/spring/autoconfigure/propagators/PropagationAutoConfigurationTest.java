@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,7 @@ class PropagationAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(
-              AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, PropagationAutoConfiguration.class));
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class));
 
   @AfterEach
   void tearDown() {
@@ -59,5 +58,34 @@ class PropagationAutoConfigurationTest {
         context ->
             assertThat(context.getBean("contextPropagators", ContextPropagators.class))
                 .isNotNull());
+  }
+
+  @Test
+  @DisplayName("when no propagators are defined should contain default propagators")
+  void shouldContainDefaults() {
+
+    this.contextRunner.run(
+        context ->
+            assertThat(
+                    context
+                        .getBean("compositeTextMapPropagator", CompositeTextMapPropagator.class)
+                        .fields())
+                .contains("traceparent", "baggage"));
+  }
+
+  @Test
+  @DisplayName("when propagation is set to b3 should contain only b3 propagator")
+  void shouldContainB3() {
+    this.contextRunner
+        .withPropertyValues("otel.propagation.type=B3")
+        .run(
+            context -> {
+              CompositeTextMapPropagator compositePropagator =
+                  context.getBean("compositeTextMapPropagator", CompositeTextMapPropagator.class);
+
+              assertThat(compositePropagator.fields()).contains("b3");
+              assertThat(compositePropagator.fields())
+                  .doesNotContainAnyElementsOf(Arrays.asList("baggage", "traceparent"));
+            });
   }
 }
