@@ -18,8 +18,10 @@ sourceSets {
 
 group = "io.opentelemetry.instrumentation"
 
+evaluationDependsOn(":instrumentation-api-caching")
+
 dependencies {
-  api(project(":instrumentation-api-caching"))
+  compileOnly(project(":instrumentation-api-caching"))
 
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
@@ -31,10 +33,20 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":testing-common"))
+  testCompileOnly(project(":instrumentation-api-caching"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.awaitility:awaitility")
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+}
+
+tasks {
+  jar {
+    inputs.files(project(":instrumentation-api-caching").file("src"))
+    val shadowJar = project(":instrumentation-api-caching").tasks.named<Jar>("shadowJar")
+    from(zipTree(shadowJar.get().archiveFile))
+    dependsOn(shadowJar)
+  }
 }
