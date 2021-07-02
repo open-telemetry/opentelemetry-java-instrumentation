@@ -6,6 +6,13 @@ plugins {
 description = "OpenTelemetry Javaagent testing commons"
 group = "io.opentelemetry.javaagent"
 
+sourceSets {
+  main {
+    val traceShadedDeps = project(":testing:armeria-shaded-for-testing")
+    output.dir(traceShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+  }
+}
+
 dependencies {
   api("org.codehaus.groovy:groovy-all")
   api("org.spockframework:spock-core")
