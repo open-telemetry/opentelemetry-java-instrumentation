@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.net.URL;
@@ -16,7 +16,7 @@ import org.checkerframework.checker.lock.qual.GuardedBy;
  * instrumentation can invalidate the ClassLoaderMatcher for a particular ClassLoader, e.g. when
  * {@link java.net.URLClassLoader#addURL(URL)} is called.
  */
-public class ClassLoaderMatcherCacheHolder {
+public final class ClassLoaderMatcherCacheHolder {
 
   @GuardedBy("allCaches")
   private static final List<Cache<ClassLoader, Boolean>> allCaches = new ArrayList<>();
