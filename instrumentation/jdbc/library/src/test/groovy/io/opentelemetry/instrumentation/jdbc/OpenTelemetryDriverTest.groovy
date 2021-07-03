@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
+import io.opentelemetry.instrumentation.api.InstrumentationVersion
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
-import spock.lang.Specification
-
 import java.sql.DriverManager
 import java.sql.SQLFeatureNotSupportedException
+import spock.lang.Specification
 
 class OpenTelemetryDriverTest extends Specification {
 
@@ -35,9 +35,11 @@ class OpenTelemetryDriverTest extends Specification {
   def "verify standard properties"() {
     expect:
     !OpenTelemetryDriver.INSTANCE.jdbcCompliant()
-    // replace with actual version of instrumentation library
-    OpenTelemetryDriver.INSTANCE.majorVersion == 1
-    OpenTelemetryDriver.INSTANCE.minorVersion == 4
+
+    String[] parts = InstrumentationVersion.getPackage().getImplementationVersion().split("\\.")
+
+    OpenTelemetryDriver.INSTANCE.majorVersion == Integer.parseInt(parts[0])
+    OpenTelemetryDriver.INSTANCE.minorVersion == Integer.parseInt(parts[1])
   }
 
   def "verify parent logger thrown an exception"() {
