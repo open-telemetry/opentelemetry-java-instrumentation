@@ -37,6 +37,11 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
 
   @Override
   public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
+    if (error != null) {
+      // e.g. apache-httpasyncclient passes an exception and a response object with 302 status code
+      // on circular redirect
+      return StatusCode.ERROR;
+    }
     if (response != null) {
       Integer statusCode = attributesExtractor.statusCode(request, response);
       if (statusCode != null) {
