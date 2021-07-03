@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
-import io.opentelemetry.javaagent.bootstrap.ClassLoaderMatcherCacheHolder;
+import io.opentelemetry.javaagent.instrumentation.api.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.checkerframework.checker.nullness.qual.Nullable;
