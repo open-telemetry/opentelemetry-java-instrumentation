@@ -30,6 +30,7 @@ public final class ApacheHttpClientRequest {
     try {
       calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
     } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
       calculatedUri = null;
     }
     uri = calculatedUri;
@@ -54,15 +55,14 @@ public final class ApacheHttpClientRequest {
     return delegate.getRequestLine().getMethod();
   }
 
-  public ProtocolVersion getProtocolVersion() {
-    return delegate.getProtocolVersion();
-  }
-
   public String getUrl() {
-    return uri.toString();
+    return uri != null ? uri.toString() : null;
   }
 
   public String getTarget() {
+    if (uri == null) {
+      return null;
+    }
     String pathString = uri.getPath();
     String queryString = uri.getQuery();
     if (pathString != null && queryString != null) {
@@ -75,7 +75,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getScheme() {
-    return uri.getScheme();
+    return uri != null ? uri.getScheme() : null;
   }
 
   public String getFlavor() {
@@ -100,10 +100,13 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getPeerName() {
-    return uri.getHost();
+    return uri != null ? uri.getHost() : null;
   }
 
   public Integer getPeerPort() {
+    if (uri == null) {
+      return null;
+    }
     int port = uri.getPort();
     if (port != -1) {
       return port;
