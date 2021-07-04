@@ -129,7 +129,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   public FieldBackedProvider(Class<?> instrumenterClass, Map<String, String> contextStore) {
     this.instrumenterClass = instrumenterClass;
     this.contextStore = contextStore;
-    //This class is used only when running with javaagent, thus this calls is safe
+    // This class is used only when running with javaagent, thus this calls is safe
     this.instrumentation = InstrumentationHolder.getInstrumentation();
 
     byteBuddy = new ByteBuddy();

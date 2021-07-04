@@ -39,11 +39,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Injects instrumentation helper classes into the user's classloader.
  *
- * Care must be taken when using this class. It is used both by the javaagent during its runtime
+ * <p>Care must be taken when using this class. It is used both by the javaagent during its runtime
  * and by gradle code generation plugins during build time. And some code paths in this class
  * require the usage of {@link Instrumentation}, which is available for the former, but not for the
- * latter. Unfortunately, these two "modes of operations" and not easily discernable just by reading
+ * latter. Unfortunately, these two "modes of operations" and not easily discernible just by reading
  * source code. Be careful.
+ *
+ * <p>In a nutshell, an instance of {@link Instrumentation} is needed for class injection into
+ * bootstrap classloader. This should NOT happen during build-time codegeneration phase.
  */
 public class HelperInjector implements Transformer {
 
@@ -99,14 +102,13 @@ public class HelperInjector implements Transformer {
     this.instrumentation = instrumentation;
   }
 
-  /**
-   * Must be used ONLY by gradle codegeneration plugins.
-   */
+  /** Must be used ONLY by gradle codegeneration plugins. */
   public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
     this(requestingName, helperMap, null);
   }
 
-  private HelperInjector(String requestingName, Map<String, byte[]> helperMap, Instrumentation instrumentation) {
+  private HelperInjector(
+      String requestingName, Map<String, byte[]> helperMap, Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = helperMap.keySet();
@@ -118,7 +120,8 @@ public class HelperInjector implements Transformer {
   }
 
   public static HelperInjector forDynamicTypes(
-      String requestingName, Collection<DynamicType.Unloaded<?>> helpers,
+      String requestingName,
+      Collection<DynamicType.Unloaded<?>> helpers,
       @NonNull Instrumentation instrumentation) {
     Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
@@ -170,8 +173,8 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private ClassLoader injectHelperClasses(TypeDescription typeDescription, ClassLoader classLoader,
-      JavaModule module) {
+  private ClassLoader injectHelperClasses(
+      TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
     if (classLoader == BOOTSTRAP_CLASSLOADER) {
       classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
     }
@@ -222,8 +225,8 @@ public class HelperInjector implements Transformer {
     return classLoader;
   }
 
-  private Map<String, Class<?>> injectBootstrapClassLoader(
-      Map<String, byte[]> classnameToBytes) throws IOException {
+  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
+      throws IOException {
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.
@@ -232,9 +235,7 @@ public class HelperInjector implements Transformer {
     File tempDir = createTempDir();
     try {
       return ClassInjector.UsingInstrumentation.of(
-          tempDir,
-          ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
-          instrumentation)
+              tempDir, ClassInjector.UsingInstrumentation.Target.BOOTSTRAP, instrumentation)
           .injectRaw(classnameToBytes);
     } finally {
       // Delete fails silently
@@ -259,7 +260,7 @@ public class HelperInjector implements Transformer {
           if (!target.canRead(helperModule)) {
             log.debug("Adding module read from {} to {}", target, helperModule);
             ClassInjector.UsingInstrumentation.redefineModule(
-                //TODO can we guarantee that this is always present?
+                // TODO can we guarantee that this is always present?
                 instrumentation,
                 target,
                 Collections.singleton(helperModule),

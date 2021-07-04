@@ -1,10 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.lang.instrument.Instrumentation;
 
-/**
- * This class serves as a "everywhere accessible" source of {@link Instrumentation} instance.
- */
+/** This class serves as a "everywhere accessible" source of {@link Instrumentation} instance. */
 public class InstrumentationHolder {
   private static volatile Instrumentation instrumentation;
 
