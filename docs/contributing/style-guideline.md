@@ -96,3 +96,22 @@ Method parameters should never be declared `final`.
 
 Local variables should only be declared `final` if they are not initialized inline
 (declaring these vars `final` can help prevent accidental double-initialization).
+
+### `@Nullable` annotation usage
+
+[Note: this section is aspirational, as opposed to a reflection of the current codebase]
+
+All parameters and fields which can be `null` should be annotated with `@Nullable`
+(specifically `org.checkerframework.checker.nullness.qual.Nullable`, which is included by the
+`otel.java-conventions` gradle plugin as a `compileOnly` dependency).
+
+The default is assumed to be non-null, so there is no need to use `@NonNull`.
+
+The `otel.nullaway-conventions` gradle plugin should be used in all modules to perform basic
+nullable usage validation:
+
+```kotlin
+plugins {
+  id("otel.nullaway-conventions")
+}
+```
