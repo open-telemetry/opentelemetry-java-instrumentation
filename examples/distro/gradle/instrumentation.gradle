@@ -16,7 +16,6 @@ dependencies {
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
   compileOnly deps.bytebuddy
-  compileOnly deps.bytebuddyagent
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
 
