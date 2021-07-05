@@ -8,21 +8,25 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 /** Types of supported propagators. */
 public enum PropagationType {
 
-  /** B3Propagator */
-  B3,
+  /** B3 Single */
+  b3,
 
-  /** W3CTraceContextPropagator */
-  W3C,
+  /** B3 Multi */
+  b3multi,
 
-  /** W3CBaggagePropagator */
-  BAGGAGE,
+  /** W3C Trace Context */
+  tracecontext,
 
-  /** JaegerPropagator */
-  JAEGER,
+  /** W3C Baggage */
+  baggage,
 
-  /** OtTracePropagator */
-  OT_TRACER,
+  /** Jaeger */
+  jaeger,
 
-  /** NoOp propagator */
-  NOOP
+  /** AWS X-Ray */
+   xray,
+
+  /** OT Trace */
+  ottrace,
+
 }

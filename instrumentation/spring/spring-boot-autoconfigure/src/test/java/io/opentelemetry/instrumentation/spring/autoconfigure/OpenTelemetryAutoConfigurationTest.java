@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,15 +57,4 @@ class OpenTelemetryAutoConfigurationTest {
         .run(context -> assertThat(context.containsBean("openTelemetry")).isTrue());
   }
 
-  @Test
-  @DisplayName(
-      "when Auto Configuration is set up OpenTelemetry should have default propagators set")
-  void setPropagators() {
-    this.contextRunner
-        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).getPropagators())
-                    .isNotEqualTo(ContextPropagators.noop()));
-  }
 }
