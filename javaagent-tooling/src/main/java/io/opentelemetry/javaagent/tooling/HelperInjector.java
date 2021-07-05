@@ -31,7 +31,6 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +92,7 @@ public class HelperInjector implements Transformer {
       List<String> helperClassNames,
       List<String> helperResourceNames,
       ClassLoader helpersSource,
-      @NonNull Instrumentation instrumentation) {
+      Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
@@ -122,7 +121,7 @@ public class HelperInjector implements Transformer {
   public static HelperInjector forDynamicTypes(
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
-      @NonNull Instrumentation instrumentation) {
+      Instrumentation instrumentation) {
     Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
