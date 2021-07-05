@@ -25,7 +25,6 @@ public final class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
 
-  @SuppressWarnings("SystemOut")
   public ApacheHttpClientRequest(HttpRequest httpRequest) {
     URI calculatedUri;
     if (httpRequest instanceof HttpUriRequest) {

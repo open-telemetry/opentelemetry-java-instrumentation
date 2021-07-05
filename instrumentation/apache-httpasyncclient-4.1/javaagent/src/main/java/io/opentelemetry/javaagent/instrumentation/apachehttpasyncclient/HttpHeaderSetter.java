@@ -9,8 +9,6 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 
 public class HttpHeaderSetter implements TextMapSetter<ApacheHttpClientRequest> {
 
-  public static final HttpHeaderSetter SETTER = new HttpHeaderSetter();
-
   @Override
   public void set(ApacheHttpClientRequest carrier, String key, String value) {
     carrier.setHeader(key, value);
