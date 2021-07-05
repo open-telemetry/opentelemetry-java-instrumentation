@@ -9,12 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.A
 
 import io.opentelemetry.context.Context;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientHelper {
 
   public static void doMethodExit(
-      Context context, HttpUriRequest request, Object result, Throwable throwable) {
+      Context context, ApacheHttpClientRequest request, Object result, Throwable throwable) {
     if (throwable != null) {
       instrumenter().end(context, request, null, throwable);
     } else if (result instanceof HttpResponse) {
