@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.undertow;
+package io.opentelemetry.javaagent.bootstrap.undertow;
 
 import java.util.IdentityHashMap;
 import java.util.concurrent.ConcurrentHashMap;
