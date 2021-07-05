@@ -29,7 +29,7 @@ public class PropagationAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   ContextPropagators contextPropagators(ObjectProvider<List<TextMapPropagator>> propagators) {
-    List<TextMapPropagator> mapPropagators = propagators.getIfAvailable(ArrayList::new);
+    List<TextMapPropagator> mapPropagators = propagators.getIfAvailable(Collections::emptyList);
     if (mapPropagators.isEmpty()) {
       return ContextPropagators.noop();
     }
