@@ -9,11 +9,11 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for {@link CompositeTextMapPropagator}. */
+/** Configuration for propagators. */
 @ConfigurationProperties(prefix = "otel.propagation")
 public final class PropagationProperties {
 
-  private List<PropagationType> type = Arrays.asList(PropagationType.W3C, PropagationType.BAGGAGE);
+  private List<PropagationType> type = Arrays.asList(PropagationType.tracecontext, PropagationType.baggage);
 
   public List<PropagationType> getType() {
     return type;
