@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
@@ -15,7 +14,6 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,9 +55,6 @@ public final class ReferenceMatcher {
    * @return true if all references match the classpath of loader
    */
   public boolean matches(ClassLoader userClassLoader) {
-    if (userClassLoader == BOOTSTRAP_LOADER) {
-      userClassLoader = Utils.getBootstrapProxy();
-    }
     return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
   }
 
@@ -80,9 +75,6 @@ public final class ReferenceMatcher {
    * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
    */
   public List<Mismatch> getMismatchedReferenceSources(ClassLoader loader) {
-    if (loader == BOOTSTRAP_LOADER) {
-      loader = Utils.getBootstrapProxy();
-    }
     TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();

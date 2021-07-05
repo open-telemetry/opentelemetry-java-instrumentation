@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe;
+import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -136,6 +137,9 @@ public final class InstrumentationModuleInstaller {
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain) {
       ReferenceMatcher muzzle = getReferenceMatcher();
+      if (classLoader == BOOTSTRAP_LOADER) {
+        classLoader = Utils.getBootstrapProxy();
+      }
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
