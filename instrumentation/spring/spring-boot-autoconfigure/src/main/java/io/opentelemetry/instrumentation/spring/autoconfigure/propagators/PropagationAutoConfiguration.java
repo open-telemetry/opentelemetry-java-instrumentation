@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -40,8 +40,10 @@ public class PropagationAutoConfiguration {
   static class PropagatorsConfiguration {
 
     @Bean
-    TextMapPropagator compositeTextMapPropagator(BeanFactory beanFactory, PropagationProperties properties) {
-      return CompositeTextMapPropagatorFactory.getCompositeTextMapPropagator(beanFactory, properties.getType());
+    TextMapPropagator compositeTextMapPropagator(
+        BeanFactory beanFactory, PropagationProperties properties) {
+      return CompositeTextMapPropagatorFactory.getCompositeTextMapPropagator(
+          beanFactory, properties.getType());
     }
   }
 }

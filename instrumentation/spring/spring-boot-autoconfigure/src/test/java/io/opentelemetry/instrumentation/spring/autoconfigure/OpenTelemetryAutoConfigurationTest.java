@@ -56,5 +56,4 @@ class OpenTelemetryAutoConfigurationTest {
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(context -> assertThat(context.containsBean("openTelemetry")).isTrue());
   }
-
 }

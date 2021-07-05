@@ -13,7 +13,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "otel.propagation")
 public final class PropagationProperties {
 
-  private List<PropagationType> type = Arrays.asList(PropagationType.tracecontext, PropagationType.baggage);
+  private List<PropagationType> type =
+      Arrays.asList(PropagationType.tracecontext, PropagationType.baggage);
 
   public List<PropagationType> getType() {
     return type;
