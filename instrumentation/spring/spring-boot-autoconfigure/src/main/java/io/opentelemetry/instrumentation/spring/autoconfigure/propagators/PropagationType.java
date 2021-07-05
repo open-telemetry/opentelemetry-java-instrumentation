@@ -24,9 +24,8 @@ public enum PropagationType {
   jaeger,
 
   /** AWS X-Ray */
-   xray,
+  xray,
 
   /** OT Trace */
   ottrace,
-
 }

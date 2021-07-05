@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,9 @@ class PropagationAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class,
-              PropagationAutoConfiguration.class));
+          .withConfiguration(
+              AutoConfigurations.of(
+                  OpenTelemetryAutoConfiguration.class, PropagationAutoConfiguration.class));
 
   @AfterEach
   void tearDown() {
@@ -35,10 +35,7 @@ class PropagationAutoConfigurationTest {
 
     this.contextRunner
         .withPropertyValues("otel.propagation.enabled=true")
-        .run(
-            context ->
-                assertThat(context.containsBean("propagationAutoConfiguration"))
-                    .isTrue());
+        .run(context -> assertThat(context.containsBean("propagationAutoConfiguration")).isTrue());
   }
 
   @Test
@@ -48,10 +45,7 @@ class PropagationAutoConfigurationTest {
 
     this.contextRunner
         .withPropertyValues("otel.propagation.enabled=false")
-        .run(
-            context ->
-                assertThat(context.containsBean("propagationAutoConfiguration"))
-                    .isFalse());
+        .run(context -> assertThat(context.containsBean("propagationAutoConfiguration")).isFalse());
   }
 
   @Test
@@ -59,9 +53,7 @@ class PropagationAutoConfigurationTest {
       "when propagation enabled property is MISSING should initialize PropagationAutoConfiguration bean")
   void noProperty() {
     this.contextRunner.run(
-        context ->
-            assertThat(context.containsBean("propagationAutoConfiguration"))
-                .isTrue());
+        context -> assertThat(context.containsBean("propagationAutoConfiguration")).isTrue());
   }
 
   @Test
@@ -71,9 +63,7 @@ class PropagationAutoConfigurationTest {
     this.contextRunner.run(
         context ->
             assertThat(
-                    context
-                        .getBean("compositeTextMapPropagator", TextMapPropagator.class)
-                        .fields())
+                    context.getBean("compositeTextMapPropagator", TextMapPropagator.class).fields())
                 .contains("traceparent", "baggage"));
   }
 
@@ -87,9 +77,9 @@ class PropagationAutoConfigurationTest {
               TextMapPropagator compositePropagator =
                   context.getBean("compositeTextMapPropagator", TextMapPropagator.class);
 
-              assertThat(compositePropagator.fields()).contains("b3");
               assertThat(compositePropagator.fields())
-                  .doesNotContainAnyElementsOf(Arrays.asList("baggage", "traceparent"));
+                  .contains("b3")
+                  .doesNotContain("baggage", "traceparent");
             });
   }
 }
