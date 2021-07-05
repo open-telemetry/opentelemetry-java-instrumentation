@@ -1,5 +1,5 @@
 plugins {
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 
   id("otel.java-conventions")
 }

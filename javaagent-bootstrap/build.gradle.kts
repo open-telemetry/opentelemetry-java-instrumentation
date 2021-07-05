@@ -17,12 +17,6 @@ tasks {
   }
 }
 
-val instrumentationMuzzle by configurations.creating {
-  isCanBeConsumed = true
-  isCanBeResolved = false
-  extendsFrom(configurations.implementation.get())
-}
-
 dependencies {
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-api-metrics")
