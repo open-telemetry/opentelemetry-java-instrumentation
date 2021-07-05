@@ -61,7 +61,7 @@ if you are looking for documentation on using those.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar). <!-- TODO (trask) remove the following note after 1.4.0 is released and there are two released versions without this memory leak --> [Note: using the latest version is strongly recommended as there is [a known memory leak](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3027) that affects prior versions]
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
