@@ -83,9 +83,9 @@ class PropagationAutoConfigurationTest {
               CompositeTextMapPropagator compositePropagator =
                   context.getBean("compositeTextMapPropagator", CompositeTextMapPropagator.class);
 
-              assertThat(compositePropagator.fields()).contains("b3");
               assertThat(compositePropagator.fields())
-                  .doesNotContainAnyElementsOf(Arrays.asList("baggage", "traceparent"));
+                  .contains("b3")
+                  .doesNotContain("baggage", "traceparent");
             });
   }
 }
