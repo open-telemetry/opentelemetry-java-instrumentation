@@ -17,7 +17,7 @@ public final class AgentTooling {
 
   private static final AgentCachingPoolStrategy POOL_STRATEGY = new AgentCachingPoolStrategy();
 
-  public static AgentLocationStrategy locationStrategy(){
+  public static AgentLocationStrategy locationStrategy() {
     return locationStrategy(null);
   }
 
