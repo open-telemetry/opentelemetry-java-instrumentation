@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ApacheHttpClientHttpAttributesExtractor
+final class ApacheHttpAsyncClientHttpAttributesExtractor
     extends HttpAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
@@ -30,7 +31,7 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Override
   @Nullable
   protected String host(ApacheHttpClientRequest request) {
-    return request.getHeader("Host");
+    return request.getHost();
   }
 
   @Override
@@ -60,8 +61,10 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
+  @Nullable
   protected Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
-    return response.getStatusLine().getStatusCode();
+    StatusLine statusLine = response.getStatusLine();
+    return statusLine != null ? statusLine.getStatusCode() : null;
   }
 
   @Override

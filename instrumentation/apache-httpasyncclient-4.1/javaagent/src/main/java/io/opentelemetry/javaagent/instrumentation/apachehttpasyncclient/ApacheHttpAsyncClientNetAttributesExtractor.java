@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ApacheHttpClientNetAttributesExtractor
+final class ApacheHttpAsyncClientNetAttributesExtractor
     extends NetAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override

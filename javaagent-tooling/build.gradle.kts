@@ -5,12 +5,6 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
-val instrumentationMuzzle by configurations.creating {
-  isCanBeConsumed = true
-  isCanBeResolved = false
-  extendsFrom(configurations.implementation.get())
-}
-
 dependencies {
   // Only used during compilation by bytebuddy plugin
   compileOnly("com.google.guava:guava")
@@ -45,8 +39,6 @@ dependencies {
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
-
-  instrumentationMuzzle(sourceSets.main.get().output)
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in

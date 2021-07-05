@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -15,20 +15,20 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.http.HttpResponse;
 
-public final class ApacheHttpClientSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.0";
+public final class ApacheHttpAsyncClientSingletons {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-4.1";
 
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
   static {
     HttpAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
-        new ApacheHttpClientHttpAttributesExtractor();
+        new ApacheHttpAsyncClientHttpAttributesExtractor();
     SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
-        new ApacheHttpClientNetAttributesExtractor();
+    ApacheHttpAsyncClientNetAttributesExtractor netAttributesExtractor =
+        new ApacheHttpAsyncClientNetAttributesExtractor();
 
     INSTRUMENTER =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>newBuilder(
@@ -44,5 +44,5 @@ public final class ApacheHttpClientSingletons {
     return INSTRUMENTER;
   }
 
-  private ApacheHttpClientSingletons() {}
+  private ApacheHttpAsyncClientSingletons() {}
 }

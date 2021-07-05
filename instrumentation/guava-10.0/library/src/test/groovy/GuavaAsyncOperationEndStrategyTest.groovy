@@ -8,25 +8,28 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer
-import io.opentelemetry.instrumentation.guava.GuavaAsyncSpanEndStrategy
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy
 import spock.lang.Specification
 
-class GuavaAsyncSpanEndStrategyTest extends Specification  {
-  BaseTracer tracer
+class GuavaAsyncOperationEndStrategyTest extends Specification  {
+  String request = "request"
+  String response = "response"
+
+  Instrumenter<String, String> instrumenter
 
   Context context
 
   Span span
 
-  def underTest = GuavaAsyncSpanEndStrategy.create()
+  def underTest = GuavaAsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = GuavaAsyncSpanEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = GuavaAsyncOperationEndStrategy.newBuilder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 
   void setup() {
-    tracer = Mock()
+    instrumenter = Mock()
     context = Mock()
     span = Mock()
     span.storeInContext(_) >> { callRealMethod() }
@@ -44,10 +47,10 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
 
   def "ends span on already done future"() {
     when:
-    underTest.end(tracer, context, Futures.immediateFuture("Value"))
+    underTest.end(instrumenter, context, request, Futures.immediateFuture(response), String)
 
     then:
-    1 * tracer.end(context)
+    1 * instrumenter.end(context, request, response, null)
   }
 
   def "ends span on already failed future"() {
@@ -55,10 +58,10 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
     def exception = new IllegalStateException()
 
     when:
-    underTest.end(tracer, context, Futures.immediateFailedFuture(exception))
+    underTest.end(instrumenter, context, request, Futures.immediateFailedFuture(exception), String)
 
     then:
-    1 * tracer.endExceptionally(context, { it.getCause() == exception })
+    1 * instrumenter.end(context, request, null, { it.getCause() == exception })
   }
 
   def "ends span on eventually done future"() {
@@ -66,16 +69,16 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
     def future = SettableFuture.<String>create()
 
     when:
-    underTest.end(tracer, context, future)
+    underTest.end(instrumenter, context, request, future, String)
 
     then:
-    0 * tracer._
+    0 * instrumenter._
 
     when:
-    future.set("Value")
+    future.set(response)
 
     then:
-    1 * tracer.end(context)
+    1 * instrumenter.end(context, request, response, null)
   }
 
   def "ends span on eventually failed future"() {
@@ -84,16 +87,16 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
     def exception = new IllegalStateException()
 
     when:
-    underTest.end(tracer, context, future)
+    underTest.end(instrumenter, context, request, future, String)
 
     then:
-    0 * tracer._
+    0 * instrumenter._
 
     when:
     future.setException(exception)
 
     then:
-    1 * tracer.endExceptionally(context, { it.getCause() == exception })
+    1 * instrumenter.end(context, request, null, { it.getCause() == exception })
   }
 
   def "ends span on eventually canceled future"() {
@@ -102,16 +105,16 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
     def context = span.storeInContext(Context.root())
 
     when:
-    underTest.end(tracer, context, future)
+    underTest.end(instrumenter, context, request, future, String)
 
     then:
-    0 * tracer._
+    0 * instrumenter._
 
     when:
     future.cancel(true)
 
     then:
-    1 * tracer.end(context)
+    1 * instrumenter.end(context, request, null, null)
     0 * span.setAttribute(_)
   }
 
@@ -121,16 +124,16 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
     def context = span.storeInContext(Context.root())
 
     when:
-    underTestWithExperimentalAttributes.end(tracer, context, future)
+    underTestWithExperimentalAttributes.end(instrumenter, context, request, future, String)
 
     then:
-    0 * tracer._
+    0 * instrumenter._
 
     when:
     future.cancel(true)
 
     then:
-    1 * tracer.end(context)
+    1 * instrumenter.end(context, request, null, null)
     1 * span.setAttribute({ it.getKey() == "guava.canceled" }, true)
   }
 }

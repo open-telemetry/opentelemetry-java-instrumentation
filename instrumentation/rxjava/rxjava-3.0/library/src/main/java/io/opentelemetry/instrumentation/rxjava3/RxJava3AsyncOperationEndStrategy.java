@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.rxjava3;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import io.reactivex.rxjava3.core.Completable;
@@ -20,23 +22,25 @@ import io.reactivex.rxjava3.functions.BiConsumer;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Publisher;
 
-public final class RxJava3AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
+public final class RxJava3AsyncOperationEndStrategy
+    implements AsyncOperationEndStrategy, AsyncSpanEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
 
-  public static RxJava3AsyncSpanEndStrategy create() {
+  public static RxJava3AsyncOperationEndStrategy create() {
     return newBuilder().build();
   }
 
-  public static RxJava3AsyncSpanEndStrategyBuilder newBuilder() {
-    return new RxJava3AsyncSpanEndStrategyBuilder();
+  public static RxJava3AsyncOperationEndStrategyBuilder newBuilder() {
+    return new RxJava3AsyncOperationEndStrategyBuilder();
   }
 
   private final boolean captureExperimentalSpanAttributes;
 
-  RxJava3AsyncSpanEndStrategy(boolean captureExperimentalSpanAttributes) {
+  RxJava3AsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
@@ -52,22 +56,53 @@ public final class RxJava3AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
   }
 
   @Override
-  public Object end(BaseTracer tracer, Context context, Object returnValue) {
+  public <REQUEST, RESPONSE> Object end(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      Object asyncValue,
+      Class<RESPONSE> responseType) {
 
-    EndOnFirstNotificationConsumer<?> notificationConsumer =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    if (returnValue instanceof Completable) {
-      return endWhenComplete((Completable) returnValue, notificationConsumer);
-    } else if (returnValue instanceof Maybe) {
-      return endWhenMaybeComplete((Maybe<?>) returnValue, notificationConsumer);
-    } else if (returnValue instanceof Single) {
-      return endWhenSingleComplete((Single<?>) returnValue, notificationConsumer);
-    } else if (returnValue instanceof Observable) {
-      return endWhenObservableComplete((Observable<?>) returnValue, notificationConsumer);
-    } else if (returnValue instanceof ParallelFlowable) {
-      return endWhenFirstComplete((ParallelFlowable<?>) returnValue, notificationConsumer);
+    return end(
+        asyncValue,
+        new EndOnFirstNotificationConsumer<Object>(context) {
+          @Override
+          protected void end(Object response, Throwable error) {
+            instrumenter.end(context, request, tryToGetResponse(responseType, response), error);
+          }
+        });
+  }
+
+  @Override
+  public Object end(BaseTracer tracer, Context context, Object returnValue) {
+    return end(
+        returnValue,
+        new EndOnFirstNotificationConsumer<Object>(context) {
+          @Override
+          protected void end(Object response, Throwable error) {
+            if (error != null) {
+              tracer.endExceptionally(context, error);
+            } else {
+              tracer.end(context);
+            }
+          }
+        });
+  }
+
+  private static <T> Object end(
+      Object asyncValue, EndOnFirstNotificationConsumer<T> notificationConsumer) {
+    if (asyncValue instanceof Completable) {
+      return endWhenComplete((Completable) asyncValue, notificationConsumer);
+    } else if (asyncValue instanceof Maybe) {
+      return endWhenMaybeComplete((Maybe<?>) asyncValue, notificationConsumer);
+    } else if (asyncValue instanceof Single) {
+      return endWhenSingleComplete((Single<?>) asyncValue, notificationConsumer);
+    } else if (asyncValue instanceof Observable) {
+      return endWhenObservableComplete((Observable<?>) asyncValue, notificationConsumer);
+    } else if (asyncValue instanceof ParallelFlowable) {
+      return endWhenFirstComplete((ParallelFlowable<?>) asyncValue, notificationConsumer);
     }
-    return endWhenPublisherComplete((Publisher<?>) returnValue, notificationConsumer);
+    return endWhenPublisherComplete((Publisher<?>) asyncValue, notificationConsumer);
   }
 
   private static Completable endWhenComplete(
@@ -118,21 +153,31 @@ public final class RxJava3AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
         .doOnCancel(notificationConsumer::onCancelOrDispose);
   }
 
+  @Nullable
+  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
+    if (responseType.isInstance(result)) {
+      return responseType.cast(result);
+    }
+    return null;
+  }
+
   /**
    * Helper class to ensure that the span is ended exactly once regardless of how many OnComplete or
    * OnError notifications are received. Multiple notifications can happen anytime multiple
    * subscribers subscribe to the same publisher.
    */
-  private final class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
+  private abstract class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
       implements Action, Consumer<Throwable>, BiConsumer<T, Throwable> {
 
-    private final BaseTracer tracer;
     private final Context context;
 
-    public EndOnFirstNotificationConsumer(BaseTracer tracer, Context context) {
-      super(false);
-      this.tracer = tracer;
+    protected EndOnFirstNotificationConsumer(Context context) {
       this.context = context;
+    }
+
+    @Override
+    public void run() {
+      accept(null, null);
     }
 
     public void onCancelOrDispose() {
@@ -140,29 +185,22 @@ public final class RxJava3AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
         }
-        tracer.end(context);
+        end(null, null);
       }
-    }
-
-    @Override
-    public void run() {
-      accept(null);
     }
 
     @Override
     public void accept(Throwable exception) {
-      if (compareAndSet(false, true)) {
-        if (exception != null) {
-          tracer.endExceptionally(context, exception);
-        } else {
-          tracer.end(context);
-        }
-      }
+      accept(null, exception);
     }
 
     @Override
     public void accept(T value, Throwable exception) {
-      accept(exception);
+      if (compareAndSet(false, true)) {
+        end(value, exception);
+      }
     }
+
+    protected abstract void end(Object response, Throwable error);
   }
 }

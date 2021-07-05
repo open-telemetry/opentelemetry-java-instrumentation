@@ -13,15 +13,6 @@ spotless {
   }
 }
 
-gradlePlugin {
-  plugins {
-    create("muzzle-plugin") {
-      id = "muzzle"
-      implementationClass = "io.opentelemetry.instrumentation.gradle.muzzle.MuzzlePlugin"
-    }
-  }
-}
-
 repositories {
   mavenCentral()
   gradlePluginPortal()
