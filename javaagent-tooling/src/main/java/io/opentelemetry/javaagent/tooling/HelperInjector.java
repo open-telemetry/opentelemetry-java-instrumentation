@@ -39,13 +39,13 @@ import org.slf4j.LoggerFactory;
  * Injects instrumentation helper classes into the user's classloader.
  *
  * <p>Care must be taken when using this class. It is used both by the javaagent during its runtime
- * and by gradle code generation plugins during build time. And some code paths in this class
+ * and by gradle muzzle verification plugin during build time. And some code paths in this class
  * require the usage of {@link Instrumentation}, which is available for the former, but not for the
  * latter. Unfortunately, these two "modes of operations" and not easily discernible just by reading
  * source code. Be careful.
  *
  * <p>In a nutshell, an instance of {@link Instrumentation} is needed for class injection into
- * bootstrap classloader. This should NOT happen during build-time codegeneration phase.
+ * bootstrap classloader. This should NOT happen during build-time muzzle verification phase.
  */
 public class HelperInjector implements Transformer {
 
@@ -101,7 +101,7 @@ public class HelperInjector implements Transformer {
     this.instrumentation = instrumentation;
   }
 
-  /** Must be used ONLY by gradle codegeneration plugins. */
+  /** Must be used ONLY by gradle muzzle verification plugin. */
   public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
     this(requestingName, helperMap, null);
   }
