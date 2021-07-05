@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 
 public class ServletAndFilterAdviceHelper {
@@ -20,7 +20,7 @@ public class ServletAndFilterAdviceHelper {
       Throwable throwable,
       Context context,
       Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
+    int callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey()).decrementAndGet();
 
     if (scope != null) {
       scope.close();

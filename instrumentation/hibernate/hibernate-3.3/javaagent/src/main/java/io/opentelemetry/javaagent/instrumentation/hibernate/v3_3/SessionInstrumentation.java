@@ -20,7 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
@@ -150,7 +150,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return; // No state found. We aren't in a Session.
       }
 
-      if (CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class) > 0) {
+      if (CallDepth.forClass(SessionMethodUtils.class).getAndIncrement() > 0) {
         return; // This method call is being traced already.
       }
 

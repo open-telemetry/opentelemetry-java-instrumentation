@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,7 +33,7 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void trackCallDepth(@Advice.Local("callDepth") int callDepth) {
-      callDepth = CallDepthThreadLocalMap.incrementCallDepth(OkHttpClient.Builder.class);
+      callDepth = CallDepth.forClass(OkHttpClient.Builder.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -44,7 +44,7 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
       if (callDepth > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(OkHttpClient.Builder.class);
+      CallDepth.forClass(OkHttpClient.Builder.class).reset();
       if (builder.interceptors().contains(OkHttp3Interceptors.TRACING_INTERCEPTOR)) {
         return;
       }
