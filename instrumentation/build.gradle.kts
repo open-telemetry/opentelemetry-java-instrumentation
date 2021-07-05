@@ -58,7 +58,7 @@ tasks {
     description = "List all available instrumentation modules"
     doFirst {
       subprojects
-        .filter { it.plugins.hasPlugin("otel.muzzle-check") }
+        .filter { it.plugins.hasPlugin("io.openteleetry.instrumentation.muzzle-check") }
         .map { it.path }
         .forEach { println(it) }
     }
