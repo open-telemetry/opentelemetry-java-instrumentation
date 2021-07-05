@@ -134,7 +134,7 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
-            .with(AgentTooling.locationStrategy());
+            .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
     // FIXME: we cannot enable it yet due to BB/JVM bug, see
     // https://github.com/raphw/byte-buddy/issues/558
     // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
