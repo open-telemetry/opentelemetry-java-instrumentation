@@ -13,4 +13,7 @@ muzzle {
 
 dependencies {
   library("com.ning:async-http-client:1.9.0")
+
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 }
