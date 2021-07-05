@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ServiceLoader;
 import net.bytebuddy.dynamic.ClassFileLocator;
 
@@ -52,9 +51,6 @@ public final class MuzzleGradlePluginUtil {
   public static void assertInstrumentationMuzzled(
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
-    Objects.requireNonNull(agentClassLoader);
-    Objects.requireNonNull(userClassLoader);
-
     // muzzle validate all instrumenters
     int validatedModulesCount = 0;
     for (InstrumentationModule instrumentationModule :
