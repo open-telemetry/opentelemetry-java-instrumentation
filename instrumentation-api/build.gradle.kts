@@ -13,12 +13,13 @@ sourceSets {
       // set to generate into. By default it would be the src/main directory itself.
       srcDir("${buildDir}/generated/sources/jflex")
     }
+
+    val cachingShadedDeps = project(":instrumentation-api-caching")
+    output.dir(cachingShadedDeps.file("build/extracted/shadow"), "builtBy" to ":instrumentation-api-caching:extractShadowJar")
   }
 }
 
 group = "io.opentelemetry.instrumentation"
-
-evaluationDependsOn(":instrumentation-api-caching")
 
 dependencies {
   compileOnly(project(":instrumentation-api-caching"))
@@ -33,20 +34,10 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":testing-common"))
-  testCompileOnly(project(":instrumentation-api-caching"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.awaitility:awaitility")
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-}
-
-tasks {
-  jar {
-    inputs.files(project(":instrumentation-api-caching").file("src"))
-    val shadowJar = project(":instrumentation-api-caching").tasks.named<Jar>("shadowJar")
-    from(zipTree(shadowJar.get().archiveFile))
-    dependsOn(shadowJar)
-  }
 }

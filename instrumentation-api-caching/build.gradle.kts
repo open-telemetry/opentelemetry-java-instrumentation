@@ -29,4 +29,12 @@ tasks {
 
     minimize()
   }
+
+  val extractShadowJar by registering(Copy::class) {
+    dependsOn(shadowJar)
+    from(zipTree(shadowJar.get().archiveFile))
+    into("build/extracted/shadow")
+    // prevents empty com/github/benmanes/caffeine/cache path from ending up in instrumentation-api
+    includeEmptyDirs = false
+  }
 }
