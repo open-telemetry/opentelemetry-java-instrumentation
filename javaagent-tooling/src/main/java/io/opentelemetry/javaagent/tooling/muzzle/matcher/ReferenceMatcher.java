@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -51,14 +52,18 @@ public final class ReferenceMatcher {
   /**
    * Matcher used by ByteBuddy. Fails fast and only caches empty results, or complete results
    *
-   * @param userClassLoader Classloader to validate against (or null for bootstrap)
+   * @param userClassLoader Classloader to validate against (or "bootstrap proxy" for bootstrap)
    * @return true if all references match the classpath of loader
    */
   public boolean matches(ClassLoader userClassLoader) {
+    Objects.requireNonNull(userClassLoader); // "proxy bootstrap" must be passed instead of null
+
     return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
   }
 
   private boolean doesMatch(ClassLoader loader) {
+    Objects.requireNonNull(loader); // "proxy bootstrap" must be passed instead of null
+
     TypePool typePool = createTypePool(loader);
     for (ClassRef reference : references.values()) {
       if (!checkMatch(reference, typePool, loader).isEmpty()) {
@@ -75,6 +80,8 @@ public final class ReferenceMatcher {
    * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
    */
   public List<Mismatch> getMismatchedReferenceSources(ClassLoader loader) {
+    Objects.requireNonNull(loader); // "proxy bootstrap" must be passed instead of null
+
     TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();
@@ -87,6 +94,10 @@ public final class ReferenceMatcher {
   }
 
   private static TypePool createTypePool(ClassLoader loader) {
+    Objects.requireNonNull(loader); // "proxy bootstrap" must be passed instead of null
+
+    // it's ok to use locationStrategy() without fallback bootstrap proxy here since the class
+    // loader cannot be null
     return AgentTooling.poolStrategy()
         .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
   }
