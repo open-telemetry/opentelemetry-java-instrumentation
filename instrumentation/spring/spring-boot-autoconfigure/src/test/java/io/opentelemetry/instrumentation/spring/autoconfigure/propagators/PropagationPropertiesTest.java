@@ -34,16 +34,16 @@ public class PropagationPropertiesTest {
   void hasType() {
 
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=JAEGER")
+        .withPropertyValues("otel.propagation.type=xray")
         .run(
             context -> {
               assertThat(context.getEnvironment().getProperty("otel.propagation.type"))
-                  .isEqualTo(PropagationType.JAEGER.toString());
+                  .isEqualTo(PropagationType.xray.toString());
 
               PropagationProperties propertiesBean = context.getBean(PropagationProperties.class);
 
               assertThat(propertiesBean.getType())
-                  .isEqualTo(Collections.singletonList(PropagationType.JAEGER));
+                  .isEqualTo(Collections.singletonList(PropagationType.xray));
             });
   }
 
@@ -54,6 +54,6 @@ public class PropagationPropertiesTest {
     this.contextRunner.run(
         context ->
             assertThat(context.getBean(PropagationProperties.class).getType())
-                .containsExactly(PropagationType.W3C, PropagationType.BAGGAGE));
+                .containsExactly(PropagationType.tracecontext, PropagationType.baggage));
   }
 }
