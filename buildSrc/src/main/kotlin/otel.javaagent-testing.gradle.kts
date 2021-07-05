@@ -9,7 +9,6 @@ plugins {
 evaluationDependsOn(":testing:agent-for-testing")
 
 dependencies {
-  compileOnly("net.bytebuddy:byte-buddy")
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
   compileOnly("org.slf4j:slf4j-api")
