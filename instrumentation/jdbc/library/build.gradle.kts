@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":instrumentation-api"))
+  api(project(":instrumentation-api"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
