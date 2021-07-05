@@ -40,7 +40,7 @@ val testInstrumentation by configurations.creating {
   isCanBeResolved = true
 }
 
-tasks.named<ShadowJar>("shadowJar").configure {
+tasks.shadowJar {
   configurations = listOf(project.configurations.runtimeClasspath.get(), testInstrumentation)
 
   archiveFileName.set("agent-testing.jar")
@@ -104,6 +104,19 @@ afterEvaluate {
         return@filter false
       }
       return@filter true
+    }
+  }
+}
+
+// shadowJar is only used for creating a jar for testing, but the shadow plugin automatically adds
+// it to a project's published Java component. Skip it if publishing is configured for this
+// project.
+plugins.withId("maven-publish") {
+  configure<PublishingExtension> {
+    (components["java"] as AdhocComponentWithVariants).run {
+      withVariantsFromConfiguration(configurations["shadowRuntimeElements"]) {
+        skip()
+      }
     }
   }
 }
