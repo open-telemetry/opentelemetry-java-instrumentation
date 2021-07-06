@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -19,7 +20,7 @@ public class InstrumentationLoader implements AgentExtension {
   private static final Logger log = LoggerFactory.getLogger(InstrumentationLoader.class);
 
   private final InstrumentationModuleInstaller instrumentationModuleInstaller =
-      new InstrumentationModuleInstaller();
+      new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
 
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder) {

@@ -61,11 +61,6 @@ public class AgentInstaller {
       "otel.javaagent.experimental.force-synchronous-agent-listeners";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
-  private static volatile Instrumentation instrumentation;
-
-  public static Instrumentation getInstrumentation() {
-    return instrumentation;
-  }
 
   static {
     LoggingConfigurer.configureLogger();
@@ -121,8 +116,6 @@ public class AgentInstaller {
     setBootstrapPackages(config);
 
     runBeforeAgentListeners(agentListeners, config);
-
-    instrumentation = inst;
 
     FieldBackedProvider.resetContextMatchers();
 

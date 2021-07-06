@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
+import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +37,16 @@ public final class InstrumentationModuleInstaller {
   private static final TransformSafeLogger log =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
+  private final Instrumentation instrumentation;
 
   // Added here instead of AgentInstaller's ignores because it's relatively
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
+
+  public InstrumentationModuleInstaller(Instrumentation instrumentation) {
+    this.instrumentation = instrumentation;
+  }
 
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
@@ -69,7 +75,8 @@ public final class InstrumentationModuleInstaller {
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceNames,
-            Utils.getExtensionsClassLoader());
+            Utils.getExtensionsClassLoader(),
+            instrumentation);
     InstrumentationContextProvider contextProvider =
         createInstrumentationContextProvider(instrumentationModule);
 
