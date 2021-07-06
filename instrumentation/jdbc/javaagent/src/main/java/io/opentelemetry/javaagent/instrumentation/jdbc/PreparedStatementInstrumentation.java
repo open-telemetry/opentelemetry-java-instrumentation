@@ -51,6 +51,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This PreparedStatement statement,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -61,7 +62,8 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       // using CallDepth prevents this, because this check happens before Connection#getMetadata()
       // is called - the first recursive Statement call is just skipped and we do not create a span
       // for it
-      if (CallDepth.forClass(Statement.class).getAndIncrement() > 0) {
+      callDepth = CallDepth.forClass(Statement.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -79,13 +81,14 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      CallDepth.forClass(Statement.class).reset();
+      callDepth.reset();
 
       scope.close();
       instrumenter().end(context, request, null, throwable);

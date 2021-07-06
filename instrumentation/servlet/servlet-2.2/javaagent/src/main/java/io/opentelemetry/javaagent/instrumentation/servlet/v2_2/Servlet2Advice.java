@@ -28,9 +28,11 @@ public class Servlet2Advice {
   public static void onEnter(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepth.forClass(AppServerBridge.getCallDepthKey()).getAndIncrement();
+    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
+    callDepth.getAndIncrement();
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
@@ -60,15 +62,17 @@ public class Servlet2Advice {
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey()).decrementAndGet();
+
+    callDepth.decrementAndGet();
 
     if (scope != null) {
       scope.close();
     }
 
-    if (context == null && callDepth == 0) {
+    if (context == null && callDepth.get() == 0) {
       Context currentContext = Java8BytecodeBridge.currentContext();
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.

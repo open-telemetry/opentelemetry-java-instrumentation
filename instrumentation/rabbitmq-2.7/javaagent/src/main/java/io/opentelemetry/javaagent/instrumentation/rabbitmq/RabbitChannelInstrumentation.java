@@ -92,10 +92,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This Channel channel,
         @Advice.Origin("Channel.#m") String method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepth.forClass(Channel.class).getAndIncrement();
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(Channel.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -107,13 +108,14 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
-      CallDepth.forClass(Channel.class).reset();
+      callDepth.reset();
 
       CURRENT_RABBIT_CONTEXT.remove();
       if (throwable != null) {
@@ -179,9 +181,9 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelGetAdvice {
 
     @Advice.OnMethodEnter
-    public static long takeTimestamp(@Advice.Local("callDepth") int callDepth) {
-
-      callDepth = CallDepth.forClass(Channel.class).getAndIncrement();
+    public static long takeTimestamp(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(Channel.class);
+      callDepth.getAndIncrement();
       return System.currentTimeMillis();
     }
 
@@ -190,13 +192,12 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
         @Advice.Enter long startTime,
-        @Advice.Local("callDepth") int callDepth,
         @Advice.Return GetResponse response,
-        @Advice.Thrown Throwable throwable) {
-      if (callDepth > 0) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepth.forClass(Channel.class).reset();
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation

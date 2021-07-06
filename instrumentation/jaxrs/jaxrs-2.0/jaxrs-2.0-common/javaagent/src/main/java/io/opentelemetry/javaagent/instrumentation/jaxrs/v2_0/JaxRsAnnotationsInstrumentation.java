@@ -71,6 +71,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
@@ -92,7 +93,8 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         }
       }
 
-      if (CallDepth.forClass(Path.class).getAndIncrement() > 0) {
+      callDepth = CallDepth.forClass(Path.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -109,13 +111,14 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
       if (context == null || scope == null) {
         return;
       }
-      CallDepth.forClass(Path.class).reset();
+      callDepth.reset();
 
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

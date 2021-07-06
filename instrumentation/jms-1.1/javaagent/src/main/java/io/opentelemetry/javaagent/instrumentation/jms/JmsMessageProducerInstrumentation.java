@@ -59,11 +59,12 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Message message,
         @Advice.This MessageProducer producer,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepth.forClass(MessageProducer.class).getAndIncrement();
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(MessageProducer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -86,6 +87,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -93,7 +95,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepth.forClass(MessageProducer.class).reset();
+      callDepth.reset();
 
       scope.close();
       producerInstrumenter().end(context, request, null, throwable);
@@ -107,11 +109,12 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepth.forClass(MessageProducer.class).getAndIncrement();
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(MessageProducer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -127,6 +130,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -134,7 +138,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepth.forClass(MessageProducer.class).reset();
+      callDepth.reset();
 
       scope.close();
       producerInstrumenter().end(context, request, null, throwable);

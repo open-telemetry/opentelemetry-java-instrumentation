@@ -74,15 +74,18 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class CreateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      CallDepth.forClass(HttpClient.class).getAndIncrement();
+    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(HttpClient.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Return(readOnly = false) HttpClient client) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(readOnly = false) HttpClient client,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      if (CallDepth.forClass(HttpClient.class).decrementAndGet() == 0 && throwable == null) {
+      if (callDepth.decrementAndGet() == 0 && throwable == null) {
         client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
     }

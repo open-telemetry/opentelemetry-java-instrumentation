@@ -33,9 +33,11 @@ public class Servlet3Advice {
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepth.forClass(AppServerBridge.getCallDepthKey()).getAndIncrement();
+    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
+    callDepth.getAndIncrement();
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -91,6 +93,7 @@ public class Servlet3Advice {
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -103,6 +106,7 @@ public class Servlet3Advice {
         (HttpServletRequest) request,
         (HttpServletResponse) response,
         throwable,
+        callDepth,
         context,
         scope);
   }

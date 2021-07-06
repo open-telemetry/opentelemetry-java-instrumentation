@@ -43,16 +43,20 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
-      int callDepth = CallDepth.forClass(ServerBuilder.class).getAndIncrement();
-      if (callDepth == 0) {
+    public static void onEnter(
+        @Advice.This ServerBuilder<?> serverBuilder,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(ServerBuilder.class);
+      if (callDepth.getAndIncrement() == 0) {
         serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This ServerBuilder<?> serverBuilder) {
-      CallDepth.forClass(ServerBuilder.class).decrementAndGet();
+    public static void onExit(
+        @Advice.This ServerBuilder<?> serverBuilder,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth.decrementAndGet();
     }
   }
 }

@@ -44,10 +44,11 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepth.forClass(RemoteServer.class).getAndIncrement();
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(RemoteServer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -61,14 +62,15 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
+      callDepth.reset();
 
-      CallDepth.forClass(RemoteServer.class).reset();
       if (throwable != null) {
         RmiServerTracer.tracer().endExceptionally(context, throwable);
       } else {
