@@ -34,5 +34,6 @@ tasks {
       exclude("META-INF/LICENSE")
     }
     into("build/extracted/shadow")
+    includeEmptyDirs = false
   }
 }

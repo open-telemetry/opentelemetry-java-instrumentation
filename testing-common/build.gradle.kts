@@ -24,7 +24,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-testing")
 
-  api(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry:opentelemetry-proto") {
     // Only need the proto, not gRPC.
