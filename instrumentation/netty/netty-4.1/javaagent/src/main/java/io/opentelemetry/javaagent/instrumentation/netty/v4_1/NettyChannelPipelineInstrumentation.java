@@ -88,7 +88,6 @@ public class NettyChannelPipelineInstrumentation
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-//      callDepth.reset();
 
       String name = handlerName;
       if (name == null) {
