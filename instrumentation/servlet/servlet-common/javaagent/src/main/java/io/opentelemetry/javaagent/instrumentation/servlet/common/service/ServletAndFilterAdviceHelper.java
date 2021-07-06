@@ -20,13 +20,13 @@ public class ServletAndFilterAdviceHelper {
       CallDepth callDepth,
       Context context,
       Scope scope) {
-    callDepth.decrementAndGet();
+    int depth = callDepth.decrementAndGet();
 
     if (scope != null) {
       scope.close();
     }
 
-    if (context == null && callDepth.get() == 0) {
+    if (context == null && depth == 0) {
       Context currentContext = Java8BytecodeBridge.currentContext();
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.

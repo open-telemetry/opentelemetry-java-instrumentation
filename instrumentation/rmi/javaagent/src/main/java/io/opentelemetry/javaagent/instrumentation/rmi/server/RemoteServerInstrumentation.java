@@ -65,12 +65,11 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      scope.close();
-      callDepth.reset();
 
+      scope.close();
       if (throwable != null) {
         RmiServerTracer.tracer().endExceptionally(context, throwable);
       } else {

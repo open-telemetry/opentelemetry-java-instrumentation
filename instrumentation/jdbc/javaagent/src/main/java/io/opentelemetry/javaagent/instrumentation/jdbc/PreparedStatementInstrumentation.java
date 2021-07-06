@@ -85,13 +85,14 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        instrumenter().end(context, request, null, throwable);
+      }
     }
   }
 }
