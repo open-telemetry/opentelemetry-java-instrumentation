@@ -19,7 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.sql.Statement;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -61,7 +61,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       // using CallDepth prevents this, because this check happens before Connection#getMetadata()
       // is called - the first recursive Statement call is just skipped and we do not create a span
       // for it
-      if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
+      if (CallDepth.forClass(Statement.class).getAndIncrement() > 0) {
         return;
       }
 
@@ -85,7 +85,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Statement.class);
+      CallDepth.forClass(Statement.class).reset();
 
       scope.close();
       instrumenter().end(context, request, null, throwable);
