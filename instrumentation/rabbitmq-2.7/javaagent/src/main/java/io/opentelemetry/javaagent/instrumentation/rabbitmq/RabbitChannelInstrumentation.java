@@ -31,7 +31,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Origin("Channel.#m") String method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
+      int callDepth = CallDepth.forClass(Channel.class).getAndIncrement();
       if (callDepth > 0) {
         return;
       }
@@ -113,7 +113,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      CallDepthThreadLocalMap.reset(Channel.class);
+      CallDepth.forClass(Channel.class).reset();
 
       CURRENT_RABBIT_CONTEXT.remove();
       if (throwable != null) {
@@ -181,7 +181,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static long takeTimestamp(@Advice.Local("callDepth") int callDepth) {
 
-      callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
+      callDepth = CallDepth.forClass(Channel.class).getAndIncrement();
       return System.currentTimeMillis();
     }
 
@@ -196,7 +196,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (callDepth > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Channel.class);
+      CallDepth.forClass(Channel.class).reset();
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation

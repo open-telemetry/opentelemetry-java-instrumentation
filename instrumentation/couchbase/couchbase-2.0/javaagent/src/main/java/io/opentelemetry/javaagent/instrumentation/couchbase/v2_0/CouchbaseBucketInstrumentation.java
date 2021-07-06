@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.couchbase.client.java.CouchbaseCluster;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -46,7 +46,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
+      return CallDepth.forClass(CouchbaseCluster.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -58,7 +58,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
       if (callDepth > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
+      CallDepth.forClass(CouchbaseCluster.class).reset();
       result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
     }
   }
@@ -68,7 +68,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
+      return CallDepth.forClass(CouchbaseCluster.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
@@ -81,7 +81,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
       if (callDepth > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
+      CallDepth.forClass(CouchbaseCluster.class).reset();
 
       if (query != null) {
         // A query can be of many different types. We could track the creation of them and try to

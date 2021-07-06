@@ -20,7 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import javax.jws.WebService;
 import net.bytebuddy.asm.Advice;
@@ -64,7 +64,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(WebService.class) > 0) {
+      if (CallDepth.forClass(WebService.class).getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(target.getClass(), method);
@@ -79,7 +79,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(WebService.class);
+      CallDepth.forClass(WebService.class).reset();
 
       scope.close();
       if (throwable == null) {

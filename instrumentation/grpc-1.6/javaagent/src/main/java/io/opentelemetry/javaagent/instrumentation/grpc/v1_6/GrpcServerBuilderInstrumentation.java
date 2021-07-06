@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.grpc.ServerBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,7 +44,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ServerBuilder.class);
+      int callDepth = CallDepth.forClass(ServerBuilder.class).getAndIncrement();
       if (callDepth == 0) {
         serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
       }
@@ -52,7 +52,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.This ServerBuilder<?> serverBuilder) {
-      CallDepthThreadLocalMap.decrementCallDepth(ServerBuilder.class);
+      CallDepth.forClass(ServerBuilder.class).decrementAndGet();
     }
   }
 }

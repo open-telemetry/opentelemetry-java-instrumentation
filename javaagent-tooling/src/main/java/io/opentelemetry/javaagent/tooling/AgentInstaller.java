@@ -61,11 +61,6 @@ public class AgentInstaller {
       "otel.javaagent.experimental.force-synchronous-agent-listeners";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
-  private static volatile Instrumentation instrumentation;
-
-  public static Instrumentation getInstrumentation() {
-    return instrumentation;
-  }
 
   static {
     LoggingConfigurer.configureLogger();
@@ -122,8 +117,6 @@ public class AgentInstaller {
 
     runBeforeAgentListeners(agentListeners, config);
 
-    instrumentation = inst;
-
     FieldBackedProvider.resetContextMatchers();
 
     AgentBuilder agentBuilder =
@@ -134,7 +127,7 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
-            .with(AgentTooling.locationStrategy());
+            .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
     // FIXME: we cannot enable it yet due to BB/JVM bug, see
     // https://github.com/raphw/byte-buddy/issues/558
     // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)

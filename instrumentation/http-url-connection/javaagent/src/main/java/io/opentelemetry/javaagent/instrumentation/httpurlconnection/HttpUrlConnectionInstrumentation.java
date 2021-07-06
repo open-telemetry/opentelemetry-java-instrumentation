@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -70,7 +69,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      callDepth = CallDepthThreadLocalMap.getCallDepth(HttpURLConnection.class);
+      callDepth = CallDepth.forClass(HttpURLConnection.class);
       if (callDepth.getAndIncrement() > 0) {
         // only want the rest of the instrumentation rules (which are complex enough) to apply to
         // top-level HttpURLConnection calls

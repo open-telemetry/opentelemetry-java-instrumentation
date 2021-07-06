@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTE
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
@@ -21,7 +21,7 @@ public class AsyncDispatchAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static boolean enter(
       @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
-    int depth = CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
+    int depth = CallDepth.forClass(AsyncContext.class).getAndIncrement();
     if (depth > 0) {
       return false;
     }
@@ -47,7 +47,7 @@ public class AsyncDispatchAdvice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void exit(@Advice.Enter boolean topLevel) {
     if (topLevel) {
-      CallDepthThreadLocalMap.reset(AsyncContext.class);
+      CallDepth.forClass(AsyncContext.class).reset();
     }
   }
 }

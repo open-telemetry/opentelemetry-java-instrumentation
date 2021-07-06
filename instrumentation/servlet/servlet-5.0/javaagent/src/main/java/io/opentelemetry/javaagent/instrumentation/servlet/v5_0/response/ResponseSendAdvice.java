@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response.R
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,7 +25,7 @@ public class ResponseSendAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") CallDepth callDepth) {
-    callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
+    callDepth = CallDepth.forClass(HttpServletResponse.class);
     // Don't want to generate a new top-level span
     if (callDepth.getAndIncrement() == 0
         && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {

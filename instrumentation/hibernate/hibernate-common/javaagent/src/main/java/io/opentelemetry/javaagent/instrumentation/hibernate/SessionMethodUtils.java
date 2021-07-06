@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ public final class SessionMethodUtils {
       return null; // No state found. We aren't in a Session.
     }
 
-    int depth = CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class);
+    int depth = CallDepth.forClass(SessionMethodUtils.class).getAndIncrement();
     if (depth > 0) {
       return null; // This method call is being traced already.
     }
@@ -73,7 +73,7 @@ public final class SessionMethodUtils {
   public static void end(
       @Nullable Context context, Throwable throwable, String operationName, Object entity) {
 
-    CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
+    CallDepth.forClass(SessionMethodUtils.class).reset();
 
     if (context == null) {
       return;

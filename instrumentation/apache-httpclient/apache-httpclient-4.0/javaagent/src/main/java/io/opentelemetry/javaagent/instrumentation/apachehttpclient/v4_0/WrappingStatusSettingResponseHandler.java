@@ -12,16 +12,18 @@ import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpUriRequest;
 
 public final class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
   private final Context context;
   private final Context parentContext;
-  private final HttpUriRequest request;
+  private final ApacheHttpClientRequest request;
   private final ResponseHandler<T> handler;
 
   public WrappingStatusSettingResponseHandler(
-      Context context, Context parentContext, HttpUriRequest request, ResponseHandler<T> handler) {
+      Context context,
+      Context parentContext,
+      ApacheHttpClientRequest request,
+      ResponseHandler<T> handler) {
     this.context = context;
     this.parentContext = parentContext;
     this.request = request;

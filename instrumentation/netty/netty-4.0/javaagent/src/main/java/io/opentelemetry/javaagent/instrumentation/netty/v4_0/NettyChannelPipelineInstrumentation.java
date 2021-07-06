@@ -22,7 +22,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
@@ -61,7 +61,7 @@ public class NettyChannelPipelineInstrumentation
 
     @Advice.OnMethodEnter
     public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
+      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -72,7 +72,7 @@ public class NettyChannelPipelineInstrumentation
       if (callDepth > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(ChannelPipeline.class);
+      CallDepth.forClass(ChannelPipeline.class).reset();
 
       ChannelHandler ourHandler = null;
       // Server pipeline handlers

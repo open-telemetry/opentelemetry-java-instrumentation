@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientRequestTracingHandler;
@@ -100,7 +100,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
               new HttpClientResponseTracingHandler(contextStore));
         }
       } finally {
-        CallDepthThreadLocalMap.reset(ChannelPipeline.class);
+        CallDepth.forClass(ChannelPipeline.class).reset();
       }
     }
   }
@@ -117,7 +117,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
+      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -148,7 +148,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
+      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
