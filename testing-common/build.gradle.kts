@@ -8,8 +8,8 @@ group = "io.opentelemetry.javaagent"
 
 sourceSets {
   main {
-    val traceShadedDeps = project(":testing:armeria-shaded-for-testing")
-    output.dir(traceShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+    val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
+    output.dir(armeriaShadedDeps .file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
   }
 }
 
