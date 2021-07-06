@@ -89,7 +89,7 @@ rootProject.tasks.named("release").configure {
   finalizedBy(tasks["publishToSonatype"])
 }
 
-// Sign only if have a key to do so
+// Sign only if we have a key to do so
 val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
 if (signingKey != null) {
   signing {
