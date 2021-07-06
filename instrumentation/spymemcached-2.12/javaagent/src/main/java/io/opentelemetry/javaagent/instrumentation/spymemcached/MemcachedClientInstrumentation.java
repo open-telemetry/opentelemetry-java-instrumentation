@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,7 +56,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepthThreadLocalMap.getCallDepth(MemcachedClient.class);
+      callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
     }
 
@@ -84,7 +83,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepthThreadLocalMap.getCallDepth(MemcachedClient.class);
+      callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
     }
 
@@ -111,7 +110,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepthThreadLocalMap.getCallDepth(MemcachedClient.class);
+      callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
     }
 
@@ -141,7 +140,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepthThreadLocalMap.getCallDepth(MemcachedClient.class);
+      callDepth = CallDepth.forClass(MemcachedClient.class);
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }

@@ -12,7 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
@@ -35,7 +35,7 @@ public class Servlet3Advice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
+    CallDepth.forClass(AppServerBridge.getCallDepthKey()).getAndIncrement();
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }

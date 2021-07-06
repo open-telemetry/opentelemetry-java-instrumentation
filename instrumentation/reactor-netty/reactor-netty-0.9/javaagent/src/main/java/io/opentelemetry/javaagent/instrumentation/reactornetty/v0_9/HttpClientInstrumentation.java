@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.util.function.BiConsumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -75,14 +75,14 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      CallDepth.forClass(HttpClient.class).getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable, @Advice.Return(readOnly = false) HttpClient client) {
 
-      if (CallDepthThreadLocalMap.decrementCallDepth(HttpClient.class) == 0 && throwable == null) {
+      if (CallDepth.forClass(HttpClient.class).decrementAndGet() == 0 && throwable == null) {
         client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
     }

@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.lang.reflect.Method;
@@ -92,7 +92,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         }
       }
 
-      if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
+      if (CallDepth.forClass(Path.class).getAndIncrement() > 0) {
         return;
       }
 
@@ -115,7 +115,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
       if (context == null || scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Path.class);
+      CallDepth.forClass(Path.class).reset();
 
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

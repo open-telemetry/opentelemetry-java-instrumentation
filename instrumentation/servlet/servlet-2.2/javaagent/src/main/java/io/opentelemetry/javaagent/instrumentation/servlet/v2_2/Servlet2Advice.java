@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.servlet.v2_2.ResponseWithStatus;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.servlet.ServletRequest;
@@ -30,7 +30,7 @@ public class Servlet2Advice {
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
+    CallDepth.forClass(AppServerBridge.getCallDepthKey()).getAndIncrement();
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
@@ -62,7 +62,7 @@ public class Servlet2Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
+    int callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey()).decrementAndGet();
 
     if (scope != null) {
       scope.close();

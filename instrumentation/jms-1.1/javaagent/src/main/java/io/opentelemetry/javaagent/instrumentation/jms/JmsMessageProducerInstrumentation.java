@@ -17,7 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -62,7 +62,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
+      int callDepth = CallDepth.forClass(MessageProducer.class).getAndIncrement();
       if (callDepth > 0) {
         return;
       }
@@ -93,7 +93,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
+      CallDepth.forClass(MessageProducer.class).reset();
 
       scope.close();
       producerInstrumenter().end(context, request, null, throwable);
@@ -110,7 +110,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
+      int callDepth = CallDepth.forClass(MessageProducer.class).getAndIncrement();
       if (callDepth > 0) {
         return;
       }
@@ -134,7 +134,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
+      CallDepth.forClass(MessageProducer.class).reset();
 
       scope.close();
       producerInstrumenter().end(context, request, null, throwable);
