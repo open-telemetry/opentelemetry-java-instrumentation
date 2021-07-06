@@ -124,10 +124,9 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) ChannelHandler handler,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
@@ -159,10 +158,9 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);

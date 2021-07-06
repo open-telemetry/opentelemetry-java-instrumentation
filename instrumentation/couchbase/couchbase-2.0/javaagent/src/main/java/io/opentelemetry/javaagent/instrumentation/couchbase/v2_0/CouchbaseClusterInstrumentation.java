@@ -52,10 +52,9 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       result = Observable.create(CouchbaseOnSubscribe.create(result, null, method));
     }

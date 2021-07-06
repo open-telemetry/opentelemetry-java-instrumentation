@@ -85,10 +85,10 @@ public class NettyChannelPipelineInstrumentation
         @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
+//      callDepth.reset();
 
       String name = handlerName;
       if (name == null) {

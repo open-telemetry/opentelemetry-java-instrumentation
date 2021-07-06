@@ -43,10 +43,9 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to
       // run once from the constructor with args because that is where the dedupe needs to happen.
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
       if (builder.interceptors().contains(OkHttp3Interceptors.TRACING_INTERCEPTOR)) {
         return;
       }

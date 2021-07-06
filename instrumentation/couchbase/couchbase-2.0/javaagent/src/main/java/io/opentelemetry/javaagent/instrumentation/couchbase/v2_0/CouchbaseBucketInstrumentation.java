@@ -56,10 +56,9 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
       result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
     }
   }
@@ -80,10 +79,9 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, optional = true) Object query,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       if (query != null) {
         // A query can be of many different types. We could track the creation of them and try to

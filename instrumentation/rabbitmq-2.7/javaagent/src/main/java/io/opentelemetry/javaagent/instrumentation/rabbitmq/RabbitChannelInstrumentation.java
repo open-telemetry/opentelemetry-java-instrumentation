@@ -195,10 +195,9 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation

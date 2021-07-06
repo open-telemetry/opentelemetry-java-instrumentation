@@ -70,10 +70,9 @@ public class NettyChannelPipelineInstrumentation
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.get() > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
