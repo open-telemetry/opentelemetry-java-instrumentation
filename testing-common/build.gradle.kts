@@ -6,6 +6,13 @@ plugins {
 description = "OpenTelemetry Javaagent testing commons"
 group = "io.opentelemetry.javaagent"
 
+sourceSets {
+  main {
+    val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
+    output.dir(armeriaShadedDeps .file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+  }
+}
+
 dependencies {
   api("org.codehaus.groovy:groovy-all")
   api("org.spockframework:spock-core")
@@ -17,7 +24,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-testing")
 
-  api(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry:opentelemetry-proto") {
     // Only need the proto, not gRPC.
