@@ -60,19 +60,20 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(2) ChannelHandler handler) {
-      if (callDepth > 0) {
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.get() > 0) {
         return;
       }
-      CallDepth.forClass(ChannelPipeline.class).reset();
+      callDepth.reset();
 
       ChannelHandler ourHandler = null;
       // Server pipeline handlers

@@ -107,8 +107,8 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
       // back to this instrumentation over and over, causing a StackOverflowError
-      int callDepth = CallDepth.forClass(ClassLoader.class).getAndIncrement();
-      if (callDepth > 0) {
+      CallDepth callDepth = CallDepth.forClass(ClassLoader.class);
+      if (callDepth.getAndIncrement() > 0) {
         return null;
       }
 
@@ -128,7 +128,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         // ends up calling a ClassFileTransformer which ends up calling loadClass() further down the
         // stack on one of our bootstrap packages (since the call depth check would then suppress
         // the nested loadClass instrumentation)
-        CallDepth.forClass(ClassLoader.class).reset();
+        callDepth.reset();
       }
       return null;
     }

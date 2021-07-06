@@ -72,35 +72,31 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         ContextStore<Channel, ChannelTraceContext> contextStore,
         ChannelPipeline pipeline,
         ChannelHandler handler) {
-      try {
-        // Server pipeline handlers
-        if (handler instanceof HttpServerCodec) {
-          pipeline.addLast(
-              HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(contextStore));
-        } else if (handler instanceof HttpRequestDecoder) {
-          pipeline.addLast(
-              HttpServerRequestTracingHandler.class.getName(),
-              new HttpServerRequestTracingHandler(contextStore));
-        } else if (handler instanceof HttpResponseEncoder) {
-          pipeline.addLast(
-              HttpServerResponseTracingHandler.class.getName(),
-              new HttpServerResponseTracingHandler(contextStore));
-        } else
-        // Client pipeline handlers
-        if (handler instanceof HttpClientCodec) {
-          pipeline.addLast(
-              HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(contextStore));
-        } else if (handler instanceof HttpRequestEncoder) {
-          pipeline.addLast(
-              HttpClientRequestTracingHandler.class.getName(),
-              new HttpClientRequestTracingHandler(contextStore));
-        } else if (handler instanceof HttpResponseDecoder) {
-          pipeline.addLast(
-              HttpClientResponseTracingHandler.class.getName(),
-              new HttpClientResponseTracingHandler(contextStore));
-        }
-      } finally {
-        CallDepth.forClass(ChannelPipeline.class).reset();
+      // Server pipeline handlers
+      if (handler instanceof HttpServerCodec) {
+        pipeline.addLast(
+            HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(contextStore));
+      } else if (handler instanceof HttpRequestDecoder) {
+        pipeline.addLast(
+            HttpServerRequestTracingHandler.class.getName(),
+            new HttpServerRequestTracingHandler(contextStore));
+      } else if (handler instanceof HttpResponseEncoder) {
+        pipeline.addLast(
+            HttpServerResponseTracingHandler.class.getName(),
+            new HttpServerResponseTracingHandler(contextStore));
+      } else
+      // Client pipeline handlers
+      if (handler instanceof HttpClientCodec) {
+        pipeline.addLast(
+            HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(contextStore));
+      } else if (handler instanceof HttpRequestEncoder) {
+        pipeline.addLast(
+            HttpClientRequestTracingHandler.class.getName(),
+            new HttpClientRequestTracingHandler(contextStore));
+      } else if (handler instanceof HttpResponseDecoder) {
+        pipeline.addLast(
+            HttpClientResponseTracingHandler.class.getName(),
+            new HttpClientResponseTracingHandler(contextStore));
       }
     }
   }
@@ -109,25 +105,29 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd2ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static int checkDepth(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
+    public static void checkDepth(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(1) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
+      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int depth,
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(1) ChannelHandler handler) {
-      if (depth > 0) {
+        @Advice.Argument(1) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.get() > 0) {
         return;
       }
+      callDepth.reset();
 
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
@@ -140,25 +140,29 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd3ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static int checkDepth(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
+    public static void checkDepth(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      return CallDepth.forClass(ChannelPipeline.class).getAndIncrement();
+      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int depth,
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(2) ChannelHandler handler) {
-      if (depth > 0) {
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.get() > 0) {
         return;
       }
+      callDepth.reset();
 
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);

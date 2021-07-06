@@ -20,9 +20,11 @@ public class AsyncDispatchAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static boolean enter(
-      @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
-    int depth = CallDepth.forClass(AsyncContext.class).getAndIncrement();
-    if (depth > 0) {
+      @Advice.This AsyncContext context,
+      @Advice.AllArguments Object[] args,
+      @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    callDepth = CallDepth.forClass(AsyncContext.class);
+    if (callDepth.getAndIncrement() > 0) {
       return false;
     }
 
@@ -45,9 +47,10 @@ public class AsyncDispatchAdvice {
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void exit(@Advice.Enter boolean topLevel) {
+  public static void exit(
+      @Advice.Enter boolean topLevel, @Advice.Local("otelCallDepth") CallDepth callDepth) {
     if (topLevel) {
-      CallDepth.forClass(AsyncContext.class).reset();
+      callDepth.reset();
     }
   }
 }

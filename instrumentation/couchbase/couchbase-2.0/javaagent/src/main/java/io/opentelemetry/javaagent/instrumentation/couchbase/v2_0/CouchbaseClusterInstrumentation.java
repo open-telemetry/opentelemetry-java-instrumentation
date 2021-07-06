@@ -42,19 +42,20 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepth.forClass(CouchbaseCluster.class).getAndIncrement();
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(CouchbaseCluster.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
-        @Advice.Enter int callDepth,
         @Advice.Origin Method method,
-        @Advice.Return(readOnly = false) Observable<?> result) {
-      if (callDepth > 0) {
+        @Advice.Return(readOnly = false) Observable<?> result,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.get() > 0) {
         return;
       }
-      CallDepth.forClass(CouchbaseCluster.class).reset();
+      callDepth.reset();
 
       result = Observable.create(CouchbaseOnSubscribe.create(result, null, method));
     }

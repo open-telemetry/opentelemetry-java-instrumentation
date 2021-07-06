@@ -17,18 +17,18 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class AsyncStartAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void startAsyncEnter() {
+  public static void startAsyncEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
     // This allows to detect the outermost invocation of startAsync in method exit
-    CallDepth.forClass(AsyncContext.class).getAndIncrement();
+    callDepth = CallDepth.forClass(AsyncContext.class);
+    callDepth.getAndIncrement();
   }
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void startAsyncExit(
-      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request) {
+      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
+      @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-    int callDepth = CallDepth.forClass(AsyncContext.class).decrementAndGet();
-
-    if (callDepth != 0) {
+    if (callDepth.decrementAndGet() != 0) {
       // This is not the outermost invocation, ignore.
       return;
     }

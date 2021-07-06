@@ -54,9 +54,11 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepth.forClass(PayloadRoot.class).getAndIncrement() > 0) {
+      callDepth = CallDepth.forClass(PayloadRoot.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(method);
@@ -66,12 +68,13 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      CallDepth.forClass(PayloadRoot.class).reset();
+      callDepth.reset();
 
       scope.close();
       if (throwable == null) {

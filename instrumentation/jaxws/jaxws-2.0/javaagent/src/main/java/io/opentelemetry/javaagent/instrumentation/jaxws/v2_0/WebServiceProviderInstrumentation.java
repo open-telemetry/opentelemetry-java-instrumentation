@@ -51,9 +51,11 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
     public static void startSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepth.forClass(Provider.class).getAndIncrement() > 0) {
+      callDepth = CallDepth.forClass(Provider.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(target.getClass(), method);
@@ -63,12 +65,13 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      CallDepth.forClass(Provider.class).reset();
+      callDepth.reset();
 
       scope.close();
       if (throwable == null) {

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.service;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -18,15 +17,16 @@ public class ServletAndFilterAdviceHelper {
       REQUEST request,
       RESPONSE response,
       Throwable throwable,
+      CallDepth callDepth,
       Context context,
       Scope scope) {
-    int callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey()).decrementAndGet();
+    callDepth.decrementAndGet();
 
     if (scope != null) {
       scope.close();
     }
 
-    if (context == null && callDepth == 0) {
+    if (context == null && callDepth.get() == 0) {
       Context currentContext = Java8BytecodeBridge.currentContext();
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.

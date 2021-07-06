@@ -14,8 +14,6 @@ public class HttpServletResponseAdviceHelper {
   public static void stopSpan(
       BaseTracer tracer, Throwable throwable, Context context, Scope scope, CallDepth callDepth) {
     if (callDepth.decrementAndGet() == 0 && context != null) {
-      callDepth.reset();
-
       scope.close();
 
       if (throwable != null) {
