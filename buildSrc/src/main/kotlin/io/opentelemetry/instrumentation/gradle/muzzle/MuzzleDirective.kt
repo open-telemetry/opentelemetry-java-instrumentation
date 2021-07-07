@@ -21,7 +21,7 @@ abstract class MuzzleDirective {
   abstract val excludedDependencies: ListProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
-  abstract val coreJdk: Property<Boolean>
+  internal abstract val coreJdk: Property<Boolean> // use coreJdk() function below to enable
 
   init {
     name.convention("")
