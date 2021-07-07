@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
@@ -48,8 +49,14 @@ public class TransactionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startCommit(
         @Advice.This Transaction transaction,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
 
       ContextStore<Transaction, Context> contextStore =
           InstrumentationContext.get(Transaction.class, Context.class);
@@ -64,8 +71,13 @@ public class TransactionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
 
       if (scope != null) {
         scope.close();
