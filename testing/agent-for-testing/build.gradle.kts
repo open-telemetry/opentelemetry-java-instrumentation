@@ -68,6 +68,7 @@ tasks {
 dependencies {
   // Dependencies to include without obfuscation.
   shadowInclude(project(":javaagent-bootstrap"))
+  shadowInclude(project(":instrumentation", configuration = "bootstrap"))
 
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-api")
