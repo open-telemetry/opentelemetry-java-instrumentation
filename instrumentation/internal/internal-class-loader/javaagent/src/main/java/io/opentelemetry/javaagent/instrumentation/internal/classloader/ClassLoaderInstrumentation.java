@@ -109,6 +109,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
       // back to this instrumentation over and over, causing a StackOverflowError
       CallDepth callDepth = CallDepth.forClass(ClassLoader.class);
       if (callDepth.getAndIncrement() > 0) {
+        callDepth.decrementAndGet();
         return null;
       }
 
@@ -128,7 +129,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         // ends up calling a ClassFileTransformer which ends up calling loadClass() further down the
         // stack on one of our bootstrap packages (since the call depth check would then suppress
         // the nested loadClass instrumentation)
-        callDepth.reset();
+        callDepth.decrementAndGet();
       }
       return null;
     }

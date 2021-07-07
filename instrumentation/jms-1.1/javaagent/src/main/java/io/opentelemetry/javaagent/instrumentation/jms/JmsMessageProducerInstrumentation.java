@@ -92,13 +92,14 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
-      scope.close();
-      producerInstrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        producerInstrumenter().end(context, request, null, throwable);
+      }
     }
   }
 
@@ -135,13 +136,14 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
-      scope.close();
-      producerInstrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        producerInstrumenter().end(context, request, null, throwable);
+      }
     }
   }
 }
