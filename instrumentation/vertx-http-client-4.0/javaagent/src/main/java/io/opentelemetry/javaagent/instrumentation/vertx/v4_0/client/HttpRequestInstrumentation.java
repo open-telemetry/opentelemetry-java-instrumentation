@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client.VertxClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -83,7 +84,6 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class EndRequestAdvice {
 
-    @SuppressWarnings("SystemOut")
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
         @Advice.This HttpClientRequest request,
@@ -91,11 +91,11 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
 
-      if (!VertxClientTracer.tracer().shouldStartSpan(parentContext)) {
+      if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      context = VertxClientTracer.tracer().startSpan(parentContext, request, request);
+      context = tracer().startSpan(parentContext, request, request);
       Contexts contexts = new Contexts(parentContext, context);
       InstrumentationContext.get(HttpClientRequest.class, Contexts.class).put(request, contexts);
 
@@ -111,7 +111,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         scope.close();
       }
       if (throwable != null) {
-        VertxClientTracer.tracer().endExceptionally(context, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
@@ -131,7 +131,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VertxClientTracer.tracer().endExceptionally(contexts.context, t);
+      tracer().endExceptionally(contexts.context, t);
 
       // Scoping all potential callbacks etc to the parent context
       scope = contexts.parentContext.makeCurrent();
@@ -160,7 +160,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VertxClientTracer.tracer().end(contexts.context, response);
+      tracer().end(contexts.context, response);
 
       // Scoping all potential callbacks etc to the parent context
       scope = contexts.parentContext.makeCurrent();
