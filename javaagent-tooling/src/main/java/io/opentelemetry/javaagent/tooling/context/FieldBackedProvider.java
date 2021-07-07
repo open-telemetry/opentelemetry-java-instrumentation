@@ -78,7 +78,7 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  private static final TransformSafeLogger log =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(FieldBackedProvider.class);
 
   /**
@@ -195,7 +195,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass()).equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  log.trace("Found context-store access in {}", instrumenterClass.getName());
+                  logger.trace("Found context-store access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -210,8 +210,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     String keyClassName = ((Type) stack[1]).getClassName();
                     TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
-                    if (log.isTraceEnabled()) {
-                      log.trace(
+                    if (logger.isTraceEnabled()) {
+                      logger.trace(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),
                           keyClassName,
@@ -370,11 +370,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
-            log.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            logger.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          log.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
+          logger.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
           INSTALLED_CONTEXT_MATCHERS.add(entry);
 
           /*

@@ -159,7 +159,7 @@ class ApplicationSpan implements Span {
 
   static class Builder implements SpanBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(Builder.class);
+    private static final Logger logger = LoggerFactory.getLogger(Builder.class);
 
     private final io.opentelemetry.api.trace.SpanBuilder agentBuilder;
 

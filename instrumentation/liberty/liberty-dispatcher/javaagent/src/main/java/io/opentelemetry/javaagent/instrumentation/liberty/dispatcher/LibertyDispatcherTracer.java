@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class LibertyDispatcherTracer
     extends HttpServerTracer<
         LibertyRequestWrapper, LibertyResponseWrapper, LibertyConnectionWrapper, Void> {
-  private static final Logger log = LoggerFactory.getLogger(LibertyDispatcherTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(LibertyDispatcherTracer.class);
   private static final LibertyDispatcherTracer TRACER = new LibertyDispatcherTracer();
 
   public static LibertyDispatcherTracer tracer() {
@@ -80,7 +80,7 @@ public class LibertyDispatcherTracer
               null)
           .toString();
     } catch (URISyntaxException e) {
-      log.debug("Failed to construct request URI", e);
+      logger.debug("Failed to construct request URI", e);
       return null;
     }
   }

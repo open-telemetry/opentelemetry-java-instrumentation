@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class SupportabilityMetrics {
-  private static final Logger log = LoggerFactory.getLogger(SupportabilityMetrics.class);
+  private static final Logger logger = LoggerFactory.getLogger(SupportabilityMetrics.class);
   private final boolean agentDebugEnabled;
   private final Consumer<String> reporter;
 
@@ -25,7 +25,7 @@ public final class SupportabilityMetrics {
   private final ConcurrentMap<String, LongAdder> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
-      new SupportabilityMetrics(Config.get(), log::debug).start();
+      new SupportabilityMetrics(Config.get(), logger::debug).start();
 
   public static SupportabilityMetrics instance() {
     return INSTANCE;

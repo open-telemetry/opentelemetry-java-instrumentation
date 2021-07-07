@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class RunnableWrapper implements Runnable {
 
-  private static final Logger log = LoggerFactory.getLogger(RunnableWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(RunnableWrapper.class);
 
   private final Runnable runnable;
 
@@ -32,7 +32,7 @@ public final class RunnableWrapper implements Runnable {
     // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
     // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
     if (task.getClass().getName().contains("/") && !(task instanceof RunnableWrapper)) {
-      log.debug("Wrapping runnable task {}", task);
+      logger.debug("Wrapping runnable task {}", task);
       return new RunnableWrapper(task);
     }
     return task;

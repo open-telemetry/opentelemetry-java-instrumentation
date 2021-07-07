@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 class ApplicationBatchRecorder implements BatchRecorder {
 
-  private static final Logger log = LoggerFactory.getLogger(ApplicationBatchRecorder.class);
+  private static final Logger logger = LoggerFactory.getLogger(ApplicationBatchRecorder.class);
 
   private final io.opentelemetry.api.metrics.BatchRecorder agentBatchRecorder;
 
@@ -31,7 +31,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
       agentBatchRecorder.put(
           ((ApplicationLongValueRecorder) measure).getAgentLongValueRecorder(), value);
     } else {
-      log.debug("unexpected measure: {}", measure);
+      logger.debug("unexpected measure: {}", measure);
     }
     return this;
   }
@@ -42,7 +42,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
       agentBatchRecorder.put(
           ((ApplicationDoubleValueRecorder) measure).getAgentDoubleValueRecorder(), value);
     } else {
-      log.debug("unexpected measure: {}", measure);
+      logger.debug("unexpected measure: {}", measure);
     }
     return this;
   }
@@ -52,7 +52,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
     if (counter instanceof ApplicationLongCounter) {
       agentBatchRecorder.put(((ApplicationLongCounter) counter).getAgentLongCounter(), value);
     } else {
-      log.debug("unexpected counter: {}", counter);
+      logger.debug("unexpected counter: {}", counter);
     }
     return this;
   }
@@ -62,7 +62,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
     if (counter instanceof ApplicationDoubleCounter) {
       agentBatchRecorder.put(((ApplicationDoubleCounter) counter).getAgentDoubleCounter(), value);
     } else {
-      log.debug("unexpected counter: {}", counter);
+      logger.debug("unexpected counter: {}", counter);
     }
     return this;
   }
@@ -73,7 +73,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
       agentBatchRecorder.put(
           ((ApplicationLongUpDownCounter) counter).getAgentLongUpDownCounter(), value);
     } else {
-      log.debug("unexpected counter: {}", counter);
+      logger.debug("unexpected counter: {}", counter);
     }
     return this;
   }
@@ -84,7 +84,7 @@ class ApplicationBatchRecorder implements BatchRecorder {
       agentBatchRecorder.put(
           ((ApplicationDoubleUpDownCounter) counter).getAgentDoubleUpDownCounter(), value);
     } else {
-      log.debug("unexpected counter: {}", counter);
+      logger.debug("unexpected counter: {}", counter);
     }
     return this;
   }

@@ -292,7 +292,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, dbLoc)));
         } catch (NumberFormatException e) {
-          log.debug(e.getMessage(), e);
+          logger.debug(e.getMessage(), e);
         }
       } else {
         hostEndLoc = dbLoc;
@@ -333,7 +333,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
         } catch (NumberFormatException e) {
-          log.debug(e.getMessage(), e);
+          logger.debug(e.getMessage(), e);
         }
       } else {
         hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -482,7 +482,7 @@ public enum JdbcConnectionUrlParser {
             try {
               parsedPort = Integer.parseInt(portOrInstance);
             } catch (NumberFormatException e) {
-              log.debug(e.getMessage(), e);
+              logger.debug(e.getMessage(), e);
             }
             if (parsedPort == null) {
               port = null;
@@ -791,7 +791,7 @@ public enum JdbcConnectionUrlParser {
     }
   };
 
-  private static final Logger log = LoggerFactory.getLogger(JdbcConnectionUrlParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcConnectionUrlParser.class);
 
   private static final Map<String, JdbcConnectionUrlParser> typeParsers = new HashMap<>();
 
@@ -844,7 +844,7 @@ public enum JdbcConnectionUrlParser {
       }
       return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
     } catch (RuntimeException e) {
-      log.debug("Error parsing URL", e);
+      logger.debug("Error parsing URL", e);
       return parsedProps.build();
     }
   }
@@ -922,7 +922,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (NumberFormatException e) {
-          log.debug("Error parsing portnumber property: " + portNumber, e);
+          logger.debug("Error parsing portnumber property: " + portNumber, e);
         }
       }
 
@@ -931,7 +931,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (NumberFormatException e) {
-          log.debug("Error parsing portNumber property: " + portNumber, e);
+          logger.debug("Error parsing portNumber property: " + portNumber, e);
         }
       }
     }

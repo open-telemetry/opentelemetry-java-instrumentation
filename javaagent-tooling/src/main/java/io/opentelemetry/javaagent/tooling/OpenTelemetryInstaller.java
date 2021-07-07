@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @AutoService(AgentListener.class)
 public class OpenTelemetryInstaller implements AgentListener {
-  private static final Logger log = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
+  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
@@ -40,7 +40,7 @@ public class OpenTelemetryInstaller implements AgentListener {
       OpenTelemetrySdkAccess.internalSetForceFlush(
           (timeout, unit) -> sdk.getSdkTracerProvider().forceFlush().join(timeout, unit));
     } else {
-      log.info("Tracing is disabled.");
+      logger.info("Tracing is disabled.");
     }
   }
 

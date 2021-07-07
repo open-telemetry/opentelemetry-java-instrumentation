@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class JmsMessageAttributesExtractor
     extends MessagingAttributesExtractor<MessageWithDestination, Void> {
-  private static final Logger log = LoggerFactory.getLogger(JmsMessageAttributesExtractor.class);
+  private static final Logger logger = LoggerFactory.getLogger(JmsMessageAttributesExtractor.class);
 
   @Nullable
   @Override
@@ -63,7 +63,7 @@ public class JmsMessageAttributesExtractor
     try {
       return messageWithDestination.getMessage().getJMSCorrelationID();
     } catch (JMSException e) {
-      log.debug("Failure getting JMS correlation id", e);
+      logger.debug("Failure getting JMS correlation id", e);
       return null;
     }
   }
@@ -91,7 +91,7 @@ public class JmsMessageAttributesExtractor
     try {
       return messageWithDestination.getMessage().getJMSMessageID();
     } catch (JMSException e) {
-      log.debug("Failure getting JMS message id", e);
+      logger.debug("Failure getting JMS message id", e);
       return null;
     }
   }

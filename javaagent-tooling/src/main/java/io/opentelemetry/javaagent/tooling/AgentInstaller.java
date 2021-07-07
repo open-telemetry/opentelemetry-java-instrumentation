@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 public class AgentInstaller {
 
-  private static final Logger log;
+  private static final Logger logger;
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
@@ -64,7 +64,7 @@ public class AgentInstaller {
 
   static {
     LoggingConfigurer.configureLogger();
-    log = LoggerFactory.getLogger(AgentInstaller.class);
+    logger = LoggerFactory.getLogger(AgentInstaller.class);
 
     addByteBuddyRawSetting();
     // this needs to be done as early as possible - before the first Config.get() call
@@ -95,7 +95,7 @@ public class AgentInstaller {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
       installBytebuddyAgent(inst, agentListeners);
     } else {
-      log.debug("Tracing is disabled, not installing instrumentations.");
+      logger.debug("Tracing is disabled, not installing instrumentations.");
     }
   }
 
@@ -134,7 +134,7 @@ public class AgentInstaller {
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
-    if (log.isDebugEnabled()) {
+    if (logger.isDebugEnabled()) {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -145,7 +145,7 @@ public class AgentInstaller {
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class)) {
-      log.debug(
+      logger.debug(
           "Loading extension {} [class {}]",
           agentExtension.extensionName(),
           agentExtension.getClass().getName());
@@ -153,14 +153,14 @@ public class AgentInstaller {
         agentBuilder = agentExtension.extend(agentBuilder);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
-        log.error(
+        logger.error(
             "Unable to load extension {} [class {}]",
             agentExtension.extensionName(),
             agentExtension.getClass().getName(),
             e);
       }
     }
-    log.debug("Installed {} extension(s)", numberOfLoadedExtensions);
+    logger.debug("Installed {} extension(s)", numberOfLoadedExtensions);
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     runAfterAgentListeners(agentListeners, config);
@@ -218,7 +218,7 @@ public class AgentInstaller {
     if (!shouldForceSynchronousAgentListenersCalls
         && isJavaBefore9()
         && isAppUsingCustomLogManager()) {
-      log.debug("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
+      logger.debug("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager", new DelayedAfterAgentCallback(config, agentListeners));
     } else {
@@ -234,7 +234,7 @@ public class AgentInstaller {
       System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true");
       boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
       if (!rawTypes) {
-        log.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
+        logger.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
       }
     } finally {
       if (savedPropertyValue == null) {
@@ -247,7 +247,7 @@ public class AgentInstaller {
 
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {
 
-    private static final Logger log = LoggerFactory.getLogger(RedefinitionLoggingListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedefinitionLoggingListener.class);
 
     @Override
     public void onBatch(int index, List<Class<?>> batch, List<Class<?>> types) {}
@@ -255,8 +255,9 @@ public class AgentInstaller {
     @Override
     public Iterable<? extends List<Class<?>>> onError(
         int index, List<Class<?>> batch, Throwable throwable, List<Class<?>> types) {
-      if (log.isDebugEnabled()) {
-        log.debug("Exception while retransforming {} classes: {}", batch.size(), batch, throwable);
+      if (logger.isDebugEnabled()) {
+        logger.debug(
+            "Exception while retransforming {} classes: {}", batch.size(), batch, throwable);
       }
       return Collections.emptyList();
     }
@@ -268,7 +269,7 @@ public class AgentInstaller {
 
   static class TransformLoggingListener implements AgentBuilder.Listener {
 
-    private static final TransformSafeLogger log =
+    private static final TransformSafeLogger logger =
         TransformSafeLogger.getLogger(TransformLoggingListener.class);
 
     @Override
@@ -278,8 +279,8 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         Throwable throwable) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "Failed to handle {} for transformation on classloader {}",
             typeName,
             classLoader,
@@ -294,7 +295,7 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         DynamicType dynamicType) {
-      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
+      logger.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
 
     @Override
@@ -361,7 +362,7 @@ public class AgentInstaller {
         try {
           agentListener.afterAgent(config);
         } catch (RuntimeException e) {
-          log.error("Failed to execute {}", agentListener.getClass().getName(), e);
+          logger.error("Failed to execute {}", agentListener.getClass().getName(), e);
         }
       }
     }
@@ -445,7 +446,7 @@ public class AgentInstaller {
   private static boolean isAppUsingCustomLogManager() {
     String jbossHome = System.getenv("JBOSS_HOME");
     if (jbossHome != null) {
-      log.debug("Found JBoss: {}; assuming app is using custom LogManager", jbossHome);
+      logger.debug("Found JBoss: {}; assuming app is using custom LogManager", jbossHome);
       // JBoss/Wildfly is known to set a custom log manager after startup.
       // Originally we were checking for the presence of a jboss class,
       // but it seems some non-jboss applications have jboss classes on the classpath.
@@ -456,12 +457,12 @@ public class AgentInstaller {
 
     String customLogManager = System.getProperty("java.util.logging.manager");
     if (customLogManager != null) {
-      log.debug(
+      logger.debug(
           "Detected custom LogManager configuration: java.util.logging.manager={}",
           customLogManager);
       boolean onSysClasspath =
           ClassLoader.getSystemResource(getResourceName(customLogManager)) != null;
-      log.debug(
+      logger.debug(
           "Class {} is on system classpath: {}delaying AgentInstaller#afterAgent()",
           customLogManager,
           onSysClasspath ? "not " : "");
@@ -478,7 +479,7 @@ public class AgentInstaller {
 
   private static void logVersionInfo() {
     VersionLogger.logAllVersions();
-    log.debug(
+    logger.debug(
         "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
   }
 

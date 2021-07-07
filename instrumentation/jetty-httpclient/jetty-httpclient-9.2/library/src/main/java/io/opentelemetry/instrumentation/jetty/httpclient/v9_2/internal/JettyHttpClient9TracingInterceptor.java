@@ -34,7 +34,7 @@ public class JettyHttpClient9TracingInterceptor
         Response.FailureListener,
         Response.CompleteListener {
 
-  private static final Logger LOG =
+  private static final Logger logger =
       LoggerFactory.getLogger(JettyHttpClient9TracingInterceptor.class);
 
   @Nullable private Context context;
@@ -59,7 +59,7 @@ public class JettyHttpClient9TracingInterceptor
         jettyRequest.getRequestListeners(JettyHttpClient9TracingInterceptor.class);
 
     if (!current.isEmpty()) {
-      LOG.warn("A tracing interceptor is already in place for this request! ");
+      logger.warn("A tracing interceptor is already in place for this request! ");
       return;
     }
     startSpan(jettyRequest);
@@ -148,7 +148,7 @@ public class JettyHttpClient9TracingInterceptor
     if (this.context != null) {
       instrumenter.end(this.context, response.getRequest(), response, null);
     } else {
-      LOG.debug("onComplete - could not find an otel context");
+      logger.debug("onComplete - could not find an otel context");
     }
   }
 }
