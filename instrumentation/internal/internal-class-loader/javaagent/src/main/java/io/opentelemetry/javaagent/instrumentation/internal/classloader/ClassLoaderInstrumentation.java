@@ -109,6 +109,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
       // back to this instrumentation over and over, causing a StackOverflowError
       CallDepth callDepth = CallDepth.forClass(ClassLoader.class);
       if (callDepth.getAndIncrement() > 0) {
+        callDepth.decrementAndGet();
         return null;
       }
 
