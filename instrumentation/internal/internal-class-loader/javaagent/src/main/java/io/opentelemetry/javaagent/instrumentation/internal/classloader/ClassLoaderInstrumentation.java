@@ -18,7 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.tooling.Constants;
 import java.lang.invoke.MethodHandle;
@@ -107,8 +107,9 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
       // back to this instrumentation over and over, causing a StackOverflowError
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
-      if (callDepth > 0) {
+      CallDepth callDepth = CallDepth.forClass(ClassLoader.class);
+      if (callDepth.getAndIncrement() > 0) {
+        callDepth.decrementAndGet();
         return null;
       }
 
@@ -128,7 +129,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         // ends up calling a ClassFileTransformer which ends up calling loadClass() further down the
         // stack on one of our bootstrap packages (since the call depth check would then suppress
         // the nested loadClass instrumentation)
-        CallDepthThreadLocalMap.reset(ClassLoader.class);
+        callDepth.decrementAndGet();
       }
       return null;
     }

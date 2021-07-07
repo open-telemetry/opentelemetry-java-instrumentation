@@ -20,7 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
@@ -121,8 +121,14 @@ public class SessionInstrumentation implements TypeInstrumentation {
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
         @Advice.Argument(0) Object entity,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
+
+      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
 
       ContextStore<SharedSessionContract, Context> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Context.class);
@@ -130,10 +136,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       if (sessionContext == null) {
         return; // No state found. We aren't in a Session.
-      }
-
-      if (CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class) > 0) {
-        return; // This method call is being traced already.
       }
 
       if (!SCOPE_ONLY_METHODS.contains(name)) {
@@ -149,8 +151,13 @@ public class SessionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
         @Advice.Origin("#m") String name,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
+
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
 
       if (scope != null) {
         scope.close();

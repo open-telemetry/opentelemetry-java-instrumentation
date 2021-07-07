@@ -7,34 +7,37 @@ package io.opentelemetry.instrumentation.reactor
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.UnicastProcessor
 import reactor.test.StepVerifier
 import spock.lang.Specification
 
-class ReactorAsyncSpanEndStrategyTest extends Specification {
-  BaseTracer tracer
+class ReactorAsyncOperationEndStrategyTest extends Specification {
+  String request = "request"
+  String response = "response"
+  
+  Instrumenter<String, String> instrumenter
 
   Context context
 
   Span span
 
-  def underTest = ReactorAsyncSpanEndStrategy.create()
+  def underTest = ReactorAsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = ReactorAsyncSpanEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = ReactorAsyncOperationEndStrategy.newBuilder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 
   void setup() {
-    tracer = Mock()
+    instrumenter = Mock()
     context = Mock()
     span = Mock()
     span.storeInContext(_) >> { callRealMethod() }
   }
 
-  static class MonoTest extends ReactorAsyncSpanEndStrategyTest {
+  static class MonoTest extends ReactorAsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Mono)
@@ -42,23 +45,23 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
 
     def "ends span on already completed"() {
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, Mono.just("Value"))
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.just(response), String)
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
     }
 
     def "ends span on already empty"() {
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, Mono.empty())
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.empty(), String)
       StepVerifier.create(result)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span on already errored"() {
@@ -66,12 +69,12 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def exception = new IllegalStateException()
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, Mono.error(exception))
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.error(exception), String)
       StepVerifier.create(result)
         .verifyErrorMatches({  it == exception })
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when completed"() {
@@ -80,21 +83,21 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def mono = source.singleOrEmpty()
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, mono)
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, mono, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onNext("Value")
+      source.onNext(response)
       source.onComplete()
-      verifier.expectNext("Value")
+      verifier.expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
     }
 
     def "ends span when empty"() {
@@ -103,19 +106,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def mono = source.singleOrEmpty()
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, mono)
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, mono, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
       verifier.verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span when errored"() {
@@ -125,19 +128,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def mono = source.singleOrEmpty()
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, mono)
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, mono, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
       verifier.verifyErrorMatches({ it == exception })
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when cancelled"() {
@@ -147,18 +150,18 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, mono)
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, mono, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       verifier.thenCancel().verify()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -169,41 +172,41 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Mono<?>) underTestWithExperimentalAttributes.end(tracer, context, mono)
+      def result = (Mono<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, mono, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       verifier.thenCancel().verify()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
 
       when:
-      def result = (Mono<?>) underTest.end(tracer, context, Mono.just("Value"))
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.just(response), String)
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
     }
   }
 
-  static class FluxTest extends ReactorAsyncSpanEndStrategyTest {
+  static class FluxTest extends ReactorAsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Flux)
@@ -211,23 +214,23 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
 
     def "ends span on already completed"() {
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, Flux.just("Value"))
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.just(response), String)
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span on already empty"() {
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, Flux.empty())
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.empty(), String)
       StepVerifier.create(result)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span on already errored"() {
@@ -235,12 +238,12 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def exception = new IllegalStateException()
 
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, Flux.error(exception))
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.error(exception), String)
       StepVerifier.create(result)
         .verifyErrorMatches({  it == exception })
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when completed"() {
@@ -248,21 +251,21 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def source = UnicastProcessor.<String>create()
 
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, source)
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onNext("Value")
+      source.onNext(response)
       source.onComplete()
-      verifier.expectNext("Value")
+      verifier.expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span when empty"() {
@@ -270,19 +273,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def source = UnicastProcessor.<String>create()
 
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, source)
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
       verifier.verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span when errored"() {
@@ -291,19 +294,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def source = UnicastProcessor.<String>create()
 
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, source)
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
       verifier.verifyErrorMatches({ it == exception })
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when cancelled"() {
@@ -312,19 +315,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, source)
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       verifier.thenCancel()
         .verify()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -334,37 +337,37 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flux<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Flux<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       def verifier = StepVerifier.create(result)
         .expectSubscription()
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       verifier.thenCancel()
         .verify()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
       when:
-      def result = (Flux<?>) underTest.end(tracer, context, Flux.just("Value"))
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.just(response), String)
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
       StepVerifier.create(result)
-        .expectNext("Value")
+        .expectNext(response)
         .verifyComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
   }
 }

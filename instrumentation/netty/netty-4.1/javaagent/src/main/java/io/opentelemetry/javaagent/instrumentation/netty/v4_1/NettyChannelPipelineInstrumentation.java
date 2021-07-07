@@ -24,7 +24,7 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
@@ -63,7 +63,9 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
+    public static void trackCallDepth(
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -73,19 +75,19 @@ public class NettyChannelPipelineInstrumentation
       // Using the specific handler key instead of the generic ChannelPipeline.class will help us
       // both to handle such cases and avoid adding our additional handlers in case of internal
       // calls of `addLast` to other method overloads with a compatible signature.
-      return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
+      callDepth = CallDepth.forClass(handler.getClass());
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
-        @Advice.Argument(2) ChannelHandler handler) {
-      if (callDepth > 0) {
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(handler.getClass());
 
       String name = handlerName;
       if (name == null) {

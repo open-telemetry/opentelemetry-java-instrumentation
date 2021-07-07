@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -19,6 +18,12 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
 
+  private final ClassLoader bootstrapProxy;
+
+  public AgentLocationStrategy(ClassLoader bootstrapProxy) {
+    this.bootstrapProxy = bootstrapProxy;
+  }
+
   public ClassFileLocator classFileLocator(ClassLoader classLoader) {
     return classFileLocator(classLoader, null);
   }
@@ -26,7 +31,9 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
   @Override
   public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
     List<ClassFileLocator> locators = new ArrayList<>();
-    locators.add(ClassFileLocator.ForClassLoader.of(Utils.getBootstrapProxy()));
+    if (bootstrapProxy != null) {
+      locators.add(ClassFileLocator.ForClassLoader.of(bootstrapProxy));
+    }
     while (classLoader != null) {
       locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
       classLoader = classLoader.getParent();

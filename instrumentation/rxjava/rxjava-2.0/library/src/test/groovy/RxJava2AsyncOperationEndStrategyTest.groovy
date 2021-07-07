@@ -5,49 +5,52 @@
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer
-import io.opentelemetry.instrumentation.rxjava3.RxJava3AsyncSpanEndStrategy
-import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Maybe
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.observers.TestObserver
-import io.reactivex.rxjava3.parallel.ParallelFlowable
-import io.reactivex.rxjava3.processors.ReplayProcessor
-import io.reactivex.rxjava3.processors.UnicastProcessor
-import io.reactivex.rxjava3.subjects.CompletableSubject
-import io.reactivex.rxjava3.subjects.MaybeSubject
-import io.reactivex.rxjava3.subjects.ReplaySubject
-import io.reactivex.rxjava3.subjects.SingleSubject
-import io.reactivex.rxjava3.subjects.UnicastSubject
-import io.reactivex.rxjava3.subscribers.TestSubscriber
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import io.opentelemetry.instrumentation.rxjava2.RxJava2AsyncOperationEndStrategy
+import io.reactivex.Completable
+import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.observers.TestObserver
+import io.reactivex.parallel.ParallelFlowable
+import io.reactivex.processors.ReplayProcessor
+import io.reactivex.processors.UnicastProcessor
+import io.reactivex.subjects.CompletableSubject
+import io.reactivex.subjects.MaybeSubject
+import io.reactivex.subjects.ReplaySubject
+import io.reactivex.subjects.SingleSubject
+import io.reactivex.subjects.UnicastSubject
+import io.reactivex.subscribers.TestSubscriber
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Specification
 
-class RxJava3AsyncSpanEndStrategyTest extends Specification {
-  BaseTracer tracer
+class RxJava2AsyncOperationEndStrategyTest extends Specification {
+  String request = "request"
+  String response = "response"
+
+  Instrumenter<String, String> instrumenter
 
   Context context
 
   Span span
 
-  def underTest = RxJava3AsyncSpanEndStrategy.create()
+  def underTest = RxJava2AsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = RxJava3AsyncSpanEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = RxJava2AsyncOperationEndStrategy.newBuilder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 
   void setup() {
-    tracer = Mock()
+    instrumenter = Mock()
     context = Mock()
     span = Mock()
     span.storeInContext(_) >> { callRealMethod() }
   }
 
-  static class CompletableTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class CompletableTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Completable)
@@ -58,11 +61,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Completable) underTest.end(tracer, context, Completable.complete())
+      def result = (Completable) underTest.end(instrumenter, context, request, Completable.complete(), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -72,11 +75,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Completable) underTest.end(tracer, context, Completable.error(exception))
+      def result = (Completable) underTest.end(instrumenter, context, request, Completable.error(exception), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -86,17 +89,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Completable) underTest.end(tracer, context, source)
+      def result = (Completable) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -107,17 +110,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Completable) underTest.end(tracer, context, source)
+      def result = (Completable) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -128,18 +131,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Completable) underTest.end(tracer, context, source)
+      def result = (Completable) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -150,18 +153,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Completable) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Completable) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
@@ -173,26 +176,26 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer3 = new TestObserver()
 
       when:
-      def result = (Completable) underTest.end(tracer, context, source)
+      def result = (Completable) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer1)
       result.subscribe(observer2)
       result.subscribe(observer3)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer1.assertComplete()
       observer2.assertComplete()
       observer3.assertComplete()
     }
   }
 
-  static class MaybeTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class MaybeTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Maybe)
@@ -203,11 +206,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, Maybe.just("Value"))
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, Maybe.just(response), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
       observer.assertComplete()
     }
 
@@ -216,11 +219,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, Maybe.empty())
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, Maybe.empty(), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -230,11 +233,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, Maybe.error(exception))
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, Maybe.error(exception), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -244,17 +247,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onSuccess("Value")
+      source.onSuccess(response)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
       observer.assertComplete()
     }
 
@@ -264,17 +267,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -285,17 +288,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -306,17 +309,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -327,18 +330,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Maybe<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Maybe<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
@@ -350,29 +353,29 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer3 = new TestObserver()
 
       when:
-      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      def result = (Maybe<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer1)
       result.subscribe(observer2)
       result.subscribe(observer3)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onSuccess("Value")
+      source.onSuccess(response)
 
       then:
-      1 * tracer.end(context)
-      observer1.assertValue("Value")
+      1 * instrumenter.end(context, request, response, null)
+      observer1.assertValue(response)
       observer1.assertComplete()
-      observer2.assertValue("Value")
+      observer2.assertValue(response)
       observer2.assertComplete()
-      observer3.assertValue("Value")
+      observer3.assertValue(response)
       observer3.assertComplete()
     }
   }
 
-  static class SingleTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class SingleTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Single)
@@ -383,11 +386,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, Single.just("Value"))
+      def result = (Single<?>) underTest.end(instrumenter, context, request, Single.just(response), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
       observer.assertComplete()
     }
 
@@ -397,11 +400,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, Single.error(exception))
+      def result = (Single<?>) underTest.end(instrumenter, context, request, Single.error(exception), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -411,17 +414,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, source)
+      def result = (Single<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onSuccess("Value")
+      source.onSuccess(response)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, response, null)
       observer.assertComplete()
     }
 
@@ -432,17 +435,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, source)
+      def result = (Single<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -453,17 +456,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, source)
+      def result = (Single<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -474,18 +477,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Single<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Single<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
@@ -497,29 +500,29 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer3 = new TestObserver()
 
       when:
-      def result = (Single<?>) underTest.end(tracer, context, source)
+      def result = (Single<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer1)
       result.subscribe(observer2)
       result.subscribe(observer3)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      source.onSuccess("Value")
+      source.onSuccess(response)
 
       then:
-      1 * tracer.end(context)
-      observer1.assertValue("Value")
+      1 * instrumenter.end(context, request, response, null)
+      observer1.assertValue(response)
       observer1.assertComplete()
-      observer2.assertValue("Value")
+      observer2.assertValue(response)
       observer2.assertComplete()
-      observer3.assertValue("Value")
+      observer3.assertValue(response)
       observer3.assertComplete()
     }
   }
 
-  static class ObservableTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class ObservableTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Observable)
@@ -530,11 +533,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, Observable.just("Value"))
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, Observable.just(response), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -544,11 +547,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, Observable.error(exception))
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, Observable.error(exception), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -558,17 +561,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, source)
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -579,17 +582,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestObserver()
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, source)
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -600,17 +603,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, source)
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -621,18 +624,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Observable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Observable<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
-      observer.dispose()
+      observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
@@ -644,26 +647,26 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer3 = new TestObserver()
 
       when:
-      def result = (Observable<?>) underTest.end(tracer, context, source)
+      def result = (Observable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer1)
       result.subscribe(observer2)
       result.subscribe(observer3)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer1.assertComplete()
       observer2.assertComplete()
       observer3.assertComplete()
     }
   }
 
-  static class FlowableTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class FlowableTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Flowable)
@@ -674,11 +677,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, Flowable.just("Value"))
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, Flowable.just(response), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -688,11 +691,11 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, Flowable.error(exception))
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, Flowable.error(exception), String)
       result.subscribe(observer)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -702,17 +705,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -723,17 +726,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -744,17 +747,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -765,18 +768,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
@@ -788,26 +791,26 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer3 = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer1)
       result.subscribe(observer2)
       result.subscribe(observer3)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer1.assertComplete()
       observer2.assertComplete()
       observer3.assertComplete()
     }
   }
 
-  static class ParallelFlowableTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class ParallelFlowableTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(ParallelFlowable)
@@ -818,12 +821,12 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (ParallelFlowable<?>) underTest.end(tracer, context, Flowable.just("Value").parallel())
+      def result = (ParallelFlowable<?>) underTest.end(instrumenter, context, request, Flowable.just(response).parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
       observer.assertComplete()
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span on already errored"() {
@@ -832,12 +835,12 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (ParallelFlowable<?>) underTest.end(tracer, context, Flowable.error(exception).parallel())
+      def result = (ParallelFlowable<?>) underTest.end(instrumenter, context, request, Flowable.error(exception).parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
       observer.assertError(exception)
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when completed"() {
@@ -846,18 +849,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (ParallelFlowable<?>) underTest.end(tracer, context, source.parallel())
+      def result = (ParallelFlowable<?>) underTest.end(instrumenter, context, request, source.parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
       observer.assertComplete()
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
     }
 
     def "ends span when errored"() {
@@ -867,18 +870,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (ParallelFlowable<?>) underTest.end(tracer, context, source.parallel())
+      def result = (ParallelFlowable<?>) underTest.end(instrumenter, context, request, source.parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
       observer.assertError(exception)
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
     }
 
     def "ends span when cancelled"() {
@@ -888,17 +891,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (ParallelFlowable<?>) underTest.end(tracer, context, source.parallel())
+      def result = (ParallelFlowable<?>) underTest.end(instrumenter, context, request, source.parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -909,23 +912,23 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (ParallelFlowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source.parallel())
+      def result = (ParallelFlowable<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source.parallel(), String)
       result.sequential().subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
   }
 
-  static class PublisherTest extends RxJava3AsyncSpanEndStrategyTest {
+  static class PublisherTest extends RxJava2AsyncOperationEndStrategyTest {
     def "is supported"() {
       expect:
       underTest.supports(Publisher)
@@ -937,17 +940,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onComplete()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       observer.assertComplete()
     }
 
@@ -958,17 +961,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def observer = new TestSubscriber()
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       source.onError(exception)
 
       then:
-      1 * tracer.endExceptionally(context, exception)
+      1 * instrumenter.end(context, request, null, exception)
       observer.assertError(exception)
     }
 
@@ -979,17 +982,17 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      def result = (Flowable<?>) underTest.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       0 * span.setAttribute(_)
     }
 
@@ -1000,18 +1003,18 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       def context = span.storeInContext(Context.root())
 
       when:
-      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(instrumenter, context, request, source, String)
       result.subscribe(observer)
 
       then:
-      0 * tracer._
+      0 * instrumenter._
       0 * span._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.end(context)
+      1 * instrumenter.end(context, request, null, null)
       1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
   }

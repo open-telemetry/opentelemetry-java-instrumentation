@@ -17,6 +17,13 @@ dependencies {
   library("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry:opentelemetry-extension-aws")
 
+  // without adding this dependency, javadoc fails:
+  //   warning: unknown enum constant XmlAccessType.PROPERTY
+  //   reason: class file for javax.xml.bind.annotation.XmlAccessType not found
+  // due to usage of org.apache.camel.model.RouteDefinition in CamelTracingService
+  // which has jaxb class-level annotations
+  compileOnly("javax.xml.bind:jaxb-api:2.3.1")
+
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
@@ -47,21 +54,9 @@ dependencies {
 }
 
 tasks {
-
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.apache-camel.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
-  }
-
-  named<Javadoc>("javadoc") {
-    dependencies {
-      // without adding this dependency, javadoc fails:
-      //   warning: unknown enum constant XmlAccessType.PROPERTY
-      //   reason: class file for javax.xml.bind.annotation.XmlAccessType not found
-      // due to usage of org.apache.camel.model.RouteDefinition in CamelTracingService
-      // which has jaxb class-level annotations
-      compileOnly("javax.xml.bind:jaxb-api:2.3.1")
-    }
   }
 }

@@ -1,7 +1,16 @@
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
 plugins {
-  id("otel.java-conventions")
+  `java-library`
+}
+
+afterEvaluate {
+  configurations.configureEach {
+    if (isCanBeResolved && !isCanBeConsumed) {
+      // TODO(anuraaga): Read version from properties file embedded by build.
+      project.dependencies.add(name, project.dependencies.platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.3.1-alpha"))
+    }
+  }
 }
 
 /**
@@ -84,16 +93,5 @@ if (testLatestDeps) {
         dependsOn(latestDepTest)
       }
     }
-  }
-}
-
-when (projectDir.name) {
-  "javaagent", "library", "testing" -> {
-    // We don't use this group anywhere in our config, but we need to make sure it is unique per
-    // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
-    // https://github.com/gradle/gradle/issues/847
-    // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
-    // value.
-    group = "io.opentelemetry.${projectDir.parentFile.name}"
   }
 }

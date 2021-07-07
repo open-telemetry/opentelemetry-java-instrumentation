@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.guava;
 
-public final class GuavaAsyncSpanEndStrategyBuilder {
+public final class GuavaAsyncOperationEndStrategyBuilder {
   private boolean captureExperimentalSpanAttributes = false;
 
-  GuavaAsyncSpanEndStrategyBuilder() {}
+  GuavaAsyncOperationEndStrategyBuilder() {}
 
-  public GuavaAsyncSpanEndStrategyBuilder setCaptureExperimentalSpanAttributes(
+  public GuavaAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public GuavaAsyncSpanEndStrategy build() {
-    return new GuavaAsyncSpanEndStrategy(captureExperimentalSpanAttributes);
+  public GuavaAsyncOperationEndStrategy build() {
+    return new GuavaAsyncOperationEndStrategy(captureExperimentalSpanAttributes);
   }
 }
