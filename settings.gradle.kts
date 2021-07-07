@@ -311,8 +311,11 @@ include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:javaagent")
 include(":instrumentation:vaadin-14.2:javaagent")
 include(":instrumentation:vaadin-14.2:testing")
-include(":instrumentation:vertx-web-3.0:javaagent")
+include(":instrumentation:vertx-http-client-3.0:javaagent")
+include(":instrumentation:vertx-http-client-4.0:javaagent")
 include(":instrumentation:vertx-reactive-3.5:javaagent")
+include(":instrumentation:vertx-web-3.0:javaagent")
+include(":instrumentation:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark

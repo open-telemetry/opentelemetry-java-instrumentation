@@ -1,39 +1,41 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
   pass {
     group.set("io.vertx")
     module.set("vertx-web")
-    versions.set("[3.0.0,4.0.0)")
-    //TODO we should split this module into client and server
-    //They have different version applicability
-//    assertInverse.set(true)
+    versions.set("[3.0.0,)")
+    assertInverse.set(true)
   }
 }
 
-val vertxVersion = "3.0.0"
+testSets {
+  create("version3Test")
+  create("latestDepTest")
+}
+
+tasks {
+  named<Test>("test") {
+    dependsOn("version3Test")
+  }
+}
 
 dependencies {
-  library("io.vertx:vertx-web:${vertxVersion}")
+  compileOnly("io.vertx:vertx-web:3.0.0")
 
   //We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
-  testImplementation("io.vertx:vertx-jdbc-client:${vertxVersion}")
+  testImplementation(project(":instrumentation:vertx-web-3.0:testing"))
 
-  // Vert.x 4.0 is incompatible with our tests.
-  // 3.9.7 Requires Netty 4.1.60, no other version works with it.
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final"))
-  latestDepTestLibrary("io.vertx:vertx-web:3.+")
-  latestDepTestLibrary("io.vertx:vertx-web-client:3.+")
-}
+  add("version3TestImplementation", "io.vertx:vertx-web:3.0.0")
+  add("version3TestImplementation", "io.vertx:vertx-jdbc-client:3.0.0")
 
-tasks {
-  named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-  }
+  add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.+")
 }

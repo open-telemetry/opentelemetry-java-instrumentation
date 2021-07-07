@@ -12,8 +12,13 @@ import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.caching.Cache;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 public final class FutureListenerWrappers {
+  private static final AtomicReference<Consumer<Future<?>>> operationCompleteHandlerReference =
+      new AtomicReference<>();
+
   // Instead of ContextStore use Cache with weak keys and weak values to store link between original
   // listener and wrapper. ContextStore works fine when wrapper is stored in a field on original
   // listener, but when listener class is a lambda instead of field it gets stored in a map with
@@ -51,6 +56,21 @@ public final class FutureListenerWrappers {
     return wrapper == null ? delegate : wrapper;
   }
 
+  /**
+   * Set callback that is called when {@link GenericFutureListener#operationComplete} method is
+   * invoked on wrapped listener.
+   */
+  public static void setOperationCompleteHandler(Consumer<Future<?>> operationCompleteHandler) {
+    operationCompleteHandlerReference.compareAndSet(null, operationCompleteHandler);
+  }
+
+  private static void callOperationCompleteHandler(Future<?> future) {
+    Consumer<Future<?>> operationCompleteHandler = operationCompleteHandlerReference.get();
+    if (operationCompleteHandler != null) {
+      operationCompleteHandler.accept(future);
+    }
+  }
+
   private static final class WrappedFutureListener implements GenericFutureListener<Future<?>> {
 
     private final Context context;
@@ -63,6 +83,7 @@ public final class FutureListenerWrappers {
 
     @Override
     public void operationComplete(Future<?> future) throws Exception {
+      callOperationCompleteHandler(future);
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(future);
       }
@@ -91,6 +112,7 @@ public final class FutureListenerWrappers {
 
     @Override
     public void operationComplete(ProgressiveFuture<?> progressiveFuture) throws Exception {
+      callOperationCompleteHandler(progressiveFuture);
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(progressiveFuture);
       }
