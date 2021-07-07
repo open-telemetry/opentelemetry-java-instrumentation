@@ -2,6 +2,9 @@ import io.opentelemetry.instrumentation.gradle.codegen.ClasspathByteBuddyPlugin
 import io.opentelemetry.instrumentation.gradle.codegen.ClasspathTransformation
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 import net.bytebuddy.build.gradle.Transformation
+import org.gradle.kotlin.dsl.`java-library`
+import org.gradle.kotlin.dsl.creating
+import org.gradle.kotlin.dsl.register
 
 plugins {
   `java-library`
@@ -61,7 +64,7 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*>? {
+  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
