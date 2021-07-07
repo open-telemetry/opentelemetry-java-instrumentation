@@ -111,11 +111,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
+
       scope.close();
-      callDepth.reset();
 
       CURRENT_RABBIT_CONTEXT.remove();
       if (throwable != null) {
