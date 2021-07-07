@@ -9,7 +9,7 @@ group = "io.opentelemetry.javaagent"
 sourceSets {
   main {
     val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
-    output.dir(armeriaShadedDeps .file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+    output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
   }
 }
 
@@ -48,7 +48,7 @@ dependencies {
 
   testImplementation("org.assertj:assertj-core")
 
-  testImplementation(project(":javaagent-api"))
+  testImplementation(project(":javaagent-instrumentation-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))

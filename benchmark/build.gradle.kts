@@ -12,7 +12,7 @@ dependencies {
   jmh("net.bytebuddy:byte-buddy-agent")
 
   jmh(project(":instrumentation-api"))
-  jmh(project(":javaagent-api"))
+  jmh(project(":javaagent-instrumentation-api"))
   jmh(project(":javaagent-tooling"))
   jmh(project(":javaagent-extension-api"))
 

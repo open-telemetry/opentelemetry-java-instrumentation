@@ -119,7 +119,7 @@ val licenseReportDependencies by configurations.creating
 
 dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
-  testCompileOnly(project(":javaagent-api"))
+  testCompileOnly(project(":javaagent-instrumentation-api"))
 
   testImplementation("com.google.guava:guava")
 

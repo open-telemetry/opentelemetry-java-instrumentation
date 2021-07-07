@@ -14,7 +14,7 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service")
 
   implementation(project(":instrumentation-api"))
-  implementation(project(":javaagent-api"))
+  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling"))
   implementation("io.opentelemetry:opentelemetry-proto")
