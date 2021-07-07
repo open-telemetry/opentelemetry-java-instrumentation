@@ -40,37 +40,14 @@ public class VertxSingleConnection implements SingleConnection {
   public int doRequest(String path, Map<String, String> headers)
       throws ExecutionException, InterruptedException {
     String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
-    /*
-       String url;
-       try {
-         url = new URL("http", host, port, path).toString();
-       } catch (MalformedURLException e) {
-         throw new ExecutionException(e);
-       }
-
-    */
     RequestOptions requestOptions = new RequestOptions().setHost(host).setPort(port).setURI(path);
     headers.forEach(requestOptions::putHeader);
     Future<HttpClientRequest> request = httpClient.request(requestOptions);
-    //    request.compose(req -> req.send()).result()
-    /*
-       Future<HttpClientRequest> request = httpClient.request(HttpMethod.GET, port, host, url);
-       headers.forEach(request::putHeader);
-    */
-    /*
-       CompletableFuture<HttpClientResponse> future = new CompletableFuture<>();
-       request.handler(future::complete);
 
-       request.end();
-       HttpClientResponse response = future.get();
-       String responseId = response.getHeader(REQUEST_ID_HEADER);
-    */
     Context ctx = Context.current();
     HttpClientResponse response =
         request.compose(req -> send(ctx, req)).toCompletionStage().toCompletableFuture().get();
-    //    HttpClientResponse response = request.compose(req ->
-    // req.send()).toCompletionStage().toCompletableFuture().get();
-    //    HttpClientResponse response = request.compose(req -> req.send()).result();
+
     String responseId = response.getHeader(REQUEST_ID_HEADER);
     if (!requestId.equals(responseId)) {
       throw new IllegalStateException(
