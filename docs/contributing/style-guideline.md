@@ -109,7 +109,9 @@ There is no need to use `@NonNull`, as this is the default, which should be decl
 `package-info.java` file on the root package of each module, e.g.
 
 ```java
-@DefaultQualifier(value = NonNull.class)
+@DefaultQualifier(
+    value = NonNull.class,
+    locations = {TypeUseLocation.FIELD, TypeUseLocation.PARAMETER, TypeUseLocation.RETURN})
 package io.opentelemetry.instrumentation.api;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
