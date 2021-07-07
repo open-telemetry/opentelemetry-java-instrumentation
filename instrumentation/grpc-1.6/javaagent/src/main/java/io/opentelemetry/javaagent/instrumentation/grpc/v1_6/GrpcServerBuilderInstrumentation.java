@@ -47,7 +47,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This ServerBuilder<?> serverBuilder,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       callDepth = CallDepth.forClass(ServerBuilder.class);
-      if (callDepth.getAndIncrement() == 0) {
+      if (callDepth.getAndIncrement() > 0) {
         serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
       }
     }

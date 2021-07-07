@@ -26,7 +26,7 @@ public class ResponseSendAdvice {
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") CallDepth callDepth) {
     callDepth = CallDepth.forClass(HttpServletResponse.class);
-    if (callDepth.getAndIncrement() == 0) {
+    if (callDepth.getAndIncrement() > 0) {
       return;
     }
     // Don't want to generate a new top-level span
