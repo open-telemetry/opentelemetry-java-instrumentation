@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ContextPropagationDebug {
-  private static final Logger log = LoggerFactory.getLogger(ContextPropagationDebug.class);
+  private static final Logger logger = LoggerFactory.getLogger(ContextPropagationDebug.class);
 
   // locations where the context was propagated to another thread (tracking multiple steps is
   // helpful in akka where there is so much recursive async spawning of new work)
@@ -54,10 +54,10 @@ public final class ContextPropagationDebug {
 
     Context current = Context.current();
     if (current != Context.root()) {
-      log.error("Unexpected non-root current context found when extracting remote context!");
+      logger.error("Unexpected non-root current context found when extracting remote context!");
       Span currentSpan = Span.fromContextOrNull(current);
       if (currentSpan != null) {
-        log.error("It contains this span: {}", currentSpan);
+        logger.error("It contains this span: {}", currentSpan);
       }
 
       debugContextPropagation(current);
@@ -88,7 +88,7 @@ public final class ContextPropagationDebug {
           sb.append("\nwhich was propagated from:");
         }
       }
-      log.error("a context leak was detected. it was propagated from:{}", sb);
+      logger.error("a context leak was detected. it was propagated from:{}", sb);
     }
   }
 

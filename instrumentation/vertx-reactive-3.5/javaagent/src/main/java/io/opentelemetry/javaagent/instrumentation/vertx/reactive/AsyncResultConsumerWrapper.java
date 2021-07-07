@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
 
-  private static final Logger log = LoggerFactory.getLogger(AsyncResultConsumerWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(AsyncResultConsumerWrapper.class);
 
   private final Consumer<Handler<AsyncResult<?>>> delegate;
   private final Context executionContext;
@@ -40,7 +40,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
       Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
-      log.debug("Wrapping consumer {}", delegate);
+      logger.debug("Wrapping consumer {}", delegate);
       return new AsyncResultConsumerWrapper(delegate, executionContext);
     }
     return delegate;

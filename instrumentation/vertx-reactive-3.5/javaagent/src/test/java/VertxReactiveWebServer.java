@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 public class VertxReactiveWebServer extends AbstractVerticle {
 
-  private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
+  private static final Logger logger = LoggerFactory.getLogger(VertxReactiveWebServer.class);
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
@@ -58,7 +58,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                 .put("url", "jdbc:hsqldb:mem:test?shutdown=true")
                 .put("driver_class", "org.hsqldb.jdbcDriver"));
 
-    log.info("Starting on port {}", port);
+    logger.info("Starting on port {}", port);
     server.deployVerticle(
         VertxReactiveWebServer.class.getName(),
         new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)),
@@ -82,7 +82,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         ready -> {
           Router router = Router.router(vertx);
           int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
-          log.info("Listening on port {}", port);
+          logger.info("Listening on port {}", port);
           router
               .route(SUCCESS.getPath())
               .handler(

@@ -23,7 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
-  private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
 
   private static final String EXECUTORS_INCLUDE_PROPERTY_NAME =
       "otel.instrumentation.executors.include";
@@ -129,9 +130,9 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
                   }
 
                   if (!allowed
-                      && log.isDebugEnabled()
+                      && logger.isDebugEnabled()
                       && hasExecutorInterfaceMatcher.matches(target)) {
-                    log.debug("Skipping executor instrumentation for {}", target.getName());
+                    logger.debug("Skipping executor instrumentation for {}", target.getName());
                   }
                   return allowed;
                 }

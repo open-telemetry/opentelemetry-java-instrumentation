@@ -27,7 +27,7 @@ public class TwilioTracer extends BaseTracer {
       Config.get()
           .getBooleanProperty("otel.instrumentation.twilio.experimental-span-attributes", false);
 
-  private static final Logger log = LoggerFactory.getLogger(TwilioTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(TwilioTracer.class);
 
   public static final TwilioTracer TRACER = new TwilioTracer();
 
@@ -60,7 +60,7 @@ public class TwilioTracer extends BaseTracer {
             Uninterruptibles.getUninterruptibly(
                 (ListenableFuture<?>) result, 0, TimeUnit.MICROSECONDS);
       } catch (Exception e) {
-        log.debug("Error unwrapping result", e);
+        logger.debug("Error unwrapping result", e);
       }
     }
 

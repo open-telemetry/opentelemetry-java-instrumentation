@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class Bridging {
 
-  private static final Logger log = LoggerFactory.getLogger(Bridging.class);
+  private static final Logger logger = LoggerFactory.getLogger(Bridging.class);
 
   public static Span toApplication(io.opentelemetry.api.trace.Span agentSpan) {
     if (!agentSpan.getSpanContext().isValid()) {
@@ -81,7 +81,7 @@ public class Bridging {
     try {
       return io.opentelemetry.api.trace.SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", applicationSpanKind.name());
+      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
       return null;
     }
   }
@@ -138,7 +138,7 @@ public class Bridging {
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
     }
-    log.debug("unexpected attribute key type: {}", applicationKey.getType());
+    logger.debug("unexpected attribute key type: {}", applicationKey.getType());
     return null;
   }
 
@@ -147,7 +147,7 @@ public class Bridging {
     try {
       agentCanonicalCode = io.opentelemetry.api.trace.StatusCode.valueOf(applicationStatus.name());
     } catch (IllegalArgumentException e) {
-      log.debug("unexpected status canonical code: {}", applicationStatus.name());
+      logger.debug("unexpected status canonical code: {}", applicationStatus.name());
       return io.opentelemetry.api.trace.StatusCode.UNSET;
     }
     return agentCanonicalCode;

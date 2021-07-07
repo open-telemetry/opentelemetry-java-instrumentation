@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * <p>This class is run at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy plugin.
  */
 class MuzzleCodeGenerator implements AsmVisitorWrapper {
-  private static final Logger log = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
 
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
@@ -116,21 +116,21 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_REFERENCES_METHOD_NAME.equals(name)) {
         generateReferencesMethod = false;
-        log.info(
+        logger.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_REFERENCES_METHOD_NAME,
             instrumentationClassName);
       }
       if (MUZZLE_HELPER_CLASSES_METHOD_NAME.equals(name)) {
         generateHelperClassNamesMethod = false;
-        log.info(
+        logger.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_HELPER_CLASSES_METHOD_NAME,
             instrumentationClassName);
       }
       if (MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME.equals(name)) {
         generateContextStoreClassesMethod = false;
-        log.info(
+        logger.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
             instrumentationClassName);

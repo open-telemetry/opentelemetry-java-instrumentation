@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public final class SafeServiceLoader {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeServiceLoader.class);
+  private static final Logger logger = LoggerFactory.getLogger(SafeServiceLoader.class);
 
   /**
    * Delegates to {@link ServiceLoader#load(Class, ClassLoader)} and then eagerly iterates over
@@ -36,7 +36,7 @@ public final class SafeServiceLoader {
       try {
         result.add(iter.next());
       } catch (UnsupportedClassVersionError e) {
-        log.debug("Unable to load instrumentation class: {}", e.getMessage());
+        logger.debug("Unable to load instrumentation class: {}", e.getMessage());
       }
     }
     return result;

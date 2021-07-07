@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public final class JdbcUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(JdbcUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
   @Nullable private static Field c3poField = null;
 
@@ -58,7 +58,7 @@ public final class JdbcUtils {
       }
     } catch (Throwable e) {
       // Had some problem getting the connection.
-      log.debug("Could not get connection for StatementAdvice", e);
+      logger.debug("Could not get connection for StatementAdvice", e);
       return null;
     }
     return connection;

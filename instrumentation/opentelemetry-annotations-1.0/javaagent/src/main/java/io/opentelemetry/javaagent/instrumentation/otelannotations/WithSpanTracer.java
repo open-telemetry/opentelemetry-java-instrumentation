@@ -24,7 +24,7 @@ public class WithSpanTracer extends BaseTracer {
     return TRACER;
   }
 
-  private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(WithSpanTracer.class);
 
   private final AsyncSpanEndStrategies asyncSpanEndStrategies =
       AsyncSpanEndStrategies.getInstance();
@@ -70,7 +70,7 @@ public class WithSpanTracer extends BaseTracer {
     try {
       return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", applicationSpanKind.name());
+      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
   }
