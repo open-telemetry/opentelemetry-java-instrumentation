@@ -13,7 +13,7 @@ import ratpack.func.Block;
 
 public class BlockWrapper implements Block {
 
-  private static final Logger log = LoggerFactory.getLogger(BlockWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(BlockWrapper.class);
 
   private final Block delegate;
   private final Context parentContext;
@@ -35,7 +35,7 @@ public class BlockWrapper implements Block {
     if (delegate instanceof BlockWrapper) {
       return delegate;
     }
-    log.debug("Wrapping block {}", delegate);
+    logger.debug("Wrapping block {}", delegate);
     return new BlockWrapper(delegate, Context.current());
   }
 }

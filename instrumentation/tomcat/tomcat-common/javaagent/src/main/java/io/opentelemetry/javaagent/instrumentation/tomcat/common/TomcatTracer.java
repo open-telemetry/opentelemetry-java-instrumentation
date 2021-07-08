@@ -29,14 +29,15 @@ import org.slf4j.LoggerFactory;
 public abstract class TomcatTracer extends HttpServerTracer<Request, Response, Request, Request>
     implements TextMapGetter<Request> {
 
-  private static final Logger log = LoggerFactory.getLogger(TomcatTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(TomcatTracer.class);
 
   public boolean shouldStartSpan(Request request) {
     Context attachedContext = getServerContext(request);
     if (attachedContext == null) {
       return true;
     }
-    log.debug("Unexpected context found before server handler even started: {}", attachedContext);
+    logger.debug(
+        "Unexpected context found before server handler even started: {}", attachedContext);
     return false;
   }
 
@@ -90,7 +91,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
     try {
       return new URI(scheme, null, host, serverPort, path, query, null).toString();
     } catch (Exception e) {
-      log.warn(
+      logger.warn(
           "Malformed url? scheme: {}, host: {}, port: {}, path: {}, query: {}",
           scheme,
           host,

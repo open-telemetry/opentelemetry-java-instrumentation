@@ -2,14 +2,6 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-// add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
-// which is used by jaxrs-2.0-arquillian-testing depends on
-repositories {
-  mavenCentral()
-  maven { setUrl("https://repo.gradle.org/artifactory/libs-releases-local") }
-  mavenLocal()
-}
-
 dependencies {
   testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing"))
   testRuntimeOnly("fish.payara.arquillian:arquillian-payara-server-embedded:2.4.1")

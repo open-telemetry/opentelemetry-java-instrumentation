@@ -32,7 +32,7 @@ public class AgentBenchmark {
               "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
 
   private List<GenericContainer<?>> containers;
-  private static final Logger LOG = LoggerFactory.getLogger(AgentBenchmark.class);
+  private static final Logger logger = LoggerFactory.getLogger(AgentBenchmark.class);
 
   // docker images
   private static final DockerImageName APP_IMAGE = DockerImageName.parse(APP_NAME);
@@ -63,7 +63,7 @@ public class AgentBenchmark {
         new GenericContainer<>(OTLP_COLLECTOR_IMAGE)
             .withNetwork(Network.SHARED)
             .withNetworkAliases("collector")
-            .withLogConsumer(new Slf4jLogConsumer(LOG))
+            .withLogConsumer(new Slf4jLogConsumer(logger))
             .withExposedPorts(55680, 13133)
             .waitingFor(Wait.forHttp("/").forPort(13133))
             .withCopyFileToContainer(
@@ -76,7 +76,7 @@ public class AgentBenchmark {
     GenericContainer<?> app =
         new GenericContainer<>(APP_IMAGE)
             .withNetwork(Network.SHARED)
-            .withLogConsumer(new Slf4jLogConsumer(LOG))
+            .withLogConsumer(new Slf4jLogConsumer(logger))
             .withNetworkAliases("app")
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
@@ -89,7 +89,7 @@ public class AgentBenchmark {
     GenericContainer<?> wrk =
         new GenericContainer<>(WRK_IMAGE)
             .withNetwork(Network.SHARED)
-            .withLogConsumer(new Slf4jLogConsumer(LOG))
+            .withLogConsumer(new Slf4jLogConsumer(logger))
             .withCreateContainerCmdModifier(it -> it.withEntrypoint("wrk"))
             .withCommand("-t4 -c128 -d300s http://app:8080/ --latency");
     containers.add(wrk);
@@ -97,7 +97,7 @@ public class AgentBenchmark {
     wrk.dependsOn(app, collector);
     Startables.deepStart(Stream.of(wrk)).join();
 
-    LOG.info("Benchmark started");
+    logger.info("Benchmark started");
     printContainerMapping(collector);
     printContainerMapping(app);
 
@@ -106,12 +106,12 @@ public class AgentBenchmark {
     }
 
     Thread.sleep(5000);
-    LOG.info("Benchmark complete, wrk output:");
-    LOG.info(wrk.getLogs().replace("\n\n", "\n"));
+    logger.info("Benchmark complete, wrk output:");
+    logger.info(wrk.getLogs().replace("\n\n", "\n"));
   }
 
   static void printContainerMapping(GenericContainer<?> container) {
-    LOG.info(
+    logger.info(
         "Container {} ports exposed at {}",
         container.getDockerImageName(),
         container.getExposedPorts().stream()

@@ -35,9 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class InstrumentationModuleInstaller {
-  private static final TransformSafeLogger log =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
-  private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
+  private static final Logger muzzleLogger = LoggerFactory.getLogger("muzzleMatcher");
   private final Instrumentation instrumentation;
 
   // Added here instead of AgentInstaller's ignores because it's relatively
@@ -52,7 +52,7 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (!instrumentationModule.isEnabled()) {
-      log.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
+      logger.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
@@ -60,7 +60,7 @@ public final class InstrumentationModuleInstaller {
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
       if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
-        log.warn(
+        logger.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
             instrumentationModule.instrumentationName());
       }
@@ -150,20 +150,20 @@ public final class InstrumentationModuleInstaller {
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
-        if (muzzleLog.isWarnEnabled()) {
-          muzzleLog.warn(
+        if (muzzleLogger.isWarnEnabled()) {
+          muzzleLogger.warn(
               "Instrumentation skipped, mismatched references were found: {} [class {}] on {}",
               instrumentationModule.instrumentationName(),
               instrumentationModule.getClass().getName(),
               classLoader);
           List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
           for (Mismatch mismatch : mismatches) {
-            muzzleLog.warn("-- {}", mismatch);
+            muzzleLogger.warn("-- {}", mismatch);
           }
         }
       } else {
-        if (log.isDebugEnabled()) {
-          log.debug(
+        if (logger.isDebugEnabled()) {
+          logger.debug(
               "Applying instrumentation: {} [class {}] on {}",
               instrumentationModule.instrumentationName(),
               instrumentationModule.getClass().getName(),

@@ -79,10 +79,9 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      callDepth.reset();
 
       scope.close();
       if (throwable == null) {

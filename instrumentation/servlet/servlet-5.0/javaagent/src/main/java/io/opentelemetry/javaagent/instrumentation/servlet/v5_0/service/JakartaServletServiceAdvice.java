@@ -39,6 +39,7 @@ public class JakartaServletServiceAdvice {
 
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
+
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -97,6 +98,9 @@ public class JakartaServletServiceAdvice {
       @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+
+    boolean topLevel = callDepth.decrementAndGet() == 0;
+
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -106,7 +110,7 @@ public class JakartaServletServiceAdvice {
         (HttpServletRequest) request,
         (HttpServletResponse) response,
         throwable,
-        callDepth,
+        topLevel,
         context,
         scope);
   }
