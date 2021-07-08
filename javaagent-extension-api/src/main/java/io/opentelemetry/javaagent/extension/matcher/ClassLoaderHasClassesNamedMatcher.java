@@ -25,6 +25,15 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
     ClassLoaderMatcherCacheHolder.addCache(cache);
   }
 
+  @Override
+  public boolean matches(ClassLoader cl) {
+    if (cl == null) {
+      // Can't match the bootstrap classloader.
+      return false;
+    }
+    return cache.computeIfAbsent(cl, this::hasResources);
+  }
+
   private boolean hasResources(ClassLoader cl) {
     boolean priorValue = InClassLoaderMatcher.getAndSet(true);
     try {
@@ -37,14 +46,5 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
       InClassLoaderMatcher.set(priorValue);
     }
     return true;
-  }
-
-  @Override
-  public boolean matches(ClassLoader cl) {
-    if (cl == null) {
-      // Can't match the bootstrap classloader.
-      return false;
-    }
-    return cache.computeIfAbsent(cl, this::hasResources);
   }
 }
