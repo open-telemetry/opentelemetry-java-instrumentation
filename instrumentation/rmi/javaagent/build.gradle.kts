@@ -46,5 +46,10 @@ tasks {
   }
   withType<Test>().configureEach {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+
+    if (JavaVersion.current().isJava9Compatible) {
+      jvmArgs("--add-exports=java.rmi/sun.rmi.server=ALL-UNNAMED")
+      jvmArgs("--add-exports=java.rmi/sun.rmi.transport=ALL-UNNAMED")
+    }
   }
 }
