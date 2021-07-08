@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /** ContextPayload wraps context information shared between client and server. */
 public class ContextPayload {
 
-  private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
+  private static final Logger logger = LoggerFactory.getLogger(ContextPayload.class);
 
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
@@ -48,7 +48,7 @@ public class ContextPayload {
         return new ContextPayload((Map<String, String>) object);
       }
     } catch (ClassCastException | ClassNotFoundException ex) {
-      log.debug("Error reading object", ex);
+      logger.debug("Error reading object", ex);
     }
 
     return null;

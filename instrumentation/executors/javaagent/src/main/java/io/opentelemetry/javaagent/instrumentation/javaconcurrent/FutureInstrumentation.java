@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FutureInstrumentation implements TypeInstrumentation {
-  private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
+  private static final Logger logger = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
    * Only apply executor instrumentation to allowed executors. In the future, this restriction may
@@ -79,8 +79,8 @@ public class FutureInstrumentation implements TypeInstrumentation {
       @Override
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
-        if (!allowed && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
-          log.debug("Skipping future instrumentation for {}", target.getName());
+        if (!allowed && logger.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+          logger.debug("Skipping future instrumentation for {}", target.getName());
         }
         return allowed;
       }

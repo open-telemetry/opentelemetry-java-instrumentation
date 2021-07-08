@@ -36,7 +36,7 @@ class ActiveSpanManager {
 
   private static final String ACTIVE_SPAN_PROPERTY = "OpenTelemetry.activeSpan";
 
-  private static final Logger LOG = LoggerFactory.getLogger(ActiveSpanManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(ActiveSpanManager.class);
 
   private ActiveSpanManager() {}
 
@@ -60,7 +60,7 @@ class ActiveSpanManager {
     SpanWithScope parent = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
     SpanWithScope spanWithScope = SpanWithScope.activate(span, parent, spanKind);
     exchange.setProperty(ACTIVE_SPAN_PROPERTY, spanWithScope);
-    LOG.debug("Activated a span: {}", spanWithScope);
+    logger.debug("Activated a span: {}", spanWithScope);
   }
 
   /**
@@ -77,7 +77,7 @@ class ActiveSpanManager {
     if (spanWithScope != null) {
       spanWithScope.deactivate();
       exchange.setProperty(ACTIVE_SPAN_PROPERTY, spanWithScope.getParent());
-      LOG.debug("Deactivated span: {}", spanWithScope);
+      logger.debug("Deactivated span: {}", spanWithScope);
     }
   }
 

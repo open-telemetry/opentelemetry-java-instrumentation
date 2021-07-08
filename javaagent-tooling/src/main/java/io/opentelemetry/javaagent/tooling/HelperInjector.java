@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HelperInjector implements Transformer {
 
-  private static final Logger log = LoggerFactory.getLogger(HelperInjector.class);
+  private static final Logger logger = LoggerFactory.getLogger(HelperInjector.class);
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -160,11 +160,11 @@ public class HelperInjector implements Transformer {
       for (String resourceName : helperResourceNames) {
         URL resource = helpersSource.getResource(resourceName);
         if (resource == null) {
-          log.debug("Helper resource {} requested but not found.", resourceName);
+          logger.debug("Helper resource {} requested but not found.", resourceName);
           continue;
         }
 
-        log.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
+        logger.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
         HelperResources.register(classLoader, resourceName, resource);
       }
     }
@@ -178,7 +178,7 @@ public class HelperInjector implements Transformer {
       classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
     }
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
-      log.error(
+      logger.error(
           "Cannot inject helpers into bootstrap classloader without an instance of Instrumentation. Programmer error!");
       return classLoader;
     }
@@ -187,7 +187,7 @@ public class HelperInjector implements Transformer {
         classLoader,
         cl -> {
           try {
-            log.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
+            logger.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
 
             Map<String, byte[]> classnameToBytes = getHelperMap();
             Map<String, Class<?>> classes;
@@ -207,8 +207,8 @@ public class HelperInjector implements Transformer {
               helperModules.add(new WeakReference<>(javaModule.unwrap()));
             }
           } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-              log.error(
+            if (logger.isErrorEnabled()) {
+              logger.error(
                   "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
                   typeDescription,
                   requestingName,
@@ -257,7 +257,7 @@ public class HelperInjector implements Transformer {
           JavaModule helperModule = JavaModule.of(realModule);
 
           if (!target.canRead(helperModule)) {
-            log.debug("Adding module read from {} to {}", target, helperModule);
+            logger.debug("Adding module read from {} to {}", target, helperModule);
             ClassInjector.UsingInstrumentation.redefineModule(
                 // TODO can we guarantee that this is always present?
                 instrumentation,

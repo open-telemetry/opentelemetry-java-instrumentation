@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 
 public class ClientTracingFeature implements Feature {
 
-  private static final Logger log = LoggerFactory.getLogger(ClientTracingFeature.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClientTracingFeature.class);
 
   @Override
   public boolean configure(FeatureContext context) {
     context.register(new ClientTracingFilter());
-    log.debug("ClientTracingFilter registered");
+    logger.debug("ClientTracingFilter registered");
     return true;
   }
 }

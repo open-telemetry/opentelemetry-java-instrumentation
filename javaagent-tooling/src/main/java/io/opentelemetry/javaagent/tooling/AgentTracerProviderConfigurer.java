@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 @AutoService(SdkTracerProviderConfigurer.class)
 public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigurer {
-  private static final Logger log = LoggerFactory.getLogger(AgentTracerProviderConfigurer.class);
+  private static final Logger logger = LoggerFactory.getLogger(AgentTracerProviderConfigurer.class);
 
   static final String EXPORTER_JAR_CONFIG = "otel.javaagent.experimental.exporter.jar";
 
@@ -80,8 +80,8 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     try {
       url = new File(exporterJar).toURI().toURL();
     } catch (MalformedURLException e) {
-      log.warn("Filename could not be parsed: {}. Exporter is not installed", exporterJar);
-      log.warn("No valid exporter found. Tracing will run but spans are dropped");
+      logger.warn("Filename could not be parsed: {}. Exporter is not installed", exporterJar);
+      logger.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
     }
     ExporterClassLoader exporterLoader =
@@ -93,8 +93,8 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     if (spanExporterFactory != null) {
       installSpanExporter(spanExporterFactory, config, builder);
     } else {
-      log.warn("No span exporter found in {}", exporterJar);
-      log.warn("No valid exporter found. Tracing will run but spans are dropped");
+      logger.warn("No span exporter found in {}", exporterJar);
+      logger.warn("No valid exporter found. Tracing will run but spans are dropped");
     }
 
     MetricExporterFactory metricExporterFactory =
@@ -110,7 +110,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     if (i.hasNext()) {
       F factory = i.next();
       if (i.hasNext()) {
-        log.warn(
+        logger.warn(
             "Exporter JAR defines more than one {}. Only the first one found will be used",
             service.getName());
       }
@@ -124,7 +124,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config.asJavaProperties());
     SpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter).build();
     builder.addSpanProcessor(spanProcessor);
-    log.info("Installed span exporter: {}", spanExporter.getClass().getName());
+    logger.info("Installed span exporter: {}", spanExporter.getClass().getName());
   }
 
   private static void installMetricExporter(
@@ -134,6 +134,6 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
         .setMetricExporter(metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMeterProvider.get()))
         .buildAndStart();
-    log.info("Installed metric exporter: {}", metricExporter.getClass().getName());
+    logger.info("Installed metric exporter: {}", metricExporter.getClass().getName());
   }
 }

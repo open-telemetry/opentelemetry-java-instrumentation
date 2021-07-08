@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
-  private static final Logger log =
+  private static final Logger logger =
       LoggerFactory.getLogger(ExternalAnnotationInstrumentationModule.class);
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
@@ -116,7 +116,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     } else if (configString.isEmpty()) {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
-      log.warn(
+      logger.warn(
           "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
           configString);
       return Collections.emptySet();
