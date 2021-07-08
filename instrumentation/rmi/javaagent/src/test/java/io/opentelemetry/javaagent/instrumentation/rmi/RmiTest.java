@@ -163,11 +163,10 @@ class RmiTest {
                                                     .hasSize(3)
                                                     .containsEntry(
                                                         SemanticAttributes.EXCEPTION_TYPE,
-                                                        thrown.getClass().getCanonicalName());
-                                                assertThat(
-                                                        attrs.get(
-                                                            SemanticAttributes.EXCEPTION_MESSAGE))
-                                                    .isEqualTo(thrown.getMessage());
+                                                        thrown.getClass().getCanonicalName())
+                                                    .containsEntry(
+                                                        SemanticAttributes.EXCEPTION_MESSAGE,
+                                                        thrown.getMessage());
                                                 assertThat(
                                                         attrs.get(
                                                             SemanticAttributes
