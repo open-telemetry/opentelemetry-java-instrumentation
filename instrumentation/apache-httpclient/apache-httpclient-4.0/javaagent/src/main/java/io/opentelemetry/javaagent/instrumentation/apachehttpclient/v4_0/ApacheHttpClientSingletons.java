@@ -14,25 +14,24 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.0";
 
-  private static final Instrumenter<HttpUriRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<HttpUriRequest, HttpResponse> httpAttributesExtractor =
+    HttpAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
         new ApacheHttpClientHttpAttributesExtractor();
-    SpanNameExtractor<? super HttpUriRequest> spanNameExtractor =
+    SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super HttpUriRequest, ? super HttpResponse> spanStatusExtractor =
+    SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
         new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpUriRequest, HttpResponse>newBuilder(
+        Instrumenter.<ApacheHttpClientRequest, HttpResponse>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
@@ -41,7 +40,7 @@ public final class ApacheHttpClientSingletons {
             .newClientInstrumenter(new HttpHeaderSetter());
   }
 
-  public static Instrumenter<HttpUriRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 

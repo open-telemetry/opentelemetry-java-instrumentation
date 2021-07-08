@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
-  private static final Logger log = LoggerFactory.getLogger(LoggingFailSafeMatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(LoggingFailSafeMatcher.class);
 
   /** The delegate matcher that might throw an exception. */
   private final ElementMatcher<? super T> matcher;
@@ -51,7 +51,7 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
     try {
       return matcher.matches(target);
     } catch (Throwable e) {
-      log.debug(description, e);
+      logger.debug(description, e);
       return fallback;
     }
   }

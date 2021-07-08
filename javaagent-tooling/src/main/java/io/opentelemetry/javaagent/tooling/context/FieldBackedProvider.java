@@ -14,12 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
@@ -71,12 +73,12 @@ import net.bytebuddy.utility.JavaModule;
  * <p>Example:<br>
  * <em>InstrumentationContext.get(Runnable.class, RunnableState.class)")</em><br>
  * is rewritten to:<br>
- * <em>FieldBackedProvider$ContextStore$Runnable$RunnableState12345.getContextStore(runnableRunnable.class,
+ * <em>FieldBackedProvider$ContextStore$Runnable$RunnableState12345.getContextStore(Runnable.class,
  * RunnableState.class)</em>
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  private static final TransformSafeLogger log =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(FieldBackedProvider.class);
 
   /**
@@ -122,9 +124,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final AgentBuilder.Transformer contextStoreImplementationsInjector;
 
+  private final Instrumentation instrumentation;
+
   public FieldBackedProvider(Class<?> instrumenterClass, Map<String, String> contextStore) {
     this.instrumenterClass = instrumenterClass;
     this.contextStore = contextStore;
+    // This class is used only when running with javaagent, thus this calls is safe
+    this.instrumentation = InstrumentationHolder.getInstrumentation();
+
     byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
     fieldAccessorInterfacesInjector = bootstrapHelperInjector(fieldAccessorInterfaces.values());
@@ -188,7 +195,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass()).equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  log.trace("Found context-store access in {}", instrumenterClass.getName());
+                  logger.trace("Found context-store access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -203,8 +210,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     String keyClassName = ((Type) stack[1]).getClassName();
                     TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
-                    if (log.isTraceEnabled()) {
-                      log.trace(
+                    if (logger.isTraceEnabled()) {
+                      logger.trace(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),
                           keyClassName,
@@ -316,7 +323,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     // TODO: Better to pass through the context of the Instrumenter
     return new AgentBuilder.Transformer() {
       final HelperInjector injector =
-          HelperInjector.forDynamicTypes(getClass().getSimpleName(), helpers);
+          HelperInjector.forDynamicTypes(getClass().getSimpleName(), helpers, instrumentation);
 
       @Override
       public DynamicType.Builder<?> transform(
@@ -363,11 +370,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
-            log.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            logger.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          log.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
+          logger.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
           INSTALLED_CONTEXT_MATCHERS.add(entry);
 
           /*

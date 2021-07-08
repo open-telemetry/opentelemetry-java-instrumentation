@@ -1,13 +1,8 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
   id("com.github.johnrengelman.shadow")
 
   id("otel.java-conventions")
-  id("otel.publish-conventions")
 }
-
-group = "io.opentelemetry.instrumentation"
 
 val shadowInclude by configurations.creating {
   isCanBeResolved = true
@@ -26,10 +21,8 @@ dependencies {
 }
 
 tasks {
-  named<ShadowJar>("shadowJar") {
+  shadowJar {
     configurations = listOf(shadowInclude)
-
-    archiveClassifier.set("")
 
     relocate("com.github.benmanes.caffeine", "io.opentelemetry.instrumentation.api.internal.shaded.caffeine")
     relocate("com.blogspot.mydailyjava.weaklockfree", "io.opentelemetry.instrumentation.api.internal.shaded.weaklockfree")
@@ -37,18 +30,11 @@ tasks {
     minimize()
   }
 
-  named("jar") {
-    enabled = false
-
+  val extractShadowJar by registering(Copy::class) {
     dependsOn(shadowJar)
-  }
-}
-
-// Because shadow does not use default configurations
-publishing {
-  publications {
-    named<MavenPublication>("maven") {
-      project.shadow.component(this)
-    }
+    from(zipTree(shadowJar.get().archiveFile))
+    into("build/extracted/shadow")
+    // prevents empty com/github/benmanes/caffeine/cache path from ending up in instrumentation-api
+    includeEmptyDirs = false
   }
 }

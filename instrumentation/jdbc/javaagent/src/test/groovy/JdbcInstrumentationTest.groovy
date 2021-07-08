@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.jdbc.TestConnection
+import io.opentelemetry.instrumentation.jdbc.TestDriver
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
@@ -28,8 +31,6 @@ import org.h2.jdbcx.JdbcDataSource
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
-import test.TestConnection
-import test.TestDriver
 
 @Unroll
 class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
@@ -466,6 +467,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     when:
     try {
       connection = new TestConnection(true)
+      connection.url = "jdbc:testdb://localhost"
     } catch (Exception ignored) {
       connection = driver.connect(jdbcUrl, null)
     }
@@ -580,6 +582,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "test getClientInfo exception"() {
     setup:
     Connection connection = new TestConnection(false)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
     Statement statement = null
@@ -720,6 +723,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "should handle recursive Statements inside Connection.getMetaData(): #desc"() {
     given:
     def connection = new DbCallingConnection(usePreparedStatementInConnection)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
     runUnderTrace("parent") {

@@ -1,6 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
-  id("net.ltgt.nullaway")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {

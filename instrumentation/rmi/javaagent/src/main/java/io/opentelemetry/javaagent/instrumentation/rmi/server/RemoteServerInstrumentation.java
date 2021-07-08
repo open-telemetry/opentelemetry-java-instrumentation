@@ -18,7 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import java.rmi.server.RemoteServer;
 import net.bytebuddy.asm.Advice;
@@ -44,10 +44,11 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(RemoteServer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -61,14 +62,14 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      scope.close();
 
-      CallDepthThreadLocalMap.reset(RemoteServer.class);
+      scope.close();
       if (throwable != null) {
         RmiServerTracer.tracer().endExceptionally(context, throwable);
       } else {

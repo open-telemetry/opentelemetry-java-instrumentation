@@ -7,7 +7,7 @@ plugins {
 
   id("otel.java-conventions")
   id("otel.publish-conventions")
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
 description = "OpenTelemetry Javaagent"

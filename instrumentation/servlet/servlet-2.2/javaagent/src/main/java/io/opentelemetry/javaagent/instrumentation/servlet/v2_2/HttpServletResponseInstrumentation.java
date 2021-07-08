@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -30,8 +31,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and
  * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletRequest,
- * ServletResponse, Throwable, Context, Scope)} can get it from context and set required span
- * attribute.
+ * ServletResponse, Throwable, CallDepth, Context, Scope)} can get it from context and set required
+ * span attribute.
  */
 public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override

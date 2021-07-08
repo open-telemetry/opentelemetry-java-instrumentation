@@ -37,6 +37,10 @@ class SpringBootSmokeTest extends SmokeTest {
     countSpansByName(traces, 'WebController.greeting') == 1
     countSpansByName(traces, 'WebController.withSpan') == 1
 
+    then: "thread details are recorded"
+    getSpanStream(traces)
+      .allMatch { it.attributesList.stream().map { it.key }.collect(toSet()).containsAll(["thread.id", "thread.name"]) }
+
     then: "correct agent version is captured in the resource"
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
       .map { it.stringValue }

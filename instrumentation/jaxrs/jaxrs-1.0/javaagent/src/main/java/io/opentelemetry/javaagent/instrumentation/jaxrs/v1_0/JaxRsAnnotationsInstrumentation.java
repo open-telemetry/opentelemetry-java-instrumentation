@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import javax.ws.rs.Path;
 import net.bytebuddy.asm.Advice;
@@ -65,9 +65,11 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
+      callDepth = CallDepth.forClass(Path.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(target.getClass(), method);
@@ -77,12 +79,12 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Path.class);
 
       scope.close();
       if (throwable == null) {

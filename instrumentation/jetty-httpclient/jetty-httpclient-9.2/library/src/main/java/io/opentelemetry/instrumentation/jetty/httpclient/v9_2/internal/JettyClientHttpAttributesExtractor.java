@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
-  private static final Logger LOG =
+  private static final Logger logger =
       LoggerFactory.getLogger(JettyClientHttpAttributesExtractor.class);
 
   @Override
@@ -146,7 +146,7 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
     try {
       longFromField = httpField != null ? Long.getLong(httpField.getValue()) : null;
     } catch (NumberFormatException t) {
-      LOG.debug(
+      logger.debug(
           "Value {} is not  not valid number format for header field: {}",
           httpField.getValue(),
           httpField.getName());

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public class State {
 
-  private static final Logger log = LoggerFactory.getLogger(State.class);
+  private static final Logger logger = LoggerFactory.getLogger(State.class);
 
   private static final AtomicReferenceFieldUpdater<State, Context> parentContextUpdater =
       AtomicReferenceFieldUpdater.newUpdater(State.class, Context.class, "parentContext");
@@ -31,8 +31,8 @@ public class State {
     if (!result) {
       Context currentParent = parentContextUpdater.get(this);
       if (currentParent != parentContext) {
-        if (log.isDebugEnabled()) {
-          log.debug(
+        if (logger.isDebugEnabled()) {
+          logger.debug(
               "Failed to set parent context because another parent context is "
                   + "already set {}: new: {}, old: {}",
               this,

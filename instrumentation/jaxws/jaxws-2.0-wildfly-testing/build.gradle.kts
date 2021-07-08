@@ -2,19 +2,6 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-// add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
-// which is used by jaxws-2.0-arquillian-testing depends on
-repositories {
-  mavenCentral()
-  maven {
-    setUrl("https://repo.gradle.org/artifactory/libs-releases-local")
-    content {
-      includeGroup("org.gradle")
-    }
-  }
-  mavenLocal()
-}
-
 val testServer by configurations.creating
 
 dependencies {

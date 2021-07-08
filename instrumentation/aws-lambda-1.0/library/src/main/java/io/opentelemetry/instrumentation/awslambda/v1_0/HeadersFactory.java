@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 final class HeadersFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(HeadersFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(HeadersFactory.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -31,7 +31,7 @@ final class HeadersFactory {
         }
       }
     } catch (Exception e) {
-      log.debug("Could not get headers from request, ", e);
+      logger.debug("Could not get headers from request, ", e);
     }
     return null;
   }
