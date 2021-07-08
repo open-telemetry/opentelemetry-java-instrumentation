@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation.collector;
 
 import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
@@ -13,7 +13,6 @@ import io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation.collector;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import java.net.URL;
+import java.net.URLClassLoader;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -23,6 +25,15 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
 
   private static final TypeDescription instrumentationModuleType =
       new TypeDescription.ForLoadedType(InstrumentationModule.class);
+
+  private final URLClassLoader classLoader;
+
+  public MuzzleCodeGenerationPlugin(URLClassLoader classLoader) {
+    this.classLoader = classLoader;
+    for (URL url : classLoader.getURLs()) {
+      System.out.println(url);
+    }
+  }
 
   @Override
   public boolean matches(TypeDescription target) {
@@ -47,7 +58,7 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
       ClassFileLocator classFileLocator) {
-    return builder.visit(new MuzzleCodeGenerator());
+    return builder.visit(new MuzzleCodeGenerator(classLoader));
   }
 
   @Override

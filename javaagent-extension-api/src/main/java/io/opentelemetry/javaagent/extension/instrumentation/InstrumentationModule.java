@@ -145,7 +145,7 @@ public abstract class InstrumentationModule implements Ordered {
    * advices, grouped by {@link ClassRef#getClassName()}.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
@@ -160,7 +160,7 @@ public abstract class InstrumentationModule implements Ordered {
    * compilation. Those helpers will be injected into the application classloader.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
@@ -175,7 +175,7 @@ public abstract class InstrumentationModule implements Ordered {
    * associated with a context class stored in the value.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin

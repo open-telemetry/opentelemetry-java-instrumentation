@@ -27,7 +27,7 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin"
+val pluginName = "io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false
@@ -35,7 +35,8 @@ val codegen by configurations.creating {
 }
 
 val sourceSet = sourceSets.main.get()
-val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) } ?: codegen)
+val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) }
+  ?: codegen)
   .plus(configurations.runtimeClasspath.get())
 
 val languageTasks = LANGUAGES.map { language ->
@@ -65,6 +66,7 @@ fun createLanguageTask(
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
+    var transformationClassPath = inputClasspath
     val compileTask = compileTaskProvider.get()
     if (compileTask is AbstractCompile) {
       val classesDirectory = compileTask.destinationDirectory.asFile.get()
@@ -74,11 +76,12 @@ fun createLanguageTask(
       compileTask.destinationDirectory.set(rawClassesDirectory)
       source = rawClassesDirectory
       target = classesDirectory
-      classPath = compileTask.classpath
+      classPath = compileTask.classpath.plus(rawClassesDirectory)
+      transformationClassPath = transformationClassPath.plus(files(rawClassesDirectory))
       dependsOn(compileTask, sourceSet.processResourcesTaskName)
     }
 
-    transformations.add(createTransformation(inputClasspath, pluginName))
+    transformations.add(createTransformation(transformationClassPath, pluginName))
   }
 }
 

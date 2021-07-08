@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation.collector;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -13,7 +13,6 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
-import io.opentelemetry.javaagent.tooling.Utils;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +50,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
   private static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
       "getMuzzleContextStoreClasses";
+  private final URLClassLoader classLoader;
+
+  public MuzzleCodeGenerator(URLClassLoader classLoader) {
+    this.classLoader = classLoader;
+  }
 
   @Override
   public int mergeWriter(int flags) {
@@ -72,11 +76,12 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       MethodList<?> methods,
       int writerFlags,
       int readerFlags) {
-    return new GenerateMuzzleMethodsAndFields(classVisitor);
+    return new GenerateMuzzleMethodsAndFields(classVisitor, classLoader);
   }
 
   private static class GenerateMuzzleMethodsAndFields extends ClassVisitor {
 
+    private final URLClassLoader classLoader;
     private String instrumentationClassName;
     private InstrumentationModule instrumentationModule;
 
@@ -84,8 +89,10 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateHelperClassNamesMethod = true;
     private boolean generateContextStoreClassesMethod = true;
 
-    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor) {
+    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor,
+        URLClassLoader classLoader) {
       super(Opcodes.ASM7, classVisitor);
+      this.classLoader = classLoader;
     }
 
     @Override
@@ -98,11 +105,12 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         String[] interfaces) {
       this.instrumentationClassName = name;
       try {
+//        for (URL url : ((URLClassLoader) MuzzleCodeGenerator.class.getClassLoader()).getURLs()) {
+//          System.out.println(url);
+//        }
         instrumentationModule =
             (InstrumentationModule)
-                MuzzleCodeGenerator.class
-                    .getClassLoader()
-                    .loadClass(Utils.getClassName(instrumentationClassName))
+                classLoader.loadClass(Utils.getClassName(instrumentationClassName))
                     .getDeclaredConstructor()
                     .newInstance();
       } catch (Exception e) {
@@ -162,9 +170,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // the classloader has a parent including the Gradle classpath, such as buildSrc dependencies.
       // These may have resources take precedence over ones we define, so we need to make sure to
       // not include them when loading resources.
-      ClassLoader resourceLoader =
-          new URLClassLoader(
-              ((URLClassLoader) MuzzleCodeGenerator.class.getClassLoader()).getURLs(), null);
+      ClassLoader resourceLoader = new URLClassLoader((classLoader).getURLs(), null);
       ReferenceCollector collector =
           new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);
       for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {

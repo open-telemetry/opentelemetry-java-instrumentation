@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation.collector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -16,7 +16,6 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.io.BufferedReader;
 import java.io.IOException;

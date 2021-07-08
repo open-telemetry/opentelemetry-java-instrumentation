@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation.collector;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.HashSet;

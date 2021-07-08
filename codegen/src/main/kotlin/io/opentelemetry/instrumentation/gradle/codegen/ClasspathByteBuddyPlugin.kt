@@ -23,7 +23,7 @@ import java.net.URLClassLoader
 class ClasspathByteBuddyPlugin(
   classPath: Iterable<File>, sourceDirectory: File, className: String
 ) : Plugin {
-  private val delegate = pluginFromClassPath(classPath, sourceDirectory, className)
+  private val delegate = pluginFromClassPath2(classPath, sourceDirectory, className)
 
   override fun apply(
     builder: DynamicType.Builder<*>,
@@ -42,13 +42,13 @@ class ClasspathByteBuddyPlugin(
   }
 
   companion object {
-    private fun pluginFromClassPath(
+    private fun pluginFromClassPath2(
       classPath: Iterable<File>, sourceDirectory: File, className: String
     ): Plugin {
       val classLoader = classLoaderFromClassPath(classPath, sourceDirectory)
       try {
         val clazz = Class.forName(className, false, classLoader)
-        return clazz.getDeclaredConstructor().newInstance() as Plugin
+        return clazz.getDeclaredConstructor(URLClassLoader::class.java).newInstance(classLoader) as Plugin
       } catch (e: Exception) {
         throw IllegalStateException("Failed to create ByteBuddy plugin instance", e)
       }
@@ -56,7 +56,7 @@ class ClasspathByteBuddyPlugin(
 
     private fun classLoaderFromClassPath(
       classPath: Iterable<File>, sourceDirectory: File
-    ): ClassLoader {
+    ): URLClassLoader {
       val urls = mutableListOf<URL>()
       urls.add(fileAsUrl(sourceDirectory))
       for (file in classPath) {
