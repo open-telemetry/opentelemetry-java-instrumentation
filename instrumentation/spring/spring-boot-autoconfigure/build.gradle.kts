@@ -51,8 +51,9 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation("io.grpc:grpc-api:1.30.2")
   testImplementation("io.grpc:grpc-netty-shaded:1.30.2")
+  testImplementation(project(":instrumentation-annotation-support"))
 }
 
-tasks.withType<JavaCompile> {
+tasks.compileTestJava {
   options.compilerArgs.add("-parameters")
 }

@@ -155,7 +155,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,
-        @Advice.AllArguments(readOnly = true, typing = Assigner.Typing.DYNAMIC) Object[] args,
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);

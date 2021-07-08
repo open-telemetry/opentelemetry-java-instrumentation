@@ -16,11 +16,12 @@ dependencies {
   compileOnly(project(path = ":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
+  testImplementation(project(":instrumentation-annotation-support"))
   testImplementation("net.bytebuddy:byte-buddy:${versions["net.bytebuddy"]}")
 }
 
 tasks {
-  withType<JavaCompile> {
+  compileTestJava {
     options.compilerArgs.add("-parameters")
   }
   named<Test>("test") {

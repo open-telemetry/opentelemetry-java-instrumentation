@@ -62,7 +62,7 @@ final class ParameterizedClass {
 
   /** Gets the parameterized superclass of the current parameterized class. */
   public ParameterizedClass getParameterizedSuperclass() {
-    return withMappedTypeArguments(rawClass.getGenericSuperclass());
+    return resolveSuperTypeActualTypeArguments(rawClass.getGenericSuperclass());
   }
 
   /** Gets an array of the parameterized interfaces of the current parameterized class. */
@@ -70,7 +70,7 @@ final class ParameterizedClass {
     Type[] interfaceTypes = rawClass.getGenericInterfaces();
     ParameterizedClass[] parameterizedClasses = new ParameterizedClass[interfaceTypes.length];
     for (int i = 0; i < interfaceTypes.length; i++) {
-      parameterizedClasses[i] = withMappedTypeArguments(interfaceTypes[i]);
+      parameterizedClasses[i] = resolveSuperTypeActualTypeArguments(interfaceTypes[i]);
     }
     return parameterizedClasses;
   }
@@ -103,11 +103,12 @@ final class ParameterizedClass {
     return findParameterizedSuperclassImpl(current.getParameterizedSuperclass(), superClass);
   }
 
-  private ParameterizedClass withMappedTypeArguments(Type superType) {
+  private ParameterizedClass resolveSuperTypeActualTypeArguments(Type superType) {
     if (superType instanceof ParameterizedType) {
       ParameterizedType parameterizedSuperType = (ParameterizedType) superType;
       TypeVariable<?>[] typeParameters = rawClass.getTypeParameters();
-      return withMappedTypeArguments(parameterizedSuperType, typeParameters, typeArguments);
+      return resolveSuperTypeActualTypeArguments(
+          parameterizedSuperType, typeParameters, typeArguments);
     } else if (superType != null) {
       return ParameterizedClass.of(superType);
     }
@@ -118,7 +119,7 @@ final class ParameterizedClass {
    * Maps the actual type arguments to the type parameters of the superclass based on the identity
    * of the type variables.
    */
-  private static ParameterizedClass withMappedTypeArguments(
+  private static ParameterizedClass resolveSuperTypeActualTypeArguments(
       ParameterizedType parameterizedSuperType,
       TypeVariable<?>[] typeParameters,
       Type[] actualTypeArguments) {
@@ -129,14 +130,15 @@ final class ParameterizedClass {
       if (superTypeArgument instanceof TypeVariable) {
         TypeVariable<?> superTypeVariable = (TypeVariable<?>) superTypeArgument;
         superTypeArguments[i] =
-            mapTypeVariableToArgument(superTypeVariable, typeParameters, actualTypeArguments);
+            mapTypeVariableToActualTypeArgument(
+                superTypeVariable, typeParameters, actualTypeArguments);
       }
     }
     Class<?> rawSuperClass = (Class<?>) parameterizedSuperType.getRawType();
     return new ParameterizedClass(rawSuperClass, superTypeArguments);
   }
 
-  private static Type mapTypeVariableToArgument(
+  private static Type mapTypeVariableToActualTypeArgument(
       TypeVariable<?> superTypeVariable,
       TypeVariable<?>[] typeParameters,
       Type[] actualTypeArguments) {
