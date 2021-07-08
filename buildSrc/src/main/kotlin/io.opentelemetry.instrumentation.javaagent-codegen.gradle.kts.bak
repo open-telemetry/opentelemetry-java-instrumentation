@@ -61,7 +61,7 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
+  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*>? {
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
