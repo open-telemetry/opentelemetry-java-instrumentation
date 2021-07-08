@@ -2,7 +2,6 @@ pluginManagement {
   plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
-    id("com.gradle.plugin-publish") version "0.15.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("me.champeau.jmh") version "0.6.5"
     id("org.jetbrains.kotlin.jvm") version "1.5.10"
@@ -50,7 +49,6 @@ buildCache {
 
 rootProject.name = "opentelemetry-java-instrumentation"
 
-include(":codegen")
 
 // agent projects
 include(":opentelemetry-api-shaded-for-instrumenting")

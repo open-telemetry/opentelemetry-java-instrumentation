@@ -27,7 +27,7 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation.gradle:codegen:1.4.0-SNAPSHOT")
+  implementation("io.opentelemetry.instrumentation.gradle:codegen:0.1.0")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
