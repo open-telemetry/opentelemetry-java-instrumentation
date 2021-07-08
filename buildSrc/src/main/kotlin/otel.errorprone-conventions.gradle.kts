@@ -8,12 +8,12 @@ dependencies {
   errorprone("com.google.errorprone:error_prone_core")
 }
 
-val disableErrorProne = gradle.startParameter.projectProperties.get("disableErrorProne")
+val disableErrorProne = gradle.startParameter.projectProperties.get("disableErrorProne")?.toBoolean() ?: false
 
 tasks {
   withType<JavaCompile>().configureEach {
     options.errorprone {
-      enabled = disableErrorProne != "true"
+      enabled = !disableErrorProne
 
       disableWarningsInGeneratedCode.set(true)
       allDisabledChecksAsWarnings.set(true)
