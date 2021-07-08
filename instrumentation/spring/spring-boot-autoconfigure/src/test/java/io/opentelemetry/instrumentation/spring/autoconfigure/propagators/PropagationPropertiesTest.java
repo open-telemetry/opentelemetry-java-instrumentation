@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.util.Collections;
+import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,16 +34,12 @@ public class PropagationPropertiesTest {
   void hasType() {
 
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=xray")
+        .withPropertyValues("otel.propagation.type=xray,b3")
         .run(
             context -> {
-              assertThat(context.getEnvironment().getProperty("otel.propagation.type"))
-                  .isEqualTo(PropagationType.xray.toString());
-
               PropagationProperties propertiesBean = context.getBean(PropagationProperties.class);
 
-              assertThat(propertiesBean.getType())
-                  .isEqualTo(Collections.singletonList(PropagationType.xray));
+              assertThat(propertiesBean.getType()).isEqualTo(Arrays.asList("xray", "b3"));
             });
   }
 
@@ -54,6 +50,6 @@ public class PropagationPropertiesTest {
     this.contextRunner.run(
         context ->
             assertThat(context.getBean(PropagationProperties.class).getType())
-                .containsExactly(PropagationType.tracecontext, PropagationType.baggage));
+                .containsExactly("tracecontext", "baggage"));
   }
 }

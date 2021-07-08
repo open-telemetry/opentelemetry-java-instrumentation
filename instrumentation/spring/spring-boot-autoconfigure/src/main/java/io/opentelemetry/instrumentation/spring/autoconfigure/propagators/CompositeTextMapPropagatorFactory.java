@@ -22,13 +22,13 @@ import org.springframework.util.ClassUtils;
 public final class CompositeTextMapPropagatorFactory {
 
   static TextMapPropagator getCompositeTextMapPropagator(
-      BeanFactory beanFactory, List<PropagationType> types) {
+      BeanFactory beanFactory, List<String> types) {
 
     Set<TextMapPropagator> propagators = new HashSet<>();
 
-    for (PropagationType type : types) {
+    for (String type : types) {
       switch (type) {
-        case b3:
+        case "b3":
           if (isOnClasspath("io.opentelemetry.extension.trace.propagation.B3Propagator")) {
             propagators.add(
                 beanFactory
@@ -36,7 +36,7 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(B3Propagator::injectingSingleHeader));
           }
           break;
-        case b3multi:
+        case "b3multi":
           if (isOnClasspath("io.opentelemetry.extension.trace.propagation.B3Propagator")) {
             propagators.add(
                 beanFactory
@@ -44,7 +44,7 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(B3Propagator::injectingMultiHeaders));
           }
           break;
-        case jaeger:
+        case "jaeger":
           if (isOnClasspath("io.opentelemetry.extension.trace.propagation.JaegerPropagator")) {
             propagators.add(
                 beanFactory
@@ -52,7 +52,7 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(JaegerPropagator::getInstance));
           }
           break;
-        case ottrace:
+        case "ottrace":
           if (isOnClasspath("io.opentelemetry.extension.trace.propagation.OtTracerPropagator")) {
             propagators.add(
                 beanFactory
@@ -60,7 +60,7 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(OtTracePropagator::getInstance));
           }
           break;
-        case xray:
+        case "xray":
           if (isOnClasspath("io.opentelemetry.extension.aws.AwsXrayPropagator")) {
             propagators.add(
                 beanFactory
@@ -68,15 +68,15 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(AwsXrayPropagator::getInstance));
           }
           break;
-        case tracecontext:
+        case "tracecontext":
           propagators.add(W3CTraceContextPropagator.getInstance());
           break;
-        case baggage:
+        case "baggage":
           propagators.add(W3CBaggagePropagator.getInstance());
           break;
+        default:
+          break;
       }
-
-      propagators.add(TextMapPropagator.noop());
     }
 
     return TextMapPropagator.composite(propagators);
