@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.context;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -335,7 +334,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             builder,
             typeDescription,
             // context store implementation classes will always go to the bootstrap
-            BOOTSTRAP_CLASSLOADER,
+            null,
             module);
       }
     };
@@ -383,7 +382,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            */
           builder =
               builder
-                  .type(not(isAbstract()).and(safeHasSuperType(named(entry.getKey()))))
+                  .type(not(isAbstract()).and(hasSuperType(named(entry.getKey()))))
                   .and(safeToInjectFieldsMatcher())
                   .and(InstrumentationModuleInstaller.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
