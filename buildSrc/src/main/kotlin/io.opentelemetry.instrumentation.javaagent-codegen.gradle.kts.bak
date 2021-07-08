@@ -47,7 +47,7 @@ val languageTasks = LANGUAGES.map { language ->
     return@map null
   }
   val compileTask = tasks.named(compileTaskName)
-  createLanguageTask(compileTask, "byteBuddy${language.capitalize()}")
+  createLanguageTask(compileTask, "byteBuddy${language}")
 }.filterNotNull()
 
 tasks {
@@ -61,7 +61,7 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
+  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*>? {
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }

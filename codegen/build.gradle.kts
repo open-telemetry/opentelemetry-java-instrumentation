@@ -1,15 +1,19 @@
 plugins {
   `kotlin-dsl`
-  `maven-publish`
 
   id("com.gradle.plugin-publish")
+
+  id("otel.java-conventions")
+  id("otel.publish-conventions")
+
 }
 
 group = "io.opentelemetry.instrumentation.gradle"
-version = "0.1.0"
+
+val versions: Map<String, String> by project
 
 dependencies {
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${versions["net.bytebuddy"]}")
 }
 
 pluginBundle {
