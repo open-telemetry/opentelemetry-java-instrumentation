@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.httpclients;
 
-import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withClientSpan;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.mockito.BDDMockito.then;
 
@@ -22,8 +21,7 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 @ExtendWith(MockitoExtension.class)
 class RestTemplateInterceptorTest {
   @RegisterExtension
-  static final LibraryInstrumentationExtension instrumentation =
-      LibraryInstrumentationExtension.create();
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock HttpRequest httpRequestMock;
   @Mock ClientHttpRequestExecution requestExecutionMock;
@@ -32,11 +30,10 @@ class RestTemplateInterceptorTest {
   @Test
   void shouldSkipWhenContextHasClientSpan() throws Exception {
     // given
-    RestTemplateInterceptor interceptor =
-        new RestTemplateInterceptor(instrumentation.getOpenTelemetry());
+    RestTemplateInterceptor interceptor = new RestTemplateInterceptor(testing.getOpenTelemetry());
 
     // when
-    withClientSpan(
+    testing.runWithClientSpan(
         "parent",
         () -> {
           interceptor.intercept(httpRequestMock, requestBody, requestExecutionMock);
@@ -45,7 +42,7 @@ class RestTemplateInterceptorTest {
     // then
     then(requestExecutionMock).should().execute(httpRequestMock, requestBody);
 
-    assertThat(instrumentation.waitForTraces(1))
+    assertThat(testing.waitForTraces(1))
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
