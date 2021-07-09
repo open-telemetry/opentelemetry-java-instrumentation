@@ -89,8 +89,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateHelperClassNamesMethod = true;
     private boolean generateContextStoreClassesMethod = true;
 
-    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor,
-        URLClassLoader classLoader) {
+    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
       super(Opcodes.ASM7, classVisitor);
       this.classLoader = classLoader;
     }
@@ -105,12 +104,10 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         String[] interfaces) {
       this.instrumentationClassName = name;
       try {
-//        for (URL url : ((URLClassLoader) MuzzleCodeGenerator.class.getClassLoader()).getURLs()) {
-//          System.out.println(url);
-//        }
         instrumentationModule =
             (InstrumentationModule)
-                classLoader.loadClass(Utils.getClassName(instrumentationClassName))
+                classLoader
+                    .loadClass(Utils.getClassName(instrumentationClassName))
                     .getDeclaredConstructor()
                     .newInstance();
       } catch (Exception e) {
@@ -170,7 +167,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // the classloader has a parent including the Gradle classpath, such as buildSrc dependencies.
       // These may have resources take precedence over ones we define, so we need to make sure to
       // not include them when loading resources.
-      //TODO analyze anew if this is needed
+      // TODO analyze anew if this is needed
       ClassLoader resourceLoader = new URLClassLoader(classLoader.getURLs(), null);
       ReferenceCollector collector =
           new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);

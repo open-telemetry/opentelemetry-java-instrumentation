@@ -2,16 +2,17 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.javaagent.muzzle.generation
 
+import java.io.File
+import java.net.URL
+import java.net.URLClassLoader
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.build.Plugin
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.DynamicType
-import java.io.File
-import java.net.URL
-import java.net.URLClassLoader
 
 /**
  * Starting from version 1.10.15, ByteBuddy gradle plugin transformations require that plugin
@@ -21,7 +22,9 @@ import java.net.URLClassLoader
  * provided classloader when the plugin is instantiated.
  */
 class ClasspathByteBuddyPlugin(
-  classPath: Iterable<File>, sourceDirectory: File, className: String
+  classPath: Iterable<File>,
+  sourceDirectory: File,
+  className: String
 ) : Plugin {
   private val delegate = pluginFromClassPath2(classPath, sourceDirectory, className)
 
@@ -43,7 +46,9 @@ class ClasspathByteBuddyPlugin(
 
   companion object {
     private fun pluginFromClassPath2(
-      classPath: Iterable<File>, sourceDirectory: File, className: String
+      classPath: Iterable<File>,
+      sourceDirectory: File,
+      className: String
     ): Plugin {
       val classLoader = classLoaderFromClassPath(classPath, sourceDirectory)
       try {
@@ -55,7 +60,8 @@ class ClasspathByteBuddyPlugin(
     }
 
     private fun classLoaderFromClassPath(
-      classPath: Iterable<File>, sourceDirectory: File
+      classPath: Iterable<File>,
+      sourceDirectory: File
     ): URLClassLoader {
       val urls = mutableListOf<URL>()
       urls.add(fileAsUrl(sourceDirectory))
