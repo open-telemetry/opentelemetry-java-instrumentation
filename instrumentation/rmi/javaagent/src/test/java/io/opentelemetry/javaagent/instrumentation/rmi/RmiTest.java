@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.AutoCleanupExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -36,6 +37,8 @@ class RmiTest {
   private static Registry serverRegistry;
   private static Registry clientRegistry;
 
+  @RegisterExtension final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+
   @BeforeAll
   static void setUp() throws Exception {
     registryPort = PortUtils.findOpenPort();
@@ -52,6 +55,7 @@ class RmiTest {
   void clientCallCreatesSpans() throws Exception {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
+    autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
     String response =
         runUnderTrace(
@@ -99,14 +103,13 @@ class RmiTest {
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "rmi.app.Server"),
                                                 entry(SemanticAttributes.RPC_METHOD, "hello")))));
-
-    serverRegistry.unbind(Server.RMI_ID);
   }
 
   @Test
   void serverBuiltinMethods() throws Exception {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
+    autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
     server.equals(new Server());
     server.getRef();
@@ -115,14 +118,13 @@ class RmiTest {
     server.getClass();
 
     assertThat(testing.waitForTraces(0)).isEmpty();
-
-    serverRegistry.unbind(Server.RMI_ID);
   }
 
   @Test
   void serviceThrownException() throws Exception {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
+    autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
     Throwable thrown =
         catchThrowableOfType(
@@ -224,14 +226,13 @@ class RmiTest {
                                                 entry(
                                                     SemanticAttributes.RPC_METHOD,
                                                     "exceptional")))));
-
-    serverRegistry.unbind(Server.RMI_ID);
   }
 
   @Test
   void clientCallUsingLegacyStub() throws Exception {
     ServerLegacy server = new ServerLegacy();
     serverRegistry.rebind(ServerLegacy.RMI_ID, server);
+    autoCleanup.deferCleanup(() -> serverRegistry.unbind(ServerLegacy.RMI_ID));
 
     String response =
         runUnderTrace(
@@ -279,7 +280,5 @@ class RmiTest {
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "rmi.app.ServerLegacy"),
                                                 entry(SemanticAttributes.RPC_METHOD, "hello")))));
-
-    serverRegistry.unbind(ServerLegacy.RMI_ID);
   }
 }
