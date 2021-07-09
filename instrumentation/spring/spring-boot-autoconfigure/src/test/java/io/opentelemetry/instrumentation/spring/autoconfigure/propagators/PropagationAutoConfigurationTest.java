@@ -82,4 +82,33 @@ class PropagationAutoConfigurationTest {
                   .doesNotContain("baggage", "traceparent");
             });
   }
+
+  @Test
+  @DisplayName("when propagation is set to unsupported value should create an empty propagator")
+  void shouldCreateNoop() {
+
+    this.contextRunner
+        .withPropertyValues("otel.propagation.type=invalid")
+        .run(
+            context -> {
+              TextMapPropagator compositePropagator =
+                  context.getBean("compositeTextMapPropagator", TextMapPropagator.class);
+
+              assertThat(compositePropagator.fields()).isEmpty();
+            });
+  }
+
+  @Test
+  @DisplayName("when propagation is set to some values should contain only supported values")
+  void shouldContainOnlySupported() {
+    this.contextRunner
+        .withPropertyValues("otel.propagation.type=invalid,b3")
+        .run(
+            context -> {
+              TextMapPropagator compositePropagator =
+                  context.getBean("compositeTextMapPropagator", TextMapPropagator.class);
+
+              assertThat(compositePropagator.fields()).containsExactly("b3");
+            });
+  }
 }

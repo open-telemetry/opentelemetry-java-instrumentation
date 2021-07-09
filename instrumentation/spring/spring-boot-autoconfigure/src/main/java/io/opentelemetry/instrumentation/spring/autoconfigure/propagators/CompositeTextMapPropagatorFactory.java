@@ -15,11 +15,16 @@ import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.util.ClassUtils;
 
 /** Factory of composite {@link TextMapPropagator}. Defaults to W3C and BAGGAGE. */
 public final class CompositeTextMapPropagatorFactory {
+
+  private static final Logger log =
+      LoggerFactory.getLogger(CompositeTextMapPropagatorFactory.class);
 
   static TextMapPropagator getCompositeTextMapPropagator(
       BeanFactory beanFactory, List<String> types) {
@@ -75,6 +80,7 @@ public final class CompositeTextMapPropagatorFactory {
           propagators.add(W3CBaggagePropagator.getInstance());
           break;
         default:
+          log.warn("Unsupported type of propagator: " + type);
           break;
       }
     }
