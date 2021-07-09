@@ -14,9 +14,6 @@ rootProject.extra["versions"] = dependencyVersions
 val otelVersion = "1.4.0"
 rootProject.extra["otelVersion"] = otelVersion
 
-// TODO: Remove when OTel 1.4.0 is released
-val otelVersionSnapshot = "1.4.0-SNAPSHOT"
-
 // Need both BOM and -all
 val groovyVersion = "2.5.11"
 
@@ -36,7 +33,7 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.12.3",
   "com.google.guava:guava-bom:30.1.1-jre",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersionSnapshot}",
+  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
   "org.junit:junit-bom:5.7.2"
 )
