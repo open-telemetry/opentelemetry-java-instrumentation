@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -34,10 +36,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   DefaultMQPushConsumer consumer
 
   @Shared
-  RMQOrderListener messageListener
-
-  @Shared
-  def sharedTopic
+  String sharedTopic
 
   @Shared
   Message msg
@@ -58,8 +57,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     msgs.add(msg2)
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
-    messageListener = new RMQOrderListener()
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", messageListener)
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new TracingMessageListener())
     configureMQPushConsumer(consumer)
   }
 
@@ -67,10 +65,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     producer?.shutdown()
     consumer?.shutdown()
     BaseConf.deleteTempDir()
-  }
-
-  def setup() {
-    messageListener.clearMsg()
   }
 
   def "test rocketmq produce callback"() {
@@ -84,10 +78,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       void onException(Throwable throwable) {
       }
     })
-    messageListener.waitForMessageConsume(1, CONSUME_TIMEOUT)
+
     then:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 3) {
         span(0) {
           name sharedTopic + " send"
           kind PRODUCER
@@ -117,6 +111,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.queue_offset" Long
           }
         }
+        span(2) {
+          name "messageListener"
+          kind INTERNAL
+          childOf span(1)
+        }
       }
     }
   }
@@ -126,14 +125,18 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     runUnderTrace("parent") {
       producer.send(msg)
     }
-    messageListener.waitForMessageConsume(1, CONSUME_TIMEOUT)
+
     then:
     assertTraces(1) {
-      trace(0, 3) {
-        basicSpan(it, 0, "parent")
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+        }
         span(1) {
           name sharedTopic + " send"
           kind PRODUCER
+          childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
@@ -147,6 +150,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         span(2) {
           name sharedTopic + " process"
           kind CONSUMER
+          childOf span(1)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
@@ -160,6 +164,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.queue_offset" Long
           }
         }
+        span(3) {
+          name "messageListener"
+          kind INTERNAL
+          childOf span(2)
+        }
       }
     }
   }
@@ -167,22 +176,27 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   def "test rocketmq produce and batch consume"() {
     setup:
     consumer.setConsumeMessageBatchMaxSize(2)
+
     when:
     runUnderTrace("parent") {
       producer.send(msgs)
     }
-    messageListener.waitForMessageConsume(msgs.size(), CONSUME_TIMEOUT)
+
     then:
     assertTraces(2) {
-      def itemStepSpan = null
+      def producerSpan = null
 
       trace(0, 2) {
-        itemStepSpan = span(1)
+        producerSpan = span(1)
 
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind INTERNAL
+        }
         span(1) {
           name sharedTopic + " send"
           kind PRODUCER
+          childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
@@ -194,7 +208,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         }
       }
 
-      trace(1, 3) {
+      trace(1, 4) {
         span(0) {
           name "multiple_sources receive"
           kind CONSUMER
@@ -219,7 +233,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.queue_offset" Long
           }
           childOf span(0)
-          hasLink itemStepSpan
+          hasLink producerSpan
         }
         span(2) {
           name sharedTopic + " process"
@@ -237,7 +251,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.queue_offset" Long
           }
           childOf span(0)
-          hasLink itemStepSpan
+          hasLink producerSpan
+        }
+        span(3) {
+          name "messageListener"
+          kind INTERNAL
+          childOf span(0)
         }
       }
     }
