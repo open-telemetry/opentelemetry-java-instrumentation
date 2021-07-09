@@ -7,11 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTracing;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import okhttp3.Interceptor;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
-public class OkHttp3Interceptors {
+public final class OkHttp3Interceptors {
 
   public static final Interceptor TRACING_INTERCEPTOR =
-      OkHttpTracing.create(GlobalOpenTelemetry.get()).newInterceptor();
+      OkHttpTracing.newBuilder(GlobalOpenTelemetry.get())
+          .addAttributesExtractor(
+              PeerServiceAttributesExtractor.create(new OkHttpNetAttributesExtractor()))
+          .build()
+          .newInterceptor();
+
+  private OkHttp3Interceptors() {}
 }

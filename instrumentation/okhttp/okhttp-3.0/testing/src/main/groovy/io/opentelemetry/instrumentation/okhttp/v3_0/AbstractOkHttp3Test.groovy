@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import okhttp3.Call
 import okhttp3.Callback
@@ -66,6 +68,24 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   @Override
   boolean testCausality() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_SCHEME
+    ]
+    def attributes = super.httpAttributes(uri) + extra
+
+    // flavor is extracted from the response, and those URLs cause exceptions (= null response)
+    switch (uri.toString()) {
+      case "http://localhost:61/":
+      case "https://192.0.2.1/":
+        attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    }
+
+    attributes
   }
 
   def "reused builder has one interceptor"() {

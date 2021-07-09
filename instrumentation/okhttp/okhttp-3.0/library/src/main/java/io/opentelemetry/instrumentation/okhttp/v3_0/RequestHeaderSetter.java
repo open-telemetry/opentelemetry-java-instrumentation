@@ -14,9 +14,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Pavol Loffay
  */
-final class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builder> {
+final class RequestHeaderSetter implements TextMapSetter<Request.Builder> {
 
-  static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
+  static final RequestHeaderSetter SETTER = new RequestHeaderSetter();
 
   @Override
   public void set(Request.@Nullable Builder carrier, String key, String value) {

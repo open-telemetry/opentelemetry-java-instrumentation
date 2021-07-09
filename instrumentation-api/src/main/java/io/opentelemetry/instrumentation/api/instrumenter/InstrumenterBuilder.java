@@ -129,6 +129,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
   }
 
+  /** Returns a new {@link Instrumenter} which will create client spans. */
+  public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter() {
+    return newInstrumenter(InstrumenterConstructor.internal(), SpanKindExtractor.alwaysClient());
+  }
+
   /**
    * Returns a new {@link Instrumenter} which will create server spans and extract context from
    * requests.
