@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

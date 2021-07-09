@@ -3,31 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.matcher;
+package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-import java.util.Objects;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A fail-safe matcher catches exceptions that are thrown by a delegate matcher and returns an
- * alternative value.
+ * A fail-safe matcher catches exceptions that are thrown by a delegate matcher and returns {@code
+ * false}.
  *
  * <p>Logs exception if it was thrown.
  *
  * @param <T> The type of the matched entity.
  * @see net.bytebuddy.matcher.FailSafeMatcher
  */
-class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
+public class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(LoggingFailSafeMatcher.class);
 
   /** The delegate matcher that might throw an exception. */
   private final ElementMatcher<? super T> matcher;
-
-  /** The fallback value in case of an exception. */
-  private final boolean fallback;
 
   /** The text description to log if exception happens. */
   private final String description;
@@ -36,13 +32,10 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
    * Creates a new fail-safe element matcher.
    *
    * @param matcher The delegate matcher that might throw an exception.
-   * @param fallback The fallback value in case of an exception.
    * @param description Descriptive string to log along with exception.
    */
-  public LoggingFailSafeMatcher(
-      ElementMatcher<? super T> matcher, boolean fallback, String description) {
+  public LoggingFailSafeMatcher(ElementMatcher<? super T> matcher, String description) {
     this.matcher = matcher;
-    this.fallback = fallback;
     this.description = description;
   }
 
@@ -52,13 +45,13 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
       return matcher.matches(target);
     } catch (Throwable e) {
       logger.debug(description, e);
-      return fallback;
+      return false;
     }
   }
 
   @Override
   public String toString() {
-    return "failSafe(try(" + matcher + ") or " + fallback + ")";
+    return "failSafe(try(" + matcher + ") or false)";
   }
 
   @Override
@@ -70,11 +63,11 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
       return false;
     }
     LoggingFailSafeMatcher<?> other = (LoggingFailSafeMatcher<?>) obj;
-    return fallback == other.fallback && matcher.equals(other.matcher);
+    return matcher.equals(other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(fallback, matcher);
+    return matcher.hashCode();
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
 import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.safeAsErasure;
+import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 
 import java.util.HashSet;
 import java.util.Iterator;
