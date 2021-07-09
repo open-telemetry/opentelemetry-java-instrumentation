@@ -23,7 +23,7 @@ import org.springframework.util.ClassUtils;
 /** Factory of composite {@link TextMapPropagator}. Defaults to W3C and BAGGAGE. */
 public final class CompositeTextMapPropagatorFactory {
 
-  private static final Logger log =
+  private static final Logger logger =
       LoggerFactory.getLogger(CompositeTextMapPropagatorFactory.class);
 
   static TextMapPropagator getCompositeTextMapPropagator(
@@ -80,7 +80,7 @@ public final class CompositeTextMapPropagatorFactory {
           propagators.add(W3CBaggagePropagator.getInstance());
           break;
         default:
-          log.warn("Unsupported type of propagator: " + type);
+          logger.warn("Unsupported type of propagator: {}", type);
           break;
       }
     }
