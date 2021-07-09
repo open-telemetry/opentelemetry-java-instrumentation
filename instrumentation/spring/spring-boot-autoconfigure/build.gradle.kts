@@ -8,7 +8,7 @@ group = "io.opentelemetry.instrumentation"
 val versions: Map<String, String> by project
 
 dependencies {
-  compileOnly(project(":instrumentation-annotation-support"))
+  implementation(project(":instrumentation-annotation-support"))
 
   implementation("org.springframework.boot:spring-boot-autoconfigure:${versions["org.springframework.boot"]}")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:${versions["org.springframework.boot"]}")
