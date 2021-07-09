@@ -5,7 +5,7 @@ plugins {
 val versions: Map<String, String> by project
 
 dependencies {
-  implementation(project(":instrumentation-annotation-support"))
+  compileOnly(project(":instrumentation-annotation-support"))
 
   compileOnly(project(":javaagent-tooling"))
 
