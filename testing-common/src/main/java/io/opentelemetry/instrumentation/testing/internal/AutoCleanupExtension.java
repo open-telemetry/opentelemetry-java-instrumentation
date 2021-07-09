@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.junit;
+package io.opentelemetry.instrumentation.testing.internal;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import org.junit.jupiter.api.extension.AfterEachCallback;

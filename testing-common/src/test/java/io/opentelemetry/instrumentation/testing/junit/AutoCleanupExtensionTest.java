@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
