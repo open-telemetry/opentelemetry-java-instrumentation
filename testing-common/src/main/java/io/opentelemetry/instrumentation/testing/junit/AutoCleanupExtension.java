@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * after it finishes, no matter the outcome. Inspired by Spock's {@code cleanup:} block.
  */
 public final class AutoCleanupExtension implements AfterEachCallback {
-  private final Queue<AutoCloseable> thingsToCleanUp = new LinkedList<>();
+  private final Queue<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedQueue<>();
 
   private AutoCleanupExtension() {}
 
