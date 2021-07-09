@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.muzzle.generation.collector;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -170,7 +170,8 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // the classloader has a parent including the Gradle classpath, such as buildSrc dependencies.
       // These may have resources take precedence over ones we define, so we need to make sure to
       // not include them when loading resources.
-      ClassLoader resourceLoader = new URLClassLoader((classLoader).getURLs(), null);
+      //TODO analyze anew if this is needed
+      ClassLoader resourceLoader = new URLClassLoader(classLoader.getURLs(), null);
       ReferenceCollector collector =
           new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);
       for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {

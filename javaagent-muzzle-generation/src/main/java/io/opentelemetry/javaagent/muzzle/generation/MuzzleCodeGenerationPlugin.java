@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.muzzle.generation.collector;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import java.net.URL;
 import java.net.URLClassLoader;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -30,9 +29,6 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
 
   public MuzzleCodeGenerationPlugin(URLClassLoader classLoader) {
     this.classLoader = classLoader;
-    for (URL url : classLoader.getURLs()) {
-      System.out.println(url);
-    }
   }
 
   @Override

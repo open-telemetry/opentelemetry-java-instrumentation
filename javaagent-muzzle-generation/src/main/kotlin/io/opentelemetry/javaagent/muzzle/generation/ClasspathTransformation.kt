@@ -2,7 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry.instrumentation.gradle.codegen
+package io.opentelemetry.javaagent.muzzle.generation
 
 import net.bytebuddy.build.Plugin.Factory.UsingReflection.ArgumentResolver
 import net.bytebuddy.build.gradle.Transformation

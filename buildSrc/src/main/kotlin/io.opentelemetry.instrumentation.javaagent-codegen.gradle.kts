@@ -7,6 +7,7 @@ plugins {
   `java-library`
 }
 
+//TODO remove this when separate codegen plugin is published
 /**
  * Starting from version 1.10.15, ByteBuddy gradle plugin transformation task autoconfiguration is
  * hardcoded to be applied to javaCompile task. This causes the dependencies to be resolved during
@@ -27,7 +28,7 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin"
+val pluginName = "io.opentelemetry.javaagent.muzzle.generation.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false

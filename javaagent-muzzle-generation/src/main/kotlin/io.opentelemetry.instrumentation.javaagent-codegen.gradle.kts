@@ -1,5 +1,5 @@
-import io.opentelemetry.instrumentation.gradle.codegen.ClasspathByteBuddyPlugin
-import io.opentelemetry.instrumentation.gradle.codegen.ClasspathTransformation
+import io.opentelemetry.javaagent.muzzle.generation.ClasspathByteBuddyPlugin
+import io.opentelemetry.javaagent.muzzle.generation.ClasspathTransformation
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 import net.bytebuddy.build.gradle.Transformation
 
@@ -27,7 +27,7 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin"
+val pluginName = "io.opentelemetry.javaagent.muzzle.generation.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false

@@ -1,22 +1,17 @@
 plugins {
   `kotlin-dsl`
 
-  id("com.gradle.plugin-publish")
-
   id("otel.java-conventions")
   id("otel.publish-conventions")
-
+  id("com.gradle.plugin-publish")
 }
 
 group = "io.opentelemetry.instrumentation.gradle"
 
-val versions: Map<String, String> by project
-
 dependencies {
-  // Only used during compilation by bytebuddy plugin
   implementation("com.google.guava:guava")
   implementation(project(":muzzle"))
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${versions["net.bytebuddy"]}")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin")
   implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.muzzle.generation.collector;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
