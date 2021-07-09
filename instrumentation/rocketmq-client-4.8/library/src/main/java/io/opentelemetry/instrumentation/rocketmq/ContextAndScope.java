@@ -12,8 +12,8 @@ import io.opentelemetry.context.Scope;
 @AutoValue
 abstract class ContextAndScope {
 
-  static ContextAndScope create(Context context) {
-    return new AutoValue_ContextAndScope(context, context.makeCurrent());
+  static ContextAndScope create(Context context, Scope scope) {
+    return new AutoValue_ContextAndScope(context, scope);
   }
 
   abstract Context getContext();

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.rocketmq
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly
