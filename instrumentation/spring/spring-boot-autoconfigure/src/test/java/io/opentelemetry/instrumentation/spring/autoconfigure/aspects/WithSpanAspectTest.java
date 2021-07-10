@@ -232,7 +232,8 @@ public class WithSpanAspectTest {
   @DisplayName("")
   void withSpanAttributes() throws Throwable {
     // when
-    testing.runWithServerSpan("parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
+    testing.runWithSpan(
+        "parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
 
     // then
     List<List<SpanData>> traces = testing.waitForTraces(1);
