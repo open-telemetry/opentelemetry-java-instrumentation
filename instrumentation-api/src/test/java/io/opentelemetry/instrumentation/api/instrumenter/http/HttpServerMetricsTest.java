@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -60,11 +61,11 @@ class HttpServerMetricsTest {
               assertThat(metric.getType()).isEqualTo(MetricDataType.LONG_SUM);
               assertThat(metric.getLongSumData().getPoints()).hasSize(1);
               LongPointData data = metric.getLongSumData().getPoints().stream().findFirst().get();
-              assertThat(data.getLabels().asMap())
+              assertThat(data.getAttributes().asMap())
                   .containsOnly(
-                      entry("http.host", "host"),
-                      entry("http.method", "GET"),
-                      entry("http.scheme", "https"));
+                      entry(stringKey("http.host"), "host"),
+                      entry(stringKey("http.method"), "GET"),
+                      entry(stringKey("http.scheme"), "https"));
               assertThat(data.getValue()).isEqualTo(1);
             });
 
@@ -100,13 +101,13 @@ class HttpServerMetricsTest {
               assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(1);
               DoubleSummaryPointData data =
                   metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
-              assertThat(data.getLabels().asMap())
+              assertThat(data.getAttributes().asMap())
                   .containsOnly(
-                      entry("http.host", "host"),
-                      entry("http.method", "GET"),
-                      entry("http.scheme", "https"),
-                      entry("net.host.name", "localhost"),
-                      entry("net.host.port", "1234"));
+                      entry(stringKey("http.host"), "host"),
+                      entry(stringKey("http.method"), "GET"),
+                      entry(stringKey("http.scheme"), "https"),
+                      entry(stringKey("net.host.name"), "localhost"),
+                      entry(stringKey("net.host.port"), "1234"));
               assertThat(data.getPercentileValues()).isNotEmpty();
             });
 

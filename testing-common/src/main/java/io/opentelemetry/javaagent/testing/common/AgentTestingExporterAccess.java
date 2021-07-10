@@ -9,13 +9,12 @@ import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.stream.Collectors.toList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -330,12 +329,12 @@ public final class AgentTestingExporterAccess {
     }
   }
 
-  private static Labels createLabels(List<StringKeyValue> stringKeyValues) {
-    LabelsBuilder labelsBuilder = Labels.builder();
+  private static Attributes createAttributes(List<StringKeyValue> stringKeyValues) {
+    AttributesBuilder attributesBuilder = Attributes.builder();
     for (StringKeyValue stringKeyValue : stringKeyValues) {
-      labelsBuilder.put(stringKeyValue.getKey(), stringKeyValue.getValue());
+      attributesBuilder.put(stringKey(stringKeyValue.getKey()), stringKeyValue.getValue());
     }
-    return labelsBuilder.build();
+    return attributesBuilder.build();
   }
 
   private static List<LongPointData> getIntPoints(List<IntDataPoint> points) {
@@ -345,7 +344,7 @@ public final class AgentTestingExporterAccess {
                 LongPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
+                    createAttributes(point.getLabelsList()),
                     point.getValue()))
         .collect(toList());
   }
@@ -367,7 +366,7 @@ public final class AgentTestingExporterAccess {
               return DoublePointData.create(
                   point.getStartTimeUnixNano(),
                   point.getTimeUnixNano(),
-                  createLabels(point.getLabelsList()),
+                  createAttributes(point.getLabelsList()),
                   value);
             })
         .collect(toList());
@@ -381,7 +380,7 @@ public final class AgentTestingExporterAccess {
                 DoubleHistogramPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
+                    createAttributes(point.getLabelsList()),
                     point.getSum(),
                     point.getExplicitBoundsList(),
                     point.getBucketCountsList()))
@@ -396,7 +395,7 @@ public final class AgentTestingExporterAccess {
                 DoubleSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
+                    createAttributes(point.getLabelsList()),
                     point.getCount(),
                     point.getSum(),
                     getValues(point)))
