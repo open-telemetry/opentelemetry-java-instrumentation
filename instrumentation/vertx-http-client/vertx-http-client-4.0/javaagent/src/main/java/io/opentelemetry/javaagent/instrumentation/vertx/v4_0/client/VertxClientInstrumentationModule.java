@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,8 +24,8 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 4.0
-    return hasClassesNamed("io.vertx.core.Promise");
+    // class removed in 4.0
+    return not(hasClassesNamed("io.vertx.core.Starter"));
   }
 
   @Override
