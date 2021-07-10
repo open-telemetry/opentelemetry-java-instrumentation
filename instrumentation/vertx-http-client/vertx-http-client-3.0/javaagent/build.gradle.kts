@@ -14,6 +14,8 @@ muzzle {
 dependencies {
   library("io.vertx:vertx-core:3.0.0")
 
+  implementation(project(":instrumentation:vertx-http-client:vertx-http-client-common:javaagent"))
+
   //We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))

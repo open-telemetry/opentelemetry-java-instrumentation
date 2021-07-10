@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
+package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -11,14 +11,17 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 
 public class ExceptionHandlerWrapper implements Handler<Throwable> {
+  private final AbstractVertxClientTracer tracer;
   private final HttpClientRequest request;
   private final ContextStore<HttpClientRequest, Contexts> contextStore;
   private final Handler<Throwable> handler;
 
   public ExceptionHandlerWrapper(
+      AbstractVertxClientTracer tracer,
       HttpClientRequest request,
       ContextStore<HttpClientRequest, Contexts> contextStore,
       Handler<Throwable> handler) {
+    this.tracer = tracer;
     this.request = request;
     this.contextStore = contextStore;
     this.handler = handler;
@@ -32,7 +35,7 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
       return;
     }
 
-    VertxClientTracer.tracer().endExceptionally(contexts.context, throwable);
+    tracer.endExceptionally(contexts.context, throwable);
 
     try (Scope ignored = contexts.parentContext.makeCurrent()) {
       callHandler(throwable);

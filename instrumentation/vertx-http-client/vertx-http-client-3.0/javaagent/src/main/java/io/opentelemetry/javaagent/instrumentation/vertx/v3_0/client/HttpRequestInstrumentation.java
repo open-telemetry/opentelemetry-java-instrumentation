@@ -21,6 +21,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
+import io.opentelemetry.javaagent.instrumentation.vertx.client.ExceptionHandlerWrapper;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -205,7 +207,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       if (handler != null) {
         ContextStore<HttpClientRequest, Contexts> contextStore =
             InstrumentationContext.get(HttpClientRequest.class, Contexts.class);
-        handler = new ExceptionHandlerWrapper(request, contextStore, handler);
+        handler = new ExceptionHandlerWrapper(tracer(), request, contextStore, handler);
       }
     }
   }
