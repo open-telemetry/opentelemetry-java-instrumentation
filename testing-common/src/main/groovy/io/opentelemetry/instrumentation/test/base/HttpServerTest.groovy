@@ -35,7 +35,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import spock.lang.Unroll
 
 @Unroll
@@ -390,9 +389,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     int count = 100
     def endpoint = INDEXED_CHILD
 
-    def latch = new CountDownLatch(1)
+    def latch = new CountDownLatch(count)
 
-    def pool = Executors.newFixedThreadPool(4)
     def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
     def setter = { HttpRequestBuilder carrier, String name, String value ->
       carrier.header(name, value)
@@ -400,22 +398,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     when:
     count.times { index ->
-      def job = {
-        latch.await()
-        HttpRequestBuilder request = HttpRequest.builder()
-          // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-          .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
-          .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
-        runUnderTrace("client " + index) {
-          Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
-          propagator.inject(Context.current(), request, setter)
-          client.execute(request.build()).aggregate().join()
+      HttpRequestBuilder request = HttpRequest.builder()
+        // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+        .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
+        .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
+      runUnderTrace("client " + index) {
+        Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
+        propagator.inject(Context.current(), request, setter)
+        client.execute(request.build()).aggregate().thenRun {
+          latch.countDown()
         }
-
       }
-      pool.submit(job)
     }
-    latch.countDown()
+    latch.await()
 
     then:
     assertTraces(count) {
@@ -442,9 +437,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
     }
-
-    cleanup:
-    pool.shutdownNow()
   }
 
   //FIXME: add tests for POST with large/chunked data
