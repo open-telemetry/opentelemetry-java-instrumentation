@@ -9,6 +9,8 @@ import static io.opentelemetry.sdk.metrics.data.MetricDataType.SUMMARY
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMeterProvider
 import io.opentelemetry.api.metrics.common.Labels
@@ -52,9 +54,9 @@ class MeterTest extends AgentInstrumentationSpecification {
     points(metricData).size() == 1
     def point = points(metricData).iterator().next()
     if (bind) {
-      point.labels == Labels.of("w", "x", "y", "z")
+      point.attributes == Attributes.of(AttributeKey.stringKey("w"), "x", AttributeKey.stringKey("y"), "z")
     } else {
-      point.labels == Labels.of("q", "r")
+      point.attributes == Attributes.of(AttributeKey.stringKey("q"), "r")
     }
     point.value == expectedValue
 
@@ -103,9 +105,9 @@ class MeterTest extends AgentInstrumentationSpecification {
     points(metricData).size() == 1
     def point = points(metricData).iterator().next()
     if (bind) {
-      point.labels == Labels.of("w", "x", "y", "z")
+      point.attributes == Attributes.of(AttributeKey.stringKey("w"), "x", AttributeKey.stringKey("y"), "z")
     } else {
-      point.labels == Labels.of("q", "r")
+      point.attributes == Attributes.of(AttributeKey.stringKey("q"), "r")
     }
 
     where:
