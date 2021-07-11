@@ -63,7 +63,7 @@ include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-caching")
 include(":javaagent-instrumentation-api")
-include(":instrumentation-annotation-support")
+include(":instrumentation-api-annotation-support")
 
 // misc
 include(":dependencyManagement")

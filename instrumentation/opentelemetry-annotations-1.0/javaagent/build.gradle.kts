@@ -5,7 +5,7 @@ plugins {
 val versions: Map<String, String> by project
 
 dependencies {
-  compileOnly(project(":instrumentation-annotation-support"))
+  compileOnly(project(":instrumentation-api-annotation-support"))
 
   compileOnly(project(":javaagent-tooling"))
 
@@ -16,7 +16,7 @@ dependencies {
   compileOnly(project(path = ":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-  testImplementation(project(":instrumentation-annotation-support"))
+  testImplementation(project(":instrumentation-api-annotation-support"))
   testImplementation("net.bytebuddy:byte-buddy:${versions["net.bytebuddy"]}")
 }
 

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import application.io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.annotation.support.AttributeBindings;
-import io.opentelemetry.instrumentation.annotation.support.BaseAttributeBinder;
+import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
+import io.opentelemetry.instrumentation.api.annotation.support.BaseAttributeBinder;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
