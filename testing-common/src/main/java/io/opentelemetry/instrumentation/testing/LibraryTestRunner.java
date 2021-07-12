@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -53,6 +54,12 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
 
   public static LibraryTestRunner instance() {
     return INSTANCE;
+  }
+
+  private final TestInstrumenters testInstrumenters;
+
+  private LibraryTestRunner() {
+    testInstrumenters = new TestInstrumenters(openTelemetry);
   }
 
   @Override
@@ -98,7 +105,23 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
     return forceFlushCalled;
   }
 
-  private LibraryTestRunner() {}
+  @Override
+  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithClientSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithClientSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithServerSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithServerSpan(spanName, callback);
+  }
 
   private static class FlushTrackingSpanProcessor implements SpanProcessor {
     @Override
