@@ -11,6 +11,9 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import java.util.Arrays;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,12 @@ public class OpenTelemetryInstaller implements AgentListener {
 
       OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
       OpenTelemetrySdkAccess.internalSetForceFlush(
-          (timeout, unit) -> sdk.getSdkTracerProvider().forceFlush().join(timeout, unit));
+          (timeout, unit) -> {
+            CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+            CompletableResultCode flushResult = IntervalMetricReader.forceFlushGlobal();
+            CompletableResultCode.ofAll(Arrays.asList(traceResult, flushResult))
+                .join(timeout, unit);
+          });
     } else {
       logger.info("Tracing is disabled.");
     }
