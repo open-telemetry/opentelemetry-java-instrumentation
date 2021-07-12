@@ -112,8 +112,8 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   }
 
   public static class AgentContextWrapper implements Context {
-    private final io.opentelemetry.context.Context agentContext;
-    private final Context applicationContext;
+    final io.opentelemetry.context.Context agentContext;
+    final Context applicationContext;
 
     public AgentContextWrapper(
         io.opentelemetry.context.Context agentContext, Context applicationContext) {
