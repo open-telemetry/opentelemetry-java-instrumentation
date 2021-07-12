@@ -25,7 +25,7 @@ public class OpenTelemetryInstaller implements AgentListener {
   private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.sdk.noop";
+  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   @Override
   public void beforeAgent(Config config) {
@@ -41,13 +41,13 @@ public class OpenTelemetryInstaller implements AgentListener {
   public static synchronized void installAgentTracer(Config config) {
     if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
 
-      System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
-
       copySystemProperties(config);
 
       if (config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false)) {
         GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
       } else {
+        System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+
         OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {

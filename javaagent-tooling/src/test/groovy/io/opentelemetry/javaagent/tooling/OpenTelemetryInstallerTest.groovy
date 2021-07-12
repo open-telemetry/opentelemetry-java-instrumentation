@@ -25,13 +25,16 @@ class OpenTelemetryInstallerTest extends Specification {
   def "should initialize noop"(){
 
     given:
-    def config = Mock(Config)
-    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG, false) >> true
-    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true) >> true
-    config.getAllProperties() >> ["otel.javaagent.enabled":"true", "otel.javaagent.experimental.sdk.noop":"true"]
+    def config = Config.newBuilder()
+    .readProperties([
+        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG) : "true",
+        (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG) : "true"
+    ])
+    .build()
 
     when:
-    OpenTelemetryInstaller.installAgentTracer(config)
+    def otelInstaller = new OpenTelemetryInstaller();
+    otelInstaller.beforeAgent(config)
 
     then:
     GlobalOpenTelemetry.getTracerProvider() == NoopOpenTelemetry.getInstance().getTracerProvider()
@@ -40,13 +43,16 @@ class OpenTelemetryInstallerTest extends Specification {
   def "should NOT initialize noop"(){
 
     given:
-    def config = Mock(Config)
-    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG, false) >> false
-    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true) >> true
-    config.getAllProperties() >> ["otel.javaagent.enabled":"true", "otel.javaagent.experimental.sdk.noop":"false"]
+    def config = Config.newBuilder()
+      .readProperties([
+        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG) : "true",
+        (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG) : "false"
+      ])
+      .build()
 
     when:
-    OpenTelemetryInstaller.installAgentTracer(config)
+    def otelInstaller = new OpenTelemetryInstaller();
+    otelInstaller.beforeAgent(config)
 
     then:
     GlobalOpenTelemetry.getTracerProvider() != NoopOpenTelemetry.getInstance().getTracerProvider()

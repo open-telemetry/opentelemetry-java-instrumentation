@@ -13,7 +13,7 @@ import java.util.jar.Attributes
 import java.util.jar.JarFile
 
 @IgnoreIf({ os.windows })
-class NoopSdkSmokeTest extends SmokeTest {
+class NoopApiSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
@@ -22,7 +22,7 @@ class NoopSdkSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "otel.javaagent.experimental.sdk.noop": "true"
+      "OTEL_JAVAAGENT_EXPERIMENTAL_USE_NOOP_API": "true"
     ]
   }
 
