@@ -60,7 +60,7 @@ public interface InstrumentationTestRunner {
    */
   default <E extends Throwable> void runWithClientSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
-    runWithSpan(
+    runWithClientSpan(
         spanName,
         () -> {
           callback.run();
