@@ -35,7 +35,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Build
-        run: ./gradlew build --stacktrace -x :smoke-tests:test
+        run: ./gradlew build --stacktrace
 
       - name: Upload deadlock detector artifacts
         if: always()
@@ -86,7 +86,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
       - name: Upload deadlock detector artifacts
         if: always()
