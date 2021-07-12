@@ -55,7 +55,7 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   static final io.opentelemetry.context.ContextKey<Context> APPLICATION_CONTEXT =
       io.opentelemetry.context.ContextKey.named("otel-context");
 
-  private static final ContextKeyBridge<?, ?>[] CONTEXT_KEY_BRIDGES =
+  static final ContextKeyBridge<?, ?>[] CONTEXT_KEY_BRIDGES =
       new ContextKeyBridge[] {
         new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
             "application.io.opentelemetry.api.trace.SpanContextKey",
