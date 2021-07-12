@@ -63,7 +63,7 @@ public abstract class BaseAttributeBinder {
   @Nullable
   protected abstract String[] attributeNamesForParameters(Method method, Parameter[] parameters);
 
-  private enum EmptyAttributeBindings implements AttributeBindings {
+  protected enum EmptyAttributeBindings implements AttributeBindings {
     INSTANCE;
 
     @Override
