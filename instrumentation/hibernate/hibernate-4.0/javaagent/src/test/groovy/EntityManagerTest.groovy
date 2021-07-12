@@ -25,7 +25,6 @@ class EntityManagerTest extends AbstractHibernateTest {
   @Unroll
   def "test hibernate action #testName"() {
     setup:
-
     EntityManager entityManager = entityManagerFactory.createEntityManager()
     EntityTransaction entityTransaction = entityManager.getTransaction()
     entityTransaction.begin()
@@ -37,6 +36,8 @@ class EntityManagerTest extends AbstractHibernateTest {
       }
       ignoreTracesAndClear(1)
     }
+
+    when:
     try {
       sessionMethodTest.call(entityManager, entity)
     } catch (Exception e) {
@@ -46,7 +47,7 @@ class EntityManagerTest extends AbstractHibernateTest {
     entityTransaction.commit()
     entityManager.close()
 
-    expect:
+    then:
     boolean isPersistTest = "persist" == testName
     assertTraces(1) {
       trace(0, 4 + (isPersistTest ? 1 : 0)) {
@@ -70,6 +71,7 @@ class EntityManagerTest extends AbstractHibernateTest {
           // persist test has an extra query for getting id of inserted element
           offset = 1
           span(2) {
+            name "SELECT db1.Value"
             childOf span(1)
             kind CLIENT
             attributes {
@@ -138,7 +140,7 @@ class EntityManagerTest extends AbstractHibernateTest {
     "refresh"                                 | "refresh"    | "Value"  | true   | false         | { em, val ->
       em.refresh(val)
     }
-    "get"                                     | "(get|find)" | "Value"  | false  | false         | { em, val ->
+    "find"                                    | "(get|find)" | "Value"  | false  | false         | { em, val ->
       em.find(Value, val.getId())
     }
     "persist"                                 | "persist"    | "Value"  | false  | true          | { em, val ->
@@ -182,6 +184,7 @@ class EntityManagerTest extends AbstractHibernateTest {
           }
         }
         span(2) {
+          name "SELECT db1.Value"
           kind CLIENT
           childOf span(1)
           attributes {
