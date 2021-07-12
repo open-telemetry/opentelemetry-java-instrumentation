@@ -34,7 +34,6 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   private static final OpenTelemetrySdk openTelemetry;
   private static final InMemorySpanExporter testExporter;
   private static boolean forceFlushCalled;
-  private static final LibraryTestRunner INSTANCE = new LibraryTestRunner();
 
   static {
     GlobalOpenTelemetry.resetForTest();
@@ -51,6 +50,8 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .buildAndRegisterGlobal();
   }
+
+  private static final LibraryTestRunner INSTANCE = new LibraryTestRunner();
 
   public static LibraryTestRunner instance() {
     return INSTANCE;
