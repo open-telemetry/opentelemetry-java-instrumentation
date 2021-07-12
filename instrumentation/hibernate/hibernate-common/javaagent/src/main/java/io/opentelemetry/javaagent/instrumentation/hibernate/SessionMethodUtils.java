@@ -102,7 +102,7 @@ public final class SessionMethodUtils {
 
   public static String getSessionMethodSpanName(String methodName) {
     if ("fireLock".equals(methodName)) {
-      methodName = "lock";
+      return "Session.lock";
     }
     return "Session." + methodName;
   }
