@@ -12,8 +12,6 @@ import spock.lang.Specification
 
 class OpenTelemetryInstallerTest extends Specification {
 
-  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.sdk.noop";
 
   void setup(){
     GlobalOpenTelemetry.resetForTest()
@@ -28,8 +26,8 @@ class OpenTelemetryInstallerTest extends Specification {
 
     given:
     def config = Mock(Config)
-    config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false) >> true
-    config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true) >> true
+    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG, false) >> true
+    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true) >> true
     config.getAllProperties() >> ["otel.javaagent.enabled":"true", "otel.javaagent.experimental.sdk.noop":"true"]
 
     when:
@@ -43,8 +41,8 @@ class OpenTelemetryInstallerTest extends Specification {
 
     given:
     def config = Mock(Config)
-    config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false) >> false
-    config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true) >> true
+    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG, false) >> false
+    config.getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true) >> true
     config.getAllProperties() >> ["otel.javaagent.enabled":"true", "otel.javaagent.experimental.sdk.noop":"false"]
 
     when:

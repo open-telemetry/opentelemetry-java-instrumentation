@@ -36,6 +36,8 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   private static boolean forceFlushCalled;
 
   static {
+    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+
     GlobalOpenTelemetry.resetForTest();
 
     testExporter = InMemorySpanExporter.create();

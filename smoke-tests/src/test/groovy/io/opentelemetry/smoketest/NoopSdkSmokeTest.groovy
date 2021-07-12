@@ -6,11 +6,13 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+@IgnoreIf({ os.windows })
 class NoopSdkSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
