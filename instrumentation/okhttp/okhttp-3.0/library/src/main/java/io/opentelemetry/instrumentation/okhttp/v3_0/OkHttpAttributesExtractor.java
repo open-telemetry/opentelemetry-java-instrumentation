@@ -13,12 +13,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
   @Override
-  protected @Nullable String method(Request request) {
+  protected String method(Request request) {
     return request.method();
   }
 
   @Override
-  protected @Nullable String url(Request request) {
+  protected String url(Request request) {
     return request.url().toString();
   }
 
@@ -28,7 +28,7 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   }
 
   @Override
-  protected @Nullable String host(Request request) {
+  protected String host(Request request) {
     return request.url().host();
   }
 
@@ -38,13 +38,13 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   }
 
   @Override
-  protected @Nullable String scheme(Request request) {
+  protected String scheme(Request request) {
     return request.url().scheme();
   }
 
   @Override
   protected @Nullable String userAgent(Request request) {
-    return request.header("User-Agent");
+    return request.header("user-agent");
   }
 
   @Override

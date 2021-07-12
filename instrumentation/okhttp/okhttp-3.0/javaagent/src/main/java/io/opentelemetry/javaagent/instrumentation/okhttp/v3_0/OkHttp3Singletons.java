@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAt
 import okhttp3.Interceptor;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
-public final class OkHttp3Interceptors {
+public final class OkHttp3Singletons {
 
   public static final Interceptor TRACING_INTERCEPTOR =
       OkHttpTracing.newBuilder(GlobalOpenTelemetry.get())
@@ -21,5 +21,5 @@ public final class OkHttp3Interceptors {
           .build()
           .newInterceptor();
 
-  private OkHttp3Interceptors() {}
+  private OkHttp3Singletons() {}
 }

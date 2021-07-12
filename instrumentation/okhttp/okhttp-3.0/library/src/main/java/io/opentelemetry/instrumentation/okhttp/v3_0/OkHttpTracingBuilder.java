@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -52,7 +54,7 @@ public final class OkHttpTracingBuilder {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
-            .newClientInstrumenter();
+            .newInstrumenter(alwaysClient());
     return new OkHttpTracing(instrumenter, openTelemetry.getPropagators());
   }
 }
