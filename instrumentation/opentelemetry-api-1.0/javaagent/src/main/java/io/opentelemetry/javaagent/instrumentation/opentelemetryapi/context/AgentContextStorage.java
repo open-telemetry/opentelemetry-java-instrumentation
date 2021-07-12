@@ -14,6 +14,7 @@ import application.io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.reflect.Field;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,47 +177,46 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
     @Override
     public <V> V get(ContextKey<V> key) {
-      if (key == APPLICATION_SPAN_CONTEXT_KEY) {
-        io.opentelemetry.api.trace.Span agentSpan = agentContext.get(AGENT_SPAN_CONTEXT_KEY);
-        if (agentSpan == null) {
-          return null;
-        }
-        Span applicationSpan = Bridging.toApplication(agentSpan);
-        @SuppressWarnings("unchecked")
-        V value = (V) applicationSpan;
-        return value;
+      V maybeBridged =
+          bridgedGet(
+              APPLICATION_SPAN_CONTEXT_KEY, AGENT_SPAN_CONTEXT_KEY, Bridging::toApplication, key);
+      if (maybeBridged != null) {
+        return maybeBridged;
       }
-      if (key == APPLICATION_BAGGAGE_CONTEXT_KEY) {
-        io.opentelemetry.api.baggage.Baggage agentBaggage =
-            agentContext.get(AGENT_BAGGAGE_CONTEXT_KEY);
-        if (agentBaggage == null) {
-          return null;
-        }
-        Baggage applicationBaggage = BaggageBridging.toApplication(agentBaggage);
-        @SuppressWarnings("unchecked")
-        V value = (V) applicationBaggage;
-        return value;
+      maybeBridged =
+          bridgedGet(
+              APPLICATION_BAGGAGE_CONTEXT_KEY,
+              AGENT_BAGGAGE_CONTEXT_KEY,
+              BaggageBridging::toApplication,
+              key);
+      if (maybeBridged != null) {
+        return maybeBridged;
       }
+
       return applicationContext.get(key);
     }
 
     @Override
     public <V> Context with(ContextKey<V> k1, V v1) {
-      if (k1 == APPLICATION_SPAN_CONTEXT_KEY) {
-        Span applicationSpan = (Span) v1;
-        io.opentelemetry.api.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
-        if (agentSpan == null) {
-          return this;
-        }
-        return new AgentContextWrapper(
-            agentContext.with(AGENT_SPAN_CONTEXT_KEY, agentSpan), applicationContext);
+      Context maybeBridged =
+          bridgedWith(
+              APPLICATION_SPAN_CONTEXT_KEY,
+              AGENT_SPAN_CONTEXT_KEY,
+              Bridging::toAgentOrNull,
+              k1,
+              v1);
+      if (maybeBridged != null) {
+        return maybeBridged;
       }
-      if (k1 == APPLICATION_BAGGAGE_CONTEXT_KEY) {
-        Baggage applicationBaggage = (Baggage) v1;
-        io.opentelemetry.api.baggage.Baggage agentBaggage =
-            BaggageBridging.toAgent(applicationBaggage);
-        return new AgentContextWrapper(
-            agentContext.with(AGENT_BAGGAGE_CONTEXT_KEY, agentBaggage), applicationContext);
+      maybeBridged =
+          bridgedWith(
+              APPLICATION_BAGGAGE_CONTEXT_KEY,
+              AGENT_BAGGAGE_CONTEXT_KEY,
+              BaggageBridging::toAgent,
+              k1,
+              v1);
+      if (maybeBridged != null) {
+        return maybeBridged;
       }
       return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1));
     }
@@ -224,6 +224,45 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     @Override
     public String toString() {
       return "{agentContext=" + agentContext + ", applicationContext=" + applicationContext + "}";
+    }
+
+    @Nullable
+    <ApplicationValue, AgentValue, V> V bridgedGet(
+        ContextKey<ApplicationValue> applicationValueReferenceKey,
+        io.opentelemetry.context.ContextKey<AgentValue> agentValueReferenceKey,
+        Function<AgentValue, ApplicationValue> bridgingFunction,
+        ContextKey<V> requestedKey) {
+      if (requestedKey == applicationValueReferenceKey) {
+        AgentValue agentValue = agentContext.get(agentValueReferenceKey);
+        if (agentValue == null) {
+          return null;
+        }
+        ApplicationValue applicationValue = bridgingFunction.apply(agentValue);
+        @SuppressWarnings("unchecked")
+        V castValue = (V) applicationValue;
+        return castValue;
+      }
+      return null;
+    }
+
+    @Nullable
+    private <ApplicationValue, AgentValue, V> Context bridgedWith(
+        ContextKey<ApplicationValue> applicationValueReferenceKey,
+        io.opentelemetry.context.ContextKey<AgentValue> agentValueReferenceKey,
+        Function<ApplicationValue, AgentValue> bridgingFunction,
+        ContextKey<V> requestedKey,
+        V value) {
+      if (requestedKey == applicationValueReferenceKey) {
+        @SuppressWarnings("unchecked")
+        ApplicationValue applicationValue = (ApplicationValue) value;
+        AgentValue agentValue = bridgingFunction.apply(applicationValue);
+        if (agentValue == null) {
+          return this;
+        }
+        return new AgentContextWrapper(
+            agentContext.with(agentValueReferenceKey, agentValue), applicationContext);
+      }
+      return null;
     }
   }
 }
