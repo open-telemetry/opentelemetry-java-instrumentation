@@ -50,7 +50,7 @@ buildCache {
 
 rootProject.name = "opentelemetry-java-instrumentation"
 
-include(":javaagent-muzzle-generation")
+include(":gradle-plugins")
 include(":muzzle")
 
 // agent projects

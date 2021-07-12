@@ -7,6 +7,7 @@ plugins {
 
   id("io.opentelemetry.instrumentation.base")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
+  id("io.opentelemetry.instrumentation.javaagent-codegen")
 }
 
 dependencies {
@@ -28,6 +29,8 @@ dependencies {
   }
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
 
 val testInstrumentation by configurations.creating {

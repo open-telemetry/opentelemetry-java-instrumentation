@@ -9,9 +9,11 @@ plugins {
 group = "io.opentelemetry.instrumentation.gradle"
 
 dependencies {
-  implementation("com.google.guava:guava")
-  implementation(project(":muzzle"))
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin")
+  compileOnly("com.google.guava:guava")
+  compileOnly("net.bytebuddy:byte-buddy-gradle-plugin")
+
+  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.4.0-alpha-SNAPSHOT"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-muzzle")
   implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }
 

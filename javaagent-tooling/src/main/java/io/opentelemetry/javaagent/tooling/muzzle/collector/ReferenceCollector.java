@@ -47,7 +47,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <p>This class is only called at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy
  * plugin.
  */
-class ReferenceCollector {
+public class ReferenceCollector {
 
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();

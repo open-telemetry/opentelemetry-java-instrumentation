@@ -22,6 +22,5 @@ final class Utils {
     return className.replace('.', '/') + ".class";
   }
 
-  private Utils() {
-  }
+  private Utils() {}
 }
