@@ -5,15 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
+import io.opentelemetry.instrumentation.api.annotation.support.AnnotationReflectionHelper;
 import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
 import io.opentelemetry.instrumentation.api.annotation.support.BaseAttributeBinder;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.annotation.Annotation;
-import java.lang.invoke.CallSite;
-import java.lang.invoke.LambdaMetafactory;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.function.Function;
@@ -27,48 +24,25 @@ class WithSpanAttributeBinder extends BaseAttributeBinder {
   private static final Function<Annotation, String> spanAttributeValueFunction;
 
   static {
-    spanAttributeAnnotation = resolveSpanAttributeAnnotationClass();
+    ClassLoader classLoader = WithSpanAttributeBinder.class.getClassLoader();
+    spanAttributeAnnotation =
+        AnnotationReflectionHelper.forNameOrNull(
+            classLoader, "io.opentelemetry.extension.annotations.SpanAttribute");
     if (spanAttributeAnnotation != null) {
-      try {
-        spanAttributeValueFunction = bindSpanAttributeValueMethod(spanAttributeAnnotation);
-      } catch (Throwable exception) {
-        throw new IllegalStateException(exception);
-      }
+      spanAttributeValueFunction = resolveSpanAttributeValue(spanAttributeAnnotation);
     } else {
       spanAttributeValueFunction = null;
     }
   }
 
-  private static Class<? extends Annotation> resolveSpanAttributeAnnotationClass() {
+  private static Function<Annotation, String> resolveSpanAttributeValue(
+      Class<? extends Annotation> spanAttributeAnnotation) {
     try {
-      return Class.forName("io.opentelemetry.extension.annotations.SpanAttribute")
-          .asSubclass(Annotation.class);
-    } catch (Exception exception) {
-      return null;
+      return AnnotationReflectionHelper.bindAnnotationElementMethod(
+          MethodHandles.lookup(), spanAttributeAnnotation, "value", String.class);
+    } catch (Throwable exception) {
+      return annotation -> "";
     }
-  }
-
-  private static Function<Annotation, String> bindSpanAttributeValueMethod(
-      Class<? extends Annotation> spanAttributeAnnotation) throws Throwable {
-
-    Method valueMethod = spanAttributeAnnotation.getDeclaredMethod("value");
-    MethodHandles.Lookup lookup = MethodHandles.lookup();
-    MethodHandle valueHandle = lookup.unreflect(valueMethod);
-
-    CallSite callSite =
-        LambdaMetafactory.metafactory(
-            lookup,
-            "apply",
-            MethodType.methodType(Function.class),
-            MethodType.methodType(Object.class, Object.class),
-            valueHandle,
-            MethodType.methodType(String.class, spanAttributeAnnotation));
-
-    MethodHandle factory = callSite.getTarget();
-
-    @SuppressWarnings("unchecked")
-    Function<Annotation, String> function = (Function<Annotation, String>) factory.invoke();
-    return function;
   }
 
   @Override
