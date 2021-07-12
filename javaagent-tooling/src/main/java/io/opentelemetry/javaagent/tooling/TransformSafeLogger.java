@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -105,6 +106,14 @@ public final class TransformSafeLogger {
     }
   }
 
+  public void warn(String format) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(WARN, logger, format));
+    } else {
+      logger.warn(format);
+    }
+  }
+
   public void warn(String format, Object arg) {
     if (logMessageQueue != null) {
       logMessageQueue.offer(new LogMessage(WARN, logger, format, arg));
@@ -126,6 +135,38 @@ public final class TransformSafeLogger {
       logMessageQueue.offer(new LogMessage(WARN, logger, format, arguments));
     } else {
       logger.warn(format, arguments);
+    }
+  }
+
+  public void error(String format) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format));
+    } else {
+      logger.error(format);
+    }
+  }
+
+  public void error(String format, Object arg) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arg));
+    } else {
+      logger.error(format, arg);
+    }
+  }
+
+  public void error(String format, Object arg1, Object arg2) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arg1, arg2));
+    } else {
+      logger.error(format, arg1, arg2);
+    }
+  }
+
+  public void error(String format, Object... arguments) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arguments));
+    } else {
+      logger.error(format, arguments);
     }
   }
 
