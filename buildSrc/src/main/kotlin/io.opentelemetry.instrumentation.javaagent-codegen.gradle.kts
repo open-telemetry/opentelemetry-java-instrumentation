@@ -28,7 +28,7 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.muzzle.generation.MuzzleCodeGenerationPlugin"
+val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false

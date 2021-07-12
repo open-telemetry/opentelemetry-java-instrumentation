@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.muzzle.generation;
 
-class Utils {
+final class Utils {
 
   /** com/foo/Bar to com.foo.Bar */
   static String getClassName(String internalName) {
@@ -20,5 +20,8 @@ class Utils {
   /** com.foo.Bar to com/foo/Bar.class */
   static String getResourceName(String className) {
     return className.replace('.', '/') + ".class";
+  }
+
+  private Utils() {
   }
 }
