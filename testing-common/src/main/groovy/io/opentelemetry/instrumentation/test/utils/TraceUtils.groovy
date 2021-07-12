@@ -62,6 +62,8 @@ class TraceUtils {
     tracer.spanBuilder(spanName).startSpan().end()
   }
 
+  // Must create span within agent using annotation until
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
   @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
   static <T> T runUnderParentClientSpan(Callable<T> r) {
     r.call()
