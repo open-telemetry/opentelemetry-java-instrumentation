@@ -30,8 +30,6 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Injects instrumentation helper classes into the user's classloader.
@@ -47,7 +45,8 @@ import org.slf4j.LoggerFactory;
  */
 public class HelperInjector implements Transformer {
 
-  private static final Logger logger = LoggerFactory.getLogger(HelperInjector.class);
+  private static final TransformSafeLogger logger =
+      TransformSafeLogger.getLogger(HelperInjector.class);
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
