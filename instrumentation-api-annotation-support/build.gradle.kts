@@ -8,7 +8,6 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   implementation(project(":instrumentation-api"))
-  implementation(project(":instrumentation-api-caching"))
 
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
