@@ -1,1 +1,8 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenLocal()
+  }
+}
+
 rootProject.name = 'opentelemetry-java-instrumentation-extension-demo'

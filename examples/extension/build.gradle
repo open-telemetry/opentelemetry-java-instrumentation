@@ -11,6 +11,8 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
+
+  id "io.opentelemetry.instrumentation.javaagent-codegen" version "0.1.0"
 }
 
 group 'io.opentelemetry.example'

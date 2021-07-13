@@ -1,20 +1,25 @@
 plugins {
   `kotlin-dsl`
+  `maven-publish`
 
-  id("otel.java-conventions")
-  id("otel.publish-conventions")
+//  id("otel.java-conventions")
+//  id("otel.publish-conventions")
   id("com.gradle.plugin-publish")
 }
 
 group = "io.opentelemetry.instrumentation.gradle"
+version = "0.1.0"
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
 
 dependencies {
-  compileOnly("com.google.guava:guava")
-  compileOnly("net.bytebuddy:byte-buddy-gradle-plugin")
-
-  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.4.0-alpha-SNAPSHOT"))
-  implementation("io.opentelemetry.javaagent:opentelemetry-muzzle")
-  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
+  implementation("com.google.guava:guava:30.1.1-jre")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("io.opentelemetry.javaagent:opentelemetry-muzzle:1.4.0-alpha-SNAPSHOT")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:1.4.0-alpha-SNAPSHOT")
 }
 
 pluginBundle {
