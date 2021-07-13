@@ -1,3 +1,0 @@
-[submodule "testing-overhead/spring-petclinic-rest"]
-	path = testing-overhead/spring-petclinic-rest
-	url = https://github.com/spring-petclinic/spring-petclinic-rest.git
