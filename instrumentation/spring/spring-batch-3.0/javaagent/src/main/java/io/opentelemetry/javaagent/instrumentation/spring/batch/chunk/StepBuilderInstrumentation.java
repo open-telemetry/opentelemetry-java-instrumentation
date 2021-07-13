@@ -46,7 +46,8 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {
       ContextStore<ChunkContext, ContextAndScope> chunkExecutionContextStore =
           InstrumentationContext.get(ChunkContext.class, ContextAndScope.class);
-      stepBuilder.listener(new TracingChunkExecutionListener(chunkExecutionContextStore));
+      stepBuilder.listener(
+          new TracingChunkExecutionListener(chunkExecutionContextStore, stepBuilder.getClass()));
     }
   }
 }
