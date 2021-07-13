@@ -18,9 +18,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 class MethodDeclaringTypeMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
-  private final ElementMatcher<TypeDescription> matcher;
+  private final ElementMatcher<? super TypeDescription> matcher;
 
-  MethodDeclaringTypeMatcher(ElementMatcher<TypeDescription> matcher) {
+  MethodDeclaringTypeMatcher(ElementMatcher<? super TypeDescription> matcher) {
     this.matcher = matcher;
   }
 

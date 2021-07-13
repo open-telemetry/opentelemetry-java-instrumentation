@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import java.io.File;
@@ -174,7 +172,7 @@ public class HelperInjector implements Transformer {
 
   private ClassLoader injectHelperClasses(
       TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
-    if (classLoader == BOOTSTRAP_CLASSLOADER) {
+    if (classLoader == null) {
       classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
     }
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {

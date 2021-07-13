@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class ServerLegacy extends UnicastRemoteObject implements Greeter {
-  static final String RMI_ID = ServerLegacy.class.getSimpleName();
+  public static final String RMI_ID = ServerLegacy.class.getSimpleName();
 
   private static final long serialVersionUID = 1L;
 

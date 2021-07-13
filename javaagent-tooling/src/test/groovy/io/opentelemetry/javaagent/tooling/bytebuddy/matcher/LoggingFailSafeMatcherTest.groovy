@@ -5,18 +5,18 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe
 
+import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher
 import net.bytebuddy.matcher.ElementMatcher
 import spock.lang.Specification
 
-class SafeMatcherTest extends Specification {
+class LoggingFailSafeMatcherTest extends Specification {
 
   def mockMatcher = Mock(ElementMatcher)
 
   def "test matcher"() {
     setup:
-    def matcher = failSafe(mockMatcher, "test")
+    def matcher = new LoggingFailSafeMatcher<>(mockMatcher, "test")
 
     when:
     def result = matcher.matches(new Object())
@@ -31,7 +31,7 @@ class SafeMatcherTest extends Specification {
 
   def "test matcher exception"() {
     setup:
-    def matcher = failSafe(mockMatcher, "test")
+    def matcher = new LoggingFailSafeMatcher<>(mockMatcher, "test")
 
     when:
     def result = matcher.matches(new Object())

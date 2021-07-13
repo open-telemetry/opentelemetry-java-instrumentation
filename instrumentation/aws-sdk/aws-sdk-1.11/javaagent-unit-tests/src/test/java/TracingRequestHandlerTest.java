@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withClientSpan;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.DefaultRequest;
@@ -12,12 +11,14 @@ import com.amazonaws.Response;
 import com.amazonaws.http.HttpResponse;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.TracingRequestHandler;
 import java.net.URI;
 import org.apache.http.client.methods.HttpGet;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TracingRequestHandlerTest {
+class TracingRequestHandlerTest {
 
   private static Response<SendMessageResult> response(Request request) {
     return new Response<>(new SendMessageResult(), new HttpResponse(request, new HttpGet()));
@@ -29,13 +30,16 @@ public class TracingRequestHandlerTest {
     return request;
   }
 
+  @RegisterExtension
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
   @Test
-  public void shouldNotSetScopeAndNotFailIfClientSpanAlreadyPresent() {
+  void shouldNotSetScopeAndNotFailIfClientSpanAlreadyPresent() {
     // given
     TracingRequestHandler underTest = new TracingRequestHandler();
     Request<SendMessageRequest> request = request();
 
-    withClientSpan(
+    testing.runWithClientSpan(
         "test",
         () -> {
           // when
@@ -47,7 +51,7 @@ public class TracingRequestHandlerTest {
   }
 
   @Test
-  public void shouldSetScopeIfClientSpanNotPresent() {
+  void shouldSetScopeIfClientSpanNotPresent() {
     // given
     TracingRequestHandler underTest = new TracingRequestHandler();
     Request<SendMessageRequest> request = request();

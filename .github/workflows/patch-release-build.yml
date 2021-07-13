@@ -87,7 +87,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   # testLatestDeps is intentionally not included in the release workflow
   # because any time a new library version is released to maven central
@@ -203,7 +203,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -x :smoke-tests:test -Prelease.version=${{ github.event.inputs.version }}
+          arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}

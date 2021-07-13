@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
@@ -86,10 +86,10 @@ public final class InstrumentationModuleInstaller {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           agentBuilder
               .type(
-                  failSafe(
+                  new LoggingFailSafeMatcher<>(
                       typeInstrumentation.typeMatcher(),
                       "Instrumentation type matcher unexpected exception: " + getClass().getName()),
-                  failSafe(
+                  new LoggingFailSafeMatcher<>(
                       moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))

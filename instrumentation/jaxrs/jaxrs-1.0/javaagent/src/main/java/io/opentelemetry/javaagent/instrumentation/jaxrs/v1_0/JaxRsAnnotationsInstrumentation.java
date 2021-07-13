@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxRsAnnotationsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -35,7 +35,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return hasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
             .or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
   }

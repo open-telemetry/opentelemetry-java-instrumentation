@@ -6,9 +6,15 @@
 package io.opentelemetry.instrumentation.testing.junit;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -26,8 +32,21 @@ public abstract class InstrumentationExtension
 
   private final InstrumentationTestRunner testRunner;
 
+  private final Instrumenter<String, Void> testInstrumenter;
+  private final Instrumenter<String, Void> testClientInstrumenter;
+  private final Instrumenter<String, Void> testServerInstrumenter;
+
   protected InstrumentationExtension(InstrumentationTestRunner testRunner) {
     this.testRunner = testRunner;
+    testInstrumenter =
+        Instrumenter.<String, Void>newBuilder(testRunner.getOpenTelemetry(), "test", name -> name)
+            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+    testClientInstrumenter =
+        Instrumenter.<String, Void>newBuilder(testRunner.getOpenTelemetry(), "test", name -> name)
+            .newInstrumenter(SpanKindExtractor.alwaysClient());
+    testServerInstrumenter =
+        Instrumenter.<String, Void>newBuilder(testRunner.getOpenTelemetry(), "test", name -> name)
+            .newInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   @Override
@@ -105,5 +124,89 @@ public abstract class InstrumentationExtension
   public List<List<SpanData>> waitForTraces(int numberOfTraces, long timeout, TimeUnit unit)
       throws TimeoutException, InterruptedException {
     return TelemetryDataUtil.waitForTraces(this::spans, numberOfTraces, timeout, unit);
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
+   * spanName}.
+   */
+  public <E extends Exception> void runWithSpan(String spanName, ThrowingRunnable<E> callback)
+      throws E {
+    runWithSpan(
+        spanName,
+        () -> {
+          callback.run();
+          return null;
+        });
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
+   * spanName}.
+   */
+  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
+      throws E {
+    return runWithInstrumenter(spanName, testInstrumenter, callback);
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  public <E extends Throwable> void runWithClientSpan(String spanName, ThrowingRunnable<E> callback)
+      throws E {
+    runWithClientSpan(
+        spanName,
+        () -> {
+          callback.run();
+          return null;
+        });
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  public <T, E extends Throwable> T runWithClientSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return runWithInstrumenter(spanName, testClientInstrumenter, callback);
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  public <E extends Throwable> void runWithServerSpan(String spanName, ThrowingRunnable<E> callback)
+      throws E {
+    runWithServerSpan(
+        spanName,
+        () -> {
+          callback.run();
+          return null;
+        });
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  public <T, E extends Throwable> T runWithServerSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return runWithInstrumenter(spanName, testServerInstrumenter, callback);
+  }
+
+  private static <T, E extends Throwable> T runWithInstrumenter(
+      String spanName, Instrumenter<String, Void> instrumenter, ThrowingSupplier<T, E> callback)
+      throws E {
+    Context context = instrumenter.start(Context.current(), spanName);
+    Throwable err = null;
+    try (Scope ignored = context.makeCurrent()) {
+      return callback.get();
+    } catch (Throwable t) {
+      err = t;
+      throw t;
+    } finally {
+      instrumenter.end(context, spanName, null, err);
+    }
   }
 }
