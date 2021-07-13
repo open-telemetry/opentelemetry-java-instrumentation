@@ -1,19 +1,29 @@
-FROM adoptopenjdk:11-jdk as app-build
+FROM adoptopenjdk:11-jdk
 
 # This is the base image that will contain a built version of the spring-petclinic-rest
 # application. Installing the dependencies and maven compiling the application is time
 # consuming, so we do it in a base image to save time nightly.
 
-RUN apt update && apt install -y git
+# Allow the test runner to ssh into our container to start and control
+# the application under test.
+
+RUN apt update && \
+    apt install -y openssh-server sudo git && \
+    mkdir /run/sshd && \
+    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PermitUserEnvironment.*/PermitUserEnvironment yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PermitEmptyPasswords.*/PermitEmptyPasswords yes/' /etc/ssh/sshd_config && \
+    sed -i 's/secure_path="/secure_path="\/opt\/java\/openjdk\/bin:/' /etc/sudoers && \
+    sed -i 's/PATH="/PATH="\/opt\/java\/openjdk\/bin:/' /etc/environment && \
+    useradd -m -d /app -s /bin/bash -u 5001 remote && \
+    passwd -d remote && \
+    mkdir -p /app/.ssh && chmod 700 /app/.ssh && \
+    ln -s /etc/environment /app/.ssh/environment && \
+    echo "%remote ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 WORKDIR /app
 RUN git clone http://github.com/spring-petclinic/spring-petclinic-rest.git
 WORKDIR /app/spring-petclinic-rest
+
 RUN ./mvnw package -Dmaven.test.skip=true
-RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM adoptopenjdk:11-jre
-
-COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
-WORKDIR /app
-EXPOSE 9966
-CMD ["java", "-jar", "spring-petclinic-rest.jar"]
