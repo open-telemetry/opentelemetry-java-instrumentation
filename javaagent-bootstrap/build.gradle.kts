@@ -5,18 +5,6 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
-// patch inner class from Caffeine to avoid ForkJoinTask from being loaded too early
-val patch = sourceSets.create("patch")
-patch.java {}
-
-tasks {
-  named<Jar>("jar") {
-    from(patch.output) {
-      include("io/opentelemetry/instrumentation/api/internal/shaded/caffeine/cache/BoundedLocalCache\$PerformCleanupTask.class")
-    }
-  }
-}
-
 dependencies {
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-api-metrics")

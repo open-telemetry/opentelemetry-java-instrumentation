@@ -53,7 +53,6 @@ rootProject.name = "opentelemetry-java-instrumentation"
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
 include(":javaagent-bootstrap")
-include(":javaagent-bootstrap-tests")
 include(":javaagent-exporters")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
