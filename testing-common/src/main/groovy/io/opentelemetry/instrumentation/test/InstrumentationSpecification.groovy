@@ -104,7 +104,7 @@ abstract class InstrumentationSpecification extends Specification {
    * spanName}.
    */
   def runWithSpan(String spanName, Closure callback) {
-    return testRunner().runWithSpan(spanName, (ThrowingSupplier) callback);
+    return testRunner().runWithSpan(spanName, (ThrowingSupplier) callback)
   }
 
   /**
@@ -112,7 +112,7 @@ abstract class InstrumentationSpecification extends Specification {
    * spanName}.
    */
   def runWithClientSpan(String spanName, Closure callback) {
-    return testRunner().runWithClientSpan(spanName, (ThrowingSupplier) callback);
+    return testRunner().runWithClientSpan(spanName, (ThrowingSupplier) callback)
   }
 
   /**
@@ -120,6 +120,6 @@ abstract class InstrumentationSpecification extends Specification {
    * spanName}.
    */
   def runWithServerSpan(String spanName, Closure callback) {
-    return testRunner().runWithServerSpan(spanName, (ThrowingSupplier) callback);
+    return testRunner().runWithServerSpan(spanName, (ThrowingSupplier) callback)
   }
 }

@@ -126,6 +126,7 @@ public abstract class InstrumentationExtension
       throws E {
     return testRunner.runWithSpan(spanName, callback);
   }
+
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
