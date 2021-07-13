@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
 import io.opentelemetry.api.trace.SpanKind
@@ -44,7 +42,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new AkkaAsyncChild()
           // this child won't
@@ -104,7 +102,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well
