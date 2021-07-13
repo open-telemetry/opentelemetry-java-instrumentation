@@ -33,7 +33,7 @@ class OpenTelemetryInstallerTest extends Specification {
     .build()
 
     when:
-    def otelInstaller = new OpenTelemetryInstaller();
+    def otelInstaller = new OpenTelemetryInstaller()
     otelInstaller.beforeAgent(config)
 
     then:
@@ -51,7 +51,7 @@ class OpenTelemetryInstallerTest extends Specification {
       .build()
 
     when:
-    def otelInstaller = new OpenTelemetryInstaller();
+    def otelInstaller = new OpenTelemetryInstaller()
     otelInstaller.beforeAgent(config)
 
     then:
