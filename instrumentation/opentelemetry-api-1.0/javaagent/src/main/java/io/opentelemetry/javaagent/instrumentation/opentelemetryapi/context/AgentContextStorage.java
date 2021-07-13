@@ -67,7 +67,7 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
             "io.opentelemetry.api.trace.SpanContextKey",
             Bridging::toApplication,
             Bridging::toAgentOrNull),
-        new ContextKeyBridge<Baggage, io.opentelemetry.api.baggage.Baggage>(
+        new ContextKeyBridge<>(
             "application.io.opentelemetry.api.baggage.BaggageContextKey",
             "io.opentelemetry.api.baggage.BaggageContextKey",
             BaggageBridging::toApplication,
@@ -161,40 +161,40 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     }
   }
 
-  static class ContextKeyBridge<ApplicationValue, AgentValue> {
+  static class ContextKeyBridge<APPLICATION, AGENT> {
 
-    private final ContextKey<ApplicationValue> applicationContextKey;
-    private final io.opentelemetry.context.ContextKey<AgentValue> agentContextKey;
-    private final Function<ApplicationValue, AgentValue> toAgent;
-    private final Function<AgentValue, ApplicationValue> toApplication;
+    private final ContextKey<APPLICATION> applicationContextKey;
+    private final io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
+    private final Function<APPLICATION, AGENT> toAgent;
+    private final Function<AGENT, APPLICATION> toApplication;
 
     @SuppressWarnings("unchecked")
     ContextKeyBridge(
         String applicationKeyHolderClassName,
         String agentKeyHolderClassName,
-        Function<AgentValue, ApplicationValue> toApplication,
-        Function<ApplicationValue, AgentValue> toAgent) {
+        Function<AGENT, APPLICATION> toApplication,
+        Function<APPLICATION, AGENT> toAgent) {
       this.toApplication = toApplication;
       this.toAgent = toAgent;
 
-      ContextKey<ApplicationValue> applicationContextKey;
+      ContextKey<APPLICATION> applicationContextKey;
       try {
         Class<?> applicationKeyHolderClass = Class.forName(applicationKeyHolderClassName);
         Field applicationContextKeyField = applicationKeyHolderClass.getDeclaredField("KEY");
         applicationContextKeyField.setAccessible(true);
-        applicationContextKey = (ContextKey<ApplicationValue>) applicationContextKeyField.get(null);
+        applicationContextKey = (ContextKey<APPLICATION>) applicationContextKeyField.get(null);
       } catch (Throwable t) {
         applicationContextKey = null;
       }
       this.applicationContextKey = applicationContextKey;
 
-      io.opentelemetry.context.ContextKey<AgentValue> agentContextKey;
+      io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
       try {
         Class<?> agentKeyHolderClass = Class.forName(agentKeyHolderClassName);
         Field agentContextKeyField = agentKeyHolderClass.getDeclaredField("KEY");
         agentContextKeyField.setAccessible(true);
         agentContextKey =
-            (io.opentelemetry.context.ContextKey<AgentValue>) agentContextKeyField.get(null);
+            (io.opentelemetry.context.ContextKey<AGENT>) agentContextKeyField.get(null);
       } catch (Throwable t) {
         agentContextKey = null;
       }
@@ -204,11 +204,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     @Nullable
     <V> V get(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey) {
       if (requestedKey == applicationContextKey) {
-        AgentValue agentValue = contextWrapper.agentContext.get(agentContextKey);
+        AGENT agentValue = contextWrapper.agentContext.get(agentContextKey);
         if (agentValue == null) {
           return null;
         }
-        ApplicationValue applicationValue = toApplication.apply(agentValue);
+        APPLICATION applicationValue = toApplication.apply(agentValue);
         @SuppressWarnings("unchecked")
         V castValue = (V) applicationValue;
         return castValue;
@@ -220,8 +220,8 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     <V> Context with(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
       if (requestedKey == applicationContextKey) {
         @SuppressWarnings("unchecked")
-        ApplicationValue applicationValue = (ApplicationValue) value;
-        AgentValue agentValue = toAgent.apply(applicationValue);
+        APPLICATION applicationValue = (APPLICATION) value;
+        AGENT agentValue = toAgent.apply(applicationValue);
         if (agentValue == null) {
           return contextWrapper;
         }
