@@ -18,10 +18,11 @@ plugins {
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 
 afterEvaluate {
+  val previousBaseArchiveName = base.archivesName.get()
   if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
-    base.archivesName.set("opentelemetry-javaagent-${base.archivesName.get()}")
-  } else {
-    base.archivesName.set("opentelemetry-${base.archivesName.get()}")
+    base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
+  } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
+    base.archivesName.set("opentelemetry-$previousBaseArchiveName")
   }
 }
 
