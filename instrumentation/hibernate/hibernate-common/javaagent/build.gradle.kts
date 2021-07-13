@@ -6,5 +6,5 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-api"))
+  compileOnly(project(":javaagent-instrumentation-api"))
 }

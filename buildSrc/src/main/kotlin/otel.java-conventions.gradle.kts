@@ -278,7 +278,7 @@ configurations.configureEach {
     // what modules they add to reference generically.
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-api")).using(project(":javaagent-api"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")).using(project(":javaagent-instrumentation-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

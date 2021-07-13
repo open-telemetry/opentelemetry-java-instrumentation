@@ -43,9 +43,7 @@ public class ContextInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) Context root) {
-      root =
-          new AgentContextStorage.AgentContextWrapper(
-              io.opentelemetry.context.Context.root(), root);
+      root = AgentContextStorage.newContextWrapper(io.opentelemetry.context.Context.root(), root);
     }
   }
 }
