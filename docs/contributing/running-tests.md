@@ -40,16 +40,17 @@ Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOV
 
 ### Smoke tests
 
-The smoke tests are not run by default since they take a long time and are not relevant for most
-contributions.
-If you need to run a specific smoke test:
+The smoke tests are not run as part of a global `test` task run since they take a long time and are
+not relevant for most contributions. Explicitly specify `:smoke-tests:test` to run them.
+
+If you need to run a specific smoke test suite:
 
 ```
-./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish -PrunSmokeTests=true
+./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish
 ```
 
 If you are on Windows and you want to run the tests using linux containers:
 
 ```
-USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish -PrunSmokeTests=true
+USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish
 ```

@@ -52,6 +52,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     return io.opentelemetry.context.Context.root();
   }
 
+  public static Context newContextWrapper(
+      io.opentelemetry.context.Context agentContext, Context applicationContext) {
+    return new AgentContextWrapper(agentContext, applicationContext);
+  }
+
   static final io.opentelemetry.context.ContextKey<Context> APPLICATION_CONTEXT =
       io.opentelemetry.context.ContextKey.named("otel-context");
 
@@ -111,12 +116,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     }
   }
 
-  public static class AgentContextWrapper implements Context {
+  private static class AgentContextWrapper implements Context {
     final io.opentelemetry.context.Context agentContext;
     final Context applicationContext;
 
-    public AgentContextWrapper(
-        io.opentelemetry.context.Context agentContext, Context applicationContext) {
+    AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
       this.agentContext = agentContext;
       this.applicationContext = applicationContext;
     }
