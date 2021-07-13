@@ -300,7 +300,7 @@ then inlining Java 8 default method calls (or static methods in an interface) in
 will result in a `java.lang.VerifyError` at runtime, since Java 8 default method invocations are not
 legal in Java 7 (and prior) bytecode.
 Because OpenTelemetry API has many common default/static interface methods (e.g. `Span.current()`),
-the `javaagent-api` artifact has a class `Java8BytecodeBridge` which provides static methods
+the `javaagent-instrumentation-api` artifact has a class `Java8BytecodeBridge` which provides static methods
 for accessing these default methods from advice.
 In fact, we suggest avoiding Java 8 language features in advice classes at all - sometimes you don't
 know what bytecode version is used by the instrumented class.

@@ -62,7 +62,7 @@ include(":javaagent")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-caching")
-include(":javaagent-api")
+include(":javaagent-instrumentation-api")
 
 // misc
 include(":dependencyManagement")

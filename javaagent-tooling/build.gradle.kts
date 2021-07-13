@@ -11,7 +11,7 @@ dependencies {
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
-  implementation(project(":javaagent-api"))
+  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":instrumentation-api"))
 
   implementation("io.opentelemetry:opentelemetry-api")

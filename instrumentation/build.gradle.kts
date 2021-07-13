@@ -26,7 +26,7 @@ subprojects {
 
 dependencies {
   compileOnly(project(":instrumentation-api"))
-  compileOnly(project(":javaagent-api"))
+  compileOnly(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-tooling"))
   implementation(project(":javaagent-extension-api"))
 }
@@ -49,7 +49,7 @@ tasks {
       //These classes are added to bootstrap classloader by javaagent module
       exclude(project(":javaagent-bootstrap"))
       exclude(project(":instrumentation-api"))
-      exclude(project(":javaagent-api"))
+      exclude(project(":javaagent-instrumentation-api"))
     }
   }
 

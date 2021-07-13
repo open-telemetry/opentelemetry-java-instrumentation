@@ -6,7 +6,7 @@ dependencies {
   implementation(project(":testing-common:library-for-integration-tests"))
 
   testCompileOnly(project(":instrumentation-api"))
-  testCompileOnly(project(":javaagent-api"))
+  testCompileOnly(project(":javaagent-instrumentation-api"))
   testCompileOnly(project(":javaagent-tooling"))
   testCompileOnly(project(":javaagent-extension-api"))
 
