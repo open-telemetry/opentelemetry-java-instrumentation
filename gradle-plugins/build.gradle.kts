@@ -2,8 +2,6 @@ plugins {
   `kotlin-dsl`
   `maven-publish`
 
-//  id("otel.java-conventions")
-//  id("otel.publish-conventions")
   id("com.gradle.plugin-publish")
 }
 
