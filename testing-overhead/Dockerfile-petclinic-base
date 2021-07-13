@@ -8,7 +8,7 @@ FROM adoptopenjdk:11-jdk
 # the application under test.
 
 RUN apt update && \
-    apt install -y openssh-server sudo && \
+    apt install -y openssh-server sudo git && \
     mkdir /run/sshd && \
     sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
     sed -i 's/^#PermitUserEnvironment.*/PermitUserEnvironment yes/' /etc/ssh/sshd_config && \
@@ -21,8 +21,8 @@ RUN apt update && \
     ln -s /etc/environment /app/.ssh/environment && \
     echo "%remote ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-COPY spring-petclinic-rest/ /app/spring-petclinic-rest/
-
+WORKDIR /app
+RUN git clone http://github.com/spring-petclinic/spring-petclinic-rest.git
 WORKDIR /app/spring-petclinic-rest
 
 RUN ./mvnw package -Dmaven.test.skip=true
