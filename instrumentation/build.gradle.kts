@@ -6,6 +6,8 @@ plugins {
   id("otel.java-conventions")
 }
 
+val bootstrap by configurations.creating
+
 val instrumentationProjectTest = tasks.named("test")
 val instrumentationProjectDependencies = dependencies
 
@@ -14,6 +16,12 @@ subprojects {
   plugins.withId("java") {
     instrumentationProjectTest.configure {
       dependsOn(subProj.tasks.named("test"))
+    }
+
+    if (subProj.name == "bootstrap") {
+      instrumentationProjectDependencies.run {
+        add(bootstrap.name, project(subProj.path))
+      }
     }
   }
 

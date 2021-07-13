@@ -13,4 +13,6 @@ muzzle {
 
 dependencies {
   library("io.undertow:undertow-core:2.0.0.Final")
+
+  compileOnly(project(":instrumentation:undertow-1.4:bootstrap"))
 }

@@ -115,7 +115,9 @@ tasks {
   }
 }
 
-val licenseReportDependencies by configurations.creating
+val licenseReportDependencies by configurations.creating {
+  extendsFrom(shadowInclude)
+}
 
 dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
@@ -126,6 +128,7 @@ dependencies {
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
 
   shadowInclude(project(":javaagent-bootstrap"))
+  shadowInclude(project(":instrumentation", configuration = "bootstrap"))
 
   // We only have compileOnly dependencies on these to make sure they don"t leak into POMs.
   licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
@@ -137,9 +140,7 @@ dependencies {
   //  but I couldn"t get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
   licenseReportDependencies(project(":javaagent-extension-api"))
-  licenseReportDependencies(project(":javaagent-bootstrap"))
 }
-
 
 licenseReport {
   outputDir = rootProject.file("licenses").absolutePath
