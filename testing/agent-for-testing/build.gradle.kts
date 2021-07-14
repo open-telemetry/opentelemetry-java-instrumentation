@@ -47,9 +47,9 @@ project(":instrumentation").subprojects {
   }
 }
 
-fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
+fun isolateAgentClasses (configuration: Configuration): CopySpec {
   return copySpec {
-    jars.forEach {
+    configuration.files.forEach {
       from(zipTree(it)) {
         // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
         into("inst")
@@ -72,7 +72,7 @@ tasks {
     dependsOn(":testing:agent-exporter:shadowJar")
 
     configurations = listOf(bootstrapLibs)
-    with(isolateAgentClasses(javaagentLibs.files))
+    with(isolateAgentClasses(javaagentLibs))
 
     archiveClassifier.set("")
 
