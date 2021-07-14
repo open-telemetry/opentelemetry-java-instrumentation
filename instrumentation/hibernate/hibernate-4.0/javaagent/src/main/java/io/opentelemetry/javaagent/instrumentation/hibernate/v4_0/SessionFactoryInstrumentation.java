@@ -29,12 +29,13 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.hibernate.SessionFactory");
+    return hasClassesNamed("org.hibernate.SessionFactory", "org.hibernate.SessionBuilder");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.hibernate.SessionFactory"));
+    return implementsInterface(
+        named("org.hibernate.SessionFactory").or(named("org.hibernate.SessionBuilder")));
   }
 
   @Override

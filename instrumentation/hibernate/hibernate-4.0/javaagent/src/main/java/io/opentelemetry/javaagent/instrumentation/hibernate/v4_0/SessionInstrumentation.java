@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getSessionMethodSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -63,6 +64,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "merge",
                     "persist",
                     "lock",
+                    "fireLock",
                     "refresh",
                     "insert",
                     "delete",
@@ -72,7 +74,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
-        isMethod().and(named("get")).and(returns(Object.class)).and(takesArgument(0, String.class)),
+        isMethod()
+            .and(named("get").or(named("find")))
+            .and(returns(Object.class))
+            .and(takesArgument(0, String.class).or(takesArgument(0, Class.class))),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
@@ -139,7 +144,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
       }
 
       if (!SCOPE_ONLY_METHODS.contains(name)) {
-        spanContext = tracer().startSpan(sessionContext, "Session." + name, entity);
+        spanContext = tracer().startSpan(sessionContext, getSessionMethodSpanName(name), entity);
         scope = spanContext.makeCurrent();
       } else {
         scope = sessionContext.makeCurrent();
@@ -161,7 +166,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(spanContext, throwable, "Session." + name, returned);
+        SessionMethodUtils.end(spanContext, throwable, getSessionMethodSpanName(name), returned);
       }
     }
   }

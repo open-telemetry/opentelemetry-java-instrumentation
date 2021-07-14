@@ -100,5 +100,12 @@ public final class SessionMethodUtils {
     targetContextStore.putIfAbsent(target, sessionContext);
   }
 
+  public static String getSessionMethodSpanName(String methodName) {
+    if ("fireLock".equals(methodName)) {
+      return "Session.lock";
+    }
+    return "Session." + methodName;
+  }
+
   private SessionMethodUtils() {}
 }
