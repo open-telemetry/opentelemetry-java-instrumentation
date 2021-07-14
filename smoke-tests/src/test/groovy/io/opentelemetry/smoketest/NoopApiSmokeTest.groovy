@@ -46,7 +46,7 @@ class NoopApiSmokeTest extends SmokeTest {
 
     then: "no metrics are exported"
     def metrics = new MetricsInspector(waitForMetrics())
-    metrics.requests.isEmpty();
+    metrics.requests.isEmpty()
 
     cleanup:
     stopTarget()
