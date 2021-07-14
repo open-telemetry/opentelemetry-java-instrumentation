@@ -14,10 +14,6 @@ val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
-val javaagentLibs by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
@@ -25,8 +21,6 @@ dependencies {
   bootstrapLibs(project(":javaagent-bootstrap"))
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")
-
-  javaagentLibs(project(":testing:agent-exporter", configuration = "shadow"))
 
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-api")
@@ -47,16 +41,14 @@ project(":instrumentation").subprojects {
   }
 }
 
-fun isolateAgentClasses (configuration: Configuration): CopySpec {
+fun isolateAgentClasses (shadowJar: Jar): CopySpec {
   return copySpec {
-    configuration.files.forEach {
-      from(zipTree(it)) {
-        // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-        into("inst")
-        rename("""(^.*)\.class$""", "$1.classdata")
-        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-        rename("""^LICENSE$""", "LICENSE.renamed")
-      }
+    from(zipTree(shadowJar.archiveFile)) {
+      // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+      into("inst")
+      rename("""(^.*)\.class$""", "$1.classdata")
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename("""^LICENSE$""", "LICENSE.renamed")
     }
   }
 }
@@ -72,7 +64,8 @@ tasks {
     dependsOn(":testing:agent-exporter:shadowJar")
 
     configurations = listOf(bootstrapLibs)
-    with(isolateAgentClasses(javaagentLibs))
+
+    with(isolateAgentClasses(project(":testing:agent-exporter").tasks.getByName<ShadowJar>("shadowJar")))
 
     archiveClassifier.set("")
 
