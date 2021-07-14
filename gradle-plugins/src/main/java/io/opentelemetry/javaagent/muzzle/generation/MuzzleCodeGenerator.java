@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>This class is run at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy plugin.
  */
-class MuzzleCodeGenerator implements AsmVisitorWrapper {
+final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final Logger logger = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
 
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";

@@ -34,7 +34,7 @@ import net.bytebuddy.jar.asm.Type;
 // - outer class
 // - inner class
 // - cast opcodes in method bodies
-class ReferenceCollectingClassVisitor extends ClassVisitor {
+final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   /**
    * Get the package of an internal class name.

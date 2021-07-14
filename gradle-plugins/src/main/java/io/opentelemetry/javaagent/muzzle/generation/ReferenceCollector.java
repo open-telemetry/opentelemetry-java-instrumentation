@@ -46,7 +46,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <p>This class is only called at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy
  * plugin.
  */
-class ReferenceCollector {
+final class ReferenceCollector {
 
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
@@ -56,11 +56,11 @@ class ReferenceCollector {
   private final ClassLoader resourceLoader;
 
   // only used by tests
-  public ReferenceCollector(Predicate<String> libraryInstrumentationPredicate) {
+  ReferenceCollector(Predicate<String> libraryInstrumentationPredicate) {
     this(libraryInstrumentationPredicate, ReferenceCollector.class.getClassLoader());
   }
 
-  public ReferenceCollector(
+  ReferenceCollector(
       Predicate<String> libraryInstrumentationPredicate, ClassLoader resourceLoader) {
     this.instrumentationClassPredicate =
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
@@ -76,7 +76,7 @@ class ReferenceCollector {
    * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
    * @see InstrumentationClassPredicate
    */
-  public void collectReferencesFromResource(String resource) {
+  void collectReferencesFromResource(String resource) {
     if (!isSpiFile(resource)) {
       return;
     }
@@ -121,7 +121,7 @@ class ReferenceCollector {
    * @param adviceClassName Starting point for generating references.
    * @see InstrumentationClassPredicate
    */
-  public void collectReferencesFromAdvice(String adviceClassName) {
+  void collectReferencesFromAdvice(String adviceClassName) {
     visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
   }
 
@@ -206,11 +206,11 @@ class ReferenceCollector {
     }
   }
 
-  public Map<String, ClassRef> getReferences() {
+  Map<String, ClassRef> getReferences() {
     return references;
   }
 
-  public void prune() {
+  void prune() {
     // helper classes that may help another helper class implement an abstract library method
     // must be retained
     // for example if helper class A extends helper class B, and A also implements a library
@@ -300,7 +300,7 @@ class ReferenceCollector {
   }
 
   // see https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
-  public List<String> getSortedHelperClasses() {
+  List<String> getSortedHelperClasses() {
     MutableGraph<String> dependencyGraph = Graphs.copyOf(Graphs.transpose(helperSuperClassGraph));
     List<String> helperClasses = new ArrayList<>(dependencyGraph.nodes().size());
 
@@ -333,7 +333,7 @@ class ReferenceCollector {
     return helpersWithNoDeps;
   }
 
-  public Map<String, String> getContextStoreClasses() {
+  Map<String, String> getContextStoreClasses() {
     return contextStoreClasses;
   }
 }

@@ -6,8 +6,8 @@ plugins {
   id("net.bytebuddy.byte-buddy")
 
   id("io.opentelemetry.instrumentation.base")
-  id("io.opentelemetry.instrumentation.javaagent-shadowing")
   id("io.opentelemetry.instrumentation.javaagent-codegen")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
 dependencies {

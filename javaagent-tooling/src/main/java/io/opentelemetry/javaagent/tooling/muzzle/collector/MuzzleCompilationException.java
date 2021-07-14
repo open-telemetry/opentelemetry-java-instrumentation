@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
-class MuzzleCompilationException extends RuntimeException {
+final class MuzzleCompilationException extends RuntimeException {
   MuzzleCompilationException(String message) {
     super(message);
   }

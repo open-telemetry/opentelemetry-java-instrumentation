@@ -20,7 +20,7 @@ import net.bytebuddy.dynamic.DynamicType;
  *
  * <p>This class is used in the gradle build scripts, referenced by each instrumentation module.
  */
-public class MuzzleCodeGenerationPlugin implements Plugin {
+public final class MuzzleCodeGenerationPlugin implements Plugin {
 
   private static final TypeDescription instrumentationModuleType =
       new TypeDescription.ForLoadedType(InstrumentationModule.class);
@@ -36,7 +36,6 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
     if (target.isAbstract()) {
       return false;
     }
-    // AutoService annotation is not retained at runtime. Check for InstrumentationModule supertype
     boolean isInstrumentationModule = false;
     TypeDefinition instrumentation = target.getSuperClass();
     while (instrumentation != null) {
