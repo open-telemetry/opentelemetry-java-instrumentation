@@ -43,7 +43,6 @@ public abstract class AbstractNettyHttpClientTracer<REQUEST>
     // If first call to GenericFutureListener#operationComplete has an exception then we
     // treat it as the cause of connection failure and create a special span for it
     ChannelFuture channelFuture = (ChannelFuture) future;
-    AttributeKey<Context> ak = null;
     Context parentContext = tracer.getAndRemoveConnectContext(channelFuture);
     if (parentContext == null) {
       return;
