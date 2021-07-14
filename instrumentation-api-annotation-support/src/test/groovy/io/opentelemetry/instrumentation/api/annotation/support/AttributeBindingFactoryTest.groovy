@@ -290,11 +290,7 @@ class AttributeBindingFactoryTest extends Specification {
     }
   }
 
-  enum TestEnum { FOO, BAR, BAZ }
-
   class TestFields {
-    EnumSet<TestEnum> enumSet
-    Set<TestEnum> setOfEnum
     List<String> stringList
     List<Long> longList
     List<Double> doubleList
