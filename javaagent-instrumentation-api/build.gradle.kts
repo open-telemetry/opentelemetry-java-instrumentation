@@ -7,10 +7,8 @@ plugins {
 group = "io.opentelemetry.javaagent"
 
 dependencies {
-  api("io.opentelemetry:opentelemetry-api")
-  compileOnly("io.opentelemetry:opentelemetry-sdk")
+  api(project(":instrumentation-api"))
 
-  implementation(project(":instrumentation-api"))
   implementation("org.slf4j:slf4j-api")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
