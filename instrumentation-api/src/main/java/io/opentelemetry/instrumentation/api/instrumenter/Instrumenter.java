@@ -174,7 +174,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * response} is the response object of the operation, and {@code error} is an exception that was
    * thrown by the operation, or {@code null} if none was thrown.
    */
-  public void end(Context context, REQUEST request, RESPONSE response, @Nullable Throwable error) {
+  public void end(
+      Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
