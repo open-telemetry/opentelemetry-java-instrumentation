@@ -121,7 +121,7 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(36) {
-          name "BatchJob itemsAndTaskletJob.taskletStep.Chunk"
+          name "BatchJob itemsAndTaskletJob.taskletStep.Tasklet"
           kind INTERNAL
           childOf span(35)
         }
@@ -411,7 +411,7 @@ class JsrConfigItemLevelSpanTest extends AgentInstrumentationSpecification imple
           childOf span(0)
         }
         span(36) {
-          name "BatchJob itemsAndTaskletJob.taskletStep.Chunk"
+          name "BatchJob itemsAndTaskletJob.taskletStep.Tasklet"
           kind INTERNAL
           childOf span(35)
         }

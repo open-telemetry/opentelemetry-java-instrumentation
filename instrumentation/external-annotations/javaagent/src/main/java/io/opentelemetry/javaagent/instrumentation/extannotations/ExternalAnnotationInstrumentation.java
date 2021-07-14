@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -99,7 +99,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
+    return hasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
   }
 
   @Override

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.inheritsAnnotation;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;

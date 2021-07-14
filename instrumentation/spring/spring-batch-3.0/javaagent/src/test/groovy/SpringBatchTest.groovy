@@ -34,7 +34,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(2) {
-          name "BatchJob taskletJob.step.Chunk"
+          name "BatchJob taskletJob.step.Tasklet"
           kind INTERNAL
           childOf span(1)
         }
@@ -59,7 +59,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(2) {
-          name "BatchJob taskletJob.step.Chunk"
+          name "BatchJob taskletJob.step.Tasklet"
           kind INTERNAL
           childOf span(1)
           status ERROR
@@ -106,7 +106,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(6) {
-          name "BatchJob itemsAndTaskletJob.taskletStep.Chunk"
+          name "BatchJob itemsAndTaskletJob.taskletStep.Tasklet"
           kind INTERNAL
           childOf span(5)
         }
@@ -131,7 +131,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(2) {
-          name "BatchJob flowJob.flowStep1.Chunk"
+          name "BatchJob flowJob.flowStep1.Tasklet"
           kind INTERNAL
           childOf span(1)
         }
@@ -141,7 +141,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(4) {
-          name "BatchJob flowJob.flowStep2.Chunk"
+          name "BatchJob flowJob.flowStep2.Tasklet"
           kind INTERNAL
           childOf span(3)
         }
@@ -166,7 +166,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(2) {
-          name ~/BatchJob splitJob\.splitFlowStep[12]\.Chunk/
+          name ~/BatchJob splitJob\.splitFlowStep[12]\.Tasklet/
           kind INTERNAL
           childOf span(1)
         }
@@ -176,7 +176,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(4) {
-          name ~/BatchJob splitJob\.splitFlowStep[12]\.Chunk/
+          name ~/BatchJob splitJob\.splitFlowStep[12]\.Tasklet/
           kind INTERNAL
           childOf span(3)
         }
@@ -201,7 +201,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(2) {
-          name "BatchJob decisionJob.decisionStepStart.Chunk"
+          name "BatchJob decisionJob.decisionStepStart.Tasklet"
           kind INTERNAL
           childOf span(1)
         }
@@ -211,7 +211,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(0)
         }
         span(4) {
-          name "BatchJob decisionJob.decisionStepLeft.Chunk"
+          name "BatchJob decisionJob.decisionStepLeft.Tasklet"
           kind INTERNAL
           childOf span(3)
         }

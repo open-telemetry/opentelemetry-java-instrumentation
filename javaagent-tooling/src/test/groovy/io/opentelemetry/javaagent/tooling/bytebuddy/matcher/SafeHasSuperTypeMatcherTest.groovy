@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType
 import static net.bytebuddy.matcher.ElementMatchers.named
 
 import io.opentelemetry.javaagent.tooling.AgentTooling
@@ -27,7 +27,7 @@ class SafeHasSuperTypeMatcherTest extends Specification {
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
-    safeHasSuperType(matcher).matches(argument) == result
+    hasSuperType(matcher).matches(argument) == result
 
     where:
     matcherClass | type | result
@@ -49,7 +49,7 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     setup:
     def type = Mock(TypeDescription)
     def typeGeneric = Mock(TypeDescription.Generic)
-    def matcher = safeHasSuperType(named(Object.name))
+    def matcher = hasSuperType(named(Object.name))
 
     when:
     def result = matcher.matches(type)
@@ -70,7 +70,7 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     setup:
     def type = Mock(TypeDescription)
     def typeGeneric = Mock(TypeDescription.Generic)
-    def matcher = safeHasSuperType(named(Object.name))
+    def matcher = hasSuperType(named(Object.name))
     def interfaces = Mock(TypeList.Generic)
     def it = new ThrowOnFirstElement()
 

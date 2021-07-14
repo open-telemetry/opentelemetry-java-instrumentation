@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
+import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;

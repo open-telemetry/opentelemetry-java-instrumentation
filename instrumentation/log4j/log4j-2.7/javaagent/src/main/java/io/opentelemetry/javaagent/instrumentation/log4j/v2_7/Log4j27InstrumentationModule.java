@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.v2_7;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 

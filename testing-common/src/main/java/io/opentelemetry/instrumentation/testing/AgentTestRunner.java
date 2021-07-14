@@ -10,6 +10,7 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -33,6 +34,12 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
 
   public static InstrumentationTestRunner instance() {
     return INSTANCE;
+  }
+
+  private final TestInstrumenters testInstrumenters;
+
+  private AgentTestRunner() {
+    testInstrumenters = new TestInstrumenters(getOpenTelemetry());
   }
 
   @Override
@@ -81,5 +88,21 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     return AgentTestingExporterAccess.forceFlushCalled();
   }
 
-  private AgentTestRunner() {}
+  @Override
+  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithClientSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithClientSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithServerSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithServerSpan(spanName, callback);
+  }
 }

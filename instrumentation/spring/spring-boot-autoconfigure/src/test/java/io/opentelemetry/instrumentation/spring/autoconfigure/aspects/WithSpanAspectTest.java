@@ -8,9 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withClientSpan;
-import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withServerSpan;
-import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withSpan;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -34,8 +31,7 @@ import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 /** Spring AOP Test for {@link WithSpanAspect}. */
 public class WithSpanAspectTest {
   @RegisterExtension
-  static final LibraryInstrumentationExtension instrumentation =
-      LibraryInstrumentationExtension.create();
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   static class WithSpanTester {
     @WithSpan
@@ -79,7 +75,7 @@ public class WithSpanAspectTest {
   @BeforeEach
   void setup() {
     AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
-    WithSpanAspect aspect = new WithSpanAspect(instrumentation.getOpenTelemetry());
+    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry());
     factory.addAspect(aspect);
 
     withSpanTester = factory.getProxy();
@@ -94,10 +90,10 @@ public class WithSpanAspectTest {
   @DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
   void withSpanWithDefaults() throws Throwable {
     // when
-    withSpan("parent", () -> withSpanTester.testWithSpan());
+    testing.runWithSpan("parent", withSpanTester::testWithSpan);
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -116,10 +112,10 @@ public class WithSpanAspectTest {
       "when @WithSpan value is set should wrap method execution in a Span with custom name")
   void withSpanName() throws Throwable {
     // when
-    withSpan("parent", () -> withSpanTester.testWithSpanWithValue());
+    testing.runWithSpan("parent", () -> withSpanTester.testWithSpanWithValue());
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -138,7 +134,7 @@ public class WithSpanAspectTest {
     assertThatThrownBy(() -> withSpanTester.testWithSpanWithException())
         .isInstanceOf(Exception.class);
 
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -154,10 +150,10 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=CLIENT) should build span with the declared SpanKind")
   void withSpanKind() throws Throwable {
     // when
-    withSpan("parent", () -> withSpanTester.testWithClientSpan());
+    testing.runWithSpan("parent", () -> withSpanTester.testWithClientSpan());
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -174,10 +170,10 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=CLIENT) and context already contains a CLIENT span should suppress span")
   void suppressClientSpan() throws Throwable {
     // when
-    withClientSpan("parent", () -> withSpanTester.testWithClientSpan());
+    testing.runWithClientSpan("parent", withSpanTester::testWithClientSpan);
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -190,10 +186,10 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=SERVER) and context already contains a SERVER span should suppress span")
   void suppressServerSpan() throws Throwable {
     // when
-    withServerSpan("parent", () -> withSpanTester.testWithServerSpan());
+    testing.runWithServerSpan("parent", withSpanTester::testWithServerSpan);
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
@@ -211,10 +207,10 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       // then
-      assertThat(instrumentation.waitForTraces(1))
+      assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
@@ -225,7 +221,7 @@ public class WithSpanAspectTest {
       future.complete("DONE");
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -243,10 +239,10 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       // then
-      assertThat(instrumentation.waitForTraces(1))
+      assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
@@ -257,7 +253,7 @@ public class WithSpanAspectTest {
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -274,10 +270,10 @@ public class WithSpanAspectTest {
     @DisplayName("should end Span on incompatible return value")
     void onIncompatibleReturnValue() throws Throwable {
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(null));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(null));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -300,10 +296,10 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      assertThat(instrumentation.waitForTraces(1))
+      assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
@@ -314,7 +310,7 @@ public class WithSpanAspectTest {
       future.complete("DONE");
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -332,10 +328,10 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      assertThat(instrumentation.waitForTraces(1))
+      assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
@@ -346,7 +342,7 @@ public class WithSpanAspectTest {
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -365,10 +361,10 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -387,10 +383,10 @@ public class WithSpanAspectTest {
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->
@@ -407,10 +403,10 @@ public class WithSpanAspectTest {
     @DisplayName("should end Span on incompatible return value")
     void onIncompatibleReturnValue() throws Throwable {
       // when
-      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(null));
+      testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(null));
 
       // then
-      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      List<List<SpanData>> traces = testing.waitForTraces(1);
       assertThat(traces)
           .hasTracesSatisfyingExactly(
               trace ->

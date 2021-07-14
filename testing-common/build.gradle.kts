@@ -9,7 +9,7 @@ group = "io.opentelemetry.javaagent"
 sourceSets {
   main {
     val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
-    output.dir(armeriaShadedDeps .file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+    output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
   }
 }
 
@@ -23,6 +23,8 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-testing")
+
+  api("org.assertj:assertj-core")
 
   compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
@@ -46,9 +48,7 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
-  testImplementation("org.assertj:assertj-core")
-
-  testImplementation(project(":javaagent-api"))
+  testImplementation(project(":javaagent-instrumentation-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))

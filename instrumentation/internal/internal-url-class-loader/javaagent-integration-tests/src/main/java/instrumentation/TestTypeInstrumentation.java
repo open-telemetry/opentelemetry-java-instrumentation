@@ -5,7 +5,7 @@
 
 package instrumentation;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;

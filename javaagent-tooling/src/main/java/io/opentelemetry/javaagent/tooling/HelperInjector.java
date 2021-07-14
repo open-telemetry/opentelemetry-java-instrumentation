@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import java.io.File;
@@ -32,8 +30,6 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Injects instrumentation helper classes into the user's classloader.
@@ -49,7 +45,8 @@ import org.slf4j.LoggerFactory;
  */
 public class HelperInjector implements Transformer {
 
-  private static final Logger logger = LoggerFactory.getLogger(HelperInjector.class);
+  private static final TransformSafeLogger logger =
+      TransformSafeLogger.getLogger(HelperInjector.class);
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -174,7 +171,7 @@ public class HelperInjector implements Transformer {
 
   private ClassLoader injectHelperClasses(
       TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
-    if (classLoader == BOOTSTRAP_CLASSLOADER) {
+    if (classLoader == null) {
       classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
     }
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
@@ -207,14 +204,12 @@ public class HelperInjector implements Transformer {
               helperModules.add(new WeakReference<>(javaModule.unwrap()));
             }
           } catch (Exception e) {
-            if (logger.isErrorEnabled()) {
-              logger.error(
-                  "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
-                  typeDescription,
-                  requestingName,
-                  cl,
-                  e);
-            }
+            logger.error(
+                "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
+                typeDescription,
+                requestingName,
+                cl,
+                e);
             throw new IllegalStateException(e);
           }
           return true;

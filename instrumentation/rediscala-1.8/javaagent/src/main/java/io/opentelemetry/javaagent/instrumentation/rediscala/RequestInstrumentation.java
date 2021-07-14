@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -35,7 +35,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return hasSuperType(
         namedOneOf(
             "redis.ActorRequest",
             "redis.Request",

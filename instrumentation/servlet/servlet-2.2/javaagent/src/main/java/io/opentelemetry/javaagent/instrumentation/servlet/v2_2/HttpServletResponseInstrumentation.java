@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -42,7 +42,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("javax.servlet.http.HttpServletResponse"));
+    return hasSuperType(named("javax.servlet.http.HttpServletResponse"));
   }
 
   @Override

@@ -14,7 +14,7 @@ dependencies {
   // Integration tests may need to define custom instrumentation modules so we include the standard
   // instrumentation infrastructure for testing too.
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
   // Apply common dependencies for instrumentation.
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
@@ -94,11 +94,11 @@ afterEvaluate {
 
       // If agent depends on some shared instrumentation module that is not a testing module, it will
       // be packaged into the testing jar so we need to make sure to exclude from the test classpath.
-      val libPath = it.absolutePath
-      val instrumentationPath = file("${rootDir}/instrumentation/").absolutePath
-      if (libPath.startsWith(instrumentationPath) &&
-        libPath.endsWith(".jar") &&
-        !libPath.substring(instrumentationPath.length).contains("testing")) {
+      val lib = it.absoluteFile
+      val instrumentationDir = file("${rootDir}/instrumentation/").absoluteFile
+      if (lib.startsWith(instrumentationDir) &&
+        lib.extension == "jar" &&
+        !lib.absolutePath.substring(instrumentationDir.absolutePath.length).contains("testing")) {
         return@filter false
       }
       return@filter true

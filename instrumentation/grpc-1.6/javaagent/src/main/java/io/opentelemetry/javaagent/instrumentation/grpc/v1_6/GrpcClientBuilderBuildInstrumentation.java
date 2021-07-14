@@ -6,14 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.grpc.ClientInterceptor;
+import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,8 +46,14 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
+        @Advice.This ManagedChannelBuilder<?> builder,
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
-      interceptors.add(0, GrpcSingletons.CLIENT_INTERCEPTOR);
+      ContextStore<ManagedChannelBuilder<?>, Boolean> instrumented =
+          InstrumentationContext.get(ManagedChannelBuilder.class, Boolean.class);
+      if (!Boolean.TRUE.equals(instrumented.get(builder))) {
+        interceptors.add(0, GrpcSingletons.CLIENT_INTERCEPTOR);
+        instrumented.put(builder, true);
+      }
     }
   }
 }

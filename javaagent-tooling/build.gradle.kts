@@ -8,7 +8,7 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
-  implementation(project(":javaagent-api"))
+  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":instrumentation-api"))
   implementation(project(":muzzle"))
 

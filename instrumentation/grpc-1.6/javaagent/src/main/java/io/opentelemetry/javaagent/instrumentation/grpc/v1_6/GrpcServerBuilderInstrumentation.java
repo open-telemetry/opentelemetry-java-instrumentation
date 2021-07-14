@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,6 +16,8 @@ import io.grpc.ServerBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,7 +50,12 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       callDepth = CallDepth.forClass(ServerBuilder.class);
       if (callDepth.getAndIncrement() == 0) {
-        serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
+        ContextStore<ServerBuilder<?>, Boolean> instrumented =
+            InstrumentationContext.get(ServerBuilder.class, Boolean.class);
+        if (!Boolean.TRUE.equals(instrumented.get(serverBuilder))) {
+          serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
+          instrumented.put(serverBuilder, true);
+        }
       }
     }
 
