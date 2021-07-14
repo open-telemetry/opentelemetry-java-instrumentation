@@ -61,6 +61,8 @@ fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
   }
 }
 
+evaluationDependsOn(":testing:agent-exporter")
+
 tasks {
   jar {
     enabled = false
