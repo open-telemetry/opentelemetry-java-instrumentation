@@ -2,13 +2,7 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-muzzle {
-  pass {
-    group.set("io.opentelemetry.javaagent")
-    module.set("opentelemetry-ext-annotations-shaded-for-instrumenting")
-    versions.set("[1,)")
-  }
-}
+// TODO: add muzzle once 1.4.0 is released
 
 val versions: Map<String, String> by project
 

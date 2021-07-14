@@ -2,13 +2,7 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-muzzle {
-  pass {
-    group.set("io.opentelemetry.javaagent")
-    module.set("opentelemetry-api-shaded-for-instrumenting")
-    versions.set("[1,)")
-  }
-}
+// TODO: add muzzle once 1.4.0 is released
 
 dependencies {
   // this instrumentation needs to be able to reference both the OpenTelemetry API
