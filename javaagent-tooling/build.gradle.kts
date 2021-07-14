@@ -6,13 +6,11 @@ plugins {
 group = "io.opentelemetry.javaagent"
 
 dependencies {
-  // Only used during compilation by bytebuddy plugin
-  compileOnly("com.google.guava:guava")
-
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-api-metrics")

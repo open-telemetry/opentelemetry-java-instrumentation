@@ -1,5 +1,5 @@
-import io.opentelemetry.instrumentation.gradle.codegen.ClasspathByteBuddyPlugin
-import io.opentelemetry.instrumentation.gradle.codegen.ClasspathTransformation
+import io.opentelemetry.javaagent.muzzle.generation.ClasspathByteBuddyPlugin
+import io.opentelemetry.javaagent.muzzle.generation.ClasspathTransformation
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 import net.bytebuddy.build.gradle.Transformation
 
@@ -7,7 +7,6 @@ plugins {
   `java-library`
 }
 
-//TODO remove this when separate codegen plugin is published
 /**
  * Starting from version 1.10.15, ByteBuddy gradle plugin transformation task autoconfiguration is
  * hardcoded to be applied to javaCompile task. This causes the dependencies to be resolved during
@@ -28,7 +27,7 @@ plugins {
  */
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
-val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin"
+val pluginName = "io.opentelemetry.javaagent.muzzle.generation.MuzzleCodeGenerationPlugin"
 
 val codegen by configurations.creating {
   isCanBeConsumed = false
@@ -36,7 +35,8 @@ val codegen by configurations.creating {
 }
 
 val sourceSet = sourceSets.main.get()
-val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) } ?: codegen)
+val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) }
+  ?: codegen)
   .plus(configurations.runtimeClasspath.get())
 
 val languageTasks = LANGUAGES.map { language ->
@@ -48,7 +48,7 @@ val languageTasks = LANGUAGES.map { language ->
     return@map null
   }
   val compileTask = tasks.named(compileTaskName)
-  createLanguageTask(compileTask, "byteBuddy${language}")
+  createLanguageTask(compileTask, "byteBuddy${language.capitalize()}")
 }.filterNotNull()
 
 tasks {
@@ -62,10 +62,11 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*>? {
+  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
+    var transformationClassPath = inputClasspath
     val compileTask = compileTaskProvider.get()
     if (compileTask is AbstractCompile) {
       val classesDirectory = compileTask.destinationDirectory.asFile.get()
@@ -75,11 +76,12 @@ fun createLanguageTask(
       compileTask.destinationDirectory.set(rawClassesDirectory)
       source = rawClassesDirectory
       target = classesDirectory
-      classPath = compileTask.classpath
+      classPath = compileTask.classpath.plus(rawClassesDirectory)
+      transformationClassPath = transformationClassPath.plus(files(rawClassesDirectory))
       dependsOn(compileTask, sourceSet.processResourcesTaskName)
     }
 
-    transformations.add(createTransformation(inputClasspath, pluginName))
+    transformations.add(createTransformation(transformationClassPath, pluginName))
   }
 }
 

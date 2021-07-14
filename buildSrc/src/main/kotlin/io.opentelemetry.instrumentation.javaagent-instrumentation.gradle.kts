@@ -1,6 +1,7 @@
 plugins {
   id("io.opentelemetry.instrumentation.javaagent-testing")
   id("io.opentelemetry.instrumentation.muzzle-check")
+  id("io.opentelemetry.instrumentation.javaagent-codegen")
 }
 
 dependencies {

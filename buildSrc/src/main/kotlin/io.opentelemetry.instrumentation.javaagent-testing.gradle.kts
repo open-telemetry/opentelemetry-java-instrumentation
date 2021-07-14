@@ -30,9 +30,7 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }
 
 val testInstrumentation by configurations.creating {
