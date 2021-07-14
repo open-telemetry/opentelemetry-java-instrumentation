@@ -2,6 +2,8 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+// TODO: add muzzle once 1.4.0 is released
+
 val versions: Map<String, String> by project
 
 dependencies {
