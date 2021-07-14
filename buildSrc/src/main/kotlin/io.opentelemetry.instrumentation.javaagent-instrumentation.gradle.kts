@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-  add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+  add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
