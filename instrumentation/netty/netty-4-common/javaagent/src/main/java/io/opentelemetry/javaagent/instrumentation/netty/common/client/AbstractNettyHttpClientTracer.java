@@ -14,7 +14,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
