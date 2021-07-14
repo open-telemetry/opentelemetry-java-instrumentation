@@ -14,6 +14,7 @@ import okhttp3.Callback
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -28,6 +29,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   def client = configureClient(
     new OkHttpClient.Builder()
       .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .protocols(Arrays.asList(Protocol.HTTP_1_1))
       .retryOnConnectionFailure(false))
     .build()
 
