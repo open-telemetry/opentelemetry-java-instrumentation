@@ -8,6 +8,8 @@ group = "io.opentelemetry.instrumentation"
 val versions: Map<String, String> by project
 
 dependencies {
+  implementation(project(":instrumentation-api-annotation-support"))
+
   implementation("org.springframework.boot:spring-boot-autoconfigure:${versions["org.springframework.boot"]}")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:${versions["org.springframework.boot"]}")
   implementation("javax.validation:validation-api:2.0.1.Final")
@@ -49,4 +51,9 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation("io.grpc:grpc-api:1.30.2")
   testImplementation("io.grpc:grpc-netty-shaded:1.30.2")
+  testImplementation(project(":instrumentation-api-annotation-support"))
+}
+
+tasks.compileTestJava {
+  options.compilerArgs.add("-parameters")
 }

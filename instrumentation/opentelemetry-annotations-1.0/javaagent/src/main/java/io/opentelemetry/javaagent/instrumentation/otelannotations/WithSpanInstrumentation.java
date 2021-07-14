@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.SpanKind;
@@ -40,12 +42,18 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       "otel.instrumentation.opentelemetry-annotations.exclude-methods";
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
+  private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   WithSpanInstrumentation() {
     annotatedMethodMatcher =
         isAnnotatedWith(named("application.io.opentelemetry.extension.annotations.WithSpan"));
+    annotatedParametersMatcher =
+        hasParameters(
+            whereAny(
+                isAnnotatedWith(
+                    named("application.io.opentelemetry.extension.annotations.SpanAttribute"))));
     excludedMethodsMatcher = configureExcludedMethods();
   }
 
@@ -56,9 +64,23 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    ElementMatcher.Junction<MethodDescription> tracedMethods =
+        annotatedMethodMatcher.and(not(excludedMethodsMatcher));
+
+    ElementMatcher.Junction<MethodDescription> tracedMethodsWithParameters =
+        tracedMethods.and(annotatedParametersMatcher);
+    ElementMatcher.Junction<MethodDescription> tracedMethodsWithoutParameters =
+        tracedMethods.and(not(annotatedParametersMatcher));
+
     transformer.applyAdviceToMethod(
-        annotatedMethodMatcher.and(not(excludedMethodsMatcher)),
+        tracedMethodsWithoutParameters,
         WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
+
+    // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
+    // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
+    transformer.applyAdviceToMethod(
+        tracedMethodsWithParameters,
+        WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
   }
 
   /*
@@ -102,7 +124,48 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
       // don't create a nested span if you're not supposed to.
       if (tracer().shouldStartSpan(current, kind)) {
-        context = tracer().startSpan(current, applicationAnnotation, method, kind);
+        context = tracer().startSpan(current, applicationAnnotation, method, kind, null);
+        scope = context.makeCurrent();
+      }
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Origin Method method,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
+        @Advice.Thrown Throwable throwable) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+
+      if (throwable != null) {
+        tracer().endExceptionally(context, throwable);
+      } else {
+        returnValue = tracer().end(context, method.getReturnType(), returnValue);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class WithSpanAttributesAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Origin Method method,
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
+
+      SpanKind kind = tracer().extractSpanKind(applicationAnnotation);
+      Context current = Java8BytecodeBridge.currentContext();
+
+      // don't create a nested span if you're not supposed to.
+      if (tracer().shouldStartSpan(current, kind)) {
+        context = tracer().startSpan(current, applicationAnnotation, method, kind, args);
         scope = context.makeCurrent();
       }
     }

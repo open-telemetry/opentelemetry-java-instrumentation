@@ -12,6 +12,7 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk")
 
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-annotation-support"))
   implementation(project(":javaagent-instrumentation-api"))
 
   implementation("org.slf4j:slf4j-api")
