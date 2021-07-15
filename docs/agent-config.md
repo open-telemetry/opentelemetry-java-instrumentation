@@ -10,6 +10,7 @@ Please report any bugs or unexpected behavior you find.
 ## Contents
 
 * [SDK Autoconfiguration](#sdk-autoconfiguration)
+* [Supplying configuration properties](#supplying-configuration-properties)
 * [Peer service name](#peer-service-name)
 * [DB statement sanitization](#db-statement-sanitization)
 * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
@@ -34,6 +35,24 @@ Here are some quick links into those docs for the configuration options for spec
 * [Sampler](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#sampler)
 * [Span limits](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#span-limits)
 * [Using SPI to further configure the SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#customizing-the-opentelemetry-sdk)
+
+## Supplying configuration properties
+
+Configuration properties can be supplied with one or more of the following ways (priority from highest to lowest):
+* system properties
+* environment variables
+* configuration file
+* SPI
+* hard-coded defaults
+
+### File configuration
+
+You can provide a path to agent configuration file by setting the corresponding property.
+
+| System property                      | Environment variable                 | Description                                                                      |
+|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
+| `otel.javaagent.configuration-file` | `OTEL_JAVAAGENT_CONFIGURATION_FILE` | Path to configuration file which contains a line-oriented list of properties formatted like `property1=value1` or `property2:value2`|
+
 
 ## Peer service name
 
