@@ -1,16 +1,18 @@
+import java.time.Duration
+
 plugins {
   `kotlin-dsl`
   `maven-publish`
 
   id("com.gradle.plugin-publish")
+  id("io.github.gradle-nexus.publish-plugin")
 }
 
-group = "io.opentelemetry.instrumentation.gradle"
+group = "io.opentelemetry.javaagent"
 version = "0.1.0"
 
 repositories {
   mavenCentral()
-  mavenLocal()
 }
 
 dependencies {
@@ -24,4 +26,18 @@ pluginBundle {
   website = "https://opentelemetry.io"
   vcsUrl = "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
   tags = listOf("opentelemetry", "instrumentation")
+}
+
+nexusPublishing {
+  packageGroup.set("io.opentelemetry")
+
+  repositories {
+    sonatype {
+      username.set(System.getenv("SONATYPE_USER"))
+      password.set(System.getenv("SONATYPE_KEY"))
+    }
+  }
+
+  connectTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(5))
 }
