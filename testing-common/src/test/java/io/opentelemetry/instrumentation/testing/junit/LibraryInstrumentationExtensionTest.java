@@ -15,6 +15,12 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LibraryInstrumentationExtensionTest {
+
+  static {
+    // TODO: remove once test depedency on javaagent-tooling is removed
+    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+  }
+
   @RegisterExtension
   static final LibraryInstrumentationExtension instrumentation =
       LibraryInstrumentationExtension.create();

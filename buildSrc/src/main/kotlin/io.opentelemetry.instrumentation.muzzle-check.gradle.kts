@@ -172,7 +172,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     "muzzle-Assert${muzzleDirective}"
   } else {
     StringBuilder("muzzle-Assert").apply {
-      if (muzzleDirective.assertPass.isPresent) {
+      if (muzzleDirective.assertPass.get()) {
         append("Pass")
       } else {
         append("Fail")

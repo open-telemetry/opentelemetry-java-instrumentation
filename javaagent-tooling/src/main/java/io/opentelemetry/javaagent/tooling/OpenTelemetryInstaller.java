@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
@@ -23,6 +25,7 @@ public class OpenTelemetryInstaller implements AgentListener {
   private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   @Override
   public void beforeAgent(Config config) {
@@ -37,16 +40,24 @@ public class OpenTelemetryInstaller implements AgentListener {
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer(Config config) {
     if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+
       copySystemProperties(config);
 
-      OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
-      OpenTelemetrySdkAccess.internalSetForceFlush(
-          (timeout, unit) -> {
-            CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-            CompletableResultCode flushResult = IntervalMetricReader.forceFlushGlobal();
-            CompletableResultCode.ofAll(Arrays.asList(traceResult, flushResult))
-                .join(timeout, unit);
-          });
+      if (config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false)) {
+        GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
+      } else {
+        System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+
+        OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
+        OpenTelemetrySdkAccess.internalSetForceFlush(
+            (timeout, unit) -> {
+              CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+              CompletableResultCode flushResult = IntervalMetricReader.forceFlushGlobal();
+              CompletableResultCode.ofAll(Arrays.asList(traceResult, flushResult))
+                  .join(timeout, unit);
+            });
+      }
+
     } else {
       logger.info("Tracing is disabled.");
     }
