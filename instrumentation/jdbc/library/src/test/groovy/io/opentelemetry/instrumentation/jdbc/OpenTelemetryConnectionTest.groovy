@@ -12,7 +12,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 class OpenTelemetryConnectionTest extends InstrumentationSpecification implements LibraryTestTrait {
 
@@ -22,7 +21,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.createStatement()
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute(query)
     }
 
@@ -70,7 +69,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.prepareStatement(query)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute()
     }
 
@@ -121,7 +120,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.prepareCall(query)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute()
     }
 

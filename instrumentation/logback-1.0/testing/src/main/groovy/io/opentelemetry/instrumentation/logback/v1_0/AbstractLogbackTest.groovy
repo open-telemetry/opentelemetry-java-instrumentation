@@ -9,7 +9,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
@@ -60,14 +59,14 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   def "ids when span"() {
     when:
-    Span span1 = TraceUtils.runUnderTrace("test") {
+    Span span1 = runWithSpan("test") {
       logger.info("log message 1")
       Span.current()
     }
 
     logger.info("log message 2")
 
-    Span span2 = TraceUtils.runUnderTrace("test 2") {
+    Span span2 = runWithSpan("test 2") {
       logger.info("log message 3")
       Span.current()
     }

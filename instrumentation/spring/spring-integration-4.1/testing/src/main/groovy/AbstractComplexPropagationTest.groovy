@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import java.util.concurrent.BlockingQueue
@@ -59,7 +58,7 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
     receiveChannel.subscribe(messageHandler)
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       sendChannel.send(MessageBuilder.withPayload("test")
         .setHeader("theAnswer", "42")
         .build())

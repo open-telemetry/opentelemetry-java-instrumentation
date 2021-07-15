@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
@@ -77,7 +76,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
 
   @Override
   MongoCollection<Document> setupInsert(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
@@ -94,7 +93,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
 
   @Override
   MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       def coll = db.getCollection(collectionName)
@@ -116,7 +115,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
 
   @Override
   MongoCollection<Document> setupDelete(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       def coll = db.getCollection(collectionName)
@@ -136,7 +135,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
 
   @Override
   MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def coll = db.getCollection(collectionName)
       coll.insertMany([new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)])
@@ -154,7 +153,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
 
   @Override
   void error(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       return db.getCollection(collectionName)

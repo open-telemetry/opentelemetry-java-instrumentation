@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -58,7 +57,7 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel.subscribe(messageHandler)
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       channel.send(MessageBuilder.withPayload("test")
         .build())
     }
@@ -104,7 +103,7 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel2.subscribe(messageHandler)
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       channel1.send(MessageBuilder.withPayload("test")
         .build())
     }

@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
@@ -19,7 +18,7 @@ class ViewRenderTest extends AgentInstrumentationSpecification {
     def outputStream = new ByteArrayOutputStream()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       renderer.render(view, Locale.ENGLISH, outputStream)
     }
 

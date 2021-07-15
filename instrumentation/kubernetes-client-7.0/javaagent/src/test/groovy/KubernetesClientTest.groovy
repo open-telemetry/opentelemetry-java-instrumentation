@@ -7,7 +7,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.kubernetes.client.openapi.ApiCallback
@@ -55,7 +54,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "42"))
 
     when:
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       api.connectGetNamespacedPodProxy("name", "namespace", "path")
     }
 
@@ -76,7 +75,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
     server.enqueue(HttpResponse.of(HttpStatus.valueOf(451), MediaType.PLAIN_TEXT_UTF_8, "42"))
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       api.connectGetNamespacedPodProxy("name", "namespace", "path")
     }
 
@@ -100,7 +99,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
     def responseBody = new AtomicReference<String>()
     def latch = new CountDownLatch(1)
 
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       api.connectGetNamespacedPodProxyAsync("name", "namespace", "path", new ApiCallbackTemplate() {
         @Override
         void onSuccess(String result, int statusCode, Map<String, List<String>> responseHeaders) {
@@ -133,7 +132,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
     def exception = new AtomicReference<Exception>()
     def latch = new CountDownLatch(1)
 
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       api.connectGetNamespacedPodProxyAsync("name", "namespace", "path", new ApiCallbackTemplate() {
         @Override
         void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {

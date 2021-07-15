@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.couchbase.client.java.AsyncCluster
 import com.couchbase.client.java.CouchbaseAsyncCluster
@@ -58,7 +57,7 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     def inserted = new BlockingVariable<JsonDocument>(TIMEOUT)
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       // Connect to the bucket and open it
       cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
         bkt.upsert(JsonDocument.create("helloworld", content)).subscribe({ result -> inserted.set(result) })
@@ -96,7 +95,7 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     def found = new BlockingVariable<JsonDocument>(TIMEOUT)
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
         bkt.upsert(JsonDocument.create("helloworld", content))
           .subscribe({ result ->
@@ -145,7 +144,7 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     when:
     // Mock expects this specific query.
     // See com.couchbase.mock.http.query.QueryServer.handleString.
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).subscribe({
         bkt ->
           bkt.query(N1qlQuery.simple("SELECT mockrow"))

@@ -6,7 +6,6 @@
 package springdata
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
@@ -115,7 +114,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def result
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       result = FIND(repo, "1")
     }
@@ -141,7 +140,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def doc = new Doc()
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       doc.data = "other data"
       repo.save(doc)
@@ -169,7 +168,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def result
 
     when: // DELETE
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       repo.delete("1")
       result = repo.findAll().iterator().hasNext()

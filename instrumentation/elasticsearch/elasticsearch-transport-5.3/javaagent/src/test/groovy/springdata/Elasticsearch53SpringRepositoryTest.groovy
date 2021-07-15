@@ -7,7 +7,6 @@ package springdata
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -60,7 +59,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
   def setup() {
     repo.refresh()
     clearExportedData()
-    runUnderTrace("delete") {
+    runWithSpan("delete") {
       repo.deleteAll()
     }
     ignoreTracesAndClear(1)

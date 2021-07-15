@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.rocketmq
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -118,7 +117,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and consume"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       producer.send(msg)
     }
 
@@ -174,7 +173,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     consumer.setConsumeMessageBatchMaxSize(2)
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       producer.send(msgs)
     }
 
