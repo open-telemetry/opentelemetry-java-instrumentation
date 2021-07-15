@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -28,7 +27,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
 
   def "test put and get"() {
     when:
-    def cacheValue = runUnderTrace("someTrace") {
+    def cacheValue = runWithSpan("someTrace") {
       region.clear()
       region.put(key, value)
       region.get(key)
@@ -48,7 +47,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
 
   def "test put and remove"() {
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       region.clear()
       region.put(key, value)
       region.remove(key)
@@ -68,7 +67,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
 
   def "test query"() {
     when:
-    def cacheValue = runUnderTrace("someTrace") {
+    def cacheValue = runWithSpan("someTrace") {
       region.clear()
       region.put(key, value)
       region.query("SELECT * FROM /test-region")
@@ -88,7 +87,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
 
   def "test existsValue"() {
     when:
-    def exists = runUnderTrace("someTrace") {
+    def exists = runWithSpan("someTrace") {
       region.clear()
       region.put(key, value)
       region.existsValue("SELECT * FROM /test-region")

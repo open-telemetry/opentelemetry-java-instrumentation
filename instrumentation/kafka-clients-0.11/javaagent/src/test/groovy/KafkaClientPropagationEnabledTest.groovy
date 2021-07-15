@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
@@ -66,12 +65,12 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     when:
     String greeting = "Hello Spring Kafka Sender!"
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       producer.send(new ProducerRecord(SHARED_TOPIC, greeting)) { meta, ex ->
         if (ex == null) {
-          runUnderTrace("producer callback") {}
+          runWithSpan("producer callback") {}
         } else {
-          runUnderTrace("producer exception: " + ex) {}
+          runWithSpan("producer exception: " + ex) {}
         }
       }
     }
@@ -156,11 +155,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     when:
     String greeting = "Hello Spring Kafka Sender!"
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       kafkaTemplate.send(SHARED_TOPIC, greeting).addCallback({
-        runUnderTrace("producer callback") {}
+        runWithSpan("producer callback") {}
       }, { ex ->
-        runUnderTrace("producer exception: " + ex) {}
+        runWithSpan("producer exception: " + ex) {}
       })
     }
 

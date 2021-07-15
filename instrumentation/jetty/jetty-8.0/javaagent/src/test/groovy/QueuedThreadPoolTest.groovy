@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -24,7 +23,7 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new JavaAsyncChild()
           // this child won't
@@ -61,7 +60,7 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           pool.dispatch(JavaLambdaMaker.lambda(child))
         }
       }

@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
@@ -114,7 +113,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
       "test-decr"   : "200",
       "test-incr"   : "100"
     ]
-    runUnderTrace("setup") {
+    runWithSpan("setup") {
       valuesToSet.each { k, v -> assert memcached.set(key(k), expiration, v).get() }
     }
     ignoreTracesAndClear(1)
@@ -122,7 +121,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test get hit"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert "get test" == memcached.get(key("test-get"))
     }
 
@@ -137,7 +136,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test get miss"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert null == memcached.get(key("test-get-key-that-doesn't-exist"))
     }
 
@@ -152,7 +151,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test get cancel"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       queueLock.lock()
       lockableMemcached.asyncGet(key("test-get")).cancel(true)
       queueLock.unlock()
@@ -170,7 +169,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
   def "test get timeout"() {
     when:
     /*
-     Not using runUnderTrace since timeouts happen in separate thread
+     Not using runWithSpan since timeouts happen in separate thread
      and direct executor doesn't help to make sure that parent span finishes last.
      Instead run without parent span to have only 1 span to test with.
       */
@@ -192,7 +191,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test bulk get"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       def expected = [(key("test-get")): "get test", (key("test-get-2")): "get test 2"]
       assert expected == memcached.getBulk(key("test-get"), key("test-get-2"))
     }
@@ -208,7 +207,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test set"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.set(key("test-set"), expiration, "bar").get()
     }
 
@@ -223,7 +222,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test set cancel"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       queueLock.lock()
       assert lockableMemcached.set(key("test-set-cancel"), expiration, "bar").cancel()
       queueLock.unlock()
@@ -240,7 +239,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test add"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.add(key("test-add"), expiration, "add bar").get()
       assert "add bar" == memcached.get(key("test-add"))
     }
@@ -257,7 +256,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test second add"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.add(key("test-add-2"), expiration, "add bar").get()
       assert !memcached.add(key("test-add-2"), expiration, "add bar 123").get()
     }
@@ -274,7 +273,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test delete"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.delete(key("test-delete")).get()
       assert null == memcached.get(key("test-delete"))
     }
@@ -291,7 +290,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test delete non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert !memcached.delete(key("test-delete-non-existent")).get()
     }
 
@@ -306,7 +305,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test replace"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.replace(key("test-replace"), expiration, "new value").get()
       assert "new value" == memcached.get(key("test-replace"))
     }
@@ -323,7 +322,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test replace non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert !memcached.replace(key("test-replace-non-existent"), expiration, "new value").get()
     }
 
@@ -338,7 +337,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test append"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       def cas = memcached.gets(key("test-append"))
       assert memcached.append(cas.cas, key("test-append"), " appended").get()
       assert "append test appended" == memcached.get(key("test-append"))
@@ -357,7 +356,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test prepend"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       def cas = memcached.gets(key("test-prepend"))
       assert memcached.prepend(cas.cas, key("test-prepend"), "prepended ").get()
       assert "prepended prepend test" == memcached.get(key("test-prepend"))
@@ -376,7 +375,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test cas"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       def cas = memcached.gets(key("test-cas"))
       assert CASResponse.OK == memcached.cas(key("test-cas"), cas.cas, expiration, "cas bar")
     }
@@ -393,7 +392,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test cas not found"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert CASResponse.NOT_FOUND == memcached.cas(key("test-cas-doesnt-exist"), 1234, expiration, "cas bar")
     }
 
@@ -408,7 +407,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test touch"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert memcached.touch(key("test-touch"), expiration).get()
     }
 
@@ -423,7 +422,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test touch non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert !memcached.touch(key("test-touch-non-existent"), expiration).get()
     }
 
@@ -438,7 +437,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test get and touch"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert "touch test" == memcached.getAndTouch(key("test-touch"), expiration).value
     }
 
@@ -453,7 +452,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test get and touch non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert null == memcached.getAndTouch(key("test-touch-non-existent"), expiration)
     }
 
@@ -468,7 +467,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test decr"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       /*
         Memcached is funny in the way it handles incr/decr operations:
         it needs values to be strings (with digits in them) and it returns actual long from decr/incr
@@ -489,7 +488,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test decr non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert -1 == memcached.decr(key("test-decr-non-existent"), 5)
     }
 
@@ -517,7 +516,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test incr"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       /*
         Memcached is funny in the way it handles incr/decr operations:
         it needs values to be strings (with digits in them) and it returns actual long from decr/incr
@@ -538,7 +537,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def "test incr non existent"() {
     when:
-    runUnderTrace(parentOperation) {
+    runWithSpan(parentOperation) {
       assert -1 == memcached.incr(key("test-incr-non-existent"), 5)
     }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.lettuce.core.RedisClient
@@ -258,7 +257,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
 
   def "blocking subscriber"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .block()
@@ -314,7 +313,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
 
   def "async subscriber"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .subscribe()

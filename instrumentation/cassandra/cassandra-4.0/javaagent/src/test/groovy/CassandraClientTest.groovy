@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
@@ -73,9 +72,9 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     setup:
     CqlSession session = getSession(keyspace)
 
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       session.executeAsync(statement).toCompletableFuture().whenComplete({ result, throwable ->
-        runUnderTrace("child") {}
+        runWithSpan("child") {}
       }).get()
     }
 

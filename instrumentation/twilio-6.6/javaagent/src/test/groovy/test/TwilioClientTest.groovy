@@ -7,7 +7,6 @@ package test
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.util.concurrent.ListenableFuture
@@ -120,7 +119,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes()), 200)
 
-    Message message = runUnderTrace("test") {
+    Message message = runWithSpan("test") {
       Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -160,7 +159,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes()), 200)
 
-    Call call = runUnderTrace("test") {
+    Call call = runWithSpan("test") {
       Call.creator(
         new PhoneNumber("+15558881234"),  // To number
         new PhoneNumber("+15559994321"),  // From number
@@ -226,7 +225,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         .httpClient(networkHttpClient)
         .build()
 
-    Message message = runUnderTrace("test") {
+    Message message = runWithSpan("test") {
       Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -307,7 +306,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         .httpClient(networkHttpClient)
         .build()
 
-    Message message = runUnderTrace("test") {
+    Message message = runWithSpan("test") {
       Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -387,7 +386,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         .httpClient(networkHttpClient)
         .build()
 
-    Message message = runUnderTrace("test") {
+    Message message = runWithSpan("test") {
       ListenableFuture<Message> future = Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -441,7 +440,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
     when:
-    runUnderTrace("test") {
+    runWithSpan("test") {
       Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -512,7 +511,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
 
     when:
 
-    Message message = runUnderTrace("test") {
+    Message message = runWithSpan("test") {
 
       ListenableFuture<Message> future = Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
@@ -572,7 +571,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
     when:
-    runUnderTrace("test") {
+    runWithSpan("test") {
       ListenableFuture<Message> future = Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number

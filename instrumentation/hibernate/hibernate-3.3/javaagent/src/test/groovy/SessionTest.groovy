@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
@@ -450,7 +449,7 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    runUnderTrace("overlapping Sessions") {
+    runWithSpan("overlapping Sessions") {
       def session1 = sessionFactory.openSession()
       session1.beginTransaction()
       def session2 = sessionFactory.openStatelessSession()
