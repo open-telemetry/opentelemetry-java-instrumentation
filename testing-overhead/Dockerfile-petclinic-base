@@ -11,25 +11,9 @@ WORKDIR /app/spring-petclinic-rest
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-
 FROM adoptopenjdk:11-jdk
-
-# Allow the test runner to ssh into our container to start and control
-# the application under test.
-
-RUN apt update && \
-    apt install -y openssh-server sudo && \
-    mkdir /run/sshd && \
-    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
-    sed -i 's/^#PermitUserEnvironment.*/PermitUserEnvironment yes/' /etc/ssh/sshd_config && \
-    sed -i 's/^#PermitEmptyPasswords.*/PermitEmptyPasswords yes/' /etc/ssh/sshd_config && \
-    sed -i 's/secure_path="/secure_path="\/opt\/java\/openjdk\/bin:/' /etc/sudoers && \
-    sed -i 's/PATH="/PATH="\/opt\/java\/openjdk\/bin:/' /etc/environment && \
-    useradd -m -d /app -s /bin/bash -u 5001 remote && \
-    passwd -d remote && \
-    mkdir -p /app/.ssh && chmod 700 /app/.ssh && \
-    ln -s /etc/environment /app/.ssh/environment && \
-    echo "%remote ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
+EXPOSE 9966
+CMD ["java", "-jar", "spring-petclinic-rest.jar"]
