@@ -13,7 +13,7 @@ val disableErrorProne = gradle.startParameter.projectProperties.get("disableErro
 tasks {
   withType<JavaCompile>().configureEach {
     options.errorprone {
-      enabled = !disableErrorProne
+      isEnabled.set(!disableErrorProne)
 
       disableWarningsInGeneratedCode.set(true)
       allDisabledChecksAsWarnings.set(true)
