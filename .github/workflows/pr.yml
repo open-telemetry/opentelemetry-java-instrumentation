@@ -137,7 +137,7 @@ jobs:
       # Workaround https://github.com/burrunan/gradle-cache-action/issues/46
       - name: Set dependencies cache key
         shell: bash
-        run: mkdir -p .gradle && echo "smoke-tests" > .gradle/gradle-dependencies-key | echo .gradle/gradle-dependencies-key
+        run: mkdir -p .gradle && echo "smoke-tests" > .gradle/gradle-dependencies-key | cat .gradle/gradle-dependencies-key
 
       - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.10
