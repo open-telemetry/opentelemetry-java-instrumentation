@@ -49,6 +49,7 @@ tasks {
       //These classes are added to bootstrap classloader by javaagent module
       exclude(project(":javaagent-bootstrap"))
       exclude(project(":instrumentation-api"))
+      exclude(project(":instrumentation-api-annotation-support"))
       exclude(project(":javaagent-instrumentation-api"))
     }
   }
