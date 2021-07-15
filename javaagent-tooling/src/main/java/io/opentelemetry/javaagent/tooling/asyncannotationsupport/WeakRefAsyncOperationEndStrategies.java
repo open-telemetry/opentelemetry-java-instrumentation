@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.asyncannotationsupport;
 
-import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncOperationEndStrategy;
-import io.opentelemetry.instrumentation.api.asyncannotationsupport.Jdk8AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.Jdk8AsyncOperationEndStrategy;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.ListIterator;
