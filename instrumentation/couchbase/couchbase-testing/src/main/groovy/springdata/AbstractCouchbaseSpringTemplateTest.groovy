@@ -5,7 +5,7 @@
 
 package springdata
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.couchbase.client.java.Bucket
@@ -13,6 +13,7 @@ import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.env.CouchbaseEnvironment
+import io.opentelemetry.api.trace.SpanKind
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Retry
 import spock.lang.Shared
@@ -79,7 +80,11 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
         assertCouchbaseCall(it, 2, "Bucket.get", name, span(0))
       }
@@ -104,7 +109,11 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
         assertCouchbaseCall(it, 2, "Bucket.remove", name, span(0))
       }

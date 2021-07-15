@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -28,6 +27,7 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
@@ -174,7 +174,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     // the complex sequence of events
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -189,12 +193,20 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     assertTraces(2) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
       trace(1, 3) {
-        basicSpan(it, 0, "parent2")
+        span(0) {
+          name "parent2"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -291,7 +303,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     responseCode == 200
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           childOf span(0)
           name "tracedMethod"

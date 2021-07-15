@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.couchbase.client.java.Bucket
@@ -13,6 +12,7 @@ import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
+import io.opentelemetry.api.trace.SpanKind
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
@@ -68,7 +68,11 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(0))
         assertCouchbaseCall(it, 2, "Bucket.get", bucketSettings.name(), span(0))
       }

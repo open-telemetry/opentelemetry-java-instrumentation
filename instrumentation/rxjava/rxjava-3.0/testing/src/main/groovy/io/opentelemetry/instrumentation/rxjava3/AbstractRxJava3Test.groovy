@@ -5,7 +5,15 @@
 
 package io.opentelemetry.instrumentation.rxjava3
 
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
+import static java.util.concurrent.TimeUnit.MILLISECONDS
+
+import com.google.common.collect.Lists
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
@@ -15,14 +23,6 @@ import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.internal.operators.flowable.FlowablePublish
 import io.reactivex.rxjava3.internal.operators.observable.ObservablePublish
 import io.reactivex.rxjava3.schedulers.Schedulers
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
-import static java.util.concurrent.TimeUnit.MILLISECONDS
-
-import com.google.common.collect.Lists
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
@@ -77,7 +77,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
       sortSpansByStartTime()
       trace(0, workSpans + 1) {
 
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         for (int i = 1; i < workSpans + 1; ++i) {
           basicSpan(it, i, "addOne", span(0))
         }
@@ -134,7 +138,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
         // impact the spans on reactor integrations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
       }
     }
 
@@ -162,7 +170,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
         // impact the spans on reactor integrations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         for (int i = 1; i < workSpans + 1; i++) {
           basicSpan(it, i, "addOne", span(0))
@@ -187,7 +199,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
       }
     }
 
@@ -207,7 +223,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, workSpans + 1) {
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         for (int i = 1; i < workSpans + 1; i++) {
           basicSpan(it, i, "addOne", span(0))
@@ -239,7 +259,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         sortSpansByStartTime()
-        basicSpan(it, 0, "trace-parent")
+        span(0) {
+          name "trace-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "addOne", span(0))
         basicSpan(it, 2, "addTwo", span(0))
       }
@@ -272,7 +296,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2 + 2 * workItems) {
         sortSpansByStartTime()
-        basicSpan(it, 0, "publisher-parent")
+        span(0) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "intermediate", span(0))
 
         for (int i = 2; i < 2 + 2 * workItems; i = i + 2) {
@@ -308,7 +336,11 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     values.size() == 4
     assertTraces(1) {
       trace(0, 5) {
-        basicSpan(it, 0, "flowable root")
+        span(0) {
+          name "flowable root"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         for (int i = 1; i < values.size() + 1; i++) {
           basicSpan(it, i, "addOne", span(0))
         }

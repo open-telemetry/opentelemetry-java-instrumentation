@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.test.base
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 // TODO: add a test for a longer chain of promises
@@ -43,7 +44,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     get(promise) == value
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "other", it.span(0))
         basicSpan(it, 2, "callback", it.span(0))
       }
@@ -74,11 +79,19 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     get(promise) == value
     assertTraces(2) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "callback", span(0))
       }
       trace(1, 1) {
-        basicSpan(it, 0, "other")
+        span(0) {
+          name "other"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
       }
     }
 
@@ -106,7 +119,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     get(promise) == value
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "callback", it.span(0))
       }
     }
@@ -135,7 +152,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     assertTraces(1) {
       trace(0, 2) {
         // TODO: is this really the behavior we want?
-        basicSpan(it, 0, "other")
+        span(0) {
+          name "other"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "callback", it.span(0))
       }
     }

@@ -23,6 +23,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -350,7 +351,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     responseCode == 200
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method)
         serverSpan(it, 2, span(1))
       }
@@ -410,7 +415,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     // only one trace (client).
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method)
         serverSpan(it, 2, span(1))
         basicSpan(it, 3, "child", span(0))
@@ -441,7 +450,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         serverSpan(it, 1, span(0))
       }
       trace(1, 1) {
-        basicSpan(it, 0, "callback")
+        span(0) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
       }
     }
 
@@ -669,7 +682,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
         basicSpan(it, 2, "callback", span(0))
       }
