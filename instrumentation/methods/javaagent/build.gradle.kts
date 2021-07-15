@@ -10,6 +10,7 @@ muzzle {
 
 dependencies {
   compileOnly(project(":javaagent-tooling"))
+  compileOnly(project(":instrumentation-api-annotation-support"))
 }
 
 tasks.withType<Test>().configureEach {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava;
 
-import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy;

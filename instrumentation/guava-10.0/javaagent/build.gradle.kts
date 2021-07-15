@@ -18,6 +18,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   library("com.google.guava:guava:10.0")
+  compileOnly(project(":instrumentation-api-annotation-support"))
 
   implementation(project(":instrumentation:guava-10.0:library"))
 
