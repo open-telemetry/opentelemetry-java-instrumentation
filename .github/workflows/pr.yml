@@ -134,10 +134,16 @@ jobs:
           distribution: adopt
           java-version: 11
 
+      # Workaround https://github.com/burrunan/gradle-cache-action/issues/46
+      - name: Set dependencies cache key
+        run: echo "smoke-tests" > /tmp/gradle-dependencies-key
+
       - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: smokeTests
+          gradle-dependencies-cache-key: |
+            /tmp/gradle-dependencies-key
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
