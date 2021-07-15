@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import java.util.Map;
+
+import io.opentelemetry.context.propagation.TextMapGetter;
 
 public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>> {
 
@@ -20,7 +21,11 @@ public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>>
 
   @Override
   public String get(Map<String, Object> carrier, String key) {
-    Object obj = carrier != null? carrier.get(key) : null;
-    return obj == null ? null : obj.toString();
+    if (carrier != null) {
+      Object obj = carrier.get(key);
+      return obj == null ? null : obj.toString();
+    } else {
+      return null;
+    }
   }
 }
