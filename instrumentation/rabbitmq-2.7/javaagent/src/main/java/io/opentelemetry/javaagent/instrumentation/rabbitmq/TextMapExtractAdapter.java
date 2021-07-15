@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import java.util.Collections;
 import java.util.Map;
 
 public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>> {
@@ -14,12 +15,12 @@ public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>>
 
   @Override
   public Iterable<String> keys(Map<String, Object> carrier) {
-    return carrier.keySet();
+    return carrier != null ? carrier.keySet() : Collections.emptyList();
   }
 
   @Override
   public String get(Map<String, Object> carrier, String key) {
-    Object obj = carrier.get(key);
+    Object obj = carrier != null? carrier.get(key) : null;
     return obj == null ? null : obj.toString();
   }
 }
