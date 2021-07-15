@@ -10,7 +10,7 @@ Please report any bugs or unexpected behavior you find.
 ## Contents
 
 * [SDK Autoconfiguration](#sdk-autoconfiguration)
-* [Supplying configuration properties](#supplying-configuration-properties)
+* [Configuring the agent](#configuring-the-agent)
 * [Peer service name](#peer-service-name)
 * [DB statement sanitization](#db-statement-sanitization)
 * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
@@ -36,22 +36,21 @@ Here are some quick links into those docs for the configuration options for spec
 * [Span limits](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#span-limits)
 * [Using SPI to further configure the SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#customizing-the-opentelemetry-sdk)
 
-## Supplying configuration properties
+## Configuring the agent
 
-Configuration properties can be supplied with one or more of the following ways (priority from highest to lowest):
+The agent can consume configuration from one or more of the following sources (ordered from highest to lowest priority):
 * system properties
 * environment variables
-* configuration file
-* SPI
-* hard-coded defaults
+* the [configuration file](#configuration-file)
+* the [`ConfigPropertySource`](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/extension/config/ConfigPropertySource.java) SPI
 
-### File configuration
+### Configuration file
 
 You can provide a path to agent configuration file by setting the corresponding property.
 
 | System property                      | Environment variable                 | Description                                                                      |
 |--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
-| `otel.javaagent.configuration-file` | `OTEL_JAVAAGENT_CONFIGURATION_FILE` | Path to configuration file which contains a line-oriented list of properties formatted like `property1=value1` or `property2:value2`|
+| `otel.javaagent.configuration-file` | `OTEL_JAVAAGENT_CONFIGURATION_FILE` | Path to valid Java properties file which contains the javaagent configuration.|
 
 
 ## Peer service name
