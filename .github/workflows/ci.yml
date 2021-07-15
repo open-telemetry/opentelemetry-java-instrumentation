@@ -171,11 +171,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
-
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
         with:
