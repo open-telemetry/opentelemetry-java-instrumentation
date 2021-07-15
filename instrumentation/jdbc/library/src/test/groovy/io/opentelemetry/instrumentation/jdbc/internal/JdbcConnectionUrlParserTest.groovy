@@ -52,6 +52,7 @@ class JdbcConnectionUrlParserTest extends Specification {
     info.port == expected.port
     info.user == expected.user
     info.name == expected.name
+    info.db == expected.db
 
     info == expected
 
