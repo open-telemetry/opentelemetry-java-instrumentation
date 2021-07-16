@@ -9,11 +9,14 @@ Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 0.17.0`
+Replace `OPENTELEMETRY_VERSION` with the latest
+stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
+`Minimum version: 1.4.0`
 
 For Maven add to your `pom.xml`:
+
 ```xml
+
 <dependencies>
   <!-- opentelemetry -->
   <dependency>
@@ -22,8 +25,8 @@ For Maven add to your `pom.xml`:
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-   <!-- provides opentelemetry-sdk -->
-   <dependency>
+  <!-- provides opentelemetry-sdk -->
+  <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporters-logging</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
@@ -41,6 +44,7 @@ For Maven add to your `pom.xml`:
 ```
 
 For Gradle add to your dependencies:
+
 ```groovy
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-web-3.1:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
@@ -51,16 +55,17 @@ implementation("org.springframework:spring-web:SPRING_VERSION")
 
 ### Features
 
-#### RestTemplateInterceptor
+#### Telemetry-producing `ClientHttpRequestInterceptor` implementation
 
-RestTemplateInterceptor adds OpenTelemetry client spans to requests sent using RestTemplate by implementing the [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html)
-interface. An example is shown below:
+`SpringWebTracing` allows creating a
+custom [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html)
+that produces telemetry for HTTP requests sens using a `RestTemplate`. Example:
 
 ##### Usage
 
 ```java
 
-import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
+import io.opentelemetry.instrumentation.spring.web.SpringWebTracing;
 import io.opentelemetry.api.OpenTelemetry;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,18 +77,20 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class RestTemplateConfig {
 
-   @Bean
-   public RestTemplate restTemplate(OpenTelemetry openTelemetry) {
+  @Bean
+  public RestTemplate restTemplate(OpenTelemetry openTelemetry) {
 
-      RestTemplate restTemplate = new RestTemplate();
-      RestTemplateInterceptor restTemplateInterceptor = new RestTemplateInterceptor(openTelemetry);
-      restTemplate.getInterceptors().add(restTemplateInterceptor);
+    RestTemplate restTemplate = new RestTemplate();
+    SpringWebTracing springWebTracing = SpringWebTracing.create(openTelemetry);
+    restTemplate.getInterceptors().add(springWebTracing.newInterceptor());
 
-      return restTemplate;
-   }
+    return restTemplate;
+  }
 }
 ```
 
 ### Starter Guide
 
-Check out the opentelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the
+OpenTelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md)
+to learn more about OpenTelemetry instrumentation.

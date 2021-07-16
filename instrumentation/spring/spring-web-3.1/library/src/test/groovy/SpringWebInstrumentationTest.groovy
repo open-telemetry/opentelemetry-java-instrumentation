@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.instrumentation.spring.web.SpringWebTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -13,14 +15,14 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class RestTemplateInstrumentationTest extends HttpClientTest<HttpEntity<String>> implements LibraryTestTrait {
+class SpringWebInstrumentationTest extends HttpClientTest<HttpEntity<String>> implements LibraryTestTrait {
   @Shared
   RestTemplate restTemplate
 
   def setupSpec() {
     if (restTemplate == null) {
       restTemplate = new RestTemplate()
-      restTemplate.getInterceptors().add(new RestTemplateInterceptor(getOpenTelemetry()))
+      restTemplate.getInterceptors().add(SpringWebTracing.create(getOpenTelemetry()).newInterceptor())
     }
   }
 
@@ -64,5 +66,13 @@ class RestTemplateInstrumentationTest extends HttpClientTest<HttpEntity<String>>
   @Override
   boolean testWithClientParent() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    attributes.add(SemanticAttributes.HTTP_SCHEME)
+    attributes
   }
 }
