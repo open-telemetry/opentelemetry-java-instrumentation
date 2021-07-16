@@ -16,6 +16,8 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+
   compileOnly("javax.ws.rs:jsr311-api:1.1.1")
 
   testImplementation("io.dropwizard:dropwizard-testing:0.7.1")

@@ -8,6 +8,10 @@ muzzle {
   }
 }
 
+dependencies {
+  compileOnly(project(":instrumentation:rmi:bootstrap"))
+}
+
 tasks {
   val rmic by registering(Exec::class) {
     dependsOn(testClasses)

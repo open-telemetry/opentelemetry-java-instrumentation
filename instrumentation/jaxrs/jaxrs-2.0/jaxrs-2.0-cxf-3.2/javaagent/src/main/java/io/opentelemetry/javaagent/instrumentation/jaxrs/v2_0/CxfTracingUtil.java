@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.instrumentation.api.jaxrs.JaxrsContextPath;
+import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
 import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;

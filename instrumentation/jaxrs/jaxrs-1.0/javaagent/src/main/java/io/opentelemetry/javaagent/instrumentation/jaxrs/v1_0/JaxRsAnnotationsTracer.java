@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
+import io.opentelemetry.javaagent.bootstrap.jaxrs.ClassHierarchyIterable;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
