@@ -103,23 +103,23 @@ abstract class InstrumentationSpecification extends Specification {
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.
    */
-  def runWithSpan(String spanName, Closure callback) {
-    return testRunner().runWithSpan(spanName, (ThrowingSupplier) callback)
+  def <T> T runWithSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithSpan(spanName, (ThrowingSupplier) callback)
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  def runWithClientSpan(String spanName, Closure callback) {
-    return testRunner().runWithClientSpan(spanName, (ThrowingSupplier) callback)
+  def <T> T runWithClientSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithClientSpan(spanName, (ThrowingSupplier) callback)
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  def runWithServerSpan(String spanName, Closure callback) {
-    return testRunner().runWithServerSpan(spanName, (ThrowingSupplier) callback)
+  def <T> T runWithServerSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithServerSpan(spanName, (ThrowingSupplier) callback)
   }
 }

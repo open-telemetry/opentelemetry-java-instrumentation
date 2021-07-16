@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -16,6 +19,8 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -73,6 +78,25 @@ public abstract class InstrumentationExtension
   /** Return a list of all captured metrics. */
   public List<MetricData> metrics() {
     return testRunner.getExportedMetrics();
+  }
+
+  /**
+   * Waits for the assertion applied to all metrics of the given instrumentation and metric name to
+   * pass.
+   */
+  public void waitAndAssertMetrics(
+      String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
+    await()
+        .untilAsserted(
+            () ->
+                assertion.accept(
+                    assertThat(metrics())
+                        .filteredOn(
+                            data ->
+                                data.getInstrumentationLibraryInfo()
+                                        .getName()
+                                        .equals(instrumentationName)
+                                    && data.getName().equals(metricName))));
   }
 
   /**

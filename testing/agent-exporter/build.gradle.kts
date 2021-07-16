@@ -31,7 +31,7 @@ dependencies {
   implementation(project(":instrumentation:internal:internal-proxy:javaagent"))
   implementation(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
-  // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
+  // Many tests use OpenTelemetry API calls, e.g., via ServerTraceUtils.runUnderServerTrace
   implementation(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
   // TODO (trask) is full OTel API interop needed, or is @WithSpan enough?
   implementation(project(":instrumentation:opentelemetry-api-1.0:javaagent"))

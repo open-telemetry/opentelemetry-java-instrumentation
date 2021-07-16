@@ -7,7 +7,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -65,7 +64,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     def channel = connection.createChannel()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       applicationContext.getBean(AmqpTemplate)
         .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
     }

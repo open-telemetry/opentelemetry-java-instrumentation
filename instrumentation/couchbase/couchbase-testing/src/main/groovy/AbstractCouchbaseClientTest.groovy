@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
@@ -54,7 +52,7 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
     def inserted
     def found
 
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       inserted = bkt.upsert(JsonDocument.create("helloworld", content))
       found = bkt.get("helloworld")
     }

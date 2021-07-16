@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.persistence.EntityManager
@@ -31,7 +30,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     def entity = prepopulated.get(0)
     if (attach) {
-      entity = runUnderTrace("setup") {
+      entity = runWithSpan("setup") {
         entityManager.merge(prepopulated.get(0))
       }
       ignoreTracesAndClear(1)

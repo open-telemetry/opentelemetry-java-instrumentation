@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.test.base
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -29,13 +28,13 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     def promise = newPromise()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def mapped = map(promise) { "$it" }
       onComplete(mapped) {
         assert it == "$value"
-        runUnderTrace("callback") {}
+        runWithSpan("callback") {}
       }
-      runUnderTrace("other") {
+      runWithSpan("other") {
         complete(promise, value)
       }
     }
@@ -63,15 +62,15 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     def promise = newPromise()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def mapped = map(promise) { "$it" }
       onComplete(mapped) {
         assert it == "$value"
-        runUnderTrace("callback") {}
+        runWithSpan("callback") {}
       }
     }
 
-    runUnderTrace("other") {
+    runWithSpan("other") {
       complete(promise, value)
     }
 
@@ -104,11 +103,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     final promise = newPromise()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def mapped = map(promise) { "$it" }
       onComplete(mapped) {
         assert it == "$value"
-        runUnderTrace("callback") {}
+        runWithSpan("callback") {}
       }
       Thread.start {
         complete(promise, value)
@@ -140,10 +139,10 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
     def mapped = map(promise) { "$it" }
     onComplete(mapped) {
       assert it == "$value"
-      runUnderTrace("callback") {}
+      runWithSpan("callback") {}
     }
 
-    runUnderTrace("other") {
+    runWithSpan("other") {
       complete(promise, value)
     }
 

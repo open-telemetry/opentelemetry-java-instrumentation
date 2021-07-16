@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
@@ -110,7 +109,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
     count.times { index ->
       def job = {
         latch.await()
-        runUnderTrace("client " + index) {
+        runWithSpan("client " + index) {
           HttpRequestBuilder builder = HttpRequest.builder()
             .get("${baseUrl}?${TEST_REQUEST_ID_PARAMETER}=${index}")
           Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index)

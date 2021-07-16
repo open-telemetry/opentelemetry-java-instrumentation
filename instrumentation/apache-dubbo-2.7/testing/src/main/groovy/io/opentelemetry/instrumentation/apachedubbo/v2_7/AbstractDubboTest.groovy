@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
@@ -80,7 +80,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
     def o = new Object[1]
     o[0] = "hello"
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       genericService.$invoke("hello", [String.getName()] as String[], o)
     }
 
@@ -151,7 +151,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
     def o = new Object[1]
     o[0] = "hello"
-    def responseAsync = runUnderTrace("parent") {
+    def responseAsync = runWithSpan("parent") {
       genericService.$invokeAsync("hello", [String.getName()] as String[], o)
     }
 

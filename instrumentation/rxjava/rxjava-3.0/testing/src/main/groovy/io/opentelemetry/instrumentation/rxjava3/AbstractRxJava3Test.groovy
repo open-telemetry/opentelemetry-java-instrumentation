@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rxjava3
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -27,7 +26,6 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
 import spock.lang.Unroll
-
 /**
  * <p>Tests in this class may seem not exhaustive due to the fact that some classes are converted
  * into others, ie. {@link Completable#toMaybe()}. Fortunately, RxJava3 uses helper classes like
@@ -54,14 +52,14 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     throw new IllegalStateException(EXCEPTION_MESSAGE)
   }
 
-  static addOneFunc(int i) {
-    runUnderTrace("addOne") {
+  def addOneFunc(int i) {
+    runWithSpan("addOne") {
       return i + 1
     }
   }
 
-  static addTwoFunc(int i) {
-    runUnderTrace("addTwo") {
+  def addTwoFunc(int i) {
+    runWithSpan("addTwo") {
       return i + 2
     }
   }
@@ -251,7 +249,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
       .map(addOne)
       .map(addTwo)
 
-    runUnderTrace("trace-parent") {
+    runWithSpan("trace-parent") {
       maybe.blockingGet()
     }
 
@@ -276,7 +274,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
       def publisher = publisherSupplier()
 
-      runUnderTrace("intermediate") {
+      runWithSpan("intermediate") {
         if (publisher instanceof Maybe) {
           return ((Maybe) publisher).map(addTwo)
         } else if (publisher instanceof Flowable) {
@@ -320,7 +318,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
 
   def "Flowables produce the right number of results '#scheduler'"() {
     when:
-    List<String> values = runUnderTrace("flowable root") {
+    List<String> values = runWithSpan("flowable root") {
       Flowable.fromIterable([1, 2, 3, 4])
         .parallel()
         .runOn(scheduler)
@@ -357,7 +355,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
     Set<Long> remainingIterations = new HashSet<>((0L..(iterations - 1)).toList())
 
     when:
-    RxJava3ConcurrencyTestHelper.launchAndWait(scheduler, iterations, 60000)
+    RxJava3ConcurrencyTestHelper.launchAndWait(scheduler, iterations, 60000, testRunner())
 
     then:
     assertTraces(iterations) {

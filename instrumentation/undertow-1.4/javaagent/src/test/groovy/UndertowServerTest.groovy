@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -60,7 +59,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         }
         .addExactPath("sendResponse") { exchange ->
           Span.current().addEvent("before-event")
-          runUnderTrace("sendResponse") {
+          runWithSpan("sendResponse") {
             exchange.setStatusCode(StatusCodes.OK)
             exchange.getResponseSender().send("sendResponse")
           }
@@ -70,7 +69,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         }
         .addExactPath("sendResponseWithException") { exchange ->
           Span.current().addEvent("before-event")
-          runUnderTrace("sendResponseWithException") {
+          runWithSpan("sendResponseWithException") {
             exchange.setStatusCode(StatusCodes.OK)
             exchange.getResponseSender().send("sendResponseWithException")
           }

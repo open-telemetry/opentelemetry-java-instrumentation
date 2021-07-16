@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo
@@ -26,7 +25,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.createStatement()
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute(query)
     }
 
@@ -78,7 +77,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.prepareStatement(query)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute()
     }
 
@@ -133,7 +132,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
     String query = "SELECT * FROM users"
     def statement = connection.prepareCall(query)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       assert statement.execute()
     }
 

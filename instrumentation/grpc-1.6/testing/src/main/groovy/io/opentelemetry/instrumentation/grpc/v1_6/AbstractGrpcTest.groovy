@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 
 import example.GreeterGrpc
 import example.Helloworld
@@ -76,7 +76,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
     }
 
@@ -386,7 +386,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>()
     AtomicReference<Throwable> error = new AtomicReference<>()
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       client.sayHello(
         Helloworld.Request.newBuilder().setName("test").build(),
         new StreamObserver<Helloworld.Response>() {
@@ -508,7 +508,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     when:
     AtomicReference<Throwable> error = new AtomicReference<>()
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       client.sayHello(
         Helloworld.Request.newBuilder().setName("test").build(),
         new StreamObserver<Helloworld.Response>() {
@@ -721,7 +721,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
     }
 

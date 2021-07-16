@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
@@ -19,7 +17,7 @@ class ViewRenderTest extends AgentInstrumentationSpecification {
     def outputStream = new ByteArrayOutputStream()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       renderer.render(view, Locale.ENGLISH, outputStream)
     }
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi;
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.assertj.core.api.Assertions.entry;
@@ -58,7 +57,7 @@ class RmiTest {
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
     String response =
-        runUnderTrace(
+        testing.runWithSpan(
             "parent",
             () -> {
               Greeter client = (Greeter) clientRegistry.lookup(Server.RMI_ID);
@@ -129,7 +128,7 @@ class RmiTest {
     Throwable thrown =
         catchThrowableOfType(
             () ->
-                runUnderTrace(
+                testing.runWithSpan(
                     "parent",
                     () -> {
                       Greeter client = (Greeter) clientRegistry.lookup(Server.RMI_ID);
@@ -235,7 +234,7 @@ class RmiTest {
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(ServerLegacy.RMI_ID));
 
     String response =
-        runUnderTrace(
+        testing.runWithSpan(
             "parent",
             () -> {
               Greeter client = (Greeter) clientRegistry.lookup(ServerLegacy.RMI_ID);

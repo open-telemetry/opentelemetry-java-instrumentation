@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import io.netty.bootstrap.Bootstrap
@@ -165,7 +164,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     when:
     // note that this is a purely asynchronous request
-    runUnderTrace("parent1") {
+    runWithSpan("parent1") {
       ch = b.connect("localhost", server.httpPort()).sync().channel()
       ch.write(request)
       ch.flush()
@@ -186,7 +185,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // now run a second request through the same channel
-    runUnderTrace("parent2") {
+    runWithSpan("parent2") {
       ch.write(request)
       ch.flush()
     }
@@ -295,7 +294,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     def annotatedClass = new TracedClass()
 
     when:
-    def responseCode = runUnderTrace("parent") {
+    def responseCode = runWithSpan("parent") {
       annotatedClass.tracedMethod(method)
     }
 
@@ -326,7 +325,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   class TracedClass {
     int tracedMethod(String method) {
       def uri = resolveAddress("/success")
-      runUnderTrace("tracedMethod") {
+      runWithSpan("tracedMethod") {
         doRequest(method, uri)
       }
     }

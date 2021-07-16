@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
@@ -167,7 +167,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery(query)
     }
 
@@ -226,7 +226,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared statement execute on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       assert statement.execute()
       return statement.resultSet
     }
@@ -279,7 +279,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared statement query on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -331,7 +331,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared call on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     CallableStatement statement = connection.prepareCall(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -386,7 +386,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     def sql = connection.nativeSQL(query)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return !statement.execute(sql)
     }
     statement.updateCount == 0
@@ -440,7 +440,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     PreparedStatement statement = connection.prepareStatement(sql)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return statement.executeUpdate() == 0
     }
     assertTraces(1) {
@@ -495,7 +495,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
       connection = driver.connect(jdbcUrl, null)
     }
 
-    def (Statement statement, ResultSet rs) = runUnderTrace("parent") {
+    def (Statement statement, ResultSet rs) = runWithSpan("parent") {
       if (prepareStatement) {
         def statement = connection.prepareStatement(query)
         return new Tuple(statement, statement.executeQuery())
@@ -559,7 +559,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       datasource.getConnection().close()
     }
 
@@ -617,7 +617,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
     when:
     Statement statement = null
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -658,7 +658,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
     when:
     def connection = driver.connect(url, null)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -765,7 +765,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     connection.url = "jdbc:testdb://localhost"
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       executeQueryFunction(connection, "SELECT * FROM table")
     }
 

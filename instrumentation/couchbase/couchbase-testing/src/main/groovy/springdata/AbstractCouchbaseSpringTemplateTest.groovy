@@ -6,7 +6,6 @@
 package springdata
 
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.Cluster
@@ -50,7 +49,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     Bucket bucketCouchbase = couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
     Bucket bucketMemcache = memcacheCluster.openBucket(bucketMemcache.name(), bucketMemcache.password())
 
-    runUnderTrace("getting info") {
+    runWithSpan("getting info") {
       templates = [new CouchbaseTemplate(couchbaseManager.info(), bucketCouchbase),
                    new CouchbaseTemplate(memcacheManager.info(), bucketMemcache)]
     }
@@ -69,7 +68,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     def result
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       template.save(doc)
       result = template.findById("1", Doc)
     }
@@ -100,7 +99,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     def doc = new Doc()
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       template.save(doc)
       template.remove(doc)
     }

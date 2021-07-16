@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.mongo.testing
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -80,7 +80,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollection(dbName, collectionName)
     }
 
@@ -107,7 +107,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection no description"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionNoDescription(dbName, collectionName)
     }
 
@@ -134,7 +134,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection calling build twice"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionCallingBuildTwice(dbName, collectionName)
     }
 
@@ -161,7 +161,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test get collection"() {
     when:
-    def count = runUnderTrace("parent") {
+    def count = runWithSpan("parent") {
       getCollection(dbName, collectionName)
     }
 
@@ -191,7 +191,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test insert"() {
     when:
     def collection = setupInsert(dbName, collectionName)
-    def count = runUnderTrace("parent") {
+    def count = runWithSpan("parent") {
       insert(collection)
     }
 
@@ -226,7 +226,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test update"() {
     when:
     def collection = setupUpdate(dbName, collectionName)
-    int modifiedCount = runUnderTrace("parent") {
+    int modifiedCount = runWithSpan("parent") {
       update(collection)
     }
 
@@ -261,7 +261,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test delete"() {
     when:
     def collection = setupDelete(dbName, collectionName)
-    int deletedCount = runUnderTrace("parent") {
+    int deletedCount = runWithSpan("parent") {
       delete(collection)
     }
 
@@ -296,7 +296,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test collection name for getMore command"() {
     when:
     def collection = setupGetMore(dbName, collectionName)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       getMore(collection)
     }
 
@@ -340,7 +340,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection with already built ClientOptions"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionWithAlreadyBuiltClientOptions(dbName, collectionName)
     }
 

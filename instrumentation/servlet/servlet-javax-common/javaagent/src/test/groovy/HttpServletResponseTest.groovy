@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static java.util.Collections.emptyEnumeration
 
 import groovy.servlet.AbstractHttpServlet
@@ -49,7 +48,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
 
   def "test send with parent"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       response.sendError(0)
       response.sendError(0, "")
       response.sendRedirect("")
@@ -100,7 +99,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       response.sendRedirect("")
     }
 

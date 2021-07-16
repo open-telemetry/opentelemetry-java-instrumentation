@@ -7,6 +7,8 @@ muzzle {
     group.set("redis.clients")
     module.set("jedis")
     versions.set("[,3.0.0)")
+    // TODO: remove this once jedis people release the new version correctly
+    skip("jedis-3.6.2")
   }
 
   pass {

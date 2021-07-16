@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -47,7 +46,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new ScalaAsyncChild()
           // this child won't
@@ -101,7 +100,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well

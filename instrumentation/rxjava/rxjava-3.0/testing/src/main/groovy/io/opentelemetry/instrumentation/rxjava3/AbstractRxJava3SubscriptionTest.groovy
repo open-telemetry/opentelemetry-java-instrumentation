@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rxjava3
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
@@ -20,7 +19,7 @@ abstract class AbstractRxJava3SubscriptionTest extends InstrumentationSpecificat
   def "subscription test"() {
     when:
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       Single<Connection> connection = Single.create {
         it.onSuccess(new Connection())
       }
