@@ -19,6 +19,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx-http-client-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx-web-3.0:javaagent"))
   //TODO we should include rjxava2 instrumentation here as well
 

@@ -5,8 +5,6 @@
 
 package client;
 
-import static io.opentelemetry.instrumentation.test.base.SingleConnection.REQUEST_ID_HEADER;
-
 import io.opentelemetry.instrumentation.test.base.SingleConnection;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
