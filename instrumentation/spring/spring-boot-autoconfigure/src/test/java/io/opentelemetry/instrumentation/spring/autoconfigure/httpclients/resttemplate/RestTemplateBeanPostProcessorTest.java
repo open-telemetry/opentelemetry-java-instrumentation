@@ -71,7 +71,7 @@ class RestTemplateBeanPostProcessorTest {
 
     assertThat(
             restTemplate.getInterceptors().stream()
-                .filter(this::isOtelInstrumentationInterceptor)
+                .filter(RestTemplateBeanPostProcessorTest::isOtelInstrumentationInterceptor)
                 .count())
         .isEqualTo(1);
 
@@ -90,14 +90,14 @@ class RestTemplateBeanPostProcessorTest {
 
     assertThat(
             restTemplate.getInterceptors().stream()
-                .filter(this::isOtelInstrumentationInterceptor)
+                .filter(RestTemplateBeanPostProcessorTest::isOtelInstrumentationInterceptor)
                 .count())
         .isEqualTo(0);
 
     verify(openTelemetryProvider, times(3)).getIfUnique();
   }
 
-  private boolean isOtelInstrumentationInterceptor(ClientHttpRequestInterceptor rti) {
+  private static boolean isOtelInstrumentationInterceptor(ClientHttpRequestInterceptor rti) {
     return rti.getClass().getName().startsWith("io.opentelemetry.instrumentation");
   }
 }
