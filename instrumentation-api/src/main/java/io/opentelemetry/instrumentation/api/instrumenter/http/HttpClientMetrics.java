@@ -74,7 +74,7 @@ public final class HttpClientMetrics implements RequestListener {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
-          "No state present when ending context {}. Cannot reset HTTP request metrics.", context);
+          "No state present when ending context {}. Cannot record HTTP request metrics.", context);
       return;
     }
     duration.record(
