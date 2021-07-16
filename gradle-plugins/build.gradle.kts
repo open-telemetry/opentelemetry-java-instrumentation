@@ -8,7 +8,9 @@ plugins {
   id("io.github.gradle-nexus.publish-plugin")
 }
 
-group = "io.opentelemetry.javaagent"
+// this is the groupId for the gradle plugin artifact (the groupId for each gradle plugin is
+// determined by the gradle plugin file name)
+group = "io.opentelemetry.instrumentation"
 version = "0.1.0-SNAPSHOT"
 
 repositories {
