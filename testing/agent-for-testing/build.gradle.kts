@@ -14,7 +14,16 @@ val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
-val javaagentLibs by configurations.creating
+val javaagentLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+
+  // exclude dependencies that are to be placed in bootstrap - they won't be added to inst/
+  exclude("org.slf4j")
+  exclude("io.opentelemetry", "opentelemetry-api")
+  exclude("io.opentelemetry", "opentelemetry-api-metrics")
+  exclude("io.opentelemetry", "opentelemetry-semconv")
+}
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
@@ -23,7 +32,22 @@ dependencies {
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")
 
-  javaagentLibs(project(":testing:agent-exporter", configuration = "shadow"))
+  javaagentLibs(project(":testing:agent-exporter"))
+  javaagentLibs(project(":javaagent-extension-api"))
+  javaagentLibs(project(":javaagent-tooling"))
+
+  // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
+  javaagentLibs(project(":instrumentation:executors:javaagent"))
+  // FIXME: we should enable this, but currently this fails tests for google http client
+  //testImplementation project(":instrumentation:http-url-connection:javaagent")
+  javaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  javaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
+  javaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
+  javaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
+
+  // Many tests use OpenTelemetry API calls, e.g. via InstrumentationTestRunner.runWithSpan
+  javaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  javaagentLibs(project(":instrumentation:opentelemetry-api-1.0:javaagent"))
 
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-api")
@@ -44,33 +68,44 @@ project(":instrumentation").subprojects {
   }
 }
 
-fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
-  return copySpec {
-    jars.forEach {
-      from(zipTree(it)) {
-        // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-        into("inst")
-        rename("""(^.*)\.class$""", "$1.classdata")
-        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-        rename("""^LICENSE$""", "LICENSE.renamed")
-      }
-    }
-  }
-}
-
-evaluationDependsOn(":testing:agent-exporter")
-
 tasks {
   jar {
     enabled = false
   }
 
+  val relocateJavaagentLibs by registering(ShadowJar::class) {
+    configurations = listOf(javaagentLibs)
+
+    archiveFileName.set("javaagentLibs-relocated.jar")
+
+    // exclude bootstrap projects from javaagent libs - they won't be added to inst/
+    dependencies {
+      exclude(project(":instrumentation-api"))
+      exclude(project(":instrumentation-api-annotation-support"))
+      exclude(project(":javaagent-bootstrap"))
+      exclude(project(":javaagent-instrumentation-api"))
+    }
+  }
+
+  fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
+    return copySpec {
+      jars.forEach {
+        from(zipTree(it)) {
+          // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+          into("inst")
+          rename("""(^.*)\.class$""", "$1.classdata")
+          // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+          rename("""^LICENSE$""", "LICENSE.renamed")
+        }
+      }
+    }
+  }
+
   val shadowJar by existing(ShadowJar::class) {
-    dependsOn(":testing:agent-exporter:shadowJar")
+    dependsOn(relocateJavaagentLibs)
 
     configurations = listOf(bootstrapLibs)
-
-    with(isolateAgentClasses(javaagentLibs.files))
+    with(isolateAgentClasses(relocateJavaagentLibs.get().outputs.files))
 
     archiveClassifier.set("")
 
