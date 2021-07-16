@@ -65,7 +65,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
   }
 
-  def "Publisher '#name' test"() {
+  def "Publisher '#testName' test"() {
     when:
     def result = assemblePublisherUnderTrace(publisherSupplier)
 
@@ -88,7 +88,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name                      | expected | workSpans | publisherSupplier
+    testName                  | expected | workSpans | publisherSupplier
     "basic maybe"             | 2        | 1         | { -> Maybe.just(1).map(addOne) }
     "two operations maybe"    | 4        | 2         | { -> Maybe.just(2).map(addOne).map(addOne) }
     "delayed maybe"           | 4        | 1         | { ->
@@ -122,7 +122,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
   }
 
-  def "Publisher error '#name' test"() {
+  def "Publisher error '#testName' test"() {
     when:
     assemblePublisherUnderTrace(publisherSupplier)
 
@@ -146,7 +146,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name          | publisherSupplier
+    testName      | publisherSupplier
     "maybe"       | { -> Maybe.error(new RuntimeException(EXCEPTION_MESSAGE)) }
     "flowable"    | { -> Flowable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
     "single"      | { -> Single.error(new RuntimeException(EXCEPTION_MESSAGE)) }
@@ -154,7 +154,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     "completable" | { -> Completable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
   }
 
-  def "Publisher step '#name' test"() {
+  def "Publisher step '#testName' test"() {
     when:
     assemblePublisherUnderTrace(publisherSupplier)
 
@@ -182,7 +182,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name                     | workSpans | publisherSupplier
+    testName                 | workSpans | publisherSupplier
     "basic maybe failure"    | 1         | { ->
       Maybe.just(1).map(addOne).map({ throwException() })
     }
@@ -191,7 +191,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
   }
 
-  def "Publisher '#name' cancel"() {
+  def "Publisher '#testName' cancel"() {
     when:
     cancelUnderTrace(publisherSupplier)
 
@@ -207,7 +207,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name                | publisherSupplier
+    testName            | publisherSupplier
     "basic maybe"       | { -> Maybe.just(1) }
     "basic flowable"    | { -> Flowable.fromIterable([5, 6]) }
     "basic single"      | { -> Single.just(1) }
@@ -215,7 +215,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     "basic observable"  | { -> Observable.just(1) }
   }
 
-  def "Publisher chain spans have the correct parent for '#name'"() {
+  def "Publisher chain spans have the correct parent for '#testName'"() {
     when:
     assemblePublisherUnderTrace(publisherSupplier)
 
@@ -235,7 +235,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name             | workSpans | publisherSupplier
+    testName         | workSpans | publisherSupplier
     "basic maybe"    | 3         | { ->
       Maybe.just(1).map(addOne).map(addOne).concatWith(Maybe.just(1).map(addOne))
     }
@@ -269,7 +269,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
   }
 
-  def "Publisher chain spans have the correct parents from subscription time '#name'"() {
+  def "Publisher chain spans have the correct parents from subscription time '#testName'"() {
     when:
     assemblePublisherUnderTrace {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
@@ -310,7 +310,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
 
     where:
-    name               | workItems | publisherSupplier
+    testName           | workItems | publisherSupplier
     "basic maybe"      | 1         | { -> Maybe.just(1).map(addOne) }
     "basic flowable"   | 2         | { -> Flowable.fromIterable([1, 2]).map(addOne) }
     "basic single"     | 1         | { -> Single.just(1).map(addOne) }

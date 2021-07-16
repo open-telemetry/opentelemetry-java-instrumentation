@@ -52,7 +52,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
   @Shared
   def scheduleCallable = { e, c -> e.schedule((Callable) c, 10, TimeUnit.MILLISECONDS) }
 
-  def "#poolName '#name' propagates"() {
+  def "#poolName '#testName' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -93,7 +93,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    name                     | method              | poolImpl
+    testName                 | method              | poolImpl
     "execute Runnable"       | executeRunnable     | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Runnable"        | submitRunnable      | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Callable"        | submitCallable      | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
@@ -139,7 +139,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     poolName = poolImpl.class.simpleName
   }
 
-  def "#poolName '#name' wrap lambdas"() {
+  def "#poolName '#testName' wrap lambdas"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -175,7 +175,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
-    name                | method           | wrap                           | poolImpl
+    testName            | method           | wrap                           | poolImpl
     "execute Runnable"  | executeRunnable  | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
     "submit Runnable"   | submitRunnable   | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
     "submit Callable"   | submitCallable   | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
@@ -184,7 +184,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     poolName = poolImpl.class.simpleName
   }
 
-  def "#poolName '#name' reports after canceled jobs"() {
+  def "#poolName '#testName' reports after canceled jobs"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -233,7 +233,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
-    name                | method           | poolImpl
+    testName            | method           | poolImpl
     "submit Runnable"   | submitRunnable   | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Callable"   | submitCallable   | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
 

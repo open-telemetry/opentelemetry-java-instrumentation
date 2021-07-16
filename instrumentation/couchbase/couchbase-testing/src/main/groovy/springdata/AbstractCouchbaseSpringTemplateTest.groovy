@@ -62,7 +62,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     memcacheEnvironment.shutdown()
   }
 
-  def "test write #name"() {
+  def "test write #testName"() {
     setup:
     def doc = new Doc()
     def result
@@ -84,17 +84,17 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", testName, span(0))
       }
     }
 
     where:
     template << templates
-    name = template.couchbaseBucket.name()
+    testName = template.couchbaseBucket.name()
   }
 
-  def "test remove #name"() {
+  def "test remove #testName"() {
     setup:
     def doc = new Doc()
 
@@ -113,8 +113,8 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", testName, span(0))
       }
     }
     clearExportedData()
@@ -126,12 +126,12 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     result == null
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.get", name)
+        assertCouchbaseCall(it, 0, "Bucket.get", testName)
       }
     }
 
     where:
     template << templates
-    name = template.couchbaseBucket.name()
+    testName = template.couchbaseBucket.name()
   }
 }

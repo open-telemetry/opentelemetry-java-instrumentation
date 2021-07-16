@@ -38,7 +38,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
   @Shared
   def scalaInvokeForkJoinTask = { e, c -> e.invoke((ForkJoinTask) c) }
 
-  def "#poolImpl '#name' propagates"() {
+  def "#poolImpl '#testName' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -76,7 +76,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    name                   | method                   | poolImpl
+    testName               | method                   | poolImpl
     "execute Runnable"     | executeRunnable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Runnable"      | submitRunnable           | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Callable"      | submitCallable           | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
@@ -90,7 +90,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     "invoke ForkJoinTask"  | scalaInvokeForkJoinTask  | new ForkJoinPool()
   }
 
-  def "#poolImpl '#name' reports after canceled jobs"() {
+  def "#poolImpl '#testName' reports after canceled jobs"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -140,7 +140,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
-    name              | method         | poolImpl
+    testName          | method         | poolImpl
     "submit Runnable" | submitRunnable | new ForkJoinPool()
     "submit Callable" | submitCallable | new ForkJoinPool()
   }
