@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.asyncannotationsupport;
+package io.opentelemetry.instrumentation.api.annotation.support.async;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

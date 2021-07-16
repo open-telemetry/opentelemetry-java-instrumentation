@@ -3,6 +3,6 @@
  * reactive values so that the operation can be ended when the asynchronous type completes.
  */
 @UnstableApi
-package io.opentelemetry.instrumentation.api.asyncannotationsupport;
+package io.opentelemetry.instrumentation.api.annotation.support.async;
 
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
