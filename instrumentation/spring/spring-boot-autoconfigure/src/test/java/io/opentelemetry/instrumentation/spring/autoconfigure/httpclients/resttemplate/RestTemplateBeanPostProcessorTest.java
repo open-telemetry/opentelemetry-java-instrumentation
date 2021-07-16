@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +71,7 @@ class RestTemplateBeanPostProcessorTest {
 
     assertThat(
             restTemplate.getInterceptors().stream()
-                .filter(rti -> rti instanceof RestTemplateInterceptor)
+                .filter(this::isOtelInstrumentationInterceptor)
                 .count())
         .isEqualTo(1);
 
@@ -90,10 +90,14 @@ class RestTemplateBeanPostProcessorTest {
 
     assertThat(
             restTemplate.getInterceptors().stream()
-                .filter(rti -> rti instanceof RestTemplateInterceptor)
+                .filter(this::isOtelInstrumentationInterceptor)
                 .count())
         .isEqualTo(0);
 
     verify(openTelemetryProvider, times(3)).getIfUnique();
+  }
+
+  private boolean isOtelInstrumentationInterceptor(ClientHttpRequestInterceptor rti) {
+    return rti.getClass().getName().startsWith("io.opentelemetry.instrumentation");
   }
 }
