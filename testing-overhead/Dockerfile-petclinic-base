@@ -11,7 +11,7 @@ WORKDIR /app/spring-petclinic-rest
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM adoptopenjdk:11-jdk
+FROM adoptopenjdk:11-jre
 
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
