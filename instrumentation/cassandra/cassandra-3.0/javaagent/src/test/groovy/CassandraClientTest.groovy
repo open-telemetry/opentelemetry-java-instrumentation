@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
@@ -88,10 +87,10 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     setup:
     def callbackExecuted = new AtomicBoolean()
     Session session = cluster.connect(keyspace)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def future = session.executeAsync(statement)
       future.addListener({ ->
-        runUnderTrace("callbackListener") {
+        runWithSpan("callbackListener") {
           callbackExecuted.set(true)
         }
       }, executor)

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
@@ -113,7 +112,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       .doAfterResponse({ rs, con -> afterResponseSpan.set(Span.current()) })
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
@@ -150,7 +149,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       .doOnRequestError({ rq, err -> onRequestErrorSpan.set(Span.current()) })
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       httpClient.get()
         .uri("http://localhost:$UNUSABLE_PORT/")
         .responseSingle {resp, content ->

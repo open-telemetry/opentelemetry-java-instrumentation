@@ -38,6 +38,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: jdk${{ matrix.test-java-version }}
+          read-only: true
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -87,6 +88,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: smokeTests
+          read-only: true
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -109,11 +111,6 @@ jobs:
         with:
           distribution: adopt
           java-version: 11
-
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2

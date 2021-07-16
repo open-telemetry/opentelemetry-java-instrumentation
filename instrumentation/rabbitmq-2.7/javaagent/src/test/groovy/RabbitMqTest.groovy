@@ -7,7 +7,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
@@ -52,7 +51,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
   def "test rabbit publish/get"() {
     setup:
-    GetResponse response = runUnderTrace("parent") {
+    GetResponse response = runWithSpan("parent") {
       channel.exchangeDeclare(exchangeName, "direct", false)
       String queueName = channel.queueDeclare().getQueue()
       channel.queueBind(queueName, exchangeName, routingKey)

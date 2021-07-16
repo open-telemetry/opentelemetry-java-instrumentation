@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -24,7 +23,7 @@ abstract class AbstractSubscriptionTest extends InstrumentationSpecification {
   def "subscription test"() {
     when:
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       Mono<Connection> connection = Mono.create {
         it.success(new Connection())
       }

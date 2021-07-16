@@ -6,8 +6,6 @@ plugins {
   id("otel.java-conventions")
 }
 
-val bootstrap by configurations.creating
-
 val instrumentationProjectTest = tasks.named("test")
 val instrumentationProjectDependencies = dependencies
 
@@ -16,12 +14,6 @@ subprojects {
   plugins.withId("java") {
     instrumentationProjectTest.configure {
       dependsOn(subProj.tasks.named("test"))
-    }
-
-    if (subProj.name == "bootstrap") {
-      instrumentationProjectDependencies.run {
-        add(bootstrap.name, project(subProj.path))
-      }
     }
   }
 
@@ -37,6 +29,10 @@ dependencies {
   compileOnly(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-tooling"))
   implementation(project(":javaagent-extension-api"))
+
+  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+  // inclusion of this artifact inside of :instrumentation-api
+  compileOnly(project(":instrumentation-api-caching"))
 }
 
 configurations {
@@ -57,6 +53,7 @@ tasks {
       //These classes are added to bootstrap classloader by javaagent module
       exclude(project(":javaagent-bootstrap"))
       exclude(project(":instrumentation-api"))
+      exclude(project(":instrumentation-api-annotation-support"))
       exclude(project(":javaagent-instrumentation-api"))
     }
   }

@@ -5,7 +5,6 @@
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import org.apache.log4j.LogManager
 
 class Log4j1MdcTest extends AgentInstrumentationSpecification {
@@ -41,14 +40,14 @@ class Log4j1MdcTest extends AgentInstrumentationSpecification {
     def logger = LogManager.getLogger('TestLogger')
 
     when:
-    def span1 = TraceUtils.runUnderTrace("test") {
+    def span1 = runWithSpan("test") {
       logger.info("log message 1")
       Span.current()
     }
 
     logger.info("log message 2")
 
-    def span2 = TraceUtils.runUnderTrace("test 2") {
+    def span2 = runWithSpan("test 2") {
       logger.info("log message 3")
       Span.current()
     }
