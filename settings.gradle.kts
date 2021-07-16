@@ -59,6 +59,7 @@ include(":javaagent-bootstrap")
 include(":javaagent-exporters")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
+include(":javaagent-tooling:opentelemetry-ext-noop-api-for-instrumenting")
 include(":javaagent")
 
 include(":bom-alpha")

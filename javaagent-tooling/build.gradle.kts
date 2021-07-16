@@ -22,7 +22,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
-  implementation("io.opentelemetry:opentelemetry-extension-noop-api")
+  implementation(project(path = ":javaagent-tooling:opentelemetry-ext-noop-api-for-instrumenting", configuration = "shadow"))
 
   // Only the logging exporter is included in our slim distribution so we include it here.
   // Other exporters are in javaagent-exporters
