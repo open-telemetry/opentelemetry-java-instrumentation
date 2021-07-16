@@ -14,6 +14,7 @@ dependencies {
 tasks {
   shadowJar {
     dependencies {
+      // including only opentelemetry-extension-noop-api excludes its transitive dependencies
       include(dependency("io.opentelemetry:opentelemetry-extension-noop-api"))
     }
     exclude("META-INF/services/io.opentelemetry.context.ContextStorageProvider")
