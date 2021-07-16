@@ -1,0 +1,5 @@
+*.hprof
+*.jfr
+*.class
+logs/
+.idea/
