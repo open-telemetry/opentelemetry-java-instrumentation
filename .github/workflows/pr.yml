@@ -137,14 +137,14 @@ jobs:
       # Workaround https://github.com/burrunan/gradle-cache-action/issues/46
       - name: Set dependencies cache key
         shell: bash
-        run: mkdir -p .gradle && echo "smoke-tests" > .gradle/gradle-dependencies-key | cat .gradle/gradle-dependencies-key
+        run: mkdir -p .gradle && echo "smoke-tests" > gradle/otel-gradle-dependencies-key
 
       - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: smokeTests
           gradle-dependencies-cache-key: |
-            .gradle/gradle-dependencies-key
+            gradle/otel-gradle-dependencies-key
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
