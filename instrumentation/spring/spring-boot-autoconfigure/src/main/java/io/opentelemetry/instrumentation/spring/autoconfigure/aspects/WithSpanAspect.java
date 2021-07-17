@@ -9,11 +9,19 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
+import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.ParameterNameDiscoverer;
 
 /**
  * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link
@@ -27,31 +35,63 @@ import org.aspectj.lang.reflect.MethodSignature;
  */
 @Aspect
 public class WithSpanAspect {
-  private final WithSpanAspectTracer tracer;
+  private static final String INSTRUMENTATION_NAME = "spring-boot-autoconfigure";
+
+  private final Instrumenter<JoinPoint, Object> instrumenter;
 
   public WithSpanAspect(
-      OpenTelemetry openTelemetry, WithSpanAspectAttributeBinder withSpanAspectAttributeBinder) {
-    tracer = new WithSpanAspectTracer(openTelemetry, withSpanAspectAttributeBinder);
+      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+
+    instrumenter =
+        Instrumenter.newBuilder(
+                openTelemetry, INSTRUMENTATION_NAME, WithSpanAspectSpanNameExtractor.INSTANCE)
+            .addAttributesExtractor(
+                MethodSpanAttributesExtractor.builder(WithSpanAspect::method)
+                    .setMethodCache(Cache.newBuilder().setWeakKeys().build())
+                    .setParameterAttributeNamesExtractor(
+                        new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer))
+                    .build(JoinPoint::getArgs))
+            .newInstrumenter(WithSpanAspectSpanKindExtractor.INSTANCE);
+  }
+
+  private static Method method(JoinPoint joinPoint) {
+    MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+    return methodSignature.getMethod();
   }
 
   @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
-    MethodSignature signature = (MethodSignature) pjp.getSignature();
-    Method method = signature.getMethod();
-    WithSpan withSpan = method.getAnnotation(WithSpan.class);
 
     Context parentContext = Context.current();
-    if (!tracer.shouldStartSpan(parentContext, withSpan.kind())) {
+    if (!instrumenter.shouldStart(parentContext, pjp)) {
       return pjp.proceed();
     }
 
-    Context context = tracer.startSpan(parentContext, withSpan, method, pjp);
+    Context context = instrumenter.start(parentContext, pjp);
     try (Scope ignored = context.makeCurrent()) {
-      Object result = pjp.proceed();
-      return tracer.end(context, method.getReturnType(), result);
+      return end(pjp, context, pjp.proceed());
     } catch (Throwable t) {
-      tracer.endExceptionally(context, t);
+      instrumenter.end(context, pjp, null, t);
       throw t;
     }
+  }
+
+  private Object end(JoinPoint joinPoint, Context context, Object response) {
+
+    Class<?> returnType = method(joinPoint).getReturnType();
+
+    if (returnType.isInstance(response)) {
+      AsyncOperationEndStrategy asyncOperationEndStrategy =
+          AsyncOperationEndStrategies.instance().resolveStrategy(returnType);
+
+      if (asyncOperationEndStrategy != null) {
+        AsyncOperationEndSupport<JoinPoint, Object> asyncOperationEndSupport =
+            AsyncOperationEndSupport.create(instrumenter, Object.class, returnType);
+
+        return asyncOperationEndSupport.asyncEnd(context, joinPoint, response, null);
+      }
+    }
+    instrumenter.end(context, joinPoint, response, null);
+    return response;
   }
 }
