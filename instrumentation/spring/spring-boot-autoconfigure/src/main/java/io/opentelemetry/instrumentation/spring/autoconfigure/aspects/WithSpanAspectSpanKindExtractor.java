@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
-public enum WithSpanAspectSpanKindExtractor implements SpanKindExtractor<JoinPoint> {
+enum WithSpanAspectSpanKindExtractor implements SpanKindExtractor<JoinPoint> {
   INSTANCE;
 
   @Override

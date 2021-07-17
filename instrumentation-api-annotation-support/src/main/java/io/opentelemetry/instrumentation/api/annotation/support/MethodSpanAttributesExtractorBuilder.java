@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.reflect.Method;
 
+/** A builder of {@link MethodSpanAttributesExtractor}. */
 public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
   MethodExtractor<REQUEST> methodExtractor;
   MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
@@ -18,12 +19,17 @@ public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
     this.methodExtractor = methodExtractor;
   }
 
-  public MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> setMethodCache(
+  /** Sets the {@link Cache} to cache the {@link AttributeBindings} by {@link Method}. */
+  public MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> setCache(
       Cache<Method, AttributeBindings> cache) {
     this.cache = cache;
     return this;
   }
 
+  /**
+   * Sets the {@link ParameterAttributeNamesExtractor} to extract the attribute names from the
+   * parameters of the traced method.
+   */
   public MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE>
       setParameterAttributeNamesExtractor(
           ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
@@ -31,6 +37,10 @@ public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /**
+   * Returns a new {@link MethodSpanAttributesExtractor} that extracts {@link
+   * io.opentelemetry.api.common.Attributes} from the arguments passed to the traced method.
+   */
   public MethodSpanAttributesExtractor<REQUEST, RESPONSE> build(
       MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
     this.methodArgumentsExtractor = methodArgumentsExtractor;
