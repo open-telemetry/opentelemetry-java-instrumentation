@@ -4,16 +4,16 @@
 
 ### ☢️ Behavioral changes
 
-- Change all instrumentation names to io.opentelemetry.{libName}-{libVersion} (#3411)
-- Fixed semantic conventions in RabbitMQ (#3425)
+- Updated all instrumentation names to `io.opentelemetry.{libName}-{libVersion}` (#3411)
+- Updated RabbitMQ to follow semantic conventions (#3425)
 
 ### 🌟 New javaagent instrumentation
 
-- Jetty 9 httpclient instrumentation (#3079)
+- Jetty 9 HTTP client instrumentation (#3079)
 
 ### 🌟 New library instrumentation
 
-- Jetty 9 httpclient instrumentation (#3079)
+- Jetty 9 HTTP client instrumentation (#3079)
 
 ### 📈 Enhancements
 
