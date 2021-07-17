@@ -23,7 +23,7 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
     Session writer = sessionFactory.openSession()
     writer.beginTransaction()
     prepopulated = new ArrayList<>()
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 5; i++) {
       prepopulated.add(new Value("Hello :) " + i))
       writer.save(prepopulated.get(i))
     }

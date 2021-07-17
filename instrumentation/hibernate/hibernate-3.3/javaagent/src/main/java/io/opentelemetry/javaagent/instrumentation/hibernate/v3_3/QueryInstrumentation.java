@@ -80,7 +80,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(context, throwable, null, null);
+        SessionMethodUtils.end(context, throwable);
       }
     }
   }

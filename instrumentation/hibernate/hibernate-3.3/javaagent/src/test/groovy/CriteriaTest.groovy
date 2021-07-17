@@ -36,7 +36,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Criteria.$methodName"
+          name "Criteria.$methodName Value"
           kind INTERNAL
           childOf span(0)
           attributes {

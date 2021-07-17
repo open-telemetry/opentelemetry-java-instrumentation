@@ -21,9 +21,9 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
+import org.hibernate.internal.CriteriaImpl;
 
 public class CriteriaInstrumentation implements TypeInstrumentation {
 
@@ -63,7 +63,13 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
       ContextStore<Criteria, Context> contextStore =
           InstrumentationContext.get(Criteria.class, Context.class);
 
-      context = SessionMethodUtils.startSpanFrom(contextStore, criteria, "Criteria." + name, null);
+      String entityName = null;
+      if (criteria instanceof CriteriaImpl) {
+        entityName = ((CriteriaImpl) criteria).getEntityOrClassName();
+      }
+
+      context =
+          SessionMethodUtils.startSpanFrom(contextStore, criteria, "Criteria." + name, entityName);
       if (context != null) {
         scope = context.makeCurrent();
       }
@@ -72,8 +78,6 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object entity,
-        @Advice.Origin("#m") String name,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -84,7 +88,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(context, throwable, "Criteria." + name, entity);
+        SessionMethodUtils.end(context, throwable);
       }
     }
   }
