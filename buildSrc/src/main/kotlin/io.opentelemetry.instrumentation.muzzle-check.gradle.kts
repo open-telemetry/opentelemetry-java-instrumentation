@@ -268,15 +268,10 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
   val inverseDirectives = mutableSetOf<MuzzleDirective>()
 
   val allVersionsArtifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
-    "jar",
-    "[,)")
+    muzzleDirective.group.get(), muzzleDirective.module.get(), "jar", "[,)")
   val directiveArtifact = DefaultArtifact(
     muzzleDirective.group.get(),
     muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
     "jar",
     muzzleDirective.versions.get())
 
@@ -299,7 +294,6 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
     val inverseDirective = objects.newInstance(MuzzleDirective::class).apply {
       group.set(muzzleDirective.group)
       module.set(muzzleDirective.module)
-      classifier.set(muzzleDirective.classifier)
       versions.set(version)
       assertPass.set(!muzzleDirective.assertPass.get())
       excludedDependencies.set(muzzleDirective.excludedDependencies)
@@ -331,7 +325,6 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   val directiveArtifact: Artifact = DefaultArtifact(
     muzzleDirective.group.get(),
     muzzleDirective.module.get(),
-    muzzleDirective.classifier.get(),
     "jar",
     muzzleDirective.versions.get())
 
@@ -346,7 +339,6 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
       DefaultArtifact(
         muzzleDirective.group.get(),
         muzzleDirective.module.get(),
-        muzzleDirective.classifier.get(),
         "jar",
         it)
     }
