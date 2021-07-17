@@ -15,7 +15,6 @@ abstract class MuzzleDirective {
   abstract val name: Property<String>
   abstract val group: Property<String>
   abstract val module: Property<String>
-  abstract val classifier: Property<String>
   abstract val versions: Property<String>
   abstract val skipVersions: SetProperty<String>
   abstract val additionalDependencies: ListProperty<String>
@@ -26,7 +25,6 @@ abstract class MuzzleDirective {
 
   init {
     name.convention("")
-    classifier.convention("")
     skipVersions.convention(emptySet())
     additionalDependencies.convention(listOf())
     excludedDependencies.convention(listOf())
@@ -90,9 +88,6 @@ abstract class MuzzleDirective {
         .append(module.get())
         .append(':')
         .append(versions.get())
-      if (classifier.isPresent) {
-        sb.append(':').append(classifier.get())
-      }
     }
     return sb.toString()
   }
