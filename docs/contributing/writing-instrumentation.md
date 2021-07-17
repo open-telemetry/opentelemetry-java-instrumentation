@@ -68,6 +68,39 @@ include 'instrumentation:yarpc-1.0:library'
 include 'instrumentation:yarpc-1.0:testing'
 ```
 
+---
+**NOTE**
+
+While adding instrumentation support for subdirectory of an existing directory, the subdirectory should
+start with the prefix of the current directory.
+
+For example, consider that a new subversion for the above mentioned `yarpc` framework, say `yarpc-1.0:java`
+(just a hypothetical example),the folder structure should be as below.
+
+```
+instrumentation ->
+    ...
+    yarpc-1.0/yarpc-1.0-java ->
+        javaagent
+            yarpc-1.0-java-javaagent.gradle
+        library
+            yarpc-1.0-java-library.gradle
+        testing
+            yarpc-1.0-java-testing.gradle
+```
+
+and in the top level `settings.gradle`
+
+```groovy
+
+include 'instrumentation:yarpc-1.0:yarpc-1.0-java:javaagent'
+include 'instrumentation:yarpc-1.0:yarpc-1.0-java:library'
+include 'instrumentation:yarpc-1.0:yarpc-1.0-java:testing'
+```
+please note that, the subdirectory `yarpc-1.0:java` is a prefix of the parent directory `yarpc-1.0`
+
+---
+
 ## Writing library instrumentation
 
 Begin by writing the instrumentation for the library in `library`. This generally involves defining a
