@@ -31,14 +31,8 @@ public class TraceAspectAutoConfiguration {
   }
 
   @Bean
-  public WithSpanAspectAttributeBinder withSpanAspectAttributeBinder(
-      ParameterNameDiscoverer parameterNameDiscoverer) {
-    return new WithSpanAspectAttributeBinder(parameterNameDiscoverer);
-  }
-
-  @Bean
   public WithSpanAspect withSpanAspect(
-      OpenTelemetry openTelemetry, WithSpanAspectAttributeBinder withSpanAspectAttributeBinder) {
-    return new WithSpanAspect(openTelemetry, withSpanAspectAttributeBinder);
+      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+    return new WithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 }
