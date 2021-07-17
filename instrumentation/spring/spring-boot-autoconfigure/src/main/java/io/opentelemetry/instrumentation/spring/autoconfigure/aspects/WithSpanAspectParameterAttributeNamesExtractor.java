@@ -12,8 +12,7 @@ import java.lang.reflect.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.core.ParameterNameDiscoverer;
 
-public class WithSpanAspectParameterAttributeNamesExtractor
-    implements ParameterAttributeNamesExtractor {
+class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
   private final ParameterNameDiscoverer parameterNameDiscoverer;
 
   public WithSpanAspectParameterAttributeNamesExtractor(
@@ -22,7 +21,7 @@ public class WithSpanAspectParameterAttributeNamesExtractor
   }
 
   @Override
-  public @Nullable String[] attributeNamesForParameters(Method method, Parameter[] parameters) {
+  public @Nullable String[] extract(Method method, Parameter[] parameters) {
     String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
     String[] attributeNames = new String[parameters.length];
 

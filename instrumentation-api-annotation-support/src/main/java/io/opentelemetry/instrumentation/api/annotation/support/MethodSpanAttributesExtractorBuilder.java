@@ -7,19 +7,15 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.reflect.Method;
-import java.util.function.Function;
 
 public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
-  private static final ParameterAttributeNamesExtractor NOOP_ATTRIBUTE_NAME_EXTRACTOR =
-      (method, parameters) -> null;
-
-  Function<REQUEST, Method> methodResolver;
-  Function<REQUEST, Object[]> argsResolver;
+  MethodExtractor<REQUEST> methodExtractor;
+  MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
   Cache<Method, AttributeBindings> cache;
-  ParameterAttributeNamesExtractor parameterAttributeNamesExtractor = NOOP_ATTRIBUTE_NAME_EXTRACTOR;
+  ParameterAttributeNamesExtractor parameterAttributeNamesExtractor;
 
-  public MethodSpanAttributesExtractorBuilder(Function<REQUEST, Method> methodResolver) {
-    this.methodResolver = methodResolver;
+  public MethodSpanAttributesExtractorBuilder(MethodExtractor<REQUEST> methodExtractor) {
+    this.methodExtractor = methodExtractor;
   }
 
   public MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> setMethodCache(
@@ -36,8 +32,8 @@ public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   public MethodSpanAttributesExtractor<REQUEST, RESPONSE> build(
-      Function<REQUEST, Object[]> argsResolver) {
-    this.argsResolver = argsResolver;
+      MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
+    this.methodArgumentsExtractor = methodArgumentsExtractor;
     return new MethodSpanAttributesExtractor<>(this);
   }
 }
