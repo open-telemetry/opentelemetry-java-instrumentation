@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 
 import example.GreeterGrpc
 import example.Helloworld
@@ -35,6 +35,7 @@ import io.grpc.reflection.v1alpha.ServerReflectionGrpc
 import io.grpc.reflection.v1alpha.ServerReflectionRequest
 import io.grpc.reflection.v1alpha.ServerReflectionResponse
 import io.grpc.stub.StreamObserver
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -84,7 +85,11 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "example.Greeter/SayHello"
           kind CLIENT
@@ -418,7 +423,11 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "example.Greeter/SayHello"
           kind CLIENT
@@ -528,7 +537,11 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "example.Greeter/SayHello"
           kind CLIENT
@@ -717,7 +730,11 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "example.Greeter/SayHello"
           kind CLIENT

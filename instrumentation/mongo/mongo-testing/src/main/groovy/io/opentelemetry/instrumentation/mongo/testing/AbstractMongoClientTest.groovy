@@ -6,8 +6,9 @@
 package io.opentelemetry.instrumentation.mongo.testing
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
+
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -86,7 +87,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -109,7 +114,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0), {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -132,7 +141,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -156,7 +169,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     count == 0
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\":\"$collectionName\"}" ||
@@ -182,7 +199,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     count == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "insert", collectionName, dbName, span(0)) {
           assert it == "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}" ||
             it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
@@ -213,7 +234,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     modifiedCount == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "update", collectionName, dbName, span(0)) {
           assert it == "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}" ||
             it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
@@ -244,7 +269,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     deletedCount == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "delete", collectionName, dbName, span(0)) {
           assert it == "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}" ||
             it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
@@ -274,7 +303,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "find", collectionName, dbName, span(0)) {
           assert it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}'
           true
@@ -314,7 +347,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}"
           true

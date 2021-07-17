@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-
 import com.couchbase.client.java.AsyncCluster
 import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
+import io.opentelemetry.api.trace.SpanKind
 import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
@@ -69,7 +68,11 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
         assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
@@ -114,7 +117,11 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
         assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
@@ -159,7 +166,11 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
 

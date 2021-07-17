@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.nio.charset.StandardCharsets
 
@@ -26,7 +25,11 @@ class ViewRenderTest extends AgentInstrumentationSpecification {
     outputStream.toString().contains("This is an example of a view")
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "Render $template"
           childOf span(0)

@@ -5,13 +5,17 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import io.opentelemetry.instrumentation.jdbc.internal.*
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.jdbc.internal.DbInfo
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryCallableStatement
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryPreparedStatement
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 class OpenTelemetryConnectionTest extends InstrumentationSpecification implements LibraryTestTrait {
 
@@ -28,7 +32,11 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "SELECT my_name.users"
           kind CLIENT
@@ -76,7 +84,11 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "SELECT my_name.users"
           kind CLIENT
@@ -127,7 +139,11 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "SELECT my_name.users"
           kind CLIENT
