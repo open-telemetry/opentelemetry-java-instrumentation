@@ -53,8 +53,6 @@ public class OpenTelemetryInstaller implements AgentListener {
       if (config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false)) {
         GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
       } else {
-        System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
-
         OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {
