@@ -12,5 +12,5 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @FunctionalInterface
 public interface ParameterAttributeNamesExtractor {
   @Nullable
-  String[] attributeNamesForParameters(Method method, Parameter[] parameters);
+  String[] extract(Method method, Parameter[] parameters);
 }

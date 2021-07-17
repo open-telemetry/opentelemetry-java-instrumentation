@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
+import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
@@ -42,14 +43,16 @@ public class WithSpanAspect {
   public WithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
 
+    ParameterAttributeNamesExtractor parameterAttributeNamesExtractor =
+        new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
+
     instrumenter =
         Instrumenter.newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, WithSpanAspectSpanNameExtractor.INSTANCE)
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.builder(WithSpanAspect::method)
                     .setMethodCache(Cache.newBuilder().setWeakKeys().build())
-                    .setParameterAttributeNamesExtractor(
-                        new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer))
+                    .setParameterAttributeNamesExtractor(parameterAttributeNamesExtractor)
                     .build(JoinPoint::getArgs))
             .newInstrumenter(WithSpanAspectSpanKindExtractor.INSTANCE);
   }
