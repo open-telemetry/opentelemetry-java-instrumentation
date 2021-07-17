@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcSingletons.modelAndViewInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -17,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -48,12 +47,6 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
         DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isProtected())
-            .and(nameStartsWith("processHandlerException"))
-            .and(takesArgument(3, Exception.class)),
-        DispatcherServletInstrumentation.class.getName() + "$ErrorHandlerAdvice");
   }
 
   /**
@@ -61,6 +54,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
    * which allows the mappings to be evaluated at the beginning of the filter chain. This evaluation
    * is done inside the Servlet3Decorator.onContext method.
    */
+  @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -77,6 +71,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -84,32 +79,24 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ModelAndView mv,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(mv);
-      scope = context.makeCurrent();
+      Context parentContext = currentContext();
+      if (modelAndViewInstrumenter().shouldStart(parentContext, mv)) {
+        context = modelAndViewInstrumenter().start(parentContext, mv);
+        scope = context.makeCurrent();
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(0) ModelAndView mv,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
-    }
-  }
-
-  public static class ErrorHandlerAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void nameResource(@Advice.Argument(3) Exception exception) {
-      if (exception != null) {
-        // It is fine to set status=ERROR here, end(Context, Response) call will overwrite it if the
-        // exception turns out to be a valid result
-        tracer().onException(Java8BytecodeBridge.currentContext(), exception);
-      }
+      modelAndViewInstrumenter().end(context, mv, null, throwable);
     }
   }
 }

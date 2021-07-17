@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static com.lambdaworks.redis.protocol.CommandKeyword.SEGFAULT;
 import static com.lambdaworks.redis.protocol.CommandType.DEBUG;
 import static com.lambdaworks.redis.protocol.CommandType.SHUTDOWN;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.CommandType;

@@ -98,7 +98,7 @@ class CacheTest {
     }
 
     @Test
-    void bounded() throws Exception {
+    void bounded() {
       Cache<String, String> cache = Cache.newBuilder().setWeakKeys().setMaximumSize(1).build();
 
       assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");

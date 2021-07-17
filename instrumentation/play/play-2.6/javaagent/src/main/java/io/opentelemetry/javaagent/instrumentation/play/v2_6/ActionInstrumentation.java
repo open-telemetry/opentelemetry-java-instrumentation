@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -47,7 +47,9 @@ public class ActionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ApplyAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ApplyAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Request<?> req,

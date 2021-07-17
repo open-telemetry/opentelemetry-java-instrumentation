@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
-import static io.opentelemetry.javaagent.instrumentation.gwt.GwtTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,36 +50,47 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeAndEncodeResponseAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Object target,
         @Advice.Argument(1) Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
-      context = tracer().startRpcSpan(target, method);
+      context =
+          instrumenter()
+              .start(Java8BytecodeBridge.currentContext(), method)
+              .with(GwtSingletons.RPC_CONTEXT_KEY, true);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Argument(1) Method method,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
       scope.close();
 
-      tracer().endSpan(context, throwable);
+      instrumenter().end(context, method, null, throwable);
     }
   }
 
+  @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
       if (throwable == null) {
         return;
       }
-      tracer().rpcFailure(throwable);
+      Context context = Java8BytecodeBridge.currentContext();
+      if (context.get(GwtSingletons.RPC_CONTEXT_KEY) == null) {
+        // not inside rpc invocation
+        return;
+      }
+      Java8BytecodeBridge.spanFromContext(context).recordException(throwable);
     }
   }
 }

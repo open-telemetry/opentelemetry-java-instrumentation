@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -53,6 +53,7 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
         ScalaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ForkJoinTaskAdvice {
 
     /**
@@ -63,7 +64,7 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
-      ContextStore<ForkJoinTask, State> contextStore =
+      ContextStore<ForkJoinTask<?>, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
       Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);
       if (thiz instanceof Runnable) {
@@ -79,9 +80,9 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (thiz instanceof Callable) {
-        ContextStore<Callable, State> callableContextStore =
+        ContextStore<Callable<?>, State> callableContextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        Scope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
+        Scope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable<?>) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();

@@ -11,11 +11,12 @@ import io.opentelemetry.context.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.api.mvc.Result;
+import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try<Result>, Object> {
+public class RequestCompleteCallback extends AbstractFunction1<Try<Result>, Object> {
 
-  private static final Logger log = LoggerFactory.getLogger(RequestCompleteCallback.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestCompleteCallback.class);
 
   private final Context context;
 
@@ -32,7 +33,7 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
         tracer().end(context);
       }
     } catch (Throwable t) {
-      log.debug("error in play instrumentation", t);
+      logger.debug("error in play instrumentation", t);
     }
     return null;
   }

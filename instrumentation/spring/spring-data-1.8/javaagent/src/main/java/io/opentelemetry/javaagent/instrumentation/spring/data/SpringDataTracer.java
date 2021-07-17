@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
 public final class SpringDataTracer extends BaseTracer {
@@ -20,10 +21,10 @@ public final class SpringDataTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-data-1.8";
+    return "io.opentelemetry.spring-data-1.8";
   }
 
   public Context startSpan(Method method) {
-    return startSpan(spanNameForMethod(method));
+    return startSpan(SpanNames.fromMethod(method));
   }
 }

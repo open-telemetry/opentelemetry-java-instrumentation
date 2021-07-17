@@ -11,11 +11,6 @@ import spock.lang.Specification
 
 class InstrumentationModuleTest extends Specification {
 
-  def setup() {
-    assert System.getenv().findAll { it.key.startsWith("OTEL_") }.isEmpty()
-    assert System.getProperties().findAll { it.key.toString().startsWith("otel.") }.isEmpty()
-  }
-
   def "default enabled"() {
     setup:
     def target = new TestInstrumentationModule(["test"])
@@ -46,7 +41,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "default disabled can override to enabled #enabled"() {
     setup:
-    Config.INSTANCE = new ConfigBuilder().readProperties([
+    Config.instance = new ConfigBuilder().readProperties([
       "otel.instrumentation.test.enabled": Boolean.toString(enabled)
     ]).build()
     def target = new TestInstrumentationModule(["test"]) {
@@ -60,7 +55,7 @@ class InstrumentationModuleTest extends Specification {
     target.enabled == enabled
 
     cleanup:
-    Config.INSTANCE = null
+    Config.instance = null
 
     where:
     enabled << [true, false]

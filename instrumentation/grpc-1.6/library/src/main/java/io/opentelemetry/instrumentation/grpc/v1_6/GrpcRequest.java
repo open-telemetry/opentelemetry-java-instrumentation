@@ -10,7 +10,7 @@ import io.grpc.MethodDescriptor;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class GrpcRequest {
+public final class GrpcRequest {
 
   private final MethodDescriptor<?, ?> method;
   @Nullable private final Metadata metadata;
@@ -26,15 +26,17 @@ final class GrpcRequest {
     this.remoteAddress = remoteAddress;
   }
 
-  MethodDescriptor<?, ?> getMethod() {
+  public MethodDescriptor<?, ?> getMethod() {
     return method;
   }
 
-  Metadata getMetadata() {
+  @Nullable
+  public Metadata getMetadata() {
     return metadata;
   }
 
-  SocketAddress getRemoteAddress() {
+  @Nullable
+  public SocketAddress getRemoteAddress() {
     return remoteAddress;
   }
 

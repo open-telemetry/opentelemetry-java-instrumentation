@@ -29,8 +29,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 public class WithSpanAspect {
   private final WithSpanAspectTracer tracer;
 
-  public WithSpanAspect(OpenTelemetry openTelemetry) {
-    tracer = new WithSpanAspectTracer(openTelemetry);
+  public WithSpanAspect(
+      OpenTelemetry openTelemetry, WithSpanAspectAttributeBinder withSpanAspectAttributeBinder) {
+    tracer = new WithSpanAspectTracer(openTelemetry, withSpanAspectAttributeBinder);
   }
 
   @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
@@ -44,7 +45,7 @@ public class WithSpanAspect {
       return pjp.proceed();
     }
 
-    Context context = tracer.startSpan(parentContext, withSpan, method);
+    Context context = tracer.startSpan(parentContext, withSpan, method, pjp);
     try (Scope ignored = context.makeCurrent()) {
       Object result = pjp.proceed();
       return tracer.end(context, method.getReturnType(), result);

@@ -13,16 +13,21 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.AgentLocationStrategy;
  * (both compile and runtime). Extracted out from AgentInstaller to begin separating some of the
  * logic out.
  */
-public class AgentTooling {
+public final class AgentTooling {
 
-  private static final AgentLocationStrategy LOCATION_STRATEGY = new AgentLocationStrategy();
   private static final AgentCachingPoolStrategy POOL_STRATEGY = new AgentCachingPoolStrategy();
 
   public static AgentLocationStrategy locationStrategy() {
-    return LOCATION_STRATEGY;
+    return locationStrategy(null);
+  }
+
+  public static AgentLocationStrategy locationStrategy(ClassLoader bootstrapProxy) {
+    return new AgentLocationStrategy(bootstrapProxy);
   }
 
   public static AgentCachingPoolStrategy poolStrategy() {
     return POOL_STRATEGY;
   }
+
+  private AgentTooling() {}
 }

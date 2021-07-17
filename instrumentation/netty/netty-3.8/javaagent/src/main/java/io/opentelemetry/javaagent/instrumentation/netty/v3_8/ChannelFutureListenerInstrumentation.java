@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,7 +45,9 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
+
     @Advice.OnMethodEnter
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*

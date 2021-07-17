@@ -3,9 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.jdbc.TestConnection
+import io.opentelemetry.instrumentation.jdbc.TestDriver
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
@@ -27,9 +30,8 @@ import org.h2.jdbcx.JdbcDataSource
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
-import test.TestConnection
-import test.TestDriver
 
+@Unroll
 class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
@@ -162,11 +164,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
-  @Unroll
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery(query)
     }
 
@@ -218,11 +219,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"   | "INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
-  @Unroll
   def "prepared statement execute on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       assert statement.execute()
       return statement.resultSet
     }
@@ -268,11 +268,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT SYSIBM.SYSDUMMY1" | "derby:memory:" | "SYSIBM.SYSDUMMY1"
   }
 
-  @Unroll
   def "prepared statement query on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -317,11 +316,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT SYSIBM.SYSDUMMY1" | "derby:memory:" | "SYSIBM.SYSDUMMY1"
   }
 
-  @Unroll
   def "prepared call on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     CallableStatement statement = connection.prepareCall(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -366,14 +364,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT SYSIBM.SYSDUMMY1" | "derby:memory:" | "SYSIBM.SYSDUMMY1"
   }
 
-  @Unroll
   def "statement update on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     Statement statement = connection.createStatement()
     def sql = connection.nativeSQL(query)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return !statement.execute(sql)
     }
     statement.updateCount == 0
@@ -417,14 +414,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()   | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "hsqldb:mem:"
   }
 
-  @Unroll
   def "prepared statement update on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     def sql = connection.nativeSQL(query)
     PreparedStatement statement = connection.prepareStatement(sql)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return statement.executeUpdate() == 0
     }
     assertTraces(1) {
@@ -463,7 +459,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "derby:memory:"
   }
 
-  @Unroll
   def "connection constructor throwing then generating correct spans after recovery using #driver connection (prepare statement = #prepareStatement)"() {
     setup:
     Connection connection = null
@@ -471,11 +466,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     when:
     try {
       connection = new TestConnection(true)
+      connection.url = "jdbc:testdb://localhost"
     } catch (Exception ignored) {
       connection = driver.connect(jdbcUrl, null)
     }
 
-    def (Statement statement, ResultSet rs) = runUnderTrace("parent") {
+    def (Statement statement, ResultSet rs) = runWithSpan("parent") {
       if (prepareStatement) {
         def statement = connection.prepareStatement(query)
         return new Tuple(statement, statement.executeQuery())
@@ -535,7 +531,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       datasource.getConnection().close()
     }
 
@@ -546,17 +542,21 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
         span(1) {
           name "${datasource.class.simpleName}.getConnection"
-          kind CLIENT
+          kind INTERNAL
           childOf span(0)
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE.key" datasource.class.name
+            "$SemanticAttributes.CODE_FUNCTION.key" "getConnection"
           }
         }
         if (recursive) {
           span(2) {
             name "${datasource.class.simpleName}.getConnection"
-            kind CLIENT
+            kind INTERNAL
             childOf span(1)
             attributes {
+              "$SemanticAttributes.CODE_NAMESPACE.key" datasource.class.name
+              "$SemanticAttributes.CODE_FUNCTION.key" "getConnection"
             }
           }
         }
@@ -581,10 +581,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "test getClientInfo exception"() {
     setup:
     Connection connection = new TestConnection(false)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
     Statement statement = null
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -615,14 +616,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     query = "testing 123"
   }
 
-  @Unroll
   def "should produce proper span name #spanName"() {
     setup:
     def driver = new TestDriver()
 
     when:
     def connection = driver.connect(url, null)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -657,7 +657,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "DB Query"          | null         | null      | null
   }
 
-  @Unroll
   def "#connectionPoolName connections should be cached in case of wrapped connections"() {
     setup:
     String dbType = "hsqldb"
@@ -720,13 +719,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   }
 
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2644
-  @Unroll
   def "should handle recursive Statements inside Connection.getMetaData(): #desc"() {
     given:
     def connection = new DbCallingConnection(usePreparedStatementInConnection)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       executeQueryFunction(connection, "SELECT * FROM table")
     }
 

@@ -11,25 +11,24 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import io.vertx.reactivex.core.Vertx
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import spock.lang.Shared
 
 class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   @Shared
-  OkHttpClient client = OkHttpUtils.client()
+  WebClient client
 
   @Shared
   int port
@@ -40,6 +39,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     port = PortUtils.findOpenPort()
     server = VertxReactiveWebServer.start(port)
+    client = WebClient.of("h1c://localhost:${port}")
   }
 
   def cleanupSpec() {
@@ -50,12 +50,10 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   //Tests io.opentelemetry.javaagent.instrumentation.vertx.reactive.VertxRxInstrumentation
   def "should propagate context over vert.x rx-java framework"() {
     setup:
-    def url = "http://localhost:$port/listProducts"
-    def request = new Request.Builder().url(url).get().build()
-    def response = client.newCall(request).execute()
+    def response = client.get("/listProducts").aggregate().join()
 
     expect:
-    response.code() == SUCCESS.status
+    response.status().code() == SUCCESS.status
 
     and:
     assertTraces(1) {
@@ -67,7 +65,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${port}/listProducts"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -98,12 +96,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   def "should propagate context correctly over vert.x rx-java framework with high concurrency"() {
     setup:
     int count = 100
-    def baseUrl = "http://localhost:$port/listProducts"
+    def baseUrl = "/listProducts"
     def latch = new CountDownLatch(1)
 
     def pool = Executors.newFixedThreadPool(8)
     def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
-    def setter = { Request.Builder carrier, String name, String value ->
+    def setter = { HttpRequestBuilder carrier, String name, String value ->
       carrier.header(name, value)
     }
 
@@ -111,12 +109,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
     count.times { index ->
       def job = {
         latch.await()
-        Request.Builder builder = new Request.Builder().url("$baseUrl?$TEST_REQUEST_ID_PARAMETER=$index").get()
-
-        runUnderTrace("client " + index) {
+        runWithSpan("client " + index) {
+          HttpRequestBuilder builder = HttpRequest.builder()
+            .get("${baseUrl}?${TEST_REQUEST_ID_PARAMETER}=${index}")
           Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index)
           propagator.inject(Context.current(), builder, setter)
-          client.newCall(builder.build()).execute()
+          client.execute(builder.build()).aggregate().join()
         }
       }
       pool.submit(job)
@@ -137,7 +135,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           basicServerSpan(it, 1, "/listProducts", span(0), null) {
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_URL.key}" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

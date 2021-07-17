@@ -8,30 +8,24 @@ package io.opentelemetry.smoketest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.util.JsonFormat
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
-import okhttp3.OkHttpClient
-import okhttp3.Request
 
 class TelemetryRetriever {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-  protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
-  final int backendPort
+
+  final WebClient client
 
   TelemetryRetriever(int backendPort) {
-    this.backendPort = backendPort
+    client = WebClient.of("http://localhost:${backendPort}")
   }
 
   void clearTelemetry() {
-    CLIENT.newCall(new Request.Builder()
-      .url("http://localhost:${backendPort}/clear")
-      .build())
-      .execute()
-      .close()
+    client.get("/clear").aggregate().join()
   }
 
   Collection<ExportTraceServiceRequest> waitForTraces() {
@@ -58,16 +52,7 @@ class TelemetryRetriever {
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
     String content = "[]"
     while (System.currentTimeMillis() < deadline) {
-      def body = content = CLIENT.newCall(new Request.Builder()
-        .url("http://localhost:${backendPort}/${path}")
-        .build())
-        .execute()
-        .body()
-      try {
-        content = body.string()
-      } finally {
-        body.close()
-      }
+      content = client.get(path).aggregate().join().contentUtf8()
       if (content.length() > 2 && content.length() == previousSize) {
         break
       }

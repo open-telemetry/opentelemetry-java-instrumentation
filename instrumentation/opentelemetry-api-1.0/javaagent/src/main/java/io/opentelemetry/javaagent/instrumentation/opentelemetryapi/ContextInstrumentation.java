@@ -38,12 +38,12 @@ public class ContextInstrumentation implements TypeInstrumentation {
         ContextInstrumentation.class.getName() + "$GetAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetAdvice {
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) Context root) {
-      root =
-          new AgentContextStorage.AgentContextWrapper(
-              io.opentelemetry.context.Context.root(), root);
+      root = AgentContextStorage.newContextWrapper(io.opentelemetry.context.Context.root(), root);
     }
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -44,7 +44,9 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelConnectAdvice {
+
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This Channel channel) {
       Context context = Java8BytecodeBridge.currentContext();

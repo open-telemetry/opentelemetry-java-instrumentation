@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 @Deprecated
 public class ExporterClassLoader extends URLClassLoader {
 
-  private static final Logger log = LoggerFactory.getLogger(ExporterClassLoader.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExporterClassLoader.class);
 
   // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching
   // them. It's possible to do this by excluding this class from shading, but it may cause issue
@@ -77,7 +77,7 @@ public class ExporterClassLoader extends URLClassLoader {
       try {
         in.close();
       } catch (IOException e) {
-        log.debug(e.getMessage(), e);
+        logger.debug(e.getMessage(), e);
       }
     }
   }
@@ -99,7 +99,7 @@ public class ExporterClassLoader extends URLClassLoader {
       // to race condition with the check above
       if (!isPackageDefined(packageName)) {
         // this shouldn't happen however
-        log.error(e.getMessage(), e);
+        logger.error(e.getMessage(), e);
       }
     }
   }
@@ -132,7 +132,7 @@ public class ExporterClassLoader extends URLClassLoader {
     try (JarFile jarFile = new JarFile(url.toURI().getPath())) {
       return jarFile.getManifest();
     } catch (IOException | URISyntaxException e) {
-      log.warn(e.getMessage(), e);
+      logger.warn(e.getMessage(), e);
     }
     return null;
   }

@@ -24,6 +24,7 @@ package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -40,6 +41,7 @@ import io.reactivex.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.parallel.ParallelFlowable;
 import io.reactivex.plugins.RxJavaPlugins;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Subscriber;
 
 /**
@@ -57,82 +59,104 @@ public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Observable, ? super Observer, ? extends Observer>
       oldOnObservableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Single, ? super SingleObserver, ? extends SingleObserver>
       oldOnSingleSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Maybe, ? super MaybeObserver, ? extends MaybeObserver>
       oldOnMaybeSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Flowable, ? super Subscriber, ? extends Subscriber>
       oldOnFlowableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static Function<? super ParallelFlowable, ? extends ParallelFlowable>
       oldOnParallelAssembly;
 
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
-  private TracingAssembly() {}
-
-  public static synchronized void enable() {
-    if (enabled) {
-      return;
-    }
-
-    enableObservable();
-
-    enableCompletable();
-
-    enableSingle();
-
-    enableMaybe();
-
-    enableFlowable();
-
-    enableParallel();
-
-    enableWithSpanStrategy();
-
-    enabled = true;
+  public static TracingAssembly create() {
+    return newBuilder().build();
   }
 
-  public static synchronized void disable() {
-    if (!enabled) {
-      return;
+  public static TracingAssemblyBuilder newBuilder() {
+    return new TracingAssemblyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingAssembly(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
+  public void enable() {
+    synchronized (TracingAssembly.class) {
+      if (enabled) {
+        return;
+      }
+
+      enableObservable();
+
+      enableCompletable();
+
+      enableSingle();
+
+      enableMaybe();
+
+      enableFlowable();
+
+      enableParallel();
+
+      enableWithSpanStrategy(captureExperimentalSpanAttributes);
+
+      enabled = true;
     }
+  }
 
-    disableObservable();
+  public void disable() {
+    synchronized (TracingAssembly.class) {
+      if (!enabled) {
+        return;
+      }
 
-    disableCompletable();
+      disableObservable();
 
-    disableSingle();
+      disableCompletable();
 
-    disableMaybe();
+      disableSingle();
 
-    disableFlowable();
+      disableMaybe();
 
-    disableParallel();
+      disableFlowable();
 
-    disableWithSpanStrategy();
+      disableParallel();
 
-    enabled = false;
+      disableWithSpanStrategy();
+
+      enabled = false;
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -150,7 +174,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnCompletableSubscribe,
             (completable, observer) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return new TracingCompletableObserver(observer, context);
               }
@@ -164,7 +188,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnFlowableSubscribe,
             (flowable, subscriber) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 if (subscriber instanceof ConditionalSubscriber) {
                   return new TracingConditionalSubscriber<>(
@@ -184,7 +208,7 @@ public final class TracingAssembly {
           biCompose(
               oldOnObservableSubscribe,
               (observable, observer) -> {
-                final Context context = Context.current();
+                Context context = Context.current();
                 try (Scope ignored = context.makeCurrent()) {
                   return new TracingObserver(observer, context);
                 }
@@ -199,7 +223,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnSingleSubscribe,
             (single, singleObserver) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return new TracingSingleObserver(singleObserver, context);
               }
@@ -215,15 +239,24 @@ public final class TracingAssembly {
                 oldOnMaybeSubscribe,
                 (BiFunction<Maybe, MaybeObserver, MaybeObserver>)
                     (maybe, maybeObserver) -> {
-                      final Context context = Context.current();
+                      Context context = Context.current();
                       try (Scope ignored = context.makeCurrent()) {
                         return new TracingMaybeObserver(maybeObserver, context);
                       }
                     }));
   }
 
-  private static void enableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().registerStrategy(RxJava2AsyncSpanEndStrategy.INSTANCE);
+  private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
+
+  private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
+    asyncOperationEndStrategy =
+        RxJava2AsyncOperationEndStrategy.newBuilder()
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .build();
+
+    AsyncSpanEndStrategies.getInstance().registerStrategy(asyncOperationEndStrategy);
+
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   private static void disableParallel() {
@@ -259,7 +292,13 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava2AsyncSpanEndStrategy.INSTANCE);
+    if (asyncOperationEndStrategy != null) {
+      AsyncSpanEndStrategies.getInstance().unregisterStrategy(asyncOperationEndStrategy);
+
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+
+      asyncOperationEndStrategy = null;
+    }
   }
 
   private static <T> Function<? super T, ? extends T> compose(

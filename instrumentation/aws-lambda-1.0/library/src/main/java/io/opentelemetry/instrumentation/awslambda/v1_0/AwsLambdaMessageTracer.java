@@ -67,11 +67,11 @@ public class AwsLambdaMessageTracer extends BaseTracer {
     return parentContext.with(span.startSpan());
   }
 
-  private void addLinkToMessageParent(SQSMessage message, SpanBuilder span) {
+  private static void addLinkToMessageParent(SQSMessage message, SpanBuilder span) {
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
     if (parentHeader != null) {
       SpanContext parentCtx =
-          Span.fromContext(ParentContextExtractor.fromXRayHeader(parentHeader)).getSpanContext();
+          Span.fromContext(ParentContextExtractor.fromXrayHeader(parentHeader)).getSpanContext();
       if (parentCtx.isValid()) {
         span.addLink(parentCtx);
       }

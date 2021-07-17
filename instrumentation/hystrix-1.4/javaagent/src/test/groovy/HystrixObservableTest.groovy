@@ -6,7 +6,6 @@
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
@@ -23,7 +22,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     setup:
     def observeOnFn = observeOn
     def subscribeOnFn = subscribeOn
-    def result = runUnderTrace("parent") {
+    def result = runWithSpan("parent") {
       def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
         private String tracedMethod() {
           runInternalSpan("tracedMethod")
@@ -115,7 +114,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     setup:
     def observeOnFn = observeOn
     def subscribeOnFn = subscribeOn
-    def result = runUnderTrace("parent") {
+    def result = runWithSpan("parent") {
       def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
         @Override
         protected Observable<String> construct() {
@@ -213,7 +212,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     def subscribeOnFn = subscribeOn
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       operation new HystrixObservableCommand<String>(asKey("FailingGroup")) {
 
         @Override

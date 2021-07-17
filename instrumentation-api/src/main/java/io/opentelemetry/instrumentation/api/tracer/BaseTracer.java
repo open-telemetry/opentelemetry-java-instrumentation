@@ -21,12 +21,10 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Base class for all instrumentation specific tracer implementations.
@@ -75,9 +73,9 @@ public abstract class BaseTracer {
    * troubleshooting it's possible to pinpoint what tracer produced problematic telemetry.
    *
    * <p>In this project we use a convention to encode the version of the instrument*ed* library into
-   * the instrumentation name, for example {@code io.opentelemetry.javaagent.apache-httpclient-4.0}.
-   * This way, if there are different instrumentations for different library versions it's easy to
-   * find out which instrumentations produced the telemetry data.
+   * the instrumentation name, for example {@code io.opentelemetry.apache-httpclient-4.0}. This way,
+   * if there are different instrumentations for different library versions it's easy to find out
+   * which instrumentations produced the telemetry data.
    *
    * @see io.opentelemetry.api.trace.TracerProvider#get(String, String)
    */
@@ -106,10 +104,11 @@ public abstract class BaseTracer {
     boolean suppressed = false;
     switch (proposedKind) {
       case CLIENT:
-        suppressed = inClientSpan(context);
+        suppressed = ClientSpan.exists(context);
         break;
       case SERVER:
-        suppressed = inServerSpan(context);
+      case CONSUMER:
+        suppressed = ServerSpan.exists(context) || ConsumerSpan.exists(context);
         break;
       default:
         break;
@@ -118,14 +117,6 @@ public abstract class BaseTracer {
       supportability.recordSuppressedSpan(proposedKind, getInstrumentationName());
     }
     return !suppressed;
-  }
-
-  private boolean inClientSpan(Context context) {
-    return ClientSpan.fromContextOrNull(context) != null;
-  }
-
-  private boolean inServerSpan(Context context) {
-    return ServerSpan.fromContextOrNull(context) != null;
   }
 
   /**
@@ -179,47 +170,13 @@ public abstract class BaseTracer {
   }
 
   /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
+   * Returns a {@link Context} containing the passed {@code span} marked as the current {@link
+   * SpanKind#CONSUMER} span.
    *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Method)}.
+   * @see #shouldStartSpan(Context, SpanKind)
    */
-  @Deprecated
-  public static String spanNameForMethod(Method method) {
-    return SpanNames.spanNameForMethod(method);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, Method)}.
-   */
-  @Deprecated
-  public static String spanNameForMethod(Class<?> clazz, @Nullable Method method) {
-    return SpanNames.spanNameForMethod(clazz, method);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, String)}.
-   */
-  @Deprecated
-  public static String spanNameForMethod(Class<?> cl, String methodName) {
-    return SpanNames.spanNameForMethod(cl, methodName);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given class
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForClass(Class)}.
-   */
-  @Deprecated
-  public static String spanNameForClass(Class<?> clazz) {
-    return SpanNames.spanNameForClass(clazz);
+  protected final Context withConsumerSpan(Context parentContext, Span span) {
+    return ConsumerSpan.with(parentContext.with(span), span);
   }
 
   /** Ends the execution of a span stored in the passed {@code context}. */

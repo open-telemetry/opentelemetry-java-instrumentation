@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -117,17 +118,17 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
   def "access log has ids for #count requests"() {
     given:
-    def request = request(SUCCESS, method, body).build()
+    def request = request(SUCCESS, method)
 
     when:
-    List<okhttp3.Response> responses = (1..count).collect {
-      return client.newCall(request).execute()
+    List<AggregatedHttpResponse> responses = (1..count).collect {
+      return client.execute(request).aggregate().join()
     }
 
     then:
     responses.each { response ->
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
+      assert response.status().code() == SUCCESS.status
+      assert response.contentUtf8() == SUCCESS.body
     }
 
     and:
@@ -150,19 +151,18 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
     where:
     method = "GET"
-    body = null
     count << [1, 4] // make multiple requests.
   }
 
   def "access log has ids for error request"() {
     setup:
     assumeTrue(testError())
-    def request = request(ERROR, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(ERROR, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.code() == ERROR.status
-    response.body().string() == ERROR.body
+    response.status().code() == ERROR.status
+    response.contentUtf8() == ERROR.body
 
     and:
     def spanCount = 2
@@ -171,7 +171,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     }
     assertTraces(1) {
       trace(0, spanCount) {
-        serverSpan(it, 0, null, null, method, response.body().contentLength(), ERROR)
+        serverSpan(it, 0, null, null, method, response.content().length(), ERROR)
         def spanIndex = 1
         controllerSpan(it, spanIndex, span(spanIndex - 1))
         spanIndex++
@@ -189,7 +189,6 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
     where:
     method = "GET"
-    body = null
   }
 
   // FIXME: Add authentication tests back in...

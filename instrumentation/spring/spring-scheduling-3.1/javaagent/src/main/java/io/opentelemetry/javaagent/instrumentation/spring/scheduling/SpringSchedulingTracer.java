@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 public class SpringSchedulingTracer extends BaseTracer {
@@ -19,19 +20,19 @@ public class SpringSchedulingTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-scheduling-3.1";
+    return "io.opentelemetry.spring-scheduling-3.1";
   }
 
   public Context startSpan(Runnable runnable) {
     return startSpan(spanNameOnRun(runnable), SpanKind.INTERNAL);
   }
 
-  private String spanNameOnRun(Runnable runnable) {
+  private static String spanNameOnRun(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-      return spanNameForMethod(scheduledMethodRunnable.getMethod());
+      return SpanNames.fromMethod(scheduledMethodRunnable.getMethod());
     } else {
-      return spanNameForClass(runnable.getClass()) + "/run";
+      return SpanNames.fromMethod(runnable.getClass(), "run");
     }
   }
 }

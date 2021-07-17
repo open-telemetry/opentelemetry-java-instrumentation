@@ -10,6 +10,8 @@ import application.io.opentelemetry.api.metrics.DoubleValueObserverBuilder;
 import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
+// For observers, which have no API, there might be a better pattern than wrapping.
+@SuppressWarnings("FieldCanBeLocal")
 class ApplicationDoubleValueObserver implements DoubleValueObserver {
 
   private final io.opentelemetry.api.metrics.DoubleValueObserver agentDoubleValueObserver;

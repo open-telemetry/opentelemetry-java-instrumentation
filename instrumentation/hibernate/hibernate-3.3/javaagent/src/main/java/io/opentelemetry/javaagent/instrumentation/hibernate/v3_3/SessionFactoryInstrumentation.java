@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -51,6 +51,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SessionFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

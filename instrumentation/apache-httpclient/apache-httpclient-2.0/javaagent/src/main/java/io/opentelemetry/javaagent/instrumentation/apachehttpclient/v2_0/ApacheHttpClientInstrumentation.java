@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.ApacheHttpClientInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.ApacheHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -44,7 +44,9 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteMethodAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(1) HttpMethod httpMethod,

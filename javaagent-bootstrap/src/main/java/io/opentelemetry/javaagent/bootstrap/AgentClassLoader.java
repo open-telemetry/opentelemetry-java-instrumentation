@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -22,6 +21,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Classloader used to run the core agent.
@@ -43,7 +43,6 @@ public class AgentClassLoader extends URLClassLoader {
       System.getProperty("otel.javaagent.experimental.initializer.jar", "");
 
   private static final String META_INF = "META-INF/";
-  private static final String META_INF_MANIFEST_MF = META_INF + "MANIFEST.MF";
   private static final String META_INF_VERSIONS = META_INF + "versions/";
 
   // multi release jars were added in java 9
@@ -68,15 +67,13 @@ public class AgentClassLoader extends URLClassLoader {
   /**
    * Construct a new AgentClassLoader.
    *
-   * @param bootstrapJarLocation Used for resource lookups.
+   * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
    * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
-   *     9+.
    */
-  public AgentClassLoader(
-      URL bootstrapJarLocation, String internalJarFileName, ClassLoader parent) {
+  public AgentClassLoader(File javaagentFile, String internalJarFileName, ClassLoader parent) {
     super(new URL[] {}, parent);
-    if (bootstrapJarLocation == null) {
+    if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }
     if (internalJarFileName == null) {
@@ -89,18 +86,17 @@ public class AgentClassLoader extends URLClassLoader {
         internalJarFileName
             + (internalJarFileName.isEmpty() || internalJarFileName.endsWith("/") ? "" : "/");
     try {
-      // open jar with verification disabled
-      jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
+      jarFile = new JarFile(javaagentFile, false);
       // base url for constructing jar entry urls
       // we use a custom protocol instead of typical jar:file: because we don't want to be affected
       // by user code disabling URLConnection caching for jar protocol e.g. tomcat does this
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
-    } catch (URISyntaxException | IOException e) {
+      codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
+      manifest = jarFile.getManifest();
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
-    codeSource = new CodeSource(bootstrapJarLocation, (Certificate[]) null);
-    manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
 
     if (!AGENT_INITIALIZER_JAR.isEmpty()) {
       URL url;
@@ -124,18 +120,6 @@ public class AgentClassLoader extends URLClassLoader {
       return 8;
     }
     return Integer.parseInt(javaSpecVersion);
-  }
-
-  private static Manifest getManifest(JarFile jarFile, String manifestPath) {
-    JarEntry manifestEntry = jarFile.getJarEntry(manifestPath);
-    if (manifestEntry == null) {
-      throw new IllegalStateException("Manifest entry not found");
-    }
-    try (InputStream is = jarFile.getInputStream(manifestEntry)) {
-      return new Manifest(is);
-    } catch (IOException exception) {
-      throw new IllegalStateException("Failed to read manifest", exception);
-    }
   }
 
   @Override
@@ -274,7 +258,7 @@ public class AgentClassLoader extends URLClassLoader {
         return new URL(jarBase, jarEntry.getName());
       } catch (MalformedURLException e) {
         throw new IllegalStateException(
-            "Failed to construct url for jar entry " + jarEntry.getName());
+            "Failed to construct url for jar entry " + jarEntry.getName(), e);
       }
     }
 
@@ -368,8 +352,8 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static class AgentClassLoaderUrlConnection extends URLConnection {
     private final JarFile jarFile;
-    private final String entryName;
-    private JarEntry jarEntry;
+    @Nullable private final String entryName;
+    @Nullable private JarEntry jarEntry;
 
     AgentClassLoaderUrlConnection(URL url, JarFile jarFile) {
       super(url);

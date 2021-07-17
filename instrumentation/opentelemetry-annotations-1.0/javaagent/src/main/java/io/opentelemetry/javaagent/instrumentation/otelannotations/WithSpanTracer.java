@@ -7,9 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
@@ -23,17 +26,24 @@ public class WithSpanTracer extends BaseTracer {
     return TRACER;
   }
 
-  private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(WithSpanTracer.class);
 
+  private final WithSpanAttributeBinder attributeBinder = new WithSpanAttributeBinder();
   private final AsyncSpanEndStrategies asyncSpanEndStrategies =
       AsyncSpanEndStrategies.getInstance();
 
   public Context startSpan(
-      Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
-    Span span =
+      Context parentContext,
+      WithSpan applicationAnnotation,
+      Method method,
+      SpanKind kind,
+      Object[] args) {
+
+    SpanBuilder spanBuilder =
         spanBuilder(
-                parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
-            .startSpan();
+            parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
+    Span span = withSpanAttributes(spanBuilder, method, args).startSpan();
+
     if (kind == SpanKind.SERVER) {
       return withServerSpan(parentContext, span);
     }
@@ -47,13 +57,13 @@ public class WithSpanTracer extends BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
    * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
-   * #spanNameForMethod(Method)}.
+   * SpanNames#fromMethod(Method)}.
    */
   public String spanNameForMethodWithAnnotation(WithSpan applicationAnnotation, Method method) {
     if (applicationAnnotation != null && !applicationAnnotation.value().isEmpty()) {
       return applicationAnnotation.value();
     }
-    return spanNameForMethod(method);
+    return SpanNames.fromMethod(method);
   }
 
   public SpanKind extractSpanKind(WithSpan applicationAnnotation) {
@@ -69,9 +79,19 @@ public class WithSpanTracer extends BaseTracer {
     try {
       return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", applicationSpanKind.name());
+      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
+  }
+
+  public SpanBuilder withSpanAttributes(SpanBuilder spanBuilder, Method method, Object[] args) {
+    if (args != null && args.length > 0) {
+      AttributeBindings bindings = attributeBinder.bind(method);
+      if (!bindings.isEmpty()) {
+        bindings.apply(spanBuilder::setAttribute, args);
+      }
+    }
+    return spanBuilder;
   }
 
   /**
@@ -100,6 +120,6 @@ public class WithSpanTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.opentelemetry-annotations-1.0";
+    return "io.opentelemetry.opentelemetry-annotations-1.0";
   }
 }

@@ -14,9 +14,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class HeadersFactory {
+final class HeadersFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(HeadersFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(HeadersFactory.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -31,8 +31,10 @@ class HeadersFactory {
         }
       }
     } catch (Exception e) {
-      log.debug("Could not get headers from request, ", e);
+      logger.debug("Could not get headers from request, ", e);
     }
     return null;
   }
+
+  private HeadersFactory() {}
 }

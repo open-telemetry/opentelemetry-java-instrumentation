@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 final class CamelEventNotifier extends EventNotifierSupport {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CamelEventNotifier.class);
+  private static final Logger logger = LoggerFactory.getLogger(CamelEventNotifier.class);
 
   @Override
   public void notify(EventObject event) {
@@ -46,12 +46,12 @@ final class CamelEventNotifier extends EventNotifierSupport {
         onExchangeSent((ExchangeSentEvent) event);
       }
     } catch (Throwable t) {
-      LOG.warn("Failed to capture tracing data", t);
+      logger.warn("Failed to capture tracing data", t);
     }
   }
 
   /** Camel about to send (outbound). */
-  private void onExchangeSending(ExchangeSendingEvent ese) {
+  private static void onExchangeSending(ExchangeSendingEvent ese) {
     SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
@@ -65,24 +65,23 @@ final class CamelEventNotifier extends EventNotifierSupport {
     ActiveSpanManager.activate(ese.getExchange(), span, sd.getInitiatorSpanKind());
     CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
 
-    LOG.debug("[Exchange sending] Initiator span started: {}", span);
+    logger.debug("[Exchange sending] Initiator span started: {}", span);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
-  private void onExchangeSent(ExchangeSentEvent event) {
-    ExchangeSentEvent ese = event;
-    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
+  private static void onExchangeSent(ExchangeSentEvent event) {
+    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(event.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
     }
 
-    Span span = ActiveSpanManager.getSpan(ese.getExchange());
+    Span span = ActiveSpanManager.getSpan(event.getExchange());
     if (span != null) {
-      LOG.debug("[Exchange sent] Initiator span finished: {}", span);
-      sd.post(span, ese.getExchange(), ese.getEndpoint());
-      ActiveSpanManager.deactivate(ese.getExchange());
+      logger.debug("[Exchange sent] Initiator span finished: {}", span);
+      sd.post(span, event.getExchange(), event.getEndpoint());
+      ActiveSpanManager.deactivate(event.getExchange());
     } else {
-      LOG.warn("Could not find managed span for exchange: {}", ese.getExchange());
+      logger.warn("Could not find managed span for exchange: {}", event.getExchange());
     }
   }
 

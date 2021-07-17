@@ -7,13 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -29,10 +30,14 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AsyncHttpClientInstrumentation(ClientAdvice.class.getName()));
+    return asList(
+        new AsyncHttpClientInstrumentation(this.getClass().getName() + "$ClientAdvice"),
+        new HandlerPublisherInstrumentation());
   }
 
+  @SuppressWarnings("unused")
   public static class ClientAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) Request request,

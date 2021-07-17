@@ -6,11 +6,9 @@
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import spark.Spark
 import spock.lang.Shared
 
@@ -19,11 +17,13 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
   @Shared
   int port
 
-  OkHttpClient client = OkHttpUtils.client()
+  @Shared
+  WebClient client
 
   def setupSpec() {
     port = PortUtils.findOpenPort()
     TestSparkJavaApplication.initSpark(port)
+    client = WebClient.of("http://localhost:${port}")
   }
 
   def cleanupSpec() {
@@ -31,16 +31,12 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
   }
 
   def "generates spans"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/param/asdf1234")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
+    when:
+    def response = client.get("/param/asdf1234").aggregate().join()
 
-    expect:
+    then:
     port != 0
-    def content = response.body.string()
+    def content = response.contentUtf8()
     content == "Hello asdf1234"
 
     assertTraces(1) {

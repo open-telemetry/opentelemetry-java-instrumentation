@@ -34,13 +34,13 @@ class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
   private final Context context;
   private Disposable disposable;
 
-  TracingSingleObserver(final SingleObserver<T> actual, final Context context) {
+  TracingSingleObserver(SingleObserver<T> actual, Context context) {
     this.actual = actual;
     this.context = context;
   }
 
   @Override
-  public void onSubscribe(final Disposable d) {
+  public void onSubscribe(Disposable d) {
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
@@ -49,7 +49,7 @@ class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
   }
 
   @Override
-  public void onSuccess(final T t) {
+  public void onSuccess(T t) {
     try (Scope ignored = context.makeCurrent()) {
       actual.onSuccess(t);
     }

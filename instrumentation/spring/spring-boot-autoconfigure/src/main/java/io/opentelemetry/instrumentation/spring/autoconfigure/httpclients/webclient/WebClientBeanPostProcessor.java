@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import java.util.List;
 import java.util.function.Consumer;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,30 +21,36 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
-  private final OpenTelemetry openTelemetry;
+  private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
 
-  WebClientBeanPostProcessor(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+  WebClientBeanPostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    this.openTelemetryProvider = openTelemetryProvider;
   }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof WebClient) {
       WebClient webClient = (WebClient) bean;
-      return wrapBuilder(openTelemetry, webClient.mutate()).build();
+      return wrapBuilder(openTelemetryProvider, webClient.mutate()).build();
     } else if (bean instanceof WebClient.Builder) {
       WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-      return wrapBuilder(openTelemetry, webClientBuilder);
+      return wrapBuilder(openTelemetryProvider, webClientBuilder);
     }
     return bean;
   }
 
-  private WebClient.Builder wrapBuilder(
-      OpenTelemetry openTelemetry, WebClient.Builder webClientBuilder) {
-    return webClientBuilder.filters(webClientFilterFunctionConsumer(openTelemetry));
+  private static WebClient.Builder wrapBuilder(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider, WebClient.Builder webClientBuilder) {
+
+    OpenTelemetry openTelemetry = openTelemetryProvider.getIfUnique();
+    if (openTelemetry != null) {
+      return webClientBuilder.filters(webClientFilterFunctionConsumer(openTelemetry));
+    } else {
+      return webClientBuilder;
+    }
   }
 
-  private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
+  private static Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
       OpenTelemetry openTelemetry) {
     return functions -> {
       if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -57,10 +57,12 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("sendAsync"))
             .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest")))
+            .and(takesArgument(1, named("java.net.http.HttpResponse$BodyHandler"))),
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -96,14 +98,19 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SendAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
+        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler bodyHandler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
+      if (bodyHandler != null) {
+        bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
+      }
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }

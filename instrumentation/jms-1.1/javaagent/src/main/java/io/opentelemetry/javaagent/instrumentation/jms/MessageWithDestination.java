@@ -93,7 +93,8 @@ public final class MessageWithDestination {
     if (jmsDestination instanceof Topic) {
       return createMessageWithTopic(message, operation, (Topic) jmsDestination, startTime);
     }
-    return new MessageWithDestination(message, operation, "unknown", "unknown", false, startTime);
+    return new MessageWithDestination(
+        message, operation, "unknown", "unknown", /* temporary= */ false, startTime);
   }
 
   private static MessageWithDestination createMessageWithQueue(

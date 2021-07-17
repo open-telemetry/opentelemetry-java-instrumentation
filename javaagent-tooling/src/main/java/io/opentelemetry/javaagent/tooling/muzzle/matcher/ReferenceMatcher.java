@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
@@ -15,9 +14,7 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -54,16 +51,15 @@ public final class ReferenceMatcher {
   /**
    * Matcher used by ByteBuddy. Fails fast and only caches empty results, or complete results
    *
-   * @param userClassLoader Classloader to validate against (or null for bootstrap)
+   * @param userClassLoader Classloader to validate against (cannot be {@code null}, must pass
+   *     "bootstrap proxy" instead of bootstrap class loader)
    * @return true if all references match the classpath of loader
    */
   public boolean matches(ClassLoader userClassLoader) {
-    if (userClassLoader == BOOTSTRAP_LOADER) {
-      userClassLoader = Utils.getBootstrapProxy();
-    }
     return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
   }
 
+  // loader cannot be null, must pass "bootstrap proxy" instead of bootstrap class loader
   private boolean doesMatch(ClassLoader loader) {
     TypePool typePool = createTypePool(loader);
     for (ClassRef reference : references.values()) {
@@ -77,13 +73,11 @@ public final class ReferenceMatcher {
   /**
    * Loads the full list of mismatches. Used in debug contexts only
    *
-   * @param loader Classloader to validate against (or null for bootstrap)
+   * @param loader Classloader to validate against (cannot be {@code null}, must pass "bootstrap *
+   *     proxy" instead of bootstrap class loader)
    * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
    */
   public List<Mismatch> getMismatchedReferenceSources(ClassLoader loader) {
-    if (loader == BOOTSTRAP_LOADER) {
-      loader = Utils.getBootstrapProxy();
-    }
     TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();
@@ -95,7 +89,9 @@ public final class ReferenceMatcher {
     return mismatches;
   }
 
+  // loader cannot be null, must pass "bootstrap proxy" instead of bootstrap class loader
   private static TypePool createTypePool(ClassLoader loader) {
+    // ok to use locationStrategy() without fallback bootstrap proxy here since loader is non-null
     return AgentTooling.poolStrategy()
         .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
   }
@@ -121,7 +117,7 @@ public final class ReferenceMatcher {
         }
         return checkThirdPartyTypeMatch(reference, resolution.resolve());
       }
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       if (e.getMessage().startsWith("Cannot resolve type description for ")) {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
@@ -188,7 +184,9 @@ public final class ReferenceMatcher {
   }
 
   private static void collectMethodsFromTypeHierarchy(
-      HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
+      HelperReferenceWrapper type,
+      Set<HelperReferenceWrapper.Method> abstractMethods,
+      Set<HelperReferenceWrapper.Method> plainMethods) {
 
     type.getMethods()
         .forEach(method -> (method.isAbstract() ? abstractMethods : plainMethods).add(method));

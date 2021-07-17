@@ -5,21 +5,15 @@
 
 package io.opentelemetry.javaagent;
 
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.CodeSource;
-import java.util.Arrays;
-import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Premain-Class for the OpenTelemetry Java agent.
@@ -42,8 +36,9 @@ import java.util.regex.Pattern;
  *   <li>Do dot touch any logging facilities here so we can configure them later
  * </ul>
  */
-public class OpenTelemetryAgent {
-  private static final Class<?> thisClass = OpenTelemetryAgent.class;
+// Too early for logging
+@SuppressWarnings("SystemOut")
+public final class OpenTelemetryAgent {
 
   public static void premain(String agentArgs, Instrumentation inst) {
     agentmain(agentArgs, inst);
@@ -51,138 +46,61 @@ public class OpenTelemetryAgent {
 
   public static void agentmain(String agentArgs, Instrumentation inst) {
     try {
-
-      URL bootstrapUrl = installBootstrapJar(inst);
-
-      Class<?> agentInitializerClass =
-          ClassLoader.getSystemClassLoader()
-              .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
-      Method startMethod =
-          agentInitializerClass.getMethod("initialize", Instrumentation.class, URL.class);
-      startMethod.invoke(null, inst, bootstrapUrl);
+      File javaagentFile = installBootstrapJar(inst);
+      InstrumentationHolder.setInstrumentation(inst);
+      AgentInitializer.initialize(inst, javaagentFile);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
-      System.err.println("ERROR " + thisClass.getName());
+      System.err.println("ERROR " + OpenTelemetryAgent.class.getName());
       ex.printStackTrace();
     }
   }
 
-  private static synchronized URL installBootstrapJar(Instrumentation inst)
+  private static synchronized File installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
-    URL javaAgentJarUrl = null;
 
-    // First try Code Source
-    CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
+    CodeSource codeSource = OpenTelemetryAgent.class.getProtectionDomain().getCodeSource();
 
-    if (codeSource != null) {
-      javaAgentJarUrl = codeSource.getLocation();
-      File bootstrapFile = new File(javaAgentJarUrl.toURI());
-
-      if (!bootstrapFile.isDirectory()) {
-        JarFile agentJar = new JarFile(bootstrapFile, false);
-        checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
-        inst.appendToBootstrapClassLoaderSearch(agentJar);
-        return javaAgentJarUrl;
-      }
+    if (codeSource == null) {
+      throw new IllegalStateException("could not get agent jar location");
     }
 
-    System.out.println("Could not get bootstrap jar from code source, using -javaagent arg");
+    File javaagentFile = new File(codeSource.getLocation().toURI());
 
-    // ManagementFactory indirectly references java.util.logging.LogManager
-    // - On Oracle-based JDKs after 1.8
-    // - On IBM-based JDKs since at least 1.7
-    // This prevents custom log managers from working correctly
-    // Use reflection to bypass the loading of the class
-    List<String> arguments = getVmArgumentsThroughReflection();
-
-    String agentArgument = null;
-    for (String arg : arguments) {
-      if (arg.startsWith("-javaagent")) {
-        if (agentArgument == null) {
-          agentArgument = arg;
-        } else {
-          throw new RuntimeException(
-              "Multiple javaagents specified and code source unavailable, not installing tracing agent");
-        }
-      }
+    if (!javaagentFile.isFile()) {
+      throw new IllegalStateException(
+          "agent jar location doesn't appear to be a file: " + javaagentFile.getAbsolutePath());
     }
 
-    if (agentArgument == null) {
-      throw new RuntimeException(
-          "Could not find javaagent parameter and code source unavailable, not installing tracing agent");
-    }
-
-    // argument is of the form -javaagent:/path/to/java-agent.jar=optionalargumentstring
-    Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(agentArgument);
-
-    if (!matcher.matches()) {
-      throw new RuntimeException("Unable to parse javaagent parameter: " + agentArgument);
-    }
-
-    File javaagentFile = new File(matcher.group(1));
-    if (!(javaagentFile.exists() || javaagentFile.isFile())) {
-      throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
-    }
-    javaAgentJarUrl = javaagentFile.toURI().toURL();
+    // passing verify false for vendors who sign the agent jar, because jar file signature
+    // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
+    // after premain executes
     JarFile agentJar = new JarFile(javaagentFile, false);
-    checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+    verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
-
-    return javaAgentJarUrl;
+    return javaagentFile;
   }
 
-  private static List<String> getVmArgumentsThroughReflection() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    try {
-      // Try Oracle-based
-      Class managementFactoryHelperClass =
-          classLoader.loadClass("sun.management.ManagementFactoryHelper");
-
-      Class vmManagementClass = classLoader.loadClass("sun.management.VMManagement");
-
-      Object vmManagement;
-
-      try {
-        vmManagement =
-            managementFactoryHelperClass.getDeclaredMethod("getVMManagement").invoke(null);
-      } catch (NoSuchMethodException e) {
-        // Older vm before getVMManagement() existed
-        Field field = managementFactoryHelperClass.getDeclaredField("jvm");
-        field.setAccessible(true);
-        vmManagement = field.get(null);
-        field.setAccessible(false);
-      }
-
-      return (List<String>) vmManagementClass.getMethod("getVmArguments").invoke(vmManagement);
-
-    } catch (ReflectiveOperationException e) {
-      try { // Try IBM-based.
-        Class vmClass = classLoader.loadClass("com.ibm.oti.vm.VM");
-        String[] argArray = (String[]) vmClass.getMethod("getVMArgs").invoke(null);
-        return Arrays.asList(argArray);
-      } catch (ReflectiveOperationException e1) {
-        // Fallback to default
-        System.out.println(
-            "WARNING: Unable to get VM args through reflection.  A custom java.util.logging.LogManager may not work correctly");
-
-        return ManagementFactory.getRuntimeMXBean().getInputArguments();
-      }
-    }
-  }
-
-  private static boolean checkJarManifestMainClassIsThis(URL jarUrl, JarFile agentJar)
+  // this protects against the case where someone adds the contents of opentelemetry-javaagent.jar
+  // by mistake to their application's "uber.jar"
+  //
+  // the reason this can cause issues is because we locate the agent jar based on the CodeSource of
+  // the OpenTelemetryAgent class, and then we add that jar file to the bootstrap class path
+  //
+  // but if we find the OpenTelemetryAgent class in an uber jar file, and we add that (whole) uber
+  // jar file to the bootstrap class loader, that can cause some applications to break, as there's a
+  // lot of application and library code that doesn't handle getClassLoader() returning null
+  // (e.g. https://github.com/qos-ch/logback/pull/291)
+  private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
-    String mainClass = manifest.getMainAttributes().getValue("Main-Class");
-    if (thisClass.getCanonicalName().equals(mainClass)) {
-      return true;
+    if (manifest.getMainAttributes().getValue("Premain-Class") == null) {
+      throw new IllegalStateException(
+          "The agent was not installed, because the agent was found in '"
+              + jarFile
+              + "', which doesn't contain a Premain-Class manifest attribute. Make sure that you"
+              + " haven't included the agent jar file inside of an application uber jar.");
     }
-    throw new RuntimeException(
-        "opentelemetry-javaagent is not installed, because class '"
-            + thisClass.getCanonicalName()
-            + "' is located in '"
-            + jarUrl
-            + "'. Make sure you don't have this .class file anywhere, besides opentelemetry-javaagent.jar");
   }
 
   /**
@@ -193,9 +111,11 @@ public class OpenTelemetryAgent {
   public static void main(String... args) {
     try {
       System.out.println(OpenTelemetryAgent.class.getPackage().getImplementationVersion());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       System.out.println("Failed to parse agent version");
       e.printStackTrace();
     }
   }
+
+  private OpenTelemetryAgent() {}
 }

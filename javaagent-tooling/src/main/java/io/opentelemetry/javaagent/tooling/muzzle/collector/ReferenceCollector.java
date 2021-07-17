@@ -48,15 +48,24 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * plugin.
  */
 public class ReferenceCollector {
+
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
   private final Set<String> visitedClasses = new HashSet<>();
   private final InstrumentationClassPredicate instrumentationClassPredicate;
+  private final ClassLoader resourceLoader;
 
+  // only used by tests
   public ReferenceCollector(Predicate<String> libraryInstrumentationPredicate) {
+    this(libraryInstrumentationPredicate, ReferenceCollector.class.getClassLoader());
+  }
+
+  public ReferenceCollector(
+      Predicate<String> libraryInstrumentationPredicate, ClassLoader resourceLoader) {
     this.instrumentationClassPredicate =
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
+    this.resourceLoader = resourceLoader;
   }
 
   /**
@@ -86,7 +95,7 @@ public class ReferenceCollector {
       throw new IllegalStateException("Error reading resource " + resource, e);
     }
 
-    visitClassesAndCollectReferences(spiImplementations, false);
+    visitClassesAndCollectReferences(spiImplementations, /* startsFromAdviceClass= */ false);
   }
 
   private static final Pattern AWS_SDK_V2_SERVICE_INTERCEPTOR_SPI =
@@ -95,7 +104,7 @@ public class ReferenceCollector {
   private static final Pattern AWS_SDK_V1_SERVICE_INTERCEPTOR_SPI =
       Pattern.compile("com/amazonaws/services/\\w+(/\\w+)?/request.handler2s");
 
-  private boolean isSpiFile(String resource) {
+  private static boolean isSpiFile(String resource) {
     return resource.startsWith("META-INF/services/")
         || resource.equals("software/amazon/awssdk/global/handlers/execution.interceptors")
         || resource.equals("com/amazonaws/global/handlers/request.handler2s")
@@ -114,7 +123,7 @@ public class ReferenceCollector {
    * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
-    visitClassesAndCollectReferences(singleton(adviceClassName), true);
+    visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
   }
 
   private void visitClassesAndCollectReferences(
@@ -158,16 +167,13 @@ public class ReferenceCollector {
     }
   }
 
-  private static InputStream getClassFileStream(String className) throws IOException {
+  private InputStream getClassFileStream(String className) throws IOException {
     return getResourceStream(Utils.getResourceName(className));
   }
 
-  private static InputStream getResourceStream(String resource) throws IOException {
+  private InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
-        checkNotNull(
-                ReferenceCollector.class.getClassLoader().getResource(resource),
-                "Couldn't find resource %s",
-                resource)
+        checkNotNull(resourceLoader.getResource(resource), "Couldn't find resource %s", resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may

@@ -41,7 +41,9 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$AkkaHttpAsyncAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AkkaHttpSyncAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
@@ -50,7 +52,9 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AkkaHttpAsyncAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)

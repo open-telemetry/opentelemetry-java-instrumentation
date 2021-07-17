@@ -19,8 +19,33 @@ class SpringBootIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  public void springBootSmokeTestOnJDK() throws IOException, InterruptedException {
-    startTarget(11);
+  public void extensionsAreLoadedFromJar() throws IOException, InterruptedException {
+    startTarget("/opentelemetry-extensions.jar");
+
+    testAndVerify();
+
+    stopTarget();
+  }
+
+  @Test
+  public void extensionsAreLoadedFromFolder() throws IOException, InterruptedException {
+    startTarget("/");
+
+    testAndVerify();
+
+    stopTarget();
+  }
+
+  @Test
+  public void extensionsAreLoadedFromJavaagent() throws IOException, InterruptedException {
+    startTargetWithExtendedAgent();
+
+    testAndVerify();
+
+    stopTarget();
+  }
+
+  private void testAndVerify() throws IOException, InterruptedException {
     String url = String.format("http://localhost:%d/greeting", target.getMappedPort(8080));
     Request request = new Request.Builder().url(url).get().build();
 
@@ -45,7 +70,5 @@ class SpringBootIntegrationTest extends IntegrationTest {
     Assertions.assertNotEquals(0,
         countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
     Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
-
-    stopTarget();
   }
 }

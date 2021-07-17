@@ -67,7 +67,7 @@ abstract class ChunkRootSpanTest extends AgentInstrumentationSpecification {
       }
       trace(4, 1) {
         span(0) {
-          name "BatchJob itemsAndTaskletJob.taskletStep.Chunk"
+          name "BatchJob itemsAndTaskletJob.taskletStep.Tasklet"
           kind INTERNAL
           hasLink taskletStepSpan
         }

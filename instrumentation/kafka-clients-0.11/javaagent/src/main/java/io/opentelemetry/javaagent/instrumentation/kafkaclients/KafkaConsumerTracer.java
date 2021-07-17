@@ -40,7 +40,7 @@ public class KafkaConsumerTracer extends BaseTracer {
             .startSpan();
 
     onConsume(span, now, record);
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
@@ -78,6 +78,6 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kafka-clients-0.11";
+    return "io.opentelemetry.kafka-clients-0.11";
   }
 }

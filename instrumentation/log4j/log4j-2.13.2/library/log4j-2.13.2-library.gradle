@@ -1,7 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
-
-dependencies {
-  library "org.apache.logging.log4j:log4j-core:2.13.2"
-
-  testImplementation project(':instrumentation:log4j:log4j-2-testing')
-}

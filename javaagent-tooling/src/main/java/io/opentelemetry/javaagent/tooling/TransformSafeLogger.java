@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -28,7 +30,7 @@ public final class TransformSafeLogger {
   private static final boolean ENABLE_TRANSFORM_SAFE_LOGGING =
       Boolean.getBoolean("otel.javaagent.testing.transform-safe-logging.enabled");
 
-  private static final BlockingQueue<LogMessage> logMessageQueue;
+  @Nullable private static final BlockingQueue<LogMessage> logMessageQueue;
 
   static {
     if (ENABLE_TRANSFORM_SAFE_LOGGING) {
@@ -104,6 +106,14 @@ public final class TransformSafeLogger {
     }
   }
 
+  public void warn(String format) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(WARN, logger, format));
+    } else {
+      logger.warn(format);
+    }
+  }
+
   public void warn(String format, Object arg) {
     if (logMessageQueue != null) {
       logMessageQueue.offer(new LogMessage(WARN, logger, format, arg));
@@ -125,6 +135,38 @@ public final class TransformSafeLogger {
       logMessageQueue.offer(new LogMessage(WARN, logger, format, arguments));
     } else {
       logger.warn(format, arguments);
+    }
+  }
+
+  public void error(String format) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format));
+    } else {
+      logger.error(format);
+    }
+  }
+
+  public void error(String format, Object arg) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arg));
+    } else {
+      logger.error(format, arg);
+    }
+  }
+
+  public void error(String format, Object arg1, Object arg2) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arg1, arg2));
+    } else {
+      logger.error(format, arg1, arg2);
+    }
+  }
+
+  public void error(String format, Object... arguments) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(ERROR, logger, format, arguments));
+    } else {
+      logger.error(format, arguments);
     }
   }
 

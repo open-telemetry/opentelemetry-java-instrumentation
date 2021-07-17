@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.reactor.TracingOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,10 +29,18 @@ public class HooksInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ResetOnEachOperatorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void postStaticInitializer() {
-      TracingOperator.registerOnEachOperator();
+      TracingOperator.newBuilder()
+          .setCaptureExperimentalSpanAttributes(
+              Config.get()
+                  .getBooleanProperty(
+                      "otel.instrumentation.reactor.experimental-span-attributes", false))
+          .build()
+          .registerOnEachOperator();
     }
   }
 }

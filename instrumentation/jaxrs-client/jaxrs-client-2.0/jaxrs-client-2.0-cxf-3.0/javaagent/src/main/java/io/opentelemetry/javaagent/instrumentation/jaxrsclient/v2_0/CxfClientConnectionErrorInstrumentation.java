@@ -28,6 +28,7 @@ public class CxfClientConnectionErrorInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$PreProcessResultAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class PreProcessResultAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

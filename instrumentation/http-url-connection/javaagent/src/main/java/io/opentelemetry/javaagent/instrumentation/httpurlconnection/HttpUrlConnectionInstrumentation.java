@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.api.trace.Span;
@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -59,6 +58,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$GetResponseCodeAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HttpUrlConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -69,7 +69,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      callDepth = CallDepthThreadLocalMap.getCallDepth(HttpURLConnection.class);
+      callDepth = CallDepth.forClass(HttpURLConnection.class);
       if (callDepth.getAndIncrement() > 0) {
         // only want the rest of the instrumentation rules (which are complex enough) to apply to
         // top-level HttpURLConnection calls
@@ -137,6 +137,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetResponseCodeAdvice {
 
     @Advice.OnMethodExit

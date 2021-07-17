@@ -24,7 +24,7 @@ public class ServerSpanNameSupplier implements Supplier<String> {
   @Override
   public String get() {
     // using class name as page name
-    String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
+    String pageName = handler.getPageClass().getName();
     // wicket filter mapping without wildcard, if wicket filter is mapped to /*
     // this will be an empty string
     String filterPath = RequestCycle.get().getRequest().getFilterPath();

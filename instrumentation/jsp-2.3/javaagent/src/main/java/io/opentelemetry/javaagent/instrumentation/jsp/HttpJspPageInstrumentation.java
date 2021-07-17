@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jsp.JspTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -44,6 +44,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

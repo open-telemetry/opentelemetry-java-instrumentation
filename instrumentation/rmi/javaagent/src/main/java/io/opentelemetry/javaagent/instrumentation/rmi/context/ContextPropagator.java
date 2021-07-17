@@ -19,7 +19,7 @@ import sun.rmi.transport.TransportConstants;
 
 public class ContextPropagator {
 
-  private static final Logger log = LoggerFactory.getLogger(ContextPropagator.class);
+  private static final Logger logger = LoggerFactory.getLogger(ContextPropagator.class);
 
   // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
@@ -51,12 +51,12 @@ public class ContextPropagator {
       ContextStore<Connection, Boolean> knownConnections, Connection c, Context context) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(context), CONTEXT_PAYLOAD_OPERATION_ID)) {
-        log.debug("Couldn't send context payload");
+        logger.debug("Couldn't send context payload");
       }
     }
   }
 
-  private boolean checkIfContextCanBePassed(
+  private static boolean checkIfContextCanBePassed(
       ContextStore<Connection, Boolean> knownConnections, Connection c) {
     Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
@@ -69,7 +69,7 @@ public class ContextPropagator {
   }
 
   /** Returns true when no error happened during call. */
-  private boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
+  private static boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);
@@ -99,10 +99,10 @@ public class ContextPropagator {
           if (ex instanceof NoSuchObjectException) {
             return false;
           } else {
-            log.debug("Server error when executing synthetic call", ex);
+            logger.debug("Server error when executing synthetic call", ex);
           }
         } else {
-          log.debug("Error executing synthetic call", e);
+          logger.debug("Error executing synthetic call", e);
         }
         return false;
       } finally {
@@ -110,7 +110,7 @@ public class ContextPropagator {
       }
 
     } catch (IOException e) {
-      log.debug("Communication error executing synthetic call", e);
+      logger.debug("Communication error executing synthetic call", e);
       return false;
     }
     return true;

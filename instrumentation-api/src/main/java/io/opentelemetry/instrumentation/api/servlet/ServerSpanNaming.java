@@ -98,7 +98,7 @@ public final class ServerSpanNaming {
     CONTAINER(1),
     // for servlet filters we try to find the best name which isn't necessarily from the first
     // filter that is called
-    FILTER(2, false),
+    FILTER(2, /* useFirst= */ false),
     SERVLET(3),
     CONTROLLER(4);
 
@@ -106,7 +106,7 @@ public final class ServerSpanNaming {
     private final boolean useFirst;
 
     Source(int order) {
-      this(order, true);
+      this(order, /* useFirst= */ true);
     }
 
     Source(int order, boolean useFirst) {

@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
@@ -64,6 +65,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SetExecuteRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -86,13 +88,14 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetJavaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask<?>, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());
@@ -107,6 +110,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetSubmitRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -128,7 +132,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (state != null && future != null) {
-        ContextStore<Future, State> contextStore =
+        ContextStore<Future<?>, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -136,6 +140,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -143,7 +148,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         task = CallableWrapper.wrapIfNeeded(task);
-        ContextStore<Callable, State> contextStore =
+        ContextStore<Callable<?>, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());
@@ -157,7 +162,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (state != null && future != null) {
-        ContextStore<Future, State> contextStore =
+        ContextStore<Future<?>, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -165,6 +170,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetCallableStateForCallableCollectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -174,9 +180,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (Callable<?> task : tasks) {
           if (task != null) {
-            Callable newTask = CallableWrapper.wrapIfNeeded(task);
+            Callable<?> newTask = CallableWrapper.wrapIfNeeded(task);
             wrappedTasks.add(newTask);
-            ContextStore<Callable, State> contextStore =
+            ContextStore<Callable<?>, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             ExecutorInstrumentationUtils.setupState(
                 contextStore, newTask, Java8BytecodeBridge.currentContext());
@@ -185,7 +191,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         tasks = wrappedTasks;
         return tasks;
       }
-      return null;
+      return Collections.emptyList();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -201,10 +207,10 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
        any parent spans in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
-      if (null != throwable && wrappedTasks != null) {
+      if (null != throwable) {
         for (Callable<?> task : wrappedTasks) {
           if (task != null) {
-            ContextStore<Callable, State> contextStore =
+            ContextStore<Callable<?>, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             State state = contextStore.get(task);
             if (state != null) {

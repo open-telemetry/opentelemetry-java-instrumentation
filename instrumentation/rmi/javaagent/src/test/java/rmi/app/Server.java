@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server extends UnicastRemoteObject implements Greeter {
-  public static String RMI_ID = Server.class.getSimpleName();
+  public static final String RMI_ID = Server.class.getSimpleName();
 
   private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class Server extends UnicastRemoteObject implements Greeter {
   }
 
   @Override
-  public void exceptional() throws RuntimeException {
-    throw new RuntimeException("expected");
+  public void exceptional() {
+    throw new IllegalStateException("expected");
   }
 }

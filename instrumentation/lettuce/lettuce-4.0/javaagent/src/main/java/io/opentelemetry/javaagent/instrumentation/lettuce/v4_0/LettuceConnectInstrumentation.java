@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceInstrumenters.connectInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -33,6 +33,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
         LettuceConnectInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

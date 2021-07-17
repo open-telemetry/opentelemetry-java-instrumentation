@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -36,10 +36,11 @@ public class CamelContextInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$StartAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class StartAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onContextStart(@Advice.This final CamelContext context) throws Exception {
+    public static void onContextStart(@Advice.This CamelContext context) throws Exception {
 
       if (context.hasService(CamelTracingService.class) == null) {
         // start this service eager so we init before Camel is starting up

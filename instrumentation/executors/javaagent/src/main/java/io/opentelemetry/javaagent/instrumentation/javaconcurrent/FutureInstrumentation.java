@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FutureInstrumentation implements TypeInstrumentation {
-  private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
+  private static final Logger logger = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
    * Only apply executor instrumentation to allowed executors. In the future, this restriction may
@@ -73,14 +73,14 @@ public class FutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
+    ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
         implementsInterface(named(Future.class.getName()));
     return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
       @Override
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
-        if (!allowed && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
-          log.debug("Skipping future instrumentation for {}", target.getName());
+        if (!allowed && logger.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+          logger.debug("Skipping future instrumentation for {}", target.getName());
         }
         return allowed;
       }
@@ -94,13 +94,15 @@ public class FutureInstrumentation implements TypeInstrumentation {
         FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another
-      ContextStore<Future, State> contextStore =
+      ContextStore<Future<?>, State> contextStore =
           InstrumentationContext.get(Future.class, State.class);
       State state = contextStore.get(future);
       if (state != null) {

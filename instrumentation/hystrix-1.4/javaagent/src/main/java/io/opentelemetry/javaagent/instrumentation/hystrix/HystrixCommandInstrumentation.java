@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
@@ -43,6 +43,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$FallbackAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -55,6 +56,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class FallbackAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

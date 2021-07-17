@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -44,13 +43,15 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
     public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
   }
 
+  @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
+
     @Advice.OnMethodExit
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
       Context context = CURRENT_RABBIT_CONTEXT.get();
       if (context != null && command.getMethod() != null) {
-        tracer().onCommand(Java8BytecodeBridge.spanFromContext(context), command);
+        RabbitTracer.onCommand(Java8BytecodeBridge.spanFromContext(context), command);
       }
     }
   }

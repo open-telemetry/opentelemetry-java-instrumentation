@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.geode.GeodeInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.geode.GeodeSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -40,27 +41,30 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(
-                named("clear")
+                namedOneOf(
+                        "clear",
+                        "create",
+                        "destroy",
+                        "entrySet",
+                        "get",
+                        "getAll",
+                        "invalidate",
+                        "replace")
                     .or(nameStartsWith("contains"))
-                    .or(named("create"))
-                    .or(named("destroy"))
-                    .or(named("entrySet"))
-                    .or(named("get"))
-                    .or(named("getAll"))
-                    .or(named("invalidate"))
                     .or(nameStartsWith("keySet"))
                     .or(nameStartsWith("put"))
-                    .or(nameStartsWith("remove"))
-                    .or(named("replace"))),
+                    .or(nameStartsWith("remove"))),
         this.getClass().getName() + "$SimpleAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(named("existsValue").or(named("query")).or(named("selectValue")))
+            .and(namedOneOf("existsValue", "query", "selectValue"))
             .and(takesArgument(0, String.class)),
         this.getClass().getName() + "$QueryAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SimpleAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,
@@ -94,7 +98,9 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class QueryAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,

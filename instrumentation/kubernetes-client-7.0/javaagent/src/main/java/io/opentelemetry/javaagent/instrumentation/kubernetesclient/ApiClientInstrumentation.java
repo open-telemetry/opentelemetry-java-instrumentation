@@ -50,7 +50,9 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildRequestAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) Request request) {
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -65,7 +67,9 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
@@ -81,7 +85,9 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAsyncAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Call httpCall,

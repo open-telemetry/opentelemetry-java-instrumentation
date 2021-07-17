@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -18,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
+import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +41,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class Instrumenter<REQUEST, RESPONSE> {
 
-  /** Returns a new {@link InstrumenterBuilder}. */
+  /**
+   * Returns a new {@link InstrumenterBuilder}.
+   *
+   * <p>The {@code instrumentationName} is the name of the instrumentation library, not the name of
+   * the instrument*ed* library. The value passed in this parameter should uniquely identify the
+   * instrumentation library so that during troubleshooting it's possible to pinpoint what tracer
+   * produced problematic telemetry.
+   *
+   * <p>In this project we use a convention to encode the minimum supported version of the
+   * instrument*ed* library into the instrumentation name, for example {@code
+   * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
+   * different library versions it's easy to find out which instrumentations produced the telemetry
+   * data.
+   */
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> newBuilder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
@@ -57,11 +69,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
-  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
+  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      attributesExtractors;
+  private final List<? extends SpanLinkExtractor<? super REQUEST>> spanLinkExtractors;
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
-  private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
+  @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -70,7 +84,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
-    this.extractors = new ArrayList<>(builder.attributesExtractors);
+    this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
+    this.spanLinkExtractors = new ArrayList<>(builder.spanLinkExtractors);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
@@ -88,10 +103,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
-        suppressed = ServerSpan.fromContextOrNull(parentContext) != null;
+      case CONSUMER:
+        suppressed = ServerSpan.exists(parentContext) || ConsumerSpan.exists(parentContext);
         break;
       case CLIENT:
-        suppressed = ClientSpan.fromContextOrNull(parentContext) != null;
+        suppressed = ClientSpan.exists(parentContext);
         break;
       default:
         break;
@@ -121,11 +137,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
       spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
     }
 
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    for (SpanLinkExtractor<? super REQUEST> extractor : spanLinkExtractors) {
+      spanBuilder.addLink(extractor.extract(parentContext, request));
+    }
+
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onStart(attributesBuilder, request);
     }
-    Attributes attributes = attributesBuilder.build();
+    Attributes attributes = attributesBuilder;
 
     Context context = parentContext;
 
@@ -133,7 +153,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = requestListener.start(context, attributes);
     }
 
-    attributes.forEach((key, value) -> spanBuilder.setAttribute((AttributeKey) key, value));
+    spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.startSpan();
     context = context.with(span);
     switch (spanKind) {
@@ -141,6 +161,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
         return ServerSpan.with(context, span);
       case CLIENT:
         return ClientSpan.with(context, span);
+      case CONSUMER:
+        return ConsumerSpan.with(context, span);
       default:
         return context;
     }
@@ -152,20 +174,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * response} is the response object of the operation, and {@code error} is an exception that was
    * thrown by the operation, or {@code null} if none was thrown.
    */
-  public void end(Context context, REQUEST request, RESPONSE response, @Nullable Throwable error) {
+  public void end(
+      Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onEnd(attributesBuilder, request, response);
     }
-    Attributes attributes = attributesBuilder.build();
+    Attributes attributes = attributesBuilder;
 
     for (RequestListener requestListener : requestListeners) {
       requestListener.end(context, attributes);
     }
 
-    attributes.forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
+    span.setAllAttributes(attributes);
 
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);

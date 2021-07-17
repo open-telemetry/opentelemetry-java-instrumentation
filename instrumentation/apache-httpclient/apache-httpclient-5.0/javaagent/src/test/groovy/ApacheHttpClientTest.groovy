@@ -48,11 +48,12 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_TARGET
     ]
+    super.httpAttributes(uri) + extra
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)

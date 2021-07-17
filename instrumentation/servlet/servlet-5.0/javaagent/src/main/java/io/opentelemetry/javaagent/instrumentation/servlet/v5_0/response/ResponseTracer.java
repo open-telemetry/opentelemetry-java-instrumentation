@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
 public class ResponseTracer extends BaseTracer {
@@ -18,10 +19,10 @@ public class ResponseTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet-5.0";
+    return "io.opentelemetry.servlet-5.0";
   }
 
   public Context startSpan(Method method) {
-    return startSpan(spanNameForMethod(method));
+    return startSpan(SpanNames.fromMethod(method));
   }
 }

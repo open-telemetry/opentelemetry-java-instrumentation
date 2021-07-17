@@ -163,7 +163,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     tracer.endExceptionally(otelContext, context.exception());
   }
 
-  private void clearAttributes(ExecutionAttributes executionAttributes) {
+  private static void clearAttributes(ExecutionAttributes executionAttributes) {
     Scope scope = executionAttributes.getAttribute(SCOPE_ATTRIBUTE);
     if (scope != null) {
       scope.close();

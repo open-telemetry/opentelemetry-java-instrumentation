@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet.naming;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +24,9 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
 
   protected abstract Collection<String> getServletMappings(String servletName);
 
+  // TODO(anuraaga): We currently treat null as no mappings, and empty as having a default mapping.
+  // Error prone is correctly flagging this behavior as error prone.
+  @SuppressWarnings("ReturnsNullCollection")
   private Collection<String> getMappings() {
     FILTERREGISTRATION filterRegistration = getFilterRegistration();
     if (filterRegistration == null) {
@@ -51,7 +53,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
 
     List<String> mappingsList = new ArrayList<>(mappings);
     // sort longest mapping first
-    Collections.sort(mappingsList, (s1, s2) -> s2.length() - s1.length());
+    mappingsList.sort((s1, s2) -> s2.length() - s1.length());
 
     return mappingsList;
   }

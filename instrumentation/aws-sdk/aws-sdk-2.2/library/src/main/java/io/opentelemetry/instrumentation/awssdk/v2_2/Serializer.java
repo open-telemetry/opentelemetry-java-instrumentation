@@ -42,7 +42,7 @@ class Serializer {
   }
 
   @Nullable
-  private String serialize(SdkPojo sdkPojo) {
+  private static String serialize(SdkPojo sdkPojo) {
     ProtocolMarshaller<SdkHttpFullRequest> marshaller =
         AwsJsonProtocolFactoryAccess.createMarshaller();
     if (marshaller == null) {

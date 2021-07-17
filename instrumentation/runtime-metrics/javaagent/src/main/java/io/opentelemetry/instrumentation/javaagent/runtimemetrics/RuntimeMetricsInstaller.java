@@ -9,15 +9,16 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
-import io.opentelemetry.javaagent.spi.ComponentInstaller;
+import io.opentelemetry.javaagent.extension.AgentListener;
 import java.util.Collections;
 
-/** {@link ComponentInstaller} to enable runtime metrics during agent startup. */
-@AutoService(ComponentInstaller.class)
-public class RuntimeMetricsInstaller implements ComponentInstaller {
+/** An {@link AgentListener} that enables runtime metrics during agent startup. */
+@AutoService(AgentListener.class)
+public class RuntimeMetricsInstaller implements AgentListener {
   @Override
-  public void afterByteBuddyAgent(Config config) {
-    if (config.isInstrumentationEnabled(Collections.singleton("runtime-metrics"), true)) {
+  public void afterAgent(Config config) {
+    if (config.isInstrumentationEnabled(
+        Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
       GarbageCollector.registerObservers();
       MemoryPools.registerObservers();
     }

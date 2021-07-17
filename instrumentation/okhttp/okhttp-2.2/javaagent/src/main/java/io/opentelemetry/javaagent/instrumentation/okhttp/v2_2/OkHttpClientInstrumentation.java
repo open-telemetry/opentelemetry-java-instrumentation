@@ -28,7 +28,9 @@ public class OkHttpClientInstrumentation implements TypeInstrumentation {
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
+
     @Advice.OnMethodExit
     public static void addTracingInterceptor(@Advice.This OkHttpClient client) {
       for (Interceptor interceptor : client.interceptors()) {

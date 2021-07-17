@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.lettuce.core.RedisClient
@@ -25,7 +24,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
   // it should and if so move back to base class.
   def "async subscriber with specific thread pool"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .subscribeOn(Schedulers.elastic())

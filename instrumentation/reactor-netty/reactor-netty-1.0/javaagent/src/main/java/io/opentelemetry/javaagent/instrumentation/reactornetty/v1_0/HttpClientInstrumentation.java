@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.util.function.BiConsumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -70,24 +70,30 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$OnErrorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CreateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(HttpClient.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Return(readOnly = false) HttpClient client) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(readOnly = false) HttpClient client,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      if (CallDepthThreadLocalMap.decrementCallDepth(HttpClient.class) == 0 && throwable == null) {
+      if (callDepth.decrementAndGet() == 0 && throwable == null) {
         client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -98,7 +104,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnRequestErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -109,7 +117,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnResponseAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -120,7 +130,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnResponseErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -131,7 +143,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)

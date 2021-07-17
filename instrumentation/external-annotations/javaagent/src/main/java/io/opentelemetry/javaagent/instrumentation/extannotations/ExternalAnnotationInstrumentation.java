@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
-  private static final Logger log =
+  private static final Logger logger =
       LoggerFactory.getLogger(ExternalAnnotationInstrumentationModule.class);
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
@@ -69,32 +69,24 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
       "otel.instrumentation.external-annotations.exclude-methods";
 
-  private final Set<String> additionalTraceAnnotations;
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   public ExternalAnnotationInstrumentation() {
-    additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
+    Set<String> additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
       traceAnnotationMatcher = none();
     } else {
-      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = null;
-      ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
+      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
       for (String annotationName : additionalTraceAnnotations) {
-        if (methodTraceMatcher == null) {
-          classLoaderMatcher = hasClassesNamed(annotationName);
-          methodTraceMatcher = named(annotationName);
-        } else {
-          classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
-          methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
-        }
+        classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
       }
       this.classLoaderOptimization = classLoaderMatcher;
-      this.traceAnnotationMatcher = methodTraceMatcher;
+      this.traceAnnotationMatcher = namedOneOf(additionalTraceAnnotations.toArray(new String[0]));
     }
 
     excludedMethodsMatcher = configureExcludedMethods();
@@ -107,7 +99,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
+    return hasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
   }
 
   @Override
@@ -124,7 +116,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     } else if (configString.isEmpty()) {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
-      log.warn(
+      logger.warn(
           "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
           configString);
       return Collections.emptySet();
@@ -166,6 +158,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     return result;
   }
 
+  @SuppressWarnings("unused")
   public static class ExternalAnnotationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

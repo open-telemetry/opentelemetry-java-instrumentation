@@ -20,7 +20,7 @@ public class GrizzlyHttpServerTracer
     extends HttpServerTracer<
         HttpRequestPacket, HttpResponsePacket, HttpRequestPacket, FilterChainContext> {
 
-  private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
 
   private static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
@@ -68,13 +68,13 @@ public class GrizzlyHttpServerTracer
                       : ""))
           .toString();
     } catch (URISyntaxException e) {
-      log.warn("Failed to construct request URI", e);
+      logger.warn("Failed to construct request URI", e);
       return null;
     }
   }
 
   @Override
-  protected String peerHostIP(HttpRequestPacket httpRequest) {
+  protected String peerHostIp(HttpRequestPacket httpRequest) {
     return httpRequest.getRemoteAddress();
   }
 
@@ -90,7 +90,7 @@ public class GrizzlyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.grizzly-2.0";
+    return "io.opentelemetry.grizzly-2.0";
   }
 
   @Override

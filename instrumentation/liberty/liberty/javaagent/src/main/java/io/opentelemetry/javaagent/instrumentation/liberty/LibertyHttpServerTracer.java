@@ -17,11 +17,11 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
   }
 
   public Context startSpan(HttpServletRequest request) {
-    return startSpan(request, "HTTP " + request.getMethod(), false);
+    return startSpan(request, "HTTP " + request.getMethod(), /* servlet= */ false);
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.liberty";
+    return "io.opentelemetry.liberty";
   }
 }

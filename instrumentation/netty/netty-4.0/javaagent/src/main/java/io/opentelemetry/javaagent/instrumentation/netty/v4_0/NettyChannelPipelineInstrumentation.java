@@ -22,7 +22,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
@@ -56,21 +56,23 @@ public class NettyChannelPipelineInstrumentation
    * handlers. If those handlers are later removed, we may want to remove our handlers. That is not
    * currently implemented.
    */
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
+
     @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(2) ChannelHandler handler) {
-      if (callDepth > 0) {
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(ChannelPipeline.class);
 
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
@@ -102,7 +104,9 @@ public class NettyChannelPipelineInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineConnectAdvice {
+
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Context context = Java8BytecodeBridge.currentContext();

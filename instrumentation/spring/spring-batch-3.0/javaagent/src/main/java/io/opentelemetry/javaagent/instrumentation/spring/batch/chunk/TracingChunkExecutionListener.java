@@ -17,15 +17,17 @@ import org.springframework.core.Ordered;
 
 public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
   private final ContextStore<ChunkContext, ContextAndScope> executionContextStore;
+  private final Class<?> builderClass;
 
   public TracingChunkExecutionListener(
-      ContextStore<ChunkContext, ContextAndScope> executionContextStore) {
+      ContextStore<ChunkContext, ContextAndScope> executionContextStore, Class<?> builderClass) {
     this.executionContextStore = executionContextStore;
+    this.builderClass = builderClass;
   }
 
   @Override
   public void beforeChunk(ChunkContext chunkContext) {
-    Context context = tracer().startSpan(chunkContext);
+    Context context = tracer().startSpan(chunkContext, builderClass);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(chunkContext, new ContextAndScope(context, scope));

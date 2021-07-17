@@ -23,7 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
-  private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
 
   private static final String EXECUTORS_INCLUDE_PROPERTY_NAME =
       "otel.instrumentation.executors.include";
@@ -91,6 +92,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
         "org.eclipse.jetty.util.thread.ReservedThreadExecutor",
         "org.glassfish.grizzly.threadpool.GrizzlyExecutorService",
         "play.api.libs.streams.Execution$trampoline$",
+        "play.shaded.ahc.io.netty.util.concurrent.ThreadPerTaskExecutor",
         "scala.concurrent.forkjoin.ForkJoinPool",
         "scala.concurrent.Future$InternalCallbackExecutor$",
         "scala.concurrent.impl.ExecutionContextImpl",
@@ -107,7 +109,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     ElementMatcher.Junction<TypeDescription> matcher = any();
-    final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
+    ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
         implementsInterface(named(Executor.class.getName()));
     if (!INCLUDE_ALL) {
       matcher =
@@ -128,9 +130,9 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
                   }
 
                   if (!allowed
-                      && log.isDebugEnabled()
+                      && logger.isDebugEnabled()
                       && hasExecutorInterfaceMatcher.matches(target)) {
-                    log.debug("Skipping executor instrumentation for {}", target.getName());
+                    logger.debug("Skipping executor instrumentation for {}", target.getName());
                   }
                   return allowed;
                 }

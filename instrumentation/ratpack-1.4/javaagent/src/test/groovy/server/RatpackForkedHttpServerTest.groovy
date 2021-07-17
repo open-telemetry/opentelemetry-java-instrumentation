@@ -12,26 +12,35 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import ratpack.error.ServerErrorHandler
+import ratpack.exec.Execution
 import ratpack.exec.Promise
-import ratpack.groovy.test.embed.GroovyEmbeddedApp
-import ratpack.test.embed.EmbeddedApp
+import ratpack.exec.Result
+import ratpack.exec.util.ParallelBatch
+import ratpack.server.RatpackServer
 
 class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
 
   @Override
-  EmbeddedApp startServer(int bindPort) {
-    def ratpack = GroovyEmbeddedApp.ratpack {
-      serverConfig {
-        port bindPort
-        address InetAddress.getByName('localhost')
+  RatpackServer startServer(int bindPort) {
+
+    def ratpack = RatpackServer.start {
+      it.serverConfig {
+        it.port(bindPort)
+        it.address(InetAddress.getByName("localhost"))
       }
-      bindings {
-        bind TestErrorHandler
-      }
-      handlers {
-        prefix(SUCCESS.rawPath()) {
-          all {
+      it.handlers {
+        it.register {
+          it.add(ServerErrorHandler, new TestErrorHandler())
+        }
+        it.prefix(SUCCESS.rawPath()) {
+          it.all {context ->
             Promise.sync {
               SUCCESS
             }.fork().then { endpoint ->
@@ -41,31 +50,31 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(INDEXED_CHILD.rawPath()) {
-          all {
+        it.prefix(INDEXED_CHILD.rawPath()) {
+          it.all {context ->
             Promise.sync {
               INDEXED_CHILD
             }.fork().then {
               controller(INDEXED_CHILD) {
-                INDEXED_CHILD.collectSpanAttributes { request.queryParams.get(it) }
+                INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
                 context.response.status(INDEXED_CHILD.status).send()
               }
             }
           }
         }
-        prefix(QUERY_PARAM.rawPath()) {
-          all {
+        it.prefix(QUERY_PARAM.rawPath()) {
+          it.all { context ->
             Promise.sync {
               QUERY_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(request.query)
+                context.response.status(endpoint.status).send(context.request.query)
               }
             }
           }
         }
-        prefix(REDIRECT.rawPath()) {
-          all {
+        it.prefix(REDIRECT.rawPath()) {
+          it.all {context ->
             Promise.sync {
               REDIRECT
             }.fork().then { endpoint ->
@@ -75,8 +84,8 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(ERROR.rawPath()) {
-          all {
+        it.prefix(ERROR.rawPath()) {
+          it.all {context ->
             Promise.sync {
               ERROR
             }.fork().then { endpoint ->
@@ -86,8 +95,8 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(EXCEPTION.rawPath()) {
-          all {
+        it.prefix(EXCEPTION.rawPath()) {
+          it.all {
             Promise.sync {
               EXCEPTION
             }.fork().then { endpoint ->
@@ -97,22 +106,58 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix("path/:id/param") {
-          all {
+        it.prefix("path/:id/param") {
+          it.all {context ->
             Promise.sync {
               PATH_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(pathTokens.id)
+                context.response.status(endpoint.status).send(context.pathTokens.id)
+              }
+            }
+          }
+        }
+        it.prefix("fork_and_yieldAll") {
+          it.all {context ->
+            def promise = Promise.async { upstream ->
+              Execution.fork().start({
+                upstream.accept(Result.success(SUCCESS))
+              })
+            }
+            ParallelBatch.of(promise).yieldAll().flatMap { list ->
+              Promise.sync { list.get(0).value }
+            } then { endpoint ->
+              controller(endpoint) {
+                context.response.status(endpoint.status).send(endpoint.body)
               }
             }
           }
         }
       }
     }
-    ratpack.server.start()
 
-    assert ratpack.address.port == bindPort
+    assert ratpack.bindPort == bindPort
+    assert ratpack.bindHost == 'localhost'
     return ratpack
+  }
+
+  def "test fork and yieldAll"() {
+    setup:
+    def url =  address.resolve("fork_and_yieldAll").toString()
+    url = url.replace("http://", "h1c://")
+    def request = AggregatedHttpRequest.of(HttpMethod.GET, url)
+    AggregatedHttpResponse response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
+
+    assertTraces(1) {
+      trace(0, 3) {
+        basicServerSpan(it, 0, "/fork_and_yieldAll")
+        basicSpan(it, 1, "/fork_and_yieldAll", span(0))
+        basicSpan(it, 2, "controller", span(1))
+      }
+    }
   }
 }

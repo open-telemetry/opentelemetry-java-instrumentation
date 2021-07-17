@@ -36,7 +36,7 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
     if (agentUpdatedContext == agentContext) {
       return applicationContext;
     }
-    return new AgentContextStorage.AgentContextWrapper(agentUpdatedContext, applicationContext);
+    return AgentContextStorage.newContextWrapper(agentUpdatedContext, applicationContext);
   }
 
   @Override

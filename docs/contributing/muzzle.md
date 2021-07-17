@@ -44,7 +44,7 @@ and is shared between all type instrumentations. The bytecode of this method (ba
 ByteBuddy plugin using an ASM code visitor.
 
 The source code of the compile-time plugin is located in the `javaagent-tooling` module,
-package `io.opentelemetry.javaagent.tooling.muzzle.collector`.
+package `io.opentelemetry.javaagent.muzzle.generation.collector`.
 
 ### Runtime reference matching
 

@@ -36,7 +36,7 @@ public class KafkaStreamsTracer extends BaseTracer {
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
             .startSpan();
     onConsume(span, record);
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   public String spanNameForConsume(StampedRecord record) {
@@ -57,6 +57,6 @@ public class KafkaStreamsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kafka-streams-0.11";
+    return "io.opentelemetry.kafka-streams-0.11";
   }
 }

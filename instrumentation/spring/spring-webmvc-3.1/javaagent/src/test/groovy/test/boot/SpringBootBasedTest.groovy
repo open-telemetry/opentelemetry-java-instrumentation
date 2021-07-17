@@ -19,8 +19,10 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import okhttp3.FormBody
-import okhttp3.RequestBody
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpData
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.QueryParams
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
@@ -51,11 +53,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
-    true
-  }
-
-  @Override
-  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -96,14 +93,14 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   def "test spans with auth error"() {
     setup:
     def authProvider = server.getBean(SavingAuthenticationProvider)
-    def request = request(AUTH_ERROR, "GET", null).build()
+    def request = request(AUTH_ERROR, "GET")
 
     when:
     authProvider.latestAuthentications.clear()
-    def response = client.newCall(request).execute()
+    def response = client.execute(request).aggregate().join()
 
     then:
-    response.code() == 401 // not secured
+    response.status().code() == 401 // not secured
 
     and:
     assertTraces(1) {
@@ -119,24 +116,23 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     setup:
     def authProvider = server.getBean(SavingAuthenticationProvider)
 
-    RequestBody formBody = new FormBody.Builder()
-      .add("username", "test")
-      .add("password", testPassword).build()
-
-    def request = request(LOGIN, "POST", formBody).build()
+    QueryParams form = QueryParams.of("username", "test", "password", testPassword)
+    def request = AggregatedHttpRequest.of(
+      request(LOGIN, "POST").headers().toBuilder().contentType(MediaType.FORM_DATA).build(),
+      HttpData.ofUtf8(form.toQueryString()))
 
     when:
     authProvider.latestAuthentications.clear()
-    def response = client.newCall(request).execute()
+    def response = client.execute(request).aggregate().join()
 
     then:
-    response.code() == 302 // redirect after success
+    response.status().code() == 302 // redirect after success
     authProvider.latestAuthentications.get(0).password == testPassword
 
     and:
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, null, null, "POST", response.body()?.contentLength(), LOGIN)
+        serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
         redirectSpan(it, 1, span(0))
       }
     }

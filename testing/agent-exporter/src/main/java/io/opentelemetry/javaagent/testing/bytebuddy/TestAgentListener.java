@@ -5,7 +5,14 @@
 
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
-import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
+import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
+import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.ignore.GlobalIgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +24,6 @@ import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +32,37 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   private static final Logger logger = LoggerFactory.getLogger(TestAgentListener.class);
 
-  private static final ElementMatcher.Junction<TypeDescription> GLOBAL_LIBRARIES_IGNORES_MATCHER =
-      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
+  private static final Trie<IgnoreAllow> ADDITIONAL_LIBRARIES_TRIE;
+  private static final Trie<IgnoreAllow> OTHER_IGNORES_TRIE;
+
+  static {
+    ADDITIONAL_LIBRARIES_TRIE = buildAdditionalLibraryIgnores();
+    OTHER_IGNORES_TRIE = buildOtherConfiguredIgnores();
+  }
+
+  private static Trie<IgnoreAllow> buildAdditionalLibraryIgnores() {
+    IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
+    new AdditionalLibraryIgnoredTypesConfigurer().configure(builder);
+    return builder.buildIgnoredTypesTrie();
+  }
+
+  private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
+    Config config = Config.newBuilder().build();
+    IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
+    for (IgnoredTypesConfigurer configurer :
+        SafeServiceLoader.loadOrdered(IgnoredTypesConfigurer.class)) {
+      // skip built-in agent ignores
+      if (configurer instanceof AdditionalLibraryIgnoredTypesConfigurer
+          || configurer instanceof GlobalIgnoredTypesConfigurer) {
+        continue;
+      }
+      configurer.configure(config, builder);
+    }
+    return builder.buildIgnoredTypesTrie();
+  }
 
   public static void reset() {
     INSTANCE.transformedClassesNames.clear();
-    INSTANCE.transformedClassesTypes.clear();
     INSTANCE.instrumentationErrorCount.set(0);
     INSTANCE.skipTransformationConditions.clear();
     INSTANCE.skipErrorConditions.clear();
@@ -43,9 +74,12 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   public static List<String> getIgnoredButTransformedClassNames() {
     List<String> names = new ArrayList<>();
-    for (TypeDescription type : INSTANCE.transformedClassesTypes) {
-      if (GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)) {
-        names.add(type.getActualName());
+    for (String name : INSTANCE.transformedClassesNames) {
+      // only record those types that weren't explicitly marked as either ignored or allowed by the
+      // instrumentation authors
+      if (ADDITIONAL_LIBRARIES_TRIE.getOrNull(name) == IgnoreAllow.IGNORE
+          && OTHER_IGNORES_TRIE.getOrNull(name) == null) {
+        names.add(name);
       }
     }
     return names;
@@ -62,8 +96,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
   static final TestAgentListener INSTANCE = new TestAgentListener();
 
   private final Set<String> transformedClassesNames =
-      Collections.newSetFromMap(new ConcurrentHashMap<>());
-  private final Set<TypeDescription> transformedClassesTypes =
       Collections.newSetFromMap(new ConcurrentHashMap<>());
   private final AtomicInteger instrumentationErrorCount = new AtomicInteger(0);
   private final Set<Function<String, Boolean>> skipTransformationConditions =
@@ -90,7 +122,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
       boolean loaded,
       DynamicType dynamicType) {
     transformedClassesNames.add(typeDescription.getActualName());
-    transformedClassesTypes.add(typeDescription);
   }
 
   @Override

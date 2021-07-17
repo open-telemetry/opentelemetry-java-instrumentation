@@ -57,7 +57,7 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
         request = new TraceMethod(uri.toString())
         break
       default:
-        throw new RuntimeException("Unsupported method: " + method)
+        throw new IllegalStateException("Unsupported method: " + method)
     }
     headers.each { request.setRequestHeader(it.key, it.value) }
     return request
@@ -92,10 +92,11 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_TARGET
     ]
+    super.httpAttributes(uri) + extra
   }
 }

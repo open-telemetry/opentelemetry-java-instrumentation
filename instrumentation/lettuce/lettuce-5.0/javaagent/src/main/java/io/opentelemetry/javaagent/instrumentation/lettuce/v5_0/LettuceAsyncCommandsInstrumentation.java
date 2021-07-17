@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,6 +38,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         LettuceAsyncCommandsInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -46,7 +47,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context = tracer().startSpan(currentContext(), null, command);
+      context = instrumenter().start(currentContext(), command);
       scope = context.makeCurrent();
     }
 
@@ -60,15 +61,15 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, command, null, throwable);
         return;
       }
 
       // close spans on error or normal completion
       if (expectsResponse(command)) {
-        asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(context));
+        asyncCommand.handleAsync(new EndCommandAsyncBiFunction<>(context, command));
       } else {
-        tracer().end(context);
+        instrumenter().end(context, command, null, null);
       }
     }
   }

@@ -111,7 +111,7 @@ class AbstractMetricsTest {
     }
 
     public void waitForData() throws InterruptedException {
-      latch.await(1, TimeUnit.SECONDS);
+      latch.await(20, TimeUnit.SECONDS);
     }
   }
 }

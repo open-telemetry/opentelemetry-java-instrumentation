@@ -38,7 +38,8 @@ public class ContextDispatcher implements Dispatcher {
   private static final NoopRemote NOOP_REMOTE = new NoopRemote();
 
   public static Target newDispatcherTarget() {
-    return new Target(NOOP_REMOTE, CONTEXT_DISPATCHER, NOOP_REMOTE, CONTEXT_CALL_ID, false);
+    return new Target(
+        NOOP_REMOTE, CONTEXT_DISPATCHER, NOOP_REMOTE, CONTEXT_CALL_ID, /* permanent= */ false);
   }
 
   @Override

@@ -45,13 +45,14 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
         ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SetScalaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask<?>, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());

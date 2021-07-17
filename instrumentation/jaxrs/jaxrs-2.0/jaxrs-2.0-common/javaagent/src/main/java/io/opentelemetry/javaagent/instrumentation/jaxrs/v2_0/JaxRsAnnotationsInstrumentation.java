@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.lang.reflect.Method;
@@ -39,7 +39,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return hasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
             .or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
   }
@@ -63,6 +63,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -70,9 +71,15 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
+      callDepth = CallDepth.forClass(Path.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
+
       ContextStore<AsyncResponse, Context> contextStore = null;
       for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
@@ -91,10 +98,6 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         }
       }
 
-      if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
-        return;
-      }
-
       context = tracer().startSpan(target.getClass(), method);
 
       if (contextStore != null && asyncResponse != null) {
@@ -108,13 +111,17 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (context == null || scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Path.class);
 
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

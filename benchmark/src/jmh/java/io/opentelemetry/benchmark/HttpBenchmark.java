@@ -34,8 +34,11 @@ public class HttpBenchmark {
         while (!AbstractLifeCycle.STARTED.equals(jettyServer.getState())) {
           Thread.sleep(500);
         }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new IllegalStateException(e);
       } catch (Exception e) {
-        throw new RuntimeException(e);
+        throw new IllegalStateException(e);
       }
     }
 

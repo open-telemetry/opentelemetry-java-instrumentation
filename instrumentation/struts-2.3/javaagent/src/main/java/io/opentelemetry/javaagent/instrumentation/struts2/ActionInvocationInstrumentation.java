@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.struts2.Struts2Tracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -41,6 +41,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeActionOnlyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

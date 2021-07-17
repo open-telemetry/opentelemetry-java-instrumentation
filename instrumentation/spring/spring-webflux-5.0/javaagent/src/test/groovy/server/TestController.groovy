@@ -40,12 +40,12 @@ class TestController {
 
   @GetMapping("/foo-failfast/{id}")
   Mono<FooModel> getFooFailFast(@PathVariable("id") long id) {
-    throw new RuntimeException("bad things happen")
+    throw new IllegalStateException("bad things happen")
   }
 
   @GetMapping("/foo-failmono/{id}")
   Mono<FooModel> getFooFailMono(@PathVariable("id") long id) {
-    return Mono.error(new RuntimeException("bad things happen"))
+    return Mono.error(new IllegalStateException("bad things happen"))
   }
 
   @GetMapping("/foo-traced-method/{id}")

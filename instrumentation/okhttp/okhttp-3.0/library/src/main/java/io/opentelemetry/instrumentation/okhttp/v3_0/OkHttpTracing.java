@@ -6,23 +6,34 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.ExecutorService;
 import okhttp3.Callback;
 import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /** Entrypoint for tracing OkHttp clients. */
 public final class OkHttpTracing {
 
   /** Returns a new {@link OkHttpTracing} configured with the given {@link OpenTelemetry}. */
   public static OkHttpTracing create(OpenTelemetry openTelemetry) {
-    return new OkHttpTracing(openTelemetry);
+    return newBuilder(openTelemetry).build();
   }
 
-  private final OkHttpClientTracer tracer;
+  /** Returns a new {@link OkHttpTracingBuilder} configured with the given {@link OpenTelemetry}. */
+  public static OkHttpTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+    return new OkHttpTracingBuilder(openTelemetry);
+  }
 
-  OkHttpTracing(OpenTelemetry openTelemetry) {
-    this.tracer = new OkHttpClientTracer(openTelemetry);
+  private final Instrumenter<Request, Response> instrumenter;
+  private final ContextPropagators propagators;
+
+  OkHttpTracing(Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
+    this.instrumenter = instrumenter;
+    this.propagators = propagators;
   }
 
   /**
@@ -42,6 +53,6 @@ public final class OkHttpTracing {
    * }</pre>
    */
   public Interceptor newInterceptor() {
-    return new TracingInterceptor(tracer);
+    return new TracingInterceptor(instrumenter, propagators);
   }
 }

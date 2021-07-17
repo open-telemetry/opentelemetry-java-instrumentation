@@ -8,11 +8,7 @@ import static Resource.Test2
 import static Resource.Test3
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import okhttp3.FormBody
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.apache.cxf.endpoint.Server
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
 
@@ -46,18 +42,10 @@ class CxfFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Serve
     httpServer.stop()
   }
 
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-  }
-
   @Override
   def makeRequest(String path) {
-    def url = HttpUrl.get(address.resolve(path)).newBuilder().build()
-    def request = request(url, "POST", new FormBody.Builder().build()).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.post(address.resolve(path).toString(), "").aggregate().join()
 
-    return [response.body().string(), response.code()]
+    return [response.contentUtf8(), response.status().code()]
   }
 }

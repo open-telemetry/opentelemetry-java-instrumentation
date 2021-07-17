@@ -123,7 +123,7 @@ final class ArmeriaHttpAttributesExtractor
     return null;
   }
 
-  private HttpRequest request(RequestContext ctx) {
+  private static HttpRequest request(RequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {
       throw new IllegalStateException(

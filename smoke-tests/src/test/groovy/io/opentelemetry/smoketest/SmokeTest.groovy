@@ -7,23 +7,20 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import java.util.regex.Pattern
 import java.util.stream.Stream
-import okhttp3.OkHttpClient
 import org.testcontainers.containers.output.ToStringConsumer
 import spock.lang.Shared
 import spock.lang.Specification
 
 abstract class SmokeTest extends Specification {
   private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*")
-
-  protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   protected static final TestContainerManager containerManager = createContainerManager()
 
@@ -32,6 +29,10 @@ abstract class SmokeTest extends Specification {
 
   @Shared
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
+
+  protected WebClient client() {
+    return WebClient.of("h1c://localhost:${containerManager.getTargetMappedPort(8080)}")
+  }
 
   /**
    * Subclasses can override this method to pass jvm arguments in another environment variable

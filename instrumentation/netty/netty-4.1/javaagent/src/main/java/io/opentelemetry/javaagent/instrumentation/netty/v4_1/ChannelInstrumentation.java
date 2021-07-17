@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
@@ -39,11 +40,13 @@ public class ChannelInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("write").or(named("writeAndFlush"))),
+        isMethod().and(namedOneOf("write", "writeAndFlush")),
         ChannelInstrumentation.class.getName() + "$AttachContextAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AttachContextAdvice {
+
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.This Channel channel) {
       channel

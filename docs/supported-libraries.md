@@ -9,7 +9,7 @@ or [contributing](../CONTRIBUTING.md).
 
 ## Contents
 
-  * [Libraries / Frameworks](#libraries---frameworks)
+  * [Libraries / Frameworks](#libraries--frameworks)
   * [Application Servers](#application-servers)
   * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)
@@ -70,7 +70,7 @@ These are the supported libraries and frameworks:
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
 | [Metro](https://projects.eclipse.org/projects/ee4j.metro)                                                                             | 2.2+ (not including 3.x yet)   |
 | [Mojarra](https://projects.eclipse.org/projects/ee4j.mojarra)                                                                         | 1.2+ (not including 3.x yet)   |
-| [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
+| [MongoDB Driver](https://mongodb.github.io/mongo-java-driver/)                                                                        | 3.1+                           |
 | [MyFaces](https://myfaces.apache.org/)                                                                                                | 1.2+ (not including 3.x yet)   |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |

@@ -11,6 +11,8 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
+
+  id "io.opentelemetry.instrumentation.javaagent-codegen" version "0.1.0"
 }
 
 group 'io.opentelemetry.example'
@@ -18,10 +20,10 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.2.0",
-    opentelemetryAlpha         : "1.2.0-alpha",
-    opentelemetryJavaagent     : "1.3.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.3.0-alpha-SNAPSHOT",
+    opentelemetry              : "1.3.0",
+    opentelemetryAlpha         : "1.3.0-alpha",
+    opentelemetryJavaagent     : "1.3.0",
+    opentelemetryJavaagentAlpha: "1.3.0-alpha",
   ]
 
   deps = [
@@ -48,7 +50,7 @@ configurations {
 dependencies {
   /*
   Interfaces and SPIs that we implement. We use `compileOnly` dependency because during
-  runtime all neccessary classes are provided by javaagent itself.
+  runtime all necessary classes are provided by javaagent itself.
    */
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:${versions.opentelemetryAlpha}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api:${versions.opentelemetryJavaagentAlpha}")
@@ -91,19 +93,36 @@ dependencies {
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}:all")
 }
 
+//Extracts manifest from OpenTelemetry Java agent to reuse it later
+task agentManifest(type: Copy) {
+  from zipTree(configurations.otel.singleFile).matching {
+    include 'META-INF/MANIFEST.MF'
+  }
+  into buildDir
+}
+
+//Produces a copy of upstream javaagent with this extension jar included inside it
+//The location of extension directory inside agent jar is hard-coded in the agent source code
+task extendedAgent(type: Jar) {
+  dependsOn agentManifest
+  archiveFileName = "opentelemetry-javaagent-all.jar"
+  manifest.from "$buildDir/META-INF/MANIFEST.MF"
+  from zipTree(configurations.otel.singleFile)
+  from(tasks.shadowJar.archiveFile) {
+    into "extensions"
+  }
+}
+
 tasks {
   test {
     useJUnitPlatform()
 
-    def extensionJar = tasks.shadowJar
-    inputs.files(layout.files(extensionJar))
+    inputs.files(layout.files(tasks.shadowJar))
+    inputs.files(layout.files(tasks.extendedAgent))
 
-    doFirst {
-      //To run our tests with the javaagent published by OpenTelemetry Java instrumentation project
-      jvmArgs("-Dio.opentelemetry.smoketest.agentPath=${configurations.getByName("otel").resolve().find().absolutePath}")
-      //Instructs our integration test where to find our extension archive
-      jvmArgs("-Dio.opentelemetry.smoketest.extensionPath=${extensionJar.archiveFile.get()}")
-    }
+    systemProperty 'io.opentelemetry.smoketest.agentPath', configurations.otel.singleFile.absolutePath
+    systemProperty 'io.opentelemetry.smoketest.extendedAgentPath', tasks.extendedAgent.archiveFile.get().asFile.absolutePath
+    systemProperty 'io.opentelemetry.smoketest.extensionPath', tasks.shadowJar.archiveFile.get().asFile.absolutePath
   }
 
   compileJava {

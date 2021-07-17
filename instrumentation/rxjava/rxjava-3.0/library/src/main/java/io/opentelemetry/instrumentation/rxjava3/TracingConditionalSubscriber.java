@@ -32,8 +32,7 @@ class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber
 
   private final Context context;
 
-  TracingConditionalSubscriber(
-      final ConditionalSubscriber<? super T> downstream, final Context context) {
+  TracingConditionalSubscriber(ConditionalSubscriber<? super T> downstream, Context context) {
     super(downstream);
     this.context = context;
   }
@@ -68,9 +67,9 @@ class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber
 
   @Override
   public int requestFusion(int mode) {
-    final QueueSubscription<T> qs = this.qs;
+    QueueSubscription<T> qs = this.qs;
     if (qs != null) {
-      final int m = qs.requestFusion(mode);
+      int m = qs.requestFusion(mode);
       sourceMode = m;
       return m;
     }

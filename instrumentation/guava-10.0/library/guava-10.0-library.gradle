@@ -1,5 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
-
-dependencies {
-  library "com.google.guava:guava:10.0"
-}

@@ -28,6 +28,10 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     this.parentContext = parentContext;
   }
 
+  public Context getParentContext() {
+    return parentContext;
+  }
+
   @Override
   public State onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
     builder.accumulate(content);
@@ -51,7 +55,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public Object onCompleted() throws Exception {
     tracer().end(context, builder.build());
 
-    try (Scope scope = parentContext.makeCurrent()) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       return delegate.onCompleted();
     }
   }
@@ -60,7 +64,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public void onThrowable(Throwable throwable) {
     tracer().endExceptionally(context, throwable);
 
-    try (Scope scope = parentContext.makeCurrent()) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

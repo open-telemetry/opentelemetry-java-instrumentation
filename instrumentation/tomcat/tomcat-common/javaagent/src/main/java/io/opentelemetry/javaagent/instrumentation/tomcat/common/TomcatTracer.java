@@ -29,7 +29,17 @@ import org.slf4j.LoggerFactory;
 public abstract class TomcatTracer extends HttpServerTracer<Request, Response, Request, Request>
     implements TextMapGetter<Request> {
 
-  private static final Logger log = LoggerFactory.getLogger(TomcatTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(TomcatTracer.class);
+
+  public boolean shouldStartSpan(Request request) {
+    Context attachedContext = getServerContext(request);
+    if (attachedContext == null) {
+      return true;
+    }
+    logger.debug(
+        "Unexpected context found before server handler even started: {}", attachedContext);
+    return false;
+  }
 
   public Context startServerSpan(Request request) {
     return startSpan(request, request, request, "HTTP " + request.method().toString());
@@ -54,7 +64,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
   }
 
   @Override
-  protected String peerHostIP(Request connection) {
+  protected String peerHostIp(Request connection) {
     connection.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, connection);
     return connection.remoteAddr().toString();
   }
@@ -71,8 +81,8 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
 
   @Override
   protected String url(Request request) {
-    MessageBytes schemeMB = request.scheme();
-    String scheme = schemeMB.isNull() ? "http" : schemeMB.toString();
+    MessageBytes schemeMessageBytes = request.scheme();
+    String scheme = schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
     String host = request.serverName().toString();
     int serverPort = request.getServerPort();
     String path = request.requestURI().toString();
@@ -81,7 +91,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
     try {
       return new URI(scheme, null, host, serverPort, path, query, null).toString();
     } catch (Exception e) {
-      log.warn(
+      logger.warn(
           "Malformed url? scheme: {}, host: {}, port: {}, path: {}, query: {}",
           scheme,
           host,

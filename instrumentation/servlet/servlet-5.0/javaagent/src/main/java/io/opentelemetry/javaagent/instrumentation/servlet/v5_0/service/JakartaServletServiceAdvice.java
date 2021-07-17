@@ -12,7 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
+@SuppressWarnings("unused")
 public class JakartaServletServiceAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -32,10 +33,13 @@ public class JakartaServletServiceAdvice {
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
+    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
+    callDepth.getAndIncrement();
+
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -91,8 +95,12 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
+      @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+
+    boolean topLevel = callDepth.decrementAndGet() == 0;
+
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -102,6 +110,7 @@ public class JakartaServletServiceAdvice {
         (HttpServletRequest) request,
         (HttpServletResponse) response,
         throwable,
+        topLevel,
         context,
         scope);
   }

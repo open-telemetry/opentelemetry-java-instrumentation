@@ -53,7 +53,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.netty-4.0";
+    return "io.opentelemetry.netty-4.0";
   }
 
   @Override
@@ -72,7 +72,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(Channel channel) {
+  protected String peerHostIp(Channel channel) {
     SocketAddress socketAddress = channel.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();

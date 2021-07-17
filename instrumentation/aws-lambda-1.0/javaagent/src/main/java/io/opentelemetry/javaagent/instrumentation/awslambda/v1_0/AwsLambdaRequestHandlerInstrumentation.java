@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.functionTracer;
 import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.messageTracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -49,7 +49,9 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,

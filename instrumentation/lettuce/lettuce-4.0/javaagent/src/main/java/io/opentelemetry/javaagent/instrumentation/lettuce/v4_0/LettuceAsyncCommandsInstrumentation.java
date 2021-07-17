@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -37,6 +37,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         LettuceAsyncCommandsInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

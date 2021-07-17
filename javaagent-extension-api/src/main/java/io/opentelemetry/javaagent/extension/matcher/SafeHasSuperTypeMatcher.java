@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
 import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.safeAsErasure;
+import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,6 +14,7 @@ import java.util.Set;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
 
   /** The matcher to apply to any super type of the matched type. */
   private final ElementMatcher<TypeDescription.Generic> matcher;
@@ -93,16 +94,16 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     return false;
   }
 
-  private Iterable<TypeDefinition> safeGetInterfaces(TypeDefinition typeDefinition) {
+  private static Iterable<TypeDefinition> safeGetInterfaces(TypeDefinition typeDefinition) {
     return new SafeInterfaceIterator(typeDefinition);
   }
 
   static TypeDefinition safeGetSuperClass(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.getSuperClass();
-    } catch (Exception e) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+    } catch (Throwable e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "{} trying to get super class for target {}: {}",
             e.getClass().getSimpleName(),
             safeTypeDefinitionName(typeDefinition),
@@ -147,7 +148,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   private static class SafeInterfaceIterator
       implements Iterator<TypeDefinition>, Iterable<TypeDefinition> {
     private final TypeDefinition typeDefinition;
-    private final Iterator<TypeDescription.Generic> it;
+    @Nullable private final Iterator<TypeDescription.Generic> it;
     private TypeDefinition next;
 
     private SafeInterfaceIterator(TypeDefinition typeDefinition) {
@@ -155,7 +156,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       Iterator<TypeDescription.Generic> it = null;
       try {
         it = typeDefinition.getInterfaces().iterator();
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logException(typeDefinition, e);
       }
       this.it = it;
@@ -167,7 +168,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
         try {
           next = it.next();
           return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
           logException(typeDefinition, e);
           return false;
         }
@@ -190,9 +191,9 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       return this;
     }
 
-    private void logException(TypeDefinition typeDefinition, Exception e) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+    private static void logException(TypeDefinition typeDefinition, Throwable e) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "{} trying to get interfaces for target {}: {}",
             e.getClass().getSimpleName(),
             safeTypeDefinitionName(typeDefinition),

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webcli
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,7 +30,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientAutoConfiguration {
 
   @Bean
-  public WebClientBeanPostProcessor otelWebClientBeanPostProcessor(OpenTelemetry openTelemetry) {
-    return new WebClientBeanPostProcessor(openTelemetry);
+  public WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new WebClientBeanPostProcessor(openTelemetryProvider);
   }
 }

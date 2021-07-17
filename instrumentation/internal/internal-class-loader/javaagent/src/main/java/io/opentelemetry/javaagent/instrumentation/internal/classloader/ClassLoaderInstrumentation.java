@@ -6,19 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedNoneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.tooling.Constants;
 import java.lang.invoke.MethodHandle;
@@ -28,6 +28,7 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.LoggerFactory;
 
 /*
  * Some class loaders do not delegate to their parent, so classes in those class loaders
@@ -45,10 +46,10 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // just an optimization to exclude common class loaders that are known to delegate to the
     // bootstrap loader (or happen to _be_ the bootstrap loader)
-    return namedNoneOf(
+    return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader")
+            "io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
@@ -90,20 +91,25 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         //noinspection unchecked
         return (List<String>) methodHandle.invokeExact();
       } catch (Throwable e) {
+        LoggerFactory.getLogger(Holder.class)
+            .warn("Unable to load bootstrap package prefixes from the bootstrap CL", e);
         return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }
   }
 
+  @SuppressWarnings("unused")
   public static class LoadClassAdvice {
+
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(@Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
       // back to this instrumentation over and over, causing a StackOverflowError
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
-      if (callDepth > 0) {
+      CallDepth callDepth = CallDepth.forClass(ClassLoader.class);
+      if (callDepth.getAndIncrement() > 0) {
+        callDepth.decrementAndGet();
         return null;
       }
 
@@ -123,7 +129,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         // ends up calling a ClassFileTransformer which ends up calling loadClass() further down the
         // stack on one of our bootstrap packages (since the call depth check would then suppress
         // the nested loadClass instrumentation)
-        CallDepthThreadLocalMap.reset(ClassLoader.class);
+        callDepth.decrementAndGet();
       }
       return null;
     }

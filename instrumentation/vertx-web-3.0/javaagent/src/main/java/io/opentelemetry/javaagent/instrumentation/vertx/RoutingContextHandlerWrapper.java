@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public final class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
-  private static final Logger log = LoggerFactory.getLogger(RoutingContextHandlerWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(RoutingContextHandlerWrapper.class);
 
   private final Handler<RoutingContext> handler;
 
@@ -37,8 +37,8 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/465
         serverSpan.updateName(context.currentRoute().getPath());
       }
-    } catch (Exception ex) {
-      log.error("Failed to update server span name with vert.x route", ex);
+    } catch (RuntimeException ex) {
+      logger.error("Failed to update server span name with vert.x route", ex);
     }
     try {
       handler.handle(context);
@@ -50,7 +50,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
     }
   }
 
-  private Throwable unwrapThrowable(Throwable throwable) {
+  private static Throwable unwrapThrowable(Throwable throwable) {
     if (throwable.getCause() != null
         && (throwable instanceof ExecutionException
             || throwable instanceof CompletionException

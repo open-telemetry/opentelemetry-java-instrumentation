@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -41,45 +41,47 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientQueryAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(CouchbaseCluster.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
-        @Advice.Enter int callDepth,
         @Advice.Origin Method method,
         @Advice.FieldValue("bucket") String bucket,
-        @Advice.Return(readOnly = false) Observable<?> result) {
-      if (callDepth > 0) {
+        @Advice.Return(readOnly = false) Observable<?> result,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
       result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
     }
   }
 
+  @SuppressWarnings("unused")
   public static class CouchbaseClientQueryAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(CouchbaseCluster.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void subscribeResult(
-        @Advice.Enter int callDepth,
         @Advice.Origin Method method,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Argument(value = 0, optional = true) Object query,
-        @Advice.Return(readOnly = false) Observable<?> result) {
-      if (callDepth > 0) {
+        @Advice.Return(readOnly = false) Observable<?> result,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
 
       if (query != null) {
         // A query can be of many different types. We could track the creation of them and try to

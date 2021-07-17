@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import play.api.mvc.Request;
 import play.api.routing.HandlerDef;
 import play.libs.typedmap.TypedKey;
@@ -22,7 +23,7 @@ public class PlayTracer extends BaseTracer {
     return TRACER;
   }
 
-  private static final Method typedKeyGetUnderlying;
+  @Nullable private static final Method typedKeyGetUnderlying;
 
   static {
     Method typedKeyGetUnderlyingCheck = null;
@@ -69,6 +70,6 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.play-2.6";
+    return "io.opentelemetry.play-2.6";
   }
 }

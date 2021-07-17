@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -42,7 +42,9 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void captureThrowable(
         @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {

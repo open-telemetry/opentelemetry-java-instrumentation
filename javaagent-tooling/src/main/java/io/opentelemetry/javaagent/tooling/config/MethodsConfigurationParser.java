@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public final class MethodsConfigurationParser {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodsConfigurationParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(MethodsConfigurationParser.class);
 
   static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
   private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
@@ -41,7 +41,7 @@ public final class MethodsConfigurationParser {
     if (configString == null || configString.trim().isEmpty()) {
       return Collections.emptyMap();
     } else if (!validateConfigString(configString)) {
-      log.warn(
+      logger.warn(
           "Invalid trace method config '{}'. Must match 'package.Class$Name[method1,method2];*'.",
           configString);
       return Collections.emptyMap();

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.caching;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.Executor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A builder of {@link Cache}. */
 public final class CacheBuilder {
@@ -16,7 +17,7 @@ public final class CacheBuilder {
   private boolean weakKeys;
   private boolean weakValues;
   private long maximumSize = UNSET;
-  private Executor executor = null;
+  @Nullable private Executor executor = null;
 
   /** Sets the maximum size of the cache. */
   public CacheBuilder setMaximumSize(long maximumSize) {

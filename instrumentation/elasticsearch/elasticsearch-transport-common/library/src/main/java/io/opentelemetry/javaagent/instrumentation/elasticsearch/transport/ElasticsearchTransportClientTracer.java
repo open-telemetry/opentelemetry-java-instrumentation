@@ -60,6 +60,6 @@ public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Voi
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.elasticsearch-transport-common";
+    return "io.opentelemetry.elasticsearch-transport-common";
   }
 }

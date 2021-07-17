@@ -34,7 +34,7 @@ class ScalaConcurrentTests {
       }
       val badFuture: Future[Integer] = Future {
         tracedChild("badFuture")
-        throw new RuntimeException("Uh-oh")
+        throw new IllegalStateException("Uh-oh")
       }
       badFuture onFailure {
         case t: Throwable => {

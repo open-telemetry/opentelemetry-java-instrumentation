@@ -41,7 +41,9 @@ public class RequestExecutorInstrumentation implements TypeInstrumentation {
         RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class RequestExecutorAdvice {
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.FieldValue("request") Request<?> request,

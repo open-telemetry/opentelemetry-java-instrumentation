@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
@@ -23,7 +22,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
 class CassandraClientTest extends AgentInstrumentationSpecification {
-  private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
+  private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest)
 
   @Shared
   def executor = Executors.newCachedThreadPool()
@@ -38,7 +37,7 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     cassandra = new GenericContainer("cassandra:3")
       .withExposedPorts(9042)
-      .withLogConsumer(new Slf4jLogConsumer(log))
+      .withLogConsumer(new Slf4jLogConsumer(logger))
       .withStartupTimeout(Duration.ofSeconds(120))
     cassandra.start()
 
@@ -88,10 +87,10 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     setup:
     def callbackExecuted = new AtomicBoolean()
     Session session = cluster.connect(keyspace)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def future = session.executeAsync(statement)
       future.addListener({ ->
-        runUnderTrace("callbackListener") {
+        runWithSpan("callbackListener") {
           callbackExecuted.set(true)
         }
       }, executor)

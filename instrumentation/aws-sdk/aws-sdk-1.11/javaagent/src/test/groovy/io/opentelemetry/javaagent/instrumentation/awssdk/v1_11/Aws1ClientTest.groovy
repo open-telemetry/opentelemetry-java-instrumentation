@@ -77,7 +77,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
     def client = new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN)
     client.addRequestHandler(new RequestHandler2() {
       void beforeRequest(Request<?> request) {
-        throw new RuntimeException("bad handler")
+        throw new IllegalStateException("bad handler")
       }
     })
 
@@ -86,7 +86,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
 
     then:
     !Span.current().getSpanContext().isValid()
-    thrown RuntimeException
+    thrown IllegalStateException
 
     assertTraces(1) {
       trace(0, 1) {
@@ -94,7 +94,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           name "S3.HeadBucket"
           kind SpanKind.CLIENT
           status ERROR
-          errorEvent RuntimeException, "bad handler"
+          errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP

@@ -6,7 +6,6 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import org.apache.logging.log4j.LogManager
 
 abstract class Log4j2Test extends InstrumentationSpecification {
@@ -42,14 +41,14 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     def logger = LogManager.getLogger("TestLogger")
 
     when:
-    Span span1 = TraceUtils.runUnderTrace("test") {
+    Span span1 = runWithSpan("test") {
       logger.info("log message 1")
       Span.current()
     }
 
     logger.info("log message 2")
 
-    Span span2 = TraceUtils.runUnderTrace("test 2") {
+    Span span2 = runWithSpan("test 2") {
       logger.info("log message 3")
       Span.current()
     }

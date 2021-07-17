@@ -30,10 +30,12 @@ public class ArmeriaServerBuilderInstrumentation implements TypeInstrumentation 
         ArmeriaServerBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
+
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This ServerBuilder builder) {
-      builder.decorator(ArmeriaDecorators.SERVER_DECORATOR);
+      builder.decorator(ArmeriaSingletons.SERVER_DECORATOR);
     }
   }
 }

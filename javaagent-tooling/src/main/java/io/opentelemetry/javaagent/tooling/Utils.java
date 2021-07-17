@@ -24,7 +24,7 @@ public class Utils {
   }
 
   public static ClassLoader getExtensionsClassLoader() {
-    return AgentInitializer.getAgentClassloader();
+    return AgentInitializer.getAgentClassLoader();
   }
 
   /** Return a classloader which can be used to look up bootstrap resources. */
@@ -73,18 +73,6 @@ public class Utils {
    */
   public static MethodDescription getMethodDefinition(TypeDefinition type, String methodName) {
     return type.getDeclaredMethods().filter(named(methodName)).getOnly();
-  }
-
-  /** Returns the current stack trace with multiple entries on new lines. */
-  public static String getStackTraceAsString() {
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    StringBuilder stringBuilder = new StringBuilder();
-    String lineSeparator = System.getProperty("line.separator");
-    for (StackTraceElement element : stackTrace) {
-      stringBuilder.append(element.toString());
-      stringBuilder.append(lineSeparator);
-    }
-    return stringBuilder.toString();
   }
 
   private Utils() {}

@@ -36,11 +36,12 @@ public class CallableInstrumentation implements TypeInstrumentation {
         CallableInstrumentation.class.getName() + "$CallableAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This Callable thiz) {
-      ContextStore<Callable, State> contextStore =
+    public static Scope enter(@Advice.This Callable<?> thiz) {
+      ContextStore<Callable<?>, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }

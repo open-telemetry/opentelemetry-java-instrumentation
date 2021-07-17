@@ -1,5 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  implementation project(':instrumentation:runtime-metrics:library')
-}

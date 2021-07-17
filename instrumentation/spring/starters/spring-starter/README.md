@@ -32,7 +32,7 @@ Add the following dependencies to your `pom.xml` file:
 Add the following dependencies to your gradle.build file:
 
 ```groovy
-implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Starter Guide

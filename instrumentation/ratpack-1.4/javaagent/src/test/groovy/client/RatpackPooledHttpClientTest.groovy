@@ -5,12 +5,22 @@
 
 package client
 
-import ratpack.http.client.HttpClientSpec
+import io.opentelemetry.instrumentation.test.base.SingleConnection
+import ratpack.http.client.HttpClient
 
 class RatpackPooledHttpClientTest extends RatpackHttpClientTest {
 
   @Override
-  void configureClient(HttpClientSpec spec) {
-    spec.poolSize(5)
+  HttpClient buildHttpClient() {
+    return buildHttpClient({spec ->
+      spec.poolSize(5)
+    })
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    // this test is already run for RatpackHttpClientTest
+    // returning null here to avoid running the same test twice
+    return null
   }
 }

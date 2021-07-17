@@ -23,7 +23,7 @@ public class TestHelperClasses {
       return 54321;
     }
 
-    private String getStr() {
+    private static String getStr() {
       return "abc";
     }
   }

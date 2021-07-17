@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -36,7 +36,9 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetCurrentPlatformEnumAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
       SystemMetrics.registerObservers();

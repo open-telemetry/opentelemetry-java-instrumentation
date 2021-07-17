@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -44,7 +44,9 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
+
     @Advice.OnMethodEnter
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*
@@ -52,12 +54,12 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
        - To return scope only if we have captured it.
        - To capture scope only in case of error.
        */
-      Throwable cause = future.cause();
-      if (cause == null) {
-        return null;
-      }
       Context parentContext = future.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
       if (parentContext == null) {
+        return null;
+      }
+      Throwable cause = future.cause();
+      if (cause == null) {
         return null;
       }
 

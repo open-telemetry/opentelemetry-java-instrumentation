@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 
@@ -24,11 +25,11 @@ public class JaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxws-common";
+    return "io.opentelemetry.jaxws-common";
   }
 
   public Context startSpan(Class<?> target, Method method) {
-    String spanName = spanNameForMethod(target, method);
+    String spanName = SpanNames.fromMethod(target, method);
 
     Context parentContext = Context.current();
     Span serverSpan = ServerSpan.fromContextOrNull(parentContext);

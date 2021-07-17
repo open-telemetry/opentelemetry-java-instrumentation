@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,7 +52,7 @@ public class SerializerTest {
   @Test
   public void shouldSerializeEmptyCollectionAsNull() {
     // given
-    List<String> collection = Arrays.asList();
+    List<String> collection = Collections.emptyList();
     // when
     String serialized = new Serializer().serialize(collection);
     // then
@@ -62,7 +63,7 @@ public class SerializerTest {
   public void shouldSerializeMapAsKeyCollection() {
     // given
     Map<String, Object> map = new HashMap<>();
-    map.put("uno", Long.valueOf(1));
+    map.put("uno", 1L);
     map.put("dos", new LinkedHashMap<>());
     map.put("tres", "cuatro");
     // when

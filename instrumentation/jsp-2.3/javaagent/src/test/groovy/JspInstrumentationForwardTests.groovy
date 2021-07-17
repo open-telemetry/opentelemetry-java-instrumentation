@@ -7,13 +7,11 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import java.nio.file.Files
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
@@ -36,7 +34,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
   @Shared
   String baseUrl
 
-  OkHttpClient client = OkHttpUtils.client()
+  @Shared
+  WebClient client
 
   def setupSpec() {
     baseDir = Files.createTempDirectory("jsp").toFile()
@@ -56,6 +55,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
     tomcatServer.getConnector()
 
     baseUrl = "http://localhost:$port/$jspWebappContext"
+    client = WebClient.of(baseUrl)
 
     appContext = tomcatServer.addWebapp("/$jspWebappContext",
       JspInstrumentationForwardTests.getResource("/webapps/jsptest").getPath())
@@ -72,12 +72,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
   @Unroll
   def "non-erroneous GET forward to #forwardTo"() {
-    setup:
-    String reqUrl = baseUrl + "/$forwardFromFileName"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/$forwardFromFileName").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -109,7 +105,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /$forwardFromFileName"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/$forwardFromFileName"
           }
         }
         span(3) {
@@ -125,15 +121,12 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /$forwardDestFileName"
           attributes {
             "jsp.forwardOrigin" "/$forwardFromFileName"
-            "jsp.requestURL" baseUrl + "/$forwardDestFileName"
+            "jsp.requestURL" "${baseUrl}/$forwardDestFileName"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
 
     where:
     forwardTo         | forwardFromFileName                | forwardDestFileName | jspForwardFromClassName   | jspForwardFromClassPrefix | jspForwardDestClassName | jspForwardDestClassPrefix
@@ -142,12 +135,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
   }
 
   def "non-erroneous GET forward to plain HTML"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToHtml.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToHtml.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -179,24 +168,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /forwards/forwardToHtml.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToHtml.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "non-erroneous GET forwarded to jsp with multiple includes"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToIncludeMulti.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToIncludeMulti.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -228,7 +210,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /forwards/forwardToIncludeMulti.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToIncludeMulti.jsp"
           }
         }
         span(3) {
@@ -244,7 +226,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /includes/includeMulti.jsp"
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
         span(5) {
@@ -260,7 +242,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /common/javaLoopH2.jsp"
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
         span(7) {
@@ -276,24 +258,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /common/javaLoopH2.jsp"
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "non-erroneous GET forward to another forward (2 forwards)"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToJspForward.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get() build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToJspForward.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -325,7 +300,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /forwards/forwardToJspForward.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToJspForward.jsp"
           }
         }
         span(3) {
@@ -341,7 +316,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /forwards/forwardToSimpleJava.jsp"
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
-            "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToSimpleJava.jsp"
           }
         }
         span(5) {
@@ -357,24 +332,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "Render /common/loop.jsp"
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
-            "jsp.requestURL" baseUrl + "/common/loop.jsp"
+            "jsp.requestURL" "${baseUrl}/common/loop.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "forward to jsp with compile error should not produce a 2nd render span"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToCompileError.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToCompileError.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -410,7 +378,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToCompileError.jsp"
           }
         }
         span(3) {
@@ -425,19 +393,12 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
       }
     }
-    res.code() == 500
-
-    cleanup:
-    res.close()
+    res.status().code() == 500
   }
 
   def "forward to non existent jsp should be 404"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToNonExistent.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToNonExistent.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -470,7 +431,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /forwards/forwardToNonExistent.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/forwards/forwardToNonExistent.jsp"
           }
         }
         span(3) {
@@ -479,9 +440,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
       }
     }
-    res.code() == 404
-
-    cleanup:
-    res.close()
+    res.status().code() == 404
   }
 }

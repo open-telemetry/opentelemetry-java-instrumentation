@@ -21,14 +21,8 @@ public class AkkaActorInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new AkkaForkJoinPoolInstrumentation(),
-        new AkkaForkJoinTaskInstrumentation(),
         new AkkaDispatcherInstrumentation(),
-        new AkkaActorCellInstrumentation());
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
+        new AkkaActorCellInstrumentation(),
+        new AkkaDefaultSystemMessageQueueInstrumentation());
   }
 }

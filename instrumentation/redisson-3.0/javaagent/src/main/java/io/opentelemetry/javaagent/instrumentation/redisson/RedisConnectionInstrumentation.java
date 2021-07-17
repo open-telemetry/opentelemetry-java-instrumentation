@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -32,6 +32,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
         isMethod().and(named("send")), this.getClass().getName() + "$SendAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

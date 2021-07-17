@@ -7,19 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.oshi;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.spi.ComponentInstaller;
+import io.opentelemetry.javaagent.extension.AgentListener;
 import java.lang.reflect.Method;
 import java.util.Collections;
 
 /**
- * {@link ComponentInstaller} to enable oshi metrics during agent startup if oshi is present on the
+ * An {@link AgentListener} that enables oshi metrics during agent startup if oshi is present on the
  * system classpath.
  */
-@AutoService(ComponentInstaller.class)
-public class OshiMetricsInstaller implements ComponentInstaller {
+@AutoService(AgentListener.class)
+public class OshiMetricsInstaller implements AgentListener {
   @Override
-  public void afterByteBuddyAgent(Config config) {
-    if (config.isInstrumentationEnabled(Collections.singleton("oshi"), true)) {
+  public void afterAgent(Config config) {
+    if (config.isInstrumentationEnabled(
+        Collections.singleton("oshi"), /* defaultEnabled= */ true)) {
       try {
         // Call oshi.SystemInfo.getCurrentPlatformEnum() to activate SystemMetrics.
         // Oshi instrumentation will intercept this call and enable SystemMetrics.

@@ -6,11 +6,8 @@
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.jboss.arquillian.container.test.api.Deployment
 import org.jboss.arquillian.container.test.api.RunAsClient
 import org.jboss.arquillian.spock.ArquillianSputnik
@@ -28,7 +25,7 @@ import test.RestApplication
 @RunAsClient
 abstract class ArquillianRestTest extends AgentInstrumentationSpecification {
 
-  static OkHttpClient client = OkHttpUtils.client()
+  static WebClient client = WebClient.of()
 
   @ArquillianResource
   static URI url
@@ -49,15 +46,11 @@ abstract class ArquillianRestTest extends AgentInstrumentationSpecification {
   @Unroll
   def "test #path"() {
     when:
-    Request request = new Request.Builder().url(HttpUrl.get(url.resolve(path))).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.get(url.resolve(path).toString()).aggregate().join()
 
     then:
-    response.withCloseable {
-      assert response.code() == 200
-      assert response.body().string() == "hello"
-      true
-    }
+    response.status().code() == 200
+    response.contentUtf8() == "hello"
 
     and:
     assertTraces(1) {

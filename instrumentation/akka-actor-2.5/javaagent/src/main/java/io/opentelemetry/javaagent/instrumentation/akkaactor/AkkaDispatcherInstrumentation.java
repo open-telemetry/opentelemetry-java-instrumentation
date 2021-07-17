@@ -33,10 +33,11 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         named("dispatch")
             .and(takesArgument(0, named("akka.actor.ActorCell")))
             .and(takesArgument(1, named("akka.dispatch.Envelope"))),
-        AkkaDispatcherInstrumentation.class.getName() + "$DispatcherStateAdvice");
+        AkkaDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
   }
 
-  public static class DispatcherStateAdvice {
+  @SuppressWarnings("unused")
+  public static class DispatchEnvelopeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterDispatch(@Advice.Argument(1) Envelope envelope) {

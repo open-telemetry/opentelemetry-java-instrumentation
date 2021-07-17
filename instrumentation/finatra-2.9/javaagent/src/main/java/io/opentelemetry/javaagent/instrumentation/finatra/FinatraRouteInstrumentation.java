@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -51,7 +51,9 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleMatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleMatchAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,

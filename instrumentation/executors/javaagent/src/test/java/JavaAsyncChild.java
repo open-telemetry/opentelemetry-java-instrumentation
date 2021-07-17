@@ -18,7 +18,12 @@ public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   private final CountDownLatch latch = new CountDownLatch(1);
 
   public JavaAsyncChild() {
-    this(true, false);
+    this(/* doTraceableWork= */ true, /* blockThread= */ false);
+  }
+
+  public JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+    this.doTraceableWork = doTraceableWork;
+    this.blockThread = new AtomicBoolean(blockThread);
   }
 
   @Override
@@ -33,11 +38,6 @@ public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   protected boolean exec() {
     runImpl();
     return true;
-  }
-
-  public JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
-    this.doTraceableWork = doTraceableWork;
-    this.blockThread = new AtomicBoolean(blockThread);
   }
 
   public void unblock() {
@@ -69,7 +69,7 @@ public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
     latch.countDown();
   }
 
-  private void asyncChild() {
+  private static void asyncChild() {
     tracer.spanBuilder("asyncChild").startSpan().end();
   }
 }

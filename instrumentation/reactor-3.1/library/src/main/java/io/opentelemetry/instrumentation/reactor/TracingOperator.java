@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -34,7 +35,24 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
-public class TracingOperator {
+public final class TracingOperator {
+
+  public static TracingOperator create() {
+    return newBuilder().build();
+  }
+
+  public static TracingOperatorBuilder newBuilder() {
+    return new TracingOperatorBuilder();
+  }
+
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
+
+  TracingOperator(boolean captureExperimentalSpanAttributes) {
+    this.asyncOperationEndStrategy =
+        ReactorAsyncOperationEndStrategy.newBuilder()
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .build();
+  }
 
   /**
    * Registers a hook that applies to every operator, propagating {@link Context} to downstream
@@ -42,15 +60,17 @@ public class TracingOperator {
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  public static void registerOnEachOperator() {
+  public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
-    AsyncSpanEndStrategies.getInstance().registerStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().registerStrategy(asyncOperationEndStrategy);
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
-  public static void resetOnEachOperator() {
+  public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(asyncOperationEndStrategy);
+    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {

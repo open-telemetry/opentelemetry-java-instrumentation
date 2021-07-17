@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,11 +30,13 @@ public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstru
             .and(
                 takesArgument(
                     1,
-                    named("javax.ws.rs.core.Request")
-                        .or(named("org.glassfish.jersey.server.ContainerRequest")))),
+                    namedOneOf(
+                        "javax.ws.rs.core.Request",
+                        "org.glassfish.jersey.server.ContainerRequest"))),
         JerseyResourceMethodDispatcherInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

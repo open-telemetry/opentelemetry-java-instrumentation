@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.ref.WeakReference;
-import java.util.Objects;
+import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
@@ -20,14 +17,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
 
 /**
- * NEW (Jan 2020) Custom Pool strategy.
  *
- * <ul>
- *   Uses a Guava Cache directly...
- *   <li>better control over locking than WeakMap.Provider
- *   <li>provides direct control over concurrency level
- *   <li>initial and maximum capacity
- * </ul>
  *
  * <ul>
  *   There two core parts to the cache...
@@ -39,16 +29,13 @@ import net.bytebuddy.pool.TypePool;
  * <p>This design was chosen to create a single limited size cache that can be adjusted for the
  * entire application -- without having to create a large number of WeakReference objects.
  *
- * <p>Eviction is handled almost entirely through a size restriction; however, softValues are still
- * used as a further safeguard.
+ * <p>Eviction is handled through a size restriction
  */
-public class AgentCachingPoolStrategy implements PoolStrategy {
+public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
-  static final int CONCURRENCY_LEVEL = 8;
-  static final int LOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
   static final int BOOTSTRAP_HASH = 7236344; // Just a random number
@@ -62,23 +49,13 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
    * </ul>
    */
   final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
-      CacheBuilder.newBuilder()
-          .weakKeys()
-          .concurrencyLevel(CONCURRENCY_LEVEL)
-          .initialCapacity(LOADER_CAPACITY / 2)
-          .maximumSize(LOADER_CAPACITY)
-          .build();
+      Cache.newBuilder().setWeakKeys().build();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
   final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
-      CacheBuilder.newBuilder()
-          .softValues()
-          .concurrencyLevel(CONCURRENCY_LEVEL)
-          .initialCapacity(TYPE_CAPACITY)
-          .maximumSize(TYPE_CAPACITY)
-          .build();
+      Cache.newBuilder().setMaximumSize(TYPE_CAPACITY).build();
 
   // fast path for bootstrap
   final SharedResolutionCacheAdapter bootstrapCacheProvider =
@@ -90,15 +67,17 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
       return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
     }
 
-    WeakReference<ClassLoader> loaderRef = loaderRefCache.getIfPresent(classLoader);
-
-    if (loaderRef == null) {
-      loaderRef = new WeakReference<>(classLoader);
-      loaderRefCache.put(classLoader, loaderRef);
-    }
+    WeakReference<ClassLoader> loaderRef =
+        loaderRefCache.computeIfAbsent(classLoader, WeakReference::new);
 
     int loaderHash = classLoader.hashCode();
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
+  }
+
+  @Override
+  public final TypePool typePool(
+      ClassFileLocator classFileLocator, ClassLoader classLoader, String name) {
+    return typePool(classFileLocator, classLoader);
   }
 
   private TypePool.CacheProvider createCacheProvider(
@@ -114,14 +93,10 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
         TypePool.Default.ReaderMode.FAST);
   }
 
-  private TypePool createCachingTypePool(
+  private static TypePool createCachingTypePool(
       TypePool.CacheProvider cacheProvider, ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
         cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
-  }
-
-  final long approximateSize() {
-    return sharedResolutionCache.size();
   }
 
   /**
@@ -145,7 +120,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
       this.loaderRef = loaderRef;
       this.className = className;
 
-      hashCode = Objects.hash(loaderHash, className);
+      hashCode = 31 * loaderHash + className.hashCode();
     }
 
     @Override
@@ -163,7 +138,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
         return false;
       }
 
-      if (!Objects.equals(className, other.className)) {
+      if (!className.equals(other.className)) {
         return false;
       }
 
@@ -200,6 +175,19 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     public final int hashCode() {
       return hashCode;
     }
+
+    @Override
+    public String toString() {
+      return "TypeCacheKey{"
+          + "loaderHash="
+          + loaderHash
+          + ", loaderRef="
+          + loaderRef
+          + ", className='"
+          + className
+          + '\''
+          + '}';
+    }
   }
 
   static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
@@ -223,7 +211,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     @Override
     public TypePool.Resolution find(String className) {
       TypePool.Resolution existingResolution =
-          sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
+          sharedResolutionCache.get(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) {
         return existingResolution;
       }

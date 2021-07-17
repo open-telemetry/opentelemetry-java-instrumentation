@@ -66,13 +66,13 @@ public abstract class ServerTestController {
   }
 
   @GetMapping("/exception")
-  Mono<Void> exception() throws Exception {
+  Mono<Void> exception() {
     ServerEndpoint endpoint = ServerEndpoint.EXCEPTION;
 
     return wrapControllerMethod(
         endpoint,
         () -> {
-          throw new RuntimeException(endpoint.getBody());
+          throw new IllegalStateException(endpoint.getBody());
         });
   }
 

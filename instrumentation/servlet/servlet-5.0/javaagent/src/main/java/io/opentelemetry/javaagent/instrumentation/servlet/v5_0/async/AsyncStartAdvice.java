@@ -7,26 +7,28 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
 
 import static io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer.tracer;
 
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
+@SuppressWarnings("unused")
 public class AsyncStartAdvice {
+
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void startAsyncEnter() {
+  public static void startAsyncEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
     // This allows to detect the outermost invocation of startAsync in method exit
-    CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
+    callDepth = CallDepth.forClass(AsyncContext.class);
+    callDepth.getAndIncrement();
   }
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void startAsyncExit(
-      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request) {
+      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
+      @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AsyncContext.class);
-
-    if (callDepth != 0) {
+    if (callDepth.decrementAndGet() != 0) {
       // This is not the outermost invocation, ignore.
       return;
     }

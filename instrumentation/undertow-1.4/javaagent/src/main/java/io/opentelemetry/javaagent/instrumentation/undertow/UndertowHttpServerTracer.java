@@ -12,8 +12,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
-import io.opentelemetry.javaagent.instrumentation.api.undertow.UndertowActiveHandlers;
+import io.opentelemetry.javaagent.bootstrap.undertow.KeyHolder;
+import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.DefaultResponseListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
@@ -31,7 +31,7 @@ public class UndertowHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.undertow";
+    return "io.opentelemetry.undertow-1.4";
   }
 
   public Context startServerSpan(HttpServerExchange exchange) {
@@ -73,7 +73,7 @@ public class UndertowHttpServerTracer
     }
   }
 
-  private void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
+  private static void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable, exchange);
     } else {
@@ -103,7 +103,7 @@ public class UndertowHttpServerTracer
 
   @Override
   @Nullable
-  protected String peerHostIP(HttpServerExchange exchange) {
+  protected String peerHostIp(HttpServerExchange exchange) {
     InetSocketAddress peerAddress =
         exchange.getConnection().getPeerAddress(InetSocketAddress.class);
     return peerAddress.getHostString();

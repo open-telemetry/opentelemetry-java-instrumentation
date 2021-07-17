@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcMaps;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
@@ -42,7 +45,9 @@ public class DriverInstrumentation implements TypeInstrumentation {
         DriverInstrumentation.class.getName() + "$DriverAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DriverAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String url,

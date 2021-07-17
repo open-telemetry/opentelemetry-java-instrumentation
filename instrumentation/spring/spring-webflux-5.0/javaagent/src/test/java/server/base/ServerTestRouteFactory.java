@@ -61,7 +61,7 @@ public abstract class ServerTestRouteFactory {
                   ServerResponse.ok(),
                   "",
                   () -> {
-                    throw new RuntimeException(endpoint.getBody());
+                    throw new IllegalStateException(endpoint.getBody());
                   });
             })
         .andRoute(
@@ -80,11 +80,10 @@ public abstract class ServerTestRouteFactory {
                   endpoint,
                   null,
                   null,
-                  () -> {
-                    Span.current()
-                        .setAttribute(
-                            "test.request.id", Long.parseLong(request.queryParam("id").get()));
-                  });
+                  () ->
+                      Span.current()
+                          .setAttribute(
+                              "test.request.id", Long.parseLong(request.queryParam("id").get())));
             });
   }
 

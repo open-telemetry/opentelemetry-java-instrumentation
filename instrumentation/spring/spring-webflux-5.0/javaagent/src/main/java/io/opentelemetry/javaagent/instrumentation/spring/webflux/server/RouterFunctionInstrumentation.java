@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -59,6 +59,7 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
    * This advice is responsible for setting additional span parameters for routes implemented with
    * functional interface.
    */
+  @SuppressWarnings("unused")
   public static class RouteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

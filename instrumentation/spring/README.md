@@ -8,7 +8,7 @@ The [first section](#manual-instrumentation-with-java-sdk) will walk you through
 
 The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
 
-The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
+The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](/spring-boot-autoconfigure/README.md#features) which can improve this process.
 
@@ -69,18 +69,18 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### OpenTelemetry
 ```gradle
-implementation "io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION"
-implementation "io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 ```
 
 #### LoggingExporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
 ```
 
 #### Jaeger Exporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
 compile "io.grpc:grpc-netty:1.30.2"
 ```
 
@@ -107,7 +107,7 @@ import io.opentelemetry.exporters.logging.*;
 public class OtelConfig {
    private static final String tracerName = "fooTracer";
    @Bean
-   public Tracer otelTracer() throws Exception {
+   public Tracer otelTracer() {
       Tracer tracer = OpenTelemetry.getGlobalTracer(tracerName);
 
       SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
@@ -155,7 +155,7 @@ Required dependencies and configurations for MainService and TimeService project
 @SpringBootApplication
 public class MainServiceApplication {
 
-   public static void main(String[] args) throws IOException {
+   public static void main(String[] args) {
       SpringApplication.run(MainServiceApplication.class, args);
    }
 }
@@ -211,7 +211,6 @@ public class MainServiceController {
 
 HttpUtils is a helper class that injects the current span context into outgoing requests. This involves adding the tracer id and the trace-state to a request header. For this example, we used `RestTemplate` to send requests from `MainService` to `TimeService`. A similar approach can be used with popular Java Web Clients such as [okhttp](https://square.github.io/okhttp/) and [apache http client](https://www.tutorialspoint.com/apache_httpclient/apache_httpclient_quick_guide.htm). The key to this implementation is to override the put method in `TextMapPropagator.Setter<?>` to handle your request format. `TextMapPropagator.inject` will use this setter to set `traceparent` and `tracestate` headers in your requests. These values will be used to propagate your span context to external services.
 
-
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -231,35 +230,35 @@ import io.opentelemetry.api.trace.Tracer;
 @Component
 public class HttpUtils {
 
-   private static final TextMapPropagator.Setter<HttpHeaders> setter = new TextMapPropagator.Setter<HttpHeaders>() {
-         @Override
-         public void set(HttpHeaders headers, String key, String value) {
-            headers.set(key, value);
-         }
-      };
+  private static final TextMapPropagator.Setter<HttpHeaders> setter = new TextMapPropagator.Setter<HttpHeaders>() {
+    @Override
+    public void set(HttpHeaders headers, String key, String value) {
+      headers.set(key, value);
+    }
+  };
 
-   @Autowired
-   private Tracer tracer;
+  @Autowired
+  private Tracer tracer;
 
-   private TextMapPropagator<SpanContext> textFormat;
+  private final TextMapPropagator<SpanContext> textFormat;
 
-   public HttpUtils(Tracer tracer) {
-      textFormat = tracer.getTextMapPropagator();
-   }
+  public HttpUtils(Tracer tracer) {
+    textFormat = tracer.getTextMapPropagator();
+  }
 
-   public String callEndpoint(String url) throws Exception {
-      HttpHeaders headers = new HttpHeaders();
+  public String callEndpoint(String url) {
+    HttpHeaders headers = new HttpHeaders();
 
-      textFormat.inject(Context.current(), headers, setter);
+    textFormat.inject(Context.current(), headers, setter);
 
-      HttpEntity<String> entity = new HttpEntity<String>(headers);
-      RestTemplate restTemplate = new RestTemplate();
+    HttpEntity<String> entity = new HttpEntity<String>(headers);
+    RestTemplate restTemplate = new RestTemplate();
 
-      ResponseEntity<String> response =
-            restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+    ResponseEntity<String> response =
+        restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-      return response.getBody();
-   }
+    return response.getBody();
+  }
 }
 ```
 ### Instrumentation of TimeService
@@ -277,7 +276,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class TimeServiceApplication {
 
-   public static void main(String[] args) throws IOException {
+   public static void main(String[] args) {
       SpringApplication.run(TimeServiceApplication.class, args);
    }
 }
@@ -358,7 +357,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class TimeServiceApplication {
 
-   public static void main(String[] args) throws IOException {
+   public static void main(String[] args) {
       SpringApplication.run(TimeServiceApplication.class, args);
    }
 }
@@ -395,7 +394,7 @@ The preHandle method starts a span for each request. This implementation is show
 
 @Component
 public class ControllerFilter implements Filter {
-  private static final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
+  private static final Logger logger = Logger.getLogger(ControllerFilter.class.getName());
 
   @Autowired
   Tracer tracer;
@@ -408,20 +407,19 @@ public class ControllerFilter implements Filter {
       };
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws IOException, ServletException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
     LOG.info("start doFilter");
 
     HttpServletRequest req = (HttpServletRequest) request;
     Span currentSpan;
     try (Scope scope = tracer.withSpan(currentSpan)) {
       Context context = OpenTelemetry.getPropagators().getTextMapPropagator()
-        .extract(Context.current(), req, GETTER);
+          .extract(Context.current(), req, GETTER);
       currentSpan = createSpanWithParent(req, context);
       currentSpan.addEvent("dofilter");
       chain.doFilter(req, response);
     } finally {
-         currentSpan.end();
+      currentSpan.end();
     }
 
     LOG.info("end doFilter");
@@ -444,7 +442,7 @@ Ensure the main method in MainServiceApplication is defined. This will be the en
 @SpringBootApplication
 public class MainServiceApplication {
 
-   public static void main(String[] args) throws IOException {
+   public static void main(String[] args) {
       SpringApplication.run(MainServiceApplication.class, args);
    }
 }
@@ -499,7 +497,6 @@ To propagate the span context from MainService to TimeService we must inject the
 
 Include the two classes below to your MainService project to add this functionality:
 
-
 ```java
 
 import java.io.IOException;
@@ -520,35 +517,35 @@ import io.opentelemetry.api.trace.Tracer;
 @Component
 public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
-   @Autowired
-   private Tracer tracer;
+  @Autowired
+  private Tracer tracer;
 
-   private static final TextMapPropagator.Setter<HttpRequest> setter =
-         new TextMapPropagator.Setter<HttpRequest>() {
-            @Override
-            public void set(HttpRequest carrier, String key, String value) {
-               carrier.getHeaders().set(key, value);
-            }
-         };
+  private static final TextMapPropagator.Setter<HttpRequest> setter =
+      new TextMapPropagator.Setter<HttpRequest>() {
+        @Override
+        public void set(HttpRequest carrier, String key, String value) {
+          carrier.getHeaders().set(key, value);
+        }
+      };
 
 
-   @Override
-   public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-         ClientHttpRequestExecution execution) throws IOException {
+  @Override
+  public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+                                      ClientHttpRequestExecution execution) {
 
-      String spanName = request.getMethodValue() +  " " + request.getURI().toString();
-      Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(SpanKind.CLIENT).startSpan();
+    String spanName = request.getMethodValue() + " " + request.getURI().toString();
+    Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(SpanKind.CLIENT).startSpan();
 
-      try (Scope scope = tracer.withSpan(currentSpan)) {
-         OpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), request, setter);
-         ClientHttpResponse response = execution.execute(request, body);
-         LOG.info(String.format("Request sent from RestTemplateInterceptor"));
+    try (Scope scope = tracer.withSpan(currentSpan)) {
+      OpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), request, setter);
+      ClientHttpResponse response = execution.execute(request, body);
+      LOG.info("Request sent from RestTemplateInterceptor");
 
-         return response;
-      }finally {
-         currentSpan.end();
-      }
-   }
+      return response;
+    } finally {
+      currentSpan.end();
+    }
+  }
 }
 
 ```
@@ -615,7 +612,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### Gradle
 ```gradle
-implementation "io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Create two Spring Projects
@@ -642,26 +639,26 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class MainServiceApplication {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     SpringApplication.run(MainServiceApplication.class, args);
   }
-  
+
   @RestController
   @RequestMapping(value = "/message")
-  public class MainServiceController {
-     private static final String TIME_SERVICE_URL = "http://localhost:8080/time";
-     
-     @Autowired
-     private RestTemplate restTemplate;
+  public static class MainServiceController {
+    private static final String TIME_SERVICE_URL = "http://localhost:8080/time";
 
-     @GetMapping
-     public String message() {
-        return restTemplate.exchange(TIME_SERVICE_URL, HttpMethod.GET, null, String.class).getBody();
-     }
-    
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @GetMapping
+    public String message() {
+      return restTemplate.exchange(TIME_SERVICE_URL, HttpMethod.GET, null, String.class).getBody();
+    }
+
     @Bean
     public RestTemplate restTemplate() {
-  	  return new RestTemplate();
+      return new RestTemplate();
     }
   }
 }
@@ -714,7 +711,7 @@ import io.opentelemetry.api.trace.Tracer;
 @SpringBootApplication
 public class TimeServiceApplication {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     SpringApplication.run(TimeServiceApplication.class, args);
   }
 
@@ -846,13 +843,13 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
 ```gradle
 
 //opentelemetry starter with zipkin configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with jaeger configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with otlp configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION")
 ```
 
 #### Exporter Configuration Properties

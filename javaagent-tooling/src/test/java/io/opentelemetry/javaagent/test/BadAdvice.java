@@ -11,7 +11,7 @@ public class BadAdvice {
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void throwAnException(@Advice.Return(readOnly = false) boolean returnVal) {
     returnVal = true;
-    throw new RuntimeException("Test Exception");
+    throw new IllegalStateException("Test Exception");
   }
 
   public static class NoOpAdvice {

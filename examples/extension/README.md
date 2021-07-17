@@ -62,7 +62,7 @@ Write a _new_ instrumentation which injects its own advice into the same method 
 Use `order` method to ensure it is run after the original instrumentation.
 Now you can augment current span with new information.
 
-See [DemoServlet3InstrumentationModule](instrumentation/servlet-3/src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java).
+See [DemoServlet3InstrumentationModule](src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java).
 
 ### I want to remove some attributes
 Write custom exporter or use attribute filtering functionality in Collector.

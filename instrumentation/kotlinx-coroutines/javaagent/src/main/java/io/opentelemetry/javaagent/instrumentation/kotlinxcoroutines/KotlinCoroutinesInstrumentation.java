@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,18 +25,18 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("launch")
-            .or(named("launch$default"))
+        namedOneOf("launch", "launch$default")
             .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
         this.getClass().getName() + "$LaunchAdvice");
     transformer.applyAdviceToMethod(
-        named("runBlocking")
-            .or(named("runBlocking$default"))
+        namedOneOf("runBlocking", "runBlocking$default")
             .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext"))),
         this.getClass().getName() + "$RunBlockingAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class LaunchAdvice {
+
     @Advice.OnMethodEnter
     public static void enter(
         @Advice.Argument(value = 1, readOnly = false) CoroutineContext coroutineContext) {
@@ -44,7 +45,9 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RunBlockingAdvice {
+
     @Advice.OnMethodEnter
     public static void enter(
         @Advice.Argument(value = 0, readOnly = false) CoroutineContext coroutineContext) {

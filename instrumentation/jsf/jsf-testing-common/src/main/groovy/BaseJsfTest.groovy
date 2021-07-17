@@ -11,11 +11,13 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import okhttp3.FormBody
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpData
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.QueryParams
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
 import org.eclipse.jetty.annotations.AnnotationConfiguration
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
@@ -72,13 +74,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
   @Unroll
   def "test #path"() {
     setup:
-    def url = HttpUrl.get(address.resolve("hello.jsf")).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.get(address.resolve("hello.jsf").toString()).aggregate().join()
 
     expect:
-    response.code() == 200
-    response.body().string().trim() == "Hello"
+    response.status().code() == 200
+    response.contentUtf8().trim() == "Hello"
 
     and:
     assertTraces(1) {
@@ -94,13 +94,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
   def "test greeting"() {
     // we need to display the page first before posting data to it
     setup:
-    def url = HttpUrl.get(address.resolve("greeting.jsf")).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
-    def doc = Jsoup.parse(response.body().string())
+    AggregatedHttpResponse response = client.get(address.resolve("greeting.jsf").toString()).aggregate().join()
+    def doc = Jsoup.parse(response.contentUtf8())
 
     expect:
-    response.code() == 200
+    response.status().code() == 200
     doc.selectFirst("title").text() == "Hello, World!"
 
     and:
@@ -122,10 +120,8 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     jsessionid != null
 
     when:
-    // use the session created for first request
-    def url2 = HttpUrl.get(address.resolve("greeting.jsf;jsessionid=" + jsessionid)).newBuilder().build()
     // set up form parameter for post
-    RequestBody formBody = new FormBody.Builder()
+    QueryParams formBody = QueryParams.builder()
       .add("app-form", "app-form")
     // value used for name is returned in app-form:output-message element
       .add("app-form:name", "test")
@@ -133,13 +129,18 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
       .add("app-form_SUBMIT", "1") // MyFaces
       .add("javax.faces.ViewState", viewState)
       .build()
-    def request2 = this.request(url2, "POST", formBody).build()
-    Response response2 = client.newCall(request2).execute()
-    def responseContent = response2.body().string()
+    // use the session created for first request
+    def request2 = AggregatedHttpRequest.of(
+      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+        .contentType(MediaType.FORM_DATA)
+        .build(),
+      HttpData.ofUtf8(formBody.toQueryString()))
+    AggregatedHttpResponse response2 = client.execute(request2).aggregate().join()
+    def responseContent = response2.contentUtf8()
     def doc2 = Jsoup.parse(responseContent)
 
     then:
-    response2.code() == 200
+    response2.status().code() == 200
     doc2.getElementById("app-form:output-message").text() == "Hello test"
 
     and:
@@ -154,13 +155,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
   def "test exception"() {
     // we need to display the page first before posting data to it
     setup:
-    def url = HttpUrl.get(address.resolve("greeting.jsf")).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
-    def doc = Jsoup.parse(response.body().string())
+    AggregatedHttpResponse response = client.get(address.resolve("greeting.jsf").toString()).aggregate().join()
+    def doc = Jsoup.parse(response.contentUtf8())
 
     expect:
-    response.code() == 200
+    response.status().code() == 200
     doc.selectFirst("title").text() == "Hello, World!"
 
     and:
@@ -182,10 +181,8 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     jsessionid != null
 
     when:
-    // use the session created for first request
-    def url2 = HttpUrl.get(address.resolve("greeting.jsf;jsessionid=" + jsessionid)).newBuilder().build()
     // set up form parameter for post
-    RequestBody formBody = new FormBody.Builder()
+    QueryParams formBody = QueryParams.builder()
       .add("app-form", "app-form")
     // setting name parameter to "exception" triggers throwing exception in GreetingForm
       .add("app-form:name", "exception")
@@ -193,11 +190,16 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
       .add("app-form_SUBMIT", "1") // MyFaces
       .add("javax.faces.ViewState", viewState)
       .build()
-    def request2 = this.request(url2, "POST", formBody).build()
-    Response response2 = client.newCall(request2).execute()
+    // use the session created for first request
+    def request2 = AggregatedHttpRequest.of(
+      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+        .contentType(MediaType.FORM_DATA)
+        .build(),
+      HttpData.ofUtf8(formBody.toQueryString()))
+    AggregatedHttpResponse response2 = client.execute(request2).aggregate().join()
 
     then:
-    response2.code() == 500
+    response2.status().code() == 500
 
     and:
     assertTraces(1) {
@@ -206,14 +208,6 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
         handlerSpan(it, 1, span(0), "#{greetingForm.submit()}", new Exception("submit exception"))
       }
     }
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-      .header("User-Agent", TEST_USER_AGENT)
-      .header("X-Forwarded-For", TEST_CLIENT_IP)
   }
 
   void handlerSpan(TraceAssert trace, int index, Object parent, String spanName, Exception expectedException = null) {

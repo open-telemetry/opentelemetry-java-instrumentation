@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.api.trace.Span
@@ -17,7 +16,7 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
 
   def "trace request with connection failure #scheme"() {
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       URLConnection connection = url.openConnection()
       connection.setConnectTimeout(10000)
       connection.setReadTimeout(10000)
@@ -38,7 +37,7 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
           errorEvent ConnectException, String
         }
         span(1) {
-          name expectedOperationName("GET")
+          name "HTTP GET"
           kind CLIENT
           childOf span(0)
           status ERROR
@@ -59,9 +58,5 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
     scheme << ["http", "https"]
 
     url = new URI("$scheme://localhost:$UNUSABLE_PORT").toURL()
-  }
-
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
   }
 }

@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A builder of {@link Instrumenter}. Instrumentation libraries should generally expose their own
@@ -32,14 +33,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
-  SpanKindExtractor<? super REQUEST> spanKindExtractor = null;
+  SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
-  StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
+  @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -80,6 +82,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
+  }
+
+  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
+      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
+    spanLinkExtractors.add(spanLinkExtractor);
+    return this;
   }
 
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
@@ -125,8 +134,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
+    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysServer(), getter);
   }
 
   /**
@@ -144,9 +152,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysConsumer(), getter);
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@code spanKindExtractor} and extract context from requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newUpstreamPropagatingInstrumenter(
+      SpanKindExtractor<REQUEST> spanKindExtractor, TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter),
-        SpanKindExtractor.alwaysConsumer());
+        InstrumenterConstructor.propagatingFromUpstream(getter), spanKindExtractor);
   }
 
   /**

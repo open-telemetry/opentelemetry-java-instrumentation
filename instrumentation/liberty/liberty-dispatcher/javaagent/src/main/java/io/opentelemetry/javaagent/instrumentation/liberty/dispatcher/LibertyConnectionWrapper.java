@@ -22,7 +22,7 @@ public class LibertyConnectionWrapper {
     return httpDispatcherLink.getRemotePort();
   }
 
-  public String peerHostIP() {
+  public String peerHostIp() {
     return httpDispatcherLink.getRemoteHostAddress();
   }
 

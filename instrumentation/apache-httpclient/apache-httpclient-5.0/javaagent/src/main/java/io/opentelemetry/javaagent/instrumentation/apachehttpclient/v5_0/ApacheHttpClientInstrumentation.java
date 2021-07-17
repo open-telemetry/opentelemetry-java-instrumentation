@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -121,7 +121,9 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class RequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
@@ -152,6 +154,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -191,6 +194,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RequestWithContextAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -230,7 +234,9 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RequestWithHostAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
@@ -264,6 +270,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RequestWithHostAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -307,6 +314,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RequestWithHostAndContextAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

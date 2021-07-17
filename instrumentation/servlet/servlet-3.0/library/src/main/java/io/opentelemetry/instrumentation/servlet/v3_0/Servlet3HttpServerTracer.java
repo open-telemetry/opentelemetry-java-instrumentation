@@ -48,6 +48,6 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet-3.0";
+    return "io.opentelemetry.servlet-3.0";
   }
 }

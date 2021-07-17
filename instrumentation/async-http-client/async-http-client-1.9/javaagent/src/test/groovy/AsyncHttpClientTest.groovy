@@ -12,6 +12,7 @@ import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -60,8 +61,12 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  boolean testHttps() {
-    false
+  SingleConnection createSingleConnection(String host, int port) {
+    // AsyncHttpClient does not support HTTP 1.1 pipelining nor waiting for connection pool slots to
+    // free up (it immediately throws "Too many connections" IOException). Therefore making a single
+    // connection test would require manually sequencing the connections, which is not meaningful
+    // for a high concurrency test.
+    return null
   }
 }
 

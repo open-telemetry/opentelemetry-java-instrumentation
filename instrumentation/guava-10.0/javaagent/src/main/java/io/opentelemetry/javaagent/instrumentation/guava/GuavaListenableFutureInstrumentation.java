@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.guava;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -39,22 +38,26 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$AddListenerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AbstractFutureAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction() {
       InstrumentationHelper.initialize();
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AddListenerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State addListenerEnter(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final Context context = Java8BytecodeBridge.currentContext();
-      final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
+      Context context = Java8BytecodeBridge.currentContext();
+      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
         task = newTask;
-        final ContextStore<Runnable, State> contextStore =
+        ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, newTask, context);
       }
@@ -63,14 +66,8 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addListenerExit(
-        @Advice.Enter final State state, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
-    }
-
-    // Used by muzzle
-    @SuppressWarnings("UnusedMethod")
-    private static void muzzleCheck(final AbstractFuture<?> future) {
-      future.addListener(null, null);
     }
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
@@ -79,7 +79,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class EndRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
         @Advice.This HttpClientRequest request,
@@ -112,7 +114,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleException(
         @Advice.This HttpClientRequest request,
@@ -139,7 +143,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandleResponseAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleResponseEnter(
         @Advice.This HttpClientRequest request,
@@ -166,7 +172,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class MountContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void mountContext(
         @Advice.This HttpClientRequest request, @Advice.Local("otelScope") Scope scope) {
@@ -187,7 +195,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ExceptionHandlerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapExceptionHandler(
         @Advice.This HttpClientRequest request,

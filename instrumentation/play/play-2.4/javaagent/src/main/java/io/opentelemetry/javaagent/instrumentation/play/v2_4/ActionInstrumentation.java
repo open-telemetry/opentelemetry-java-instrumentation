@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -23,7 +23,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import play.api.mvc.Action;
-import play.api.mvc.Headers;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
@@ -48,7 +47,9 @@ public class ActionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ApplyAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ApplyAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Request<?> req,
@@ -79,14 +80,6 @@ public class ActionInstrumentation implements TypeInstrumentation {
       } else {
         tracer().endExceptionally(context, throwable);
       }
-    }
-
-    // Unused method for muzzle
-    public static void muzzleCheck(Headers headers) {
-      // This distinguishes between 2.3 and 2.4, excluding the former
-      headers.get("aKey");
-      // system() method was removed in 2.6, so this line prevents from applying in play 2.6
-      play.libs.Akka.system();
     }
   }
 }

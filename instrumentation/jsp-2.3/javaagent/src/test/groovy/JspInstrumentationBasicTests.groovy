@@ -7,15 +7,14 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
 import java.nio.file.Files
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
@@ -39,7 +38,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
   @Shared
   String baseUrl
 
-  OkHttpClient client = OkHttpUtils.client()
+  @Shared
+  WebClient client
 
   def setupSpec() {
     baseDir = Files.createTempDirectory("jsp").toFile()
@@ -58,6 +58,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     // https://stackoverflow.com/questions/48998387/code-works-with-embedded-apache-tomcat-8-but-not-with-9-whats-changed
     tomcatServer.getConnector()
     baseUrl = "http://localhost:$port/$jspWebappContext"
+    client = WebClient.of(baseUrl)
 
     appContext = tomcatServer.addWebapp("/$jspWebappContext",
       JspInstrumentationBasicTests.getResource("/webapps/jsptest").getPath())
@@ -74,12 +75,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
 
   @Unroll
   def "non-erroneous GET #test test"() {
-    setup:
-    String reqUrl = baseUrl + "/$jspFileName"
-    def req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/${jspFileName}").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -111,15 +108,12 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /$jspFileName"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/${jspFileName}"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
 
     where:
     test                  | jspFileName         | jspClassName        | jspClassNamePrefix
@@ -131,11 +125,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
   def "non-erroneous GET with query string"() {
     setup:
     String queryString = "HELLO"
-    String reqUrl = baseUrl + "/getQuery.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl + "?" + queryString)).get().build()
 
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/getQuery.jsp?${queryString}").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -167,28 +159,22 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /getQuery.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/getQuery.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "non-erroneous POST"() {
     setup:
-    String reqUrl = baseUrl + "/post.jsp"
-    RequestBody requestBody = new MultipartBody.Builder()
-      .setType(MultipartBody.FORM)
-      .addFormDataPart("name", "world")
+    RequestHeaders headers = RequestHeaders.builder(HttpMethod.POST, "/post.jsp")
+      .contentType(MediaType.FORM_DATA)
       .build()
-    Request req = new Request.Builder().url(new URL(reqUrl)).post(requestBody).build()
 
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.execute(headers, "name=world").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -220,25 +206,18 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /post.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/post.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   @Unroll
   def "erroneous runtime errors GET jsp with #test test"() {
-    setup:
-    String reqUrl = baseUrl + "/$jspFileName"
-    def req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/${jspFileName}").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -296,15 +275,12 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             }
           }
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/${jspFileName}"
           }
         }
       }
     }
-    res.code() == 500
-
-    cleanup:
-    res.close()
+    res.status().code() == 500
 
     where:
     test                       | jspFileName        | jspClassName       | exceptionClass            | errorMessageOptional
@@ -314,12 +290,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
   }
 
   def "non-erroneous include plain HTML GET"() {
-    setup:
-    String reqUrl = baseUrl + "/includes/includeHtml.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/includes/includeHtml.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -351,24 +323,17 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /includes/includeHtml.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/includes/includeHtml.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "non-erroneous multi GET"() {
-    setup:
-    String reqUrl = baseUrl + "/includes/includeMulti.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/includes/includeMulti.jsp").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -400,7 +365,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(0)
           name "Render /includes/includeMulti.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
         span(3) {
@@ -415,7 +380,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(2)
           name "Render /common/javaLoopH2.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
         span(5) {
@@ -430,24 +395,17 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           childOf span(2)
           name "Render /common/javaLoopH2.jsp"
           attributes {
-            "jsp.requestURL" reqUrl
+            "jsp.requestURL" "${baseUrl}/includes/includeMulti.jsp"
           }
         }
       }
     }
-    res.code() == 200
-
-    cleanup:
-    res.close()
+    res.status().code() == 200
   }
 
   def "#test compile error should not produce render traces and spans"() {
-    setup:
-    String reqUrl = baseUrl + "/$jspFileName"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/${jspFileName}").aggregate().join()
 
     then:
     assertTraces(1) {
@@ -481,10 +439,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         }
       }
     }
-    res.code() == 500
-
-    cleanup:
-    res.close()
+    res.status().code() == 500
 
     where:
     test      | jspFileName                            | jspClassName                  | jspClassNamePrefix
@@ -493,15 +448,11 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
   }
 
   def "direct static file reference"() {
-    setup:
-    String reqUrl = baseUrl + "/$staticFile"
-    def req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
     when:
-    Response res = client.newCall(req).execute()
+    AggregatedHttpResponse res = client.get("/${staticFile}").aggregate().join()
 
     then:
-    res.code() == 200
+    res.status().code() == 200
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -521,9 +472,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         }
       }
     }
-
-    cleanup:
-    res.close()
 
     where:
     staticFile = "common/hello.html"

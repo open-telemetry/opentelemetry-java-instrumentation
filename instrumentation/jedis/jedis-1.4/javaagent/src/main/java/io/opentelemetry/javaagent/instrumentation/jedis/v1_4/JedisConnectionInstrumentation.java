@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -49,6 +49,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendCommandNoArgsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -83,6 +84,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SendCommandWithArgsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

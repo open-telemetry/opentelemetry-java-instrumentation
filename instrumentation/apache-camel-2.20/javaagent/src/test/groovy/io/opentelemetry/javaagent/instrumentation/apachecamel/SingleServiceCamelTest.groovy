@@ -9,13 +9,9 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import okhttp3.FormBody
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
@@ -25,7 +21,7 @@ class SingleServiceCamelTest extends AgentInstrumentationSpecification implement
   @Shared
   ConfigurableApplicationContext server
   @Shared
-  OkHttpClient client = OkHttpUtils.client()
+  WebClient client = WebClient.of()
   @Shared
   int port
   @Shared
@@ -56,15 +52,9 @@ class SingleServiceCamelTest extends AgentInstrumentationSpecification implement
   def "single camel service span"() {
     setup:
     def requestUrl = address.resolve("/camelService")
-    def url = HttpUrl.get(requestUrl)
-    def request = new Request.Builder()
-      .url(url)
-      .method("POST",
-        new FormBody.Builder().add("", "testContent").build())
-      .build()
 
     when:
-    client.newCall(request).execute()
+    client.post(requestUrl.toString(), "testContent").aggregate().join()
 
     then:
     assertTraces(1) {

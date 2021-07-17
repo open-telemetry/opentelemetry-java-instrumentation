@@ -20,8 +20,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class RocketMqConsumerTracer extends BaseTracer {
 
-  private boolean captureExperimentalSpanAttributes;
-  private boolean propagationEnabled;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean propagationEnabled;
 
   RocketMqConsumerTracer(
       OpenTelemetry openTelemetry,
@@ -34,19 +34,19 @@ final class RocketMqConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rocketmq-client";
+    return "io.opentelemetry.rocketmq-client-4.8";
   }
 
   Context startSpan(Context parentContext, List<MessageExt> msgs) {
     if (msgs.size() == 1) {
       SpanBuilder spanBuilder = startSpanBuilder(extractParent(msgs.get(0)), msgs.get(0));
-      return parentContext.with(spanBuilder.startSpan());
+      return withConsumerSpan(parentContext, spanBuilder.startSpan());
     } else {
       SpanBuilder spanBuilder =
           spanBuilder(parentContext, "multiple_sources receive", CONSUMER)
               .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
               .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive");
-      Context rootContext = parentContext.with(spanBuilder.startSpan());
+      Context rootContext = withConsumerSpan(parentContext, spanBuilder.startSpan());
       for (MessageExt message : msgs) {
         createChildSpan(rootContext, message);
       }
@@ -93,12 +93,12 @@ final class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  private String spanNameOnConsume(MessageExt msg) {
+  private static String spanNameOnConsume(MessageExt msg) {
     return msg.getTopic() + " process";
   }
 
   @Nullable
-  private String getBrokerHost(MessageExt msg) {
+  private static String getBrokerHost(MessageExt msg) {
     if (msg.getStoreHost() != null) {
       return msg.getStoreHost().toString().replace("/", "");
     } else {

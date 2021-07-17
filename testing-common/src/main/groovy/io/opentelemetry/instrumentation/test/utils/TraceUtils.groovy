@@ -16,6 +16,7 @@ import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
@@ -25,13 +26,20 @@ class TraceUtils {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")
 
-  static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
-    return ServerTraceUtils.runUnderServerTrace(rootOperationName, r)
+  static <T> T runUnderServerTrace(String spanName, Callable<T> r) {
+    return ServerTraceUtils.runUnderServerTrace(spanName, r)
   }
 
-  static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
+  static void runUnderTrace(String spanName, ThrowingRunnable<?> r) {
+    runUnderTrace(spanName, (Callable<Void>) {
+      r.run()
+      return null
+    })
+  }
+
+  static <T> T runUnderTrace(String spanName, Callable<T> r) {
     try {
-      final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
+      Span span = tracer.spanBuilder(spanName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
       try {
         def result = span.makeCurrent().withCloseable {
@@ -39,7 +47,7 @@ class TraceUtils {
         }
         span.end()
         return result
-      } catch (final Exception e) {
+      } catch (Exception e) {
         span.setStatus(StatusCode.ERROR)
         span.recordException(e instanceof ExecutionException ? e.getCause() : e)
         span.end()
@@ -54,6 +62,8 @@ class TraceUtils {
     tracer.spanBuilder(spanName).startSpan().end()
   }
 
+  // Must create span within agent using annotation until
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
   @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
   static <T> T runUnderParentClientSpan(Callable<T> r) {
     r.call()
@@ -100,8 +110,8 @@ class TraceUtils {
     }
   }
 
-  static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
-    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
+  static <T> T runUnderTraceWithoutExceptionCatch(String spanName, Callable<T> r) {
+    Span span = tracer.spanBuilder(spanName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
     try {
       return span.makeCurrent().withCloseable {

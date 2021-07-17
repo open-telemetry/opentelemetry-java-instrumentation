@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
@@ -47,7 +48,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     if (serverSpan == null) {
       spanName = pathBasedSpanName;
     } else {
-      spanName = spanNameForMethod(target, method);
+      spanName = SpanNames.fromMethod(target, method);
       updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
     }
 
@@ -57,14 +58,14 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return parentContext.with(span);
   }
 
-  private void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
+  private static void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
     spanBuilder.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
     if (method != null) {
       spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
     }
   }
 
-  private void updateServerSpanName(Context context, Span span, String spanName) {
+  private static void updateServerSpanName(Context context, Span span, String spanName) {
     if (!spanName.isEmpty()) {
       span.updateName(ServletContextPath.prepend(context, spanName));
     }
@@ -111,7 +112,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return spanName;
   }
 
-  private String locateHttpMethod(Method method) {
+  private static String locateHttpMethod(Method method) {
     String httpMethod = null;
     for (Annotation ann : method.getDeclaredAnnotations()) {
       if (ann.annotationType().getAnnotation(HttpMethod.class) != null) {
@@ -121,11 +122,11 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return httpMethod;
   }
 
-  private Path findMethodPath(Method method) {
+  private static Path findMethodPath(Method method) {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(Class<?> target) {
+  private static Path findClassPath(Class<?> target) {
     for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
       Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {
@@ -137,7 +138,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private Method findMatchingMethod(Method baseMethod, Method[] methods) {
+  private static Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {
       if (!baseMethod.getReturnType().equals(method.getReturnType())) {
@@ -163,8 +164,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(Path classPath, Path methodPath) {
-    String spanName;
+  private static String buildSpanName(Path classPath, Path methodPath) {
     StringBuilder spanNameBuilder = new StringBuilder();
     boolean skipSlash = false;
     if (classPath != null) {
@@ -187,12 +187,11 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       spanNameBuilder.append(path);
     }
 
-    spanName = spanNameBuilder.toString().trim();
-    return spanName;
+    return spanNameBuilder.toString().trim();
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxrs-1.0";
+    return "io.opentelemetry.jaxrs-1.0";
   }
 }

@@ -19,11 +19,20 @@ import org.slf4j.LoggerFactory;
 
 @AutoValue
 public abstract class Config {
-  private static final Logger log = LoggerFactory.getLogger(Config.class);
+  private static final Logger logger = LoggerFactory.getLogger(Config.class);
 
   // lazy initialized, so that javaagent can set it, and library instrumentation can fall back and
   // read system properties
-  private static volatile Config INSTANCE = null;
+  @Nullable private static volatile Config instance = null;
+
+  /** Start building a new {@link Config} instance. */
+  public static ConfigBuilder newBuilder() {
+    return new ConfigBuilder();
+  }
+
+  static Config create(Map<String, String> allProperties) {
+    return new AutoValue_Config(allProperties);
+  }
 
   /**
    * Sets the agent configuration singleton. This method is only supposed to be called once, from
@@ -31,28 +40,25 @@ public abstract class Config {
    * Config#get()} is used for the first time).
    */
   public static void internalInitializeConfig(Config config) {
-    if (INSTANCE != null) {
-      log.warn("Config#INSTANCE was already set earlier");
+    if (instance != null) {
+      logger.warn("Config#INSTANCE was already set earlier");
       return;
     }
-    INSTANCE = requireNonNull(config);
+    instance = requireNonNull(config);
   }
 
   public static Config get() {
-    if (INSTANCE == null) {
+    if (instance == null) {
       // this should only happen in library instrumentation
       //
       // no need to synchronize because worst case is creating INSTANCE more than once
-      INSTANCE = new ConfigBuilder().readEnvironmentVariables().readSystemProperties().build();
+      instance = newBuilder().readEnvironmentVariables().readSystemProperties().build();
     }
-    return INSTANCE;
+    return instance;
   }
 
-  public static Config create(Map<String, String> allProperties) {
-    return new AutoValue_Config(allProperties);
-  }
-
-  abstract Map<String, String> getAllProperties();
+  /** Returns all properties stored in this instance. The returned map is unmodifiable. */
+  public abstract Map<String, String> getAllProperties();
 
   /**
    * Returns a string property value or null if a property with name {@code name} did not exist.
@@ -93,6 +99,18 @@ public abstract class Config {
   }
 
   /**
+   * Returns a long property value or {@code defaultValue} if a property with name {@code name} did
+   * not exist.
+   *
+   * <p>This property may be used by vendor distributions to get numerical values.
+   *
+   * @see #getProperty(String, String)
+   */
+  public long getLongProperty(String name, long defaultValue) {
+    return getTypedProperty(name, Long::parseLong, defaultValue);
+  }
+
+  /**
    * Returns a list-of-strings property value or empty list if a property with name {@code name} did
    * not exist.
    *
@@ -130,7 +148,7 @@ public abstract class Config {
     try {
       return parser.apply(value);
     } catch (Throwable t) {
-      log.debug("Cannot parse {}", value, t);
+      logger.debug("Cannot parse {}", value, t);
       return defaultValue;
     }
   }
@@ -158,6 +176,12 @@ public abstract class Config {
     return anyEnabled;
   }
 
+  /**
+   * Converts this config instance to Java {@link Properties}.
+   *
+   * @deprecated Use {@link #getAllProperties()} instead.
+   */
+  @Deprecated
   public Properties asJavaProperties() {
     Properties properties = new Properties();
     properties.putAll(getAllProperties());

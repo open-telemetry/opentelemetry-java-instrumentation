@@ -49,7 +49,7 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(HttpRequest httpRequest) {
+  protected String peerHostIp(HttpRequest httpRequest) {
     return null;
   }
 
@@ -65,7 +65,7 @@ public class AkkaHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.akka-http-10.0";
+    return "io.opentelemetry.akka-http-10.0";
   }
 
   @Override

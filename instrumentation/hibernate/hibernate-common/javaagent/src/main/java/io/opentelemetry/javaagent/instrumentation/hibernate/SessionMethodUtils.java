@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,7 +18,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SessionMethodUtils {
+public final class SessionMethodUtils {
 
   public static final Set<String> SCOPE_ONLY_METHODS =
       new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
@@ -41,11 +40,6 @@ public class SessionMethodUtils {
     Context sessionContext = contextStore.get(spanKey);
     if (sessionContext == null) {
       return null; // No state found. We aren't in a Session.
-    }
-
-    int depth = CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class);
-    if (depth > 0) {
-      return null; // This method call is being traced already.
     }
 
     return tracer().startSpan(sessionContext, operationNameSupplier.get(), entity);
@@ -72,8 +66,6 @@ public class SessionMethodUtils {
 
   public static void end(
       @Nullable Context context, Throwable throwable, String operationName, Object entity) {
-
-    CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
 
     if (context == null) {
       return;
@@ -107,4 +99,13 @@ public class SessionMethodUtils {
 
     targetContextStore.putIfAbsent(target, sessionContext);
   }
+
+  public static String getSessionMethodSpanName(String methodName) {
+    if ("fireLock".equals(methodName)) {
+      return "Session.lock";
+    }
+    return "Session." + methodName;
+  }
+
+  private SessionMethodUtils() {}
 }

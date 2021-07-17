@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
  * A trait for retrying operation when it fails with "java.net.BindException: Address already in use"
  */
 trait RetryOnAddressAlreadyInUseTrait {
-  private static final Logger log = LoggerFactory.getLogger(RetryOnAddressAlreadyInUseTrait)
+  private static final Logger logger = LoggerFactory.getLogger(RetryOnAddressAlreadyInUseTrait)
 
   /**
    * This is used by setupSpec() methods to auto-retry setup that depends on finding and then using
@@ -31,10 +31,10 @@ trait RetryOnAddressAlreadyInUseTrait {
     } catch (Throwable t) {
       // typically this is "java.net.BindException: Address already in use", but also can be
       // "io.netty.channel.unix.Errors$NativeIoException: bind() failed: Address already in use"
-      if (numRetries == 0 || !t.getMessage().contains("Address already in use")) {
+      if (numRetries == 0 || t.getMessage() == null || !t.getMessage().contains("Address already in use")) {
         throw t
       }
-      log.debug("retrying due to bind exception: {}", t.getMessage(), t)
+      logger.debug("retrying due to bind exception: {}", t.getMessage(), t)
       withRetryOnAddressAlreadyInUse(closure, numRetries - 1)
     }
   }

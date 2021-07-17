@@ -18,7 +18,7 @@ import org.apache.rocketmq.common.message.Message;
 
 final class RocketMqProducerTracer extends BaseTracer {
 
-  private boolean captureExperimentalSpanAttributes;
+  private final boolean captureExperimentalSpanAttributes;
 
   RocketMqProducerTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
     super(openTelemetry);
@@ -27,7 +27,7 @@ final class RocketMqProducerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rocketmq-client";
+    return "io.opentelemetry.rocketmq-client-4.8";
   }
 
   Context startProducerSpan(Context parentContext, String addr, Message msg) {
@@ -54,7 +54,7 @@ final class RocketMqProducerTracer extends BaseTracer {
     }
   }
 
-  private String spanNameOnProduce(Message msg) {
+  private static String spanNameOnProduce(Message msg) {
     return msg.getTopic() + " send";
   }
 }

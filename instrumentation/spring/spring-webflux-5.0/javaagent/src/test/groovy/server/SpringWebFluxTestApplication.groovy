@@ -66,12 +66,12 @@ class SpringWebFluxTestApplication {
     }).andRoute(GET("/greet-failfast/{id}"), new HandlerFunction<ServerResponse>() {
       @Override
       Mono<ServerResponse> handle(ServerRequest request) {
-        throw new RuntimeException("bad things happen")
+        throw new IllegalStateException("bad things happen")
       }
     }).andRoute(GET("/greet-failmono/{id}"), new HandlerFunction<ServerResponse>() {
       @Override
       Mono<ServerResponse> handle(ServerRequest request) {
-        return Mono.error(new RuntimeException("bad things happen"))
+        return Mono.error(new IllegalStateException("bad things happen"))
       }
     }).andRoute(GET("/greet-traced-method/{id}"), new HandlerFunction<ServerResponse>() {
       @Override

@@ -1,7 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  compileOnly project(':javaagent-bootstrap')
-
-  testImplementation project(':javaagent-bootstrap')
-}

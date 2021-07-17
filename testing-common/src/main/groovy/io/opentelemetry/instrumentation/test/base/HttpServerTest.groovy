@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -29,13 +28,13 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
 import spock.lang.Unroll
 
 @Unroll
@@ -207,20 +206,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  Request.Builder request(ServerEndpoint uri, String method, RequestBody body) {
-    def url = HttpUrl.get(uri.resolvePath(address)).newBuilder()
-      .query(uri.query)
-      .fragment(uri.fragment)
-      .build()
-    return request(url, method, body)
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-      .header("User-Agent", TEST_USER_AGENT)
-      .header("X-Forwarded-For", TEST_CLIENT_IP)
+  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+    def url = uri.resolvePath(address).toString()
+    // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+    url = url.replace("http://", "h1c://")
+    if (uri.query != null) {
+      url += "?${uri.query}"
+    }
+    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), url)
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
@@ -233,17 +226,15 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def "test success with #count requests"() {
     setup:
-    def request = request(SUCCESS, method, body).build()
-    List<Response> responses = (1..count).collect {
-      return client.newCall(request).execute()
+    def request = request(SUCCESS, method)
+    List<AggregatedHttpResponse> responses = (1..count).collect {
+      return client.execute(request).aggregate().join()
     }
 
     expect:
     responses.each { response ->
-      response.withCloseable {
-        assert response.code() == SUCCESS.status
-        assert response.body().string() == SUCCESS.body
-      }
+      assert response.status().code() == SUCCESS.status
+      assert response.contentUtf8() == SUCCESS.body
     }
 
     and:
@@ -251,7 +242,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     where:
     method = "GET"
-    body = null
     count << [1, 4, 50] // make multiple requests.
   }
 
@@ -259,82 +249,68 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     setup:
     def traceId = "00000000000000000000000000000123"
     def parentId = "0000000000000456"
-    def request = request(SUCCESS, method, body)
-      .header("traceparent", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
-      .build()
-    def response = client.newCall(request).execute()
+    def request = AggregatedHttpRequest.of(
+      request(SUCCESS, method).headers().toBuilder()
+        .set("traceparent", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
+        .build())
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
-      true
-    }
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
 
     and:
     assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
 
     where:
     method = "GET"
-    body = null
   }
 
   def "test tag query string for #endpoint"() {
     setup:
-    def request = request(endpoint, method, body).build()
-    Response response = client.newCall(request).execute()
+    def request = request(endpoint, method)
+    AggregatedHttpResponse response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == endpoint.status
-      assert response.body().string() == endpoint.body
-      true
-    }
+    response.status().code() == endpoint.status
+    response.contentUtf8() == endpoint.body
 
     and:
     assertTheTraces(1, null, null, method, endpoint, null, response)
 
     where:
     method = "GET"
-    body = null
     endpoint << [SUCCESS, QUERY_PARAM]
   }
 
   def "test redirect"() {
     setup:
     assumeTrue(testRedirect())
-    def request = request(REDIRECT, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(REDIRECT, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == REDIRECT.status
-      assert response.header("location") == REDIRECT.body ||
-        new URI(response.header("location")).normalize().toString() == "${address.resolve(REDIRECT.body)}"
-      true
-    }
+    response.status().code() == REDIRECT.status
+    response.headers().get("location") == REDIRECT.body ||
+      new URI(response.headers().get("location")).normalize().toString() == "${address.resolve(REDIRECT.body)}"
 
     and:
     assertTheTraces(1, null, null, method, REDIRECT, null, response)
 
     where:
     method = "GET"
-    body = null
   }
 
   def "test error"() {
     setup:
     assumeTrue(testError())
-    def request = request(ERROR, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(ERROR, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == ERROR.status
-      if (testErrorBody()) {
-        assert response.body().string() == ERROR.body
-      }
-      true
+    response.status().code() == ERROR.status
+    if (testErrorBody()) {
+      response.contentUtf8() == ERROR.body
     }
 
     and:
@@ -342,68 +318,55 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     where:
     method = "GET"
-    body = null
   }
 
   def "test exception"() {
     setup:
     assumeTrue(testException())
-    def request = request(EXCEPTION, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(EXCEPTION, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == EXCEPTION.status
-      true
-    }
+    response.status().code() == EXCEPTION.status
 
     and:
     assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
 
     where:
     method = "GET"
-    body = null
   }
 
   def "test notFound"() {
     setup:
     assumeTrue(testNotFound())
-    def request = request(NOT_FOUND, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(NOT_FOUND, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == NOT_FOUND.status
-      true
-    }
+    response.status().code() == NOT_FOUND.status
 
     and:
     assertTheTraces(1, null, null, method, NOT_FOUND, null, response)
 
     where:
     method = "GET"
-    body = null
   }
 
   def "test path param"() {
     setup:
     assumeTrue(testPathParam())
-    def request = request(PATH_PARAM, method, body).build()
-    def response = client.newCall(request).execute()
+    def request = request(PATH_PARAM, method)
+    def response = client.execute(request).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == PATH_PARAM.status
-      assert response.body().string() == PATH_PARAM.body
-      true
-    }
+    response.status().code() == PATH_PARAM.status
+    response.contentUtf8() == PATH_PARAM.body
 
     and:
     assertTheTraces(1, null, null, method, PATH_PARAM, null, response)
 
     where:
     method = "GET"
-    body = null
   }
 
   /*
@@ -426,32 +389,28 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     int count = 100
     def endpoint = INDEXED_CHILD
 
-    def latch = new CountDownLatch(1)
+    def latch = new CountDownLatch(count)
 
-    def pool = Executors.newFixedThreadPool(4)
     def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
-    def setter = { Request.Builder carrier, String name, String value ->
+    def setter = { HttpRequestBuilder carrier, String name, String value ->
       carrier.header(name, value)
     }
 
     when:
     count.times { index ->
-      def job = {
-        latch.await()
-        def url = HttpUrl.get(endpoint.resolvePath(address)).newBuilder()
-          .query("${ServerEndpoint.ID_PARAMETER_NAME}=$index")
-          .build()
-        Request.Builder builder = request(url, "GET", null)
-        runUnderTrace("client " + index) {
-          Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
-          propagator.inject(Context.current(), builder, setter)
-          client.newCall(builder.build()).execute()
+      HttpRequestBuilder request = HttpRequest.builder()
+        // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+        .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
+        .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
+      runUnderTrace("client " + index) {
+        Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
+        propagator.inject(Context.current(), request, setter)
+        client.execute(request.build()).aggregate().thenRun {
+          latch.countDown()
         }
-
       }
-      pool.submit(job)
     }
-    latch.countDown()
+    latch.await()
 
     then:
     assertTraces(count) {
@@ -478,14 +437,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
     }
-
-    cleanup:
-    pool.shutdownNow()
   }
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, AggregatedHttpResponse response = null) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -506,7 +462,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       (0..size - 1).each {
         trace(it, spanCount) {
           def spanIndex = 0
-          serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
+          serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint)
           if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -611,7 +567,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+        "${SemanticAttributes.HTTP_FLAVOR.key}" { it == "1.1" || it == "2.0" }
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
@@ -675,6 +631,4 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       }
     }
   }
-
-
 }

@@ -39,7 +39,7 @@ class KubernetesRequestDigest {
 
       return new KubernetesRequestDigest(
           urlPath,
-          false,
+          /* isNonResourceRequest= */ false,
           resourceMeta,
           KubernetesVerb.of(
               request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
@@ -49,8 +49,7 @@ class KubernetesRequestDigest {
   }
 
   private static KubernetesRequestDigest nonResource(String urlPath) {
-    KubernetesRequestDigest digest = new KubernetesRequestDigest(urlPath, true, null, null);
-    return digest;
+    return new KubernetesRequestDigest(urlPath, /* isNonResourceRequest= */ true, null, null);
   }
 
   public static boolean isResourceRequest(String urlPath) {
@@ -90,7 +89,7 @@ class KubernetesRequestDigest {
   @Override
   public String toString() {
     if (isNonResourceRequest) {
-      return new StringBuilder().append(verb).append(' ').append(urlPath).toString();
+      return verb.value() + ' ' + urlPath;
     }
 
     String groupVersion;
@@ -107,13 +106,7 @@ class KubernetesRequestDigest {
       targetResourceName = resourceMeta.getResource() + "/" + resourceMeta.getSubResource();
     }
 
-    return new StringBuilder()
-        .append(verb.value())
-        .append(' ')
-        .append(groupVersion)
-        .append(' ')
-        .append(targetResourceName)
-        .toString();
+    return verb.value() + ' ' + groupVersion + ' ' + targetResourceName;
   }
 
   private static boolean isNullOrEmpty(String s) {

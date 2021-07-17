@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,6 +38,7 @@ public class ContinuationInstrumentation implements TypeInstrumentation {
         ContinuationInstrumentation.class.getName() + "$ResumeAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ResumeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

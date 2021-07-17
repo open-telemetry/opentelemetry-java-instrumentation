@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import example.GreeterGrpc
 import example.Helloworld
@@ -76,7 +75,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
     }
 
@@ -382,7 +381,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>()
     AtomicReference<Throwable> error = new AtomicReference<>()
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       client.sayHello(
         Helloworld.Request.newBuilder().setName("test").build(),
         new StreamObserver<Helloworld.Response>() {
@@ -500,7 +499,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     when:
     AtomicReference<Throwable> error = new AtomicReference<>()
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       client.sayHello(
         Helloworld.Request.newBuilder().setName("test").build(),
         new StreamObserver<Helloworld.Response>() {
@@ -677,5 +676,97 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
     server?.shutdownNow()?.awaitTermination()
+  }
+
+  def "test reuse builders"() {
+    setup:
+    BindableService greeter = new GreeterGrpc.GreeterImplBase() {
+      @Override
+      void sayHello(
+        final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
+        final Helloworld.Response reply = Helloworld.Response.newBuilder().setMessage("Hello $req.name").build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+      }
+    }
+    def port = PortUtils.findOpenPort()
+    ServerBuilder serverBuilder = configureServer(ServerBuilder.forPort(port).addService(greeter))
+    // Multiple calls to build on same builder
+    serverBuilder.build()
+    Server server = serverBuilder.build().start()
+    ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    // Multiple calls to build on the same builder
+    channelBuilder.build()
+    ManagedChannel channel = channelBuilder.build()
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
+
+    when:
+    def response = runWithSpan("parent") {
+      client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
+    }
+
+    then:
+    response.message == "Hello $paramName"
+
+    assertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          childOf span(0)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" Status.Code.OK.value()
+          }
+        }
+        span(2) {
+          name "example.Greeter/SayHello"
+          kind SERVER
+          childOf span(1)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()
+          }
+        }
+      }
+    }
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
+
+    where:
+    paramName << ["some name", "some other name"]
   }
 }

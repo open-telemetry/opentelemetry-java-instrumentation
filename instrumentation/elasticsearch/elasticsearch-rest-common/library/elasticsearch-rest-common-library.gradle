@@ -1,5 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
-
-dependencies {
-  compileOnly "org.elasticsearch.client:rest:5.0.0"
-}

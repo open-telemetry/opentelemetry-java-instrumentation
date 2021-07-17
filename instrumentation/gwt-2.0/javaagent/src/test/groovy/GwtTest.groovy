@@ -3,16 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -119,7 +115,16 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     assertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, getContextPath() + "/greeting/greet")
-        basicSpan(it, 1, "MessageServiceImpl.sendMessage", span(0))
+        span(1) {
+          name "test.gwt.shared.MessageService/sendMessage"
+          kind SpanKind.INTERNAL
+          childOf(span(0))
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
+            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
+            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+          }
+        }
       }
     }
     clearExportedData()
@@ -134,7 +139,17 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     assertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, getContextPath() + "/greeting/greet")
-        basicSpan(it, 1, "MessageServiceImpl.sendMessage", span(0), new IllegalArgumentException())
+        span(1) {
+          name "test.gwt.shared.MessageService/sendMessage"
+          kind SpanKind.INTERNAL
+          childOf(span(0))
+          errorEvent(IOException)
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
+            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
+            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+          }
+        }
       }
     }
 
@@ -149,13 +164,5 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
       name spanName
       kind SpanKind.SERVER
     }
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-      .header("User-Agent", TEST_USER_AGENT)
-      .header("X-Forwarded-For", TEST_CLIENT_IP)
   }
 }

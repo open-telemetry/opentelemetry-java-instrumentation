@@ -52,7 +52,7 @@ public class PersistenceConfig {
     return dataSource;
   }
 
-  private Properties additionalProperties() {
+  private static Properties additionalProperties() {
     Properties properties = new Properties();
     properties.setProperty("hibernate.show_sql", "true");
     properties.setProperty("hibernate.hbm2ddl.auto", "create");

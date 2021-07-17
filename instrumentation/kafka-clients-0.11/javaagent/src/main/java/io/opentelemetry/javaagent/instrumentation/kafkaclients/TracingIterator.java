@@ -9,12 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
-
-  private static final Logger log = LoggerFactory.getLogger(TracingIterator.class);
 
   private final Iterator<ConsumerRecord<?, ?>> delegateIterator;
   private final KafkaConsumerTracer tracer;
@@ -23,9 +20,9 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  private Context currentContext;
+  @Nullable private Context currentContext;
 
-  private Scope currentScope;
+  @Nullable private Scope currentScope;
 
   public TracingIterator(
       Iterator<ConsumerRecord<?, ?>> delegateIterator, KafkaConsumerTracer tracer) {
@@ -46,13 +43,9 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
 
     ConsumerRecord<?, ?> next = delegateIterator.next();
 
-    try {
-      if (next != null) {
-        currentContext = tracer.startSpan(next);
-        currentScope = currentContext.makeCurrent();
-      }
-    } catch (Exception e) {
-      log.debug("Error during decoration", e);
+    if (next != null) {
+      currentContext = tracer.startSpan(next);
+      currentScope = currentContext.makeCurrent();
     }
     return next;
   }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.common;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -51,7 +51,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
             + "$ChannelPipelineRemoveByClassAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
@@ -65,7 +67,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveByNameAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) String name) {
@@ -84,7 +88,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveByClassAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline,
