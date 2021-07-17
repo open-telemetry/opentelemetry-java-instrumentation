@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
 public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
@@ -20,6 +21,7 @@ public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   private final MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
   private final Cache<Method, AttributeBindings> cache;
 
+  /** Returns a new {@link MethodSpanAttributesExtractorBuilder}. */
   public static <REQUEST, RESPONSE> MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MethodExtractor<REQUEST> methodResolver) {
 
