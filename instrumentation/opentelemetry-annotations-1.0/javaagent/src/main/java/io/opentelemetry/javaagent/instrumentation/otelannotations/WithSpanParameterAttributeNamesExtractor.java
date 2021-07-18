@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import io.opentelemetry.instrumentation.api.annotation.support.AnnotationReflectionHelper;
-import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
-import io.opentelemetry.instrumentation.api.annotation.support.BaseAttributeBinder;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
@@ -16,15 +14,14 @@ import java.lang.reflect.Parameter;
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class WithSpanAttributeBinder extends BaseAttributeBinder {
+public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
+  INSTANCE;
 
-  private static final Cache<Method, AttributeBindings> bindings =
-      Cache.newBuilder().setWeakKeys().build();
   private static final Class<? extends Annotation> spanAttributeAnnotation;
   private static final Function<Annotation, String> spanAttributeValueFunction;
 
   static {
-    ClassLoader classLoader = WithSpanAttributeBinder.class.getClassLoader();
+    ClassLoader classLoader = WithSpanParameterAttributeNamesExtractor.class.getClassLoader();
     spanAttributeAnnotation =
         AnnotationReflectionHelper.forNameOrNull(
             classLoader, "io.opentelemetry.extension.annotations.SpanAttribute");
@@ -46,14 +43,7 @@ class WithSpanAttributeBinder extends BaseAttributeBinder {
   }
 
   @Override
-  public AttributeBindings bind(Method method) {
-    return spanAttributeAnnotation != null
-        ? bindings.computeIfAbsent(method, super::bind)
-        : EmptyAttributeBindings.INSTANCE;
-  }
-
-  @Override
-  protected @Nullable String[] attributeNamesForParameters(Method method, Parameter[] parameters) {
+  public @Nullable String[] extract(Method method, Parameter[] parameters) {
     String[] attributeNames = new String[parameters.length];
     for (int i = 0; i < parameters.length; i++) {
       attributeNames[i] = attributeName(parameters[i]);

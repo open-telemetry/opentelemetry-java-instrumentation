@@ -23,6 +23,8 @@ class BaseAttributeBinderTest extends Specification {
 
   def "returns empty bindings for null attribute names array"() {
     given:
+    def binder = MethodSpanAttributesExtractor.newBuilder()
+      .
     def binder = new TestAttributeBinder(null)
 
     when:
@@ -31,7 +33,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*spock.lang.Specification._)
+    0 * setter.setAttribute(*_)
   }
 
   def "returns empty bindings for empty attribute names array"() {
@@ -44,7 +46,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*spock.lang.Specification._)
+    0 * setter.setAttribute(*_)
   }
 
   def "returns empty bindings for attribute names array with all null elements"() {
@@ -57,7 +59,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*spock.lang.Specification._)
+    0 * setter.setAttribute(*_)
   }
 
   def "returns empty bindings for attribute names array with fewer elements than parameters"() {
@@ -70,7 +72,7 @@ class BaseAttributeBinderTest extends Specification {
 
     then:
     bindings.isEmpty()
-    0 * setter.setAttribute(*spock.lang.Specification._)
+    0 * setter.setAttribute(*_)
   }
 
   def "returns bindings for attribute names array"() {
@@ -99,7 +101,7 @@ class BaseAttributeBinderTest extends Specification {
     then:
     !bindings.isEmpty()
     1 * setter.setAttribute({ it.getKey() == "x" }, "a")
-    0 * setter.setAttribute(spock.lang.Specification._, "b")
+    0 * setter.setAttribute(_, "b")
     1 * setter.setAttribute({ it.getKey() == "z" }, "c")
   }
 
