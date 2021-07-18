@@ -36,7 +36,7 @@ import org.springframework.core.ParameterNameDiscoverer;
  */
 @Aspect
 public class WithSpanAspect {
-  private static final String INSTRUMENTATION_NAME = "spring-boot-autoconfigure";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure";
 
   private final Instrumenter<JoinPoint, Object> instrumenter;
 
