@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.annotation.support.async;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A wrapper over {@link Instrumenter} that is able to defer {@link Instrumenter#end(Context,
@@ -62,7 +63,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
    * asyncValue} completes.
    */
   public <ASYNC> ASYNC asyncEnd(
-      Context context, REQUEST request, ASYNC asyncValue, Throwable throwable) {
+      Context context, REQUEST request, ASYNC asyncValue, @Nullable Throwable throwable) {
     // we can end early if an exception was thrown
     if (throwable != null) {
       instrumenter.end(context, request, null, throwable);
