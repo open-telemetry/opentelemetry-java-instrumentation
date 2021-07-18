@@ -51,7 +51,7 @@ public class WithSpanAspectAttributeBinder extends BaseAttributeBinder {
     if (!value.isEmpty()) {
       return value;
     }
-    if (parameterNames != null && parameterNames.length >= index) {
+    if (parameterNames != null && parameterNames.length > index) {
       String parameterName = parameterNames[index];
       if (parameterName != null && !parameterName.isEmpty()) {
         return parameterName;
