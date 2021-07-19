@@ -40,11 +40,13 @@ gradleEnterprise {
 
 val awsAccessKey = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID") ?: ""
 
-buildCache {
-  remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
-    region = "us-west-2"
-    bucket = "opentelemetry-java-instrumentation-gradle-cache"
-    isPush = isCI && !awsAccessKey.isEmpty()
+if (!awsAccessKey.isEmpty()) {
+  buildCache {
+    remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
+      region = "us-west-2"
+      bucket = "opentelemetry-java-instrumentation-gradle-cache"
+      isPush = isCI
+    }
   }
 }
 
