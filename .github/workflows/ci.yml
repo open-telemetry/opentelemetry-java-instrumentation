@@ -67,7 +67,6 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: jdk${{ matrix.test-java-version }}
-          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -153,7 +152,6 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: smokeTests
-          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -208,7 +206,6 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: jdk11
-          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
