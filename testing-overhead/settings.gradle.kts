@@ -1,0 +1,1 @@
+rootProject.name = "opentelemetry-agent-overhead-test"
