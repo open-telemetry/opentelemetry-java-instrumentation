@@ -33,8 +33,7 @@
 
 - Hide Config#create() method and use builder everywhere (#3338)
 - Ignore task classes using IgnoredTypesConfigurer (#3380)
-- Exclude bootstrap dependencies from inst (#3432)
-- Exclude duplicates from -all.jar (#3430)
+- Exclude duplicate classes from final jars (#3432, #3430)
 - Port AsyncSpanEndStrategy to Instrumenter API (#3262)
 
 ## Version 1.3.1 - 2021-06-23
