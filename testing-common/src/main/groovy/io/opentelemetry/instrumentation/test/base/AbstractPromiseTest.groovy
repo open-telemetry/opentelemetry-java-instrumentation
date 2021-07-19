@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -48,8 +47,16 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "other", it.span(0))
-        basicSpan(it, 2, "callback", it.span(0))
+        span(1) {
+          name "other"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -83,7 +90,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "callback", span(0))
+        span(1) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
       trace(1, 1) {
         span(0) {
@@ -123,7 +134,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "callback", it.span(0))
+        span(1) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -156,7 +171,11 @@ abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecificati
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "callback", it.span(0))
+        span(1) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

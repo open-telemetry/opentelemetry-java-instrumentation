@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static org.junit.Assume.assumeTrue
@@ -420,8 +419,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
 
-          basicSpan(it, 0, "client " + requestId, null, null) {
-            "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
+          span(0) {
+            name "client " + requestId
+            kind SpanKind.INTERNAL
+            hasNoParent()
+            attributes {
+              "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
+            }
           }
           indexedServerSpan(it, span(0), requestId)
 

@@ -6,8 +6,8 @@
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
 import org.apache.cxf.endpoint.Server
+import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
 import test.JaxRsTestApplication
 
 class CxfHttpServerTest extends JaxRsHttpServerTest<Server> {

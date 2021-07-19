@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.lang.reflect.InvocationTargetException
@@ -81,7 +79,11 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -166,7 +168,11 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

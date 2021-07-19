@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rxjava2
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -43,7 +43,11 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "Connection.query", span(0))
+        span(1) {
+          name "Connection.query"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -73,7 +77,11 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
