@@ -145,6 +145,9 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Local publish
+        run: ./gradlew publishToMavenLocal --no-build-cache
+
       - name: Build distro
         run: ./gradlew build --stacktrace --no-build-cache
         working-directory: examples/distro
@@ -153,39 +156,9 @@ jobs:
         run: ./gradlew build --stacktrace --no-build-cache
         working-directory: examples/extension
 
-  examples-snapshot:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 11 for running checks
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
-
-      - name: Local publish
-        run: ./gradlew publishToMavenLocal --no-build-cache
-
-      - name: Point extensions to local snapshot
-        run: ../../.github/scripts/prepare-extension-snapshot.sh
-        working-directory: examples/extension
-
-      - name: Build
-        run: ./gradlew build --no-build-cache
-        working-directory: examples/extension
-
   issue:
     name: Open issue on failure
-    needs: [ build, test, testLatestDeps, smoke-test, examples, examples-snapshot ]
+    needs: [ build, test, testLatestDeps, smoke-test, examples ]
     runs-on: ubuntu-latest
     if: always()
     steps:
