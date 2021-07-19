@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -45,13 +50,14 @@ public final class ApacheHttpClientTracingBuilder {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
         new ApacheHttpClientNetAttributesExtractor();
-    Instrumenter<HttpUriRequest, HttpResponse> instrumenter = Instrumenter
-        .<HttpUriRequest, HttpResponse>newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .setSpanStatusExtractor(spanStatusExtractor)
-        .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(netAttributesExtractor)
-        .newClientInstrumenter(new HttpHeaderSetter());
+    Instrumenter<HttpUriRequest, HttpResponse> instrumenter =
+        Instrumenter.<HttpUriRequest, HttpResponse>newBuilder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSpanStatusExtractor(spanStatusExtractor)
+            .addAttributesExtractor(httpAttributesExtractor)
+            .addAttributesExtractor(netAttributesExtractor)
+            .newClientInstrumenter(new HttpHeaderSetter());
 
-    return new ApacheHttpClientTracing(instrumenter);
+    return new ApacheHttpClientTracing(instrumenter, openTelemetry.getPropagators());
   }
 }

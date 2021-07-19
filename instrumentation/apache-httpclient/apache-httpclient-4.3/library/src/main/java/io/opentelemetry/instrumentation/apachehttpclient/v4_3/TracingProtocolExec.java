@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.context.Context;
@@ -34,7 +39,8 @@ final class TracingProtocolExec implements ClientExecChain {
 
   TracingProtocolExec(
       Instrumenter<HttpUriRequest, HttpResponse> instrumenter,
-      ContextPropagators propagators, ClientExecChain exec) {
+      ContextPropagators propagators,
+      ClientExecChain exec) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
     this.exec = exec;
@@ -51,7 +57,8 @@ final class TracingProtocolExec implements ClientExecChain {
     if (context != null) {
       HttpUriRequest requestAsUriRequest =
           httpContext.getAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, HttpUriRequest.class);
-      // Request already had a context so a redirect. Don't create a new span just inject and execute.
+      // Request already had a context so a redirect. Don't create a new span just inject and
+      // execute.
       propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
       return execute(route, request, requestAsUriRequest, httpContext, httpExecutionAware, context);
     }

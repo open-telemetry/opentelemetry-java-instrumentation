@@ -1,6 +1,12 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -18,9 +24,12 @@ public final class ApacheHttpClientTracing {
   }
 
   private final Instrumenter<HttpUriRequest, HttpResponse> instrumenter;
+  private final ContextPropagators propagators;
 
-  ApacheHttpClientTracing(Instrumenter<HttpUriRequest, HttpResponse> instrumenter) {
+  ApacheHttpClientTracing(
+      Instrumenter<HttpUriRequest, HttpResponse> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
+    this.propagators = propagators;
   }
 
   public CloseableHttpClient newHttpClient() {
@@ -28,6 +37,6 @@ public final class ApacheHttpClientTracing {
   }
 
   public HttpClientBuilder newHttpClientBuilder() {
-    return new TracingHttpClientBuilder(instrumenter);
+    return new TracingHttpClientBuilder(instrumenter, propagators);
   }
 }

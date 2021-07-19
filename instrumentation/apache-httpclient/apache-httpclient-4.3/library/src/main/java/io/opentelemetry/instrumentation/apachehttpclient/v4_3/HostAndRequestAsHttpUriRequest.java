@@ -16,8 +16,7 @@ import org.apache.http.message.AbstractHttpMessage;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Wraps HttpHost and HttpRequest into a HttpUriRequest for tracers and injectors. */
-final class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage
-    implements HttpUriRequest {
+final class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implements HttpUriRequest {
 
   private final String method;
   private final RequestLine requestLine;
