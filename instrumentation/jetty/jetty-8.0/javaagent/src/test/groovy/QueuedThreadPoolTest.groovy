@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.SpanKind
@@ -45,7 +44,11 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -82,7 +85,11 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

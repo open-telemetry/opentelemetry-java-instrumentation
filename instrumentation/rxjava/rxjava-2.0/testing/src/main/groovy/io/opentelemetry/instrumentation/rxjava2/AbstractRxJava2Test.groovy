@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava2
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -82,7 +81,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
           hasNoParent()
         }
         for (int i = 1; i < workSpans + 1; ++i) {
-          basicSpan(it, i, "addOne", span(0))
+          span(i) {
+            name "addOne"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }
@@ -176,7 +179,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
         }
 
         for (int i = 1; i < workSpans + 1; i++) {
-          basicSpan(it, i, "addOne", span(0))
+          span(i) {
+            name "addOne"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }
@@ -229,7 +236,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
         }
 
         for (int i = 1; i < workSpans + 1; i++) {
-          basicSpan(it, i, "addOne", span(0))
+          span(i) {
+            name "addOne"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }
@@ -263,8 +274,16 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "addOne", span(0))
-        basicSpan(it, 2, "addTwo", span(0))
+        span(1) {
+          name "addOne"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "addTwo"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -300,11 +319,23 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "intermediate", span(0))
+        span(1) {
+          name "intermediate"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         for (int i = 2; i < 2 + 2 * workItems; i = i + 2) {
-          basicSpan(it, i, "addOne", span(0))
-          basicSpan(it, i + 1, "addTwo", span(0))
+          span(i) {
+            name "addOne"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
+          span(i + 1) {
+            name "addTwo"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }
@@ -341,7 +372,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
           hasNoParent()
         }
         for (int i = 1; i < values.size() + 1; i++) {
-          basicSpan(it, i, "addOne", span(0))
+          span(i) {
+            name "addOne"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }

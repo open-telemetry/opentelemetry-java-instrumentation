@@ -5,9 +5,9 @@
 
 package test.vaadin
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import com.vaadin.flow.server.Version
+import io.opentelemetry.api.trace.SpanKind
 
 abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
@@ -36,10 +36,18 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
       def handlers = getRequestHandlers("IndexHtmlRequestHandler")
       trace(0, 2 + handlers.size()) {
         serverSpan(it, 0, "IndexHtmlRequestHandler.handleRequest")
-        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
+        span(1) {
+          name "SpringVaadinServletService.handleRequest"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
         int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
+          span(spanIndex++) {
+            name handler + ".handleRequest"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
       }
       // /xyz/VAADIN/build/vaadin-bundle-*.cache.js
@@ -56,10 +64,18 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
       handlers = getRequestHandlers("JavaScriptBootstrapHandler")
       trace(traceIndex, 2 + handlers.size()) {
         serverSpan(it, 0, getContextPath())
-        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
+        span(1) {
+          name "SpringVaadinServletService.handleRequest"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
         int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
+          span(spanIndex++) {
+            name handler + ".handleRequest"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
       }
       // /xyz/VAADIN/build/vaadin-?-*.cache.js
@@ -81,15 +97,31 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
       handlers = getRequestHandlers("UidlRequestHandler")
       trace(traceIndex + 5, 2 + handlers.size() + 2) {
         serverSpan(it, 0, getContextPath() + "/main")
-        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
+        span(1) {
+          name "SpringVaadinServletService.handleRequest"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
+          span(spanIndex++) {
+            name handler + ".handleRequest"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
 
-        basicSpan(it, spanIndex, "PublishedServerEventHandlerRpcHandler.handle", span(spanIndex - 1))
-        basicSpan(it, spanIndex + 1, "JavaScriptBootstrapUI.connectClient", span(spanIndex))
+        span(spanIndex) {
+          name "PublishedServerEventHandlerRpcHandler.handle"
+          kind SpanKind.INTERNAL
+          childOf span(spanIndex - 1)
+        }
+        span(spanIndex + 1) {
+          name "JavaScriptBootstrapUI.connectClient"
+          kind SpanKind.INTERNAL
+          childOf span(spanIndex)
+        }
       }
     }
   }
@@ -100,14 +132,26 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
       def handlers = getRequestHandlers("UidlRequestHandler")
       trace(0, 2 + handlers.size() + 1) {
         serverSpan(it, 0, getContextPath() + "/main")
-        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
+        span(1) {
+          name "SpringVaadinServletService.handleRequest"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
+          span(spanIndex++) {
+            name handler + ".handleRequest"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
 
-        basicSpan(it, spanIndex, "EventRpcHandler.handle/click", span(spanIndex - 1))
+        span(spanIndex) {
+          name "EventRpcHandler.handle/click"
+          kind SpanKind.INTERNAL
+          childOf span(spanIndex - 1)
+        }
       }
     }
   }

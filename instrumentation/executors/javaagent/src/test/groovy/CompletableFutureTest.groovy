@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.trace.SpanKind
@@ -62,9 +61,21 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "supplier", span(0))
-        basicSpan(it, 2, "appendingSupplier", span(0))
-        basicSpan(it, 3, "function", span(0))
+        span(1) {
+          name "supplier"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "appendingSupplier"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(3) {
+          name "function"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -95,7 +106,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -123,7 +138,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -152,7 +171,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -183,7 +206,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -214,7 +241,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -247,7 +278,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "child", span(0))
+        span(1) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.netty.resolver.AddressResolver
 import io.netty.resolver.AddressResolverGroup
@@ -176,7 +175,13 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       trace(0, 2) {
         def parentSpan = span(0)
 
-        basicSpan(it, 0, "parent", null, ex)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status StatusCode.ERROR
+          errorEvent(ex.class, ex.message)
+        }
         span(1) {
           def actualException = ex.cause
           kind SpanKind.CLIENT
