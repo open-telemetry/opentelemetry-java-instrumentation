@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // this project will run in isolation under the agent's classloader
 plugins {
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
   id("otel.java-conventions")
 }
 
@@ -26,9 +26,13 @@ subprojects {
 
 dependencies {
   compileOnly(project(":instrumentation-api"))
-  compileOnly(project(":javaagent-api"))
+  compileOnly(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-tooling"))
   implementation(project(":javaagent-extension-api"))
+
+  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+  // inclusion of this artifact inside of :instrumentation-api
+  compileOnly(project(":instrumentation-api-caching"))
 }
 
 configurations {
@@ -49,7 +53,8 @@ tasks {
       //These classes are added to bootstrap classloader by javaagent module
       exclude(project(":javaagent-bootstrap"))
       exclude(project(":instrumentation-api"))
-      exclude(project(":javaagent-api"))
+      exclude(project(":instrumentation-api-annotation-support"))
+      exclude(project(":javaagent-instrumentation-api"))
     }
   }
 
@@ -58,7 +63,7 @@ tasks {
     description = "List all available instrumentation modules"
     doFirst {
       subprojects
-        .filter { it.plugins.hasPlugin("otel.muzzle-check") }
+        .filter { it.plugins.hasPlugin("io.opentelemetry.instrumentation.muzzle-check") }
         .map { it.path }
         .forEach { println(it) }
     }

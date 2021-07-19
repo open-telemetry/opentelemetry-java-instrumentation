@@ -88,6 +88,29 @@ Each time the application invokes the annotated method, it creates a span that d
 and provides any thrown exceptions. Unless specified as an argument to the annotation, the span name
 will be `<className>.<methodName>`.
 
+
+## Adding attributes to the span with `@SpanAttribute`
+
+When a span is created for an annotated method the values of the arguments to the method invocation
+can be automatically added as attributes to the created span by annotating the method parameters
+with the `@SpanAttribute` annotation.
+
+```java
+import io.opentelemetry.extension.annotations.SpanAttribute;
+import io.opentelemetry.extension.annotations.WithSpan;
+
+public class MyClass {
+  @WithSpan
+  public void MyLogic(@SpanAttribute("parameter1") String parameter1, @SpanAttribute("parameter2") long parameter2) {
+      <...>
+  }
+}
+```
+
+Unless specified as an argument to the annotation, the attribute name will be derived from the
+formal parameter names if they are compiled into the `.class` files by passing the `-parameters`
+option to the `javac` compiler.
+
 ## Suppressing `@WithSpan` instrumentation
 
 Suppressing `@WithSpan` is useful if you have code that is over-instrumented using `@WithSpan`

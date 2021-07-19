@@ -164,15 +164,20 @@ Provides auto-configurations for the OpenTelemetry WebClient ExchangeFilter defi
 
 #### Manual Instrumentation Support - @WithSpan
 
-This feature uses spring-aop to wrap methods annotated with `@WithSpan` in a span.
+This feature uses spring-aop to wrap methods annotated with `@WithSpan` in a span.  The arguments
+to the method can be captured as attributed on the created span by annotating the method
+parameters with `@SpanAttribute`.
 
-Note - This annotation can only be applied to bean methods managed by the spring application context. Check out [spring-aop](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop) to learn more about aspect weaving in spring.
+Note - This annotation can only be applied to bean methods managed by the spring application
+context. Check out [spring-aop](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop)
+to learn more about aspect weaving in spring.
 
 ##### Usage
 
 ```java
 import org.springframework.stereotype.Component;
 
+import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -196,6 +201,9 @@ public class TracedClass {
 
     @WithSpan(kind = SpanKind.CLIENT)
     public void tracedClientSpan() {
+    }
+
+    public void tracedMethodWithAttribute(@SpanAttribute("attributeName") String parameter) {
     }
 }
 
@@ -374,10 +382,10 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 | Feature          | Property                                 | Default Value | ConditionalOnClass     |
 |------------------|------------------------------------------|---------------|------------------------|
-| spring-web       | otel.springboot.httpclients.enabled | true          | RestTemplate           |
-| spring-webmvc    | otel.springboot.httpclients.enabled | true          | OncePerRequestFilter   |
-| spring-webflux   | otel.springboot.httpclients.enabled | true          | WebClient              |
-| @WithSpan        | otel.springboot.aspects.enabled     | true          | WithSpan, Aspect       |
+| spring-web       | otel.springboot.httpclients.enabled      | true          | RestTemplate           |
+| spring-webmvc    | otel.springboot.httpclients.enabled      | true          | OncePerRequestFilter   |
+| spring-webflux   | otel.springboot.httpclients.enabled      | true          | WebClient              |
+| @WithSpan        | otel.springboot.aspects.enabled          | true          | WithSpan, Aspect       |
 | Otlp Exporter    | otel.exporter.otlp.enabled               | true          | OtlpGrpcSpanExporter   |
 | Jaeger Exporter  | otel.exporter.jaeger.enabled             | true          | JaegerGrpcSpanExporter |
 | Zipkin Exporter  | otel.exporter.zipkin.enabled             | true          | ZipkinSpanExporter     |

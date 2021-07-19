@@ -190,6 +190,11 @@
       <message key="name.invalidPattern"
         value="Member name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    <module name="ConstantName">
+      <property name="format" value="^(?!log$)(?!LOG$)(?!LOGGER$)"/>
+      <message key="name.invalidPattern"
+        value="Logger fields must be named ''logger''."/>
+    </module>
     <module name="ParameterName">
       <property name="format" value="^[a-z]([a-z0-9][a-zA-Z0-9]*)?$"/>
       <message key="name.invalidPattern"
@@ -222,7 +227,7 @@
         value="Class type name ''{0}'' must match pattern ''{1}''."/>
     </module>
     <module name="RecordTypeParameterName">
-      <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
+      <property name="format" value="^[A-Z]+[0-9]?$"/>
       <message key="name.invalidPattern"
         value="Record type name ''{0}'' must match pattern ''{1}''."/>
     </module>
@@ -374,7 +379,8 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
-    <property name="files" value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]jflex"/>
+    <property name="files"
+      value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]jflex"/>
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>

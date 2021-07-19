@@ -7,21 +7,27 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
+import org.aspectj.lang.JoinPoint;
 
 class WithSpanAspectTracer extends BaseTracer {
 
+  private final WithSpanAspectAttributeBinder withSpanAspectAttributeBinder;
   private final AsyncSpanEndStrategies asyncSpanEndStrategies =
       AsyncSpanEndStrategies.getInstance();
 
-  WithSpanAspectTracer(OpenTelemetry openTelemetry) {
+  WithSpanAspectTracer(
+      OpenTelemetry openTelemetry, WithSpanAspectAttributeBinder withSpanAspectAttributeBinder) {
     super(openTelemetry);
+    this.withSpanAspectAttributeBinder = withSpanAspectAttributeBinder;
   }
 
   @Override
@@ -29,9 +35,11 @@ class WithSpanAspectTracer extends BaseTracer {
     return "io.opentelemetry.spring-boot-autoconfigure-aspect";
   }
 
-  Context startSpan(Context parentContext, WithSpan annotation, Method method) {
-    Span span =
-        spanBuilder(parentContext, spanName(annotation, method), annotation.kind()).startSpan();
+  Context startSpan(
+      Context parentContext, WithSpan annotation, Method method, JoinPoint joinPoint) {
+    SpanBuilder spanBuilder =
+        spanBuilder(parentContext, spanName(annotation, method), annotation.kind());
+    Span span = withSpanAttributes(spanBuilder, method, joinPoint).startSpan();
     switch (annotation.kind()) {
       case SERVER:
         return withServerSpan(parentContext, span);
@@ -48,6 +56,15 @@ class WithSpanAspectTracer extends BaseTracer {
       return SpanNames.fromMethod(method);
     }
     return spanName;
+  }
+
+  public SpanBuilder withSpanAttributes(
+      SpanBuilder spanBuilder, Method method, JoinPoint joinPoint) {
+    AttributeBindings bindings = withSpanAspectAttributeBinder.bind(method);
+    if (!bindings.isEmpty()) {
+      bindings.apply(spanBuilder::setAttribute, joinPoint.getArgs());
+    }
+    return spanBuilder;
   }
 
   /**

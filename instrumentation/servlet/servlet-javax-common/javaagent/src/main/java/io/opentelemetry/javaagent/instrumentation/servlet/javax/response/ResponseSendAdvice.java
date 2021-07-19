@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.javax.response.
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import java.lang.reflect.Method;
@@ -26,10 +25,12 @@ public class ResponseSendAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") CallDepth callDepth) {
-    callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
+    callDepth = CallDepth.forClass(HttpServletResponse.class);
+    if (callDepth.getAndIncrement() > 0) {
+      return;
+    }
     // Don't want to generate a new top-level span
-    if (callDepth.getAndIncrement() == 0
-        && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
+    if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
       context = tracer().startSpan(method);
       scope = context.makeCurrent();
     }
@@ -41,6 +42,9 @@ public class ResponseSendAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") CallDepth callDepth) {
-    HttpServletResponseAdviceHelper.stopSpan(tracer(), throwable, context, scope, callDepth);
+    if (callDepth.decrementAndGet() > 0) {
+      return;
+    }
+    HttpServletResponseAdviceHelper.stopSpan(tracer(), throwable, context, scope);
   }
 }

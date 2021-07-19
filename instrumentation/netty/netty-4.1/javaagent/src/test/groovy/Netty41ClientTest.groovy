@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import io.netty.bootstrap.Bootstrap
@@ -28,6 +26,7 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
@@ -165,7 +164,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     when:
     // note that this is a purely asynchronous request
-    runUnderTrace("parent1") {
+    runWithSpan("parent1") {
       ch = b.connect("localhost", server.httpPort()).sync().channel()
       ch.write(request)
       ch.flush()
@@ -174,7 +173,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     // the complex sequence of events
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -182,19 +185,27 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // now run a second request through the same channel
-    runUnderTrace("parent2") {
+    runWithSpan("parent2") {
       ch.write(request)
       ch.flush()
     }
 
     assertTraces(2) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
       trace(1, 3) {
-        basicSpan(it, 0, "parent2")
+        span(0) {
+          name "parent2"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -283,7 +294,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     def annotatedClass = new TracedClass()
 
     when:
-    def responseCode = runUnderTrace("parent") {
+    def responseCode = runWithSpan("parent") {
       annotatedClass.tracedMethod(method)
     }
 
@@ -291,7 +302,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     responseCode == 200
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           childOf span(0)
           name "tracedMethod"
@@ -310,7 +325,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   class TracedClass {
     int tracedMethod(String method) {
       def uri = resolveAddress("/success")
-      runUnderTrace("tracedMethod") {
+      runWithSpan("tracedMethod") {
         doRequest(method, uri)
       }
     }

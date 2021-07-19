@@ -4,12 +4,13 @@ plugins {
 
 muzzle {
   pass {
-    coreJdk.set(true)
+    coreJdk()
   }
 }
 
 dependencies {
   compileOnly(project(":javaagent-tooling"))
+  compileOnly(project(":instrumentation-api-annotation-support"))
 }
 
 tasks.withType<Test>().configureEach {

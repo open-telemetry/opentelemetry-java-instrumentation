@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.test.utils.TraceUtils;
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import java.util.concurrent.CountDownLatch;
@@ -23,11 +23,12 @@ import java.util.concurrent.TimeUnit;
  * from different traces.
  */
 public class RxJava2ConcurrencyTestHelper {
-  public static void launchAndWait(Scheduler scheduler, int iterations, long timeoutMillis) {
+  public static void launchAndWait(
+      Scheduler scheduler, int iterations, long timeoutMillis, InstrumentationTestRunner runner) {
     CountDownLatch latch = new CountDownLatch(iterations);
 
     for (int i = 0; i < iterations; i++) {
-      launchOuter(new Iteration(scheduler, latch, i));
+      launchOuter(new Iteration(scheduler, latch, i), runner);
     }
 
     try {
@@ -39,8 +40,8 @@ public class RxJava2ConcurrencyTestHelper {
     }
   }
 
-  private static void launchOuter(Iteration iteration) {
-    TraceUtils.runUnderTrace(
+  private static void launchOuter(Iteration iteration, InstrumentationTestRunner runner) {
+    runner.runWithSpan(
         "outer",
         () -> {
           Span.current().setAttribute("iteration", iteration.index);
@@ -52,15 +53,15 @@ public class RxJava2ConcurrencyTestHelper {
               .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
               .map((it) -> it)
               .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
-              .doOnSuccess(RxJava2ConcurrencyTestHelper::launchInner)
+              .doOnSuccess(v -> launchInner(v, runner))
               .subscribe();
 
           return null;
         });
   }
 
-  private static void launchInner(Iteration iteration) {
-    TraceUtils.runUnderTrace(
+  private static void launchInner(Iteration iteration, InstrumentationTestRunner runner) {
+    runner.runWithSpan(
         "middle",
         () -> {
           Span.current().setAttribute("iteration", iteration.index);
@@ -71,7 +72,7 @@ public class RxJava2ConcurrencyTestHelper {
               .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
               .doOnSuccess(
                   (it) -> {
-                    TraceUtils.runUnderTrace(
+                    runner.runWithSpan(
                         "inner",
                         () -> {
                           Span.current().setAttribute("iteration", it.index);

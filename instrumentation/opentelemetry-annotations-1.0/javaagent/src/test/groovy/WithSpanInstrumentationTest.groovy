@@ -11,7 +11,6 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
 import java.lang.reflect.Modifier
 import java.util.concurrent.CompletableFuture
@@ -375,7 +374,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
      class GeneratedJava6TestClass implements Runnable {
        @WithSpan
        public void run() {
-         TraceUtils.runUnderTrace("intercept", {})
+         runWithSpan("intercept", {})
        }
      }
      */
@@ -386,7 +385,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       .defineMethod("run", void.class, Modifier.PUBLIC).intercept(MethodDelegation.to(new Object() {
       @RuntimeType
       void intercept(@This Object o) {
-        TraceUtils.runUnderTrace("intercept", {})
+        runWithSpan("intercept", {})
       }
     }))
       .visit(new MemberAttributeExtension.ForMethod()
@@ -414,6 +413,26 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf(span(0))
           attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture attributes"() {
+    setup:
+    new TracedWithSpan().withSpanAttributes("foo", "bar", null, "baz")
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.withSpanAttributes"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "implicitName" "foo"
+            "explicitName" "bar"
           }
         }
       }

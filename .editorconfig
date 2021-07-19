@@ -111,7 +111,7 @@ ij_java_for_statement_wrap = normal
 ij_java_generate_final_locals = false
 ij_java_generate_final_parameters = false
 ij_java_if_brace_force = always
-ij_java_imports_layout = $*,|,*
+ij_java_imports_layout = $*, |, *
 ij_java_indent_case_from_switch = true
 ij_java_insert_inner_class_imports = false
 ij_java_insert_override_annotation = true
@@ -452,12 +452,12 @@ ij_scala_wrap_long_lines = false
 [.editorconfig]
 ij_editorconfig_align_group_field_declarations = false
 ij_editorconfig_space_after_colon = false
-ij_editorconfig_space_after_comma = false
+ij_editorconfig_space_after_comma = true
 ij_editorconfig_space_before_colon = false
 ij_editorconfig_space_before_comma = false
 ij_editorconfig_spaces_around_assignment_operators = true
 
-[{*.ant,*.bpmn,*.fxml,*.jhm,*.jnlp,*.jrxml,*.plan,*.pom,*.rng,*.tld,*.wadl,*.wsdd,*.wsdl,*.xjb,*.xml,*.xsd,*.xsl,*.xslt,*.xul}]
+[{*.ant, *.bpmn, *.fxml, *.jhm, *.jnlp, *.jrxml, *.plan, *.pom, *.rng, *.tld, *.wadl, *.wsdd, *.wsdl, *.xjb, *.xml, *.xsd, *.xsl, *.xslt, *.xul}]
 ij_continuation_indent_size = 2
 ij_xml_align_attributes = false
 ij_xml_align_text = false
@@ -477,14 +477,14 @@ ij_xml_space_inside_empty_tag = false
 ij_xml_text_wrap = normal
 ij_xml_use_custom_settings = true
 
-[{*.bash,*.sh,*.zsh}]
+[{*.bash, *.sh, *.zsh}]
 ij_shell_binary_ops_start_line = false
 ij_shell_keep_column_alignment_padding = false
 ij_shell_minify_program = false
 ij_shell_redirect_followed_by_space = false
 ij_shell_switch_cases_indented = false
 
-[{*.gant,*.gradle,*.groovy,*.gson,*.gy}]
+[{*.gant, *.gradle, *.groovy, *.gson, *.gy}]
 ij_continuation_indent_size = 2
 ij_groovy_align_group_field_declarations = false
 ij_groovy_align_multiline_array_initializer_expression = false
@@ -663,7 +663,7 @@ ij_groovy_while_brace_force = never
 ij_groovy_while_on_new_line = false
 ij_groovy_wrap_long_lines = false
 
-[{*.kt,*.kts}]
+[{*.kt, *.kts}]
 ij_continuation_indent_size = 2
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
@@ -740,7 +740,7 @@ ij_kotlin_wrap_elvis_expressions = 1
 ij_kotlin_wrap_expression_body_functions = 0
 ij_kotlin_wrap_first_method_in_call_chain = false
 
-[{*.har,*.jsb2,*.jsb3,*.json,.babelrc,.eslintrc,.stylelintrc,bowerrc,jest.config}]
+[{*.har, *.jsb2, *.jsb3, *.json, .babelrc, .eslintrc, .stylelintrc, bowerrc, jest.config}]
 ij_json_keep_blank_lines_in_code = 0
 ij_json_keep_indents_on_empty_lines = false
 ij_json_keep_line_breaks = true
@@ -752,12 +752,12 @@ ij_json_spaces_within_braces = false
 ij_json_spaces_within_brackets = false
 ij_json_wrap_long_lines = false
 
-[{*.properties,spring.handlers,spring.schemas}]
+[{*.properties, spring.handlers, spring.schemas}]
 ij_properties_align_group_field_declarations = false
 ij_properties_keep_blank_lines = false
 ij_properties_key_value_delimiter = equals
 ij_properties_spaces_around_key_value_delimiter = false
 
-[{*.yaml,*.yml}]
+[{*.yaml, *.yml}]
 ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true

@@ -24,6 +24,7 @@ package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -245,12 +246,17 @@ public final class TracingAssembly {
                     }));
   }
 
+  private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
+
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
-    AsyncSpanEndStrategies.getInstance()
-        .registerStrategy(
-            RxJava2AsyncSpanEndStrategy.newBuilder()
-                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-                .build());
+    asyncOperationEndStrategy =
+        RxJava2AsyncOperationEndStrategy.newBuilder()
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .build();
+
+    AsyncSpanEndStrategies.getInstance().registerStrategy(asyncOperationEndStrategy);
+
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   private static void disableParallel() {
@@ -286,7 +292,13 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava2AsyncSpanEndStrategy.class);
+    if (asyncOperationEndStrategy != null) {
+      AsyncSpanEndStrategies.getInstance().unregisterStrategy(asyncOperationEndStrategy);
+
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+
+      asyncOperationEndStrategy = null;
+    }
   }
 
   private static <T> Function<? super T, ? extends T> compose(

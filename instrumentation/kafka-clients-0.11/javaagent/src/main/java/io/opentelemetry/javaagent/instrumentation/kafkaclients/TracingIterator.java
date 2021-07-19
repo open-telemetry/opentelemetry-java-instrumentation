@@ -10,12 +10,8 @@ import io.opentelemetry.context.Scope;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
-
-  private static final Logger log = LoggerFactory.getLogger(TracingIterator.class);
 
   private final Iterator<ConsumerRecord<?, ?>> delegateIterator;
   private final KafkaConsumerTracer tracer;

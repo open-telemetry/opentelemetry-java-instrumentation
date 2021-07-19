@@ -28,7 +28,12 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
       return;
     }
     Context otelContext = tracer.startSpan(Context.current(), context.getMsgList());
-    context.setMqTraceContext(otelContext);
+
+    // it's safe to store the scope in the rocketMq trace context, both before() and after() methods
+    // are always called from the same thread; see:
+    // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
+    // - ConsumeMessageOrderlyService$ConsumeRequest#run()
+    context.setMqTraceContext(ContextAndScope.create(otelContext, otelContext.makeCurrent()));
   }
 
   @Override
@@ -36,9 +41,10 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    if (context.getMqTraceContext() instanceof Context) {
-      Context otelContext = (Context) context.getMqTraceContext();
-      tracer.end(otelContext);
+    if (context.getMqTraceContext() instanceof ContextAndScope) {
+      ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
+      contextAndScope.close();
+      tracer.end(contextAndScope.getContext());
     }
   }
 }

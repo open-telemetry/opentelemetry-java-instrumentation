@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public class SyncCompletionListener extends CompletionListener<Void> {
 
-  private static final Logger log = LoggerFactory.getLogger(SyncCompletionListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(SyncCompletionListener.class);
 
   public SyncCompletionListener(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -22,7 +22,7 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   @Override
   protected void processResult(Span span, Void future) {
-    log.error("processResult was called on SyncCompletionListener. This should never happen. ");
+    logger.error("processResult was called on SyncCompletionListener. This should never happen. ");
   }
 
   public void done(Throwable thrown) {

@@ -43,7 +43,6 @@ public class AgentClassLoader extends URLClassLoader {
       System.getProperty("otel.javaagent.experimental.initializer.jar", "");
 
   private static final String META_INF = "META-INF/";
-  private static final String META_INF_MANIFEST_MF = META_INF + "MANIFEST.MF";
   private static final String META_INF_VERSIONS = META_INF + "versions/";
 
   // multi release jars were added in java 9
@@ -94,7 +93,7 @@ public class AgentClassLoader extends URLClassLoader {
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
       codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
-      manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
+      manifest = jarFile.getManifest();
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
@@ -121,18 +120,6 @@ public class AgentClassLoader extends URLClassLoader {
       return 8;
     }
     return Integer.parseInt(javaSpecVersion);
-  }
-
-  private static Manifest getManifest(JarFile jarFile, String manifestPath) {
-    JarEntry manifestEntry = jarFile.getJarEntry(manifestPath);
-    if (manifestEntry == null) {
-      throw new IllegalStateException("Manifest entry not found");
-    }
-    try (InputStream is = jarFile.getInputStream(manifestEntry)) {
-      return new Manifest(is);
-    } catch (IOException exception) {
-      throw new IllegalStateException("Failed to read manifest", exception);
-    }
   }
 
   @Override

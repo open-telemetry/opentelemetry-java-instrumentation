@@ -8,17 +8,22 @@ dependencies {
   errorprone("com.google.errorprone:error_prone_core")
 }
 
-val disableErrorProne = gradle.startParameter.projectProperties.get("disableErrorProne")
+val disableErrorProne = gradle.startParameter.projectProperties.get("disableErrorProne")?.toBoolean()
+  ?: false
 
 tasks {
   withType<JavaCompile>().configureEach {
     options.errorprone {
-      enabled = disableErrorProne != "true"
+      isEnabled.set(!disableErrorProne)
 
       disableWarningsInGeneratedCode.set(true)
       allDisabledChecksAsWarnings.set(true)
 
       excludedPaths.set(".*/build/generated/.*")
+
+      if (System.getenv("CI") == null) {
+        disable("SystemOut")
+      }
 
       // Doesn't work well with Java 8
       disable("FutureReturnValueIgnored")

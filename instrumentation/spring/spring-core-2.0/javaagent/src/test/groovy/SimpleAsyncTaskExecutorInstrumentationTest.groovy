@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -33,7 +32,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest extends AgentInstrumentationSpe
     def executor = new SimpleAsyncTaskExecutor()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def child1 = new AsyncTask(startSpan: true)
       def child2 = new AsyncTask(startSpan: false)
       method(executor, child1)

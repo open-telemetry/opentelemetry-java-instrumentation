@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxRsAnnotationsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import javax.ws.rs.Path;
 import net.bytebuddy.asm.Advice;
@@ -35,7 +35,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return hasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
             .or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
   }
@@ -65,9 +65,11 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
+      callDepth = CallDepth.forClass(Path.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(target.getClass(), method);
@@ -77,12 +79,12 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Path.class);
 
       scope.close();
       if (throwable == null) {

@@ -18,7 +18,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Pair;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -54,8 +53,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = tracer().startSpan(parentContext, request, request);
-      InstrumentationContext.get(AsyncHandler.class, Pair.class)
-          .put(handler, Pair.of(parentContext, context));
+      InstrumentationContext.get(AsyncHandler.class, Contexts.class)
+          .put(handler, Contexts.create(parentContext, context));
       scope = context.makeCurrent();
     }
 

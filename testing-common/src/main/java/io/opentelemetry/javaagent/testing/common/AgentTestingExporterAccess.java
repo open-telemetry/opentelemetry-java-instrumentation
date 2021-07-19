@@ -14,8 +14,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -28,11 +26,8 @@ import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.common.v1.StringKeyValue;
 import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
 import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
-import io.opentelemetry.proto.metrics.v1.IntDataPoint;
-import io.opentelemetry.proto.metrics.v1.IntSum;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
@@ -266,46 +261,50 @@ public final class AgentTestingExporterAccess {
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationLibraryInfo instrumentationLibraryInfo) {
     switch (metric.getDataCase()) {
-      case INT_GAUGE:
-        return MetricData.createLongGauge(
-            resource,
-            instrumentationLibraryInfo,
-            metric.getName(),
-            metric.getDescription(),
-            metric.getUnit(),
-            LongGaugeData.create(getIntPoints(metric.getIntGauge().getDataPointsList())));
       case GAUGE:
-        return MetricData.createDoubleGauge(
-            resource,
-            instrumentationLibraryInfo,
-            metric.getName(),
-            metric.getDescription(),
-            metric.getUnit(),
-            DoubleGaugeData.create(getDoublePointDatas(metric.getGauge().getDataPointsList())));
-      case INT_SUM:
-        IntSum intSum = metric.getIntSum();
-        return MetricData.createLongSum(
-            resource,
-            instrumentationLibraryInfo,
-            metric.getName(),
-            metric.getDescription(),
-            metric.getUnit(),
-            LongSumData.create(
-                intSum.getIsMonotonic(),
-                getTemporality(intSum.getAggregationTemporality()),
-                getIntPoints(metric.getIntSum().getDataPointsList())));
+        if (isDouble(metric.getGauge().getDataPointsList())) {
+          return MetricData.createDoubleGauge(
+              resource,
+              instrumentationLibraryInfo,
+              metric.getName(),
+              metric.getDescription(),
+              metric.getUnit(),
+              DoubleGaugeData.create(getDoublePointDatas(metric.getGauge().getDataPointsList())));
+        } else {
+          return MetricData.createLongGauge(
+              resource,
+              instrumentationLibraryInfo,
+              metric.getName(),
+              metric.getDescription(),
+              metric.getUnit(),
+              LongGaugeData.create(getLongPointDatas(metric.getGauge().getDataPointsList())));
+        }
       case SUM:
-        Sum doubleSum = metric.getSum();
-        return MetricData.createDoubleSum(
-            resource,
-            instrumentationLibraryInfo,
-            metric.getName(),
-            metric.getDescription(),
-            metric.getUnit(),
-            DoubleSumData.create(
-                doubleSum.getIsMonotonic(),
-                getTemporality(doubleSum.getAggregationTemporality()),
-                getDoublePointDatas(metric.getSum().getDataPointsList())));
+        if (isDouble(metric.getSum().getDataPointsList())) {
+          Sum doubleSum = metric.getSum();
+          return MetricData.createDoubleSum(
+              resource,
+              instrumentationLibraryInfo,
+              metric.getName(),
+              metric.getDescription(),
+              metric.getUnit(),
+              DoubleSumData.create(
+                  doubleSum.getIsMonotonic(),
+                  getTemporality(doubleSum.getAggregationTemporality()),
+                  getDoublePointDatas(metric.getSum().getDataPointsList())));
+        } else {
+          Sum longSum = metric.getSum();
+          return MetricData.createLongSum(
+              resource,
+              instrumentationLibraryInfo,
+              metric.getName(),
+              metric.getDescription(),
+              metric.getUnit(),
+              LongSumData.create(
+                  longSum.getIsMonotonic(),
+                  getTemporality(longSum.getAggregationTemporality()),
+                  getLongPointDatas(metric.getSum().getDataPointsList())));
+        }
       case HISTOGRAM:
         return MetricData.createDoubleHistogram(
             resource,
@@ -330,24 +329,11 @@ public final class AgentTestingExporterAccess {
     }
   }
 
-  private static Labels createLabels(List<StringKeyValue> stringKeyValues) {
-    LabelsBuilder labelsBuilder = Labels.builder();
-    for (StringKeyValue stringKeyValue : stringKeyValues) {
-      labelsBuilder.put(stringKeyValue.getKey(), stringKeyValue.getValue());
+  private static boolean isDouble(List<NumberDataPoint> points) {
+    if (points.isEmpty()) {
+      return true;
     }
-    return labelsBuilder.build();
-  }
-
-  private static List<LongPointData> getIntPoints(List<IntDataPoint> points) {
-    return points.stream()
-        .map(
-            point ->
-                LongPointData.create(
-                    point.getStartTimeUnixNano(),
-                    point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
-                    point.getValue()))
-        .collect(toList());
+    return points.get(0).getValueCase() == NumberDataPoint.ValueCase.AS_DOUBLE;
   }
 
   private static List<DoublePointData> getDoublePointDatas(List<NumberDataPoint> points) {
@@ -367,7 +353,30 @@ public final class AgentTestingExporterAccess {
               return DoublePointData.create(
                   point.getStartTimeUnixNano(),
                   point.getTimeUnixNano(),
-                  createLabels(point.getLabelsList()),
+                  fromProto(point.getAttributesList()),
+                  value);
+            })
+        .collect(toList());
+  }
+
+  private static List<LongPointData> getLongPointDatas(List<NumberDataPoint> points) {
+    return points.stream()
+        .map(
+            point -> {
+              final long value;
+              switch (point.getValueCase()) {
+                case AS_INT:
+                  value = point.getAsInt();
+                  break;
+                case AS_DOUBLE:
+                default:
+                  value = (long) point.getAsDouble();
+                  break;
+              }
+              return LongPointData.create(
+                  point.getStartTimeUnixNano(),
+                  point.getTimeUnixNano(),
+                  fromProto(point.getAttributesList()),
                   value);
             })
         .collect(toList());
@@ -381,7 +390,7 @@ public final class AgentTestingExporterAccess {
                 DoubleHistogramPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
+                    fromProto(point.getAttributesList()),
                     point.getSum(),
                     point.getExplicitBoundsList(),
                     point.getBucketCountsList()))
@@ -396,7 +405,7 @@ public final class AgentTestingExporterAccess {
                 DoubleSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
+                    fromProto(point.getAttributesList()),
                     point.getCount(),
                     point.getSum(),
                     getValues(point)))

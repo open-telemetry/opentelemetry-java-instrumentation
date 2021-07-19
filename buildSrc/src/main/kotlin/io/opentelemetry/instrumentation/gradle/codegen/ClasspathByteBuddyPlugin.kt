@@ -20,6 +20,7 @@ import java.net.URLClassLoader
  * by taking a delegate class name and class path as arguments and loading the plugin class from the
  * provided classloader when the plugin is instantiated.
  */
+//TODO remove together with io.opentelemetry.instrumentation.javaagent-codegen.gradle
 class ClasspathByteBuddyPlugin(
   classPath: Iterable<File>, sourceDirectory: File, className: String
 ) : Plugin {

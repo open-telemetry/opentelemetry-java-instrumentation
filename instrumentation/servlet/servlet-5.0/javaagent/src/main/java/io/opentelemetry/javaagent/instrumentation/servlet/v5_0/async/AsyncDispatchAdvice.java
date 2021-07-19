@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTE
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletRequest;
@@ -19,11 +19,13 @@ import net.bytebuddy.asm.Advice;
 public class AsyncDispatchAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static boolean enter(
-      @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
-    int depth = CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
-    if (depth > 0) {
-      return false;
+  public static void enter(
+      @Advice.This AsyncContext context,
+      @Advice.AllArguments Object[] args,
+      @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    callDepth = CallDepth.forClass(AsyncContext.class);
+    if (callDepth.getAndIncrement() > 0) {
+      return;
     }
 
     ServletRequest request = context.getRequest();
@@ -40,14 +42,10 @@ public class AsyncDispatchAdvice {
       // processing, and nothing can be done with the request anymore after this
       request.setAttribute(CONTEXT_ATTRIBUTE, currentContext);
     }
-
-    return true;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void exit(@Advice.Enter boolean topLevel) {
-    if (topLevel) {
-      CallDepthThreadLocalMap.reset(AsyncContext.class);
-    }
+  public static void exit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    callDepth.decrementAndGet();
   }
 }

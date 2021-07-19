@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,9 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import net.bytebuddy.asm.Advice;
@@ -50,6 +51,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This PreparedStatement statement,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -60,7 +62,8 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       // using CallDepth prevents this, because this check happens before Connection#getMetadata()
       // is called - the first recursive Statement call is just skipped and we do not create a span
       // for it
-      if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
+      callDepth = CallDepth.forClass(Statement.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -78,16 +81,18 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Statement.class);
 
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        instrumenter().end(context, request, null, throwable);
+      }
     }
   }
 }

@@ -5,8 +5,8 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -43,7 +43,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     def result = new Supplier<String>() {
       @Override
       String get() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           return CompletableFuture.supplyAsync(supplier, pool)
             .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
             .thenApply(function)
@@ -57,7 +57,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "supplier", span(0))
         basicSpan(it, 2, "appendingSupplier", span(0))
         basicSpan(it, 3, "function", span(0))
@@ -71,9 +75,9 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test supplyAsync"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       def result = CompletableFuture.supplyAsync {
-        runUnderTrace("child") {
+        runWithSpan("child") {
           "done"
         }
       }
@@ -86,7 +90,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }
@@ -94,11 +102,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test thenApply"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       CompletableFuture.supplyAsync {
         "done"
       }.thenApply { result ->
-        runUnderTrace("child") {
+        runWithSpan("child") {
           result
         }
       }
@@ -110,7 +118,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }
@@ -118,11 +130,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test thenApplyAsync"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       def result = CompletableFuture.supplyAsync {
         "done"
       }.thenApplyAsync { result ->
-        runUnderTrace("child") {
+        runWithSpan("child") {
           result
         }
       }
@@ -135,7 +147,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }
@@ -143,12 +159,12 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test thenCompose"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       def result = CompletableFuture.supplyAsync {
         "done"
       }.thenCompose { result ->
         CompletableFuture.supplyAsync {
-          runUnderTrace("child") {
+          runWithSpan("child") {
             result
           }
         }
@@ -162,7 +178,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }
@@ -170,12 +190,12 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test thenComposeAsync"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       def result = CompletableFuture.supplyAsync {
         "done"
       }.thenComposeAsync { result ->
         CompletableFuture.supplyAsync {
-          runUnderTrace("child") {
+          runWithSpan("child") {
             result
           }
         }
@@ -189,7 +209,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }
@@ -197,7 +221,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "test compose and apply"() {
     when:
-    CompletableFuture<String> completableFuture = runUnderTrace("parent") {
+    CompletableFuture<String> completableFuture = runWithSpan("parent") {
       def result = CompletableFuture.supplyAsync {
         "do"
       }.thenCompose { result ->
@@ -205,7 +229,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
           result + "ne"
         }
       }.thenApplyAsync { result ->
-        runUnderTrace("child") {
+        runWithSpan("child") {
           result
         }
       }
@@ -218,7 +242,11 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }

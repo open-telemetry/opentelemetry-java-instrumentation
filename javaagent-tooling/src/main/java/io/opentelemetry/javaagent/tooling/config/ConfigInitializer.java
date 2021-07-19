@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.spi.config.PropertySource;
-import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
+import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,10 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ConfigInitializer {
-  private static final Logger log = LoggerFactory.getLogger(ConfigInitializer.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConfigInitializer.class);
 
-  private static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
-  private static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
+  // visible for testing
+  static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
+  static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
   public static void initialize() {
     Config.internalInitializeConfig(create(loadSpiConfiguration(), loadConfigurationFile()));
@@ -41,7 +43,7 @@ public final class ConfigInitializer {
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
   private static Properties loadSpiConfiguration() {
     Properties propertiesFromSpi = new Properties();
-    for (PropertySource propertySource : SafeServiceLoader.load(PropertySource.class)) {
+    for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
     return propertiesFromSpi;
@@ -53,7 +55,8 @@ public final class ConfigInitializer {
    * @return The {@link Properties} object. the returned instance might be empty of file does not
    *     exist or if it is in a wrong format.
    */
-  private static Properties loadConfigurationFile() {
+  // visible for testing
+  static Properties loadConfigurationFile() {
     Properties properties = new Properties();
 
     // Reading from system property first and from env after
@@ -72,7 +75,7 @@ public final class ConfigInitializer {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      log.error("Configuration file '{}' not found.", configurationFilePath);
+      logger.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
@@ -80,9 +83,9 @@ public final class ConfigInitializer {
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      log.error("Configuration file '{}' not found.", configurationFilePath);
+      logger.error("Configuration file '{}' not found.", configurationFilePath);
     } catch (IOException ioe) {
-      log.error(
+      logger.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }
 

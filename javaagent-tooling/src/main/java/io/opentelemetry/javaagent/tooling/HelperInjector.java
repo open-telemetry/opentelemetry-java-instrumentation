@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import java.io.File;
 import java.io.IOException;
+import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.file.Files;
@@ -31,13 +30,23 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/** Injects instrumentation helper classes into the user's classloader. */
+/**
+ * Injects instrumentation helper classes into the user's classloader.
+ *
+ * <p>Care must be taken when using this class. It is used both by the javaagent during its runtime
+ * and by gradle muzzle verification plugin during build time. And some code paths in this class
+ * require the usage of {@link Instrumentation}, which is available for the former, but not for the
+ * latter. Unfortunately, these two "modes of operations" and not easily discernible just by reading
+ * source code. Be careful.
+ *
+ * <p>In a nutshell, an instance of {@link Instrumentation} is needed for class injection into
+ * bootstrap classloader. This should NOT happen during build-time muzzle verification phase.
+ */
 public class HelperInjector implements Transformer {
 
-  private static final Logger log = LoggerFactory.getLogger(HelperInjector.class);
+  private static final TransformSafeLogger logger =
+      TransformSafeLogger.getLogger(HelperInjector.class);
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -56,6 +65,7 @@ public class HelperInjector implements Transformer {
   private final Set<String> helperClassNames;
   private final Set<String> helperResourceNames;
   @Nullable private final ClassLoader helpersSource;
+  @Nullable private final Instrumentation instrumentation;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
@@ -78,15 +88,23 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<String> helperResourceNames,
-      ClassLoader helpersSource) {
+      ClassLoader helpersSource,
+      Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
     this.helperResourceNames = new LinkedHashSet<>(helperResourceNames);
     this.helpersSource = helpersSource;
+    this.instrumentation = instrumentation;
   }
 
+  /** Must be used ONLY by gradle muzzle verification plugin. */
   public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
+    this(requestingName, helperMap, null);
+  }
+
+  private HelperInjector(
+      String requestingName, Map<String, byte[]> helperMap, Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = helperMap.keySet();
@@ -94,15 +112,18 @@ public class HelperInjector implements Transformer {
 
     this.helperResourceNames = Collections.emptySet();
     this.helpersSource = null;
+    this.instrumentation = instrumentation;
   }
 
   public static HelperInjector forDynamicTypes(
-      String requestingName, Collection<DynamicType.Unloaded<?>> helpers) {
+      String requestingName,
+      Collection<DynamicType.Unloaded<?>> helpers,
+      Instrumentation instrumentation) {
     Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
     }
-    return new HelperInjector(requestingName, bytes);
+    return new HelperInjector(requestingName, bytes, instrumentation);
   }
 
   private Map<String, byte[]> getHelperMap() throws IOException {
@@ -129,59 +150,18 @@ public class HelperInjector implements Transformer {
       ClassLoader classLoader,
       JavaModule module) {
     if (!helperClassNames.isEmpty()) {
-      if (classLoader == BOOTSTRAP_CLASSLOADER) {
-        classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
-      }
-
-      injectedClassLoaders.computeIfAbsent(
-          classLoader,
-          cl -> {
-            try {
-              log.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
-
-              Map<String, byte[]> classnameToBytes = getHelperMap();
-              Map<String, Class<?>> classes;
-              if (cl == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
-                classes = injectBootstrapClassLoader(classnameToBytes);
-              } else {
-                classes = injectClassLoader(cl, classnameToBytes);
-              }
-
-              classes.values().forEach(c -> injectedClasses.put(c, Boolean.TRUE));
-
-              // All agent helper classes are in the unnamed module
-              // And there's exactly one unnamed module per classloader
-              // Use the module of the first class for convenience
-              if (JavaModule.isSupported()) {
-                JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
-                helperModules.add(new WeakReference<>(javaModule.unwrap()));
-              }
-            } catch (Exception e) {
-              if (log.isErrorEnabled()) {
-                log.error(
-                    "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
-                    typeDescription,
-                    requestingName,
-                    cl,
-                    e);
-              }
-              throw new IllegalStateException(e);
-            }
-            return true;
-          });
-
-      ensureModuleCanReadHelperModules(module);
+      classLoader = injectHelperClasses(typeDescription, classLoader, module);
     }
 
-    if (!helperResourceNames.isEmpty()) {
+    if (helpersSource != null && !helperResourceNames.isEmpty()) {
       for (String resourceName : helperResourceNames) {
         URL resource = helpersSource.getResource(resourceName);
         if (resource == null) {
-          log.debug("Helper resource {} requested but not found.", resourceName);
+          logger.debug("Helper resource {} requested but not found.", resourceName);
           continue;
         }
 
-        log.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
+        logger.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
         HelperResources.register(classLoader, resourceName, resource);
       }
     }
@@ -189,8 +169,58 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private static Map<String, Class<?>> injectBootstrapClassLoader(
-      Map<String, byte[]> classnameToBytes) throws IOException {
+  private ClassLoader injectHelperClasses(
+      TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
+    if (classLoader == null) {
+      classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
+    }
+    if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
+      logger.error(
+          "Cannot inject helpers into bootstrap classloader without an instance of Instrumentation. Programmer error!");
+      return classLoader;
+    }
+
+    injectedClassLoaders.computeIfAbsent(
+        classLoader,
+        cl -> {
+          try {
+            logger.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
+
+            Map<String, byte[]> classnameToBytes = getHelperMap();
+            Map<String, Class<?>> classes;
+            if (cl == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
+              classes = injectBootstrapClassLoader(classnameToBytes);
+            } else {
+              classes = injectClassLoader(cl, classnameToBytes);
+            }
+
+            classes.values().forEach(c -> injectedClasses.put(c, Boolean.TRUE));
+
+            // All agent helper classes are in the unnamed module
+            // And there's exactly one unnamed module per classloader
+            // Use the module of the first class for convenience
+            if (JavaModule.isSupported()) {
+              JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
+              helperModules.add(new WeakReference<>(javaModule.unwrap()));
+            }
+          } catch (Exception e) {
+            logger.error(
+                "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
+                typeDescription,
+                requestingName,
+                cl,
+                e);
+            throw new IllegalStateException(e);
+          }
+          return true;
+        });
+
+    ensureModuleCanReadHelperModules(module);
+    return classLoader;
+  }
+
+  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
+      throws IOException {
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.
@@ -199,9 +229,7 @@ public class HelperInjector implements Transformer {
     File tempDir = createTempDir();
     try {
       return ClassInjector.UsingInstrumentation.of(
-              tempDir,
-              ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
-              AgentInstaller.getInstrumentation())
+              tempDir, ClassInjector.UsingInstrumentation.Target.BOOTSTRAP, instrumentation)
           .injectRaw(classnameToBytes);
     } finally {
       // Delete fails silently
@@ -224,9 +252,10 @@ public class HelperInjector implements Transformer {
           JavaModule helperModule = JavaModule.of(realModule);
 
           if (!target.canRead(helperModule)) {
-            log.debug("Adding module read from {} to {}", target, helperModule);
+            logger.debug("Adding module read from {} to {}", target, helperModule);
             ClassInjector.UsingInstrumentation.redefineModule(
-                AgentInstaller.getInstrumentation(),
+                // TODO can we guarantee that this is always present?
+                instrumentation,
                 target,
                 Collections.singleton(helperModule),
                 Collections.emptyMap(),

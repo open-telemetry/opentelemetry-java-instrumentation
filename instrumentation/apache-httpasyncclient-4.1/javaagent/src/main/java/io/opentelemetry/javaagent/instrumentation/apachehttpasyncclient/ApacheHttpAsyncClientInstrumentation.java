@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -70,9 +70,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
@@ -104,7 +101,14 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      wrappedFutureCallback.context = tracer().startSpan(parentContext, request, request);
+
+      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(request);
+
+      if (instrumenter().shouldStart(parentContext, otelRequest)) {
+        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
+        wrappedFutureCallback.otelRequest = otelRequest;
+      }
+
       return request;
     }
 
@@ -148,6 +152,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
+    private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
@@ -166,7 +171,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
-      tracer().end(context, getResponse(httpContext));
+      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -188,7 +193,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       // end span before calling delegate
-      tracer().endExceptionally(context, getResponse(httpContext), ex);
+      instrumenter().end(context, otelRequest, getResponse(httpContext), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -209,8 +214,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
+      // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      tracer().end(context, getResponse(httpContext));
+      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         cancelDelegate();

@@ -35,13 +35,15 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew build --stacktrace -x :smoke-tests:test
+        run: ./gradlew build --stacktrace
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 8, 15 ]
+        test-java-version:
+          - 8
+          - 15
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -49,11 +51,11 @@ jobs:
           fetch-depth: 0
 
       - id: setup-test-java
-        name: Set up JDK ${{ matrix.java }} for running tests
+        name: Set up JDK ${{ matrix.test-java-version }} for running tests
         uses: actions/setup-java@v2
         with:
           distribution: adopt
-          java-version: ${{ matrix.java }}
+          java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -64,7 +66,8 @@ jobs:
       - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          job-id: jdk${{ matrix.java }}
+          job-id: jdk${{ matrix.test-java-version }}
+          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -76,7 +79,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDeps:
     runs-on: ubuntu-latest
@@ -91,10 +94,17 @@ jobs:
           distribution: adopt
           java-version: 11
 
+      # Workaround https://github.com/burrunan/gradle-cache-action/issues/46
+      - name: Set dependencies cache key
+        shell: bash
+        run: echo "testLatestDeps" > gradle/otel-gradle-dependencies-key
+
       - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: latestDepTest
+          gradle-dependencies-cache-key: |
+            gradle/otel-gradle-dependencies-key
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -106,14 +116,23 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -x :smoke-tests:test -PtestLatestDeps=true --stacktrace
+        run: ./gradlew test -PtestLatestDeps=true --stacktrace
 
   smoke-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-latest ]
-        suite: [ "glassfish", "jetty", "liberty", "tomcat", "tomee", "wildfly", "other" ]
+        os:
+          - windows-latest
+          - ubuntu-latest
+        smoke-test-suite:
+          - glassfish
+          - jetty
+          - liberty
+          - tomcat
+          - tomee
+          - wildfly
+          - other
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -134,6 +153,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: smokeTests
+          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -145,7 +165,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
   example-distro:
     runs-on: ubuntu-latest
@@ -159,11 +179,6 @@ jobs:
         with:
           distribution: adopt
           java-version: 11
-
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
@@ -193,6 +208,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: jdk11
+          save-gradle-dependencies-cache: false
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2

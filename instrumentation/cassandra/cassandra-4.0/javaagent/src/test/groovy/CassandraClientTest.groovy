@@ -5,12 +5,12 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -23,7 +23,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
 class CassandraClientTest extends AgentInstrumentationSpecification {
-  private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
+  private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest)
 
   @Shared
   GenericContainer cassandra
@@ -33,7 +33,7 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     cassandra = new GenericContainer("cassandra:4.0")
       .withExposedPorts(9042)
-      .withLogConsumer(new Slf4jLogConsumer(log))
+      .withLogConsumer(new Slf4jLogConsumer(logger))
       .withStartupTimeout(Duration.ofSeconds(120))
     cassandra.start()
 
@@ -73,16 +73,20 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     setup:
     CqlSession session = getSession(keyspace)
 
-    runUnderTrace("parent") {
-      session.executeAsync(statement).toCompletableFuture().whenComplete({result, throwable ->
-        runUnderTrace("child") {}
-      }) .get()
+    runWithSpan("parent") {
+      session.executeAsync(statement).toCompletableFuture().whenComplete({ result, throwable ->
+        runWithSpan("child") {}
+      }).get()
     }
 
     expect:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         cassandraSpan(it, 1, spanName, expectedStatement, operation, keyspace, table, span(0))
         basicSpan(it, 2, "child", span(0))
       }

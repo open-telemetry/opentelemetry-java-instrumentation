@@ -18,6 +18,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   implementation(project(":instrumentation:reactor-3.1:library"))
+  compileOnly(project(":instrumentation-api-annotation-support"))
 
   testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")

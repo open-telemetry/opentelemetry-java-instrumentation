@@ -7,16 +7,60 @@ plugins {
 
   id("otel.java-conventions")
   id("otel.publish-conventions")
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
 description = "OpenTelemetry Javaagent"
 
 group = "io.opentelemetry.javaagent"
 
-val shadowInclude by configurations.creating {
+val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
+}
+
+val licenseReportDependencies by configurations.creating {
+  extendsFrom(bootstrapLibs)
+}
+
+dependencies {
+  bootstrapLibs(project(":instrumentation-api"))
+  bootstrapLibs(project(":instrumentation-api-annotation-support"))
+  bootstrapLibs(project(":javaagent-bootstrap"))
+  bootstrapLibs(project(":javaagent-instrumentation-api"))
+  bootstrapLibs("org.slf4j:slf4j-simple")
+
+  // We only have compileOnly dependencies on these to make sure they don"t leak into POMs.
+  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
+    isTransitive = false
+  }
+  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free")
+  // TODO ideally this would be :instrumentation instead of :javaagent-tooling
+  //  in case there are dependencies (accidentally) pulled in by instrumentation modules
+  //  but I couldn"t get that to work
+  licenseReportDependencies(project(":javaagent-tooling"))
+  licenseReportDependencies(project(":javaagent-extension-api"))
+
+  testCompileOnly(project(":javaagent-bootstrap"))
+  testCompileOnly(project(":javaagent-instrumentation-api"))
+
+  testImplementation("com.google.guava:guava")
+  testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
+}
+
+val javaagentDependencies = dependencies
+
+// collect all bootstrap instrumentation dependencies
+project(":instrumentation").subprojects {
+  val subProj = this
+
+  plugins.withId("java") {
+    if (subProj.name == "bootstrap") {
+      javaagentDependencies.run {
+        add(bootstrapLibs.name, project(subProj.path))
+      }
+    }
+  }
 }
 
 fun isolateSpec(projectsWithShadowJar: Collection<Project>): CopySpec = copySpec {
@@ -30,7 +74,7 @@ fun isolateSpec(projectsWithShadowJar: Collection<Project>): CopySpec = copySpec
 }
 
 tasks {
-  processResources.configure {
+  processResources {
     from(rootProject.file("licenses")) {
       into("META-INF/licenses")
     }
@@ -55,9 +99,8 @@ tasks {
     with(isolateSpec(projectsWithShadowJar))
   }
 
-  // lightShadow is the default classifier we publish so disable the default jar.
-  jar.configure {
-    enabled = false
+  withType<ShadowJar>().configureEach {
+    configurations = listOf(bootstrapLibs)
 
     manifest {
       attributes(
@@ -70,10 +113,9 @@ tasks {
     }
   }
 
-  withType<ShadowJar>().configureEach {
-    configurations = listOf(shadowInclude)
-
-    manifest.inheritFrom(jar.get().manifest)
+  // lightShadow is the default classifier we publish so disable the default jar.
+  jar {
+    enabled = false
   }
 
   withType<Test>().configureEach {
@@ -115,38 +157,12 @@ tasks {
   }
 }
 
-val licenseReportDependencies by configurations.creating
-
-dependencies {
-  testCompileOnly(project(":javaagent-bootstrap"))
-  testCompileOnly(project(":javaagent-api"))
-
-  testImplementation("com.google.guava:guava")
-
-  testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
-
-  shadowInclude(project(":javaagent-bootstrap"))
-
-  // We only have compileOnly dependencies on these to make sure they don"t leak into POMs.
-  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
-    isTransitive = false
-  }
-  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free")
-  // TODO ideally this would be :instrumentation instead of :javaagent-tooling
-  //  in case there are dependencies (accidentally) pulled in by instrumentation modules
-  //  but I couldn"t get that to work
-  licenseReportDependencies(project(":javaagent-tooling"))
-  licenseReportDependencies(project(":javaagent-extension-api"))
-  licenseReportDependencies(project(":javaagent-bootstrap"))
-}
-
-
 licenseReport {
   outputDir = rootProject.file("licenses").absolutePath
 
   renderers = arrayOf(InventoryMarkdownReportRenderer())
 
-  configurations = arrayOf("licenseReportDependencies")
+  configurations = arrayOf(licenseReportDependencies.name)
 
   excludeGroups = arrayOf(
     "io.opentelemetry.instrumentation",

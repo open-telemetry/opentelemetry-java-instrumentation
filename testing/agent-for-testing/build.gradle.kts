@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -10,26 +10,69 @@ plugins {
 description = "OpenTelemetry Javaagent for testing"
 group = "io.opentelemetry.javaagent"
 
-fun isolateSpec(shadowJarTasks: Collection<Jar>): CopySpec = copySpec {
-  from(shadowJarTasks.map { zipTree(it.archiveFile) }) {
-    // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-    into("inst")
-    rename("""(^.*)\.class$""", "$1.classdata")
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename("""^LICENSE$""", "LICENSE.renamed")
+val bootstrapLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+val javaagentLibs by configurations.creating
+
+dependencies {
+  bootstrapLibs(project(":instrumentation-api"))
+  bootstrapLibs(project(":instrumentation-api-annotation-support"))
+  bootstrapLibs(project(":javaagent-bootstrap"))
+  bootstrapLibs(project(":javaagent-instrumentation-api"))
+  bootstrapLibs("org.slf4j:slf4j-simple")
+
+  javaagentLibs(project(":testing:agent-exporter", configuration = "shadow"))
+
+  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry:opentelemetry-api")
+}
+
+val javaagentDependencies = dependencies
+
+// collect all bootstrap instrumentation dependencies
+project(":instrumentation").subprojects {
+  val subProj = this
+
+  plugins.withId("java") {
+    if (subProj.name == "bootstrap") {
+      javaagentDependencies.run {
+        add(bootstrapLibs.name, project(subProj.path))
+      }
+    }
   }
 }
 
-val shadowInclude by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
+fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
+  return copySpec {
+    jars.forEach {
+      from(zipTree(it)) {
+        // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+        into("inst")
+        rename("""(^.*)\.class$""", "$1.classdata")
+        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+        rename("""^LICENSE$""", "LICENSE.renamed")
+      }
+    }
+  }
 }
 
 evaluationDependsOn(":testing:agent-exporter")
 
 tasks {
-  jar.configure {
+  jar {
     enabled = false
+  }
+
+  val shadowJar by existing(ShadowJar::class) {
+    dependsOn(":testing:agent-exporter:shadowJar")
+
+    configurations = listOf(bootstrapLibs)
+
+    with(isolateAgentClasses(javaagentLibs.files))
+
+    archiveClassifier.set("")
 
     manifest {
       attributes(
@@ -42,17 +85,6 @@ tasks {
     }
   }
 
-  val shadowJar by existing(ShadowJar::class) {
-    configurations = listOf(shadowInclude)
-
-    archiveClassifier.set("")
-
-    dependsOn(":testing:agent-exporter:shadowJar")
-    with(isolateSpec(listOf(project(":testing:agent-exporter").tasks.getByName<ShadowJar>("shadowJar"))))
-
-    manifest.inheritFrom(jar.get().manifest)
-  }
-
   afterEvaluate {
     withType<Test>().configureEach {
       inputs.file(shadowJar.get().archiveFile)
@@ -63,21 +95,13 @@ tasks {
       dependsOn(shadowJar)
     }
   }
-}
 
-dependencies {
-  // Dependencies to include without obfuscation.
-  shadowInclude(project(":javaagent-bootstrap"))
-
-  testImplementation(project(":testing-common"))
-  testImplementation("io.opentelemetry:opentelemetry-api")
-}
-
-// Because shadow does not use default configurations
-publishing {
-  publications {
-    named<MavenPublication>("maven") {
-      project.shadow.component(this)
+  // Because shadow does not use default configurations
+  publishing {
+    publications {
+      named<MavenPublication>("maven") {
+        project.shadow.component(this)
+      }
     }
   }
 }

@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
@@ -17,7 +15,6 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
-
 /**
  * Test executor instrumentation for Akka specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
@@ -37,7 +34,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
   @Shared
   def akkaInvokeForkJoinTask = { e, c -> e.invoke((ForkJoinTask) c) }
 
-  def "#poolName '#name' propagates"() {
+  def "#poolName '#testName' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -45,7 +42,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new AkkaAsyncChild()
           // this child won't
@@ -61,8 +58,16 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf(span(0))
+        }
       }
     }
 
@@ -72,7 +77,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    name                   | method                  | poolImpl
+    testName               | method                  | poolImpl
     "execute Runnable"     | executeRunnable         | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Runnable"      | submitRunnable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Callable"      | submitCallable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
@@ -97,7 +102,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well

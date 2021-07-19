@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.rxjava2
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
-
 import java.util.concurrent.CountDownLatch
 
 abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecification {
@@ -22,7 +21,7 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
   def "subscribe single test"() {
     when:
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       Single<Connection> connection = Single.create {
         it.onSuccess(new Connection())
       }
@@ -39,7 +38,11 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "Connection.query", span(0))
       }
     }
@@ -48,7 +51,7 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
   def "test observable fusion"() {
     when:
     CountDownLatch latch = new CountDownLatch(1)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       Observable<Integer> integerObservable = Observable.just(1, 2, 3, 4)
       integerObservable.concatMap({
         return Observable.just(it)
@@ -65,7 +68,11 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "child", span(0))
       }
     }

@@ -9,6 +9,7 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:jdbc:library"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -26,6 +27,8 @@ dependencies {
   testLibrary("com.mchange:c3p0:0.9.5")
 
   latestDepTestLibrary("org.apache.derby:derby:10.14.+")
+
+  testImplementation(project(":instrumentation:jdbc:testing"))
 }
 
 tasks.withType<Test>().configureEach {

@@ -2,10 +2,7 @@ plugins {
   id("com.github.johnrengelman.shadow")
 
   id("otel.java-conventions")
-  id("otel.publish-conventions")
 }
-
-group = "io.opentelemetry.javaagent"
 
 dependencies {
   implementation("com.linecorp.armeria:armeria-junit5:1.8.0") {
@@ -27,5 +24,16 @@ tasks {
     relocate("META-INF/native/libnetty", "META-INF/native/libio_opentelemetry_testing_internal_netty")
     relocate("META-INF/native/netty", "META-INF/native/io_opentelemetry_testing_internal_netty")
     mergeServiceFiles()
+  }
+
+  val extractShadowJar by registering(Copy::class) {
+    dependsOn(shadowJar)
+    // there's both "LICENSE" file and "license" and without excluding one of these build fails on case insensitive file systems
+    // there's a LICENSE.txt file that has the same contents anyway, so we're not losing anything excluding that
+    from(zipTree(shadowJar.get().archiveFile)) {
+      exclude("META-INF/LICENSE")
+    }
+    into("build/extracted/shadow")
+    includeEmptyDirs = false
   }
 }

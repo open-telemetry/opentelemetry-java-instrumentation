@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -44,10 +45,13 @@ public final class TracingOperator {
     return new TracingOperatorBuilder();
   }
 
-  private final boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   TracingOperator(boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.asyncOperationEndStrategy =
+        ReactorAsyncOperationEndStrategy.newBuilder()
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .build();
   }
 
   /**
@@ -58,17 +62,15 @@ public final class TracingOperator {
    */
   public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
-    AsyncSpanEndStrategies.getInstance()
-        .registerStrategy(
-            ReactorAsyncSpanEndStrategy.newBuilder()
-                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-                .build());
+    AsyncSpanEndStrategies.getInstance().registerStrategy(asyncOperationEndStrategy);
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.class);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(asyncOperationEndStrategy);
+    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {

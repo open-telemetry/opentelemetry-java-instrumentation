@@ -2,6 +2,8 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+// TODO: add muzzle once 1.4.0 is released
+
 dependencies {
   // this instrumentation needs to be able to reference both the OpenTelemetry API
   // that is shaded in the bootstrap class loader (for sending telemetry to the agent),

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
 
-  private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
   public static final String ASYNC_LISTENER_ATTRIBUTE =
       ServletHttpServerTracer.class.getName() + ".AsyncListener";
@@ -105,7 +105,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
               null)
           .toString();
     } catch (URISyntaxException e) {
-      log.debug("Failed to construct request URI", e);
+      logger.debug("Failed to construct request URI", e);
       return null;
     }
   }

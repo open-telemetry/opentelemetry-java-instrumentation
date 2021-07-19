@@ -1,5 +1,5 @@
 plugins {
-  id("otel.shadow-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 
   id("otel.java-conventions")
 }
@@ -14,7 +14,7 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service")
 
   implementation(project(":instrumentation-api"))
-  implementation(project(":javaagent-api"))
+  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling"))
   implementation("io.opentelemetry:opentelemetry-proto")
@@ -31,7 +31,7 @@ dependencies {
   implementation(project(":instrumentation:internal:internal-proxy:javaagent"))
   implementation(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
-  // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
+  // Many tests use OpenTelemetry API calls, e.g., via ServerTraceUtils.runUnderServerTrace
   implementation(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
   // TODO (trask) is full OTel API interop needed, or is @WithSpan enough?
   implementation(project(":instrumentation:opentelemetry-api-1.0:javaagent"))

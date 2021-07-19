@@ -7,8 +7,6 @@ muzzle {
     group.set("io.vertx")
     module.set("vertx-web")
     versions.set("[3.0.0,4.0.0)")
-    //TODO we should split this module into client and server
-    //They have different version applicability
 //    assertInverse.set(true)
   }
 }
@@ -29,11 +27,4 @@ dependencies {
   // 3.9.7 Requires Netty 4.1.60, no other version works with it.
   latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final"))
   latestDepTestLibrary("io.vertx:vertx-web:3.+")
-  latestDepTestLibrary("io.vertx:vertx-web-client:3.+")
-}
-
-tasks {
-  named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-  }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
+import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Junction.AbstractBase<T> {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeErasureMatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(SafeErasureMatcher.class);
 
   /** The matcher to apply to the raw type of the matched element. */
   private final ElementMatcher<TypeDescription> matcher;
@@ -54,8 +54,8 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
     try {
       return typeDefinition.asErasure();
     } catch (Throwable e) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "{} trying to get erasure for target {}: {}",
             e.getClass().getSimpleName(),
             safeTypeDefinitionName(typeDefinition),

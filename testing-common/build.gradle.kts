@@ -6,6 +6,13 @@ plugins {
 description = "OpenTelemetry Javaagent testing commons"
 group = "io.opentelemetry.javaagent"
 
+sourceSets {
+  main {
+    val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
+    output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+  }
+}
+
 dependencies {
   api("org.codehaus.groovy:groovy-all")
   api("org.spockframework:spock-core")
@@ -14,10 +21,13 @@ dependencies {
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
-  api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-testing")
+  api("io.opentelemetry:opentelemetry-sdk-metrics")
+  api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
 
-  api(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  api("org.assertj:assertj-core")
+
+  compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry:opentelemetry-proto") {
     // Only need the proto, not gRPC.
@@ -29,6 +39,7 @@ dependencies {
   implementation("net.bytebuddy:byte-buddy-agent")
   implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
+  implementation("org.awaitility:awaitility")
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
@@ -39,9 +50,7 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
-  testImplementation("org.assertj:assertj-core")
-
-  testImplementation(project(":javaagent-api"))
+  testImplementation(project(":javaagent-instrumentation-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))

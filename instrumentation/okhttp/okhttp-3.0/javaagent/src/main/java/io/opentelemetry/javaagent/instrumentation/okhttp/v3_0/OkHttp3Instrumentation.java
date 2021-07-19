@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,23 +32,24 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void trackCallDepth(@Advice.Local("callDepth") int callDepth) {
-      callDepth = CallDepthThreadLocalMap.incrementCallDepth(OkHttpClient.Builder.class);
+    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(OkHttpClient.Builder.class);
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addTracingInterceptor(
-        @Advice.This OkHttpClient.Builder builder, @Advice.Local("callDepth") int callDepth) {
+        @Advice.This OkHttpClient.Builder builder,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to
       // run once from the constructor with args because that is where the dedupe needs to happen.
-      if (callDepth > 0) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(OkHttpClient.Builder.class);
-      if (builder.interceptors().contains(OkHttp3Interceptors.TRACING_INTERCEPTOR)) {
+      if (builder.interceptors().contains(OkHttp3Singletons.TRACING_INTERCEPTOR)) {
         return;
       }
-      builder.addInterceptor(OkHttp3Interceptors.TRACING_INTERCEPTOR);
+      builder.addInterceptor(OkHttp3Singletons.TRACING_INTERCEPTOR);
     }
   }
 }

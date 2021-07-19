@@ -15,6 +15,7 @@ import java.io.File
  * exposed to Gradle via [Classpath] annotation, which cannot be done if it is returned by
  * [Transformation.getArguments].
  */
+//TODO remove together with io.opentelemetry.instrumentation.javaagent-codegen.gradle
 class ClasspathTransformation(
   @get:Classpath val classpath: Iterable<File>,
   @get:Input val pluginClassName: String

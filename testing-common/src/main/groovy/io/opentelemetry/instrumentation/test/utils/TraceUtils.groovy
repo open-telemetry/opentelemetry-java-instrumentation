@@ -16,6 +16,7 @@ import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
@@ -27,6 +28,13 @@ class TraceUtils {
 
   static <T> T runUnderServerTrace(String spanName, Callable<T> r) {
     return ServerTraceUtils.runUnderServerTrace(spanName, r)
+  }
+
+  static void runUnderTrace(String spanName, ThrowingRunnable<?> r) {
+    runUnderTrace(spanName, (Callable<Void>) {
+      r.run()
+      return null
+    })
   }
 
   static <T> T runUnderTrace(String spanName, Callable<T> r) {
@@ -54,6 +62,8 @@ class TraceUtils {
     tracer.spanBuilder(spanName).startSpan().end()
   }
 
+  // Must create span within agent using annotation until
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
   @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
   static <T> T runUnderParentClientSpan(Callable<T> r) {
     r.call()

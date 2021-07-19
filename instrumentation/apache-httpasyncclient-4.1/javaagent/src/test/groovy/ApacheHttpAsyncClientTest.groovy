@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CancellationException
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
@@ -76,5 +78,14 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   @Override
   boolean testCausality() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET
+    ]
+    super.httpAttributes(uri) + extra
   }
 }

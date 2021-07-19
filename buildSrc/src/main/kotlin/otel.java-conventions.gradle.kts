@@ -18,10 +18,11 @@ plugins {
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 
 afterEvaluate {
+  val previousBaseArchiveName = base.archivesName.get()
   if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
-    base.archivesName.set("opentelemetry-javaagent-${base.archivesName.get()}")
-  } else {
-    base.archivesName.set("opentelemetry-${base.archivesName.get()}")
+    base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
+  } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
+    base.archivesName.set("opentelemetry-$previousBaseArchiveName")
   }
 }
 
@@ -257,5 +258,40 @@ idea {
   module {
     setDownloadJavadoc(false)
     setDownloadSources(false)
+  }
+}
+
+when (projectDir.name) {
+  "bootstrap", "javaagent", "library", "testing" -> {
+    // We don't use this group anywhere in our config, but we need to make sure it is unique per
+    // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
+    // https://github.com/gradle/gradle/issues/847
+    // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
+    // value.
+    group = "io.opentelemetry.${projectDir.parentFile.name}"
+  }
+}
+
+configurations.configureEach {
+  resolutionStrategy {
+    // While you might think preferProjectModules would do this, it doesn't. If this gets hard to
+    // manage, we could consider having the io.opentelemetry.instrumentation add information about
+    // what modules they add to reference generically.
+    dependencySubstitution {
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")).using(project(":javaagent-instrumentation-api"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
+    }
+
+    // The above substitutions ensure dependencies managed by this BOM for external projects refer to this repo's projects here.
+    // Excluding the bom as well helps ensure if we miss a substitution, we get a resolution failure instead of using the
+    // wrong version.
+    exclude("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-bom-alpha")
   }
 }

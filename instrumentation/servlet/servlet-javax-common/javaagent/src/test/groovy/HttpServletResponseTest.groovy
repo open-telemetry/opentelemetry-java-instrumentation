@@ -5,10 +5,10 @@
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static java.util.Collections.emptyEnumeration
 
 import groovy.servlet.AbstractHttpServlet
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.servlet.ServletOutputStream
 import javax.servlet.ServletRequest
@@ -48,7 +48,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
 
   def "test send with parent"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       response.sendError(0)
       response.sendError(0, "")
       response.sendRedirect("")
@@ -57,7 +57,11 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "TestResponse.sendError"
           childOf span(0)
@@ -95,7 +99,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       response.sendRedirect("")
     }
 

@@ -14,6 +14,7 @@ import application.io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.reflect.Field;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,69 +52,27 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     return io.opentelemetry.context.Context.root();
   }
 
+  public static Context newContextWrapper(
+      io.opentelemetry.context.Context agentContext, Context applicationContext) {
+    return new AgentContextWrapper(agentContext, applicationContext);
+  }
+
   static final io.opentelemetry.context.ContextKey<Context> APPLICATION_CONTEXT =
       io.opentelemetry.context.ContextKey.named("otel-context");
 
-  static final io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span>
-      AGENT_SPAN_CONTEXT_KEY;
-  @Nullable static final ContextKey<Span> APPLICATION_SPAN_CONTEXT_KEY;
-
-  static final io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>
-      AGENT_BAGGAGE_CONTEXT_KEY;
-  @Nullable static final ContextKey<Baggage> APPLICATION_BAGGAGE_CONTEXT_KEY;
-
-  static {
-    io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span> agentSpanContextKey;
-    try {
-      Class<?> spanContextKey = Class.forName("io.opentelemetry.api.trace.SpanContextKey");
-      Field spanContextKeyField = spanContextKey.getDeclaredField("KEY");
-      spanContextKeyField.setAccessible(true);
-      agentSpanContextKey =
-          (io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span>)
-              spanContextKeyField.get(null);
-    } catch (Throwable t) {
-      agentSpanContextKey = null;
-    }
-    AGENT_SPAN_CONTEXT_KEY = agentSpanContextKey;
-
-    ContextKey<Span> applicationSpanContextKey;
-    try {
-      Class<?> spanContextKey =
-          Class.forName("application.io.opentelemetry.api.trace.SpanContextKey");
-      Field spanContextKeyField = spanContextKey.getDeclaredField("KEY");
-      spanContextKeyField.setAccessible(true);
-      applicationSpanContextKey = (ContextKey<Span>) spanContextKeyField.get(null);
-    } catch (Throwable t) {
-      applicationSpanContextKey = null;
-    }
-    APPLICATION_SPAN_CONTEXT_KEY = applicationSpanContextKey;
-
-    io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>
-        agentBaggageContextKey;
-    try {
-      Class<?> baggageContextKey = Class.forName("io.opentelemetry.api.baggage.BaggageContextKey");
-      Field baggageContextKeyField = baggageContextKey.getDeclaredField("KEY");
-      baggageContextKeyField.setAccessible(true);
-      agentBaggageContextKey =
-          (io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>)
-              baggageContextKeyField.get(null);
-    } catch (Throwable t) {
-      agentBaggageContextKey = null;
-    }
-    AGENT_BAGGAGE_CONTEXT_KEY = agentBaggageContextKey;
-
-    ContextKey<Baggage> applicationBaggageContextKey;
-    try {
-      Class<?> baggageContextKey =
-          Class.forName("application.io.opentelemetry.api.baggage.BaggageContextKey");
-      Field baggageContextKeyField = baggageContextKey.getDeclaredField("KEY");
-      baggageContextKeyField.setAccessible(true);
-      applicationBaggageContextKey = (ContextKey<Baggage>) baggageContextKeyField.get(null);
-    } catch (Throwable t) {
-      applicationBaggageContextKey = null;
-    }
-    APPLICATION_BAGGAGE_CONTEXT_KEY = applicationBaggageContextKey;
-  }
+  static final ContextKeyBridge<?, ?>[] CONTEXT_KEY_BRIDGES =
+      new ContextKeyBridge[] {
+        new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
+            "application.io.opentelemetry.api.trace.SpanContextKey",
+            "io.opentelemetry.api.trace.SpanContextKey",
+            Bridging::toApplication,
+            Bridging::toAgentOrNull),
+        new ContextKeyBridge<>(
+            "application.io.opentelemetry.api.baggage.BaggageContextKey",
+            "io.opentelemetry.api.baggage.BaggageContextKey",
+            BaggageBridging::toApplication,
+            BaggageBridging::toAgent),
+      };
 
   @Override
   public Scope attach(Context toAttach) {
@@ -157,12 +116,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     }
   }
 
-  public static class AgentContextWrapper implements Context {
-    private final io.opentelemetry.context.Context agentContext;
-    private final Context applicationContext;
+  private static class AgentContextWrapper implements Context {
+    final io.opentelemetry.context.Context agentContext;
+    final Context applicationContext;
 
-    public AgentContextWrapper(
-        io.opentelemetry.context.Context agentContext, Context applicationContext) {
+    AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
       this.agentContext = agentContext;
       this.applicationContext = applicationContext;
     }
@@ -176,47 +134,23 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
     @Override
     public <V> V get(ContextKey<V> key) {
-      if (key == APPLICATION_SPAN_CONTEXT_KEY) {
-        io.opentelemetry.api.trace.Span agentSpan = agentContext.get(AGENT_SPAN_CONTEXT_KEY);
-        if (agentSpan == null) {
-          return null;
+      for (ContextKeyBridge<?, ?> bridge : CONTEXT_KEY_BRIDGES) {
+        V value = bridge.get(this, key);
+        if (value != null) {
+          return value;
         }
-        Span applicationSpan = Bridging.toApplication(agentSpan);
-        @SuppressWarnings("unchecked")
-        V value = (V) applicationSpan;
-        return value;
       }
-      if (key == APPLICATION_BAGGAGE_CONTEXT_KEY) {
-        io.opentelemetry.api.baggage.Baggage agentBaggage =
-            agentContext.get(AGENT_BAGGAGE_CONTEXT_KEY);
-        if (agentBaggage == null) {
-          return null;
-        }
-        Baggage applicationBaggage = BaggageBridging.toApplication(agentBaggage);
-        @SuppressWarnings("unchecked")
-        V value = (V) applicationBaggage;
-        return value;
-      }
+
       return applicationContext.get(key);
     }
 
     @Override
     public <V> Context with(ContextKey<V> k1, V v1) {
-      if (k1 == APPLICATION_SPAN_CONTEXT_KEY) {
-        Span applicationSpan = (Span) v1;
-        io.opentelemetry.api.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
-        if (agentSpan == null) {
-          return this;
+      for (ContextKeyBridge<?, ?> bridge : CONTEXT_KEY_BRIDGES) {
+        Context context = bridge.with(this, k1, v1);
+        if (context != null) {
+          return context;
         }
-        return new AgentContextWrapper(
-            agentContext.with(AGENT_SPAN_CONTEXT_KEY, agentSpan), applicationContext);
-      }
-      if (k1 == APPLICATION_BAGGAGE_CONTEXT_KEY) {
-        Baggage applicationBaggage = (Baggage) v1;
-        io.opentelemetry.api.baggage.Baggage agentBaggage =
-            BaggageBridging.toAgent(applicationBaggage);
-        return new AgentContextWrapper(
-            agentContext.with(AGENT_BAGGAGE_CONTEXT_KEY, agentBaggage), applicationContext);
       }
       return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1));
     }
@@ -224,6 +158,78 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     @Override
     public String toString() {
       return "{agentContext=" + agentContext + ", applicationContext=" + applicationContext + "}";
+    }
+  }
+
+  static class ContextKeyBridge<APPLICATION, AGENT> {
+
+    private final ContextKey<APPLICATION> applicationContextKey;
+    private final io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
+    private final Function<APPLICATION, AGENT> toAgent;
+    private final Function<AGENT, APPLICATION> toApplication;
+
+    @SuppressWarnings("unchecked")
+    ContextKeyBridge(
+        String applicationKeyHolderClassName,
+        String agentKeyHolderClassName,
+        Function<AGENT, APPLICATION> toApplication,
+        Function<APPLICATION, AGENT> toAgent) {
+      this.toApplication = toApplication;
+      this.toAgent = toAgent;
+
+      ContextKey<APPLICATION> applicationContextKey;
+      try {
+        Class<?> applicationKeyHolderClass = Class.forName(applicationKeyHolderClassName);
+        Field applicationContextKeyField = applicationKeyHolderClass.getDeclaredField("KEY");
+        applicationContextKeyField.setAccessible(true);
+        applicationContextKey = (ContextKey<APPLICATION>) applicationContextKeyField.get(null);
+      } catch (Throwable t) {
+        applicationContextKey = null;
+      }
+      this.applicationContextKey = applicationContextKey;
+
+      io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
+      try {
+        Class<?> agentKeyHolderClass = Class.forName(agentKeyHolderClassName);
+        Field agentContextKeyField = agentKeyHolderClass.getDeclaredField("KEY");
+        agentContextKeyField.setAccessible(true);
+        agentContextKey =
+            (io.opentelemetry.context.ContextKey<AGENT>) agentContextKeyField.get(null);
+      } catch (Throwable t) {
+        agentContextKey = null;
+      }
+      this.agentContextKey = agentContextKey;
+    }
+
+    @Nullable
+    <V> V get(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey) {
+      if (requestedKey == applicationContextKey) {
+        AGENT agentValue = contextWrapper.agentContext.get(agentContextKey);
+        if (agentValue == null) {
+          return null;
+        }
+        APPLICATION applicationValue = toApplication.apply(agentValue);
+        @SuppressWarnings("unchecked")
+        V castValue = (V) applicationValue;
+        return castValue;
+      }
+      return null;
+    }
+
+    @Nullable
+    <V> Context with(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
+      if (requestedKey == applicationContextKey) {
+        @SuppressWarnings("unchecked")
+        APPLICATION applicationValue = (APPLICATION) value;
+        AGENT agentValue = toAgent.apply(applicationValue);
+        if (agentValue == null) {
+          return contextWrapper;
+        }
+        return new AgentContextWrapper(
+            contextWrapper.agentContext.with(agentContextKey, agentValue),
+            contextWrapper.applicationContext);
+      }
+      return null;
     }
   }
 }

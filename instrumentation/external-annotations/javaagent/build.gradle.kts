@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    coreJdk.set(true)
+    coreJdk()
   }
 }
 

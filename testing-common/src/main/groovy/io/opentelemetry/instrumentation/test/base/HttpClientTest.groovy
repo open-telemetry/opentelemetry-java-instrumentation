@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_POR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static org.junit.Assume.assumeTrue
@@ -23,6 +22,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -342,7 +342,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "basic #method request with parent"() {
     when:
     def uri = resolveAddress("/success")
-    def responseCode = runUnderTrace("parent") {
+    def responseCode = runWithSpan("parent") {
       doRequest(method, uri)
     }
 
@@ -350,7 +350,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     responseCode == 200
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method)
         serverSpan(it, 2, span(1))
       }
@@ -399,9 +403,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     when:
     def uri = resolveAddress("/success")
-    def requestResult = runUnderTrace("parent") {
+    def requestResult = runWithSpan("parent") {
       doRequestWithCallback(method, uri) {
-        runUnderTrace("child") {}
+        runWithSpan("child") {}
       }
     }
 
@@ -410,7 +414,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     // only one trace (client).
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method)
         serverSpan(it, 2, span(1))
         basicSpan(it, 3, "child", span(0))
@@ -428,7 +436,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     when:
     def uri = resolveAddress("/success")
     def requestResult = doRequestWithCallback(method, uri) {
-      runUnderTrace("callback") {
+      runWithSpan("callback") {
       }
     }
 
@@ -441,7 +449,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         serverSpan(it, 1, span(0))
       }
       trace(1, 1) {
-        basicSpan(it, 0, "callback")
+        span(0) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
       }
     }
 
@@ -549,7 +561,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "error span"() {
     def uri = resolveAddress("/error")
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       try {
         doRequest(method, uri)
       } catch (Exception ignored) {
@@ -626,7 +638,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       doRequest(method, uri)
     }
 
@@ -654,9 +666,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
 
     when:
-    def requestResult = runUnderTrace("parent") {
+    def requestResult = runWithSpan("parent") {
       doRequestWithCallback(method, uri, [:]) {
-        runUnderTrace("callback") {
+        runWithSpan("callback") {
         }
       }
     }
@@ -669,7 +681,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
         basicSpan(it, 2, "callback", span(0))
       }
@@ -685,7 +701,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("https://192.0.2.1/")
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       doRequest(method, uri)
     }
 
@@ -749,7 +765,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     count.times { index ->
       def job = {
         latch.await()
-        runUnderTrace("Parent span " + index) {
+        runWithSpan("Parent span " + index) {
           Span.current().setAttribute("test.request.id", index)
           doRequest(method, url, ["test-request-id": index.toString()])
         }
@@ -796,10 +812,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     count.times { index ->
       def job = {
         latch.await()
-        runUnderTrace("Parent span " + index) {
+        runWithSpan("Parent span " + index) {
           Span.current().setAttribute("test.request.id", index)
           doRequestWithCallback(method, url, ["test-request-id": index.toString()]) {
-            runUnderTrace("child") {}
+            runWithSpan("child") {}
           }
         }
       }
@@ -848,7 +864,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     count.times { index ->
       def job = {
         latch.await()
-        runUnderTrace("Parent span " + index) {
+        runWithSpan("Parent span " + index) {
           Span.current().setAttribute("test.request.id", index)
           singleConnection.doRequest(path, [(SingleConnection.REQUEST_ID_HEADER): index.toString()])
         }

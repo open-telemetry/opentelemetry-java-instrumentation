@@ -5,20 +5,13 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
-val instrumentationMuzzle by configurations.creating {
-  isCanBeConsumed = true
-  isCanBeResolved = false
-  extendsFrom(configurations.implementation.get())
-}
-
 dependencies {
-  // Only used during compilation by bytebuddy plugin
-  compileOnly("com.google.guava:guava")
-
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
-  implementation(project(":javaagent-api"))
+  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-annotation-support"))
+  implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-api-metrics")
@@ -29,6 +22,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
+  implementation("io.opentelemetry:opentelemetry-extension-noop-api")
 
   // Only the logging exporter is included in our slim distribution so we include it here.
   // Other exporters are in javaagent-exporters
@@ -46,7 +40,9 @@ dependencies {
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
 
-  instrumentationMuzzle(sourceSets.main.get().output)
+  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+  // inclusion of this artifact inside of :instrumentation-api
+  compileOnly(project(":instrumentation-api-caching"))
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in

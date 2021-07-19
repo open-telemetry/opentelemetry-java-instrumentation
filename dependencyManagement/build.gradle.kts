@@ -11,7 +11,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.3.0"
+val otelVersion = "1.4.1"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -58,7 +58,7 @@ val DEPENDENCY_SETS = listOf(
     "net.bytebuddy",
     // When updating, also update buildSrc/build.gradle.kts
     "1.11.2",
-    listOf("byte-buddy", "byte-buddy-agent")
+    listOf("byte-buddy", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(
     "org.mockito",
