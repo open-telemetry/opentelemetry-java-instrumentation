@@ -43,13 +43,17 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   public static class InvokeExceptionCaughtAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(@Advice.This ChannelHandlerContext channelContext, @Advice.Argument(0) Throwable throwable) {
+    public static void onEnter(
+        @Advice.This ChannelHandlerContext channelContext,
+        @Advice.Argument(0) Throwable throwable) {
       if (throwable != null) {
         if (channelContext.channel().hasAttr(AttributeKeys.CLIENT_CONTEXT)) {
-          Attribute<Context> clientContextAttr = channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+          Attribute<Context> clientContextAttr =
+              channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
           NettyHttpClientTracer.tracer().endExceptionally(clientContextAttr.get(), throwable);
         } else {
-          NettyHttpServerTracer.tracer().onException(Java8BytecodeBridge.currentContext(), throwable);
+          NettyHttpServerTracer.tracer()
+              .onException(Java8BytecodeBridge.currentContext(), throwable);
         }
       }
     }
