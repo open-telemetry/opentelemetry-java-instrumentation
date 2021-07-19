@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternal
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import java.time.Duration
@@ -52,7 +53,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, workSpans + 2) {
-        basicSpan(it, 0, "trace-parent")
+        span(0) {
+          name "trace-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "publisher-parent", span(0))
 
         for (int i = 0; i < workSpans; i++) {
@@ -247,7 +252,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, (workItems * 2) + 3) {
-        basicSpan(it, 0, "trace-parent")
+        span(0) {
+          name "trace-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         basicSpan(it, 1, "publisher-parent", span(0))
         basicSpan(it, 2, "intermediate", span(1))
 

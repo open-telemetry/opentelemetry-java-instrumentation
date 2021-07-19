@@ -138,7 +138,11 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         def parentSpan = span(0)
         def nettyClientSpan = span(1)
 
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, parentSpan, "GET", resolveAddress("/success"))
         serverSpan(it, 2, nettyClientSpan)
 

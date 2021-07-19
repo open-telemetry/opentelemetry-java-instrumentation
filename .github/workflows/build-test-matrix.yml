@@ -26,7 +26,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: matrix-smoke
-          save-gradle-dependencies-cache: false
+          read-only: true
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2

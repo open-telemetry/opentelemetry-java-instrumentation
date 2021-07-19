@@ -5,13 +5,14 @@
 
 package springdata
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.env.CouchbaseEnvironment
+import io.opentelemetry.api.trace.SpanKind
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Retry
 import spock.lang.Shared
@@ -61,7 +62,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     memcacheEnvironment.shutdown()
   }
 
-  def "test write #name"() {
+  def "test write #testName"() {
     setup:
     def doc = new Doc()
     def result
@@ -78,18 +79,22 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", name, span(0))
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", testName, span(0))
       }
     }
 
     where:
     template << templates
-    name = template.couchbaseBucket.name()
+    testName = template.couchbaseBucket.name()
   }
 
-  def "test remove #name"() {
+  def "test remove #testName"() {
     setup:
     def doc = new Doc()
 
@@ -103,9 +108,13 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", name, span(0))
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", testName, span(0))
       }
     }
     clearExportedData()
@@ -117,12 +126,12 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     result == null
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.get", name)
+        assertCouchbaseCall(it, 0, "Bucket.get", testName)
       }
     }
 
     where:
     template << templates
-    name = template.couchbaseBucket.name()
+    testName = template.couchbaseBucket.name()
   }
 }
