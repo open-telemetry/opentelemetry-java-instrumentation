@@ -30,11 +30,16 @@ final class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implement
     requestLine = httpRequest.getRequestLine();
     protocolVersion = requestLine.getProtocolVersion();
 
-    URI calculatedUri;
-    try {
-      calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
-    } catch (URISyntaxException e) {
-      calculatedUri = null;
+    URI calculatedUri = null;
+    if (httpRequest instanceof HttpUriRequest) {
+      calculatedUri = ((HttpUriRequest) httpRequest).getURI();
+    }
+    if (calculatedUri == null) {
+      try {
+        calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
+      } catch (URISyntaxException e) {
+        // Ignore
+      }
     }
     uri = calculatedUri;
     actualRequest = httpRequest;

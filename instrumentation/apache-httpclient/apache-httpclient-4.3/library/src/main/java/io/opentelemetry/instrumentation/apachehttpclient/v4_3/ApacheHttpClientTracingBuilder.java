@@ -18,6 +18,7 @@ import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
+/** A builder for {@link ApacheHttpClientTracing}. */
 public final class ApacheHttpClientTracingBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
@@ -41,6 +42,10 @@ public final class ApacheHttpClientTracingBuilder {
     return this;
   }
 
+  /**
+   * Returns a new {@link ApacheHttpClientTracing} configured with this {@link
+   * ApacheHttpClientTracingBuilder}.
+   */
   public ApacheHttpClientTracing build() {
     HttpAttributesExtractor<HttpUriRequest, HttpResponse> httpAttributesExtractor =
         new ApacheHttpClientHttpAttributesExtractor();

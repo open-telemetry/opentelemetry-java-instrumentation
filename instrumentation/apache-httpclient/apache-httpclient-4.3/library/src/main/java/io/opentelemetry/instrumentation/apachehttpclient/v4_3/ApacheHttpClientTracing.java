@@ -13,12 +13,20 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+/** Entrypoint for tracing Apache HTTP Client. */
 public final class ApacheHttpClientTracing {
 
+  /**
+   * Returns a new {@link ApacheHttpClientTracing} configured with the given {@link OpenTelemetry}.
+   */
   public static ApacheHttpClientTracing create(OpenTelemetry openTelemetry) {
     return newBuilder(openTelemetry).build();
   }
 
+  /**
+   * Returns a new {@link ApacheHttpClientTracingBuilder} configured with the given {@link
+   * OpenTelemetry}.
+   */
   public static ApacheHttpClientTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
     return new ApacheHttpClientTracingBuilder(openTelemetry);
   }
@@ -32,10 +40,12 @@ public final class ApacheHttpClientTracing {
     this.propagators = propagators;
   }
 
+  /** Returns a new {@link CloseableHttpClient} with tracing configured. */
   public CloseableHttpClient newHttpClient() {
     return newHttpClientBuilder().build();
   }
 
+  /** Returns a new {@link HttpClientBuilder} to create a client with tracing configured. */
   public HttpClientBuilder newHttpClientBuilder() {
     return new TracingHttpClientBuilder(instrumenter, propagators);
   }
