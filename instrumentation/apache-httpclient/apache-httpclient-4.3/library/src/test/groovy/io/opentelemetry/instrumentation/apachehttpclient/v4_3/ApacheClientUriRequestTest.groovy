@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.CloseableHttpClient
 
-class ApacheClientHostRequestTest extends AbstractApacheClientHostRequestTest implements LibraryTestTrait {
+class ApacheClientUriRequestTest extends AbstractApacheClientUriRequestTest implements LibraryTestTrait {
   @Override
   protected CloseableHttpClient createClient() {
     def builder = ApacheHttpClientTracing.create(openTelemetry).newHttpClientBuilder()

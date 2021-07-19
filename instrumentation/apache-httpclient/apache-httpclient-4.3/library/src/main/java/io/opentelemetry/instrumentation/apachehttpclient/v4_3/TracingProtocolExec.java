@@ -14,6 +14,8 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
+import org.apache.http.client.CircularRedirectException;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpExecutionAware;
 import org.apache.http.client.methods.HttpRequestWrapper;
@@ -21,6 +23,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.RedirectLocations;
 import org.apache.http.impl.execchain.ClientExecChain;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -74,6 +77,15 @@ final class TracingProtocolExec implements ClientExecChain {
     } else if (httpContext.getTargetHost() != null) {
       host = httpContext.getTargetHost();
     }
+    if (host != null) {
+      if ((host.getSchemeName().equals("https") && host.getPort() == 443)
+          || (host.getSchemeName().equals("http") && host.getPort() == 80)) {
+        // port seems to be added to the host by route planning for standard ports even if not
+        // specified in the URL. There doesn't seem to be a way to differentiate between explicit
+        // and implicit port, but ignore in both cases to match the more common case.
+        host = new HttpHost(host.getHostName(), -1, host.getSchemeName());
+      }
+    }
     HttpUriRequest requestAsUriRequest =
         host != null ? new HostAndRequestAsHttpUriRequest(host, request) : request;
 
@@ -102,15 +114,17 @@ final class TracingProtocolExec implements ClientExecChain {
       error = e;
       throw e;
     } finally {
-      if (!pendingRedirect(httpContext, request, response)) {
+      if (!pendingRedirect(context, httpContext, request, requestAsUriRequest, response)) {
         instrumenter.end(context, requestAsUriRequest, response, error);
       }
     }
   }
 
-  private static boolean pendingRedirect(
+  private boolean pendingRedirect(
+      Context context,
       HttpClientContext httpContext,
       HttpRequestWrapper request,
+      HttpUriRequest requestAsUriRequest,
       @Nullable CloseableHttpResponse response)
       throws ProtocolException {
     if (response == null) {
@@ -119,6 +133,7 @@ final class TracingProtocolExec implements ClientExecChain {
     if (!httpContext.getRequestConfig().isRedirectsEnabled()) {
       return false;
     }
+
     // TODO(anuraaga): Support redirect strategies other than the default. There is no way to get
     // the user defined redirect strategy without some tricks, but it's very rare to override
     // the strategy, usually it is either on or off as checked above. We can add support for this
@@ -126,10 +141,31 @@ final class TracingProtocolExec implements ClientExecChain {
     if (!DefaultRedirectStrategy.INSTANCE.isRedirected(request, response, httpContext)) {
       return false;
     }
+
+    // Very hacky and a bit slow, but the only way to determine whether the client will fail with
+    // a circular redirect, which happens before exec decorators run.
+    RedirectLocations redirectLocations =
+        (RedirectLocations) httpContext.getAttribute(HttpClientContext.REDIRECT_LOCATIONS);
+    if (redirectLocations != null) {
+      RedirectLocations copy = new RedirectLocations();
+      copy.addAll(redirectLocations);
+
+      try {
+        DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
+      } catch (CircularRedirectException e) {
+        // We will not be returning to the Exec, finish the span.
+        instrumenter.end(context, requestAsUriRequest, response, new ClientProtocolException(e));
+        return true;
+      } finally {
+        httpContext.setAttribute(HttpClientContext.REDIRECT_LOCATIONS, copy);
+      }
+    }
+
     int redirectCount = httpContext.getAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, Integer.class);
-    if (++redirectCount >= httpContext.getRequestConfig().getMaxRedirects()) {
+    if (++redirectCount > httpContext.getRequestConfig().getMaxRedirects()) {
       return false;
     }
+
     httpContext.setAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, redirectCount);
     return true;
   }

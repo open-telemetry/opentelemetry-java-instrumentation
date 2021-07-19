@@ -22,6 +22,11 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   abstract protected CloseableHttpClient createClient()
 
+  @Override
+  Integer responseCodeOnRedirectError() {
+    return 302
+  }
+
   @Shared
   CloseableHttpClient client = createClient()
 
@@ -111,7 +116,7 @@ abstract class AbstractApacheClientHostRequestTest extends ApacheHttpClientTest<
   }
 }
 
-abstract class AbstractApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
+abstract class AbstractApacheClientHostRequestContextTest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
     return new BasicHttpRequest(method, fullPathFromURI(uri))
@@ -130,7 +135,7 @@ abstract class AbstractApacheClientHostRequestContext extends ApacheHttpClientTe
   }
 }
 
-abstract class AbstractApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
+abstract class AbstractApacheClientUriRequestTest extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
     return new HttpUriRequest(method, uri)
@@ -149,7 +154,7 @@ abstract class AbstractApacheClientUriRequest extends ApacheHttpClientTest<HttpU
   }
 }
 
-abstract class AbstractApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest> {
+abstract class AbstractApacheClientUriRequestContextTest extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
     return new HttpUriRequest(method, uri)
