@@ -34,7 +34,7 @@ specifying the full path and the correct name of your extensions jar.
 It is also possible to embedded you extension archive right inside OpenTelemetry Java Agent.
 This produces a single jar file thus simplifying deployment.
 Please consult `extendedAgent` task in [build.gradle](build.gradle) file for more information.
-When using Java Agent with embedded extension `-Dotel.javaagent.experimental.extensions`
+When using Java Agent with embedded extension, the `-Dotel.javaagent.experimental.extensions`
 command line option is not needed anymore.
 Just `-javaagent` is sufficient.
 
