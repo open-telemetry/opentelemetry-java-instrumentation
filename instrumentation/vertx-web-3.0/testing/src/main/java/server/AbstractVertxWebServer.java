@@ -15,17 +15,19 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-public class VertxWebServer extends AbstractVerticle {
+public abstract class AbstractVertxWebServer extends AbstractVerticle {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
-  @Override
-  public void start(Future<Void> startFuture) {
-    int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
+  public abstract void end(HttpServerResponse response, String message);
+
+  public abstract void end(HttpServerResponse response);
+
+  public Router buildRouter() {
     Router router = Router.router(vertx);
 
     //noinspection Convert2Lambda
@@ -40,7 +42,7 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     SUCCESS,
                     () -> {
-                      ctx.response().setStatusCode(SUCCESS.getStatus()).end(SUCCESS.getBody());
+                      end(ctx.response().setStatusCode(SUCCESS.getStatus()), SUCCESS.getBody());
                       return null;
                     });
               }
@@ -53,7 +55,7 @@ public class VertxWebServer extends AbstractVerticle {
                     INDEXED_CHILD,
                     () -> {
                       INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
-                      ctx.response().setStatusCode(INDEXED_CHILD.getStatus()).end();
+                      end(ctx.response().setStatusCode(INDEXED_CHILD.getStatus()));
                       return null;
                     }));
     router
@@ -63,9 +65,9 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     QUERY_PARAM,
                     () -> {
-                      ctx.response()
-                          .setStatusCode(QUERY_PARAM.getStatus())
-                          .end(ctx.request().query());
+                      end(
+                          ctx.response().setStatusCode(QUERY_PARAM.getStatus()),
+                          ctx.request().query());
                       return null;
                     }));
     router
@@ -75,10 +77,10 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     REDIRECT,
                     () -> {
-                      ctx.response()
-                          .setStatusCode(REDIRECT.getStatus())
-                          .putHeader("location", REDIRECT.getBody())
-                          .end();
+                      end(
+                          ctx.response()
+                              .setStatusCode(REDIRECT.getStatus())
+                              .putHeader("location", REDIRECT.getBody()));
                       return null;
                     }));
     router
@@ -88,7 +90,7 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     ERROR,
                     () -> {
-                      ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody());
+                      end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
                       return null;
                     }));
     router
@@ -107,15 +109,12 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     PATH_PARAM,
                     () -> {
-                      ctx.response()
-                          .setStatusCode(PATH_PARAM.getStatus())
-                          .end(ctx.request().getParam("id"));
+                      end(
+                          ctx.response().setStatusCode(PATH_PARAM.getStatus()),
+                          ctx.request().getParam("id"));
                       return null;
                     }));
 
-    vertx
-        .createHttpServer()
-        .requestHandler(router::accept)
-        .listen(port, it -> startFuture.complete());
+    return router;
   }
 }

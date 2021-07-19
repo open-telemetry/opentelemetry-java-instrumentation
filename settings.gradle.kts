@@ -318,6 +318,7 @@ include(":instrumentation:vaadin-14.2:testing")
 include(":instrumentation:vertx-http-client-3.0:javaagent")
 include(":instrumentation:vertx-reactive-3.5:javaagent")
 include(":instrumentation:vertx-web-3.0:javaagent")
+include(":instrumentation:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark
