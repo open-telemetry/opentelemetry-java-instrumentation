@@ -2,7 +2,6 @@ plugins {
   id("com.github.johnrengelman.shadow")
 
   id("otel.java-conventions")
-  id("otel.publish-conventions")
 }
 
 description = "opentelemetry-api shaded for internal javaagent usage"
