@@ -89,11 +89,11 @@ rootProject.tasks.named("release").configure {
   finalizedBy(tasks["publishToSonatype"])
 }
 
-// Sign only if we have a key to do so
-val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
-if (signingKey != null) {
+// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
+// signing tasks.
+if (System.getenv("CI") != null) {
   signing {
-    useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
+    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSWORD"))
     sign(publishing.publications["maven"])
   }
 }
