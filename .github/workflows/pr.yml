@@ -206,7 +206,7 @@ jobs:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
           max_attempts: 3
-          command: ./gradlew ${{ matrix.module }}:muzzle
+          command: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
 
   example-distro:
     runs-on: ubuntu-latest
