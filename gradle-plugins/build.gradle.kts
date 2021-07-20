@@ -8,7 +8,7 @@ plugins {
   id("io.github.gradle-nexus.publish-plugin")
 }
 
-group = "io.opentelemetry.javaagent"
+group = "io.opentelemetry.instrumentation"
 version = "0.1.0-SNAPSHOT"
 
 repositories {
