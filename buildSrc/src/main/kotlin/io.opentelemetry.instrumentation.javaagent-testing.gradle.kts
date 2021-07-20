@@ -6,7 +6,7 @@ plugins {
   id("net.bytebuddy.byte-buddy")
 
   id("io.opentelemetry.instrumentation.base")
-  id("io.opentelemetry.instrumentation.javaagent-codegen")
+  id("io.opentelemetry.instrumentation.muzzle-generation")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
@@ -29,8 +29,6 @@ dependencies {
   }
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
 
 val testInstrumentation by configurations.creating {
