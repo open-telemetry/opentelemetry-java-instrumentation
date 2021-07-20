@@ -10,4 +10,6 @@ dependencies {
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
   add("muzzleTooling", "org.slf4j:slf4j-simple")
+
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
