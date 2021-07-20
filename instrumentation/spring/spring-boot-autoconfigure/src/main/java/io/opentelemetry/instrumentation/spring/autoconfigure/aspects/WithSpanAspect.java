@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
@@ -16,12 +17,10 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.lang.reflect.Method;
-import org.aspectj.lang.JoinPoint;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /**
@@ -38,7 +37,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 public class WithSpanAspect {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure";
 
-  private final Instrumenter<JoinPoint, Object> instrumenter;
+  private final Instrumenter<JoinPointRequest, Object> instrumenter;
 
   public WithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
@@ -47,54 +46,64 @@ public class WithSpanAspect {
         new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
 
     instrumenter =
-        Instrumenter.newBuilder(
-                openTelemetry, INSTRUMENTATION_NAME, WithSpanAspectSpanNameExtractor.INSTANCE)
+        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
             .addAttributesExtractor(
-                MethodSpanAttributesExtractor.newBuilder(WithSpanAspect::method)
+                MethodSpanAttributesExtractor.newBuilder(JoinPointRequest::method)
                     .setCache(Cache.newBuilder().setWeakKeys().build())
                     .setParameterAttributeNamesExtractor(parameterAttributeNamesExtractor)
-                    .newMethodSpanAttributesExtractor(JoinPoint::getArgs))
-            .newInstrumenter(WithSpanAspectSpanKindExtractor.INSTANCE);
+                    .newMethodSpanAttributesExtractor(JoinPointRequest::args))
+            .newInstrumenter(WithSpanAspect::spanKind);
   }
 
-  private static Method method(JoinPoint joinPoint) {
-    MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-    return methodSignature.getMethod();
+  private static String spanName(JoinPointRequest request) {
+    WithSpan annotation = request.annotation();
+    String spanName = annotation.value();
+    if (spanName.isEmpty()) {
+      return SpanNames.fromMethod(request.method());
+    }
+    return spanName;
+  }
+
+  private static SpanKind spanKind(JoinPointRequest request) {
+    return request.annotation().kind();
   }
 
   @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
 
+    JoinPointRequest request = new JoinPointRequest(pjp);
     Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, pjp)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return pjp.proceed();
     }
 
-    Context context = instrumenter.start(parentContext, pjp);
+    Context context = instrumenter.start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
-      return end(pjp, context, pjp.proceed());
+      return end(context, request, pjp.proceed(), null);
     } catch (Throwable t) {
-      instrumenter.end(context, pjp, null, t);
+      end(context, request, null, t);
       throw t;
     }
   }
 
-  private Object end(JoinPoint joinPoint, Context context, Object response) {
+  private Object end(Context context, JoinPointRequest request, Object response, Throwable error) {
 
-    Class<?> returnType = method(joinPoint).getReturnType();
+    if (error == null) {
+      Class<?> returnType = request.method().getReturnType();
 
-    if (returnType.isInstance(response)) {
-      AsyncOperationEndStrategy asyncOperationEndStrategy =
-          AsyncOperationEndStrategies.instance().resolveStrategy(returnType);
+      if (returnType.isInstance(response)) {
+        AsyncOperationEndStrategy asyncOperationEndStrategy =
+            AsyncOperationEndStrategies.instance().resolveStrategy(returnType);
 
-      if (asyncOperationEndStrategy != null) {
-        AsyncOperationEndSupport<JoinPoint, Object> asyncOperationEndSupport =
-            AsyncOperationEndSupport.create(instrumenter, Object.class, returnType);
+        if (asyncOperationEndStrategy != null) {
+          AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
+              AsyncOperationEndSupport.create(instrumenter, Object.class, returnType);
 
-        return asyncOperationEndSupport.asyncEnd(context, joinPoint, response, null);
+          return asyncOperationEndSupport.asyncEnd(context, request, response, null);
+        }
       }
     }
-    instrumenter.end(context, joinPoint, response, null);
+    instrumenter.end(context, request, response, error);
     return response;
   }
 }
