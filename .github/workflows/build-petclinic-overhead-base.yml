@@ -1,5 +1,10 @@
 name: publish-petclinic-base-image
-on: workflow_dispatch
+on:
+  push:
+    paths:
+      - 'testing-overhead/Dockerfile-petclinic-base'
+    branches: [ 'main' ]
+  workflow_dispatch:
 jobs:
   push_to_registry:
     name: make spring-petclinic-rest base image for overhead testing
