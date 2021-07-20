@@ -19,7 +19,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpExecutionAware;
 import org.apache.http.client.methods.HttpRequestWrapper;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
@@ -36,12 +35,12 @@ final class TracingProtocolExec implements ClientExecChain {
   private static final String REDIRECT_COUNT_ATTRIBUTE_ID =
       TracingProtocolExec.class.getName() + ".redirectCount";
 
-  private final Instrumenter<HttpUriRequest, HttpResponse> instrumenter;
+  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
   private final ClientExecChain exec;
 
   TracingProtocolExec(
-      Instrumenter<HttpUriRequest, HttpResponse> instrumenter,
+      Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
       ContextPropagators propagators,
       ClientExecChain exec) {
     this.instrumenter = instrumenter;
@@ -58,17 +57,12 @@ final class TracingProtocolExec implements ClientExecChain {
       throws IOException, HttpException {
     Context context = httpContext.getAttribute(REQUEST_CONTEXT_ATTRIBUTE_ID, Context.class);
     if (context != null) {
-      HttpUriRequest requestAsUriRequest =
-          httpContext.getAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, HttpUriRequest.class);
+      ApacheHttpClientRequest instrumenterRequest =
+          httpContext.getAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, ApacheHttpClientRequest.class);
       // Request already had a context so a redirect. Don't create a new span just inject and
       // execute.
       propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
-      return execute(route, request, requestAsUriRequest, httpContext, httpExecutionAware, context);
-    }
-
-    Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, request)) {
-      return exec.execute(route, request, httpContext, httpExecutionAware);
+      return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
     }
 
     HttpHost host = null;
@@ -86,21 +80,27 @@ final class TracingProtocolExec implements ClientExecChain {
         host = new HttpHost(host.getHostName(), -1, host.getSchemeName());
       }
     }
-    HttpUriRequest requestAsUriRequest =
-        host != null ? new HostAndRequestAsHttpUriRequest(host, request) : request;
+    ApacheHttpClientRequest instrumenterRequest = new ApacheHttpClientRequest(host, request);
 
-    context = instrumenter.start(parentContext, requestAsUriRequest);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, instrumenterRequest)) {
+      return exec.execute(route, request, httpContext, httpExecutionAware);
+    }
+
+    context = instrumenter.start(parentContext, instrumenterRequest);
     httpContext.setAttribute(REQUEST_CONTEXT_ATTRIBUTE_ID, context);
-    httpContext.setAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, requestAsUriRequest);
+    httpContext.setAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, instrumenterRequest);
     httpContext.setAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, 0);
 
-    return execute(route, request, requestAsUriRequest, httpContext, httpExecutionAware, context);
+    propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
+
+    return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
   }
 
   private CloseableHttpResponse execute(
       HttpRoute route,
       HttpRequestWrapper request,
-      HttpUriRequest requestAsUriRequest,
+      ApacheHttpClientRequest instrumenterRequest,
       HttpClientContext httpContext,
       HttpExecutionAware httpExecutionAware,
       Context context)
@@ -114,8 +114,8 @@ final class TracingProtocolExec implements ClientExecChain {
       error = e;
       throw e;
     } finally {
-      if (!pendingRedirect(context, httpContext, request, requestAsUriRequest, response)) {
-        instrumenter.end(context, requestAsUriRequest, response, error);
+      if (!pendingRedirect(context, httpContext, request, instrumenterRequest, response)) {
+        instrumenter.end(context, instrumenterRequest, response, error);
       }
     }
   }
@@ -124,7 +124,7 @@ final class TracingProtocolExec implements ClientExecChain {
       Context context,
       HttpClientContext httpContext,
       HttpRequestWrapper request,
-      HttpUriRequest requestAsUriRequest,
+      ApacheHttpClientRequest instrumenterRequest,
       @Nullable CloseableHttpResponse response)
       throws ProtocolException {
     if (response == null) {
@@ -154,7 +154,7 @@ final class TracingProtocolExec implements ClientExecChain {
         DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
       } catch (CircularRedirectException e) {
         // We will not be returning to the Exec, finish the span.
-        instrumenter.end(context, requestAsUriRequest, response, new ClientProtocolException(e));
+        instrumenter.end(context, instrumenterRequest, response, new ClientProtocolException(e));
         return true;
       } finally {
         httpContext.setAttribute(HttpClientContext.REDIRECT_LOCATIONS, copy);

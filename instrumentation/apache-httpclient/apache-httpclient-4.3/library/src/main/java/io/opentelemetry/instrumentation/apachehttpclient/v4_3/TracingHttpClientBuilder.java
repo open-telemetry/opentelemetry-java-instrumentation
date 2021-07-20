@@ -8,17 +8,17 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.execchain.ClientExecChain;
 
 final class TracingHttpClientBuilder extends HttpClientBuilder {
 
-  private final Instrumenter<HttpUriRequest, HttpResponse> instrumenter;
+  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
 
   TracingHttpClientBuilder(
-      Instrumenter<HttpUriRequest, HttpResponse> instrumenter, ContextPropagators propagators) {
+      Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
+      ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
   }
