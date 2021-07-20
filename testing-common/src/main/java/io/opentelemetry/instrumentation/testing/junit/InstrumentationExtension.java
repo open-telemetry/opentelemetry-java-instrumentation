@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +39,7 @@ public abstract class InstrumentationExtension
   }
 
   @Override
-  public void beforeAll(ExtensionContext extensionContext) {
+  public void beforeAll(ExtensionContext extensionContext) throws Exception {
     testRunner.beforeTestClass();
   }
 
@@ -56,7 +57,7 @@ public abstract class InstrumentationExtension
   }
 
   @Override
-  public void afterAll(ExtensionContext extensionContext) {
+  public void afterAll(ExtensionContext extensionContext) throws Exception {
     testRunner.afterTestClass();
   }
 
@@ -112,13 +113,13 @@ public abstract class InstrumentationExtension
    * Wait until at least {@code numberOfTraces} traces are completed and return all captured traces.
    * Note that there may be more than {@code numberOfTraces} collected. By default this waits up to
    * 20 seconds, then times out.
-   *
-   * @throws TimeoutException when the operation times out
-   * @throws InterruptedException when the current thread is interrupted
    */
-  public List<List<SpanData>> waitForTraces(int numberOfTraces)
-      throws TimeoutException, InterruptedException {
-    return waitForTraces(numberOfTraces, DEFAULT_TRACE_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+  public List<List<SpanData>> waitForTraces(int numberOfTraces) {
+    try {
+      return waitForTraces(numberOfTraces, DEFAULT_TRACE_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    } catch (TimeoutException |InterruptedException e) {
+      throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
+    }
   }
 
   /**
@@ -131,6 +132,10 @@ public abstract class InstrumentationExtension
   public List<List<SpanData>> waitForTraces(int numberOfTraces, long timeout, TimeUnit unit)
       throws TimeoutException, InterruptedException {
     return TelemetryDataUtil.waitForTraces(this::spans, numberOfTraces, timeout, unit);
+  }
+
+  public TracesAssert waitAndAssertTraces(int numberOfTraces) {
+    return TracesAssert.assertThat(waitForTraces(numberOfTraces));
   }
 
   /**

@@ -16,7 +16,8 @@ sourceSets {
 dependencies {
   api("org.codehaus.groovy:groovy-all")
   api("org.spockframework:spock-core")
-  implementation("org.junit.jupiter:junit-jupiter-api")
+  api("org.junit.jupiter:junit-jupiter-api")
+  api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")

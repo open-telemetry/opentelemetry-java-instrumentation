@@ -16,7 +16,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletionException
 import spock.lang.Shared
 
-abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest> {
+abstract class AbstractArmeriaHttpClientTestOld extends HttpClientTest<HttpRequest> {
 
   abstract WebClientBuilder configureClient(WebClientBuilder clientBuilder)
 
