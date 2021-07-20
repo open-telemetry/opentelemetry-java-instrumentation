@@ -41,7 +41,7 @@ public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link MethodSpanAttributesExtractor} that extracts {@link
    * io.opentelemetry.api.common.Attributes} from the arguments passed to the traced method.
    */
-  public MethodSpanAttributesExtractor<REQUEST, RESPONSE> build(
+  public MethodSpanAttributesExtractor<REQUEST, RESPONSE> newMethodSpanAttributesExtractor(
       MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
     this.methodArgumentsExtractor = methodArgumentsExtractor;
     return new MethodSpanAttributesExtractor<>(this);

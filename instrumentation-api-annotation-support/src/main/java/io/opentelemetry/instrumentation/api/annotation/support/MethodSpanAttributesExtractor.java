@@ -22,7 +22,7 @@ public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   private final Cache<Method, AttributeBindings> cache;
 
   /** Returns a new {@link MethodSpanAttributesExtractorBuilder}. */
-  public static <REQUEST, RESPONSE> MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+  public static <REQUEST, RESPONSE> MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> newBuilder(
       MethodExtractor<REQUEST> methodResolver) {
 
     return new MethodSpanAttributesExtractorBuilder<>(methodResolver);

@@ -50,10 +50,10 @@ public class WithSpanAspect {
         Instrumenter.newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, WithSpanAspectSpanNameExtractor.INSTANCE)
             .addAttributesExtractor(
-                MethodSpanAttributesExtractor.builder(WithSpanAspect::method)
+                MethodSpanAttributesExtractor.newBuilder(WithSpanAspect::method)
                     .setCache(Cache.newBuilder().setWeakKeys().build())
                     .setParameterAttributeNamesExtractor(parameterAttributeNamesExtractor)
-                    .build(JoinPoint::getArgs))
+                    .newMethodSpanAttributesExtractor(JoinPoint::getArgs))
             .newInstrumenter(WithSpanAspectSpanKindExtractor.INSTANCE);
   }
 
