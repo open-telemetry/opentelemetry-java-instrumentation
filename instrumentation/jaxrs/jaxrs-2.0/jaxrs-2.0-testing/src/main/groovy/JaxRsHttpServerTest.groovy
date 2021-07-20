@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.junit.Assume.assumeTrue
 
@@ -38,7 +37,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
           kind SERVER
           name getContextPath() + "/test-resource-super"
         }
-        basicSpan(it, 1, "controller", span(0))
+        span(1) {
+          name "controller"
+          kind INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -60,7 +63,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
           kind SERVER
           name getContextPath() + "/test-resource-interface/call"
         }
-        basicSpan(it, 1, "controller", span(0))
+        span(1) {
+          name "controller"
+          kind INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -80,10 +87,26 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
           kind SERVER
           name getContextPath() + "/test-sub-resource-locator/call/sub"
         }
-        basicSpan(it, 1,"JaxRsSubResourceLocatorTestResource.call", span(0))
-        basicSpan(it, 2, "controller", span(1))
-        basicSpan(it, 3, "SubResource.call", span(0))
-        basicSpan(it, 4, "controller", span(3))
+        span(1) {
+          name "JaxRsSubResourceLocatorTestResource.call"
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "controller"
+          kind INTERNAL
+          childOf span(1)
+        }
+        span(3) {
+          name "SubResource.call"
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(4) {
+          name "controller"
+          kind INTERNAL
+          childOf span(3)
+        }
       }
     }
   }

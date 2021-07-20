@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
@@ -37,7 +36,11 @@ abstract class AbstractSubscriptionTest extends InstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        basicSpan(it, 1, "Connection.query", span(0))
+        span(1) {
+          name "Connection.query"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

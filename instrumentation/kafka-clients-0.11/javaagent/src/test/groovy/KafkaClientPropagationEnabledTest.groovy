@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -114,7 +113,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
-        basicSpan(it, 3, "producer callback", span(0))
+        span(3) {
+          name "producer callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -206,7 +209,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
-        basicSpan(it, 3, "producer callback", span(0))
+        span(3) {
+          name "producer callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

@@ -29,6 +29,15 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
 ```
 specifying the full path and the correct name of your extensions jar.
 
+## Embedded extensions
+
+It is also possible to embedded you extension archive right inside OpenTelemetry Java Agent.
+This produces a single jar file thus simplifying deployment.
+Please consult `extendedAgent` task in [build.gradle](build.gradle) file for more information.
+When using Java Agent with embedded extension, the `-Dotel.javaagent.experimental.extensions`
+command line option is not needed anymore.
+Just `-javaagent` is sufficient.
+
 ## Extensions examples
 
 * [DemoIdGenerator](src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
@@ -44,7 +53,7 @@ specifying the full path and the correct name of your extensions jar.
 There are several options to override or customise instrumentation provided by the upstream agent.
 The following description follows one specific use-case:
 
-> Instrumentation X from Otel distribution creates span that I don't like and I want to change it.
+> Instrumentation X from OpenTelemetry distribution creates span that I don't like and I want to change it.
 
 As an example, let us take some database client instrumentation that creates a span for database call
 and extracts data from db connection to provide attributes for that span.
