@@ -30,6 +30,6 @@ dependencies {
   // hibernate 6 is alpha so use 5 as latest version
   // Actual latest 5.5.4 has a legitimate bug that breaks our tests:
   // https://hibernate.atlassian.net/browse/HHH-14727?focusedCommentId=108318
-  latestDepTestLibrary("org.hibernate:hibernate-core:5.5.3")
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.5.3")
+  latestDepTestLibrary("org.hibernate:hibernate-core:5.5.3.Final")
+  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.5.3.Final")
 }
