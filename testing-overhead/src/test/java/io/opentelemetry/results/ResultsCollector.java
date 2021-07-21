@@ -2,10 +2,12 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.results;
 
 import com.jayway.jsonpath.JsonPath;
-import io.opentelemetry.AppPerfResults.MinMax;
+import io.opentelemetry.util.JFRUtils;
+import io.opentelemetry.util.NamingConvention;
+import io.opentelemetry.results.AppPerfResults.MinMax;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import java.io.IOException;
@@ -14,13 +16,13 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class ResultsCollector {
+public class ResultsCollector {
 
   private final NamingConvention namingConvention;
 
-  ResultsCollector(NamingConvention namingConvention) {this.namingConvention = namingConvention; }
+  public ResultsCollector(NamingConvention namingConvention) {this.namingConvention = namingConvention; }
 
-  Map<Agent, AppPerfResults> collect(TestConfig config) {
+  public Map<Agent, AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
         .collect(Collectors.toMap(a -> a, a -> readAgentResults(a, config)));
   }

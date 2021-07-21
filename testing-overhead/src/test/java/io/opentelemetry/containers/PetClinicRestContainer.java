@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import io.opentelemetry.NamingConvention;
+import io.opentelemetry.util.NamingConvention;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.agents.AgentResolver;
 import org.jetbrains.annotations.NotNull;
