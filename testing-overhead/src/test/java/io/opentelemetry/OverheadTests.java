@@ -43,14 +43,6 @@ public class OverheadTests {
     collector.close();
   }
 
-  @Test
-  @Disabled
-  void results() {
-    Map<Agent, AppPerfResults> results = new ResultsCollector(localNamingConvention)
-        .collect(Configs.RELEASE.config);
-    new ConsoleResultsPersister().write(results);
-  }
-
   @TestFactory
   Stream<DynamicTest> runAllTestConfigurations() {
     return Configs.all().map(config ->
