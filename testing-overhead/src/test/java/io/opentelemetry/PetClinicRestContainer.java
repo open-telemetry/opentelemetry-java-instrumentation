@@ -80,41 +80,4 @@ public class PetClinicRestContainer {
     result.add("/app/spring-petclinic-rest.jar");
     return result.toArray(new String[] {});
   }
-//
-//  static Builder builder() {
-//    return new Builder();
-//  }
-//
-//  static class Builder {
-//
-//    private final AgentResolver agentResolver = new AgentResolver();
-//    private Network network;
-//    private Startable collector;
-//    private String agentName;
-//
-//    Builder withNetwork(Network network) {
-//      this.network = network;
-//      return this;
-//    }
-//
-//    Builder withCollectorContainer(Startable collector) {
-//      this.collector = collector;
-//      return this;
-//    }
-//
-//    Builder withAgentNamed(String agentName) {
-//      this.agentName = agentName;
-//      return this;
-//    }
-//
-//    GenericContainer<?> build() throws IOException {
-//      PetClinicRestContainer container = new PetClinicRestContainer(network, collector, agentName);
-//      container.network = network;
-//      container.collector = collector;
-//      container.agentName = agentName;
-//      container.agent = agentResolver.resolve(agentName);
-//      return container.build();
-//    }
-//  }
-
 }
