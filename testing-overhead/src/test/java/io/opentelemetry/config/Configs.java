@@ -2,7 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.config;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 /**
  * Defines all test configurations
  */
-enum Configs {
+public enum Configs {
 
   RELEASE(TestConfig.builder()
       .name("release")

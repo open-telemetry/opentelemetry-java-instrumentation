@@ -2,8 +2,9 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.containers;
 
+import io.opentelemetry.config.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -14,19 +15,19 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import java.time.Duration;
 
-class K6Container {
+public class K6Container {
   private static final Logger logger = LoggerFactory.getLogger(K6Container.class);
   private final Network network;
   private final String agent;
   private final TestConfig config;
 
-  K6Container(Network network, String agent, TestConfig config) {
+  public K6Container(Network network, String agent, TestConfig config) {
     this.network = network;
     this.agent = agent;
     this.config = config;
   }
 
-  GenericContainer<?> build(){
+  public GenericContainer<?> build(){
     String k6OutputFile = "/results/k6_out_" + agent + ".json";
     return new GenericContainer<>(
         DockerImageName.parse("loadimpact/k6"))

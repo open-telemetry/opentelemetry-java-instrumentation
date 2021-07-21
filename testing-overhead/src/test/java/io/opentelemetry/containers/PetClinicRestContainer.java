@@ -2,7 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.containers;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import io.opentelemetry.agents.AgentResolver;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +33,13 @@ public class PetClinicRestContainer {
   private final Startable collector;
   private final String agentName;
 
-  PetClinicRestContainer(Network network, Startable collector, String agentName) {
+  public PetClinicRestContainer(Network network, Startable collector, String agentName) {
     this.network = network;
     this.collector = collector;
     this.agentName = agentName;
   }
 
-  GenericContainer<?> build() throws IOException {
+  public GenericContainer<?> build() throws IOException {
 
     Optional<Path> agent = agentResolver.resolve(agentName);
 

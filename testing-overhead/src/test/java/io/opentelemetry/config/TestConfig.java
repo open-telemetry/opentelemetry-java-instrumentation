@@ -2,7 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Defines a test config.
  */
-class TestConfig {
+public class TestConfig {
 
   private final static int DEFAULT_MAX_REQUEST_RATE = 0;  // none
   private final static int DEFAULT_CONCURRENT_CONNECTIONS = 5;

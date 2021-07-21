@@ -9,6 +9,11 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import io.opentelemetry.config.Configs;
+import io.opentelemetry.config.TestConfig;
+import io.opentelemetry.containers.CollectorContainer;
+import io.opentelemetry.containers.K6Container;
+import io.opentelemetry.containers.PetClinicRestContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicTest;

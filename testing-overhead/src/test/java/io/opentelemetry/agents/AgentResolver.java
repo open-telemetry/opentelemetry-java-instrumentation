@@ -2,7 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package io.opentelemetry;
+package io.opentelemetry.agents;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class AgentResolver {
 
   private final LatestAgentSnapshotResolver snapshotResolver = new LatestAgentSnapshotResolver();
 
-  Optional<Path> resolve(String agent) throws IOException {
+  public Optional<Path> resolve(String agent) throws IOException {
     switch (agent) {
       case "none":
         return Optional.empty();
