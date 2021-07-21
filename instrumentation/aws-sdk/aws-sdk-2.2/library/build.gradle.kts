@@ -12,6 +12,8 @@ dependencies {
 
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
+
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
 }
 
 tasks {
