@@ -18,6 +18,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.timeout.ReadTimeoutHandler
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -31,10 +32,17 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   private EventLoopGroup eventLoopGroup = new NioEventLoopGroup()
 
   @Shared
-  private Bootstrap bootstrap
+  private Bootstrap bootstrap = buildBootstrap()
 
-  def setupSpec() {
-    bootstrap = new Bootstrap()
+  @Shared
+  private Bootstrap readTimeoutBootstrap = buildBootstrap(true)
+
+  def cleanupSpec() {
+    eventLoopGroup?.shutdownGracefully()
+  }
+
+  Bootstrap buildBootstrap(boolean readTimeout = false) {
+    Bootstrap bootstrap = new Bootstrap()
     bootstrap.group(eventLoopGroup)
       .channel(NioSocketChannel)
       .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
@@ -42,13 +50,21 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
           ChannelPipeline pipeline = socketChannel.pipeline()
+          if (readTimeout) {
+            pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+          }
           pipeline.addLast(new HttpClientCodec())
         }
       })
+
+    return bootstrap
   }
 
-  def cleanupSpec() {
-    eventLoopGroup?.shutdownGracefully()
+  Bootstrap getBootstrap(URI uri) {
+    if (uri.getPath() == "/read-timeout") {
+      return readTimeoutBootstrap
+    }
+    return bootstrap
   }
 
   @Override
@@ -62,7 +78,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
-    def channel = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+    def channel = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
     def result = new CompletableFuture<Integer>()
     channel.pipeline().addLast(new ClientHandler(result))
     channel.writeAndFlush(request).get()
@@ -73,7 +89,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     Channel ch
     try {
-      ch = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+      ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
     } catch (Exception exception) {
       requestResult.complete(exception)
       return
@@ -120,5 +136,10 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   @Override
   boolean testHttps() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }
