@@ -8,6 +8,9 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   implementation(project(":instrumentation-api"))
+
+  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+  // inclusion of this artifact inside of :instrumentation-api
   compileOnly(project(":instrumentation-api-caching"))
 
   api("io.opentelemetry:opentelemetry-api")
