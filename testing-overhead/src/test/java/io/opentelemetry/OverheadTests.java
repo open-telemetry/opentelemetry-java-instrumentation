@@ -53,11 +53,7 @@ public class OverheadTests {
     GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent).build();
     petclinic.start();
 
-    GenericContainer<?> k6 = K6Container.builder()
-        .withNetwork(NETWORK)
-        .withConfig(config)
-        .withAgentNamed(agent)
-        .build();
+    GenericContainer<?> k6 = new K6Container(NETWORK, agent, config).build();
     k6.start();
 
     // This is required to get a graceful exit of the VM before testcontainers kills it forcibly.
