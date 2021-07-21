@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;

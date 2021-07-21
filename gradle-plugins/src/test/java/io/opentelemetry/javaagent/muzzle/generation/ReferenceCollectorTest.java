@@ -3,18 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.collector;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
+import static io.opentelemetry.javaagent.muzzle.generation.TestClasses.MethodBodyAdvice.*;
+import static io.opentelemetry.javaagent.muzzle.generation.TestClasses.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.InstrumentationContextTestClasses;
-import io.opentelemetry.instrumentation.OtherTestHelperClasses;
-import io.opentelemetry.instrumentation.TestHelperClasses;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
@@ -25,11 +23,7 @@ import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import muzzle.DeclaredFieldTestClass;
-import muzzle.TestClasses;
-import muzzle.TestClasses.HelperAdvice;
-import muzzle.TestClasses.LdcAdvice;
-import muzzle.TestClasses.MethodBodyAdvice;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -41,23 +35,23 @@ class ReferenceCollectorTest {
   public void methodBodyCreatesReferences() {
     ReferenceCollector collector = new ReferenceCollector((String s) -> false);
 
-    collector.collectReferencesFromAdvice(MethodBodyAdvice.class.getName());
+    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
     assertThat(references)
         .containsOnlyKeys(
-            MethodBodyAdvice.A.class.getName(),
-            MethodBodyAdvice.B.class.getName(),
-            MethodBodyAdvice.SomeInterface.class.getName(),
-            MethodBodyAdvice.SomeImplementation.class.getName());
+            A.class.getName(),
+            B.class.getName(),
+            SomeInterface.class.getName(),
+            SomeImplementation.class.getName());
 
-    ClassRef refB = references.get(MethodBodyAdvice.B.class.getName());
-    ClassRef refA = references.get(MethodBodyAdvice.A.class.getName());
+    ClassRef refB = references.get(B.class.getName());
+    ClassRef refA = references.get(A.class.getName());
 
     // interface flags
     assertThat(refB.getFlags()).contains(ManifestationFlag.NON_INTERFACE);
-    assertThat(references.get(MethodBodyAdvice.SomeInterface.class.getName()).getFlags())
+    assertThat(references.get(SomeInterface.class.getName()).getFlags())
         .contains(ManifestationFlag.INTERFACE);
 
     // class access flags
@@ -336,7 +330,7 @@ class ReferenceCollectorTest {
       @SuppressWarnings("unused") String desc, String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
-    assertThatExceptionOfType(MuzzleCompilationException.class)
+    Assertions.assertThatExceptionOfType(MuzzleCompilationException.class)
         .isThrownBy(
             () -> {
               collector.collectReferencesFromAdvice(adviceClassName);
