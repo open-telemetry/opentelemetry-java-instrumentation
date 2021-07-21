@@ -50,11 +50,7 @@ public class OverheadTests {
   }
 
   void runAppOnce(TestConfig config, String agent) throws Exception {
-    GenericContainer<?> petclinic = PetClinicRestContainer.builder()
-        .withNetwork(NETWORK)
-        .withCollectorContainer(collector)
-        .withAgentNamed(agent)
-        .build();
+    GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent).build();
     petclinic.start();
 
     GenericContainer<?> k6 = K6Container.builder()

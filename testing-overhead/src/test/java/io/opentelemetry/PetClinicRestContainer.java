@@ -25,12 +25,21 @@ public class PetClinicRestContainer {
 
   private static final Logger logger = LoggerFactory.getLogger(PetClinicRestContainer.class);
   private static final int PETCLINIC_PORT = 9966;
-  private String agentName;
-  private Optional<Path> agent;
-  private Network network;
-  private Startable collector;
+  private final AgentResolver agentResolver = new AgentResolver();
 
-  private GenericContainer<?> build() {
+  private final Network network;
+  private final Startable collector;
+  private final String agentName;
+
+  PetClinicRestContainer(Network network, Startable collector, String agentName) {
+    this.network = network;
+    this.collector = collector;
+    this.agentName = agentName;
+  }
+
+  GenericContainer<?> build() throws IOException {
+
+    Optional<Path> agent = agentResolver.resolve(agentName);
 
     GenericContainer<?> container = new GenericContainer<>(
 //        DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-base:latest"))
@@ -42,7 +51,7 @@ public class PetClinicRestContainer {
         .withFileSystemBind(".", "/results")
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .dependsOn(collector)
-        .withCommand(buildCommandline());
+        .withCommand(buildCommandline(agent));
 
     agent.ifPresent(
         agentPath -> container.withCopyFileToContainer(
@@ -53,11 +62,12 @@ public class PetClinicRestContainer {
   }
 
   @NotNull
-  private String[] buildCommandline() {
+  private String[] buildCommandline(Optional<Path> agent) {
     String jfrFile = "petclinic-" + agentName + ".jfr";
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
-        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename=/results/" + jfrFile,
+        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename=/results/"
+            + jfrFile,
         "-Dotel.traces.exporter=otlp",
         "-Dotel.imr.export.interval=5000",
         "-Dotel.exporter.otlp.insecure=true",
@@ -70,41 +80,41 @@ public class PetClinicRestContainer {
     result.add("/app/spring-petclinic-rest.jar");
     return result.toArray(new String[] {});
   }
-
-  static Builder builder() {
-    return new Builder();
-  }
-
-  static class Builder {
-
-    private final AgentResolver agentResolver = new AgentResolver();
-    private Network network;
-    private Startable collector;
-    private String agent;
-
-    Builder withNetwork(Network network) {
-      this.network = network;
-      return this;
-    }
-
-    Builder withCollectorContainer(Startable collector) {
-      this.collector = collector;
-      return this;
-    }
-
-    Builder withAgentNamed(String agentName) {
-      this.agent = agentName;
-      return this;
-    }
-
-    GenericContainer<?> build() throws IOException {
-      PetClinicRestContainer container = new PetClinicRestContainer();
-      container.network = network;
-      container.collector = collector;
-      container.agentName = agent;
-      container.agent = agentResolver.resolve(agent);
-      return container.build();
-    }
-  }
+//
+//  static Builder builder() {
+//    return new Builder();
+//  }
+//
+//  static class Builder {
+//
+//    private final AgentResolver agentResolver = new AgentResolver();
+//    private Network network;
+//    private Startable collector;
+//    private String agentName;
+//
+//    Builder withNetwork(Network network) {
+//      this.network = network;
+//      return this;
+//    }
+//
+//    Builder withCollectorContainer(Startable collector) {
+//      this.collector = collector;
+//      return this;
+//    }
+//
+//    Builder withAgentNamed(String agentName) {
+//      this.agentName = agentName;
+//      return this;
+//    }
+//
+//    GenericContainer<?> build() throws IOException {
+//      PetClinicRestContainer container = new PetClinicRestContainer(network, collector, agentName);
+//      container.network = network;
+//      container.collector = collector;
+//      container.agentName = agentName;
+//      container.agent = agentResolver.resolve(agentName);
+//      return container.build();
+//    }
+//  }
 
 }
