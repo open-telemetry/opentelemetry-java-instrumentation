@@ -31,6 +31,7 @@ public class ConsoleResultsPersister implements ResultsPersister {
     display(results, "Req. p95", res -> format(res.getRequestP95()));
     display(results, "Iter. mean", res -> format(res.getIterationAvg()));
     display(results, "Iter. p95", res -> format(res.getIterationP95()));
+    display(results, "Peak threads", res -> String.valueOf(res.getPeakThreadCount()));
   }
 
   private void display(Map<Agent, AppPerfResults> results, String pref,

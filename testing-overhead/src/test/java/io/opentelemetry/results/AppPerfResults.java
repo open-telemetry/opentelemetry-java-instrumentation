@@ -20,6 +20,7 @@ public class AppPerfResults {
   private final MinMax heapUsed;
   private final float maxThreadContextSwitchRate;
   private final long startupDurationMs;
+  private final long peakThreadCount;
 
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
@@ -33,54 +34,59 @@ public class AppPerfResults {
     this.heapUsed = builder.heapUsed;
     this.maxThreadContextSwitchRate = builder.maxThreadContextSwitchRate;
     this.startupDurationMs = builder.startupDurationMs;
+    this.peakThreadCount = builder.peakThreadCount;
   }
 
-   Agent getAgent() {
+  Agent getAgent() {
     return agent;
   }
 
-   TestConfig getConfig() {
+  TestConfig getConfig() {
     return config;
   }
 
-   double getIterationAvg() {
+  double getIterationAvg() {
     return iterationAvg;
   }
 
-   double getIterationP95() {
+  double getIterationP95() {
     return iterationP95;
   }
 
-   double getRequestAvg() {
+  double getRequestAvg() {
     return requestAvg;
   }
 
-   double getRequestP95() {
+  double getRequestP95() {
     return requestP95;
   }
 
-   long getTotalGCTime() {
+  long getTotalGCTime() {
     return totalGCTime;
   }
 
-   long getTotalAllocated() {
+  long getTotalAllocated() {
     return totalAllocated;
   }
 
   double getTotalAllocatedMB() {
-    return totalAllocated / (1024.0*1024.0);
+    return totalAllocated / (1024.0 * 1024.0);
   }
 
-   MinMax getHeapUsed() {
+  MinMax getHeapUsed() {
     return heapUsed;
   }
 
-   float getMaxThreadContextSwitchRate() {
+  float getMaxThreadContextSwitchRate() {
     return maxThreadContextSwitchRate;
   }
 
-   long getStartupDurationMs() {
+  long getStartupDurationMs() {
     return startupDurationMs;
+  }
+
+  public long getPeakThreadCount() {
+    return peakThreadCount;
   }
 
   static Builder builder() {
@@ -99,6 +105,7 @@ public class AppPerfResults {
     private long totalAllocated;
     private MinMax heapUsed;
     private float maxThreadContextSwitchRate;
+    public long peakThreadCount;
 
     AppPerfResults build() {
       return new AppPerfResults(this);
@@ -154,8 +161,13 @@ public class AppPerfResults {
       return this;
     }
 
-    Builder startupDurationMs(long startupDurationMs){
+    Builder startupDurationMs(long startupDurationMs) {
       this.startupDurationMs = startupDurationMs;
+      return this;
+    }
+
+    Builder peakThreadCount(long peakThreadCount) {
+      this.peakThreadCount = peakThreadCount;
       return this;
     }
   }

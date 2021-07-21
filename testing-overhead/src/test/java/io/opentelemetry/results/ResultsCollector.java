@@ -73,7 +73,13 @@ public class ResultsCollector {
         .totalGCTime(readTotalGCTime(jfrFile))
         .totalAllocated(readTotalAllocated(jfrFile))
         .heapUsed(readHeapUsed(jfrFile))
-        .maxThreadContextSwitchRate(readMaxThreadContextSwitchRate(jfrFile));
+        .maxThreadContextSwitchRate(readMaxThreadContextSwitchRate(jfrFile))
+        .peakThreadCount(readPeakThreadCount(jfrFile));
+  }
+
+  private long readPeakThreadCount(Path jfrFile) throws IOException {
+    MinMax minMax = JFRUtils.findMinMax(jfrFile, "jdk.JavaThreadStatistics", "peakCount");
+    return minMax.max;
   }
 
   private long readTotalGCTime(Path jfrFile) throws IOException {
