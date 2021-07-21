@@ -7,11 +7,8 @@ package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
@@ -26,7 +23,6 @@ import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +31,12 @@ import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import spock.lang.Specification;
 
-class ReferenceCollectorTest extends Specification {
+class ReferenceCollectorTest {
 
   @Test
   public void methodBodyCreatesReferences() {
@@ -52,29 +46,24 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertEquals(
-        new HashSet<>(
-            Arrays.asList(
-                MethodBodyAdvice.A.class.getName(),
-                MethodBodyAdvice.B.class.getName(),
-                MethodBodyAdvice.SomeInterface.class.getName(),
-                MethodBodyAdvice.SomeImplementation.class.getName())),
-        references.keySet());
+    assertThat(references.keySet())
+        .containsExactlyInAnyOrder(
+            MethodBodyAdvice.A.class.getName(),
+            MethodBodyAdvice.B.class.getName(),
+            MethodBodyAdvice.SomeInterface.class.getName(),
+            MethodBodyAdvice.SomeImplementation.class.getName());
 
     ClassRef bRef = references.get(MethodBodyAdvice.B.class.getName());
     ClassRef aRef = references.get(MethodBodyAdvice.A.class.getName());
 
     // interface flags
-    Assertions.assertTrue(bRef.getFlags().contains(ManifestationFlag.NON_INTERFACE));
-    Assertions.assertTrue(
-        references
-            .get(MethodBodyAdvice.SomeInterface.class.getName())
-            .getFlags()
-            .contains(ManifestationFlag.INTERFACE));
+    assertThat(bRef.getFlags()).contains(ManifestationFlag.NON_INTERFACE);
+    assertThat(references.get(MethodBodyAdvice.SomeInterface.class.getName()).getFlags())
+        .contains(ManifestationFlag.INTERFACE);
 
     // class access flags
-    Assertions.assertTrue(aRef.getFlags().contains(PACKAGE_OR_HIGHER));
-    Assertions.assertTrue(bRef.getFlags().contains(PACKAGE_OR_HIGHER));
+    assertThat(aRef.getFlags()).contains(PACKAGE_OR_HIGHER);
+    assertThat(bRef.getFlags()).contains(PACKAGE_OR_HIGHER);
 
     // method refs
     assertMethod(
@@ -89,13 +78,13 @@ class ReferenceCollectorTest extends Specification {
     assertMethod(
         bRef,
         "methodWithArrays",
-        "(.get(Ljava/lang/String;).get(Ljava/lang/Object;",
+        "([Ljava/lang/String;)[Ljava/lang/Object;",
         PROTECTED_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
 
     // field refs
-    assertTrue(bRef.getFields().isEmpty());
-    assertEquals(2, aRef.getFields().size());
+    assertThat(bRef.getFields()).isEmpty();
+    assertThat(aRef.getFields()).hasSize(2);
     assertField(aRef, "publicB", PACKAGE_OR_HIGHER, OwnershipFlag.NON_STATIC);
     assertField(aRef, "staticB", PACKAGE_OR_HIGHER, OwnershipFlag.STATIC);
   }
@@ -122,7 +111,7 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertNotNull(references.get(MethodBodyAdvice.A.class.getName()));
+    assertThat(references.get(MethodBodyAdvice.A.class.getName())).isNotNull();
   }
 
   @Test
@@ -132,7 +121,7 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertNotNull(references.get(MethodBodyAdvice.A.class.getName()));
+    assertThat(references.get(MethodBodyAdvice.A.class.getName())).isNotNull();
   }
 
   @Test
@@ -142,8 +131,9 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertNotNull(references.get("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation"));
-    assertNotNull(references.get("muzzle.TestClasses$MethodBodyAdvice$B"));
+    assertThat(references.get("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation"))
+        .isNotNull();
+    assertThat(references.get("muzzle.TestClasses$MethodBodyAdvice$B")).isNotNull();
   }
 
   @Test
@@ -152,16 +142,14 @@ class ReferenceCollectorTest extends Specification {
     collector.collectReferencesFromAdvice(HelperAdvice.class.getName());
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertEquals(
-        new HashSet<>(
-            Arrays.asList(
-                TestHelperClasses.Helper.class.getName(),
-                TestHelperClasses.HelperSuperClass.class.getName(),
-                TestHelperClasses.HelperInterface.class.getName())),
-        references.keySet());
+    assertThat(references.keySet())
+        .containsExactly(
+            TestHelperClasses.Helper.class.getName(),
+            TestHelperClasses.HelperSuperClass.class.getName(),
+            TestHelperClasses.HelperInterface.class.getName());
 
     ClassRef helperSuperClass = references.get(TestHelperClasses.HelperSuperClass.class.getName());
-    assertTrue(helperSuperClass.getFlags().contains(ManifestationFlag.ABSTRACT));
+    assertThat(helperSuperClass.getFlags()).contains(ManifestationFlag.ABSTRACT);
     assertHelperSuperClassMethod(helperSuperClass, true);
     assertMethod(
         helperSuperClass,
@@ -172,11 +160,11 @@ class ReferenceCollectorTest extends Specification {
         ManifestationFlag.FINAL);
 
     ClassRef helperInterface = references.get(TestHelperClasses.HelperInterface.class.getName());
-    assertTrue(helperInterface.getFlags().contains(ManifestationFlag.ABSTRACT));
+    assertThat(helperInterface.getFlags()).contains(ManifestationFlag.ABSTRACT);
     assertHelperInterfaceMethod(helperInterface, true);
 
     ClassRef helperClass = references.get(TestHelperClasses.Helper.class.getName());
-    assertTrue(helperClass.getFlags().contains(ManifestationFlag.NON_FINAL));
+    assertThat(helperClass.getFlags()).contains(ManifestationFlag.NON_FINAL);
     assertHelperSuperClassMethod(helperClass, false);
     assertHelperInterfaceMethod(helperClass, false);
   }
@@ -191,16 +179,16 @@ class ReferenceCollectorTest extends Specification {
 
     ClassRef helperClass = references.get(DeclaredFieldTestClass.Helper.class.getName());
     FieldRef superField = findField(helperClass, "superField");
-    assertNotNull(superField);
-    assertFalse(superField.isDeclared());
+    assertThat(superField).isNotNull();
+    assertThat(superField.isDeclared()).isFalse();
 
     FieldRef field = findField(helperClass, "helperField");
-    assertNotNull(field);
-    assertTrue(field.isDeclared());
+    assertThat(field).isNotNull();
+    assertThat(field.isDeclared()).isTrue();
 
     ClassRef libraryBaseClass =
         references.get(DeclaredFieldTestClass.LibraryBaseClass.class.getName());
-    assertTrue(libraryBaseClass.getFields().isEmpty());
+    assertThat(libraryBaseClass.getFields()).isEmpty();
   }
 
   @Test
@@ -246,18 +234,16 @@ class ReferenceCollectorTest extends Specification {
             OtherTestHelperClasses.TestEnum.class.getName(),
             OtherTestHelperClasses.TestEnum.class.getName() + "$1"));
 
-    assertEquals(
-        new HashSet<>(
-            Arrays.asList(
-                TestHelperClasses.HelperSuperClass.class.getName(),
-                TestHelperClasses.HelperInterface.class.getName(),
-                TestHelperClasses.Helper.class.getName(),
-                OtherTestHelperClasses.Bar.class.getName(),
-                OtherTestHelperClasses.Foo.class.getName(),
-                OtherTestHelperClasses.TestEnum.class.getName(),
-                OtherTestHelperClasses.TestEnum.class.getName() + "$1",
-                OtherTestHelperClasses.class.getName() + "$1")),
-        new HashSet<>(helperClasses));
+    assertThat(helperClasses)
+        .containsExactlyInAnyOrder(
+            TestHelperClasses.HelperSuperClass.class.getName(),
+            TestHelperClasses.HelperInterface.class.getName(),
+            TestHelperClasses.Helper.class.getName(),
+            OtherTestHelperClasses.Bar.class.getName(),
+            OtherTestHelperClasses.Foo.class.getName(),
+            OtherTestHelperClasses.TestEnum.class.getName(),
+            OtherTestHelperClasses.TestEnum.class.getName() + "$1",
+            OtherTestHelperClasses.class.getName() + "$1");
   }
 
   @Test
@@ -269,11 +255,10 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
 
     Map<String, ClassRef> references = collector.getReferences();
-    assertNotNull(references.get("external.NotInstrumentation"));
+    assertThat(references.get("external.NotInstrumentation")).isNotNull();
 
     List<String> helperClasses = collector.getSortedHelperClasses();
-    assertEquals(1, helperClasses.size());
-    assertEquals(ExternalHelper.class.getName(), helperClasses.get(0));
+    assertThat(helperClasses).containsExactly(ExternalHelper.class.getName());
   }
 
   @ParameterizedTest
@@ -327,8 +312,8 @@ class ReferenceCollectorTest extends Specification {
     collector.collectReferencesFromResource("application.properties");
     collector.prune();
 
-    assertTrue(collector.getReferences().isEmpty());
-    assertTrue(collector.getSortedHelperClasses().isEmpty());
+    assertThat(collector.getReferences()).isEmpty();
+    assertThat(collector.getSortedHelperClasses()).isEmpty();
   }
 
   @Test
@@ -339,13 +324,12 @@ class ReferenceCollectorTest extends Specification {
     collector.prune();
 
     Map<String, String> contextStore = collector.getContextStoreClasses();
-    assertEquals(2, contextStore.size());
-    assertEquals(
-        Context.class.getName(),
-        contextStore.get(InstrumentationContextTestClasses.Key1.class.getName()));
-    assertEquals(
-        Context.class.getName(),
-        contextStore.get(InstrumentationContextTestClasses.Key2.class.getName()));
+    assertThat(contextStore)
+        .hasSize(2)
+        .containsEntry(
+            InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName())
+        .containsEntry(
+            InstrumentationContextTestClasses.Key2.class.getName(), Context.class.getName());
   }
 
   @ParameterizedTest(name = "{0}")
@@ -353,12 +337,13 @@ class ReferenceCollectorTest extends Specification {
   public void shouldNotCollectContextStoreClassesForInvalidScenario(
       @SuppressWarnings("unused") String desc, String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
-    assertThrows(
-        MuzzleCompilationException.class,
-        () -> {
-          collector.collectReferencesFromAdvice(adviceClassName);
-          collector.prune();
-        });
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(
+            () -> {
+              collector.collectReferencesFromAdvice(adviceClassName);
+              collector.prune();
+            });
   }
 
   @SuppressWarnings("unused")
@@ -395,8 +380,8 @@ class ReferenceCollectorTest extends Specification {
   private static void assertMethod(
       ClassRef reference, String methodName, String methodDesc, Flag... flags) {
     MethodRef method = findMethod(reference, methodName, methodDesc);
-    assertNotNull(method);
-    assertEquals(new HashSet<>(Arrays.asList(flags)), method.getFlags());
+    assertThat(method).isNotNull();
+    assertThat(method.getFlags()).containsExactlyInAnyOrder(flags);
   }
 
   private static MethodRef findMethod(ClassRef reference, String methodName, String methodDesc) {
@@ -410,8 +395,8 @@ class ReferenceCollectorTest extends Specification {
 
   private static void assertField(ClassRef reference, String fieldName, Flag... flags) {
     FieldRef field = findField(reference, fieldName);
-    assertNotNull(field);
-    assertEquals(new HashSet<>(Arrays.asList(flags)), field.getFlags());
+    assertThat(field).isNotNull();
+    assertThat(field.getFlags()).containsExactly(flags);
   }
 
   private static FieldRef findField(ClassRef reference, String fieldName) {
@@ -435,6 +420,6 @@ class ReferenceCollectorTest extends Specification {
         }
       }
     }
-    assertFalse(sublistIt.hasNext());
+    assertThat(sublistIt.hasNext()).isFalse();
   }
 }
