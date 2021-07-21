@@ -21,7 +21,7 @@ public class ConsoleResultsPersister implements ResultsPersister {
 
     display(results, "Agent", appPerfResults -> appPerfResults.getAgent().getName());
     display(results, "Startup time (ms)", res -> String.valueOf(res.getStartupDurationMs()));
-    display(results, "Total allocated", res -> String.valueOf(res.getTotalAllocated()));
+    display(results, "Total allocated MB", res -> format(res.getTotalAllocatedMB()));
     display(results, "Heap (min)", res -> String.valueOf(res.getHeapUsed().min));
     display(results, "Heap (max)", res -> String.valueOf(res.getHeapUsed().max));
     display(results, "Thread switch rate",
@@ -37,7 +37,7 @@ public class ConsoleResultsPersister implements ResultsPersister {
       Function<AppPerfResults, String> vs) {
     System.out.printf("%-20s: ", pref);
     results.keySet().stream().sorted().forEach(agent -> {
-      System.out.printf("%15s", vs.apply(results.get(agent)));
+      System.out.printf("%17s", vs.apply(results.get(agent)));
     });
     System.out.println();
   }

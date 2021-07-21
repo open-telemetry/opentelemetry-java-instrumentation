@@ -67,6 +67,10 @@ class AppPerfResults {
     return totalAllocated;
   }
 
+  double getTotalAllocatedMB() {
+    return totalAllocated / (1024.0*1024.0);
+  }
+
    MinMax getHeapUsed() {
     return heapUsed;
   }
