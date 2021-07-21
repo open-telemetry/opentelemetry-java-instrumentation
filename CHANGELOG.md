@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.4.0 - 2021-07-20
+
 ### ☢️ Behavioral changes
 
 - Updated all instrumentation names to `io.opentelemetry.{libName}-{libVersion}` (#3411)
@@ -35,6 +37,7 @@
 - Ignore task classes using IgnoredTypesConfigurer (#3380)
 - Exclude duplicate classes from final jars (#3432, #3430)
 - Port AsyncSpanEndStrategy to Instrumenter API (#3262)
+- Rename `opentelemetry-javaagent-api` artifact to `opentelemetry-javaagent-instrumentation-api` (#3513)
 
 ## Version 1.3.1 - 2021-06-23
 
