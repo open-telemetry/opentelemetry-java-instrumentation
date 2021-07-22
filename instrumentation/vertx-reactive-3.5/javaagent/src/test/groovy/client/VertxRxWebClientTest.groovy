@@ -58,7 +58,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     if (exception.class == RuntimeException) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -66,7 +66,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
           exception = exception.getCause()
       }
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override

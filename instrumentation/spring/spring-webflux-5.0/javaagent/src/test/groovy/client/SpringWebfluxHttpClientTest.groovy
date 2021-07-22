@@ -7,7 +7,6 @@ package client
 
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.SingleConnection
@@ -59,7 +58,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     if (!exception.getClass().getName().endsWith("WebClientRequestException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -71,7 +70,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
           exception = exception.getCause()
       }
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override

@@ -11,7 +11,6 @@ import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import java.nio.channels.ClosedChannelException
@@ -96,7 +95,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
         exception = exception.getCause() != null ? exception.getCause() : new ConnectException("Connection refused: localhost/127.0.0.1:61")
@@ -104,7 +103,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
       case "https://192.0.2.1/": // non routable address
         exception = exception.getCause() != null ? exception.getCause() : new ClosedChannelException()
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override

@@ -353,6 +353,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
+    Throwable clientError = clientSpanError(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -377,10 +378,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                                           assertThat(attrs)
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
+                                                  clientError.getClass().getCanonicalName())
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))));
+                                                  clientError.getMessage()))));
           for (int i = 0; i < maxRedirects(); i++) {
             assertions.add(
                 span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
@@ -526,6 +527,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
+    Throwable clientError = clientSpanError(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -567,10 +569,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                                           assertThat(attrs)
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
+                                                  clientError.getClass().getCanonicalName())
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))));
+                                                  clientError.getMessage()))));
         });
   }
 
@@ -597,6 +599,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
+    Throwable clientError = clientSpanError(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -621,10 +624,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                                           assertThat(attrs)
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
+                                                  clientError.getClass().getCanonicalName())
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))),
+                                                  clientError.getMessage()))),
               span ->
                   span.hasName("callback")
                       .hasKind(SpanKind.INTERNAL)
@@ -637,7 +640,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assumeTrue(testRemoteConnection());
 
     String method = "HEAD";
-    URI uri = URI.create("https://192.0.2.1:443/");
+    URI uri = URI.create("https://192.0.2.1/");
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
@@ -647,6 +650,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
+    Throwable clientError = clientSpanError(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -688,10 +692,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                                           assertThat(attrs)
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
+                                                  clientError.getClass().getCanonicalName())
                                               .containsEntry(
                                                   SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))));
+                                                  clientError.getMessage()))));
         });
   }
 
@@ -973,8 +977,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
                 }
                 if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_PORT)) {
-                  assertThat(attrs)
-                      .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
+                  if (uri.getPort() > 0) {
+                    assertThat(attrs)
+                        .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
+                  } else {
+                    // https://192.0.2.1/ where some instrumentation may have set this to 443, but
+                    // not all.
+                    assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, 443L);
+                  }
                 }
               } else {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
@@ -1077,6 +1087,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   @Nullable
   protected String userAgent() {
     return null;
+  }
+
+  protected Throwable clientSpanError(URI uri, Throwable exception) {
+    return exception;
   }
 
   // This method should create either a single connection to the target uri or a http client

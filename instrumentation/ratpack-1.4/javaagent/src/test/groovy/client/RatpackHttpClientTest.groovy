@@ -8,7 +8,6 @@ package client
 import io.netty.channel.ConnectTimeoutException
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.SingleConnection
@@ -119,13 +118,13 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "https://192.0.2.1/": // non routable address
-        spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
+        return new ConnectTimeoutException("connection timed out: /192.0.2.1:443")
         return
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override

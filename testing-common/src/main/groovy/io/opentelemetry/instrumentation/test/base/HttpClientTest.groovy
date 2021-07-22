@@ -10,7 +10,6 @@ import static org.junit.Assume.assumeTrue
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.HttpClientTestServer
@@ -130,6 +129,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     @Override
     protected String userAgent() {
       return HttpClientTest.this.userAgent()
+    }
+
+    @Override
+    protected Throwable clientSpanError(URI uri, Throwable exception) {
+      return HttpClientTest.this.clientSpanError(uri, exception)
     }
 
     @Override
@@ -465,8 +469,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return true
   }
 
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
-    spanAssert.errorEvent(errorType, message)
+  Throwable clientSpanError(URI uri, Throwable exception) {
+    return exception
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

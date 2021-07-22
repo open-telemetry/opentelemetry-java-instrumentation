@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -75,7 +74,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -83,7 +82,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
           exception = exception.getCause()
       }
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override
