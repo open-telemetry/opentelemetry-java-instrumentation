@@ -20,7 +20,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.test.base.SingleConnection;
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;

@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import java.nio.channels.ClosedChannelException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -62,7 +63,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override

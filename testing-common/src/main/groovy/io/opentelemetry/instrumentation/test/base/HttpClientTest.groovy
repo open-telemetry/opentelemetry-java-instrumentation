@@ -5,51 +5,19 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static org.junit.Assume.assumeTrue
 
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
-import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.SpanBuilder
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.context.Context
+import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.HttpClientTestServer
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.internal.armeria.common.HttpData
-import io.opentelemetry.testing.internal.armeria.common.HttpRequest
-import io.opentelemetry.testing.internal.armeria.common.HttpResponse
-import io.opentelemetry.testing.internal.armeria.common.HttpStatus
-import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders
-import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder
-import io.opentelemetry.testing.internal.armeria.server.DecoratingHttpServiceFunction
-import io.opentelemetry.testing.internal.armeria.server.HttpService
-import io.opentelemetry.testing.internal.armeria.server.ServerBuilder
-import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext
-import io.opentelemetry.testing.internal.armeria.server.logging.LoggingService
-import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension
-import java.security.KeyStore
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
-import java.util.function.Supplier
-import javax.net.ssl.KeyManagerFactory
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -58,162 +26,6 @@ import spock.lang.Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
-  protected static final BASIC_AUTH_KEY = "custom-authorization-header"
-  protected static final BASIC_AUTH_VAL = "plain text auth token"
-
-  @Shared
-  Tracer tracer = openTelemetry.getTracer("test")
-
-  @Shared
-  def server= new ServerExtension(false) {
-    @Override
-    protected void configure(ServerBuilder sb) throws Exception {
-      KeyStore keystore = KeyStore.getInstance("PKCS12")
-      keystore.load(new FileInputStream(new File(System.getProperty("javax.net.ssl.trustStore"))), "testing".toCharArray())
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
-      kmf.init(keystore, "testing".toCharArray())
-
-      sb.http(0)
-        .https(0)
-        .tls(kmf)
-        .service("/success") {ctx, req ->
-          ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
-          def testRequestId = req.headers().get("test-request-id")
-          if (testRequestId != null) {
-            headers.set("test-request-id", testRequestId)
-          }
-          HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."))
-        }
-        .service("/client-error") {ctx, req ->
-          HttpResponse.of(HttpStatus.BAD_REQUEST, PLAIN_TEXT_UTF_8, "Invalid RQ")
-        }
-        .service("/error") {ctx, req ->
-          HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, PLAIN_TEXT_UTF_8, "Sorry.")
-        }
-        .service("/redirect") {ctx, req ->
-          HttpResponse.ofRedirect(HttpStatus.FOUND, "/success")
-        }
-        .service("/another-redirect") {ctx, req ->
-          HttpResponse.ofRedirect(HttpStatus.FOUND, "/redirect")
-        }
-        .service("/circular-redirect") {ctx, req ->
-          HttpResponse.ofRedirect(HttpStatus.FOUND, "/circular-redirect")
-        }
-        .service("/secured") {ctx, req ->
-          if (req.headers().get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
-            return HttpResponse.of(HttpStatus.OK, PLAIN_TEXT_UTF_8, "secured string under basic auth")
-          }
-          return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized")
-        }
-        .service("/to-secured") {ctx, req ->
-          HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
-        }
-        .decorator(new DecoratingHttpServiceFunction() {
-          @Override
-          HttpResponse serve(HttpService delegate, ServiceRequestContext ctx, HttpRequest req) {
-            for (String field : openTelemetry.propagators.textMapPropagator.fields()) {
-              if (req.headers().getAll(field).size() > 1) {
-                throw new AssertionError((Object) ("more than one " + field + " header present"))
-              }
-            }
-            SpanBuilder span = tracer.spanBuilder("test-http-server")
-              .setSpanKind(SERVER)
-              .setParent(openTelemetry.propagators.textMapPropagator.extract(Context.current(), ctx, RequestContextGetter.INSTANCE))
-
-            def traceRequestId = req.headers().get("test-request-id")
-            if (traceRequestId != null) {
-              span.setAttribute("test.request.id", Integer.parseInt(traceRequestId))
-            }
-            span.startSpan().end()
-
-            return delegate.serve(ctx, req)
-          }
-        })
-        .decorator(LoggingService.newDecorator())
-    }
-  }
-
-  def setupSpec() {
-    server.start()
-  }
-
-  def cleanupSpec() {
-    server.stop()
-  }
-
-  // ideally private, but then groovy closures in this class cannot find them
-  final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, method, uri, headers)
-  }
-
-  private int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request, method, uri, [:])
-    return sendRequest(request, method, uri, [:])
-  }
-
-  private int doRequestWithExistingTracingHeaders(String method, URI uri) {
-    def headers = new HashMap()
-    for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
-      headers.put(field, "12345789")
-    }
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, method, uri, headers)
-  }
-
-  // ideally private, but then groovy closures in this class cannot find them
-  final RequestResult doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:],
-      Runnable callback) {
-    def request = buildRequest(method, uri, headers)
-    def requestResult = new RequestResult(callback)
-    sendRequestWithCallback(request, method, uri, headers, requestResult)
-    return requestResult
-  }
-
-  /**
-   * Helper class for capturing result of asynchronous request and running a callback when result
-   * is received.
-   */
-  static class RequestResult {
-    private static final long timeout = 10_000
-    private final CountDownLatch valueReady = new CountDownLatch(1)
-    private final Runnable callback
-    private int status
-    private Throwable throwable
-
-    RequestResult(Runnable callback) {
-      this.callback = callback
-    }
-
-    void complete(int status) {
-      complete({ status }, null)
-    }
-
-    void complete(Throwable throwable) {
-      complete(null, throwable)
-    }
-
-    void complete(Supplier<Integer> status, Throwable throwable) {
-      if (throwable != null) {
-        this.throwable = throwable
-      } else {
-        this.status = status.get()
-      }
-      callback.run()
-      valueReady.countDown()
-    }
-
-    int get() {
-      if (!valueReady.await(timeout, TimeUnit.MILLISECONDS)) {
-        throw new TimeoutException("Timed out waiting for response in " + timeout + "ms")
-      }
-      if (throwable != null) {
-        throw throwable
-      }
-      return status
-    }
-  }
 
   /**
    * Build the request to be passed to
@@ -282,9 +94,129 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * and instead, {@link #testCallback} should be implemented to return false.
    */
   void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers,
-        RequestResult requestResult) {
+                               AbstractHttpClientTest.RequestResult  requestResult) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
+  }
+
+  @Shared
+  def junitTest = new AbstractHttpClientTest() {
+    @Override
+    protected buildRequest(String method, URI uri, Map<String, String> headers) {
+      return HttpClientTest.this.buildRequest(method, uri, headers)
+    }
+
+    @Override
+    protected int sendRequest(def request, String method, URI uri, Map<String, String> headers) {
+      return HttpClientTest.this.sendRequest(request, method, uri, headers)
+    }
+
+    @Override
+    protected void sendRequestWithCallback(def request, String method, URI uri, Map<String, String> headers,
+                                           AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientTest.this.sendRequestWithCallback(request, method, uri, headers, requestResult)
+    }
+
+    @Override
+    protected String expectedClientSpanName(URI uri, String method) {
+      return HttpClientTest.this.expectedClientSpanName(uri, method)
+    }
+
+    @Override
+    protected Integer responseCodeOnRedirectError() {
+      return HttpClientTest.this.responseCodeOnRedirectError()
+    }
+
+    @Override
+    protected String userAgent() {
+      return HttpClientTest.this.userAgent()
+    }
+
+    @Override
+    protected Set<AttributeKey<?>> httpAttributes(URI uri) {
+      return HttpClientTest.this.httpAttributes(uri)
+    }
+
+    @Override
+    protected SingleConnection createSingleConnection(String host, int port) {
+      return HttpClientTest.this.createSingleConnection(host, port)
+    }
+
+    @Override
+    protected boolean testWithClientParent() {
+      return HttpClientTest.this.testWithClientParent()
+    }
+
+    @Override
+    protected boolean testRedirects() {
+      return HttpClientTest.this.testRedirects()
+    }
+
+    @Override
+    protected boolean testCircularRedirects() {
+      return HttpClientTest.this.testCircularRedirects()
+    }
+
+    // maximum number of redirects that http client follows before giving up
+    @Override
+    protected int maxRedirects() {
+      return HttpClientTest.this.maxRedirects()
+    }
+
+    @Override
+    protected boolean testReusedRequest() {
+      return HttpClientTest.this.testReusedRequest()
+    }
+
+    @Override
+    protected boolean testConnectionFailure() {
+      return HttpClientTest.this.testConnectionFailure()
+    }
+
+    @Override
+    protected boolean testRemoteConnection() {
+      return HttpClientTest.this.testRemoteConnection()
+    }
+
+    @Override
+    protected boolean testHttps() {
+      return HttpClientTest.this.testHttps()
+    }
+
+    @Override
+    protected boolean testCausality() {
+      return HttpClientTest.this.testCausality()
+    }
+
+    @Override
+    protected boolean testCallback() {
+      return HttpClientTest.this.testCallback()
+    }
+
+    @Override
+    protected boolean testCallbackWithParent() {
+      // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
+      // function is used.  There is no way to stop a test from a derived class hence the flag
+      return HttpClientTest.this.testCallbackWithParent()
+    }
+
+    @Override
+    protected boolean testErrorWithCallback() {
+      return HttpClientTest.this.testErrorWithCallback()
+    }
+  }
+
+  @Shared
+  HttpClientTestServer server
+
+  def setupSpec() {
+    server = new HttpClientTestServer(openTelemetry)
+    server.start()
+    junitTest.setTesting(testRunner(), server)
+  }
+
+  def cleanupSpec() {
+    server.stop()
   }
 
   static int getPort(URI uri) {
@@ -297,6 +229,165 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     } else {
       throw new IllegalArgumentException("Unexpected uri: $uri")
     }
+  }
+
+  def "basic #method request #url"() {
+    expect:
+    junitTest.successfulGetRequest(path)
+
+    where:
+    path << ["/success", "/success?with=params"]
+  }
+
+  def "basic #method request with parent"() {
+    expect:
+    junitTest.successfulRequestWithParent(method)
+
+    where:
+    method << BODY_METHODS
+  }
+
+  def "should suppress nested CLIENT span if already under parent CLIENT span (#method)"() {
+    assumeTrue(testWithClientParent())
+    expect:
+    junitTest.shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(method)
+
+    where:
+    method << BODY_METHODS
+  }
+
+
+  //FIXME: add tests for POST with large/chunked data
+
+  def "trace request with callback and parent"() {
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithParent())
+    expect:
+    junitTest.requestWithCallbackAndParent()
+  }
+
+  def "trace request with callback and no parent"() {
+    assumeTrue(testCallback())
+    expect:
+    junitTest.requestWithCallbackAndNoParent()
+  }
+
+  def "basic #method request with 1 redirect"() {
+    assumeTrue(testRedirects())
+    expect:
+    junitTest.basicRequestWith1Redirect()
+  }
+
+  def "basic #method request with 2 redirects"() {
+    assumeTrue(testRedirects())
+    expect:
+    junitTest.basicRequestWith2Redirects()
+  }
+
+  def "basic #method request with circular redirects"() {
+    assumeTrue(testRedirects())
+    assumeTrue(testCircularRedirects())
+    expect:
+    junitTest.circularRedirects()
+  }
+
+  def "redirect #method to secured endpoint copies auth header"() {
+    assumeTrue(testRedirects())
+    expect:
+    junitTest.redirectToSecuredCopiesAuthHeader()
+  }
+
+  def "error span"() {
+    expect:
+    junitTest.errorSpan()
+  }
+
+  def "reuse request"() {
+    assumeTrue(testReusedRequest())
+    expect:
+    junitTest.reuseRequest()
+  }
+
+  // this test verifies two things:
+  // * the javaagent doesn't cause multiples of tracing headers to be added
+  //   (TestHttpServer throws exception if there are multiples)
+  // * the javaagent overwrites the existing tracing headers
+  //   (so that it propagates the same trace id / span id that it reports to the backend
+  //   and the trace is not broken)
+  def "request with existing tracing headers"() {
+    expect:
+    junitTest.requestWithExistingTracingHeaders()
+  }
+
+  def "connection error (unopened port)"() {
+    assumeTrue(testConnectionFailure())
+    expect:
+    junitTest.connectionErrorUnopenedPort()
+  }
+
+  def "connection error (unopened port) with callback"() {
+    assumeTrue(testConnectionFailure())
+    assumeTrue(testCallback())
+    assumeTrue(testErrorWithCallback())
+    expect:
+    junitTest.connectionErrorUnopenedPortWithCallback()
+  }
+
+  def "connection error non routable address"() {
+    assumeTrue(testRemoteConnection())
+    expect:
+    junitTest.connectionErrorNonRoutableAddress()
+  }
+
+  // IBM JVM has different protocol support for TLS
+  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
+  def "test https request"() {
+    assumeTrue(testRemoteConnection())
+    assumeTrue(testHttps())
+    expect:
+    junitTest.httpsRequest()
+  }
+
+  /**
+   * This test fires a large number of concurrent requests.
+   * Each request first hits a HTTP server and then makes another client request.
+   * The goal of this test is to verify that in highly concurrent environment our instrumentations
+   * for http clients (especially inherently concurrent ones, such as Netty or Reactor) correctly
+   * propagate trace context.
+   */
+  def "high concurrency test"() {
+    assumeTrue(testCausality())
+    expect:
+    junitTest.highConcurrency()
+  }
+
+  def "high concurrency test with callback"() {
+    assumeTrue(testCausality())
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithParent())
+    expect:
+    junitTest.highConcurrencyWithCallback()
+  }
+
+  /**
+   * Almost similar to the "high concurrency test" test above, but all requests use the same single
+   * connection.
+   */
+  def "high concurrency test on single connection"() {
+    SingleConnection singleConnection = createSingleConnection("localhost", server.httpPort())
+    assumeTrue(singleConnection != null)
+    expect:
+    junitTest.highConcurrencyOnSingleConnection()
+  }
+
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  protected String expectedClientSpanName(URI uri, String method) {
+    return method != null ? "HTTP " + method : "HTTP request"
   }
 
   Integer responseCodeOnRedirectError() {
@@ -317,729 +408,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     ]
   }
 
-  def "basic #method request #url"() {
-    when:
-    def responseCode = doRequest(method, url)
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 2) {
-        clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1, span(0))
-      }
-    }
-
-    where:
-    path << ["/success", "/success?with=params"]
-
-    method = "GET"
-    url = resolveAddress(path)
-  }
-
-  def "basic #method request with parent"() {
-    when:
-    def uri = resolveAddress("/success")
-    def responseCode = runWithSpan("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 3) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-        }
-        clientSpan(it, 1, span(0), method)
-        serverSpan(it, 2, span(1))
-      }
-    }
-
-    where:
-    method << BODY_METHODS
-  }
-
-  def "should suppress nested CLIENT span if already under parent CLIENT span (#method)"() {
-    given:
-    assumeTrue(testWithClientParent())
-
-    when:
-    def uri = resolveAddress("/success")
-    def responseCode = runUnderParentClientSpan {
-      doRequest(method, uri)
-    }
-
-    then:
-    responseCode == 200
-    // there should be 2 separate traces since the nested CLIENT span is suppressed
-    // (and the span context propagation along with it)
-    assertTraces(2) {
-      traces.sort(orderByRootSpanKind(CLIENT, SERVER))
-
-      trace(0, 1) {
-        span(0) {
-          name "parent-client-span"
-          kind CLIENT
-          hasNoParent()
-        }
-      }
-      trace(1, 1) {
-        serverSpan(it, 0)
-      }
-    }
-
-    where:
-    method << BODY_METHODS
-  }
-
-
-  //FIXME: add tests for POST with large/chunked data
-
-  def "trace request with callback and parent"() {
-    given:
-    assumeTrue(testCallback())
-    assumeTrue(testCallbackWithParent())
-
-    when:
-    def uri = resolveAddress("/success")
-    def requestResult = runWithSpan("parent") {
-      doRequestWithCallback(method, uri) {
-        runWithSpan("child") {}
-      }
-    }
-
-    then:
-    requestResult.get() == 200
-    // only one trace (client).
-    assertTraces(1) {
-      trace(0, 4) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-        }
-        clientSpan(it, 1, span(0), method)
-        serverSpan(it, 2, span(1))
-        span(3) {
-          name "child"
-          kind SpanKind.INTERNAL
-          childOf span(0)
-        }
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "trace request with callback and no parent"() {
-    given:
-    assumeTrue(testCallback())
-
-    when:
-    def uri = resolveAddress("/success")
-    def requestResult = doRequestWithCallback(method, uri) {
-      runWithSpan("callback") {
-      }
-    }
-
-    then:
-    requestResult.get() == 200
-    // only one trace (client).
-    assertTraces(2) {
-      trace(0, 2) {
-        clientSpan(it, 0, null, method)
-        serverSpan(it, 1, span(0))
-      }
-      trace(1, 1) {
-        span(0) {
-          name "callback"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-        }
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "basic #method request with 1 redirect"() {
-    // TODO quite a few clients create an extra span for the redirect
-    // This test should handle both types or we should unify how the clients work
-
-    given:
-    assumeTrue(testRedirects())
-    def uri = resolveAddress("/redirect")
-
-    when:
-    def responseCode = doRequest(method, uri)
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 3) {
-        clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1, span(0))
-        serverSpan(it, 2, span(0))
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "basic #method request with 2 redirects"() {
-    given:
-    assumeTrue(testRedirects())
-    def uri = resolveAddress("/another-redirect")
-
-    when:
-    def responseCode = doRequest(method, uri)
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 4) {
-        clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1, span(0))
-        serverSpan(it, 2, span(0))
-        serverSpan(it, 3, span(0))
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "basic #method request with circular redirects"() {
-    given:
-    assumeTrue(testRedirects() && testCircularRedirects())
-    def uri = resolveAddress("/circular-redirect")
-
-    when:
-    doRequest(method, uri)
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-
-    and:
-    assertTraces(1) {
-      trace(0, 1 + maxRedirects()) {
-        clientSpan(it, 0, null, method, uri, responseCodeOnRedirectError(), thrownException)
-        for (int i = 1; i < maxRedirects() + 1; i++) {
-          serverSpan(it, i, span(0))
-        }
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "redirect #method to secured endpoint copies auth header"() {
-    given:
-    assumeTrue(testRedirects())
-    def uri = resolveAddress("/to-secured")
-
-    when:
-
-    def responseCode = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 3) {
-        clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1, span(0))
-        serverSpan(it, 2, span(0))
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "error span"() {
-    def uri = resolveAddress("/error")
-    when:
-    runWithSpan("parent") {
-      try {
-        doRequest(method, uri)
-      } catch (Exception ignored) {
-      }
-    }
-
-    then:
-    assertTraces(1) {
-      trace(0, 3) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-        }
-        clientSpan(it, 1, span(0), method, uri, 500)
-        serverSpan(it, 2, span(1))
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "reuse request"() {
-    given:
-    assumeTrue(testReusedRequest())
-
-    when:
-    def responseCode = doReusedRequest(method, url)
-
-    then:
-    responseCode == 200
-    assertTraces(2) {
-      trace(0, 2) {
-        clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1, span(0))
-      }
-      trace(1, 2) {
-        clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1, span(0))
-      }
-    }
-
-    where:
-    path = "/success"
-    method = "GET"
-    url = resolveAddress(path)
-  }
-
-  // this test verifies two things:
-  // * the javaagent doesn't cause multiples of tracing headers to be added
-  //   (TestHttpServer throws exception if there are multiples)
-  // * the javaagent overwrites the existing tracing headers
-  //   (so that it propagates the same trace id / span id that it reports to the backend
-  //   and the trace is not broken)
-  def "request with existing tracing headers"() {
-    when:
-    def responseCode = doRequestWithExistingTracingHeaders(method, url)
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 2) {
-        clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1, span(0))
-      }
-    }
-
-    where:
-    path = "/success"
-    method = "GET"
-    url = resolveAddress(path)
-  }
-
-  def "connection error (unopened port)"() {
-    given:
-    assumeTrue(testConnectionFailure())
-    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
-
-    when:
-    runWithSpan("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-
-    and:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-          status ERROR
-          errorEvent(thrownException.class, thrownException.message)
-        }
-        clientSpan(it, 1, span(0), method, uri, null, thrownException)
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "connection error (unopened port) with callback"() {
-    given:
-    assumeTrue(testConnectionFailure())
-    assumeTrue(testCallback())
-    assumeTrue(testErrorWithCallback())
-    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
-
-    when:
-    def requestResult = runWithSpan("parent") {
-      doRequestWithCallback(method, uri, [:]) {
-        runWithSpan("callback") {
-        }
-      }
-    }
-    requestResult.get()
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-
-    and:
-    assertTraces(1) {
-      trace(0, 3) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-        }
-        clientSpan(it, 1, span(0), method, uri, null, thrownException)
-        span(2) {
-          name "callback"
-          kind SpanKind.INTERNAL
-          childOf span(0)
-        }
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  def "connection error non routable address"() {
-    given:
-    assumeTrue(testRemoteConnection())
-    def uri = new URI("https://192.0.2.1/")
-
-    when:
-    runWithSpan("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          name "parent"
-          kind SpanKind.INTERNAL
-          hasNoParent()
-          status ERROR
-          errorEvent(thrownException.class, thrownException.message)
-        }
-        clientSpan(it, 1, span(0), method, uri, null, thrownException)
-      }
-    }
-
-    where:
-    method = "HEAD"
-  }
-
-  // IBM JVM has different protocol support for TLS
-  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
-  def "test https request"() {
-    given:
-    assumeTrue(testRemoteConnection())
-    assumeTrue(testHttps())
-    def uri = new URI("https://localhost:${server.httpsPort()}/success")
-
-    when:
-    def responseCode = doRequest(method, uri)
-
-    then:
-    responseCode == 200
-    assertTraces(1) {
-      trace(0, 2) {
-        clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1, span(0))
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
-  /**
-   * This test fires a large number of concurrent requests.
-   * Each request first hits a HTTP server and then makes another client request.
-   * The goal of this test is to verify that in highly concurrent environment our instrumentations
-   * for http clients (especially inherently concurrent ones, such as Netty or Reactor) correctly
-   * propagate trace context.
-   */
-  def "high concurrency test"() {
-    setup:
-    assumeTrue(testCausality())
-    int count = 50
-    def method = 'GET'
-    def url = resolveAddress("/success")
-
-    def latch = new CountDownLatch(1)
-
-    def pool = Executors.newFixedThreadPool(4)
-
-    when:
-    count.times { index ->
-      def job = {
-        latch.await()
-        runWithSpan("Parent span " + index) {
-          Span.current().setAttribute("test.request.id", index)
-          doRequest(method, url, ["test-request-id": index.toString()])
-        }
-      }
-      pool.submit(job)
-    }
-    latch.countDown()
-
-    then:
-    assertTraces(count) {
-      count.times { idx ->
-        trace(idx, 3) {
-          def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the request id of the current one
-          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
-
-          span(0) {
-            name "Parent span " + requestId
-            kind SpanKind.INTERNAL
-            hasNoParent()
-            attributes {
-              "test.request.id" requestId
-            }
-          }
-          clientSpan(it, 1, span(0), method, url)
-          serverSpan(it, 2, span(1)) {
-            it."test.request.id" requestId
-          }
-        }
-      }
-    }
-  }
-
-  def "high concurrency test with callback"() {
-    setup:
-    assumeTrue(testCausality())
-    assumeTrue(testCallback())
-    assumeTrue(testCallbackWithParent())
-
-    int count = 50
-    def method = 'GET'
-    def url = resolveAddress("/success")
-
-    def latch = new CountDownLatch(1)
-
-    def pool = Executors.newFixedThreadPool(4)
-
-    when:
-    count.times { index ->
-      def job = {
-        latch.await()
-        runWithSpan("Parent span " + index) {
-          Span.current().setAttribute("test.request.id", index)
-          doRequestWithCallback(method, url, ["test-request-id": index.toString()]) {
-            runWithSpan("child") {}
-          }
-        }
-      }
-      pool.submit(job)
-    }
-    latch.countDown()
-
-    then:
-    assertTraces(count) {
-      count.times { idx ->
-        trace(idx, 4) {
-          def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the request id of the current one
-          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
-
-          span(0) {
-            name "Parent span " + requestId
-            kind SpanKind.INTERNAL
-            hasNoParent()
-            attributes {
-              "test.request.id" requestId
-            }
-          }
-          clientSpan(it, 1, span(0), method, url)
-          serverSpan(it, 2, span(1)) {
-            it."test.request.id" requestId
-          }
-          span(3) {
-            name "child"
-            kind SpanKind.INTERNAL
-            childOf span(0)
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Almost similar to the "high concurrency test" test above, but all requests use the same single
-   * connection.
-   */
-  def "high concurrency test on single connection"() {
-    setup:
-    def singleConnection = createSingleConnection("localhost", server.httpPort())
-    assumeTrue(singleConnection != null)
-    int count = 50
-    def method = 'GET'
-    def path = "/success"
-    def url = resolveAddress(path)
-
-    def latch = new CountDownLatch(1)
-    def pool = Executors.newFixedThreadPool(4)
-
-    when:
-    count.times { index ->
-      def job = {
-        latch.await()
-        runWithSpan("Parent span " + index) {
-          Span.current().setAttribute("test.request.id", index)
-          singleConnection.doRequest(path, [(SingleConnection.REQUEST_ID_HEADER): index.toString()])
-        }
-      }
-      pool.submit(job)
-    }
-    latch.countDown()
-
-    then:
-    assertTraces(count) {
-      count.times { idx ->
-        trace(idx, 3) {
-          def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the request id of the current one
-          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
-
-          span(0) {
-            name "Parent span " + requestId
-            kind SpanKind.INTERNAL
-            hasNoParent()
-            attributes {
-              "test.request.id" requestId
-            }
-          }
-          clientSpan(it, 1, span(0), method, url)
-          serverSpan(it, 2, span(1)) {
-            it."test.request.id" requestId
-          }
-        }
-      }
-    }
-  }
-
   //This method should create either a single connection to the target uri or a http client
   //which is guaranteed to use the same connection for all requests
   SingleConnection createSingleConnection(String host, int port) {
     return null
-  }
-
-  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
-    def userAgent = userAgent()
-    def httpClientAttributes = httpAttributes(uri)
-    trace.span(index) {
-      if (parentSpan == null) {
-        hasNoParent()
-      } else {
-        childOf((SpanData) parentSpan)
-      }
-      name expectedClientSpanName(uri, method)
-      kind CLIENT
-      if (exception) {
-        status ERROR
-        assertClientSpanErrorEvent(it, uri, exception)
-      } else if (responseCode >= 400) {
-        status ERROR
-      }
-      attributes {
-        "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-        if (uri.port == UNUSABLE_PORT || uri.host == "192.0.2.1") {
-          // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
-          // filling in peer information but some instrumentation does so based on the URL itself
-          // which is present in HTTP attributes. We should fix this.
-          "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
-          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port || (uri.scheme == "https" && it == 443) }
-        } else {
-          "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
-          "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-        }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" || it == uri.host  } // Optional
-
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_URL)) {
-          "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_METHOD)) {
-          "${SemanticAttributes.HTTP_METHOD.key}" method
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_FLAVOR)) {
-          "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
-          if (userAgent) {
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
-          }
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_HOST)) {
-          "${SemanticAttributes.HTTP_HOST}" { it == uri.host || it == "${uri.host}:${uri.port}" }
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
-          "${SemanticAttributes.HTTP_SCHEME}" uri.scheme
-        }
-        if (httpClientAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
-          "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
-        }
-
-        if (responseCode) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
-        }
-      }
-    }
-  }
-
-  void serverSpan(TraceAssert traces, int index, Object parentSpan = null,
-                  @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
-                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
-    traces.span(index) {
-      name "test-http-server"
-      kind SERVER
-      if (parentSpan == null) {
-        hasNoParent()
-      } else {
-        childOf((SpanData) parentSpan)
-      }
-      if (additionAttributesAssert != null) {
-        attributes(additionAttributesAssert)
-      }
-    }
-  }
-
-  String expectedClientSpanName(URI uri, String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
-  }
-
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
-    assertClientSpanErrorEvent(spanAssert, uri, exception.class, exception.message)
-  }
-
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Class<Throwable> errorType, message) {
-    spanAssert.errorEvent(errorType, message)
   }
 
   boolean testWithClientParent() {
@@ -1093,11 +465,34 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return true
   }
 
-  URI removeFragment(URI uri) {
-    return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    spanAssert.errorEvent(errorType, message)
   }
 
-  protected URI resolveAddress(String path) {
-    return URI.create("http://localhost:${server.httpPort()}${path}")
+  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
+  final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode)
+    if (parentSpan == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(((SpanData) parentSpan).spanId)
+    }
+  }
+
+  final void serverSpan(TraceAssert trace, int index, Object parentSpan = null) {
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData))
+    if (parentSpan == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(((SpanData) parentSpan).spanId)
+    }
+  }
+
+  final URI resolveAddress(String path) {
+    return junitTest.resolveAddress(path)
   }
 }

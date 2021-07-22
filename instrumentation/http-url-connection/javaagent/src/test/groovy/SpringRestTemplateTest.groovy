@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -44,7 +45,7 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], RequestResult requestResult) {
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], AbstractHttpClientTest.RequestResult requestResult) {
     try {
       restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
         req.getHeaders().putAll(request.getHeaders())

@@ -29,7 +29,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -102,7 +103,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     Channel ch
     try {
       ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()

@@ -9,7 +9,8 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.ProcessingException
@@ -46,7 +47,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
   }
 
   @Override
-  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
 
     request.async().method(method, (Entity) body, new InvocationCallback<Response>() {

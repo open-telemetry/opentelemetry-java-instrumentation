@@ -15,7 +15,8 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 
@@ -46,7 +47,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     Http.get(system).singleRequest(request, materializer).whenComplete {response, throwable ->
       if (throwable == null) {
         response.discardEntityBytes(materializer)

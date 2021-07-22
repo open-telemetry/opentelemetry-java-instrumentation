@@ -9,7 +9,8 @@ import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
@@ -49,7 +50,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
-  void sendRequestWithCallback(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     request.exchange().subscribe({
       requestResult.complete(it.statusCode().value())
     }, {

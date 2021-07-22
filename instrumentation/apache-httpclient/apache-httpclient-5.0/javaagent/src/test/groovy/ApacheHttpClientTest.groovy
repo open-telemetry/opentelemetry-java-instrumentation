@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -64,7 +65,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
-  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     try {
       executeRequestWithCallback(request, uri) {
         it.close() // Make sure the connection is closed.

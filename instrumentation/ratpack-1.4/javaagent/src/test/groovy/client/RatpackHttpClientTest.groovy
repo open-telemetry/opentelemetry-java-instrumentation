@@ -10,7 +10,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
@@ -68,7 +69,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     exec.execute(Operation.of {
       internalSendRequest(client, method, uri, headers).result {result ->
         requestResult.complete({ result.value }, result.throwable)

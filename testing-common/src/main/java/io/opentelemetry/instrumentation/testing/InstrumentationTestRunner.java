@@ -5,12 +5,20 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static org.awaitility.Awaitility.await;
+
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * This interface defines a common set of operations for interaction with OpenTelemetry SDK and
@@ -33,6 +41,29 @@ public interface InstrumentationTestRunner {
   List<MetricData> getExportedMetrics();
 
   boolean forceFlushCalled();
+
+  /** Return a list of all captured traces, where each trace is a sorted list of spans. */
+  default List<List<SpanData>> traces() {
+    return TelemetryDataUtil.groupTraces(getExportedSpans());
+  }
+
+  default List<List<SpanData>> waitForTraces(int numberOfTraces) {
+    try {
+      return TelemetryDataUtil.waitForTraces(
+          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
+    } catch (TimeoutException | InterruptedException e) {
+      throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
+    }
+  }
+
+  default void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
+    await()
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> traces = waitForTraces(assertions.length);
+              TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
+            });
+  }
 
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code

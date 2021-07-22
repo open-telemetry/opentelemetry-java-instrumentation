@@ -5,19 +5,19 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
+import io.opentelemetry.instrumentation.testing.AgentTestRunner;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public final class HttpClientLibraryInstrumentationExtension extends InstrumentationExtension {
+public final class HttpClientAgentInstrumentationExtension extends InstrumentationExtension {
 
   public static InstrumentationExtension create() {
-    return new HttpClientLibraryInstrumentationExtension();
+    return new HttpClientAgentInstrumentationExtension();
   }
 
   private final HttpClientTestServer server;
 
-  private HttpClientLibraryInstrumentationExtension() {
-    super(LibraryTestRunner.instance());
+  private HttpClientAgentInstrumentationExtension() {
+    super(AgentTestRunner.instance());
 
     server = new HttpClientTestServer(getOpenTelemetry());
   }

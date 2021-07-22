@@ -8,7 +8,8 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
@@ -41,7 +42,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     request.rxSend()
       .subscribe(new io.reactivex.functions.Consumer<HttpResponse<?>>() {
         @Override

@@ -12,6 +12,7 @@ import com.squareup.okhttp.Response
 import com.squareup.okhttp.internal.http.HttpMethod
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 
@@ -39,7 +40,7 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     client.newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Request req, IOException e) {

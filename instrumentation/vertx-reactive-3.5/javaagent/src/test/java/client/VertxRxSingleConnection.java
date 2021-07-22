@@ -5,7 +5,7 @@
 
 package client;
 
-import io.opentelemetry.instrumentation.test.base.SingleConnection;
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;

@@ -7,7 +7,7 @@ package client
 
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 import org.springframework.http.HttpMethod

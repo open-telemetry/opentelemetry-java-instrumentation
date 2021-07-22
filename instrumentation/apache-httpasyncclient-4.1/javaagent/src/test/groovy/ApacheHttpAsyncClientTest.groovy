@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CancellationException
 import org.apache.http.HttpResponse
@@ -46,7 +47,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     client.execute(request, new FutureCallback<HttpResponse>() {
       @Override
       void completed(HttpResponse httpResponse) {

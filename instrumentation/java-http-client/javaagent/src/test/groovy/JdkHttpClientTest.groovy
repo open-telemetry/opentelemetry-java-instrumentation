@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -38,7 +39,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
       .whenComplete { response, throwable ->
         requestResult.complete({ response.statusCode() }, throwable?.getCause())

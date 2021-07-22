@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0
 
 import io.netty.channel.ChannelOption
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.SingleConnection
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 import reactor.netty.http.client.HttpClient

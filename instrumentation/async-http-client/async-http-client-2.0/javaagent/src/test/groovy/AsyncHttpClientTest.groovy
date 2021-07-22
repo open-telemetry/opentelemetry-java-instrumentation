@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.Dsl
@@ -40,7 +41,7 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {

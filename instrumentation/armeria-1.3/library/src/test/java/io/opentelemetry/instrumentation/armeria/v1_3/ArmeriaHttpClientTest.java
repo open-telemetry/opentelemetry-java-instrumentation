@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.client.WebClientBuilder;
@@ -15,5 +20,23 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
         ArmeriaTracing.create(testing.getOpenTelemetry()).newClientDecorator());
+  }
+
+  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+  @Override
+  protected boolean testWithClientParent() {
+    return false;
+  }
+
+  // Agent users have automatic propagation through executor instrumentation, but library users
+  // should do manually using Armeria patterns.
+  @Override
+  protected boolean testCallbackWithParent() {
+    return false;
+  }
+
+  @Override
+  protected boolean testErrorWithCallback() {
+    return false;
   }
 }

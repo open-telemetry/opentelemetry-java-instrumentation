@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.testing.junit;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -21,12 +26,12 @@ import java.net.URI;
 import java.security.KeyStore;
 import javax.net.ssl.KeyManagerFactory;
 
-final class HttpClientTestServer extends ServerExtension {
+public final class HttpClientTestServer extends ServerExtension {
 
   private final OpenTelemetry openTelemetry;
   private final Tracer tracer;
 
-  HttpClientTestServer(OpenTelemetry openTelemetry) {
+  public HttpClientTestServer(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
     tracer = openTelemetry.getTracer("test");
   }
@@ -37,8 +42,7 @@ final class HttpClientTestServer extends ServerExtension {
     keystore.load(
         new FileInputStream(System.getProperty("javax.net.ssl.trustStore")),
         "testing".toCharArray());
-    KeyManagerFactory kmf =
-        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     kmf.init(keystore, "testing".toCharArray());
 
     sb.http(0)
@@ -78,15 +82,12 @@ final class HttpClientTestServer extends ServerExtension {
               }
               return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized");
             })
-        .service(
-            "/to-secured", (ctx, req) -> HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured"))
+        .service("/to-secured", (ctx, req) -> HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured"))
         .decorator(
             (delegate, ctx, req) -> {
-              for (String field :
-                  openTelemetry.getPropagators().getTextMapPropagator().fields()) {
+              for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
                 if (req.headers().getAll(field).size() > 1) {
-                  throw new AssertionError(
-                      (Object) ("more than one " + field + " header present"));
+                  throw new AssertionError((Object) ("more than one " + field + " header present"));
                 }
               }
               SpanBuilder span =

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import okhttp3.Call
@@ -48,7 +49,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     client.newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Call call, IOException e) {
