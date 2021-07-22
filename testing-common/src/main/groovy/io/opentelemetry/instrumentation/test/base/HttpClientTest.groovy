@@ -766,7 +766,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
         serverSpan(it, 2, span(1))
       }
