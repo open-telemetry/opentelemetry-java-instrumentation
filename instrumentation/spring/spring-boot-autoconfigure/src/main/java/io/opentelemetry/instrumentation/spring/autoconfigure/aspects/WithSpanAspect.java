@@ -12,10 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -49,7 +46,6 @@ public class WithSpanAspect {
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.newBuilder(JoinPointRequest::method)
-                    .setCache(Cache.newBuilder().setWeakKeys().build())
                     .setParameterAttributeNamesExtractor(parameterAttributeNamesExtractor)
                     .newMethodSpanAttributesExtractor(JoinPointRequest::args))
             .newInstrumenter(WithSpanAspect::spanKind);
@@ -78,32 +74,15 @@ public class WithSpanAspect {
     }
 
     Context context = instrumenter.start(parentContext, request);
+    AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
+        AsyncOperationEndSupport.create(
+            instrumenter, Object.class, request.method().getReturnType());
     try (Scope ignored = context.makeCurrent()) {
-      return end(context, request, pjp.proceed(), null);
+      Object response = pjp.proceed();
+      return asyncOperationEndSupport.asyncEnd(context, request, response, null);
     } catch (Throwable t) {
-      end(context, request, null, t);
+      asyncOperationEndSupport.asyncEnd(context, request, null, t);
       throw t;
     }
-  }
-
-  private Object end(Context context, JoinPointRequest request, Object response, Throwable error) {
-
-    if (error == null) {
-      Class<?> returnType = request.method().getReturnType();
-
-      if (returnType.isInstance(response)) {
-        AsyncOperationEndStrategy asyncOperationEndStrategy =
-            AsyncOperationEndStrategies.instance().resolveStrategy(returnType);
-
-        if (asyncOperationEndStrategy != null) {
-          AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
-              AsyncOperationEndSupport.create(instrumenter, Object.class, returnType);
-
-          return asyncOperationEndSupport.asyncEnd(context, request, response, null);
-        }
-      }
-    }
-    instrumenter.end(context, request, response, error);
-    return response;
   }
 }

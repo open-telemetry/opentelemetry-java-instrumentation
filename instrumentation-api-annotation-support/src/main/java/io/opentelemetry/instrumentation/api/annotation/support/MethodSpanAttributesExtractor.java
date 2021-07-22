@@ -32,8 +32,8 @@ public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   MethodSpanAttributesExtractor(MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     this.methodExtractor = builder.methodExtractor;
     this.methodArgumentsExtractor = builder.methodArgumentsExtractor;
-    this.cache = builder.cache;
     this.binder = new MethodSpanAttributeBinder(builder.parameterAttributeNamesExtractor);
+    this.cache = Cache.newBuilder().setWeakKeys().build();
   }
 
   @Override
