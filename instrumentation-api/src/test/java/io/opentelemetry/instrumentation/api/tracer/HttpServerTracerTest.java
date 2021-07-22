@@ -25,7 +25,7 @@ public class HttpServerTracerTest {
 
   @Test
   public void extractForwardedWithPort() {
-    assertEquals("1.1.1.1", HttpServerTracer.extractForwarded("for=1.1.1.1:2222"));
+    assertEquals("1.1.1.1", HttpServerTracer.extractForwarded("for=\"1.1.1.1:2222\""));
   }
 
   @Test
@@ -81,7 +81,7 @@ public class HttpServerTracerTest {
 
   @Test
   public void extractForwardedMultipleWithPort() {
-    assertEquals("1.1.1.1", HttpServerTracer.extractForwarded("for=1.1.1.1:2222;for=1.2.3.4"));
+    assertEquals("1.1.1.1", HttpServerTracer.extractForwarded("for=\"1.1.1.1:2222\";for=1.2.3.4"));
   }
 
   @Test
@@ -111,7 +111,8 @@ public class HttpServerTracerTest {
   public void extractForwardedMixedSplitterWithPort() {
     assertEquals(
         "1.1.1.1",
-        HttpServerTracer.extractForwarded("test=abcd; by=1.2.3.4, for=1.1.1.1:2222;for=1.2.3.4"));
+        HttpServerTracer.extractForwarded(
+            "test=abcd; by=1.2.3.4, for=\"1.1.1.1:2222\";for=1.2.3.4"));
   }
 
   @Test

@@ -247,6 +247,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   //  "Note that IPv6 addresses may not be quoted in
   //   X-Forwarded-For and may not be enclosed by square brackets, but they
   //   are quoted and enclosed in square brackets in Forwarded"
+  // and also (applying to Forwarded but not X-Forwarded-For)
+  //  "It is important to note that an IPv6 address and any nodename with
+  //   node-port specified MUST be quoted, since ':' is not an allowed
+  //   character in 'token'."
   private static String extractIpAddress(String forwarded, int start) {
     if (forwarded.length() == start) {
       return null;
