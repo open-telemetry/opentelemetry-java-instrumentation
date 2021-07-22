@@ -25,6 +25,7 @@ import spock.lang.Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
+  protected static final READ_TIMEOUT_MS = 2000
 
   /**
    * Build the request to be passed to
@@ -346,6 +347,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testRemoteConnection())
     expect:
     junitTest.connectionErrorNonRoutableAddress()
+  }
+
+  def "read timed out"() {
+    assumeTrue(testReadTimeout())
+    expect:
+    junitTest.readTimedOut()
   }
 
   // IBM JVM has different protocol support for TLS

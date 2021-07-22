@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -370,22 +371,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               span ->
                   assertClientSpan(span, uri, method, responseCodeOnRedirectError())
                       .hasParentSpanId(SpanId.getInvalid())
-                      // Workaround until release of
-                      // https://github.com/open-telemetry/opentelemetry-java/pull/3409
-                      // in 1.5
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  clientError.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  clientError.getMessage()))));
+                      .hasEventsSatisfyingExactly(hasException(clientError)));
           for (int i = 0; i < maxRedirects(); i++) {
             assertions.add(
                 span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
@@ -548,35 +534,11 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       // Workaround until release of
                       // https://github.com/open-telemetry/opentelemetry-java/pull/3409
                       // in 1.5
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))),
+                      .hasEventsSatisfyingExactly(hasException(ex)),
               span ->
                   assertClientSpan(span, uri, method, null)
                       .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  clientError.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  clientError.getMessage()))));
+                      .hasEventsSatisfyingExactly(hasException(clientError)));
         });
   }
 
@@ -619,19 +581,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               span ->
                   assertClientSpan(span, uri, method, null)
                       .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  clientError.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  clientError.getMessage()))),
+                      .hasEventsSatisfyingExactly(hasException(clientError)),
               span ->
                   span.hasName("callback")
                       .hasKind(SpanKind.INTERNAL)
@@ -668,43 +618,16 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       .hasKind(SpanKind.INTERNAL)
                       .hasParentSpanId(SpanId.getInvalid())
                       .hasStatus(StatusData.error())
-                      // Workaround until release of
-                      // https://github.com/open-telemetry/opentelemetry-java/pull/3409
-                      // in 1.5
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))),
+                      .hasEventsSatisfyingExactly(hasException(ex)),
               span ->
                   assertClientSpan(span, uri, method, null)
                       .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  clientError.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  clientError.getMessage()))));
+                      .hasEventsSatisfyingExactly(hasException(clientError)));
         });
   }
 
   @Test
-  void readTimeout() {
+  void readTimedOut() {
     assumeTrue(testReadTimeout());
 
     String method = "GET";
@@ -732,38 +655,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       .hasKind(SpanKind.INTERNAL)
                       .hasParentSpanId(SpanId.getInvalid())
                       .hasStatus(StatusData.error())
-                      // Workaround until release of
-                      // https://github.com/open-telemetry/opentelemetry-java/pull/3409
-                      // in 1.5
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  ex.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  ex.getMessage()))),
+                      .hasEventsSatisfyingExactly(hasException(ex)),
               span ->
                   assertClientSpan(span, uri, method, null)
                       .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          assertThat(attrs)
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_TYPE,
-                                                  clientError.getClass().getCanonicalName())
-                                              .containsEntry(
-                                                  SemanticAttributes.EXCEPTION_MESSAGE,
-                                                  clientError.getMessage()))));
+                      .hasEventsSatisfyingExactly(hasException(clientError)),
+              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(1).getSpanId()));
         });
   }
 
@@ -1229,6 +1126,25 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   protected boolean testErrorWithCallback() {
     return true;
+  }
+
+  // Workaround until release of
+  // https://github.com/open-telemetry/opentelemetry-java/pull/3409
+  // in 1.5
+  private static Consumer<EventDataAssert>[] hasException(Throwable exception) {
+    return Collections.<Consumer<EventDataAssert>>singletonList(
+            event ->
+                event
+                    .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                    .hasAttributesSatisfying(
+                        attrs ->
+                            assertThat(attrs)
+                                .containsEntry(
+                                    SemanticAttributes.EXCEPTION_TYPE,
+                                    exception.getClass().getCanonicalName())
+                                .containsEntry(
+                                    SemanticAttributes.EXCEPTION_MESSAGE, exception.getMessage())))
+        .toArray(new Consumer[0]);
   }
 
   private int doRequest(String method, URI uri) {
