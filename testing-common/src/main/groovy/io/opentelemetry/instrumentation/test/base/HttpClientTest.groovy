@@ -183,6 +183,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     @Override
+    protected boolean testReadTimeout() {
+      return HttpClientTest.this.testReadTimeout()
+    }
+
+    @Override
     protected boolean testHttps() {
       return HttpClientTest.this.testHttps()
     }
@@ -445,6 +450,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   boolean testRemoteConnection() {
     true
+  }
+
+  boolean testReadTimeout() {
+    false
   }
 
   boolean testHttps() {

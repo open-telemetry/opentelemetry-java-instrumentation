@@ -16,6 +16,9 @@ class RatpackForkedHttpClientTest extends RatpackHttpClientTest {
     def resp = client.request(uri) { spec ->
       // Connect timeout for the whole client was added in 1.5 so we need to add timeout for each request
       spec.connectTimeout(Duration.ofSeconds(2))
+      if (uri.getPath() == "/read-timeout") {
+        spec.readTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
+      }
       spec.method(method)
       spec.headers { headersSpec ->
         headers.entrySet().each {

@@ -24,6 +24,7 @@ import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExt
 import java.io.FileInputStream;
 import java.net.URI;
 import java.security.KeyStore;
+import java.time.Duration;
 import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
@@ -83,6 +84,10 @@ public final class HttpClientTestServer extends ServerExtension {
               return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized");
             })
         .service("/to-secured", (ctx, req) -> HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured"))
+        .service(
+            "/read-timeout",
+            (ctx, req) ->
+                HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(20)))
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {

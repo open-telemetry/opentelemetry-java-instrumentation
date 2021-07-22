@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.timeout.ReadTimeoutHandler
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -49,11 +50,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   @Shared
   private Bootstrap httpsBootstrap = buildBootstrap(true)
 
+  @Shared
+  private Bootstrap readTimeoutBootstrap = buildBootstrap(false, true)
+
   def cleanupSpec() {
     eventLoopGroup?.shutdownGracefully()
   }
 
-  Bootstrap buildBootstrap(boolean https) {
+  Bootstrap buildBootstrap(boolean https, boolean readTimeout = false) {
     Bootstrap bootstrap = new Bootstrap()
     bootstrap.group(eventLoopGroup)
       .channel(getChannelClass())
@@ -65,6 +69,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           if (https) {
             SslContext sslContext = SslContextBuilder.forClient().build()
             pipeline.addLast(sslContext.newHandler(socketChannel.alloc()))
+          }
+          if (readTimeout) {
+            pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
           }
           pipeline.addLast(new HttpClientCodec())
         }
@@ -82,7 +89,12 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   Bootstrap getBootstrap(URI uri) {
-    return uri.getScheme() == "https" ? httpsBootstrap : bootstrap
+    if (uri.getScheme() == "https") {
+      return httpsBootstrap
+    } else if (uri.getPath() == "/read-timeout") {
+      return readTimeoutBootstrap
+    }
+    return bootstrap
   }
 
   @Override
@@ -143,6 +155,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   @Override
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   def "test connection reuse and second request with lazy execute"() {

@@ -128,6 +128,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return Duration.ofSeconds(5);
   }
 
+  protected final Duration readTimeout() {
+    return Duration.ofSeconds(2);
+  }
+
   private InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
@@ -699,6 +703,70 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         });
   }
 
+  @Test
+  void readTimeout() {
+    assumeTrue(testReadTimeout());
+
+    String method = "GET";
+    URI uri = resolveAddress("/read-timeout");
+
+    Throwable thrown =
+        catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
+    final Throwable ex;
+    if (thrown instanceof ExecutionException) {
+      ex = thrown.getCause();
+    } else {
+      ex = thrown;
+    }
+    Throwable clientError = clientSpanError(uri, ex);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          // Workaroud until release of
+          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
+          // in 1.5
+          List<List<SpanData>> traces = testing.traces();
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("parent")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParentSpanId(SpanId.getInvalid())
+                      .hasStatus(StatusData.error())
+                      // Workaround until release of
+                      // https://github.com/open-telemetry/opentelemetry-java/pull/3409
+                      // in 1.5
+                      .hasEventsSatisfyingExactly(
+                          event ->
+                              event
+                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                  .hasAttributesSatisfying(
+                                      attrs ->
+                                          assertThat(attrs)
+                                              .containsEntry(
+                                                  SemanticAttributes.EXCEPTION_TYPE,
+                                                  ex.getClass().getCanonicalName())
+                                              .containsEntry(
+                                                  SemanticAttributes.EXCEPTION_MESSAGE,
+                                                  ex.getMessage()))),
+              span ->
+                  assertClientSpan(span, uri, method, null)
+                      .hasParentSpanId(traces.get(0).get(0).getSpanId())
+                      .hasEventsSatisfyingExactly(
+                          event ->
+                              event
+                                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                  .hasAttributesSatisfying(
+                                      attrs ->
+                                          assertThat(attrs)
+                                              .containsEntry(
+                                                  SemanticAttributes.EXCEPTION_TYPE,
+                                                  clientError.getClass().getCanonicalName())
+                                              .containsEntry(
+                                                  SemanticAttributes.EXCEPTION_MESSAGE,
+                                                  clientError.getMessage()))));
+        });
+  }
+
   @DisabledIfSystemProperty(
       named = "java.vm.name",
       matches = ".*IBM J9 VM.*",
@@ -1131,6 +1199,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   protected boolean testConnectionFailure() {
     return true;
+  }
+
+  protected boolean testReadTimeout() {
+    return false;
   }
 
   protected boolean testRemoteConnection() {
