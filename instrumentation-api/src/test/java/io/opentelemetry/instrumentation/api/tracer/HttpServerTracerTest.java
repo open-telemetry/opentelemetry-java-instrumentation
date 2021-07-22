@@ -20,7 +20,7 @@ public class HttpServerTracerTest {
   public void extractForwardedIpv6() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
-        HttpServerTracer.extractForwarded("for=[1111:1111:1111:1111:1111:1111:1111:1111]"));
+        HttpServerTracer.extractForwarded("for=\"[1111:1111:1111:1111:1111:1111:1111:1111]\""));
   }
 
   @Test
@@ -32,7 +32,8 @@ public class HttpServerTracerTest {
   public void extractForwardedIpv6WithPort() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
-        HttpServerTracer.extractForwarded("for=[1111:1111:1111:1111:1111:1111:1111:1111]:2222"));
+        HttpServerTracer.extractForwarded(
+            "for=\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\""));
   }
 
   @Test
@@ -75,7 +76,7 @@ public class HttpServerTracerTest {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwarded(
-            "for=[1111:1111:1111:1111:1111:1111:1111:1111];for=1.2.3.4"));
+            "for=\"[1111:1111:1111:1111:1111:1111:1111:1111]\";for=1.2.3.4"));
   }
 
   @Test
@@ -88,7 +89,7 @@ public class HttpServerTracerTest {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwarded(
-            "for=[1111:1111:1111:1111:1111:1111:1111:1111]:2222;for=1.2.3.4"));
+            "for=\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\";for=1.2.3.4"));
   }
 
   @Test
@@ -103,7 +104,7 @@ public class HttpServerTracerTest {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwarded(
-            "test=abcd; by=1.2.3.4, for=[1111:1111:1111:1111:1111:1111:1111:1111];for=1.2.3.4"));
+            "test=abcd; by=1.2.3.4, for=\"[1111:1111:1111:1111:1111:1111:1111:1111]\";for=1.2.3.4"));
   }
 
   @Test
@@ -118,7 +119,7 @@ public class HttpServerTracerTest {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwarded(
-            "test=abcd; by=1.2.3.4, for=[1111:1111:1111:1111:1111:1111:1111:1111]:2222;for=1.2.3.4"));
+            "test=abcd; by=1.2.3.4, for=\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\";for=1.2.3.4"));
   }
 
   @Test
@@ -130,7 +131,21 @@ public class HttpServerTracerTest {
   public void extractForwardedForIpv6() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
-        HttpServerTracer.extractForwardedFor("[1111:1111:1111:1111:1111:1111:1111:1111]]"));
+        HttpServerTracer.extractForwardedFor("\"[1111:1111:1111:1111:1111:1111:1111:1111]\""));
+  }
+
+  @Test
+  public void extractForwardedForIpv6Unquoted() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor("[1111:1111:1111:1111:1111:1111:1111:1111]"));
+  }
+
+  @Test
+  public void extractForwardedForIpv6Unbracketed() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor("1111:1111:1111:1111:1111:1111:1111:1111"));
   }
 
   @Test
@@ -140,6 +155,13 @@ public class HttpServerTracerTest {
 
   @Test
   public void extractForwardedForIpv6WithPort() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor("\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\""));
+  }
+
+  @Test
+  public void extractForwardedForIpv6UnquotedWithPort() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwardedFor("[1111:1111:1111:1111:1111:1111:1111:1111]:2222"));
@@ -159,7 +181,22 @@ public class HttpServerTracerTest {
   public void extractForwardedForMultipleIpv6() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor(
+            "\"[1111:1111:1111:1111:1111:1111:1111:1111]\",1.2.3.4"));
+  }
+
+  @Test
+  public void extractForwardedForMultipleIpv6Unquoted() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwardedFor("[1111:1111:1111:1111:1111:1111:1111:1111],1.2.3.4"));
+  }
+
+  @Test
+  public void extractForwardedForMultipleIpv6Unbracketed() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor("1111:1111:1111:1111:1111:1111:1111:1111,1.2.3.4"));
   }
 
   @Test
@@ -169,6 +206,14 @@ public class HttpServerTracerTest {
 
   @Test
   public void extractForwardedForMultipleIpv6WithPort() {
+    assertEquals(
+        "1111:1111:1111:1111:1111:1111:1111:1111",
+        HttpServerTracer.extractForwardedFor(
+            "\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\",1.2.3.4"));
+  }
+
+  @Test
+  public void extractForwardedForMultipleIpv6UnquotedWithPort() {
     assertEquals(
         "1111:1111:1111:1111:1111:1111:1111:1111",
         HttpServerTracer.extractForwardedFor(

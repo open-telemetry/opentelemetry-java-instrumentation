@@ -243,23 +243,30 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     return extractIpAddress(forwarded, 0);
   }
 
+  // from https://www.rfc-editor.org/rfc/rfc7239
+  //  "Note that IPv6 addresses may not be quoted in
+  //   X-Forwarded-For and may not be enclosed by square brackets, but they
+  //   are quoted and enclosed in square brackets in Forwarded"
   private static String extractIpAddress(String forwarded, int start) {
     if (forwarded.length() == start) {
       return null;
     }
+    if (forwarded.charAt(start) == '"') {
+      return extractIpAddress(forwarded, start + 1);
+    }
     if (forwarded.charAt(start) == '[') {
-      // from https://www.rfc-editor.org/rfc/rfc7239
-      // "note that an IPv6 address is always enclosed in square brackets"
-      int end = forwarded.indexOf(']', start);
-      if (end <= start) {
+      int end = forwarded.indexOf(']', start + 1);
+      if (end == -1) {
         return null;
       }
       return forwarded.substring(start + 1, end);
     }
+    boolean inIpv4 = false;
     for (int i = start; i < forwarded.length() - 1; i++) {
       char c = forwarded.charAt(i);
-      // ok to check ':' (for start of port) because ipv6 case is checked above
-      if (c == ',' || c == ';' || c == ':') {
+      if (c == '.') {
+        inIpv4 = true;
+      } else if (c == ',' || c == ';' || c == '"' || (inIpv4 && c == ':')) {
         if (i == start) { // empty string
           return null;
         }
