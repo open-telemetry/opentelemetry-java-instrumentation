@@ -99,7 +99,7 @@ final class ApacheHttpClientRequest {
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    logger.debug("unexpected http protocol version: " + protocolVersion);
+    logger.debug("unexpected http protocol version: {}", protocolVersion);
     return null;
   }
 
