@@ -28,6 +28,9 @@ dependencies {
 
   api("org.assertj:assertj-core")
 
+  // Needs to be api dependency due to Spock restriction.
+  api("org.awaitility:awaitility")
+
   compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry:opentelemetry-proto") {
@@ -40,7 +43,6 @@ dependencies {
   implementation("net.bytebuddy:byte-buddy-agent")
   implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
-  implementation("org.awaitility:awaitility")
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")

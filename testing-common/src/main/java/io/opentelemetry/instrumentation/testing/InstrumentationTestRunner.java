@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import org.awaitility.core.ConditionTimeoutException;
 
 /**
  * This interface defines a common set of operations for interaction with OpenTelemetry SDK and
@@ -57,12 +58,21 @@ public interface InstrumentationTestRunner {
   }
 
   default void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
-    await()
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = waitForTraces(assertions.length);
-              TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
-            });
+    try {
+      await()
+          .untilAsserted(
+              () -> {
+                List<List<SpanData>> traces = waitForTraces(assertions.length);
+                TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
+              });
+    } catch (ConditionTimeoutException e) {
+      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+      // Instead, just assert one more time on the test thread, which will fail with a better stack
+      // trace.
+      // TODO(anuraaga): There is probably a better way to do this.
+      List<List<SpanData>> traces = waitForTraces(assertions.length);
+      TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
+    }
   }
 
   /**
