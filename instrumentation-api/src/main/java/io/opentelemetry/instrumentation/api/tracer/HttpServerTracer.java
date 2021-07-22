@@ -206,7 +206,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // try Forwarded
     String forwarded = requestHeader(request, "Forwarded");
     if (forwarded != null) {
-      forwarded = extractForwardedFor(forwarded);
+      forwarded = extractForwarded(forwarded);
       if (forwarded != null) {
         return forwarded;
       }
@@ -215,12 +215,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // try X-Forwarded-For
     forwarded = requestHeader(request, "X-Forwarded-For");
     if (forwarded != null) {
-      // may be split by ,
-      int endIndex = forwarded.indexOf(',');
-      if (endIndex > 0) {
-        forwarded = forwarded.substring(0, endIndex);
-      }
-      if (!forwarded.isEmpty()) {
+      forwarded = extractForwardedFor(forwarded);
+      if (forwarded != null) {
         return forwarded;
       }
     }
@@ -230,7 +226,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   // VisibleForTesting
-  static String extractForwardedFor(String forwarded) {
+  static String extractForwarded(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
       return null;
@@ -239,9 +235,31 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     if (start >= forwarded.length() - 1) { // the value after for= must not be empty
       return null;
     }
+    return extractIpAddress(forwarded, start);
+  }
+
+  // VisibleForTesting
+  static String extractForwardedFor(String forwarded) {
+    return extractIpAddress(forwarded, 0);
+  }
+
+  private static String extractIpAddress(String forwarded, int start) {
+    if (forwarded.length() == start) {
+      return null;
+    }
+    if (forwarded.charAt(start) == '[') {
+      // from https://www.rfc-editor.org/rfc/rfc7239
+      // "note that an IPv6 address is always enclosed in square brackets"
+      int end = forwarded.indexOf(']', start);
+      if (end <= start) {
+        return null;
+      }
+      return forwarded.substring(start + 1, end);
+    }
     for (int i = start; i < forwarded.length() - 1; i++) {
       char c = forwarded.charAt(i);
-      if (c == ',' || c == ';') {
+      // ok to check ':' (for start of port) because ipv6 case is checked above
+      if (c == ',' || c == ';' || c == ':') {
         if (i == start) { // empty string
           return null;
         }
