@@ -12,5 +12,5 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jws-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 }
