@@ -983,7 +983,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   } else {
                     // https://192.0.2.1/ where some instrumentation may have set this to 443, but
                     // not all.
-                    assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, 443L);
+                    assertThat(attrs)
+                        .hasEntrySatisfying(
+                            SemanticAttributes.NET_PEER_PORT,
+                            port -> {
+                              // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
+                              if (port > 0) {
+                                assertThat(port).isEqualTo(443);
+                              }
+                            });
                   }
                 }
               } else {

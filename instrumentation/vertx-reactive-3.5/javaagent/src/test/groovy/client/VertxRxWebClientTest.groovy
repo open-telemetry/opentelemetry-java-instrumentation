@@ -6,7 +6,6 @@
 package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.SingleConnection
