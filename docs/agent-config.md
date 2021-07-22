@@ -52,6 +52,16 @@ You can provide a path to agent configuration file by setting the corresponding 
 |--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
 | `otel.javaagent.configuration-file` | `OTEL_JAVAAGENT_CONFIGURATION_FILE` | Path to valid Java properties file which contains the javaagent configuration.|
 
+### Extensions
+
+You can enable [extensions](../examples/extension/README.md) as separate files by setting the corresponding property.
+
+| System property                      | Environment variable                 | Description                                                                      |
+|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
+| `otel.javaagent.experimental.extensions` | `OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS` | Path to a an extension jar file |
+
+
+
 
 ## Peer service name
 
