@@ -43,6 +43,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
       if (System.currentTimeMillis() > startupDeadline) {
         throw new TimeoutException("Timed out waiting for server startup")
       }
+      Thread.sleep(1000)
     }
 
     return testServer
