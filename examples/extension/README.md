@@ -35,11 +35,11 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 * Custom `SpanExporter`: [DemoSpanExporter](src/main/java/com/example/javaagent/DemoSpanExporter.java)
 * Additional instrumentation: [DemoServlet3InstrumentationModule](src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java)
 
-## Use cases for extensions
+## Sample use cases
 
 Extensions are designed to override or customize the instrumentation provided by the upstream agent without having to create a new OpenTelemetry distribution or alter the agent code in any way.
 
-Consider an instrumented database client that creates a span per database call and extracts data from the database connection to provide span attributes. The following are all use cases for that scenario that can be solved by using extensions.
+Consider an instrumented database client that creates a span per database call and extracts data from the database connection to provide span attributes. The following are sample use cases for that scenario that can be solved by using extensions.
 
 ### "I don't want this span at all"
 
