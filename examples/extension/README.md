@@ -6,7 +6,7 @@ The contents in this folder demonstrate how to create an extension for the OpenT
 
 > Read both the source code and the Gradle build script, as they contain documentation that explains the purpose of all the major components.
 
-## Build and execute extension files
+## Build and add extensions
 
 To build this extension project, run `./gradlew build`. You can find the resulting jar file in `build/libs/`. 
 
@@ -22,7 +22,7 @@ To add the extension to the instrumentation agent:
      ```
 ## Embed extensions in the OpenTelemetry Agent
 
-To simplify deployment, you can embed extensions files into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.experimental.extensions` command line option.
+To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.experimental.extensions` command line option.
 
 For more information, see the `extendedAgent` task in [build.gradle](build.gradle).
 ## Extensions examples
