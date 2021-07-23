@@ -61,4 +61,4 @@ Create an extension with a custom exporter or use the attribute filtering functi
 
 ### "I don't like the OTel spans. I want to modify them and their lifecycle"
 
-Create an extension that disable existing instrumentation and replace it with new one that injects `Advice` into the same (or a better) method as the original instrumentation. You can write your `Advice` for this and use the existing `Tracer` directly or extend it. As you have your own `Advice`, you can control which `Tracer` you use.
+Create an extension that disables existing instrumentation and replace it with new one that injects `Advice` into the same (or a better) method as the original instrumentation. You can write your `Advice` for this and use the existing `Tracer` directly or extend it. As you have your own `Advice`, you can control which `Tracer` you use.
