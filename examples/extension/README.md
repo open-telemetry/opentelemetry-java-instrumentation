@@ -12,7 +12,7 @@ To build this extension project, run `./gradlew build`. You can find the resulti
 
 To add the extension to the instrumentation agent:
 
-1. Copy the jar file to a host that is running an application you've instrumented using the OpenTelemetry Java instrumentation agent.
+1. Copy the jar file to a host that is running an application to which you've attached the OpenTelemetry Java instrumentation.
 2. Modify the runtime command to add the full path to the extension file. For example:
 
      ```bash
