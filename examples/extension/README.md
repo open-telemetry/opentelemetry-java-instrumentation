@@ -10,10 +10,10 @@ The contents in this folder demonstrate how to create an extension for the OpenT
 
 To build this extension project, run `./gradlew build`. You can find the resulting jar file in `build/libs/`. 
 
-To execute the extension:
+To add the extension to the instrumentation agent:
 
-1. Copy the jar file to a host that is running an application you've instrumented using the OpenTelemetry Java instrumentation agent.
-2. Modify the runtime command to add the full path to the extension file. For example:
+1. Copy the jar file to a host that is running an application to which you've attached the OpenTelemetry Java instrumentation.
+2. Modify the startup command to add the full path to the extension file. For example:
 
      ```bash
      java -javaagent:path/to/opentelemetry-javaagent-all.jar \
@@ -61,4 +61,4 @@ Create an extension with a custom exporter or use the attribute filtering functi
 
 ### "I don't like the OTel spans. I want to modify them and their lifecycle"
 
-Create an extension that disable existing instrumentation and replace it with new one that injects `Advice` into the same (or a better) method as the original instrumentation. You can write your `Advice` for this and use the existing `Tracer` directly or extend it. As you have your own `Advice`, you can control which `Tracer` you use.
+Create an extension that disables existing instrumentation and replace it with new one that injects `Advice` into the same (or a better) method as the original instrumentation. You can write your `Advice` for this and use the existing `Tracer` directly or extend it. As you have your own `Advice`, you can control which `Tracer` you use.
