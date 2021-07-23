@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef
 import io.opentelemetry.javaagent.extension.muzzle.Flag
 import io.opentelemetry.javaagent.extension.muzzle.Source
+import muzzle.HelperReferenceWrapperTestClasses
 import net.bytebuddy.jar.asm.Type
 import net.bytebuddy.pool.TypePool
 import spock.lang.Shared
