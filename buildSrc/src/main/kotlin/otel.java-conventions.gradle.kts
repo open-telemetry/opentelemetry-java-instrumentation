@@ -172,6 +172,21 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
+class HeavyTaskBuildService : BuildService<BuildServiceParameters.None?> {
+  override fun getParameters(): BuildServiceParameters.None? {
+    return null
+  }
+}
+// To limit number of concurrently running resource intensive tests add
+// tasks {
+//   named<Test>("test") {
+//     usesService(gradle.sharedServices.registrations.getByName("heavyTaskService").getService())
+//   }
+// }
+val heavyTaskService: Provider<HeavyTaskBuildService> = gradle.sharedServices.registerIfAbsent("heavyTaskService", HeavyTaskBuildService::class.java) {
+  maxParallelUsages.convention(2)
+}
+
 val testJavaVersion = gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
 val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
 tasks.withType<Test>().configureEach {

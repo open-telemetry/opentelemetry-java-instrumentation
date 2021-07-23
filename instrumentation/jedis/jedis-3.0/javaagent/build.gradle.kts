@@ -30,3 +30,9 @@ dependencies {
 
   testLibrary("redis.clients:jedis:3.+")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations.getByName("heavyTaskService").getService())
+  }
+}

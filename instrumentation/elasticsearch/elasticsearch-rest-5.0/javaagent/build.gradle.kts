@@ -40,5 +40,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    usesService(gradle.sharedServices.registrations.getByName("heavyTaskService").getService())
   }
 }
