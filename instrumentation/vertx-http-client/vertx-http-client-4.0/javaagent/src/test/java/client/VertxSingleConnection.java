@@ -5,10 +5,6 @@
 
 package client;
 
-import static io.opentelemetry.instrumentation.test.base.SingleConnection.REQUEST_ID_HEADER;
-
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.test.base.SingleConnection;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -44,9 +40,8 @@ public class VertxSingleConnection implements SingleConnection {
     headers.forEach(requestOptions::putHeader);
     Future<HttpClientRequest> request = httpClient.request(requestOptions);
 
-    Context ctx = Context.current();
     HttpClientResponse response =
-        request.compose(req -> send(ctx, req)).toCompletionStage().toCompletableFuture().get();
+        request.compose(req -> req.send()).toCompletionStage().toCompletableFuture().get();
 
     String responseId = response.getHeader(REQUEST_ID_HEADER);
     if (!requestId.equals(responseId)) {
@@ -54,15 +49,5 @@ public class VertxSingleConnection implements SingleConnection {
           String.format("Received response with id %s, expected %s", responseId, requestId));
     }
     return response.statusCode();
-  }
-
-  private static Future<HttpClientResponse> send(Context context, HttpClientRequest req) {
-    Context ctx = Context.current();
-    if (!ctx.equals(context)) {
-      System.err.println("fail");
-    }
-    try (Scope ignore = context.makeCurrent()) {
-      return req.send();
-    }
   }
 }
