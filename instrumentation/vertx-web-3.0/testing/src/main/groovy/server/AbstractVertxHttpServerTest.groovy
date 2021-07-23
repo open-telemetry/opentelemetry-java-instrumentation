@@ -18,17 +18,17 @@ import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
+abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()
     // Useful for debugging:
     // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
-      .setClusterPort(port))
+    )
     CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
-        .setConfig(new JsonObject().put(VertxWebServer.CONFIG_HTTP_SERVER_PORT, port))
+        .setConfig(new JsonObject().put(AbstractVertxWebServer.CONFIG_HTTP_SERVER_PORT, port))
         .setInstances(3)) { res ->
       if (!res.succeeded()) {
         throw new IllegalStateException("Cannot deploy server Verticle", res.cause())
@@ -40,9 +40,7 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrai
     return server
   }
 
-  protected Class<? extends AbstractVerticle> verticle() {
-    return VertxWebServer
-  }
+  protected abstract Class<? extends AbstractVerticle> verticle()
 
   @Override
   void stopServer(Vertx server) {
