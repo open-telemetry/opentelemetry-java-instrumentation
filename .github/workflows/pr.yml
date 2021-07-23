@@ -229,15 +229,12 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Local publish
-        run: ./gradlew publishToMavenLocal
-
       - name: Build distro
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build
         working-directory: examples/extension
 
   accept-pr:

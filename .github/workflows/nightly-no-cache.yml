@@ -149,11 +149,11 @@ jobs:
         run: ./gradlew publishToMavenLocal --no-build-cache
 
       - name: Build distro
-        run: ./gradlew build --stacktrace --no-build-cache
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --stacktrace --no-build-cache
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
         working-directory: examples/extension
 
   issue:
