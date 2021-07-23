@@ -12,7 +12,8 @@ plugins {
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.1.0-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.2.0-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "0.2.0-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -130,4 +131,19 @@ tasks {
   }
 
   assemble.dependsOn(shadowJar)
+}
+
+muzzle {
+  pass {
+    group.set("javax.servlet")
+    module.set("javax.servlet-api")
+    versions.set("[3.0,)")
+    assertInverse.set(true)
+  }
+  pass {
+    group.set("javax.servlet")
+    module.set("servlet-api")
+    versions.set("[2.2, 3.0)")
+    assertInverse.set(true)
+  }
 }
