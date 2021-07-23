@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.couchbase.client.core.env.CoreEnvironment;
-import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
+import com.couchbase.v3_1_6.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;

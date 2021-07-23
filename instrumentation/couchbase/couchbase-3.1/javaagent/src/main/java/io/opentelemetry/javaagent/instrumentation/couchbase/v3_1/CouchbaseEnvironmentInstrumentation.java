@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.couchbase.client.core.env.CoreEnvironment;
-import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
+import com.couchbase.v3_1.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -38,7 +38,7 @@ public class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation 
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
       builder.requestTracer(
           OpenTelemetryRequestTracer.wrap(
-              GlobalOpenTelemetry.getTracer("io.opentelemetry.javaagent.couchbase-3.0")));
+              GlobalOpenTelemetry.getTracer("io.opentelemetry.javaagent.couchbase-3.1")));
     }
   }
 }

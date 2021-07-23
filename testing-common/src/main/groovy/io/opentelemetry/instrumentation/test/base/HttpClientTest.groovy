@@ -58,6 +58,7 @@ import spock.lang.Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
+  protected static final READ_TIMEOUT_MS = 2000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
@@ -107,6 +108,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         }
         .service("/to-secured") {ctx, req ->
           HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
+        }
+        .service("/read-timeout") {ctx, req ->
+          Thread.sleep(READ_TIMEOUT_MS * 5)
+          ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
+          HttpResponse.of(headers.build(), HttpData.ofAscii("Should have timed out."))
         }
         .decorator(new DecoratingHttpServiceFunction() {
           @Override
@@ -745,6 +751,37 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method = "HEAD"
   }
 
+  def "read timeout"() {
+    given:
+    assumeTrue(testReadTimeout())
+    def uri = resolveAddress("/read-timeout")
+
+    when:
+    runWithSpan("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
+        serverSpan(it, 2, span(1))
+      }
+    }
+
+    where:
+    method = "GET"
+  }
+
   // IBM JVM has different protocol support for TLS
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
   def "test https request"() {
@@ -1065,6 +1102,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   boolean testConnectionFailure() {
     true
+  }
+
+  boolean testReadTimeout() {
+    false
   }
 
   boolean testRemoteConnection() {

@@ -12,7 +12,7 @@ plugins {
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
 
-  id "io.opentelemetry.javaagent.muzzle.generation" version "0.1.0-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.1.0-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
