@@ -10,7 +10,7 @@ The contents in this folder demonstrate how to create an extension for the OpenT
 
 To build this extension project, run `./gradlew build`. You can find the resulting jar file in `build/libs/`. 
 
-To execute the extension:
+To add the extension to the instrumentation agent:
 
 1. Copy the jar file to a host that is running an application you've instrumented using the OpenTelemetry Java instrumentation agent.
 2. Modify the runtime command to add the full path to the extension file. For example:
