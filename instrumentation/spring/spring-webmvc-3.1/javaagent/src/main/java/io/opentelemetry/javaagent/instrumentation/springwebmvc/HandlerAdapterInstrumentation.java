@@ -15,10 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -65,17 +63,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         return;
       }
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
-      // TODO (trask) is it important to check serverSpan != null here?
-      if (serverSpan != null) {
-        // Name the parent span based on the matching pattern
-        ServerNameUpdater.updateServerSpanName(parentContext, request);
-        // Now create a span for handler/controller execution.
-        context = handlerInstrumenter().start(parentContext, handler);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
-      }
+      // Name the parent span based on the matching pattern
+      ServerNameUpdater.updateServerSpanName(parentContext, request);
+      // Now create a span for handler/controller execution.
+      context = handlerInstrumenter().start(parentContext, handler);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
