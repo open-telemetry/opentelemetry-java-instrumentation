@@ -96,11 +96,6 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   }
 
   @Override
-  boolean testCausality() {
-    true
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new VertxRxCircuitBreakerSingleConnection(host, port, breaker)
   }
