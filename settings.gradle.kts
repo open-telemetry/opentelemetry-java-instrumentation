@@ -76,6 +76,8 @@ include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
+include(":testing-overhead-jmh")
+
 // smoke tests
 include(":smoke-tests")
 
