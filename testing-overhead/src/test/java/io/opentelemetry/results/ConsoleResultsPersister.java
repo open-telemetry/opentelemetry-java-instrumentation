@@ -6,6 +6,7 @@ package io.opentelemetry.results;
 
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -37,9 +38,12 @@ public class ConsoleResultsPersister implements ResultsPersister {
   private void display(Map<Agent, AppPerfResults> results, String pref,
       Function<AppPerfResults, String> vs) {
     System.out.printf("%-20s: ", pref);
-    results.keySet().stream().sorted().forEach(agent -> {
-      System.out.printf("%17s", vs.apply(results.get(agent)));
-    });
+    results.entrySet().stream()
+        .sorted(Comparator.comparing(e -> e.getKey().getName()))
+        .forEach(entry -> {
+          Agent agent = entry.getKey();
+          System.out.printf("%17s", vs.apply(results.get(agent)));
+      });
     System.out.println();
   }
 
