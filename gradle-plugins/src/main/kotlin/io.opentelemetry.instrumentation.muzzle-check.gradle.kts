@@ -63,11 +63,6 @@ tasks.register("printMuzzleReferences") {
   doLast {
     val instrumentationCL = createInstrumentationClassloader()
     MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
-//    val assertionMethod = instrumentationCL
-//      .loadClass(
-//        "io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil")
-//      .getMethod("printMuzzleReferences", ClassLoader::class.java)
-//    assertionMethod.invoke(null, instrumentationCL)
   }
 }
 
@@ -151,11 +146,6 @@ fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader
   return URLClassLoader(urls, parent)
 }
 
-fun createMuzzleCheckLoader(): ClassLoader {
-  logger.info("creating classpath for auto-tooling")
-  return classpathLoader(muzzleTooling, ClassLoader.getPlatformClassLoader())
-}
-
 fun newRepositorySystem(): RepositorySystem {
   return MavenRepositorySystemUtils.newServiceLocator().apply {
     addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
@@ -233,18 +223,6 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
       try {
         // find all instrumenters, get muzzle, and assert
         MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL, muzzleDirective.assertPass.get())
-//        val assertionMethod = instrumentationCL
-//          .loadClass("io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil")
-//          .getMethod(
-//            "assertInstrumentationMuzzled",
-//            ClassLoader::class.java,
-//            ClassLoader::class.java,
-//            Boolean::class.javaPrimitiveType)
-//        assertionMethod.invoke(
-//          null,
-//          instrumentationCL,
-//          userCL,
-//          muzzleDirective.assertPass.get())
       } finally {
         Thread.currentThread().contextClassLoader = ccl
       }
