@@ -44,8 +44,7 @@ public class PetClinicRestContainer {
     Optional<Path> agent = agentResolver.resolve(agentName);
 
     GenericContainer<?> container = new GenericContainer<>(
-//        DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-base:latest"))
-        DockerImageName.parse("temp-petclinic-base")) // Temp hack until we get the base image published
+        DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest"))
         .withNetwork(network)
         .withNetworkAliases("petclinic")
         .withLogConsumer(new Slf4jLogConsumer(logger))
