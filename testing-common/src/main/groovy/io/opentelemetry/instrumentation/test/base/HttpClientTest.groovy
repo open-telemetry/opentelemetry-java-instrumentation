@@ -246,7 +246,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
   }
 
-  def "basic #method request #url"() {
+  def "basic GET request #path"() {
     expect:
     junitTest.successfulGetRequest(path)
 
