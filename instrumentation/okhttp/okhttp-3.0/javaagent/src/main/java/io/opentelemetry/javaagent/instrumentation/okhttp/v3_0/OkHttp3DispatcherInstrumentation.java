@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -28,7 +29,9 @@ public class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("enqueue").and(takesArgument(0, named("okhttp3.RealCall$AsyncCall"))),
+        named("enqueue")
+            .or(named("enqueue$okhttp"))
+            .and(takesArgument(0, implementsInterface(named(Runnable.class.getName())))),
         OkHttp3DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
