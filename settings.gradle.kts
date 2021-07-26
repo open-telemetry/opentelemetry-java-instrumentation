@@ -76,8 +76,6 @@ include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
-include(":testing-overhead-jmh")
-
 // smoke tests
 include(":smoke-tests")
 
@@ -330,3 +328,4 @@ include(":instrumentation:wicket-8.0:javaagent")
 // benchmark
 include(":benchmark")
 include(":benchmark-e2e")
+include(":benchmark-overhead-jmh")
