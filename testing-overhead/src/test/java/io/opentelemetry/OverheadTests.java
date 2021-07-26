@@ -23,6 +23,9 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -66,7 +69,9 @@ public class OverheadTests {
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
     GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent, containerNamingConvention).build();
+    long start = System.currentTimeMillis();
     petclinic.start();
+    writeStartupTimeFile(agent, start);
 
     GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, containerNamingConvention).build();
     k6.start();
@@ -79,5 +84,11 @@ public class OverheadTests {
     }
 
     //TODO: Parse and aggregate the test results.
+  }
+
+  private void writeStartupTimeFile(Agent agent, long start) throws IOException {
+    long delta = System.currentTimeMillis() - start;
+    Path startupPath = localNamingConvention.startupDurationFile(agent);
+    Files.writeString(startupPath, String.valueOf(delta));
   }
 }
