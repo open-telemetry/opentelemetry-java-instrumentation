@@ -6,6 +6,7 @@
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static org.awaitility.Awaitility.await
 
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
@@ -15,11 +16,10 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.TimeUnit
 
 class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
-  private static final long STARTUP_TIMEOUT = 40 * 1000
 
   static closeAndWait(Closable closable) {
     if (closable != null) {
@@ -38,12 +38,9 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
     startupThread.setDaemon(true)
     startupThread.start()
 
-    long startupDeadline = System.currentTimeMillis() + STARTUP_TIMEOUT
-    while (!testServer.started()) {
-      if (System.currentTimeMillis() > startupDeadline) {
-        throw new TimeoutException("Timed out waiting for server startup")
-      }
-    }
+    await()
+      .atMost(1, TimeUnit.MINUTES)
+      .until({ testServer.started() })
 
     return testServer
   }

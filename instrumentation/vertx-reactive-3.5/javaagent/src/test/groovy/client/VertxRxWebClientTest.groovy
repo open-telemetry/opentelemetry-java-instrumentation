@@ -84,18 +84,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  boolean testCausality() {
-    true
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new VertxRxSingleConnection(host, port)
-  }
-
-  @Override
-  boolean testCallbackWithParent() {
-    //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
-    return false
   }
 }
