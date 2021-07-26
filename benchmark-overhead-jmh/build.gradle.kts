@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import me.champeau.jmh.JMHTask
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
@@ -27,8 +29,8 @@ tasks {
     }
   }
 
-  named<me.champeau.jmh.JMHTask>("jmh") {
-    val shadowTask = project(":javaagent").tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar").get()
+  named<JMHTask>("jmh") {
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
 
     // note: without an exporter, toSpanData() won't even be called
