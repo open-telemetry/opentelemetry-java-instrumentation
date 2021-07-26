@@ -5,7 +5,7 @@
 package io.opentelemetry.agents;
 
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -15,11 +15,9 @@ import okhttp3.Response;
 
 public class AgentResolver {
 
-  final static String OTEL_LATEST = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar";
-
   private final LatestAgentSnapshotResolver snapshotResolver = new LatestAgentSnapshotResolver();
 
-  public Optional<Path> resolve(Agent agent) throws IOException {
+  public Optional<Path> resolve(Agent agent) throws Exception {
     if(Agent.NONE.equals(agent)){
       return Optional.empty();
     }
@@ -27,13 +25,18 @@ public class AgentResolver {
       return snapshotResolver.resolve();
     }
     if(agent.hasUrl()){
-      return Optional.of(downloadLatestStable(agent));
+      return Optional.of(downloadAgent(agent));
     }
     throw new IllegalArgumentException("Unknown agent: " + agent);
   }
 
-  Path downloadLatestStable(Agent agent) throws IOException {
-    // TODO: Does this work for file urls as well?
+  Path downloadAgent(Agent agent) throws Exception {
+    if(agent.getUrl().getProtocol().equals("file")){
+      Path source = Path.of(agent.getUrl().toURI());
+      Path result = Paths.get(".", source.getFileName().toString());
+      Files.copy(source, result);
+      return result;
+    }
     Request request = new Request.Builder().url(agent.getUrl()).build();
     OkHttpClient client = new OkHttpClient();
     Response response = client.newCall(request).execute();

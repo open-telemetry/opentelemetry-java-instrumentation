@@ -4,7 +4,6 @@
  */
 package io.opentelemetry.containers;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +39,7 @@ public class PetClinicRestContainer {
     this.agent = agent;
   }
 
-  public GenericContainer<?> build() throws IOException {
+  public GenericContainer<?> build() throws Exception {
 
     Optional<Path> agentJar = agentResolver.resolve(this.agent);
 
