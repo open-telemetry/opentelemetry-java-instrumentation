@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import io.opentelemetry.agents.Agent;
 import io.opentelemetry.agents.AgentResolver;
 import io.opentelemetry.util.NamingConventions;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class PetClinicRestContainer {
         .withNetworkAliases("petclinic")
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withExposedPorts(PETCLINIC_PORT)
-        .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
+        .withFileSystemBind(".", "/results")
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .dependsOn(collector)
         .withCommand(buildCommandline(agentJar));

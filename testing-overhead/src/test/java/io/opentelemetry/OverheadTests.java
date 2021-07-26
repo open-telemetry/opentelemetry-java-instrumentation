@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -45,6 +47,14 @@ public class OverheadTests {
   @AfterAll
   static void tearDown() {
     collector.close();
+  }
+
+  @Test
+  @Disabled
+  void results() {
+    List<AppPerfResults> results = new ResultsCollector(namingConventions.local)
+        .collect(Configs.RELEASE.config);
+    new ConsoleResultsPersister().write(results);
   }
 
   @TestFactory
