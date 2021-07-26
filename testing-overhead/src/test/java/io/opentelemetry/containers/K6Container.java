@@ -4,6 +4,7 @@
  */
 package io.opentelemetry.containers;
 
+import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +19,10 @@ import java.time.Duration;
 public class K6Container {
   private static final Logger logger = LoggerFactory.getLogger(K6Container.class);
   private final Network network;
-  private final String agent;
+  private final Agent agent;
   private final TestConfig config;
 
-  public K6Container(Network network, String agent, TestConfig config) {
+  public K6Container(Network network, Agent agent, TestConfig config) {
     this.network = network;
     this.agent = agent;
     this.config = config;

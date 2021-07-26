@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.Configs;
 import io.opentelemetry.config.TestConfig;
 import io.opentelemetry.containers.CollectorContainer;
@@ -54,7 +55,7 @@ public class OverheadTests {
     });
   }
 
-  void runAppOnce(TestConfig config, String agent) throws Exception {
+  void runAppOnce(TestConfig config, Agent agent) throws Exception {
     GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent).build();
     petclinic.start();
 

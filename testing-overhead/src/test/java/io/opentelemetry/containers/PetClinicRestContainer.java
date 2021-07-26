@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import io.opentelemetry.agents.Agent;
 import io.opentelemetry.agents.AgentResolver;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -31,17 +32,17 @@ public class PetClinicRestContainer {
 
   private final Network network;
   private final Startable collector;
-  private final String agentName;
+  private final Agent agent;
 
-  public PetClinicRestContainer(Network network, Startable collector, String agentName) {
+  public PetClinicRestContainer(Network network, Startable collector, Agent agent) {
     this.network = network;
     this.collector = collector;
-    this.agentName = agentName;
+    this.agent = agent;
   }
 
   public GenericContainer<?> build() throws IOException {
 
-    Optional<Path> agent = agentResolver.resolve(agentName);
+    Optional<Path> agent = agentResolver.resolve(this.agent);
 
     GenericContainer<?> container = new GenericContainer<>(
         DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest"))
@@ -64,7 +65,7 @@ public class PetClinicRestContainer {
 
   @NotNull
   private String[] buildCommandline(Optional<Path> agent) {
-    String jfrFile = "petclinic-" + agentName + ".jfr";
+    String jfrFile = "petclinic-" + this.agent.getName() + ".jfr";
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
         "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename=/results/"

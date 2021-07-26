@@ -4,6 +4,7 @@
  */
 package io.opentelemetry.config;
 
+import io.opentelemetry.agents.Agent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +21,7 @@ public class TestConfig {
 
   private final String name;
   private final String description;
-  private final List<String> agents;
+  private final List<Agent> agents;
   private final int maxRequestRate;
   private final int concurrentConnections;
   private final int totalIterations;
@@ -42,8 +43,8 @@ public class TestConfig {
     return description;
   }
 
-  public List<String> getAgents() {
-    return agents;
+  public List<Agent> getAgents() {
+    return Collections.unmodifiableList(agents);
   }
 
   public int getMaxRequestRate() {
@@ -65,7 +66,7 @@ public class TestConfig {
   static class Builder {
     private String name;
     private String description;
-    private List<String> agents = new ArrayList<>();
+    private List<Agent> agents = new ArrayList<>();
     private int maxRequestRate = DEFAULT_MAX_REQUEST_RATE;
     private int concurrentConnections = DEFAULT_CONCURRENT_CONNECTIONS;
     private int totalIterations = DEFAULT_TOTAL_ITERATIONS;
@@ -80,7 +81,7 @@ public class TestConfig {
       return this;
     }
 
-    Builder withAgents(String ...agents) {
+    Builder withAgents(Agent ...agents) {
       this.agents.addAll(Arrays.asList(agents));
       return this;
     }

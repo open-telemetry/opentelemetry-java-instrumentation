@@ -4,6 +4,7 @@
  */
 package io.opentelemetry.config;
 
+import io.opentelemetry.agents.Agent;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -15,19 +16,19 @@ public enum Configs {
   RELEASE(TestConfig.builder()
       .name("release")
       .description("compares the latest stable release to no agent")
-      .withAgents("none", "release")
+      .withAgents(Agent.NONE, Agent.LATEST_RELEASE)
       .build()
   ),
   SNAPSHOT(TestConfig.builder()
       .name("snapshot")
       .description("compares the latest snapshot to no agent")
-      .withAgents("none", "snapshot")
+      .withAgents(Agent.NONE, Agent.LATEST_SNAPSHOT)
       .build()
   ),
   SNAPSHOT_REGRESSION(TestConfig.builder()
       .name("snapshot-regression")
       .description("compares the latest snapshot to the latest stable release")
-      .withAgents("release", "snapshot")
+      .withAgents(Agent.LATEST_RELEASE, Agent.LATEST_SNAPSHOT)
       .build()
   )
   ;

@@ -19,21 +19,22 @@ public class AgentResolver {
 
   private final LatestAgentSnapshotResolver snapshotResolver = new LatestAgentSnapshotResolver();
 
-  public Optional<Path> resolve(String agent) throws IOException {
-    switch (agent) {
-      case "none":
-        return Optional.empty();
-      case "release":
-        return Optional.of(downloadLatestStable());
-      case "snapshot":
-        return snapshotResolver.resolve();
+  public Optional<Path> resolve(Agent agent) throws IOException {
+    if(Agent.NONE.equals(agent)){
+      return Optional.empty();
     }
-    // TODO: Resolve explicit https:// and file:/// urls
+    if(Agent.LATEST_SNAPSHOT.equals(agent)){
+      return snapshotResolver.resolve();
+    }
+    if(agent.hasUrl()){
+      return Optional.of(downloadLatestStable(agent));
+    }
     throw new IllegalArgumentException("Unknown agent: " + agent);
   }
 
-  Path downloadLatestStable() throws IOException {
-    Request request = new Request.Builder().url(OTEL_LATEST).build();
+  Path downloadLatestStable(Agent agent) throws IOException {
+    // TODO: Does this work for file urls as well?
+    Request request = new Request.Builder().url(agent.getUrl()).build();
     OkHttpClient client = new OkHttpClient();
     Response response = client.newCall(request).execute();
     byte[] raw = response.body().bytes();
