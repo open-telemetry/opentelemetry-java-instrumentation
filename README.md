@@ -38,6 +38,7 @@
 * [Getting Started](#getting-started)
 * [Configuring the Agent](#configuring-the-agent)
 * [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
+* [Creating agent extensions](#creating-agent-extensions)
 * [Manually instrumenting](#manually-instrumenting)
 * [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
@@ -107,6 +108,10 @@ a majority of the most popular [application servers](docs/supported-libraries.md
 [Click here to see the full list](docs/supported-libraries.md) and to learn more about
 [disabled instrumentation](docs/supported-libraries.md#disabled-instrumentations)
 and how to [suppress unwanted instrumentation](docs/suppressing-instrumentation.md).
+
+## Creating agent extensions
+
+[Extensions](examples/extension/README.md) add new features and capabilities to the agent without having to create a separate distribution or to fork this repository. For example, you can create custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a single jar file.
 
 ## Manually instrumenting
 
