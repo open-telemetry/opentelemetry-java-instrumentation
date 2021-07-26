@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.gradle.muzzle
+package io.opentelemetry.javaagent.muzzle
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import javax.inject.Inject
 
-@Deprecated("Should be removed when we start using external muzzle check plugin")
 abstract class MuzzleExtension @Inject constructor(private val objectFactory: ObjectFactory) {
 
   internal abstract val directives: ListProperty<MuzzleDirective>

@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;

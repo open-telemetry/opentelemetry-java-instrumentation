@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.matcher;
+package io.opentelemetry.javaagent.muzzle.matcher;
 
 import static java.lang.System.lineSeparator;
 
@@ -26,7 +26,6 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 /** Entry point for the muzzle gradle plugin. */
 // Runs in special classloader so tedious to provide access to the Gradle logger.
 @SuppressWarnings("SystemOut")
-@Deprecated
 public final class MuzzleGradlePluginUtil {
   private static final String INDENT = "  ";
 
