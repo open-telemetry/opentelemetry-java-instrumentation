@@ -23,6 +23,8 @@ import org.openjdk.jmh.annotations.TearDown;
 public class ServletBenchmark {
 
   static {
+    // using static initializer instead of @Setup since only want to initialize the app under test
+    // once regardless of @State and @Threads
     HelloWorldApplication.main();
   }
 
