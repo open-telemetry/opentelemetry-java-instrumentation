@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.benchmark;
+package io.opentelemetry.javaagent.benchmark.servlet;
 
-import io.opentelemetry.javaagent.benchmark.app.HelloWorldApplication;
+import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;

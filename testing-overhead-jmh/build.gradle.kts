@@ -5,11 +5,6 @@ plugins {
   id("otel.jmh-conventions")
 }
 
-val agentJar by configurations.creating {
-  isCanBeConsumed = false
-  isCanBeResolved = true
-}
-
 dependencies {
   jmhImplementation("org.springframework.boot:spring-boot-starter-web:2.5.2")
   jmhImplementation(project(":testing-common")) {
@@ -19,22 +14,9 @@ dependencies {
   // this only exists to make Intellij happy since it doesn't (currently at least) understand our
   // inclusion of this artifact inside of :testing-common
   jmhCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
-
-  agentJar(project(path = ":javaagent", configuration = "shadow")) {
-    isTransitive = false
-  }
 }
 
 tasks {
-  val copyAgent by registering(Copy::class) {
-    into(file("$buildDir/agent"))
-    from(configurations.named("agentJar"))
-    rename { file: String ->
-      file.replace("-$version", "")
-    }
-
-    dependsOn(":javaagent:shadowJar")
-  }
 
   // TODO(trask) without disabling errorprone, jmh task fails with
   //  Task :testing-overhead-jmh:jmhCompileGeneratedClasses FAILED
@@ -46,7 +28,18 @@ tasks {
   }
 
   named<me.champeau.jmh.JMHTask>("jmh") {
-    dependsOn(copyAgent)
+    val shadowTask = project(":javaagent").tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar").get()
+    inputs.files(layout.files(shadowTask))
+
+    // note: without an exporter, toSpanData() won't even be called
+    // (which is good for benchmarking the instrumentation itself)
+    val args = listOf(
+      "-javaagent:${shadowTask.archiveFile.get()}",
+      "-Dotel.traces.exporter=none",
+      "-Dotel.metrics.exporter=none"
+    )
+    // see https://github.com/melix/jmh-gradle-plugin/issues/200
+    jvmArgsPrepend.add(args.joinToString(" "))
 
     // TODO(trask) is this ok? if it's ok, move to otel.jmh-conventions?
     outputs.upToDateWhen { false }
