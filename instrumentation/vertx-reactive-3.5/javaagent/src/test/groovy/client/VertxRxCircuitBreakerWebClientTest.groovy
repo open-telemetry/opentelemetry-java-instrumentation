@@ -104,11 +104,4 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   SingleConnection createSingleConnection(String host, int port) {
     return new VertxRxCircuitBreakerSingleConnection(host, port, breaker)
   }
-
-  @Override
-  boolean testCallbackWithParent() {
-    //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
-    return false
-  }
-
 }
