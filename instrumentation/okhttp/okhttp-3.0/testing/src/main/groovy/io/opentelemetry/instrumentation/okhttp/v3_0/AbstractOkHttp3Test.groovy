@@ -64,12 +64,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   }
 
   @Override
-  boolean testRedirects() {
-    false
-  }
-
-  @Override
-  boolean testCausality() {
+  boolean testCircularRedirects() {
     false
   }
 

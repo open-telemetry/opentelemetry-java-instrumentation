@@ -126,11 +126,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   }
 
   @Override
-  boolean testCausality() {
-    true
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,

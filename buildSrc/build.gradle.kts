@@ -16,7 +16,9 @@ spotless {
 repositories {
   mavenCentral()
   gradlePluginPortal()
-  mavenLocal()
+  maven {
+    url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -27,8 +29,7 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  //TODO start using this when separate codegen plugin is published
-//  implementation("io.opentelemetry.instrumentation.gradle:opentelemetry-codegen:1.4.0-alpha-SNAPSHOT")
+  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.1.0-SNAPSHOT")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")

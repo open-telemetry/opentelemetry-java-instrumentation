@@ -24,4 +24,9 @@ class OkHttp3Test extends AbstractOkHttp3Test implements LibraryTestTrait {
   boolean testWithClientParent() {
     false
   }
+
+  @Override
+  boolean testCausalityWithCallback() {
+    false
+  }
 }
