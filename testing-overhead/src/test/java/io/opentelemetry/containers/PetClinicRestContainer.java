@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import io.opentelemetry.NamingConvention;
+import io.opentelemetry.agents.Agent;
 import io.opentelemetry.agents.AgentResolver;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -31,11 +33,13 @@ public class PetClinicRestContainer {
   private final Network network;
   private final Startable collector;
   private final Agent agent;
+  private final NamingConvention namingConvention;
 
-  public PetClinicRestContainer(Network network, Startable collector, Agent agent) {
+  public PetClinicRestContainer(Network network, Startable collector, Agent agent, NamingConvention namingConvention) {
     this.network = network;
     this.collector = collector;
     this.agent = agent;
+    this.namingConvention = namingConvention;
   }
 
   public GenericContainer<?> build() throws Exception {
@@ -63,10 +67,10 @@ public class PetClinicRestContainer {
 
   @NotNull
   private String[] buildCommandline(Optional<Path> agentJar) {
-    String jfrFile = "petclinic-" + this.agent.getName() + ".jfr";
+    Path jfrFile = namingConvention.jfrFile(this.agent);
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
-        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename=/results/"
+        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename="
             + jfrFile,
         "-Dotel.traces.exporter=otlp",
         "-Dotel.imr.export.interval=5000",
