@@ -773,6 +773,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   @Test
   void highConcurrencyWithCallback() {
     assumeTrue(testCausality());
+    assumeTrue(testCausalityWithCallback());
     assumeTrue(testCallback());
     assumeTrue(testCallbackWithParent());
 
@@ -1117,6 +1118,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   protected boolean testCausality() {
+    return true;
+  }
+
+  protected boolean testCausalityWithCallback() {
     return true;
   }
 

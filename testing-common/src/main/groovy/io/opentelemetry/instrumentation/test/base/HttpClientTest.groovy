@@ -199,6 +199,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     @Override
+    protected boolean testCausalityWithCallback() {
+      return HttpClientTest.this.testCausalityWithCallback()
+    }
+
+    @Override
     protected boolean testCallback() {
       return HttpClientTest.this.testCallback()
     }
