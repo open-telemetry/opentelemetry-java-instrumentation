@@ -47,7 +47,7 @@ tasks {
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
-    usesService(gradle.sharedServices.registrations.getByName("heavyTaskService").getService())
+    usesService(gradle.sharedServices.registrations.getByName("testcontainersBuildService").getService())
   }
 }
 

@@ -172,7 +172,7 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
-class HeavyTaskBuildService : BuildService<BuildServiceParameters.None?> {
+class TestcontainersBuildService : BuildService<BuildServiceParameters.None?> {
   override fun getParameters(): BuildServiceParameters.None? {
     return null
   }
@@ -180,10 +180,10 @@ class HeavyTaskBuildService : BuildService<BuildServiceParameters.None?> {
 // To limit number of concurrently running resource intensive tests add
 // tasks {
 //   named<Test>("test") {
-//     usesService(gradle.sharedServices.registrations.getByName("heavyTaskService").getService())
+//     usesService(gradle.sharedServices.registrations.getByName("testcontainersBuildService").getService())
 //   }
 // }
-val heavyTaskService: Provider<HeavyTaskBuildService> = gradle.sharedServices.registerIfAbsent("heavyTaskService", HeavyTaskBuildService::class.java) {
+gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
   maxParallelUsages.convention(2)
 }
 
