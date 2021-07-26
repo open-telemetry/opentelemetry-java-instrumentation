@@ -5,14 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.AbstractNettyRequestWrapper;
 
-public class NettyRequestWrapper {
+public class NettyRequestWrapper extends AbstractNettyRequestWrapper {
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
   @SuppressWarnings("unchecked")
@@ -28,34 +30,34 @@ public class NettyRequestWrapper {
     }
   }
 
-  private final HttpRequest request;
   private final ChannelHandlerContext ctx;
 
   public NettyRequestWrapper(HttpRequest request, ChannelHandlerContext ctx) {
-    this.request = request;
+    super(request);
     this.ctx = ctx;
   }
 
-  public HttpRequest request() {
-    return request;
-  }
-
+  @Override
   public boolean isHttps() {
     return sslHandlerClass != null && ctx.pipeline().get(sslHandlerClass) != null;
   }
 
-  public HttpHeaders headers() {
-    return request.headers();
+  @Override
+  public String getHostHeader() {
+    return request.headers().get(HOST);
   }
 
+  @Override
   public HttpVersion protocolVersion() {
     return request.protocolVersion();
   }
 
+  @Override
   public String uri() {
     return request.uri();
   }
 
+  @Override
   public HttpMethod method() {
     return request().method();
   }

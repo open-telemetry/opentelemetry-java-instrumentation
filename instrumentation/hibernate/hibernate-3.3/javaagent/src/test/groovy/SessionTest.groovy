@@ -283,7 +283,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Session.replicate"
+          name "Session.replicate java.lang.Long"
           kind INTERNAL
           childOf span(0)
           status ERROR

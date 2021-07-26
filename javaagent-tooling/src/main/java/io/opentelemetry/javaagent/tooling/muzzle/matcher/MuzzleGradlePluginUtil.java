@@ -13,6 +13,8 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -24,6 +26,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 /** Entry point for the muzzle gradle plugin. */
 // Runs in special classloader so tedious to provide access to the Gradle logger.
 @SuppressWarnings("SystemOut")
+@Deprecated
 public final class MuzzleGradlePluginUtil {
   private static final String INDENT = "  ";
 

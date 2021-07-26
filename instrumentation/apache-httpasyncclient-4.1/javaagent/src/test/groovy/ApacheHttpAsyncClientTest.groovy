@@ -71,16 +71,6 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  boolean testRemoteConnection() {
-    false // otherwise SocketTimeoutException for https requests
-  }
-
-  @Override
-  boolean testCausality() {
-    false
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
