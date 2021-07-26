@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -34,7 +35,7 @@ public class AgentResolver {
     if(agent.getUrl().getProtocol().equals("file")){
       Path source = Path.of(agent.getUrl().toURI());
       Path result = Paths.get(".", source.getFileName().toString());
-      Files.copy(source, result);
+      Files.copy(source, result, StandardCopyOption.REPLACE_EXISTING);
       return result;
     }
     Request request = new Request.Builder().url(agent.getUrl()).build();
