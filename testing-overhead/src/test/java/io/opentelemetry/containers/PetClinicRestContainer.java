@@ -42,7 +42,7 @@ public class PetClinicRestContainer {
 
   public GenericContainer<?> build() throws IOException {
 
-    Optional<Path> agent = agentResolver.resolve(this.agent);
+    Optional<Path> agentJar = agentResolver.resolve(this.agent);
 
     GenericContainer<?> container = new GenericContainer<>(
         DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest"))
@@ -53,9 +53,9 @@ public class PetClinicRestContainer {
         .withFileSystemBind(".", "/results")
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .dependsOn(collector)
-        .withCommand(buildCommandline(agent));
+        .withCommand(buildCommandline(agentJar));
 
-    agent.ifPresent(
+    agentJar.ifPresent(
         agentPath -> container.withCopyFileToContainer(
             MountableFile.forHostPath(agentPath),
             "/app/" + agentPath.getFileName().toString())
@@ -64,7 +64,7 @@ public class PetClinicRestContainer {
   }
 
   @NotNull
-  private String[] buildCommandline(Optional<Path> agent) {
+  private String[] buildCommandline(Optional<Path> agentJar) {
     String jfrFile = "petclinic-" + this.agent.getName() + ".jfr";
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
@@ -76,7 +76,8 @@ public class PetClinicRestContainer {
         "-Dotel.exporter.otlp.endpoint=http://collector:4317",
         "-Dotel.resource.attributes=service.name=petclinic-otel-overhead"
     ));
-    agent.ifPresent(path -> result.add("-javaagent:/app/" + path.getFileName()));
+    result.addAll(this.agent.getAdditionalJvmArgs());
+    agentJar.ifPresent(path -> result.add("-javaagent:/app/" + path.getFileName()));
 
     result.add("-jar");
     result.add("/app/spring-petclinic-rest.jar");
