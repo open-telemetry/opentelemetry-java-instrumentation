@@ -7,6 +7,7 @@ package io.opentelemetry.results;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import java.util.Comparator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
