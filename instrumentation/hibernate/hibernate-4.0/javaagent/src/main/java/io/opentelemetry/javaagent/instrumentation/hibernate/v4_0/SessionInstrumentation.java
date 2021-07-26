@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getEntityName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getSessionMethodSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,7 +28,6 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -125,7 +125,9 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
-        @Advice.Argument(0) Object entity,
+        @Advice.Origin("#d") String descriptor,
+        @Advice.Argument(0) Object arg0,
+        @Advice.Argument(value = 1, optional = true) Object arg1,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
@@ -144,7 +146,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
       }
 
       if (!SCOPE_ONLY_METHODS.contains(name)) {
-        spanContext = tracer().startSpan(sessionContext, getSessionMethodSpanName(name), entity);
+        String entityName =
+            getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
+        spanContext =
+            tracer().startSpan(sessionContext, getSessionMethodSpanName(name), entityName);
         scope = spanContext.makeCurrent();
       } else {
         scope = sessionContext.makeCurrent();
@@ -154,8 +159,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
-        @Advice.Origin("#m") String name,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
@@ -166,7 +169,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(spanContext, throwable, getSessionMethodSpanName(name), returned);
+        SessionMethodUtils.end(spanContext, throwable);
       }
     }
   }
