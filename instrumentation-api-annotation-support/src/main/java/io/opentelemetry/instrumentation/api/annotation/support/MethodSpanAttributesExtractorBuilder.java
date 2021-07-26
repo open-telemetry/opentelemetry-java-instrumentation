@@ -16,22 +16,13 @@ public final class MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets the {@link ParameterAttributeNamesExtractor} to extract the attribute names from the
-   * parameters of the traced method.
-   */
-  public MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE>
-      setParameterAttributeNamesExtractor(
-          ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
-    this.parameterAttributeNamesExtractor = parameterAttributeNamesExtractor;
-    return this;
-  }
-
-  /**
    * Returns a new {@link MethodSpanAttributesExtractor} that extracts {@link
    * io.opentelemetry.api.common.Attributes} from the arguments passed to the traced method.
    */
   public MethodSpanAttributesExtractor<REQUEST, RESPONSE> newMethodSpanAttributesExtractor(
+      ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,
       MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
+    this.parameterAttributeNamesExtractor = parameterAttributeNamesExtractor;
     this.methodArgumentsExtractor = methodArgumentsExtractor;
     return new MethodSpanAttributesExtractor<>(this);
   }

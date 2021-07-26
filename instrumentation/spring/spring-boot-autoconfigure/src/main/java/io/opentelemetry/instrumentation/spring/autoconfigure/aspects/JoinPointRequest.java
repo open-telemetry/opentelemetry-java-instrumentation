@@ -15,22 +15,22 @@ final class JoinPointRequest {
   private final Method method;
   private final WithSpan annotation;
 
-  public JoinPointRequest(JoinPoint joinPoint) {
+  JoinPointRequest(JoinPoint joinPoint) {
     this.joinPoint = joinPoint;
     MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
     this.method = methodSignature.getMethod();
     this.annotation = this.method.getDeclaredAnnotation(WithSpan.class);
   }
 
-  public Method method() {
+  Method method() {
     return method;
   }
 
-  public WithSpan annotation() {
+  WithSpan annotation() {
     return annotation;
   }
 
-  public Object[] args() {
+  Object[] args() {
     return joinPoint.getArgs();
   }
 }

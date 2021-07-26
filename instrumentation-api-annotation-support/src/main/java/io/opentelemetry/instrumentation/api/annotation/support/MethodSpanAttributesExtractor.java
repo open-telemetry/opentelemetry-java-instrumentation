@@ -13,7 +13,7 @@ import java.lang.reflect.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
-public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
+public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
   private final BaseAttributeBinder binder;
@@ -39,12 +39,7 @@ public class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
     Method method = methodExtractor.extract(request);
-    AttributeBindings bindings;
-    if (cache != null) {
-      bindings = cache.computeIfAbsent(method, binder::bind);
-    } else {
-      bindings = binder.bind(method);
-    }
+    AttributeBindings bindings = cache.computeIfAbsent(method, binder::bind);
     if (!bindings.isEmpty()) {
       Object[] args = methodArgumentsExtractor.extract(request);
       bindings.apply(attributes::put, args);

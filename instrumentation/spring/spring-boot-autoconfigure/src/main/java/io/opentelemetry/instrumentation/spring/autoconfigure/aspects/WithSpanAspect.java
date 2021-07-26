@@ -46,8 +46,8 @@ public class WithSpanAspect {
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.newBuilder(JoinPointRequest::method)
-                    .setParameterAttributeNamesExtractor(parameterAttributeNamesExtractor)
-                    .newMethodSpanAttributesExtractor(JoinPointRequest::args))
+                    .newMethodSpanAttributesExtractor(
+                        parameterAttributeNamesExtractor, JoinPointRequest::args))
             .newInstrumenter(WithSpanAspect::spanKind);
   }
 
