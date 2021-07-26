@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy
+import io.opentelemetry.javaagent.tooling.muzzle.AgentCachingPoolStrategy
 import java.lang.ref.WeakReference
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator

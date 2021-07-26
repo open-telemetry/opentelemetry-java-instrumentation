@@ -10,6 +10,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import java.util.stream.Collectors
 
+@Deprecated("Should be removed when we start using external muzzle check plugin")
 abstract class MuzzleDirective {
 
   abstract val name: Property<String>

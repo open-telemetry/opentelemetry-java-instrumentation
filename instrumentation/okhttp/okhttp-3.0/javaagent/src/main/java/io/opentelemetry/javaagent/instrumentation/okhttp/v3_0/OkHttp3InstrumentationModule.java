@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,6 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new OkHttp3Instrumentation());
+    return asList(new OkHttp3Instrumentation(), new OkHttp3DispatcherInstrumentation());
   }
 }

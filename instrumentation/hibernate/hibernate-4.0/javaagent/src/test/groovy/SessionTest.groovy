@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
+import org.hibernate.LockOptions
 import org.hibernate.MappingException
 import org.hibernate.Query
 import org.hibernate.ReplicationMode
@@ -84,29 +85,56 @@ class SessionTest extends AbstractHibernateTest {
     }
 
     where:
-    testName                                  | methodName | resource | sessionImplementations                    | sessionMethodTest
-    "lock"                                    | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
+    testName                                     | methodName | resource | sessionImplementations                    | sessionMethodTest
+    "lock"                                       | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
       sesh.lock(val, LockMode.READ)
     }
-    "refresh"                                 | "refresh"  | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+    "lock with entity name"                      | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
+      sesh.lock("Value", val, LockMode.READ)
+    }
+    "lock with null name"                        | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
+      sesh.lock(null, val, LockMode.READ)
+    }
+    "buildLockRequest"                           | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
+      sesh.buildLockRequest(LockOptions.READ)
+        .lock(val)
+    }
+    "refresh"                                    | "refresh"  | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
       sesh.refresh(val)
     }
-    "get"                                     | "get"      | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+    "refresh with entity name"                   | "refresh"  | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+      sesh.refresh("Value", val)
+    }
+    "get with entity name"                       | "get"      | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
       sesh.get("Value", val.getId())
     }
-    "insert"                                  | "insert"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+    "get with entity class"                      | "get"      | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+      sesh.get(Value, val.getId())
+    }
+    "insert"                                     | "insert"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+      sesh.insert(new Value("insert me"))
+    }
+    "insert with entity name"                    | "insert"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
       sesh.insert("Value", new Value("insert me"))
     }
-    "update (StatelessSession)"               | "update"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+    "insert with null entity name"               | "insert"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+      sesh.insert(null, new Value("insert me"))
+    }
+    "update (StatelessSession)"                  | "update"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
       val.setName("New name")
       sesh.update(val)
     }
-    "update by entityName (StatelessSession)" | "update"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+    "update with entity name (StatelessSession)" | "update"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
       val.setName("New name")
       sesh.update("Value", val)
     }
-    "delete (Session)"                        | "delete"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+    "delete (Session)"                           | "delete"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
       sesh.delete(val)
+      prepopulated.remove(val)
+    }
+    "delete with entity name (Session)"          | "delete"   | "Value"  | [statelessSessionBuilder]                 | { sesh, val ->
+      sesh.delete("Value", val)
+      prepopulated.remove(val)
     }
   }
 
@@ -222,7 +250,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Session.replicate"
+          name "Session.replicate java.lang.Long"
           kind INTERNAL
           childOf span(0)
           status ERROR
@@ -297,33 +325,53 @@ class SessionTest extends AbstractHibernateTest {
     }
 
     where:
-    testName                         | methodName     | resource | sessionMethodTest
-    "save"                           | "save"         | "Value"  | { sesh, val ->
+    testName                               | methodName     | resource | sessionMethodTest
+    "save"                                 | "save"         | "Value"  | { sesh, val ->
       sesh.save(new Value("Another value"))
     }
-    "saveOrUpdate save"              | "saveOrUpdate" | "Value"  | { sesh, val ->
+    "save with entity name"                | "save"         | "Value"  | { sesh, val ->
+      sesh.save("Value", new Value("Another value"))
+    }
+    "saveOrUpdate save"                    | "saveOrUpdate" | "Value"  | { sesh, val ->
       sesh.saveOrUpdate(new Value("Value"))
     }
-    "saveOrUpdate update"            | "saveOrUpdate" | "Value"  | { sesh, val ->
-      val.setName("New name")
-      sesh.saveOrUpdate(val)
+    "saveOrUpdate save with entity name"   | "saveOrUpdate" | "Value"  | { sesh, val ->
+      sesh.saveOrUpdate("Value", new Value("Value"))
     }
-    "merge"                          | "merge"        | "Value"  | { sesh, val ->
+    "saveOrUpdate update with entity name" | "saveOrUpdate" | "Value"  | { sesh, val ->
+      val.setName("New name")
+      sesh.saveOrUpdate("Value", val)
+    }
+    "merge"                                | "merge"        | "Value"  | { sesh, val ->
       sesh.merge(new Value("merge me in"))
     }
-    "persist"                        | "persist"      | "Value"  | { sesh, val ->
+    "merge with entity name"               | "merge"        | "Value"  | { sesh, val ->
+      sesh.merge("Value", new Value("merge me in"))
+    }
+    "persist"                              | "persist"      | "Value"  | { sesh, val ->
       sesh.persist(new Value("merge me in"))
     }
-    "update (Session)"               | "update"       | "Value"  | { sesh, val ->
+    "persist with entity name"             | "persist"      | "Value"  | { sesh, val ->
+      sesh.persist("Value", new Value("merge me in"))
+    }
+    "persist with null entity name"        | "persist"      | "Value"  | { sesh, val ->
+      sesh.persist(null, new Value("merge me in"))
+    }
+    "update (Session)"                     | "update"       | "Value"  | { sesh, val ->
       val.setName("New name")
       sesh.update(val)
     }
-    "update by entityName (Session)" | "update"       | "Value"  | { sesh, val ->
+    "update by entityName (Session)"       | "update"       | "Value"  | { sesh, val ->
       val.setName("New name")
       sesh.update("Value", val)
     }
-    "delete (Session)"               | "delete"       | "Value"  | { sesh, val ->
+    "delete (Session)"                     | "delete"       | "Value"  | { sesh, val ->
       sesh.delete(val)
+      prepopulated.remove(val)
+    }
+    "delete by entityName (Session)"       | "delete"       | "Value"  | { sesh, val ->
+      sesh.delete("Value", val)
+      prepopulated.remove(val)
     }
   }
 

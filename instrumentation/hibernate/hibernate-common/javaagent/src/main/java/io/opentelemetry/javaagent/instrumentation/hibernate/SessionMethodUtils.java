@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
@@ -15,6 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -27,22 +27,22 @@ public final class SessionMethodUtils {
       ContextStore<TARGET, Context> contextStore,
       TARGET spanKey,
       String operationName,
-      ENTITY entity) {
-    return startSpanFrom(contextStore, spanKey, () -> operationName, entity);
+      String entityName) {
+    return startSpanFrom(contextStore, spanKey, () -> operationName, entityName);
   }
 
   private static <TARGET, ENTITY> Context startSpanFrom(
       ContextStore<TARGET, Context> contextStore,
       TARGET spanKey,
       Supplier<String> operationNameSupplier,
-      ENTITY entity) {
+      String entityName) {
 
     Context sessionContext = contextStore.get(spanKey);
     if (sessionContext == null) {
       return null; // No state found. We aren't in a Session.
     }
 
-    return tracer().startSpan(sessionContext, operationNameSupplier.get(), entity);
+    return tracer().startSpan(sessionContext, operationNameSupplier.get(), entityName);
   }
 
   public static <TARGET> Context startSpanFromQuery(
@@ -64,19 +64,12 @@ public final class SessionMethodUtils {
     return startSpanFrom(contextStore, spanKey, operationNameSupplier, null);
   }
 
-  public static void end(
-      @Nullable Context context, Throwable throwable, String operationName, Object entity) {
+  public static void end(@Nullable Context context, Throwable throwable) {
 
     if (context == null) {
       return;
     }
 
-    if (operationName != null && entity != null) {
-      String entityName = tracer().entityName(entity);
-      if (entityName != null) {
-        Span.fromContext(context).updateName(operationName + " " + entityName);
-      }
-    }
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
@@ -105,6 +98,28 @@ public final class SessionMethodUtils {
       return "Session.lock";
     }
     return "Session." + methodName;
+  }
+
+  public static String getEntityName(
+      String descriptor, Object arg0, Object arg1, Function<Object, String> nameFromEntity) {
+    String entityName = null;
+    // methods like save(String entityName, Object object)
+    // that take entity name as first argument and entity as second
+    // if given entity name is null compute it from entity object
+    if (descriptor.startsWith("(Ljava/lang/String;Ljava/lang/Object;")) {
+      entityName = arg0 == null ? nameFromEntity.apply(arg1) : (String) arg0;
+      // methods like save(Object obj)
+    } else if (descriptor.startsWith("(Ljava/lang/Object;")) {
+      entityName = nameFromEntity.apply(arg0);
+      // methods like get(String entityName, Serializable id)
+    } else if (descriptor.startsWith("(Ljava/lang/String;")) {
+      entityName = (String) arg0;
+      // methods like get(Class entityClass, Serializable id)
+    } else if (descriptor.startsWith("(Ljava/lang/Class;") && arg0 != null) {
+      entityName = ((Class<?>) arg0).getName();
+    }
+
+    return entityName;
   }
 
   private SessionMethodUtils() {}

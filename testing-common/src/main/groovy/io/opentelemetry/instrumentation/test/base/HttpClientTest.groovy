@@ -865,6 +865,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "high concurrency test with callback"() {
     setup:
     assumeTrue(testCausality())
+    assumeTrue(testCausalityWithCallback())
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
@@ -1117,6 +1118,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testCausality() {
+    true
+  }
+
+  boolean testCausalityWithCallback() {
     true
   }
 
