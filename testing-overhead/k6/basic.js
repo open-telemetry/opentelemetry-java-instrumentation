@@ -5,7 +5,6 @@ import names from "./names.js";
 const baseUri = `http://petclinic:9966/petclinic/api`;
 
 export default function() {
-//    const url = "http://localhost:9966/petclinic/api/pettypes";
     const specialtiesUrl = `${baseUri}/specialties`;
     const specialtiesResponse = http.get(specialtiesUrl);
     const specialties = JSON.parse(specialtiesResponse.body);
