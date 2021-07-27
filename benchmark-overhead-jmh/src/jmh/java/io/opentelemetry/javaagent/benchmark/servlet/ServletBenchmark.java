@@ -6,7 +6,10 @@
 package io.opentelemetry.javaagent.benchmark.servlet;
 
 import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
-import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -28,12 +31,13 @@ public class ServletBenchmark {
     HelloWorldApplication.main();
   }
 
-  // using shaded armeria http client from testing-common artifact since it won't be instrumented
-  private WebClient client;
+  private URL client;
+  private byte[] buffer;
 
   @Setup
-  public void setup() {
-    client = WebClient.builder().build();
+  public void setup() throws IOException {
+    client = new URL("http://localhost:8080");
+    buffer = new byte[8192];
   }
 
   @TearDown
@@ -42,7 +46,16 @@ public class ServletBenchmark {
   }
 
   @Benchmark
-  public Object execute() {
-    return client.get("http://localhost:8080").aggregate().join();
+  public void execute() throws IOException {
+    HttpURLConnection connection = (HttpURLConnection) client.openConnection();
+    InputStream inputStream = connection.getInputStream();
+    drain(inputStream);
+    inputStream.close();
+    connection.disconnect();
+  }
+
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void drain(InputStream inputStream) throws IOException {
+    while (inputStream.read(buffer) != -1) {}
   }
 }
