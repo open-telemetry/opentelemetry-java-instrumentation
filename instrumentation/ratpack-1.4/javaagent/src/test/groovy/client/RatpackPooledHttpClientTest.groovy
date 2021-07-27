@@ -5,7 +5,7 @@
 
 package client
 
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import ratpack.http.client.HttpClient
 
 class RatpackPooledHttpClientTest extends RatpackHttpClientTest {

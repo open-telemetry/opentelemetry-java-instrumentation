@@ -24,6 +24,10 @@ tasks {
     }
   }
 
+  // TODO(trask) move to otel.jmh-conventions?
+  val jmhFork = gradle.startParameter.projectProperties["jmh.fork"]?.toInt()
+  val jmhIncludes = gradle.startParameter.projectProperties["jmh.includes"]
+
   named<JMHTask>("jmh") {
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
@@ -37,6 +41,13 @@ tasks {
     )
     // see https://github.com/melix/jmh-gradle-plugin/issues/200
     jvmArgsPrepend.add(args.joinToString(" "))
+
+    if (jmhIncludes != null) {
+      includes.addAll(jmhIncludes.split(','))
+    }
+    if (jmhFork != null) {
+      fork.set(jmhFork)
+    }
 
     // TODO(trask) is this ok? if it's ok, move to otel.jmh-conventions?
     outputs.upToDateWhen { false }

@@ -5,13 +5,11 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
 import java.util.concurrent.Callable
@@ -55,13 +53,6 @@ class TraceUtils {
 
   static void runInternalSpan(String spanName) {
     tracer.spanBuilder(spanName).startSpan().end()
-  }
-
-  // Must create span within agent using annotation until
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
-  @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
-  static <T> T runUnderParentClientSpan(Callable<T> r) {
-    r.call()
   }
 
   static <T> T runUnderTraceWithoutExceptionCatch(String spanName, Callable<T> r) {
