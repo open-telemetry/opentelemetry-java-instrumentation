@@ -8,8 +8,10 @@ import static org.joox.JOOX.$;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -34,8 +36,7 @@ public class LatestAgentSnapshotResolver {
     String url = BASE_URL +  "/" + version + "/" + latestFilename;
     byte[] jarBytes = fetchBodyBytesFrom(url);
     Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT-all.jar");
-    FileOutputStream out = new FileOutputStream(path.toFile());
-    out.write(jarBytes);
+    Files.write(path, jarBytes, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     return Optional.of(path);
   }
 
