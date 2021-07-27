@@ -287,26 +287,26 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.requestWithCallbackAndNoParent()
   }
 
-  def "basic #method request with 1 redirect"() {
+  def "basic request with 1 redirect"() {
     assumeTrue(testRedirects())
     expect:
     junitTest.basicRequestWith1Redirect()
   }
 
-  def "basic #method request with 2 redirects"() {
+  def "basic request with 2 redirects"() {
     assumeTrue(testRedirects())
     expect:
     junitTest.basicRequestWith2Redirects()
   }
 
-  def "basic #method request with circular redirects"() {
+  def "basic request with circular redirects"() {
     assumeTrue(testRedirects())
     assumeTrue(testCircularRedirects())
     expect:
     junitTest.circularRedirects()
   }
 
-  def "redirect #method to secured endpoint copies auth header"() {
+  def "redirect to secured endpoint copies auth header"() {
     assumeTrue(testRedirects())
     expect:
     junitTest.redirectToSecuredCopiesAuthHeader()
@@ -499,7 +499,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return exception
   }
 
-  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
