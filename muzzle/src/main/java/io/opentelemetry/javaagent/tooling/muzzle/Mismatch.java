@@ -170,7 +170,7 @@ public abstract class Mismatch {
 
   /**
    * Represents failure of some classloader to satisfy {@link
-   * InstrumentationModule#classLoaderMatcher()}
+   * InstrumentationModule#classLoaderMatcher()}.
    */
   public static class InstrumentationModuleClassLoaderMismatch extends Mismatch {
 

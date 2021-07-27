@@ -41,7 +41,7 @@ public class ClassLoaderMatcher {
    * Returns a list of {@link Mismatch}s between expectations of the given {@link
    * InstrumentationModule} and what the given ClassLoader can provide.
    */
-  public static List<Mismatch> matches(
+  private static List<Mismatch> matches(
       InstrumentationModule instrumentationModule, ClassLoader classLoader) {
     ReferenceMatcher muzzle =
         new ReferenceMatcher(
