@@ -4,11 +4,11 @@
  */
 package io.opentelemetry.agents;
 
-import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -43,10 +43,7 @@ public class AgentResolver {
     Response response = client.newCall(request).execute();
     byte[] raw = response.body().bytes();
     Path path = Paths.get(".", "opentelemetry-javaagent-all.jar");
-    FileOutputStream out = new FileOutputStream(path.toFile());
-    out.write(raw);
-    out.flush();
-    out.close();
+    Files.write(path, raw, StandardOpenOption.WRITE,  StandardOpenOption.TRUNCATE_EXISTING);
     return path;
   }
 
