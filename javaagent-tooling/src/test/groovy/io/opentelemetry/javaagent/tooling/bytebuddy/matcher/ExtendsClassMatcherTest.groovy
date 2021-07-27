@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-import io.opentelemetry.javaagent.tooling.AgentTooling
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G
+import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.jar.asm.Opcodes
 import spock.lang.Shared

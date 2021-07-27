@@ -6,7 +6,7 @@ plugins {
   id("net.bytebuddy.byte-buddy")
 
   id("io.opentelemetry.instrumentation.base")
-  id("io.opentelemetry.instrumentation.javaagent-codegen")
+  id("io.opentelemetry.instrumentation.muzzle-generation")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
@@ -29,8 +29,6 @@ dependencies {
   }
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
 
 val testInstrumentation by configurations.creating {
@@ -53,32 +51,41 @@ dependencies {
   agentForTesting("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")
 }
 
+class JavaagentTestArgumentsProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val agentShadowJar: File,
+
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val shadowJar: File,
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-Dotel.javaagent.debug=true",
+    "-javaagent:${agentShadowJar.absolutePath}",
+    "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
+    "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
+    "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
+    // prevent sporadic gradle deadlocks, see SafeLogger for more details
+    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+    // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
+    // in smoke tests instead.
+    "-Dotel.javaagent.add-thread-details=false"
+  )
+}
+
 // need to run this after evaluate because testSets plugin adds new test tasks
 afterEvaluate {
   tasks.withType<Test>().configureEach {
     val shadowJar = tasks.shadowJar.get()
     val agentShadowJar = agentForTesting.resolve().first()
 
-    inputs.files(agentForTesting)
-    inputs.file(shadowJar.archiveFile)
-
     dependsOn(shadowJar)
     // TODO(anuraaga): Figure out why dependsOn override is still needed in otel.javaagent-testing
     // despite this dependency.
     dependsOn(agentForTesting.buildDependencies)
 
-    jvmArgs("-Dotel.javaagent.debug=true")
-    jvmArgs("-javaagent:${agentShadowJar.absolutePath}")
-    jvmArgs("-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}")
-    jvmArgs("-Dotel.javaagent.testing.additional-library-ignores.enabled=false")
-    val failOnContextLeak = findProperty("failOnContextLeak")
-    jvmArgs("-Dotel.javaagent.testing.fail-on-context-leak=${failOnContextLeak != false}")
-    // prevent sporadic gradle deadlocks, see SafeLogger for more details
-    jvmArgs("-Dotel.javaagent.testing.transform-safe-logging.enabled=true")
-
-    // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
-    // in smoke tests instead.
-    jvmArgs("-Dotel.javaagent.add-thread-details=false")
+    jvmArgumentProviders.add(JavaagentTestArgumentsProvider(agentShadowJar, shadowJar.archiveFile.get().asFile))
 
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.

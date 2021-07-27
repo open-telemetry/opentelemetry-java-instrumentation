@@ -6,6 +6,7 @@
 package client
 
 import io.netty.channel.ConnectTimeoutException
+import io.netty.handler.timeout.ReadTimeoutException
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
@@ -81,6 +82,9 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
     def resp = client.request(uri) { spec ->
       // Connect timeout for the whole client was added in 1.5 so we need to add timeout for each request
       spec.connectTimeout(Duration.ofSeconds(2))
+      if (uri.getPath() == "/read-timeout") {
+        spec.readTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
+      }
       spec.method(method)
       spec.headers { headersSpec ->
         headers.entrySet().each {
@@ -119,10 +123,13 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
 
   @Override
   void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
-    switch (uri.toString()) {
-      case "https://192.0.2.1/": // non routable address
-        spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
-        return
+    // non routable address
+    if (uri.toString() == "https://192.0.2.1/") {
+      spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
+      return
+    } else if (uri.getPath() == "/read-timeout") {
+      spanAssert.errorEvent(ReadTimeoutException)
+      return
     }
     super.assertClientSpanErrorEvent(spanAssert, uri, exception)
   }
@@ -146,5 +153,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   boolean testReusedRequest() {
     // these tests will pass, but they don't really test anything since REQUEST is Void
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }

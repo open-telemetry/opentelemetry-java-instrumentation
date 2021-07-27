@@ -5,14 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.Attribute;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyHttpServerTracer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,9 +43,18 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   public static class InvokeExceptionCaughtAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(@Advice.Argument(0) Throwable throwable) {
+    public static void onEnter(
+        @Advice.This ChannelHandlerContext channelContext,
+        @Advice.Argument(0) Throwable throwable) {
       if (throwable != null) {
-        tracer().onException(Java8BytecodeBridge.currentContext(), throwable);
+        if (channelContext.channel().hasAttr(AttributeKeys.CLIENT_CONTEXT)) {
+          Attribute<Context> clientContextAttr =
+              channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+          NettyHttpClientTracer.tracer().endExceptionally(clientContextAttr.get(), throwable);
+        } else {
+          NettyHttpServerTracer.tracer()
+              .onException(Java8BytecodeBridge.currentContext(), throwable);
+        }
       }
     }
   }

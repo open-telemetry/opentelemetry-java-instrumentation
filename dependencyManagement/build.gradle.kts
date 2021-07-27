@@ -61,6 +61,11 @@ val DEPENDENCY_SETS = listOf(
     listOf("byte-buddy", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(
+    "org.openjdk.jmh",
+    "1.32",
+    listOf("jmh-core", "jmh-generator-bytecode")
+  ),
+  DependencySet(
     "org.mockito",
     "3.11.1",
     listOf("mockito-core", "mockito-junit-jupiter")

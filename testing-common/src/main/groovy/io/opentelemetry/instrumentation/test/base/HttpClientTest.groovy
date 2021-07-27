@@ -9,8 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8
@@ -60,6 +58,7 @@ import spock.lang.Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
+  protected static final READ_TIMEOUT_MS = 2000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
@@ -109,6 +108,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         }
         .service("/to-secured") {ctx, req ->
           HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
+        }
+        .service("/read-timeout") {ctx, req ->
+          Thread.sleep(READ_TIMEOUT_MS * 5)
+          ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
+          HttpResponse.of(headers.build(), HttpData.ofAscii("Should have timed out."))
         }
         .decorator(new DecoratingHttpServiceFunction() {
           @Override
@@ -382,7 +386,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       traces.sort(orderByRootSpanKind(CLIENT, SERVER))
 
       trace(0, 1) {
-        basicClientSpan(it, 0, "parent-client-span")
+        span(0) {
+          name "parent-client-span"
+          kind CLIENT
+          hasNoParent()
+        }
       }
       trace(1, 1) {
         serverSpan(it, 0)
@@ -421,7 +429,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         }
         clientSpan(it, 1, span(0), method)
         serverSpan(it, 2, span(1))
-        basicSpan(it, 3, "child", span(0))
+        span(3) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -571,7 +583,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0), method, uri, 500)
         serverSpan(it, 2, span(1))
       }
@@ -649,7 +665,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
     }
@@ -687,7 +709,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           hasNoParent()
         }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
-        basicSpan(it, 2, "callback", span(0))
+        span(2) {
+          name "callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -710,13 +736,50 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
     }
 
     where:
     method = "HEAD"
+  }
+
+  def "read timeout"() {
+    given:
+    assumeTrue(testReadTimeout())
+    def uri = resolveAddress("/read-timeout")
+
+    when:
+    runWithSpan("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
+        serverSpan(it, 2, span(1))
+      }
+    }
+
+    where:
+    method = "GET"
   }
 
   // IBM JVM has different protocol support for TLS
@@ -782,8 +845,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
-          basicSpan(it, 0, "Parent span " + requestId, null, null) {
-            it."test.request.id" requestId
+          span(0) {
+            name "Parent span " + requestId
+            kind SpanKind.INTERNAL
+            hasNoParent()
+            attributes {
+              "test.request.id" requestId
+            }
           }
           clientSpan(it, 1, span(0), method, url)
           serverSpan(it, 2, span(1)) {
@@ -797,6 +865,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "high concurrency test with callback"() {
     setup:
     assumeTrue(testCausality())
+    assumeTrue(testCausalityWithCallback())
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
@@ -831,14 +900,23 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
-          basicSpan(it, 0, "Parent span " + requestId, null, null) {
-            it."test.request.id" requestId
+          span(0) {
+            name "Parent span " + requestId
+            kind SpanKind.INTERNAL
+            hasNoParent()
+            attributes {
+              "test.request.id" requestId
+            }
           }
           clientSpan(it, 1, span(0), method, url)
           serverSpan(it, 2, span(1)) {
             it."test.request.id" requestId
           }
-          basicSpan(it, 3, "child", span(0))
+          span(3) {
+            name "child"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
         }
       }
     }
@@ -881,8 +959,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
-          basicSpan(it, 0, "Parent span " + requestId, null, null) {
-            it."test.request.id" requestId
+          span(0) {
+            name "Parent span " + requestId
+            kind SpanKind.INTERNAL
+            hasNoParent()
+            attributes {
+              "test.request.id" requestId
+            }
           }
           clientSpan(it, 1, span(0), method, url)
           serverSpan(it, 2, span(1)) {
@@ -1022,6 +1105,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     true
   }
 
+  boolean testReadTimeout() {
+    false
+  }
+
   boolean testRemoteConnection() {
     true
   }
@@ -1031,6 +1118,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testCausality() {
+    true
+  }
+
+  boolean testCausalityWithCallback() {
     true
   }
 

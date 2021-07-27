@@ -1,5 +1,44 @@
 # Changelog
 
+## Unreleased
+
+## Version 1.4.0 - 2021-07-20
+
+### ☢️ Behavioral changes
+
+- Updated all instrumentation names to `io.opentelemetry.{libName}-{libVersion}` (#3411)
+- Updated RabbitMQ to follow semantic conventions (#3425)
+
+### 🌟 New javaagent instrumentation
+
+- Jetty 9 HTTP client instrumentation (#3079)
+
+### 🌟 New library instrumentation
+
+- Jetty 9 HTTP client instrumentation (#3079)
+
+### 📈 Enhancements
+
+- Make @RabbitListener propagate context properly (#3339)
+- Add peer.service to grpc javaagent instrumentation (#3357)
+- Propagate context to cassandra4 callbacks (#3371)
+- Update Armeria instrumentation to support new Armeria 1.9.0 release (#3407)
+- Context propagation for ratpack Execution.fork() (#3416)
+
+### 🛠️ Bug fixes
+
+- Fix Kafka stream instrumentation to support Kafka 2.6 and above (#3438)
+- Fix Dubbo trace/span cross-process propagation (#3442)
+- Fix `peer.service` configuration mapping (#3378)
+
+### 🧰 Tooling
+
+- Hide Config#create() method and use builder everywhere (#3338)
+- Ignore task classes using IgnoredTypesConfigurer (#3380)
+- Exclude duplicate classes from final jars (#3432, #3430)
+- Port AsyncSpanEndStrategy to Instrumenter API (#3262)
+- Rename `opentelemetry-javaagent-api` artifact to `opentelemetry-javaagent-instrumentation-api` (#3513)
+
 ## Version 1.3.1 - 2021-06-23
 
 ### 🛠️ Bug fixes
@@ -9,6 +48,12 @@
 - Fix Spring JMS not being instrumented (#3359)
 
 ## Version 1.3.0 - 2021-06-17
+
+### ☢️ Behavioral changes
+
+- Update agent logger prefix (#3007)
+- Remove khttp instrumentation (#3087)
+- Enable akka actor instrumentation by default (#3173)
 
 ### 🌟 New javaagent instrumentation
 
@@ -28,12 +73,6 @@
 - Support couchbase 3.1.6 (#3194)
 - New experimental support for agent extensions (#2881, #3071, #3226, #3237)
 - Propagate context to akka http callbacks (#3263)
-
-### 🌶️ Behavioral changes
-
-- Update agent logger prefix (#3007)
-- Remove khttp instrumentation (#3087)
-- Enable akka actor instrumentation by default (#3173)
 
 ### 🛠️ Bug fixes
 
@@ -69,6 +108,25 @@
 
 ## Version 1.2.0 - 2021-05-14
 
+### ☢️ Behavioral changes
+
+- AWS lambda flush timeout raised to 10 seconds
+  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
+- `SERVER` span names improved for Spring MVC, Grails, Wicket, and Struts
+  ([#2814](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814))
+- `SERVER` span names improved for Servlet filters
+  ([#2887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2887))
+- `SERVER` span names improved for Resteasy
+  ([#2900](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2900))
+- `SERVER` span names improved for Jersey and CXF
+  ([#2919](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2919))
+- JAX-RS `@ApplicationPath` annotation captured as part of `SERVER` span name
+  ([#2824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2824))
+- RequestDispatcher `forward()` and `include()` internal spans removed
+  ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
+- Raised gRPC min version supported to 1.6 in order to use new gRPC context bridge API
+  ([#2948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2948))
+
 ### 🌟 New javaagent instrumentation
 
 - RxJava 3
@@ -91,25 +149,6 @@
   ([#2805](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2805))
 - Context propagated to reactor-netty callbacks
   ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
-
-### 🌶️ Behavioral changes
-
-- AWS lambda flush timeout raised to 10 seconds
-  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
-- `SERVER` span names improved for Spring MVC, Grails, Wicket, and Struts
-  ([#2814](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814))
-- `SERVER` span names improved for Servlet filters
-  ([#2887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2887))
-- `SERVER` span names improved for Resteasy
-  ([#2900](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2900))
-- `SERVER` span names improved for Jersey and CXF
-  ([#2919](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2919))
-- JAX-RS `@ApplicationPath` annotation captured as part of `SERVER` span name
-  ([#2824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2824))
-- RequestDispatcher `forward()` and `include()` internal spans removed
-  ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
-- Raised gRPC min version supported to 1.6 in order to use new gRPC context bridge API
-  ([#2948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2948))
 
 ### 🛠️ Bug fixes
 
@@ -159,7 +198,7 @@
 
 ## Version 1.1.0 - 2021-04-14
 
-### ☢️ Breaking changes
+### ☢️ Behavioral changes
 
 - Update servlet attribute names for log injection, from `traceId` and `spanId` to `trace_id` and
   `span_id`

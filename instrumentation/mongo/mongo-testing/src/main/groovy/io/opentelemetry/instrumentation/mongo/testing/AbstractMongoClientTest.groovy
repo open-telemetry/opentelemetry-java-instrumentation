@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.mongo.testing
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert

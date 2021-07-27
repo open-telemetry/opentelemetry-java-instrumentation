@@ -8,6 +8,8 @@ package client
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeoutException
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
@@ -15,9 +17,6 @@ import reactor.ipc.netty.http.client.HttpClientOptions
 import reactor.ipc.netty.resources.PoolResources
 import reactor.netty.http.client.HttpClient
 import reactor.netty.resources.LoopResources
-
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeoutException
 
 class SpringWebFluxSingleConnection implements SingleConnection {
   private final ReactorClientHttpConnector connector

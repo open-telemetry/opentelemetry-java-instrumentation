@@ -16,9 +16,7 @@ muzzle {
 val versions: Map<String, String> by project
 
 dependencies {
-  implementation("com.couchbase.client:tracing-opentelemetry:0.3.3") {
-    exclude("com.couchbase.client", "core-io")
-  }
+  implementation(project(path = ":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded", configuration = "shadow"))
 
   library("com.couchbase.client:core-io:2.1.0")
 

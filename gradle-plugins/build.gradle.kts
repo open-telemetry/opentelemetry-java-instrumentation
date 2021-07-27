@@ -8,11 +8,12 @@ plugins {
   id("io.github.gradle-nexus.publish-plugin")
 }
 
-group = "io.opentelemetry.javaagent"
-version = "0.1.0-SNAPSHOT"
+group = "io.opentelemetry.instrumentation"
+version = "0.2.0-SNAPSHOT"
 
 repositories {
   mavenCentral()
+  mavenLocal()
   maven {
     url = uri("https://oss.sonatype.org/content/repositories/snapshots")
   }
@@ -21,8 +22,22 @@ repositories {
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
-  implementation("io.opentelemetry.javaagent:opentelemetry-muzzle:1.4.0-alpha-SNAPSHOT")
-  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:1.4.0-alpha-SNAPSHOT")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:1.5.0-alpha-SNAPSHOT")
+  implementation("io.opentelemetry.javaagent:opentelemetry-muzzle:1.5.0-alpha-SNAPSHOT")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:1.5.0-alpha-SNAPSHOT")
+
+  implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
+  implementation("org.eclipse.aether:aether-transport-http:1.1.0")
+  implementation("org.apache.maven:maven-aether-provider:3.3.9")
+
+  testImplementation("org.assertj:assertj-core:3.19.0")
+
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.7.2"))
+  testImplementation("org.junit.jupiter:junit-jupiter-api")
+  testImplementation("org.junit.jupiter:junit-jupiter-params")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:1.4.0-alpha-SNAPSHOT")
 }
 
 pluginBundle {

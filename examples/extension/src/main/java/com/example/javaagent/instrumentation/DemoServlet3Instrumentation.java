@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 public class DemoServlet3Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return AgentElementMatchers.safeHasSuperType(
+    return AgentElementMatchers.hasSuperType(
         namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
   }
 

@@ -12,9 +12,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
@@ -154,9 +153,21 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicServerSpan(it, 0, "/fork_and_yieldAll")
-        basicSpan(it, 1, "/fork_and_yieldAll", span(0))
-        basicSpan(it, 2, "controller", span(1))
+        span(0) {
+          name "/fork_and_yieldAll"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "/fork_and_yieldAll"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(1)
+        }
       }
     }
   }

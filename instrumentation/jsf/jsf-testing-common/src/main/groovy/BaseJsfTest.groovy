@@ -5,8 +5,8 @@
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
@@ -83,7 +83,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/hello.xhtml", null)
+        span(0) {
+          name getContextPath() + "/hello.xhtml"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
       }
     }
 
@@ -104,7 +108,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        span(0) {
+          name getContextPath() + "/greeting.xhtml"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
       }
     }
     clearExportedData()
@@ -146,7 +154,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        span(0) {
+          name getContextPath() + "/greeting.xhtml"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
         handlerSpan(it, 1, span(0), "#{greetingForm.submit()}")
       }
     }
@@ -165,7 +177,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        span(0) {
+          name getContextPath() + "/greeting.xhtml"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
       }
     }
     clearExportedData()
@@ -200,12 +216,19 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
     then:
     response2.status().code() == 500
+    def ex = new Exception("submit exception")
 
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null, new Exception("submit exception"))
-        handlerSpan(it, 1, span(0), "#{greetingForm.submit()}", new Exception("submit exception"))
+        span(0) {
+          name getContextPath() + "/greeting.xhtml"
+          kind SpanKind.SERVER
+          hasNoParent()
+          status ERROR
+          errorEvent(ex.class, ex.message)
+        }
+        handlerSpan(it, 1, span(0), "#{greetingForm.submit()}", ex)
       }
     }
   }

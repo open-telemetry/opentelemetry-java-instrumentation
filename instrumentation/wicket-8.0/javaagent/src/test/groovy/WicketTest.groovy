@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
-
 import hello.HelloApplication
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
@@ -61,7 +61,11 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
 
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/wicket-test/hello.HelloPage")
+        span(0) {
+          name getContextPath() + "/wicket-test/hello.HelloPage"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
       }
     }
   }
@@ -72,10 +76,17 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
 
     expect:
     response.status().code() == 500
+    def ex = new Exception("test exception")
 
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/wicket-test/hello.ExceptionPage", null, new Exception("test exception"))
+        span(0) {
+          name getContextPath() + "/wicket-test/hello.ExceptionPage"
+          kind SpanKind.SERVER
+          hasNoParent()
+          status StatusCode.ERROR
+          errorEvent(ex.class, ex.message)
+        }
       }
     }
   }

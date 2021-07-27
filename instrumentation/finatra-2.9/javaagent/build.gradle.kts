@@ -33,6 +33,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
+  testImplementation("org.awaitility:awaitility")
+
   if (!(findProperty("testLatestDeps") as Boolean)) {
     // Requires old version of Jackson
     testImplementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.9.10"))

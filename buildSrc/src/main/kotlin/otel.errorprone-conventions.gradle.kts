@@ -25,6 +25,8 @@ tasks {
         disable("SystemOut")
       }
 
+      disable("BooleanParameter")
+
       // Doesn't work well with Java 8
       disable("FutureReturnValueIgnored")
 

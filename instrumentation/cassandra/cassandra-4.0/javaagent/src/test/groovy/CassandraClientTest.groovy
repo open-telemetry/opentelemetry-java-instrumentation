@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
@@ -88,7 +87,11 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         cassandraSpan(it, 1, spanName, expectedStatement, operation, keyspace, table, span(0))
-        basicSpan(it, 2, "child", span(0))
+        span(2) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
