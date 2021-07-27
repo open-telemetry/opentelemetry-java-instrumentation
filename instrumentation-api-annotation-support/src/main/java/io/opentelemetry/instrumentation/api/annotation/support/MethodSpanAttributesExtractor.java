@@ -21,19 +21,23 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   private final MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
   private final Cache<Method, AttributeBindings> cache;
 
-  /** Returns a new {@link MethodSpanAttributesExtractorBuilder}. */
-  public static <REQUEST, RESPONSE>
-      MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> newBuilder(
-          MethodExtractor<REQUEST> methodResolver) {
+  public static <REQUEST, RESPONSE> MethodSpanAttributesExtractor<REQUEST, RESPONSE> newInstance(
+      MethodExtractor<REQUEST> methodExtractor,
+      ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,
+      MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
 
-    return new MethodSpanAttributesExtractorBuilder<>(methodResolver);
+    return new MethodSpanAttributesExtractor<>(
+        methodExtractor, parameterAttributeNamesExtractor, methodArgumentsExtractor);
   }
 
-  MethodSpanAttributesExtractor(MethodSpanAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
-    this.methodExtractor = builder.methodExtractor;
-    this.methodArgumentsExtractor = builder.methodArgumentsExtractor;
-    this.binder = new MethodSpanAttributeBinder(builder.parameterAttributeNamesExtractor);
-    this.cache = Cache.newBuilder().setWeakKeys().build();
+  MethodSpanAttributesExtractor(
+      MethodExtractor<REQUEST> methodExtractor,
+      ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,
+      MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
+    this.methodExtractor = methodExtractor;
+    this.methodArgumentsExtractor = methodArgumentsExtractor;
+    this.binder = new MethodSpanAttributeBinder(parameterAttributeNamesExtractor);
+    this.cache = new MethodCache<>();
   }
 
   @Override
