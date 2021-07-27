@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CancellationException
+import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -17,7 +18,7 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
+abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -32,6 +33,40 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
     client.start()
   }
 
+  @Override
+  Integer responseCodeOnRedirectError() {
+    return 302
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET
+    ]
+    super.httpAttributes(uri) + extra
+  }
+
+  static String fullPathFromURI(URI uri) {
+    StringBuilder builder = new StringBuilder()
+    if (uri.getPath() != null) {
+      builder.append(uri.getPath())
+    }
+
+    if (uri.getQuery() != null) {
+      builder.append('?')
+      builder.append(uri.getQuery())
+    }
+
+    if (uri.getFragment() != null) {
+      builder.append('#')
+      builder.append(uri.getFragment())
+    }
+    return builder.toString()
+  }
+}
+
+class ApacheClientUriRequest extends ApacheHttpAsyncClientTest {
   @Override
   HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = new HttpUriRequest(method, uri)
@@ -65,18 +100,43 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
       }
     })
   }
+}
 
+class ApacheClientHostRequest extends ApacheHttpAsyncClientTest {
   @Override
-  Integer responseCodeOnRedirectError() {
-    return 302
+  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new HttpUriRequest(method, new URI(fullPathFromURI(uri)))
+    headers.entrySet().each {
+      request.addHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
-    ]
-    super.httpAttributes(uri) + extra
+  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null)
+      .get()
+      .statusLine
+      .statusCode
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new FutureCallback<HttpResponse>() {
+      @Override
+      void completed(HttpResponse httpResponse) {
+        requestResult.complete(httpResponse.statusLine.statusCode)
+      }
+
+      @Override
+      void failed(Exception e) {
+        requestResult.complete(e)
+      }
+
+      @Override
+      void cancelled() {
+        throw new CancellationException()
+      }
+    })
   }
 }
