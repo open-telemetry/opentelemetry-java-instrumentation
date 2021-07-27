@@ -34,11 +34,11 @@ val RANGE_COUNT_LIMIT = 10
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
-val muzzleTooling by configurations.creating {
+val muzzleTooling: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
-val muzzleBootstrap by configurations.creating {
+val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
@@ -123,18 +123,20 @@ if (hasRelevantTask) {
 }
 
 fun createInstrumentationClassloader(): ClassLoader {
-  logger.info("Creating instrumentation classpath for: ${name}")
+  logger.info("Creating instrumentation classpath for: $name")
   val runtimeClasspath = sourceSets.main.get().runtimeClasspath
-  return classpathLoader(runtimeClasspath, MuzzleGradlePluginUtil::class.java.classLoader)
+  return classpathLoader(runtimeClasspath, createMuzzleCheckLoader())
 }
 
 fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader {
+  logger.info("From classpath")
   val urls: Array<URL> = StreamSupport.stream(classpath.spliterator(), false)
     .map {
       logger.info("--${it}")
       it.toURI().toURL()
     }
     .toArray(::arrayOfNulls)
+  logger.info("From parent")
   if(parent is URLClassLoader) {
     parent.urLs.forEach {
       logger.info("--${it}")
@@ -235,6 +237,11 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
   runAfter.configure { finalizedBy(muzzleTask) }
   return muzzleTask
+}
+
+fun createMuzzleCheckLoader(): ClassLoader {
+  logger.info("creating muzzle classloader")
+  return classpathLoader(muzzleTooling, ClassLoader.getPlatformClassLoader())
 }
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
