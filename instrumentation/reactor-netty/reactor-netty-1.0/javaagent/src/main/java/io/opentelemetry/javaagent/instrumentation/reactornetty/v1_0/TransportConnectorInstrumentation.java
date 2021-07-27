@@ -3,55 +3,43 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.tracer;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettyTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.netty.channel.ChannelFuture;
+import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.ConnectionCompleteListener;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import reactor.core.publisher.Mono;
 
-public class BootstrapInstrumentation implements TypeInstrumentation {
+public class TransportConnectorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.netty.bootstrap.Bootstrap");
+    return named("reactor.netty.transport.TransportConnector");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // .and(takesArgument(3, named()))
     transformer.applyAdviceToMethod(
-        isConstructor(), BootstrapInstrumentation.class.getName() + "$InitAdvice");
-    transformer.applyAdviceToMethod(
-        named("doResolveAndConnect").and(takesArgument(0, named("java.net.SocketAddress"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class InitAdvice {
-    @Advice.OnMethodEnter
-    public static void enter() {
-      // Ensure that tracer is initialized. Connection failure handling is initialized in the static
-      // initializer of tracer which needs to be run before an attempt is made to establish
-      // connection.
-      tracer();
-    }
+        named("connect").and(takesArgument(1, named("java.net.SocketAddress"))),
+        TransportConnectorInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startConnect(
-        @Advice.Argument(0) SocketAddress remoteAddress,
+        @Advice.Argument(1) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
@@ -65,8 +53,8 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) SocketAddress remoteAddress,
-        @Advice.Return ChannelFuture channelFuture,
+        @Advice.Argument(1) SocketAddress remoteAddress,
+        @Advice.Return(readOnly = false) Mono<Channel> mono,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
@@ -77,7 +65,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         tracer().endConnectionSpan(context, parentContext, remoteAddress, null, throwable);
       } else {
-        channelFuture.addListener(new ConnectionCompleteListener(context, parentContext));
+        mono = ConnectionWrapper.wrap(context, parentContext, remoteAddress, mono);
       }
     }
   }

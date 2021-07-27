@@ -43,8 +43,23 @@ dependencies {
 }
 
 tasks {
+  val testConnectionSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("Netty41ConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/Netty41ConnectionSpanTest.*")
+    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+  }
+
   named<Test>("test") {
     systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+
+    dependsOn(testConnectionSpan)
+    filter {
+      excludeTestsMatching("Netty41ConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
   }
 }
 

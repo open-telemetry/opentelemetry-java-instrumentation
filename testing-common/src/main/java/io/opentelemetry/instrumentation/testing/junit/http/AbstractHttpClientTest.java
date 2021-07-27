@@ -932,7 +932,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
     Set<AttributeKey<?>> httpClientAttributes = httpAttributes(uri);
     return span.hasName(expectedClientSpanName(uri, method))
-        .hasKind(SpanKind.CLIENT)
+        .hasKind(expectedClientSpanKind(uri))
         .hasAttributesSatisfying(
             attrs -> {
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
@@ -1075,6 +1075,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   protected String expectedClientSpanName(URI uri, String method) {
     return method != null ? "HTTP " + method : "HTTP request";
+  }
+
+  protected SpanKind expectedClientSpanKind(URI uri) {
+    return SpanKind.CLIENT;
   }
 
   @Nullable

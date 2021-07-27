@@ -100,6 +100,16 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     return super.httpAttributes(uri)
   }
 
+  @Override
+  SpanKind expectedClientSpanKind(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        return SpanKind.INTERNAL
+    }
+    return super.expectedClientSpanKind(uri)
+  }
+
   abstract HttpClient createHttpClient()
 
   AddressResolverGroup getAddressResolverGroup() {
@@ -184,7 +194,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         }
         span(1) {
           def actualException = ex.cause
-          kind SpanKind.CLIENT
+          kind SpanKind.INTERNAL
           childOf parentSpan
           status StatusCode.ERROR
           errorEvent(actualException.class, actualException.message)

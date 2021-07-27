@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
@@ -52,7 +53,7 @@ public class NettyHttpClientTracer
   }
 
   public void connectionFailure(Context parentContext, Channel channel, Throwable throwable) {
-    SpanBuilder spanBuilder = spanBuilder(parentContext, "CONNECT", CLIENT);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, "CONNECT", INTERNAL);
     spanBuilder.setAttribute(
         SemanticAttributes.NET_TRANSPORT, channel instanceof DatagramChannel ? IP_UDP : IP_TCP);
     NetPeerAttributes.INSTANCE.setNetPeer(

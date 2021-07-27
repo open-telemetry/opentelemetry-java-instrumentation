@@ -12,7 +12,6 @@ import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.caching.Cache;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.AbstractNettyHttpClientTracer;
 
 public final class FutureListenerWrappers {
   // Instead of ContextStore use Cache with weak keys and weak values to store link between original
@@ -64,7 +63,6 @@ public final class FutureListenerWrappers {
 
     @Override
     public void operationComplete(Future<?> future) throws Exception {
-      AbstractNettyHttpClientTracer.operationComplete(future);
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(future);
       }
@@ -93,7 +91,6 @@ public final class FutureListenerWrappers {
 
     @Override
     public void operationComplete(ProgressiveFuture<?> progressiveFuture) throws Exception {
-      AbstractNettyHttpClientTracer.operationComplete(progressiveFuture);
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(progressiveFuture);
       }
