@@ -10,6 +10,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 public class PostgresContainer {
 
@@ -28,6 +29,10 @@ public class PostgresContainer {
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withEnv("POSTGRES_PASSWORD", "petclinic")
         .withEnv("POSTGRES_DB", "petclinic")
+        .withCopyFileToContainer(
+            MountableFile.forClasspathResource("initDB.sql"), "/docker-entrypoint-initdb.d/initDB.sql")
+        .withCopyFileToContainer(
+            MountableFile.forClasspathResource("populateDB.sql"), "/docker-entrypoint-initdb.d/populateDB.sql")
         .withReuse(false)
         .withExposedPorts(5432);
   }
