@@ -38,3 +38,9 @@ dependencies {
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

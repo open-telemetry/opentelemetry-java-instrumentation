@@ -26,5 +26,6 @@ dependencies {
 tasks {
   named<Test>("test") {
     systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }

@@ -8,3 +8,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

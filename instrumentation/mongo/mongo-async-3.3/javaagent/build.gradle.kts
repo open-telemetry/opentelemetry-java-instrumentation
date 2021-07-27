@@ -21,3 +21,9 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:mongo:mongo-3.7:javaagent"))
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

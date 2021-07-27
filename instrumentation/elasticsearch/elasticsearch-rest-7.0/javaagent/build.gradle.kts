@@ -35,3 +35,9 @@ dependencies {
 
   testImplementation("org.testcontainers:elasticsearch:${versions["org.testcontainers"]}")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

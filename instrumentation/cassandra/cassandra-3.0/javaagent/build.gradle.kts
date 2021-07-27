@@ -39,3 +39,9 @@ dependencies {
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

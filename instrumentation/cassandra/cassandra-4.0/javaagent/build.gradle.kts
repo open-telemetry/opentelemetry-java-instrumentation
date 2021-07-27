@@ -19,3 +19,9 @@ dependencies {
 
   latestDepTestLibrary("com.datastax.oss:java-driver-core:4.+")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}
