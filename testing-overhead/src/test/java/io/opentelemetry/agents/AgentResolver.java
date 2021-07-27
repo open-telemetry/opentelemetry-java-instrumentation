@@ -4,6 +4,7 @@
  */
 package io.opentelemetry.agents;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,19 +27,19 @@ public class AgentResolver {
       return snapshotResolver.resolve();
     }
     if(agent.hasUrl()){
-      return Optional.of(downloadAgent(agent));
+      return Optional.of(downloadAgent(agent.getUrl()));
     }
     throw new IllegalArgumentException("Unknown agent: " + agent);
   }
 
-  Path downloadAgent(Agent agent) throws Exception {
-    if(agent.getUrl().getProtocol().equals("file")){
-      Path source = Path.of(agent.getUrl().toURI());
+  private Path downloadAgent(URL agentUrl) throws Exception {
+    if(agentUrl.getProtocol().equals("file")){
+      Path source = Path.of(agentUrl.toURI());
       Path result = Paths.get(".", source.getFileName().toString());
       Files.copy(source, result, StandardCopyOption.REPLACE_EXISTING);
       return result;
     }
-    Request request = new Request.Builder().url(agent.getUrl()).build();
+    Request request = new Request.Builder().url(agentUrl).build();
     OkHttpClient client = new OkHttpClient();
     Response response = client.newCall(request).execute();
     byte[] raw = response.body().bytes();
