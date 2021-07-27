@@ -136,6 +136,7 @@ fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader
       it.toURI().toURL()
     }
     .toArray(::arrayOfNulls)
+  logger.info("From parent")
   if (parent is URLClassLoader) {
     parent.urLs.forEach {
       logger.info("--${it}")
@@ -236,6 +237,11 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
   runAfter.configure { finalizedBy(muzzleTask) }
   return muzzleTask
+}
+
+fun createMuzzleCheckLoader(): ClassLoader {
+  logger.info("creating muzzle classloader")
+  return classpathLoader(muzzleTooling, ClassLoader.getPlatformClassLoader())
 }
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
