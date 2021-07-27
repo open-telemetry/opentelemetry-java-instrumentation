@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.benchmark.servlet;
 
 import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
-import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.javaagent.benchmark.util.HttpClient;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -28,21 +29,21 @@ public class ServletBenchmark {
     HelloWorldApplication.main();
   }
 
-  // using shaded armeria http client from testing-common artifact since it won't be instrumented
-  private WebClient client;
+  private HttpClient client;
 
   @Setup
-  public void setup() {
-    client = WebClient.builder().build();
+  public void setup() throws IOException {
+    client = new HttpClient("localhost", 8080, "/");
   }
 
   @TearDown
-  public void tearDown() {
+  public void tearDown() throws IOException {
     HelloWorldApplication.stop();
+    client.close();
   }
 
   @Benchmark
-  public Object execute() {
-    return client.get("http://localhost:8080").aggregate().join();
+  public void execute() throws IOException {
+    client.execute();
   }
 }
