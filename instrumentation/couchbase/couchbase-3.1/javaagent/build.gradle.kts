@@ -30,6 +30,6 @@ dependencies {
 
 tasks {
   named<Test>("test") {
-    usesService(gradle.sharedServices.registrations.getByName("testcontainersBuildService").getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }
