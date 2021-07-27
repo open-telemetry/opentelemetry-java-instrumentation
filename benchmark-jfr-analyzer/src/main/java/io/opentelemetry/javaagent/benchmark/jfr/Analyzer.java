@@ -18,6 +18,7 @@ import jdk.jfr.consumer.RecordedFrame;
 import jdk.jfr.consumer.RecordedMethod;
 import jdk.jfr.consumer.RecordedStackTrace;
 import jdk.jfr.consumer.RecordingFile;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @SuppressWarnings("SystemOut")
 public class Analyzer {
@@ -61,6 +62,7 @@ public class Analyzer {
         .collect(Collectors.toSet());
   }
 
+  @Nullable
   private static String getAgentCaller(RecordedStackTrace stackTrace) {
     List<RecordedFrame> frames = stackTrace.getFrames();
     for (int i = frames.size() - 1; i >= 0; i--) {
