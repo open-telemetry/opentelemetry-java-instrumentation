@@ -54,6 +54,7 @@ public class PetClinicRestContainer {
         .withExposedPorts(PETCLINIC_PORT)
         .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
+        .withEnv("spring_profiles_active", "hsqldb,spring-data-jpa")
         .dependsOn(collector)
         .withCommand(buildCommandline(agentJar));
 
