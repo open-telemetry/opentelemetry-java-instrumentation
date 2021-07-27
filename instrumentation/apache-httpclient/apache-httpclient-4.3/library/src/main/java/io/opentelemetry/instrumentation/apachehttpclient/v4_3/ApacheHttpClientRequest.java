@@ -17,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class ApacheHttpClientRequest {
+public final class ApacheHttpClientRequest {
 
   private static final Logger logger = LoggerFactory.getLogger(ApacheHttpClientRequest.class);
 
@@ -39,6 +39,11 @@ final class ApacheHttpClientRequest {
     }
     uri = calculatedUri;
     delegate = httpRequest;
+  }
+
+  /** Returns the actual {@link HttpRequest} being executed by the client. */
+  public HttpRequest getDelegate() {
+    return delegate;
   }
 
   @Nullable

@@ -4,10 +4,6 @@
  */
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 
 import org.apache.http.client.methods.HttpRequestBase
 

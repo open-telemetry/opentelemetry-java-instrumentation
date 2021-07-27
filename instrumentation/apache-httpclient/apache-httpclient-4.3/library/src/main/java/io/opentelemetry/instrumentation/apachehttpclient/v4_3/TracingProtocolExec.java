@@ -14,7 +14,6 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
-import org.apache.http.client.CircularRedirectException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpExecutionAware;
@@ -125,8 +124,7 @@ final class TracingProtocolExec implements ClientExecChain {
       HttpClientContext httpContext,
       HttpRequestWrapper request,
       ApacheHttpClientRequest instrumenterRequest,
-      @Nullable CloseableHttpResponse response)
-      throws ProtocolException {
+      @Nullable CloseableHttpResponse response) {
     if (response == null) {
       return false;
     }
@@ -138,7 +136,12 @@ final class TracingProtocolExec implements ClientExecChain {
     // the user defined redirect strategy without some tricks, but it's very rare to override
     // the strategy, usually it is either on or off as checked above. We can add support for this
     // later if needed.
-    if (!DefaultRedirectStrategy.INSTANCE.isRedirected(request, response, httpContext)) {
+    try {
+      if (!DefaultRedirectStrategy.INSTANCE.isRedirected(request, response, httpContext)) {
+        return false;
+      }
+    } catch (ProtocolException e) {
+      // DefaultRedirectStrategy.isRedirected cannot throw this so just return a default.
       return false;
     }
 
@@ -152,7 +155,7 @@ final class TracingProtocolExec implements ClientExecChain {
 
       try {
         DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
-      } catch (CircularRedirectException e) {
+      } catch (ProtocolException e) {
         // We will not be returning to the Exec, finish the span.
         instrumenter.end(context, instrumenterRequest, response, new ClientProtocolException(e));
         return true;
