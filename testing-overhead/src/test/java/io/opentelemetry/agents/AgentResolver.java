@@ -46,7 +46,4 @@ public class AgentResolver {
     Files.write(path, raw, StandardOpenOption.WRITE,  StandardOpenOption.TRUNCATE_EXISTING);
     return path;
   }
-
-  // TODO: Download latest snapshot
-
 }
