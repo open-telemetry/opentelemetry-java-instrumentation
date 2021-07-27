@@ -304,14 +304,14 @@ public final class ReferenceMatcher {
   }
 
   // optimization to avoid ArrayList allocation in the common case when there are no mismatches
-  private static List<Mismatch> lazyAdd(List<Mismatch> mismatches, Mismatch mismatch) {
+  static List<Mismatch> lazyAdd(List<Mismatch> mismatches, Mismatch mismatch) {
     List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<>() : mismatches;
     result.add(mismatch);
     return result;
   }
 
   // optimization to avoid ArrayList allocation in the common case when there are no mismatches
-  private static List<Mismatch> lazyAddAll(List<Mismatch> mismatches, List<Mismatch> toAdd) {
+  static List<Mismatch> lazyAddAll(List<Mismatch> mismatches, List<Mismatch> toAdd) {
     if (!toAdd.isEmpty()) {
       List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<>() : mismatches;
       result.addAll(toAdd);

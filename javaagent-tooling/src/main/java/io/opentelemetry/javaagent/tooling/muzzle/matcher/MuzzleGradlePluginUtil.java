@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.io.IOException;
@@ -54,45 +55,32 @@ public final class MuzzleGradlePluginUtil {
   public static void assertInstrumentationMuzzled(
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
-    // muzzle validate all instrumenters
-    int validatedModulesCount = 0;
-    for (InstrumentationModule instrumentationModule :
-        ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-      ReferenceMatcher muzzle =
-          new ReferenceMatcher(
-              instrumentationModule.getMuzzleHelperClassNames(),
-              instrumentationModule.getMuzzleReferences(),
-              instrumentationModule::isHelperClass);
-      List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
-      boolean classLoaderMatch =
-          instrumentationModule.classLoaderMatcher().matches(userClassLoader);
-      boolean passed = mismatches.isEmpty() && classLoaderMatch;
+    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(agentClassLoader);
 
-      if (passed && !assertPass) {
-        System.err.println(
-            "MUZZLE PASSED "
-                + instrumentationModule.getClass().getSimpleName()
-                + " BUT FAILURE WAS EXPECTED");
-        throw new IllegalStateException("Instrumentation unexpectedly passed Muzzle validation");
-      } else if (!passed && assertPass) {
-        System.err.println(
-            "FAILED MUZZLE VALIDATION: "
-                + instrumentationModule.getClass().getName()
-                + " mismatches:");
+    Map<String, List<Mismatch>> allMismatches = ClassLoaderMatcher.matchesAll(userClassLoader);
 
-        if (!classLoaderMatch) {
-          System.err.println("-- classloader mismatch");
-        }
+    allMismatches.forEach(
+        (moduleName, mismatches) -> {
+          boolean passed = mismatches.isEmpty();
 
-        for (Mismatch mismatch : mismatches) {
-          System.err.println("-- " + mismatch);
-        }
-        throw new IllegalStateException("Instrumentation failed Muzzle validation");
-      }
+          if (passed && !assertPass) {
+            System.err.println("MUZZLE PASSED " + moduleName + " BUT FAILURE WAS EXPECTED");
+            throw new IllegalStateException(
+                "Instrumentation unexpectedly passed Muzzle validation");
+          } else if (!passed && assertPass) {
+            System.err.println("FAILED MUZZLE VALIDATION: " + moduleName + " mismatches:");
 
-      validatedModulesCount++;
-    }
+            for (Mismatch mismatch : mismatches) {
+              System.err.println("-- " + mismatch);
+            }
+            throw new IllegalStateException("Instrumentation failed Muzzle validation");
+          }
+        });
+
+    Thread.currentThread().setContextClassLoader(contextClassLoader);
+
     // run helper injector on all instrumentation modules
     if (assertPass) {
       for (InstrumentationModule instrumentationModule :
@@ -113,6 +101,8 @@ public final class MuzzleGradlePluginUtil {
         }
       }
     }
+
+    int validatedModulesCount = allMismatches.size();
     if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
