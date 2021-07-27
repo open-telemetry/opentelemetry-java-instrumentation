@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.benchmark.servlet;
 
 import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
-import io.opentelemetry.javaagent.benchmark.util.HttpClient;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -29,21 +31,31 @@ public class ServletBenchmark {
     HelloWorldApplication.main();
   }
 
-  private HttpClient client;
+  private URL client;
+  private byte[] buffer;
 
   @Setup
   public void setup() throws IOException {
-    client = new HttpClient("localhost", 8080, "/");
+    client = new URL("http://localhost:8080");
+    buffer = new byte[8192];
   }
 
   @TearDown
-  public void tearDown() throws IOException {
+  public void tearDown() {
     HelloWorldApplication.stop();
-    client.close();
   }
 
   @Benchmark
   public void execute() throws IOException {
-    client.execute();
+    HttpURLConnection connection = (HttpURLConnection) client.openConnection();
+    InputStream inputStream = connection.getInputStream();
+    drain(inputStream);
+    inputStream.close();
+    connection.disconnect();
+  }
+
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void drain(InputStream inputStream) throws IOException {
+    while (inputStream.read(buffer) != -1) {}
   }
 }
