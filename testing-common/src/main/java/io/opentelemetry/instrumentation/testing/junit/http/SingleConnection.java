@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.junit;
+package io.opentelemetry.instrumentation.testing.junit.http;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;

@@ -13,7 +13,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;

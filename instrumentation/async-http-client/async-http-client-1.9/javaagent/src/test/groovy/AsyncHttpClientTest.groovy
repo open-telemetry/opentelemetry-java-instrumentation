@@ -12,8 +12,8 @@ import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 

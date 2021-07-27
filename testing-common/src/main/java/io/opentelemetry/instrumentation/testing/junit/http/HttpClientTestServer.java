@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.junit;
+package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8;

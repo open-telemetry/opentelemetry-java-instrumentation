@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.junit;
+package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -765,7 +765,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           });
     }
 
-    testing.waitAndAssertTraces(assertions.toArray(new Consumer[0]));
+    testing.waitAndAssertTraces(assertions);
 
     pool.shutdown();
   }
@@ -843,7 +843,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           });
     }
 
-    testing.waitAndAssertTraces(assertions.toArray(new Consumer[0]));
+    testing.waitAndAssertTraces(assertions);
 
     pool.shutdown();
   }
@@ -922,7 +922,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           });
     }
 
-    testing.waitAndAssertTraces(assertions.toArray(new Consumer[0]));
+    testing.waitAndAssertTraces(assertions);
 
     pool.shutdown();
   }
@@ -1183,12 +1183,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return sendRequest(request, method, uri, headers);
   }
 
-  // ideally private, but then groovy closures in this class cannot find them
   private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback) {
     return doRequestWithCallback(method, uri, Collections.emptyMap(), callback);
   }
 
-  // ideally private, but then groovy closures in this class cannot find them
   private RequestResult doRequestWithCallback(
       String method, URI uri, Map<String, String> headers, Runnable callback) {
     REQUEST request = buildRequest(method, uri, headers);

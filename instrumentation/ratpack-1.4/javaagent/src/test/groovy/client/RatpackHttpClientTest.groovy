@@ -10,8 +10,8 @@ import io.netty.handler.timeout.ReadTimeoutException
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException

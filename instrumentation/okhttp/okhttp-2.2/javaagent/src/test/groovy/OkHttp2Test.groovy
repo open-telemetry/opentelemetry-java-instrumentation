@@ -12,7 +12,7 @@ import com.squareup.okhttp.Response
 import com.squareup.okhttp.internal.http.HttpMethod
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 

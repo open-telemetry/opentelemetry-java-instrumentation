@@ -3,21 +3,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.junit;
+package io.opentelemetry.instrumentation.testing.junit.http;
 
 import io.opentelemetry.instrumentation.testing.AgentTestRunner;
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public final class HttpClientAgentInstrumentationExtension extends InstrumentationExtension {
+/**
+ * A {@link InstrumentationExtension} which sets up infrastructure, such as a test HTTP server, for
+ * {@link AbstractHttpClientTest}.
+ */
+public final class HttpClientInstrumentationExtension extends InstrumentationExtension {
 
-  public static InstrumentationExtension create() {
-    return new HttpClientAgentInstrumentationExtension();
+  /**
+   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
+   * javaagent instrumentation.
+   */
+  public static InstrumentationExtension forAgent() {
+    return new HttpClientInstrumentationExtension(AgentTestRunner.instance());
+  }
+
+  /**
+   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
+   * library instrumentation.
+   */
+  public static InstrumentationExtension forLibrary() {
+    return new HttpClientInstrumentationExtension(LibraryTestRunner.instance());
   }
 
   private final HttpClientTestServer server;
 
-  private HttpClientAgentInstrumentationExtension() {
-    super(AgentTestRunner.instance());
+  private HttpClientInstrumentationExtension(InstrumentationTestRunner runner) {
+    super(runner);
 
     server = new HttpClientTestServer(getOpenTelemetry());
   }

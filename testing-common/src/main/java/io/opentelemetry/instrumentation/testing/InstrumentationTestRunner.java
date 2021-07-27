@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
@@ -73,6 +74,11 @@ public interface InstrumentationTestRunner {
       List<List<SpanData>> traces = waitForTraces(assertions.length);
       TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
     }
+  }
+
+  default void waitAndAssertTraces(Iterable<Consumer<TraceAssert>> assertions) {
+    waitAndAssertTraces(
+        StreamSupport.stream(assertions.spliterator(), false).toArray(Consumer[]::new));
   }
 
   /**
