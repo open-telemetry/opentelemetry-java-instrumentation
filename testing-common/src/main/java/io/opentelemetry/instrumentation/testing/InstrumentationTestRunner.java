@@ -76,7 +76,7 @@ public interface InstrumentationTestRunner {
     }
   }
 
-  default void waitAndAssertTraces(Iterable<Consumer<TraceAssert>> assertions) {
+  default void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
     waitAndAssertTraces(
         StreamSupport.stream(assertions.spliterator(), false).toArray(Consumer[]::new));
   }
