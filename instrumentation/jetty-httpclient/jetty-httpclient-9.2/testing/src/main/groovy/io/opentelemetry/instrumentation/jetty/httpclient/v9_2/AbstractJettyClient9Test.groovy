@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.TimeUnit
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.api.ContentResponse
 import org.eclipse.jetty.client.api.Request
@@ -15,11 +17,7 @@ import org.eclipse.jetty.client.api.Response
 import org.eclipse.jetty.client.api.Result
 import org.eclipse.jetty.http.HttpMethod
 import org.eclipse.jetty.util.ssl.SslContextFactory
-import org.junit.Rule
-import org.junit.rules.TestName
 import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
 
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
@@ -32,9 +30,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   def client = createStandardClient()
   @Shared
   def httpsClient = null
-
-  @Rule
-  TestName name = new TestName()
 
   Request jettyRequest = null
 
@@ -55,6 +50,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     HttpClient theClient = uri.scheme == 'https' ? httpsClient : client
 
     Request request = theClient.newRequest(uri)
+    request.agent("Jetty")
 
     HttpMethod methodObj = HttpMethod.valueOf(method)
     request.method(methodObj)
@@ -67,9 +63,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   @Override
   String userAgent() {
-    if (name.methodName.startsWith('connection error') && jettyRequest.getAgent() == null) {
-      return null
-    }
     return "Jetty"
   }
 
@@ -102,7 +95,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
 
     JettyClientListener jcl = new JettyClientListener()
 

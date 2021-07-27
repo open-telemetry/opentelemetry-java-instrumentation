@@ -22,6 +22,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
@@ -86,7 +87,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     Channel ch
     try {
       ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()

@@ -16,5 +16,7 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
 }

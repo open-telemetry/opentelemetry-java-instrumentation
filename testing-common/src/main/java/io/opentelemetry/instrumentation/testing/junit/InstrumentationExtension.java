@@ -11,14 +11,12 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
-import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -38,7 +36,7 @@ public abstract class InstrumentationExtension
   }
 
   @Override
-  public void beforeAll(ExtensionContext extensionContext) {
+  public void beforeAll(ExtensionContext extensionContext) throws Exception {
     testRunner.beforeTestClass();
   }
 
@@ -56,7 +54,7 @@ public abstract class InstrumentationExtension
   }
 
   @Override
-  public void afterAll(ExtensionContext extensionContext) {
+  public void afterAll(ExtensionContext extensionContext) throws Exception {
     testRunner.afterTestClass();
   }
 
@@ -68,11 +66,6 @@ public abstract class InstrumentationExtension
   /** Return a list of all captured spans. */
   public List<SpanData> spans() {
     return testRunner.getExportedSpans();
-  }
-
-  /** Return a list of all captured traces, where each trace is a sorted list of spans. */
-  public List<List<SpanData>> traces() {
-    return TelemetryDataUtil.groupTraces(spans());
   }
 
   /** Return a list of all captured metrics. */
@@ -100,9 +93,8 @@ public abstract class InstrumentationExtension
   }
 
   /**
-   * Removes all captured telemetry data. After calling this method {@link #spans()}, {@link
-   * #traces()} and {@link #metrics()} will return empty lists until more telemetry data is
-   * captured.
+   * Removes all captured telemetry data. After calling this method {@link #spans()} and {@link
+   * #metrics()} will return empty lists until more telemetry data is captured.
    */
   public void clearData() {
     testRunner.clearAllExportedData();
@@ -112,25 +104,14 @@ public abstract class InstrumentationExtension
    * Wait until at least {@code numberOfTraces} traces are completed and return all captured traces.
    * Note that there may be more than {@code numberOfTraces} collected. By default this waits up to
    * 20 seconds, then times out.
-   *
-   * @throws TimeoutException when the operation times out
-   * @throws InterruptedException when the current thread is interrupted
    */
-  public List<List<SpanData>> waitForTraces(int numberOfTraces)
-      throws TimeoutException, InterruptedException {
-    return waitForTraces(numberOfTraces, DEFAULT_TRACE_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+  public List<List<SpanData>> waitForTraces(int numberOfTraces) {
+    return testRunner.waitForTraces(numberOfTraces);
   }
 
-  /**
-   * Wait until at least {@code numberOfTraces} traces are completed and return all captured traces.
-   * Note that there may be more than {@code numberOfTraces} collected.
-   *
-   * @throws TimeoutException when the operation times out
-   * @throws InterruptedException when the current thread is interrupted
-   */
-  public List<List<SpanData>> waitForTraces(int numberOfTraces, long timeout, TimeUnit unit)
-      throws TimeoutException, InterruptedException {
-    return TelemetryDataUtil.waitForTraces(this::spans, numberOfTraces, timeout, unit);
+  @SafeVarargs
+  public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertTraces(assertions);
   }
 
   /**
@@ -185,5 +166,9 @@ public abstract class InstrumentationExtension
   public <T, E extends Throwable> T runWithServerSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
     return testRunner.runWithServerSpan(spanName, callback);
+  }
+
+  protected InstrumentationTestRunner getTestRunner() {
+    return testRunner;
   }
 }

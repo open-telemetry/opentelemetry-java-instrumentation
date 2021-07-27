@@ -23,6 +23,8 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
   library("org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final")
 

@@ -9,9 +9,9 @@ import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
@@ -69,7 +69,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     exec.execute(Operation.of {
       internalSendRequest(client, method, uri, headers).result {result ->
         requestResult.complete({ result.value }, result.throwable)
@@ -122,16 +122,13 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
-    // non routable address
+  Throwable clientSpanError(URI uri, Throwable exception) {
     if (uri.toString() == "https://192.0.2.1/") {
-      spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
-      return
+        return new ConnectTimeoutException("connection timed out: /192.0.2.1:443")
     } else if (uri.getPath() == "/read-timeout") {
-      spanAssert.errorEvent(ReadTimeoutException)
-      return
+      return new ReadTimeoutException()
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override
