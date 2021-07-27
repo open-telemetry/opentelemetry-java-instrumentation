@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.rmi;
+package io.opentelemetry.javaagent.bootstrap.rmi;
 
 import io.opentelemetry.context.Context;
 
