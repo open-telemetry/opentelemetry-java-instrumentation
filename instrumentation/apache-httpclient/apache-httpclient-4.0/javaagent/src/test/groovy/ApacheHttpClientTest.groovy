@@ -105,7 +105,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    // also testing with absolute path below
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
@@ -144,7 +144,7 @@ class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpR
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    // also testing with absolute path below
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
