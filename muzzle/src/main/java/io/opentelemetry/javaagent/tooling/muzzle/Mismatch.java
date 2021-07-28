@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
@@ -164,6 +165,22 @@ public abstract class Mismatch {
       PrintWriter pw = new PrintWriter(sw);
       referenceCheckException.printStackTrace(pw);
       return sw.toString();
+    }
+  }
+
+  /**
+   * Represents failure of some classloader to satisfy {@link
+   * InstrumentationModule#classLoaderMatcher()}.
+   */
+  public static class InstrumentationModuleClassLoaderMismatch extends Mismatch {
+
+    public InstrumentationModuleClassLoaderMismatch() {
+      super(Collections.emptyList());
+    }
+
+    @Override
+    String getMismatchDetails() {
+      return "InstrumentationModule classloader check";
     }
   }
 }

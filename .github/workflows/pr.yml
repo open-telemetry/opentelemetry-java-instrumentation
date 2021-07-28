@@ -208,8 +208,10 @@ jobs:
           max_attempts: 3
           command: ./gradlew ${{ matrix.module }}:muzzle
 
-  example-distro:
+  examples:
     runs-on: ubuntu-latest
+    # When we make PR against pre-release branch examples may point to yet-unpublished version
+    if: github.base_ref == 'main'
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -227,12 +229,16 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Build distro
+        run: ./gradlew build
         working-directory: examples/distro
 
+      - name: Build extension
+        run: ./gradlew build
+        working-directory: examples/extension
+
   accept-pr:
-    needs: [ build, test, smoke-test, muzzle ]
+    needs: [ build, test, smoke-test, muzzle, examples ]
     runs-on: ubuntu-latest
     if: always()
     steps:

@@ -100,9 +100,10 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
+      HttpHost target = delegate.getTarget();
       HttpRequest request = delegate.generateRequest();
 
-      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(request);
+      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(target, request);
 
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
         wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);

@@ -8,13 +8,13 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry         : "1.3.0",
-      opentelemetryJavaagent: "1.3.0",
+      opentelemetry              : "1.4.1",
+      opentelemetryAlpha         : "1.4.1-alpha",
+      opentelemetryJavaagent     : "1.5.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "1.5.0-alpha-SNAPSHOT",
       bytebuddy             : "1.10.18",
       guava                 : "30.1-jre"
     ]
-    versions.opentelemetryAlpha = "${versions.opentelemetry}-alpha"
-    versions.opentelemetryJavaagentAlpha = "${versions.opentelemetryJavaagent}-alpha"
 
     deps = [
       bytebuddy           : "net.bytebuddy:byte-buddy:${versions.bytebuddy}",
@@ -29,10 +29,11 @@ subprojects {
   }
 
   repositories {
+    mavenCentral()
     maven {
+      name = "sonatype"
       url = uri("https://oss.sonatype.org/content/repositories/snapshots")
     }
-    mavenCentral()
   }
 
   dependencies {

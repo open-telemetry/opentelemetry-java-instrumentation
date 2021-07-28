@@ -94,6 +94,12 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
     }
     return builder.toString()
   }
+
+  static String absoluteUriWithNonResolvingHost(URI uri) {
+    // substituting a non-resolving host and port to make sure that the host and port from this uri are not used
+    return new URI(uri.getScheme(), uri.getAuthority(), "nowhere", 1, uri.getPath(), uri.getQuery(), uri.getFragment())
+      .toString()
+  }
 }
 
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {

@@ -1,15 +1,15 @@
 package com.example.javaagent;
 
-import io.opentelemetry.javaagent.spi.config.PropertySource;
+import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.util.Map;
 
 /**
- * {@link PropertySource} is an SPI provided by OpenTelemetry Java instrumentation agent.
+ * {@link ConfigPropertySource} is an SPI provided by OpenTelemetry Java instrumentation agent.
  * By implementing it custom distributions can supply their own default configuration.
  * The configuration priority, from highest to lowest is:
  * system properties -> environment variables -> configuration file -> PropertySource SPI -> hard-coded defaults
  */
-public class DemoPropertySource implements PropertySource {
+public class DemoPropertySource implements ConfigPropertySource {
 
   @Override
   public Map<String, String> getProperties() {
