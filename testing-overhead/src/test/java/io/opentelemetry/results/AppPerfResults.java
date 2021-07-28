@@ -41,6 +41,10 @@ public class AppPerfResults {
     return agent;
   }
 
+  String getAgentName() {
+    return agent.getName();
+  }
+
   TestConfig getConfig() {
     return config;
   }

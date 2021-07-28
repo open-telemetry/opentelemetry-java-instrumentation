@@ -4,9 +4,8 @@
  */
 package io.opentelemetry.results;
 
-import io.opentelemetry.agents.Agent;
-import java.util.Map;
+import java.util.List;
 
 public interface ResultsPersister {
-  void write(Map<Agent, AppPerfResults> results);
+  void write(List<AppPerfResults> results);
 }

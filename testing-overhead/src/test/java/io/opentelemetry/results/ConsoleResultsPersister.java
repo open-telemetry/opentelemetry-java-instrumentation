@@ -7,14 +7,14 @@ package io.opentelemetry.results;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.List;
 import java.util.function.Function;
 
 public class ConsoleResultsPersister implements ResultsPersister {
 
   @Override
-  public void write(Map<Agent, AppPerfResults> results) {
-    TestConfig config = results.values().stream().findFirst().get().getConfig();
+  public void write(List<AppPerfResults> results) {
+    TestConfig config = results.stream().findFirst().get().getConfig();
     System.out.println("----------------------------------------------------------");
     System.out.printf(" %s : %s\n", config.getName(), config.getDescription());
     System.out.printf(" %d users, %d iterations\n", config.getConcurrentConnections(), config.getTotalIterations());
@@ -35,14 +35,14 @@ public class ConsoleResultsPersister implements ResultsPersister {
     display(results, "Peak threads", res -> String.valueOf(res.getPeakThreadCount()));
   }
 
-  private void display(Map<Agent, AppPerfResults> results, String pref,
+  private void display(List<AppPerfResults> results, String pref,
       Function<AppPerfResults, String> vs) {
     System.out.printf("%-20s: ", pref);
-    results.entrySet().stream()
-        .sorted(Comparator.comparing(e -> e.getKey().getName()))
-        .forEach(entry -> {
-          Agent agent = entry.getKey();
-          System.out.printf("%17s", vs.apply(results.get(agent)));
+    results.stream()
+        .sorted(Comparator.comparing(AppPerfResults::getAgentName))
+        .forEach(result -> {
+          Agent agent = result.getAgent();
+          System.out.printf("%17s", vs.apply(result));
       });
     System.out.println();
   }

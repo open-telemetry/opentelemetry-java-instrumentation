@@ -26,7 +26,7 @@ import org.testcontainers.containers.Network;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -63,7 +63,7 @@ public class OverheadTests {
         fail("Unhandled exception in " + config.getName(), e);
       }
     });
-    Map<Agent, AppPerfResults> results = new ResultsCollector(localNamingConvention).collect(config);
+    List<AppPerfResults> results = new ResultsCollector(localNamingConvention).collect(config);
     new ConsoleResultsPersister().write(results);
   }
 

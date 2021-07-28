@@ -13,7 +13,7 @@ import io.opentelemetry.config.TestConfig;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ResultsCollector {
@@ -22,9 +22,10 @@ public class ResultsCollector {
 
   public ResultsCollector(NamingConvention namingConvention) {this.namingConvention = namingConvention; }
 
-  public Map<Agent, AppPerfResults> collect(TestConfig config) {
+  public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
-        .collect(Collectors.toMap(a -> a, a -> readAgentResults(a, config)));
+        .map(a -> readAgentResults(a, config))
+        .collect(Collectors.toList());
   }
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
