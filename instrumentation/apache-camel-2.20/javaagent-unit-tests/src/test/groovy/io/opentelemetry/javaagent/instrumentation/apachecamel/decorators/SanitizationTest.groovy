@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class SanitizationTest extends Specification {
 
+  @Unroll
   def "sanitize jdbc #originalSql"() {
 
     setup:
@@ -33,6 +35,7 @@ class SanitizationTest extends Specification {
     "SELECT col1 AS col2 FROM users WHERE field=1234" | "SELECT col1 AS col2 FROM users WHERE field=?"
   }
 
+  @Unroll
   def "sanitize sql #originalSql"() {
 
     setup:
