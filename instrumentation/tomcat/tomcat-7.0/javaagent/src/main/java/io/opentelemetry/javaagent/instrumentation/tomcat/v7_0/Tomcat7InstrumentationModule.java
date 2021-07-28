@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerInstrumentation;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,9 +33,10 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     // Tomcat 10+ is excluded by making sure Request does not have any methods returning
     // jakarta.servlet.ReadListener which is returned by getReadListener method on Tomcat 10+
-    return Collections.singletonList(
+    String packageName = Tomcat7InstrumentationModule.class.getPackage().getName();
+    return singletonList(
         new TomcatServerHandlerInstrumentation(
-            Tomcat7InstrumentationModule.class.getPackage().getName()
-                + ".Tomcat7ServerHandlerAdvice"));
+            packageName + ".Tomcat7ServerHandlerAdvice",
+            packageName + ".Tomcat7AttachResponseAdvice"));
   }
 }
