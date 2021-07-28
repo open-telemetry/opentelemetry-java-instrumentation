@@ -995,12 +995,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                         SemanticAttributes.HttpFlavorValues.HTTP_1_1);
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_USER_AGENT);
                 String userAgent = userAgent();
                 if (userAgent != null) {
+                  // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
+                  // hasEntrySatisfying.
+                  // https://github.com/open-telemetry/opentelemetry-java/pull/3433
+                  assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_USER_AGENT);
                   assertThat(attrs)
                       .hasEntrySatisfying(
                           SemanticAttributes.HTTP_USER_AGENT,
