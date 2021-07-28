@@ -34,7 +34,7 @@ public final class ApacheHttpClientRequest {
     } else {
       calculatedUri = getUri(httpRequest);
     }
-    if (httpHost != null && calculatedUri != null) {
+    if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
     } else {
       uri = calculatedUri;
