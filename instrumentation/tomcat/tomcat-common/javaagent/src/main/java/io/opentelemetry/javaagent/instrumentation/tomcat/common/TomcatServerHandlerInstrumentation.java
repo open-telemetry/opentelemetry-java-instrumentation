@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,7 +28,7 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.apache.coyote.Adapter"));
+    return named("org.apache.catalina.connector.CoyoteAdapter");
   }
 
   @Override
