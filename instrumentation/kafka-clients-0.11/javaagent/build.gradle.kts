@@ -41,7 +41,9 @@ tasks {
   val testPropagationDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
+      isFailOnNoMatchingTests = false
     }
+    include("**/KafkaClientPropagationDisabledTest.*")
     jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
   }
 
@@ -49,6 +51,7 @@ tasks {
     dependsOn(testPropagationDisabled)
     filter {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      isFailOnNoMatchingTests = false
     }
   }
 }
