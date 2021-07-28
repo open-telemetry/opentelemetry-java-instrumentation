@@ -109,8 +109,6 @@ public class JakartaServletAccessor
       request
           .getAsyncContext()
           .addListener(new Listener(listener), request, (HttpServletResponse) response);
-    } else {
-      request.getAsyncContext().addListener(new Listener(listener));
     }
   }
 

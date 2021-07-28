@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -17,15 +17,18 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
-  private final String adviceClassName;
+  private final String handlerAdviceClassName;
+  private final String attachResponseAdviceClassName;
 
-  public TomcatServerHandlerInstrumentation(String adviceClassName) {
-    this.adviceClassName = adviceClassName;
+  public TomcatServerHandlerInstrumentation(
+      String handlerAdviceClassName, String attachResponseAdviceClassName) {
+    this.handlerAdviceClassName = handlerAdviceClassName;
+    this.attachResponseAdviceClassName = attachResponseAdviceClassName;
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.apache.coyote.Adapter"));
+    return named("org.apache.catalina.connector.CoyoteAdapter");
   }
 
   @Override
@@ -36,6 +39,14 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
             .and(named("service"))
             .and(takesArgument(0, named("org.apache.coyote.Request")))
             .and(takesArgument(1, named("org.apache.coyote.Response"))),
-        adviceClassName);
+        handlerAdviceClassName);
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("postParseRequest"))
+            .and(takesArgument(0, named("org.apache.coyote.Request")))
+            .and(takesArgument(2, named("org.apache.coyote.Response")))
+            .and(returns(boolean.class)),
+        attachResponseAdviceClassName);
   }
 }

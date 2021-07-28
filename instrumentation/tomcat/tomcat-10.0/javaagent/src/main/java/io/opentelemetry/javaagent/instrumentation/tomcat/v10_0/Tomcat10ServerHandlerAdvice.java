@@ -31,12 +31,6 @@ public class Tomcat10ServerHandlerAdvice {
     context = tracer().startServerSpan(request);
 
     scope = context.makeCurrent();
-
-    TomcatServerHandlerAdviceHelper.attachResponseToRequest(
-        Tomcat10ServletEntityProvider.INSTANCE,
-        JakartaServletHttpServerTracer.tracer(),
-        request,
-        response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
