@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -12,7 +13,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.util.concurrent.Phaser
+import java.util.concurrent.CountDownLatch
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
@@ -63,11 +64,10 @@ class TestServlet3 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
-      def phaser = new Phaser(2)
+      def latch = new CountDownLatch(1)
       def context = req.startAsync()
       context.start {
         try {
-          phaser.arriveAndAwaitAdvance()
           HttpServerTest.controller(endpoint) {
             resp.contentType = "text/plain"
             switch (endpoint) {
@@ -104,11 +104,10 @@ class TestServlet3 {
             }
           }
         } finally {
-          phaser.arriveAndDeregister()
+          latch.countDown()
         }
       }
-      phaser.arriveAndAwaitAdvance()
-      phaser.arriveAndAwaitAdvance()
+      latch.await()
     }
   }
 
