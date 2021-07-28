@@ -120,10 +120,56 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 }
 
+class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
+  @Override
+  ClassicHttpRequest createRequest(String method, URI uri) {
+    // TODO(trask) substitute a non-resolving host and port to make sure that the host and port
+    //  from this uri are not used (currently that causes redirect tests to fail
+    //  because Apache HttpClient 5 appears to resolve relative redirects against this uri
+    //  instead of against the host, which is different from Apache HttpClient 4 behavior)
+    return new BasicClassicHttpRequest(method, uri.toString())
+  }
+
+  @Override
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request)
+  }
+
+  @Override
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request) {
+      callback.accept(it)
+    }
+  }
+}
+
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
     return new BasicClassicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request, new BasicHttpContext())
+  }
+
+  @Override
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request, new BasicHttpContext()) {
+      callback.accept(it)
+    }
+  }
+}
+
+class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
+  @Override
+  ClassicHttpRequest createRequest(String method, URI uri) {
+    // TODO(trask) substitute a non-resolving host and port to make sure that the host and port
+    //  from this uri are not used (currently that causes redirect tests to fail
+    //  because Apache HttpClient 5 appears to resolve relative redirects against this uri
+    //  instead of against the host, which is different from Apache HttpClient 4 behavior)
+    return new BasicClassicHttpRequest(method, uri.toString())
   }
 
   @Override
