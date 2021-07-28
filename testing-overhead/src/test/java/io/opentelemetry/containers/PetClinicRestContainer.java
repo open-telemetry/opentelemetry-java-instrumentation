@@ -52,7 +52,7 @@ public class PetClinicRestContainer {
         .withNetworkAliases("petclinic")
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withExposedPorts(PETCLINIC_PORT)
-        .withFileSystemBind(".", "/results")
+        .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .dependsOn(collector)
         .withCommand(buildCommandline(agentJar));
