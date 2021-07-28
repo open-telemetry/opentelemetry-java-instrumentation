@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcSingletons.handlerInstrumenter;
@@ -18,6 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -69,7 +71,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       // TODO (trask) is it important to check serverSpan != null here?
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        ServerNameUpdater.updateServerSpanName(parentContext, request);
+        ServerSpanNaming.updateServerSpanName(
+            parentContext,
+            CONTROLLER,
+            SpringWebMvcServerSpanNaming.getServerSpanNameSupplier(parentContext, request));
         // Now create a span for handler/controller execution.
         context = handlerInstrumenter().start(parentContext, handler);
         if (context != null) {
