@@ -12,7 +12,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +25,7 @@ public final class ApacheHttpClientRequest {
   private final HttpRequest delegate;
 
   public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    final URI calculatedUri;
-    if (httpRequest instanceof HttpUriRequest) {
-      // this path is just an optimization since we already have a URI object handy
-      // this can be relative or absolute
-      calculatedUri = ((HttpUriRequest) httpRequest).getURI();
-    } else {
-      calculatedUri = getUri(httpRequest);
-    }
+    URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
     } else {
