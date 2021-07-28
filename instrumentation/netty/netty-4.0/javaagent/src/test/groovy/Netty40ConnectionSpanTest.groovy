@@ -155,7 +155,7 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
             "${SemanticAttributes.NET_PEER_PORT.key}" uri.port
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
           }
         }
       }

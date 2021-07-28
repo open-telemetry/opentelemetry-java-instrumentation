@@ -118,6 +118,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" PortUtils.UNUSABLE_PORT
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
           }
         }
       }
