@@ -81,7 +81,7 @@ public final class ReferenceMatcher {
     List<Mismatch> mismatches = emptyList();
 
     for (ClassRef reference : references.values()) {
-      mismatches = lazyAddAll(mismatches, checkMatch(reference, typePool, loader));
+      mismatches = addAll(mismatches, checkMatch(reference, typePool, loader));
     }
 
     return mismatches;
@@ -150,7 +150,7 @@ public final class ReferenceMatcher {
 
       undeclaredFields.removeAll(superClassFields);
       for (HelperReferenceWrapper.Field missingField : undeclaredFields) {
-        mismatches = lazyAdd(mismatches, new Mismatch.MissingField(helperClass, missingField));
+        mismatches = add(mismatches, new Mismatch.MissingField(helperClass, missingField));
       }
     }
 
@@ -167,8 +167,7 @@ public final class ReferenceMatcher {
 
     abstractMethods.removeAll(plainMethods);
     for (HelperReferenceWrapper.Method unimplementedMethod : abstractMethods) {
-      mismatches =
-          lazyAdd(mismatches, new Mismatch.MissingMethod(helperClass, unimplementedMethod));
+      mismatches = add(mismatches, new Mismatch.MissingMethod(helperClass, unimplementedMethod));
     }
 
     return mismatches;
@@ -202,7 +201,7 @@ public final class ReferenceMatcher {
       if (!flag.matches(typeOnClasspath.getActualModifiers(false))) {
         String desc = reference.getClassName();
         mismatches =
-            lazyAdd(
+            add(
                 mismatches,
                 new Mismatch.MissingFlag(
                     reference.getSources(), desc, flag, typeOnClasspath.getActualModifiers(false)));
@@ -212,7 +211,7 @@ public final class ReferenceMatcher {
     for (FieldRef fieldRef : reference.getFields()) {
       FieldDescription.InDefinedShape fieldDescription = findField(fieldRef, typeOnClasspath);
       if (fieldDescription == null) {
-        mismatches = lazyAdd(mismatches, new Mismatch.MissingField(reference, fieldRef));
+        mismatches = add(mismatches, new Mismatch.MissingField(reference, fieldRef));
       } else {
         for (Flag flag : fieldRef.getFlags()) {
           if (!flag.matches(fieldDescription.getModifiers())) {
@@ -222,7 +221,7 @@ public final class ReferenceMatcher {
                     + fieldRef.getName()
                     + Type.getType(fieldRef.getDescriptor()).getInternalName();
             mismatches =
-                lazyAdd(
+                add(
                     mismatches,
                     new Mismatch.MissingFlag(
                         fieldRef.getSources(), desc, flag, fieldDescription.getModifiers()));
@@ -234,14 +233,14 @@ public final class ReferenceMatcher {
     for (MethodRef methodRef : reference.getMethods()) {
       MethodDescription.InDefinedShape methodDescription = findMethod(methodRef, typeOnClasspath);
       if (methodDescription == null) {
-        mismatches = lazyAdd(mismatches, new Mismatch.MissingMethod(reference, methodRef));
+        mismatches = add(mismatches, new Mismatch.MissingMethod(reference, methodRef));
       } else {
         for (Flag flag : methodRef.getFlags()) {
           if (!flag.matches(methodDescription.getModifiers())) {
             String desc =
                 reference.getClassName() + "#" + methodRef.getName() + methodRef.getDescriptor();
             mismatches =
-                lazyAdd(
+                add(
                     mismatches,
                     new Mismatch.MissingFlag(
                         methodRef.getSources(), desc, flag, methodDescription.getModifiers()));
@@ -304,14 +303,14 @@ public final class ReferenceMatcher {
   }
 
   // optimization to avoid ArrayList allocation in the common case when there are no mismatches
-  static List<Mismatch> lazyAdd(List<Mismatch> mismatches, Mismatch mismatch) {
+  static List<Mismatch> add(List<Mismatch> mismatches, Mismatch mismatch) {
     List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<>() : mismatches;
     result.add(mismatch);
     return result;
   }
 
   // optimization to avoid ArrayList allocation in the common case when there are no mismatches
-  static List<Mismatch> lazyAddAll(List<Mismatch> mismatches, List<Mismatch> toAdd) {
+  static List<Mismatch> addAll(List<Mismatch> mismatches, List<Mismatch> toAdd) {
     if (!toAdd.isEmpty()) {
       List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<>() : mismatches;
       result.addAll(toAdd);

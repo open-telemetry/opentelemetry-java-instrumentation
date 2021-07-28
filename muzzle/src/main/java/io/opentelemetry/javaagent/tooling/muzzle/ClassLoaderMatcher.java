@@ -13,7 +13,7 @@ import java.util.ServiceLoader;
 
 /**
  * This class verifies that a given {@link ClassLoader} satisfies all expectations of a given {@link
- * InstrumentationModule}. It is used to make sure than module's transformations can be safely
+ * InstrumentationModule}. It is used to make sure than a module's transformations can be safely
  * applied to a given class loader.
  *
  * @see InstrumentationModule
@@ -52,8 +52,7 @@ public class ClassLoaderMatcher {
 
     if (!instrumentationModule.classLoaderMatcher().matches(classLoader)) {
       mismatches =
-          ReferenceMatcher.lazyAdd(
-              mismatches, new Mismatch.InstrumentationModuleClassLoaderMismatch());
+          ReferenceMatcher.add(mismatches, new Mismatch.InstrumentationModuleClassLoaderMismatch());
     }
 
     return mismatches;

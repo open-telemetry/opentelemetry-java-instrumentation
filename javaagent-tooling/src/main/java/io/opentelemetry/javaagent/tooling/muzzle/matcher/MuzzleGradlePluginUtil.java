@@ -59,27 +59,30 @@ public final class MuzzleGradlePluginUtil {
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(agentClassLoader);
 
-    Map<String, List<Mismatch>> allMismatches = ClassLoaderMatcher.matchesAll(userClassLoader);
+    Map<String, List<Mismatch>> allMismatches;
+    try {
+      allMismatches = ClassLoaderMatcher.matchesAll(userClassLoader);
 
-    allMismatches.forEach(
-        (moduleName, mismatches) -> {
-          boolean passed = mismatches.isEmpty();
+      allMismatches.forEach(
+          (moduleName, mismatches) -> {
+            boolean passed = mismatches.isEmpty();
 
-          if (passed && !assertPass) {
-            System.err.println("MUZZLE PASSED " + moduleName + " BUT FAILURE WAS EXPECTED");
-            throw new IllegalStateException(
-                "Instrumentation unexpectedly passed Muzzle validation");
-          } else if (!passed && assertPass) {
-            System.err.println("FAILED MUZZLE VALIDATION: " + moduleName + " mismatches:");
+            if (passed && !assertPass) {
+              System.err.println("MUZZLE PASSED " + moduleName + " BUT FAILURE WAS EXPECTED");
+              throw new IllegalStateException(
+                  "Instrumentation unexpectedly passed Muzzle validation");
+            } else if (!passed && assertPass) {
+              System.err.println("FAILED MUZZLE VALIDATION: " + moduleName + " mismatches:");
 
-            for (Mismatch mismatch : mismatches) {
-              System.err.println("-- " + mismatch);
+              for (Mismatch mismatch : mismatches) {
+                System.err.println("-- " + mismatch);
+              }
+              throw new IllegalStateException("Instrumentation failed Muzzle validation");
             }
-            throw new IllegalStateException("Instrumentation failed Muzzle validation");
-          }
-        });
-
-    Thread.currentThread().setContextClassLoader(contextClassLoader);
+          });
+    } finally {
+      Thread.currentThread().setContextClassLoader(contextClassLoader);
+    }
 
     // run helper injector on all instrumentation modules
     if (assertPass) {
