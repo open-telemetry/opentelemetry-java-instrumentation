@@ -167,7 +167,7 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
-  example-distro:
+  examples:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
@@ -186,13 +186,17 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Build distro
+        run: ./gradlew build
         working-directory: examples/distro
+
+      - name: Build extension
+        run: ./gradlew build
+        working-directory: examples/extension
 
   snapshot:
     runs-on: ubuntu-latest
-    needs: [ build, test, testLatestDeps, smoke-test, example-distro ]
+    needs: [ build, test, testLatestDeps, smoke-test, examples ]
     steps:
       - uses: actions/checkout@v2.3.4
         with:

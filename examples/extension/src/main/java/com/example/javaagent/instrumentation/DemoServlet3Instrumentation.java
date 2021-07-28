@@ -6,13 +6,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
 
 public class DemoServlet3Instrumentation implements TypeInstrumentation {
   @Override

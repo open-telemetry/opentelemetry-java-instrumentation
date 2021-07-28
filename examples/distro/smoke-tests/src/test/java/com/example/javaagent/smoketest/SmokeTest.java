@@ -100,7 +100,7 @@ abstract class SmokeTest {
             new Request.Builder()
                 .url(
                     String.format(
-                        "http://localhost:%d/clear-requests", backend.getMappedPort(8080)))
+                        "http://localhost:%d/clear", backend.getMappedPort(8080)))
                 .build())
         .execute()
         .close();
