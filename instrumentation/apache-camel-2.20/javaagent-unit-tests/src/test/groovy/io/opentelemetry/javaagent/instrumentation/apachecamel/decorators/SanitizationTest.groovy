@@ -7,27 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators
 
 import org.apache.camel.Exchange
 import org.apache.camel.Message
-import org.springframework.boot.SpringApplication
-import org.springframework.context.ConfigurableApplicationContext
-import spock.lang.Shared
 import spock.lang.Specification
 
 class SanitizationTest extends Specification {
-
-  @Shared
-  ConfigurableApplicationContext server
-
-  def setupSpec() {
-    def app = new SpringApplication(SanitizationConfig)
-    server = app.run()
-  }
-
-  def cleanupSpec() {
-    if (server != null) {
-      server.close()
-      server = null
-    }
-  }
 
   def "sanitize jdbc #originalSql"() {
 
