@@ -20,3 +20,9 @@ dependencies {
   // Jedis 3.0 has API changes that prevent instrumentation from applying
   latestDepTestLibrary("redis.clients:jedis:2.+")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

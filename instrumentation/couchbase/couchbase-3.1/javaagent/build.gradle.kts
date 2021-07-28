@@ -27,3 +27,9 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.5")
   latestDepTestLibrary("com.couchbase.client:core-io:2.1.5")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

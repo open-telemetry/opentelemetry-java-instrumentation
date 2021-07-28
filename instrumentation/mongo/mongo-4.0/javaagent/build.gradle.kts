@@ -22,3 +22,9 @@ dependencies {
   testImplementation(project(":instrumentation:mongo:mongo-testing"))
   testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:1.50.5")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

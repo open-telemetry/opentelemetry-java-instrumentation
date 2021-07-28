@@ -31,6 +31,7 @@ tasks {
 
   named<Test>("test") {
     dependsOn(jms2Test)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }
 

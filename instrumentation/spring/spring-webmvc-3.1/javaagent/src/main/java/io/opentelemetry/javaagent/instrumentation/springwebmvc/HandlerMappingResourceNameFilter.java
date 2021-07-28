@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,19 +41,20 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
       return;
     }
 
-    Context context = Context.current();
-
     if (handlerMappings != null) {
-      try {
-        if (findMapping((HttpServletRequest) request)) {
-
-          // Name the parent span based on the matching pattern
-          // Let the parent span resource name be set with the attribute set in findMapping.
-          ServerNameUpdater.updateServerSpanName(context, (HttpServletRequest) request);
-        }
-      } catch (Exception ignored) {
-        // mapping.getHandler() threw exception.  Ignore
-      }
+      Context context = Context.current();
+      ServerSpanNaming.updateServerSpanName(
+          context,
+          CONTROLLER,
+          () -> {
+            if (findMapping((HttpServletRequest) request)) {
+              // Name the parent span based on the matching pattern
+              // Let the parent span resource name be set with the attribute set in findMapping.
+              return SpringWebMvcServerSpanNaming.getServerSpanName(
+                  context, (HttpServletRequest) request);
+            }
+            return null;
+          });
     }
 
     filterChain.doFilter(request, response);
@@ -64,12 +68,16 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
    * as an attribute on the request. This attribute is read by SpringWebMvcDecorator.onRequest and
    * set as the resource name.
    */
-  private boolean findMapping(HttpServletRequest request) throws Exception {
-    for (HandlerMapping mapping : handlerMappings) {
-      HandlerExecutionChain handler = mapping.getHandler(request);
-      if (handler != null) {
-        return true;
+  private boolean findMapping(HttpServletRequest request) {
+    try {
+      for (HandlerMapping mapping : handlerMappings) {
+        HandlerExecutionChain handler = mapping.getHandler(request);
+        if (handler != null) {
+          return true;
+        }
       }
+    } catch (Exception ignored) {
+      // mapping.getHandler() threw exception.  Ignore
     }
     return false;
   }

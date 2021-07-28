@@ -49,3 +49,9 @@ muzzle {
 dependencies {
   library("com.github.etaty:rediscala_2.11:1.8.0")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

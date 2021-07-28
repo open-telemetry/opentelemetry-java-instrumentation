@@ -56,5 +56,6 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }

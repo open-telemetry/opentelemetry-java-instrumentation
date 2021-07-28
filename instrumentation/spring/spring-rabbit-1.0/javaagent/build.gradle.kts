@@ -22,3 +22,9 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.22.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter:1.5.22.RELEASE")
 }
+
+tasks {
+  named<Test>("test") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}

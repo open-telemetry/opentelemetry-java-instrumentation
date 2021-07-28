@@ -50,7 +50,9 @@ public final class ServerSpanNaming {
   public static void updateServerSpanName(
       Context context, Source source, Supplier<String> serverSpanName) {
     Span serverSpan = ServerSpan.fromContextOrNull(context);
-    if (serverSpan == null) {
+    // checking isRecording() is a helpful optimization for more expensive suppliers
+    // (e.g. Spring MVC instrumentation's HandlerAdapterInstrumentation)
+    if (serverSpan == null || !serverSpan.isRecording()) {
       return;
     }
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
