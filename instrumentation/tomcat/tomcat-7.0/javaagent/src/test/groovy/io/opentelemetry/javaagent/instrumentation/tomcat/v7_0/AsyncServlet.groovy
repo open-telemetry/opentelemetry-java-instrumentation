@@ -54,7 +54,6 @@ class AsyncServlet extends AbstractHttpServlet {
             case ERROR:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
-//                resp.sendError(endpoint.status, endpoint.body)
               context.complete()
               break
             case EXCEPTION:
