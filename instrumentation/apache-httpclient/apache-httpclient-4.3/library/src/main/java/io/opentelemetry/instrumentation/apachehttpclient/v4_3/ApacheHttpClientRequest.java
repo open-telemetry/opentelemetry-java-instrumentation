@@ -31,11 +31,7 @@ public final class ApacheHttpClientRequest {
       calculatedUri = ((HttpUriRequest) httpRequest).getURI();
     }
     if (calculatedUri == null && httpHost != null) {
-      try {
-        calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
-      } catch (URISyntaxException e) {
-        // Ignore
-      }
+      calculatedUri = getCalculatedUri(httpHost, httpRequest);
     }
     uri = calculatedUri;
     delegate = httpRequest;
@@ -130,6 +126,33 @@ public final class ApacheHttpClientRequest {
       default:
         logger.debug("no default port mapping for scheme: {}", uri.getScheme());
         return null;
+    }
+  }
+
+  @Nullable
+  private static URI getCalculatedUri(HttpHost httpHost, HttpRequest httpRequest) {
+    final URI uri;
+    System.out.println("httpHost: " + httpHost);
+    System.out.println("httpRequest: " + httpRequest);
+    try {
+      // this can be relative or absolute
+      uri = new URI(httpRequest.getRequestLine().getUri());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
+    }
+    try {
+      return new URI(
+          httpHost.getSchemeName(),
+          null,
+          httpHost.getHostName(),
+          httpHost.getPort(),
+          uri.getPath(),
+          uri.getQuery(),
+          uri.getFragment());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
     }
   }
 }
