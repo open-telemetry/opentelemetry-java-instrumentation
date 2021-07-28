@@ -94,12 +94,38 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
     }
     return builder.toString()
   }
+
+  static String absoluteUriWithNonResolvingHost(URI uri) {
+    // substituting a non-resolving host and port to make sure that the host and port from this uri are not used
+    return new URI(uri.getScheme(), uri.getAuthority(), "nowhere", 1, uri.getPath(), uri.getQuery(), uri.getFragment())
+      .toString()
+  }
 }
 
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+      callback.accept(it)
+    }
+  }
+}
+
+class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, absoluteUriWithNonResolvingHost(uri))
   }
 
   @Override
@@ -118,7 +144,27 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+      callback.accept(it)
+    }, new BasicHttpContext())
+  }
+}
+
+class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, absoluteUriWithNonResolvingHost(uri))
   }
 
   @Override
