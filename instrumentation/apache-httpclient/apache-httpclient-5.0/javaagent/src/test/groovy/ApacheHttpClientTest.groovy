@@ -124,10 +124,6 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
 class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
-    // TODO(trask) substitute a non-resolving host and port to make sure that the host and port
-    //  from this uri are not used (currently that causes redirect tests to fail
-    //  because Apache HttpClient 5 appears to resolve relative redirects against this uri
-    //  instead of against the host, which is different from Apache HttpClient 4 behavior)
     return new BasicClassicHttpRequest(method, uri.toString())
   }
 
@@ -167,10 +163,6 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
 class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
-    // TODO(trask) substitute a non-resolving host and port to make sure that the host and port
-    //  from this uri are not used (currently that causes redirect tests to fail
-    //  because Apache HttpClient 5 appears to resolve relative redirects against this uri
-    //  instead of against the host, which is different from Apache HttpClient 4 behavior)
     return new BasicClassicHttpRequest(method, uri.toString())
   }
 
