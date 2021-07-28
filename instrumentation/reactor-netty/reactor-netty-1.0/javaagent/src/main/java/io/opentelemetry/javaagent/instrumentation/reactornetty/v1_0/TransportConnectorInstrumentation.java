@@ -29,7 +29,6 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // .and(takesArgument(3, named()))
     transformer.applyAdviceToMethod(
         named("connect").and(takesArgument(1, named("java.net.SocketAddress"))),
         TransportConnectorInstrumentation.class.getName() + "$ConnectAdvice");
