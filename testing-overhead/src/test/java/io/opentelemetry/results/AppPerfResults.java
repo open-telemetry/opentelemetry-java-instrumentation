@@ -105,7 +105,7 @@ public class AppPerfResults {
     private long totalAllocated;
     private MinMax heapUsed;
     private float maxThreadContextSwitchRate;
-    public long peakThreadCount;
+    private long peakThreadCount;
 
     AppPerfResults build() {
       return new AppPerfResults(this);
@@ -173,7 +173,24 @@ public class AppPerfResults {
   }
 
   public static class MinMax {
-    public long min = Long.MAX_VALUE;
-    public long max = Long.MIN_VALUE;
+    public final long min;
+    public final long max;
+
+    public MinMax(){
+      this(Long.MAX_VALUE, Long.MIN_VALUE);
+    }
+
+    public MinMax(long min, long max){
+      this.min = min;
+      this.max = max;
+    }
+
+    public MinMax withMin(long min){
+      return new MinMax(min, max);
+    }
+
+    public MinMax withMax(long max){
+      return new MinMax(min, max);
+    }
   }
 }

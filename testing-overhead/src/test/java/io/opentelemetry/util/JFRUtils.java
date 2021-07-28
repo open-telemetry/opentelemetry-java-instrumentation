@@ -25,10 +25,10 @@ public class JFRUtils {
   public static MinMax findMinMax(Path jfrFile, String eventName, String valueKey) throws IOException {
     return reduce(jfrFile, eventName, valueKey, new MinMax(), (MinMax acc, Long value) -> {
       if (value > acc.max) {
-          acc.max = value;
+          acc = acc.withMax(value);
         }
         if (value < acc.min) {
-          acc.min = value;
+          acc = acc.withMin(value);
         }
         return acc;
     });
