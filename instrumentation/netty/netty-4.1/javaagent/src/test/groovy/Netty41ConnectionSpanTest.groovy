@@ -6,6 +6,7 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.netty.bootstrap.Bootstrap
@@ -23,6 +24,7 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
@@ -117,6 +119,43 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           name "test-http-server"
           kind SERVER
           childOf(span(2))
+        }
+      }
+    }
+  }
+
+  def "test failing request"() {
+    when:
+    URI uri = URI.create("http://localhost:${PortUtils.UNUSABLE_PORT}")
+    def request = buildRequest("GET", uri, [:])
+    runWithSpan("parent") {
+      sendRequest(request, uri)
+    }
+
+    then:
+    def thrownException = thrown(Exception)
+
+    and:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+        }
+        span(1) {
+          name "CONNECT"
+          kind INTERNAL
+          childOf(span(0))
+          status ERROR
+          errorEvent(thrownException.class, thrownException.message)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+            "${SemanticAttributes.NET_PEER_PORT.key}" uri.port
+          }
         }
       }
     }
