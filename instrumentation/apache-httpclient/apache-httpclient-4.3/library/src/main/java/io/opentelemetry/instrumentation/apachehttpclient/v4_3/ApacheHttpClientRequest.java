@@ -140,8 +140,6 @@ public final class ApacheHttpClientRequest {
   @Nullable
   private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {
-      System.out.println("host: " + httpHost);
-      System.out.println("uri: " + uri);
       return new URI(
           httpHost.getSchemeName(),
           null,
