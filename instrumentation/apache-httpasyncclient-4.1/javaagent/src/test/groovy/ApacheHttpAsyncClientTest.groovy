@@ -39,6 +39,15 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   }
 
   @Override
+  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = createRequest(method, uri)
+    headers.entrySet().each {
+      request.setHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
@@ -46,6 +55,44 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
     ]
     super.httpAttributes(uri) + extra
   }
+
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+    def response = executeRequest(request, uri)
+    response.entity?.content?.close() // Make sure the connection is closed.
+    return response.statusLine.statusCode
+  }
+
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+    try {
+      executeRequestWithCallback(request, uri, new FutureCallback<HttpResponse>() {
+        @Override
+        void completed(HttpResponse httpResponse) {
+          httpResponse.entity?.content?.close() // Make sure the connection is closed.
+          requestResult.complete(httpResponse.statusLine.statusCode)
+        }
+
+        @Override
+        void failed(Exception e) {
+          requestResult.complete(e)
+        }
+
+        @Override
+        void cancelled() {
+          requestResult.complete(new CancellationException())
+        }
+      })
+    } catch (Throwable throwable) {
+      requestResult.complete(throwable)
+    }
+  }
+
+  abstract HttpUriRequest createRequest(String method, URI uri)
+
+  abstract HttpResponse executeRequest(HttpUriRequest request, URI uri)
+
+  abstract void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -68,75 +115,53 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
 
 class ApacheClientUriRequest extends ApacheHttpAsyncClientTest {
   @Override
-  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new HttpUriRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
+  HttpUriRequest createRequest(String method, URI uri) {
+    return new HttpUriRequest(method, uri)
   }
 
   @Override
-  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
-    return client.execute(request, null).get().statusLine.statusCode
+  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+    return client.execute(request, null).get()
   }
 
   @Override
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    client.execute(request, new FutureCallback<HttpResponse>() {
-      @Override
-      void completed(HttpResponse httpResponse) {
-        requestResult.complete(httpResponse.statusLine.statusCode)
-      }
-
-      @Override
-      void failed(Exception e) {
-        requestResult.complete(e)
-      }
-
-      @Override
-      void cancelled() {
-        throw new CancellationException()
-      }
-    })
+  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+    client.execute(request, callback)
   }
 }
 
 class ApacheClientHostRequest extends ApacheHttpAsyncClientTest {
   @Override
-  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new HttpUriRequest(method, new URI(fullPathFromURI(uri)))
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
+  HttpUriRequest createRequest(String method, URI uri) {
+    // also testing with absolute path below
+    return new HttpUriRequest(method, new URI(fullPathFromURI(uri)))
   }
 
   @Override
-  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null)
-      .get()
-      .statusLine
-      .statusCode
+  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
   }
 
   @Override
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new FutureCallback<HttpResponse>() {
-      @Override
-      void completed(HttpResponse httpResponse) {
-        requestResult.complete(httpResponse.statusLine.statusCode)
-      }
+  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
+  }
+}
 
-      @Override
-      void failed(Exception e) {
-        requestResult.complete(e)
-      }
+class ApacheClientHostAbsoluteUriRequest extends ApacheHttpAsyncClientTest {
 
-      @Override
-      void cancelled() {
-        throw new CancellationException()
-      }
-    })
+  @Override
+  HttpUriRequest createRequest(String method, URI uri) {
+    return new HttpUriRequest(method, new URI(uri.toString()))
+  }
+
+  @Override
+  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
+  }
+
+  @Override
+  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
   }
 }
