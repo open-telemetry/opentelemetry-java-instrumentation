@@ -26,7 +26,14 @@ public final class ApacheHttpClientRequest {
   private final HttpRequest delegate;
 
   public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    uri = getCalculatedUri(httpHost, httpRequest);
+    URI calculatedUri = null;
+    if (httpRequest instanceof HttpUriRequest) {
+      calculatedUri = ((HttpUriRequest) httpRequest).getURI();
+    }
+    if (calculatedUri == null && httpHost != null) {
+      calculatedUri = getCalculatedUri(httpHost, httpRequest);
+    }
+    uri = calculatedUri;
     delegate = httpRequest;
   }
 
