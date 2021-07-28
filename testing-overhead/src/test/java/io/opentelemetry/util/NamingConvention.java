@@ -27,4 +27,8 @@ public class NamingConvention {
   }
 
   public Path startupDurationFile(Agent agent) { return Paths.get(dir, "startup-time-" + agent.getName() + ".txt"); }
+
+  public String root() {
+    return dir;
+  }
 }

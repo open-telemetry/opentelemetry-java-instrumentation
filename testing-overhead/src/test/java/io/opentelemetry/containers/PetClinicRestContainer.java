@@ -10,9 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import io.opentelemetry.util.NamingConvention;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.agents.AgentResolver;
+import io.opentelemetry.util.NamingConventions;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,13 +33,13 @@ public class PetClinicRestContainer {
   private final Network network;
   private final Startable collector;
   private final Agent agent;
-  private final NamingConvention namingConvention;
+  private final NamingConventions namingConventions;
 
-  public PetClinicRestContainer(Network network, Startable collector, Agent agent, NamingConvention namingConvention) {
+  public PetClinicRestContainer(Network network, Startable collector, Agent agent, NamingConventions namingConventions) {
     this.network = network;
     this.collector = collector;
     this.agent = agent;
-    this.namingConvention = namingConvention;
+    this.namingConventions = namingConventions;
   }
 
   public GenericContainer<?> build() throws Exception {
@@ -52,7 +52,7 @@ public class PetClinicRestContainer {
         .withNetworkAliases("petclinic")
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withExposedPorts(PETCLINIC_PORT)
-        .withFileSystemBind(".", "/results")
+        .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .dependsOn(collector)
         .withCommand(buildCommandline(agentJar));
@@ -67,7 +67,7 @@ public class PetClinicRestContainer {
 
   @NotNull
   private String[] buildCommandline(Optional<Path> agentJar) {
-    Path jfrFile = namingConvention.jfrFile(this.agent);
+    Path jfrFile = namingConventions.container.jfrFile(this.agent);
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
         "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename="

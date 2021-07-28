@@ -4,9 +4,9 @@
  */
 package io.opentelemetry.containers;
 
-import io.opentelemetry.util.NamingConvention;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
+import io.opentelemetry.util.NamingConventions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -23,17 +23,17 @@ public class K6Container {
   private final Network network;
   private final Agent agent;
   private final TestConfig config;
-  private final NamingConvention namingConvention;
+  private final NamingConventions namingConventions;
 
-  public K6Container(Network network, Agent agent, TestConfig config, NamingConvention namingConvention) {
+  public K6Container(Network network, Agent agent, TestConfig config, NamingConventions namingConvention) {
     this.network = network;
     this.agent = agent;
     this.config = config;
-    this.namingConvention = namingConvention;
+    this.namingConventions = namingConvention;
   }
 
   public GenericContainer<?> build(){
-    Path k6OutputFile = namingConvention.k6Results(agent);
+    Path k6OutputFile = namingConventions.container.k6Results(agent);
     return new GenericContainer<>(
         DockerImageName.parse("loadimpact/k6"))
         .withNetwork(network)
@@ -41,7 +41,7 @@ public class K6Container {
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withCopyFileToContainer(
             MountableFile.forHostPath("./k6"), "/app")
-        .withFileSystemBind(".", "/results")
+        .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .withCommand(
             "run",
             "-u", String.valueOf(config.getConcurrentConnections()),
