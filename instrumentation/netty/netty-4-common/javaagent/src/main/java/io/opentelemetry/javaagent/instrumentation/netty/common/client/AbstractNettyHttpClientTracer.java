@@ -106,9 +106,11 @@ public abstract class AbstractNettyHttpClientTracer<REQUEST extends AbstractNett
       SocketAddress remoteAddress,
       Channel channel,
       Throwable throwable) {
-    if (context != null) {
-      // if context is present we started span in startConnectionSpan
-      endConnectionSpan(context, channel, throwable);
+    if (alwaysCreateConnectSpan) {
+      if (context != null) {
+        // if context is present we started span in startConnectionSpan
+        endConnectionSpan(context, channel, throwable);
+      }
     } else if (throwable != null && shouldStartSpan(parentContext, CLIENT)) {
       // if we didn't start span in startConnectionSpan create a span only when the request fails
       // and when not inside a client span

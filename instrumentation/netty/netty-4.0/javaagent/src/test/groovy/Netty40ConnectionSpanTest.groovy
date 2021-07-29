@@ -48,7 +48,7 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
   }
 
   def cleanupSpec() {
-    eventLoopGroup?.shutdownGracefully()
+    eventLoopGroup.shutdownGracefully()
     server.stop()
   }
 

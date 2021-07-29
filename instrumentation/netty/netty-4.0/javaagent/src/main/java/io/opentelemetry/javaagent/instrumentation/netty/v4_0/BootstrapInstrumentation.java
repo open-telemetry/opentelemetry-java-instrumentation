@@ -33,7 +33,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor(), BootstrapInstrumentation.class.getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("doConnect").and(takesArgument(0, named("java.net.SocketAddress"))),
+        named("doConnect").and(takesArgument(0, SocketAddress.class)),
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
