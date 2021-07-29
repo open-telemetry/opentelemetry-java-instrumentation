@@ -53,9 +53,6 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
-  annotationProcessor("com.google.auto.value:auto-value")
-  compileOnly("com.google.auto.value:auto-value-annotations")
-
   testImplementation(project(":javaagent-instrumentation-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
