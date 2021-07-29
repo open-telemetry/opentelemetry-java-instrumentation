@@ -12,6 +12,7 @@ import org.apache.camel.ProducerTemplate
 import org.testcontainers.containers.CassandraContainer
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.testcontainers.containers.GenericContainer
@@ -100,9 +101,9 @@ class CassandraTest extends AgentInstrumentationSpecification implements RetryOn
           kind CLIENT
           attributes {
             "apache-camel.uri" "cql://$host:$port/test"
-            "db.name" "test"
-            "db.statement" "select * from test.users where id=? ALLOW FILTERING"
-            "db.system" "cassandra"
+            "$SemanticAttributes.DB_NAME.key" "test"
+            "$SemanticAttributes.DB_STATEMENT.key" "select * from test.users where id=? ALLOW FILTERING"
+            "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
           }
         }
       }
