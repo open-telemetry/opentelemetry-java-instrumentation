@@ -10,7 +10,6 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -115,16 +114,6 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
         return []
     }
     return super.httpAttributes(uri)
-  }
-
-  @Override
-  SpanKind expectedClientSpanKind(URI uri) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return SpanKind.INTERNAL
-    }
-    return super.expectedClientSpanKind(uri)
   }
 
   @Override

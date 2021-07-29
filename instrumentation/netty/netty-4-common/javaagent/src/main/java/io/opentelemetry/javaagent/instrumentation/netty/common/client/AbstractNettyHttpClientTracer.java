@@ -134,7 +134,7 @@ public abstract class AbstractNettyHttpClientTracer<REQUEST extends AbstractNett
 
   private void connectionFailure(
       Context parentContext, SocketAddress remoteAddress, Channel channel, Throwable throwable) {
-    SpanBuilder spanBuilder = spanBuilder(parentContext, "CONNECT", INTERNAL);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, "CONNECT", CLIENT);
     if (channel != null) {
       spanBuilder.setAttribute(
           SemanticAttributes.NET_TRANSPORT, channel instanceof DatagramChannel ? IP_UDP : IP_TCP);

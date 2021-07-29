@@ -9,7 +9,6 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -121,11 +120,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     @Override
     protected String expectedClientSpanName(URI uri, String method) {
       return HttpClientTest.this.expectedClientSpanName(uri, method)
-    }
-
-    @Override
-    protected SpanKind expectedClientSpanKind(URI uri) {
-      return HttpClientTest.this.expectedClientSpanKind(uri)
     }
 
     @Override
@@ -416,10 +410,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   protected String expectedClientSpanName(URI uri, String method) {
     return method != null ? "HTTP " + method : "HTTP request"
-  }
-
-  protected SpanKind expectedClientSpanKind(URI uri) {
-    return SpanKind.CLIENT
   }
 
   Integer responseCodeOnRedirectError() {
