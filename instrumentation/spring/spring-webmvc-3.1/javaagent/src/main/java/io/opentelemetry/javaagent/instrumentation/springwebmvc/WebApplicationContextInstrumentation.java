@@ -19,6 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.web.servlet.OpenTelemetryHandlerMappingFilter;
 
 /**
  * This instrumentation adds the HandlerMappingResourceNameFilter definition to the spring context
@@ -62,7 +63,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
 
         ((BeanDefinitionRegistry) beanFactory)
             .registerBeanDefinition(
-                "otelAutoDispatcherFilter", new HandlerMappingResourceNameFilter.BeanDefinition());
+                "otelAutoDispatcherFilter", new OpenTelemetryHandlerMappingFilter.BeanDefinition());
       }
     }
   }
