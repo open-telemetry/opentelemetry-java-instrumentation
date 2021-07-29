@@ -9,10 +9,9 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.RequestLine;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,24 +24,13 @@ public final class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
 
-  public ApacheHttpClientRequest(HttpRequest httpRequest) {
-    URI calculatedUri;
-    if (httpRequest instanceof HttpUriRequest) {
-      // Note: this is essentially an optimization: HttpUriRequest allows quicker access to required
-      // information. The downside is that we need to load HttpUriRequest which essentially means we
-      // depend on httpasyncclient library depending on httpclient library. Currently this seems to
-      // be the case.
-      calculatedUri = ((HttpUriRequest) httpRequest).getURI();
+  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
+    URI calculatedUri = getUri(httpRequest);
+    if (calculatedUri != null && httpHost != null) {
+      uri = getCalculatedUri(httpHost, calculatedUri);
     } else {
-      RequestLine requestLine = httpRequest.getRequestLine();
-      try {
-        calculatedUri = new URI(requestLine.getUri());
-      } catch (URISyntaxException e) {
-        logger.debug(e.getMessage(), e);
-        calculatedUri = null;
-      }
+      uri = calculatedUri;
     }
-    uri = calculatedUri;
     delegate = httpRequest;
   }
 
@@ -131,6 +119,40 @@ public final class ApacheHttpClientRequest {
       default:
         logger.debug("no default port mapping for scheme: {}", uri.getScheme());
         return null;
+    }
+  }
+
+  @Nullable
+  private static URI getUri(HttpRequest httpRequest) {
+    try {
+      // this can be relative or absolute
+      return new URI(httpRequest.getRequestLine().getUri());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
+    try {
+      String path = uri.getPath();
+      if (!path.startsWith("/")) {
+        // elasticsearch RestClient sends relative urls
+        // TODO(trask) add test for this and extend to Apache 4, 4.3 and 5
+        path = "/" + path;
+      }
+      return new URI(
+          httpHost.getSchemeName(),
+          null,
+          httpHost.getHostName(),
+          httpHost.getPort(),
+          path,
+          uri.getQuery(),
+          uri.getFragment());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
     }
   }
 }
