@@ -59,7 +59,7 @@ implementation("org.springframework:spring-web:SPRING_VERSION")
 
 `SpringWebTracing` allows creating a
 custom [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html)
-that produces telemetry for HTTP requests sens using a `RestTemplate`. Example:
+that produces telemetry for HTTP requests sent using a `RestTemplate`. Example:
 
 ##### Usage
 
