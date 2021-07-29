@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -10,12 +11,21 @@ muzzle {
   }
 }
 
-//The first Vert.x version that uses rx-java 2
-val vertxVersion = "3.5.0"
+testSets {
+  create("version35Test")
+  create("latestDepTest")
+}
+
+tasks {
+  named<Test>("test") {
+    dependsOn("version35Test")
+  }
+}
 
 dependencies {
-  library("io.vertx:vertx-web:${vertxVersion}")
-  library("io.vertx:vertx-rx-java2:${vertxVersion}")
+  // The first Vert.x version that uses rx-java 2
+  compileOnly("io.vertx:vertx-web:3.5.0")
+  compileOnly("io.vertx:vertx-rx-java2:3.5.0")
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
@@ -24,23 +34,17 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx-http-client:vertx-http-client-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx-web-3.0:javaagent"))
 
-  testLibrary("io.vertx:vertx-web-client:${vertxVersion}")
-  testLibrary("io.vertx:vertx-jdbc-client:${vertxVersion}")
-  testLibrary("io.vertx:vertx-circuit-breaker:${vertxVersion}")
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 
-  // Vert.x 4.0 is incompatible with our tests.
-  // 3.9.7 Requires Netty 4.1.60, no other version works with it.
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final"))
-  latestDepTestLibrary("io.vertx:vertx-web:3.+")
-  latestDepTestLibrary("io.vertx:vertx-web-client:3.+")
-  latestDepTestLibrary("io.vertx:vertx-jdbc-client:3.+")
-  latestDepTestLibrary("io.vertx:vertx-circuit-breaker:3.+")
-  latestDepTestLibrary("io.vertx:vertx-rx-java2:3.+")
-}
+  add("version35TestImplementation", "io.vertx:vertx-web:3.5.0")
+  add("version35TestImplementation", "io.vertx:vertx-rx-java2:3.5.0")
+  add("version35TestImplementation", "io.vertx:vertx-web-client:3.5.0")
+  add("version35TestImplementation", "io.vertx:vertx-jdbc-client:3.5.0")
+  add("version35TestImplementation", "io.vertx:vertx-circuit-breaker:3.5.0")
 
-tasks {
-  named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-  }
+  add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-rx-java2:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-web-client:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-circuit-breaker:4.+")
 }
