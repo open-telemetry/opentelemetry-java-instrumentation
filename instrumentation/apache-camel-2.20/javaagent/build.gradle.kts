@@ -53,6 +53,7 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-jaxb-starter:2.+")
   latestDepTestLibrary("org.apache.camel:camel-undertow:2.+")
   latestDepTestLibrary("org.apache.camel:camel-aws:2.+")
+  latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+")
 }
 
 tasks {
