@@ -134,6 +134,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         tracer().endExceptionally(context, null, throwable);
       } else {
         future = future.whenComplete(new ResponseConsumer(context));
+        future = CompletableFutureWrapper.wrap(future);
       }
     }
   }
