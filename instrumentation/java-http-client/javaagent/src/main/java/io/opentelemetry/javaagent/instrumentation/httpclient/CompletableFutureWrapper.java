@@ -13,18 +13,11 @@ public final class CompletableFutureWrapper {
 
   private CompletableFutureWrapper() {}
 
-  public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future) {
-    if (future == null) {
-      return null;
+  public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
+    if (future == null || context == Context.root()) {
+      return future;
     }
-    Context context = Context.current();
-    if (context != Context.root()) {
-      return wrap(future, context);
-    }
-    return future;
-  }
 
-  private static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
     future.whenComplete(
         (T value, Throwable throwable) -> {
