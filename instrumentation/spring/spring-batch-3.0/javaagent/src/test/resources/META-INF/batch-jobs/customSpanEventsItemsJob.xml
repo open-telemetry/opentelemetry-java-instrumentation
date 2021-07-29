@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job id="customSpanEventsItemsJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <listeners>
+    <listener ref="jsr.CustomEventJobListener"/>
+  </listeners>
+  <step id="customSpanEventsItemStep">
+    <listeners>
+      <listener ref="jsr.CustomEventStepListener"/>
+      <listener ref="jsr.CustomEventChunkListener"/>
+      <listener ref="jsr.CustomEventItemReadListener"/>
+      <listener ref="jsr.CustomEventItemProcessListener"/>
+      <listener ref="jsr.CustomEventItemWriteListener"/>
+    </listeners>
+    <chunk item-count="5">
+      <reader ref="jsr.SingleItemReader"/>
+      <processor ref="jsr.TestItemProcessor"/>
+      <writer ref="jsr.TestItemWriter"/>
+    </chunk>
+  </step>
+</job>

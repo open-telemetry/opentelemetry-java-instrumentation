@@ -23,6 +23,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import springbatch.CustomEventChunkListener
+import springbatch.CustomEventItemProcessListener
+import springbatch.CustomEventItemReadListener
+import springbatch.CustomEventItemWriteListener
+import springbatch.CustomEventJobListener
+import springbatch.CustomEventStepListener
+import springbatch.SingleItemReader
 import springbatch.TestDecider
 import springbatch.TestItemProcessor
 import springbatch.TestItemReader
@@ -269,5 +276,29 @@ class SpringBatchApplication {
   @Bean
   ItemReader<String> partitionedItemReader() {
     new TestPartitionedItemReader()
+  }
+
+  // custom span events items job
+  @Bean
+  Job customSpanEventsItemsJob() {
+    jobs.get("customSpanEventsItemsJob")
+      .start(customSpanEventsItemStep())
+      .listener(new CustomEventJobListener())
+      .build()
+  }
+
+  @Bean
+  Step customSpanEventsItemStep() {
+    steps.get("customSpanEventsItemStep")
+      .chunk(5)
+      .reader(new SingleItemReader())
+      .processor(itemProcessor())
+      .writer(itemWriter())
+      .listener(new CustomEventStepListener())
+      .listener(new CustomEventChunkListener())
+      .listener(new CustomEventItemReadListener())
+      .listener(new CustomEventItemProcessListener())
+      .listener(new CustomEventItemWriteListener())
+      .build()
   }
 }

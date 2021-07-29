@@ -46,6 +46,11 @@ class SpanAssert {
     assertDefaults()
   }
 
+  void events(int expectedCount) {
+    assert span.totalRecordedEvents == expectedCount
+    assert span.events.size() == expectedCount
+  }
+
   void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= span.events.size()) {
       throw new ArrayIndexOutOfBoundsException(index)
