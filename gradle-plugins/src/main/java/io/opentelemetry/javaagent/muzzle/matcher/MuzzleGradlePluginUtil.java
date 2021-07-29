@@ -25,7 +25,7 @@ import java.util.ServiceLoader;
  * different independent class loaders at play here.
  * <p>
  * First, Gradle class loader that has loaded the muzzle-check plugin that calls this class. This
- * one has a lot of Gradle specific stuff and we don't want that it to be available during muzzle checks.
+ * one has a lot of Gradle specific stuff and we don't want it to be available during muzzle checks.
  * <p>
  * Second, there is agent or instrumentation class loader, which contains all InstrumentationModules
  * and helper classes. The actual muzzle check process happens "inside" that class loader. This means
