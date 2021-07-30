@@ -6,32 +6,22 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.api.annotation.support.AttributeBindings;
-import io.opentelemetry.instrumentation.api.annotation.support.BaseAttributeBinder;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.core.ParameterNameDiscoverer;
 
-public class WithSpanAspectAttributeBinder extends BaseAttributeBinder {
-
-  private static final Cache<Method, AttributeBindings> bindings =
-      Cache.newBuilder().setWeakKeys().build();
-
+class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
   private final ParameterNameDiscoverer parameterNameDiscoverer;
 
-  public WithSpanAspectAttributeBinder(ParameterNameDiscoverer parameterNameDiscoverer) {
+  public WithSpanAspectParameterAttributeNamesExtractor(
+      ParameterNameDiscoverer parameterNameDiscoverer) {
     this.parameterNameDiscoverer = parameterNameDiscoverer;
   }
 
   @Override
-  public AttributeBindings bind(Method method) {
-    return bindings.computeIfAbsent(method, super::bind);
-  }
-
-  @Override
-  protected @Nullable String[] attributeNamesForParameters(Method method, Parameter[] parameters) {
+  public @Nullable String[] extract(Method method, Parameter[] parameters) {
     String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
     String[] attributeNames = new String[parameters.length];
 

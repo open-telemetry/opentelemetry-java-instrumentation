@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.annotation.support.async;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A wrapper over {@link Instrumenter} that is able to defer {@link Instrumenter#end(Context,
@@ -35,13 +36,13 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
   private final Instrumenter<REQUEST, RESPONSE> instrumenter;
   private final Class<RESPONSE> responseType;
   private final Class<?> asyncType;
-  private final AsyncOperationEndStrategy asyncOperationEndStrategy;
+  private final @Nullable AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private AsyncOperationEndSupport(
       Instrumenter<REQUEST, RESPONSE> instrumenter,
       Class<RESPONSE> responseType,
       Class<?> asyncType,
-      AsyncOperationEndStrategy asyncOperationEndStrategy) {
+      @Nullable AsyncOperationEndStrategy asyncOperationEndStrategy) {
     this.instrumenter = instrumenter;
     this.responseType = responseType;
     this.asyncType = asyncType;
@@ -61,8 +62,10 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
    * won't be {@link Instrumenter#end(Context, Object, Object, Throwable) ended} until {@code
    * asyncValue} completes.
    */
+  @SuppressWarnings("unchecked")
+  @Nullable
   public <ASYNC> ASYNC asyncEnd(
-      Context context, REQUEST request, ASYNC asyncValue, Throwable throwable) {
+      Context context, REQUEST request, @Nullable ASYNC asyncValue, @Nullable Throwable throwable) {
     // we can end early if an exception was thrown
     if (throwable != null) {
       instrumenter.end(context, request, null, throwable);
