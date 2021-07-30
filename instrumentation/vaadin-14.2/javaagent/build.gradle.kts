@@ -44,6 +44,9 @@ tasks {
   named<Test>("test") {
     dependsOn(vaadin142Test)
     dependsOn(vaadin16Test)
+
+    testLogging.showStandardStreams = true
+
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
