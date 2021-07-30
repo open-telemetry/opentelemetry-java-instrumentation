@@ -22,13 +22,13 @@ import java.util.ServiceLoader;
  * Entry point for the muzzle gradle plugin.
  * <p>
  * In order to understand this class and its weirdness, one has to remember that there are three
- * different independent class loders at play here.
+ * different independent class loaders at play here.
  * <p>
- * First, Gradle classloader that has loaded the muzzle-check plugin that calls this class. This
+ * First, Gradle class loader that has loaded the muzzle-check plugin that calls this class. This
  * one has a lot of Gradle specific stuff and we don't want that it to be available during muzzle checks.
  * <p>
  * Second, there is agent or instrumentation class loader, which contains all InstrumentationModules
- * and helper classes. The actual muzzle check process happens "inside" that classloader. This means
+ * and helper classes. The actual muzzle check process happens "inside" that class loader. This means
  * that we load {@link io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher} from it and we
  * allow it to find all InstrumentationModules from agent class loader.
  * <p>
