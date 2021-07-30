@@ -106,8 +106,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler bodyHandler,
         @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
+      parentContext = currentContext();
       if (bodyHandler != null) {
         bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
       }
@@ -124,6 +125,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
@@ -134,6 +136,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         tracer().endExceptionally(context, null, throwable);
       } else {
         future = future.whenComplete(new ResponseConsumer(context));
+        future = CompletableFutureWrapper.wrap(future, parentContext);
       }
     }
   }
