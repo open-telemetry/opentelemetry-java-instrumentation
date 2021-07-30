@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 
 public class AgentInstaller {
 
-  private static final Logger logger;
+  private static final Logger logger = LoggerFactory.getLogger(AgentInstaller.class);
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
@@ -64,10 +64,8 @@ public class AgentInstaller {
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
   static {
-    LoggingConfigurer.configureLogger();
-    logger = LoggerFactory.getLogger(AgentInstaller.class);
-
     addByteBuddyRawSetting();
+
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
 

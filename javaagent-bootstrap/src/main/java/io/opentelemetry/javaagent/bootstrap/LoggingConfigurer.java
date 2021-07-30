@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.bootstrap;
 
 import java.util.Locale;
 
-final class LoggingConfigurer {
+public final class LoggingConfigurer {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.showDateTime";
@@ -20,7 +20,7 @@ final class LoggingConfigurer {
   private static final String SIMPLE_LOGGER_PREFIX =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.log.";
 
-  static void configureLogger() {
+  public static void configureLogger() {
     setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
     setSystemPropertyDefault(
         SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);

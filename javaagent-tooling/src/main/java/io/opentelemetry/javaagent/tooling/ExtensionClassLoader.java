@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class creates a classloader which encapsulates arbitrary extensions for Otel Java
@@ -30,17 +32,15 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
  * jar gets a separate classloader and all of them are aggregated with the help of {@link
  * MultipleParentClassLoader}.
  */
-// TODO find a way to initialize logging before using this class
 // Used by AgentInitializer
-@SuppressWarnings({"unused", "SystemOut"})
+@SuppressWarnings("unused")
 public class ExtensionClassLoader extends URLClassLoader {
-  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
-  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
-  // configure the logging levels
 
   static {
     ClassLoader.registerAsParallelCapable();
   }
+
+  private static final Logger logger = LoggerFactory.getLogger(ExtensionClassLoader.class);
 
   public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
     List<URL> extensions = new ArrayList<>();
@@ -55,13 +55,17 @@ public class ExtensionClassLoader extends URLClassLoader {
                 System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")),
             javaagentFile));
 
-    extensions.addAll(
-        parseLocation(
-            System.getProperty(
-                "otel.javaagent.experimental.initializer.jar",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR")),
-            javaagentFile));
-    // TODO when logging is configured add warning about deprecated property
+    String initializerJar =
+        System.getProperty(
+            "otel.javaagent.experimental.initializer.jar",
+            System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR"));
+    if (initializerJar != null) {
+      logger.warn(
+          "Deprecated property '{}' was set; please use '{}' instead. Support for the deprecated property will be removed in future versions.",
+          "otel.javaagent.experimental.initializer.jar",
+          "otel.javaagent.experimental.extensions");
+      extensions.addAll(parseLocation(initializerJar, javaagentFile));
+    }
 
     if (extensions.isEmpty()) {
       return parent;
@@ -93,12 +97,12 @@ public class ExtensionClassLoader extends URLClassLoader {
             extractFile(jarFile, jarEntry, tempFile);
             addFileUrl(extensions, tempFile);
           } else {
-            System.err.println("Failed to create temp file " + tempFile);
+            logger.error("Failed to create temp file: {}", tempFile);
           }
         }
       }
     } catch (IOException ex) {
-      System.err.println("Failed to open embedded extensions " + ex.getMessage());
+      logger.error("Failed to open embedded extensions: {}", ex.getMessage(), ex);
     }
   }
 
@@ -142,7 +146,7 @@ public class ExtensionClassLoader extends URLClassLoader {
       URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(file));
       result.add(wrappedUrl);
     } catch (MalformedURLException ignored) {
-      System.err.println("Ignoring " + file);
+      logger.error("Ignoring file: {}", file);
     }
   }
 
