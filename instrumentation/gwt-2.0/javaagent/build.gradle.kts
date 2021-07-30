@@ -94,7 +94,10 @@ tasks {
     dependsOn(sourceSets["testapp"].output)
     dependsOn(copyTestWebapp)
 
-    testLogging.showStandardStreams = true
+    testLogging {
+      events("started", "STANDARD_OUT", "STANDARD_ERROR")
+      showStandardStreams = true
+    }
 
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files("$buildDir/testapp/classes"))
