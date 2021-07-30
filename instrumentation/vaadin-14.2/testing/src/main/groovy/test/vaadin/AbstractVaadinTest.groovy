@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import org.openqa.selenium.chrome.ChromeOptions
 import org.slf4j.Logger
@@ -49,6 +50,7 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
     chrome = new BrowserWebDriverContainer<>()
       .withCapabilities(new ChromeOptions())
       .withLogConsumer(new Slf4jLogConsumer(logger))
+      .withStartupTimeout(Duration.ofMinutes(3))
     chrome.start()
 
     address = new URI("http://host.testcontainers.internal:$port" + getContextPath() + "/")
