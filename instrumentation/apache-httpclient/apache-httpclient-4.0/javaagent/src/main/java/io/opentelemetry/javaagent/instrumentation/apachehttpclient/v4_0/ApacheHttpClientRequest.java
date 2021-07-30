@@ -26,7 +26,12 @@ public final class ApacheHttpClientRequest {
   private final HttpRequest delegate;
 
   public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    uri = getCalculatedUri(httpHost, httpRequest);
+    URI calculatedUri = getUri(httpRequest);
+    if (calculatedUri != null && httpHost != null) {
+      uri = getCalculatedUri(httpHost, calculatedUri);
+    } else {
+      uri = calculatedUri;
+    }
     delegate = httpRequest;
   }
 
@@ -116,15 +121,18 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  private static URI getCalculatedUri(HttpHost httpHost, HttpRequest httpRequest) {
-    final URI uri;
+  private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
-      uri = new URI(httpRequest.getRequestLine().getUri());
+      return new URI(httpRequest.getRequestLine().getUri());
     } catch (URISyntaxException e) {
       logger.debug(e.getMessage(), e);
       return null;
     }
+  }
+
+  @Nullable
+  private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {
       return new URI(
           httpHost.getSchemeName(),

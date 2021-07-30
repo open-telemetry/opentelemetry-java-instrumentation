@@ -88,6 +88,7 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<String> helperResourceNames,
+      // TODO can this be replaced with the context classloader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
@@ -96,11 +97,6 @@ public class HelperInjector implements Transformer {
     this.helperResourceNames = new LinkedHashSet<>(helperResourceNames);
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
-  }
-
-  /** Must be used ONLY by gradle muzzle verification plugin. */
-  public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
-    this(requestingName, helperMap, null);
   }
 
   private HelperInjector(

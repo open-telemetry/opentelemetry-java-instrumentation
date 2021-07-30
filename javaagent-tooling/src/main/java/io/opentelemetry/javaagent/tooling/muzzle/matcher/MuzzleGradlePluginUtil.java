@@ -12,17 +12,12 @@ import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
-import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import net.bytebuddy.dynamic.ClassFileLocator;
 
 /** Entry point for the muzzle gradle plugin. */
 // Runs in special classloader so tedious to provide access to the Gradle logger.
@@ -53,15 +48,14 @@ public final class MuzzleGradlePluginUtil {
    * version passes different {@code userClassLoader}.
    */
   public static void assertInstrumentationMuzzled(
-      ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
-      throws Exception {
+      ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass) {
 
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(agentClassLoader);
 
     Map<String, List<Mismatch>> allMismatches;
     try {
-      allMismatches = ClassLoaderMatcher.matchesAll(userClassLoader);
+      allMismatches = ClassLoaderMatcher.matchesAll(userClassLoader, assertPass);
 
       allMismatches.forEach(
           (moduleName, mismatches) -> {
@@ -84,44 +78,12 @@ public final class MuzzleGradlePluginUtil {
       Thread.currentThread().setContextClassLoader(contextClassLoader);
     }
 
-    // run helper injector on all instrumentation modules
-    if (assertPass) {
-      for (InstrumentationModule instrumentationModule :
-          ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-        try {
-          // verify helper injector works
-          List<String> allHelperClasses = instrumentationModule.getMuzzleHelperClassNames();
-          if (!allHelperClasses.isEmpty()) {
-            new HelperInjector(
-                    MuzzleGradlePluginUtil.class.getSimpleName(),
-                    createHelperMap(allHelperClasses, agentClassLoader))
-                .transform(null, null, userClassLoader, null);
-          }
-        } catch (RuntimeException e) {
-          System.err.println(
-              "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
-          throw e;
-        }
-      }
-    }
-
     int validatedModulesCount = allMismatches.size();
     if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
       throw new IllegalStateException(errorMessage);
     }
-  }
-
-  private static Map<String, byte[]> createHelperMap(
-      Collection<String> helperClassNames, ClassLoader agentClassLoader) throws IOException {
-    Map<String, byte[]> helperMap = new LinkedHashMap<>(helperClassNames.size());
-    for (String helperName : helperClassNames) {
-      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(agentClassLoader);
-      byte[] classBytes = locator.locate(helperName).resolve();
-      helperMap.put(helperName, classBytes);
-    }
-    return helperMap;
   }
 
   /**

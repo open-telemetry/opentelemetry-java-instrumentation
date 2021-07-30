@@ -101,7 +101,27 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 abstract class AbstractApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+      callback.accept(it)
+    }
+  }
+}
+
+abstract class AbstractApacheClientHostAbsoluteUriRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override
@@ -120,7 +140,27 @@ abstract class AbstractApacheClientHostRequestTest extends ApacheHttpClientTest<
 abstract class AbstractApacheClientHostRequestContextTest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+      callback.accept(it)
+    }, new BasicHttpContext())
+  }
+}
+
+abstract class AbstractApacheClientHostAbsoluteUriRequestContextTest extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override

@@ -13,6 +13,28 @@ import spock.lang.Unroll
 class SanitizationTest extends Specification {
 
   @Unroll
+  def "sanitize cql #originalCql"() {
+
+    setup:
+    def decorator = new DbSpanDecorator("cql", "")
+    def exchange = Mock(Exchange) {
+      getIn() >> Mock(Message) {
+        getHeader("CamelCqlQuery") >> originalCql
+      }
+    }
+    def actualSanitized = decorator.getStatement(exchange, null)
+
+    expect:
+    actualSanitized == sanitizedCql
+
+    where:
+    originalCql                                                         | sanitizedCql
+    "FROM TABLE WHERE FIELD>=-1234"                                     | "FROM TABLE WHERE FIELD>=?"
+    "SELECT Name, Phone.Number FROM Contact WHERE Address.State = 'NY'" | "SELECT Name, Phone.Number FROM Contact WHERE Address.State = ?"
+    "FROM col WHERE @Tag='Something'"                                   | "FROM col WHERE @Tag=?"
+  }
+
+  @Unroll
   def "sanitize jdbc #originalSql"() {
 
     setup:

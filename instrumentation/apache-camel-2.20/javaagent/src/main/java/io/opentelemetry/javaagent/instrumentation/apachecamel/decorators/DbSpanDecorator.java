@@ -61,16 +61,11 @@ class DbSpanDecorator extends BaseSpanDecorator {
 
   // visible for testing
   String getStatement(Exchange exchange, Endpoint endpoint) {
-    // TODO: sanitize cql
     switch (component) {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
         if (cqlObj != null) {
-          return cqlObj.toString();
-        }
-        Map<String, String> cqlParameters = toQueryParameters(endpoint.getEndpointUri());
-        if (cqlParameters.containsKey("cql")) {
-          return cqlParameters.get("cql");
+          return SqlStatementSanitizer.sanitize(cqlObj.toString()).getFullStatement();
         }
         return null;
       case "jdbc":

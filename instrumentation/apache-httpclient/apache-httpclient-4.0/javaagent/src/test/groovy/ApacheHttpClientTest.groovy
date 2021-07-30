@@ -94,18 +94,12 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
     }
     return builder.toString()
   }
-
-  static String absoluteUriWithNonResolvingHost(URI uri) {
-    // substituting a non-resolving host and port to make sure that the host and port from this uri are not used
-    return new URI(uri.getScheme(), uri.getAuthority(), "nowhere", 1, uri.getPath(), uri.getQuery(), uri.getFragment())
-      .toString()
-  }
 }
 
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    // also testing with absolute path below
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
@@ -125,7 +119,7 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, absoluteUriWithNonResolvingHost(uri))
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override
@@ -144,7 +138,7 @@ class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpR
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    // also testing with absolute path below
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
@@ -164,7 +158,7 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
 class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, absoluteUriWithNonResolvingHost(uri))
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override
