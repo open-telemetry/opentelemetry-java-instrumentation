@@ -9,13 +9,14 @@ import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,21 +50,21 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
   public static class SetScalaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask<?>, State> contextStore =
-            InstrumentationContext.get(ForkJoinTask.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8BytecodeBridge.currentContext());
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
+            InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 }

@@ -19,8 +19,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.TaskAdviceHelper;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -63,13 +63,14 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
-      ContextStore<ForkJoinTask<?>, State> contextStore =
-          InstrumentationContext.get(ForkJoinTask.class, State.class);
-      Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);
+      ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
+          InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
+      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(contextStore, thiz);
       if (thiz instanceof Runnable) {
-        ContextStore<Runnable, State> runnableContextStore =
-            InstrumentationContext.get(Runnable.class, State.class);
-        Scope newScope = AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
+        ContextStore<Runnable, PropagatedContext> runnableContextStore =
+            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        Scope newScope =
+            TaskAdviceHelper.makePropagatedContextCurrent(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -79,9 +80,10 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (thiz instanceof Callable) {
-        ContextStore<Callable<?>, State> callableContextStore =
-            InstrumentationContext.get(Callable.class, State.class);
-        Scope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable<?>) thiz);
+        ContextStore<Callable<?>, PropagatedContext> callableContextStore =
+            InstrumentationContext.get(Callable.class, PropagatedContext.class);
+        Scope newScope =
+            TaskAdviceHelper.makePropagatedContextCurrent(callableContextStore, (Callable<?>) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
