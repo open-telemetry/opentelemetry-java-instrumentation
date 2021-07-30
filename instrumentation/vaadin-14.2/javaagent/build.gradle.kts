@@ -44,7 +44,6 @@ tasks {
   named<Test>("test") {
     dependsOn(vaadin142Test)
     dependsOn(vaadin16Test)
-
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
