@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
@@ -28,17 +28,21 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
       MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
 
     return new MethodSpanAttributesExtractor<>(
-        methodExtractor, parameterAttributeNamesExtractor, methodArgumentsExtractor);
+        methodExtractor,
+        parameterAttributeNamesExtractor,
+        methodArgumentsExtractor,
+        new MethodCache<>());
   }
 
   MethodSpanAttributesExtractor(
       MethodExtractor<REQUEST> methodExtractor,
       ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,
-      MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
+      MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor,
+      Cache<Method, AttributeBindings> cache) {
     this.methodExtractor = methodExtractor;
     this.methodArgumentsExtractor = methodArgumentsExtractor;
-    this.binder = new MethodSpanAttributeBinder(parameterAttributeNamesExtractor);
-    this.cache = new MethodCache<>();
+    this.parameterAttributeNamesExtractor = parameterAttributeNamesExtractor;
+    this.cache = cache;
   }
 
   @Override
@@ -61,7 +65,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
    * @param method the traced method
    * @return the bindings of the parameters
    */
-  public AttributeBindings bind(Method method) {
+  private AttributeBindings bind(Method method) {
     AttributeBindings bindings = EmptyAttributeBindings.INSTANCE;
 
     Parameter[] parameters = method.getParameters();

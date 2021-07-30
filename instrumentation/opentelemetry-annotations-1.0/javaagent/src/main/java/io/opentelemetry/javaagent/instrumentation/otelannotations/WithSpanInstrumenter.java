@@ -46,9 +46,10 @@ public final class WithSpanInstrumenter {
             INSTRUMENTATION_NAME,
             WithSpanInstrumenter::spanNameFromMethodRequest)
         .addAttributesExtractor(
-            MethodSpanAttributesExtractor.newBuilder(MethodRequest::method)
-                .newMethodSpanAttributesExtractor(
-                    WithSpanParameterAttributeNamesExtractor.INSTANCE, MethodRequest::args))
+            MethodSpanAttributesExtractor.newInstance(
+                MethodRequest::method,
+                WithSpanParameterAttributeNamesExtractor.INSTANCE,
+                MethodRequest::args))
         .newInstrumenter(WithSpanInstrumenter::spanKindFromMethodRequest);
   }
 
