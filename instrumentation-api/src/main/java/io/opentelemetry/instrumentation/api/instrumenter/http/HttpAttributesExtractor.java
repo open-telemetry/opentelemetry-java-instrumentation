@@ -83,6 +83,11 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   protected abstract String route(REQUEST request);
 
   @Nullable
+  protected String lateRoute(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
   protected abstract String scheme(REQUEST request);
 
   @Nullable
