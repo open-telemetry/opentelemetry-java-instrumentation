@@ -14,7 +14,7 @@ public final class CompletableFutureWrapper {
   private CompletableFutureWrapper() {}
 
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
-    if (future == null || context == Context.root()) {
+    if (context == Context.root()) {
       return future;
     }
 
