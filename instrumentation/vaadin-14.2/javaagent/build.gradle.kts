@@ -45,11 +45,6 @@ tasks {
     dependsOn(vaadin142Test)
     dependsOn(vaadin16Test)
 
-    testLogging {
-      events("started", "STANDARD_OUT", "STANDARD_ERROR")
-      showStandardStreams = true
-    }
-
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
