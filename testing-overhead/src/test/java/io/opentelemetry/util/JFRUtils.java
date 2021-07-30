@@ -4,16 +4,16 @@
  */
 package io.opentelemetry.util;
 
+import io.opentelemetry.results.AppPerfResults.MinMax;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.BiFunction;
-import io.opentelemetry.results.AppPerfResults.MinMax;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordingFile;
 
 public class JFRUtils {
 
-  public static long totalLongEvents(Path jfrFile, String eventName,
+  public static long sumLongEventValues(Path jfrFile, String eventName,
       String longValueKey) throws IOException {
     return reduce(jfrFile, eventName, longValueKey, 0L, Long::sum);
   }

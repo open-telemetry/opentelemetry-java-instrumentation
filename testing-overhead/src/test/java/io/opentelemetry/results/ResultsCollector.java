@@ -84,11 +84,11 @@ public class ResultsCollector {
   }
 
   private long readTotalGCTime(Path jfrFile) throws IOException {
-    return JFRUtils.totalLongEvents(jfrFile, "jdk.G1GarbageCollection", "duration");
+    return JFRUtils.sumLongEventValues(jfrFile, "jdk.G1GarbageCollection", "duration");
   }
 
   private long readTotalAllocated(Path jfrFile) throws IOException {
-    return JFRUtils.totalLongEvents(jfrFile, "jdk.ThreadAllocationStatistics", "allocated");
+    return JFRUtils.sumLongEventValues(jfrFile, "jdk.ThreadAllocationStatistics", "allocated");
   }
 
   private MinMax readHeapUsed(Path jfrFile) throws IOException {
