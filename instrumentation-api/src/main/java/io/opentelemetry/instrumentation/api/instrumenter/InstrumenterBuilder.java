@@ -36,10 +36,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
+  InstrumentationCategory instrumentationCategory = InstrumentationCategory.none();
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
   @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
 
@@ -52,6 +54,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.meter = GlobalMeterProvider.get().get(instrumentationName);
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
+  }
+
+  // TODO: should it be an InstrumentationCategoryExtractor instead? InstrumentationCategorizer?
+  public InstrumenterBuilder<REQUEST, RESPONSE> setInstrumentationCategory(
+      InstrumentationCategory instrumentationCategory) {
+    this.instrumentationCategory = instrumentationCategory;
+    return this;
   }
 
   /**

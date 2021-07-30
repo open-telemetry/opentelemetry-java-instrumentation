@@ -65,6 +65,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private final String instrumentationName;
+  private final InstrumentationCategory instrumentationCategory;
   private final Tracer tracer;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
@@ -79,6 +80,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
+    this.instrumentationCategory = builder.instrumentationCategory;
     this.tracer =
         builder.openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION);
     this.spanNameExtractor = builder.spanNameExtractor;
@@ -100,6 +102,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
     boolean suppressed = false;
+
+    // TODO: remove that!
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
@@ -112,6 +116,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       default:
         break;
     }
+
+    // there already is a span of that category in the parent context
+    if (instrumentationCategory.matches(parentContext)) {
+      suppressed = true;
+    }
+
     if (suppressed) {
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
     }
@@ -156,6 +166,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.startSpan();
     context = context.with(span);
+    context = instrumentationCategory.setInContext(context, span);
     switch (spanKind) {
       case SERVER:
         return ServerSpan.with(context, span);

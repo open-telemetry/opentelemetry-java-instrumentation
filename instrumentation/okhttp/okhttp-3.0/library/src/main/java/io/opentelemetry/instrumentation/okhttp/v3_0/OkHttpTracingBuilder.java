@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.InstrumentationCategory.httpClient;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumentationCategory;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -51,6 +53,7 @@ public final class OkHttpTracingBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
+            .setInstrumentationCategory(httpClient())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)

@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumentationCategory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -33,11 +34,13 @@ public final class ConsumerSpan {
    */
   @Nullable
   public static Span fromContextOrNull(Context context) {
-    return context.get(KEY);
+    return InstrumentationCategory.localRoot().getMatchingSpanOrNull(context);
+//    return context.get(KEY);
   }
 
   public static Context with(Context context, Span consumerSpan) {
-    return context.with(KEY, consumerSpan);
+    return InstrumentationCategory.localRoot().setInContext(context, consumerSpan);
+//    return context.with(KEY, consumerSpan);
   }
 
   private ConsumerSpan() {}
