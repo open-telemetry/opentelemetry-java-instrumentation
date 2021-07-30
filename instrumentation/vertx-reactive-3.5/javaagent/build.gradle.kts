@@ -22,10 +22,12 @@ tasks {
   }
 }
 
+//The first Vert.x version that uses rx-java 2
+val vertxVersion = "3.5.0"
+
 dependencies {
-  // The first Vert.x version that uses rx-java 2
-  compileOnly("io.vertx:vertx-web:3.5.0")
-  compileOnly("io.vertx:vertx-rx-java2:3.5.0")
+  compileOnly("io.vertx:vertx-web:${vertxVersion}")
+  compileOnly("io.vertx:vertx-rx-java2:${vertxVersion}")
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
@@ -36,11 +38,11 @@ dependencies {
 
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 
-  add("version35TestImplementation", "io.vertx:vertx-web:3.5.0")
-  add("version35TestImplementation", "io.vertx:vertx-rx-java2:3.5.0")
-  add("version35TestImplementation", "io.vertx:vertx-web-client:3.5.0")
-  add("version35TestImplementation", "io.vertx:vertx-jdbc-client:3.5.0")
-  add("version35TestImplementation", "io.vertx:vertx-circuit-breaker:3.5.0")
+  add("version35TestImplementation", "io.vertx:vertx-web:${vertxVersion}")
+  add("version35TestImplementation", "io.vertx:vertx-rx-java2:${vertxVersion}")
+  add("version35TestImplementation", "io.vertx:vertx-web-client:${vertxVersion}")
+  add("version35TestImplementation", "io.vertx:vertx-jdbc-client:${vertxVersion}")
+  add("version35TestImplementation", "io.vertx:vertx-circuit-breaker:${vertxVersion}")
 
   add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
   add("latestDepTestImplementation", "io.vertx:vertx-rx-java2:4.+")
