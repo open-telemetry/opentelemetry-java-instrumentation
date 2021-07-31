@@ -13,7 +13,6 @@ version = "0.2.0-SNAPSHOT"
 
 repositories {
   mavenCentral()
-  mavenLocal()
   maven {
     url = uri("https://oss.sonatype.org/content/repositories/snapshots")
   }
@@ -39,6 +38,10 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:1.5.0-alpha-SNAPSHOT")
+}
+
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
 }
 
 pluginBundle {
