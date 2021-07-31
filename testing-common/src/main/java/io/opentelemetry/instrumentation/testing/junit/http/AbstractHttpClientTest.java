@@ -204,7 +204,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assertThat(responseCode).isEqualTo(200);
 
     // sleep to ensure no spans are emitted
-    Thread.sleep(1000);
+    Thread.sleep(200);
 
     assertThat(testing.traces()).isEmpty();
   }
