@@ -28,13 +28,16 @@ tasks {
   val jmhFork = gradle.startParameter.projectProperties["jmh.fork"]?.toInt()
   val jmhIncludes = gradle.startParameter.projectProperties["jmh.includes"]
 
+  // this option should point to the benchmark that you want to run with JFR
+  val jmhFlightRecording = gradle.startParameter.projectProperties.get("jmh.flightRecording")
+
   named<JMHTask>("jmh") {
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
 
     // note: without an exporter, toSpanData() won't even be called
     // (which is good for benchmarking the instrumentation itself)
-    val args = listOf(
+    val args = mutableListOf(
       "-javaagent:${shadowTask.archiveFile.get()}",
       "-Dotel.traces.exporter=none",
       "-Dotel.metrics.exporter=none",
@@ -42,6 +45,20 @@ tasks {
       // and this benchmark is focused on servlet overhead for now
       "-Dotel.instrumentation.http-url-connection.enabled=false"
     )
+    if (jmhFlightRecording != null) {
+      args.addAll(listOf(
+        "-XX:+FlightRecorder",
+        "-XX:StartFlightRecording=settings=profile.jfc,delay=50s,duration=300s,filename=recording.jfr",
+        "-XX:FlightRecorderOptions=stackdepth=1000",
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+DebugNonSafepoints"
+      ))
+
+      includes.add(jmhFlightRecording)
+
+      fork.set(1)
+      iterations.set(30)
+    }
     // see https://github.com/melix/jmh-gradle-plugin/issues/200
     jvmArgsPrepend.add(args.joinToString(" "))
 
