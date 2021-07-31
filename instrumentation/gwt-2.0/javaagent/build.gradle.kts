@@ -91,10 +91,6 @@ tasks {
   }
 
   named<Test>("test") {
-    // TODO(anuraaga): Reenable after fixing
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3724
-    enabled = gradle.startParameter.taskNames.any { it.contains(":gwt-2.0") }
-
     dependsOn(sourceSets["testapp"].output)
     dependsOn(copyTestWebapp)
 
