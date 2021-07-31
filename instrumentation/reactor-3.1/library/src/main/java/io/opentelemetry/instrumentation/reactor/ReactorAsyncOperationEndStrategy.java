@@ -10,8 +10,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,8 +17,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public final class ReactorAsyncOperationEndStrategy
-    implements AsyncOperationEndStrategy, AsyncSpanEndStrategy {
+public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("reactor.canceled");
 
@@ -44,23 +41,6 @@ public final class ReactorAsyncOperationEndStrategy
   }
 
   @Override
-  public Object end(BaseTracer tracer, Context context, Object returnValue) {
-
-    EndOnFirstNotificationConsumer notificationConsumer =
-        new EndOnFirstNotificationConsumer(context) {
-          @Override
-          protected void end(Object result, Throwable error) {
-            if (error == null) {
-              tracer.end(context);
-            } else {
-              tracer.endExceptionally(context, error);
-            }
-          }
-        };
-    return end(returnValue, notificationConsumer);
-  }
-
-  @Override
   public <REQUEST, RESPONSE> Object end(
       Instrumenter<REQUEST, RESPONSE> instrumenter,
       Context context,
@@ -75,11 +55,6 @@ public final class ReactorAsyncOperationEndStrategy
             instrumenter.end(context, request, tryToGetResponse(responseType, result), error);
           }
         };
-    return end(asyncValue, notificationConsumer);
-  }
-
-  private static Object end(
-      Object asyncValue, EndOnFirstNotificationConsumer notificationConsumer) {
 
     if (asyncValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) asyncValue;

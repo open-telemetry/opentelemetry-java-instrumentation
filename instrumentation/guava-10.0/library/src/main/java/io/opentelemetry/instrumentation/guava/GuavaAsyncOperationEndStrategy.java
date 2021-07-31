@@ -12,13 +12,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
-import java.util.function.BiConsumer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class GuavaAsyncOperationEndStrategy
-    implements AsyncOperationEndStrategy, AsyncSpanEndStrategy {
+public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("guava.canceled");
 
@@ -50,47 +46,33 @@ public final class GuavaAsyncOperationEndStrategy
       Class<RESPONSE> responseType) {
 
     ListenableFuture<?> future = (ListenableFuture<?>) asyncValue;
-    end(
-        context,
-        future,
-        (result, error) ->
-            instrumenter.end(context, request, tryToGetResponse(responseType, result), error));
+    end(instrumenter, context, request, future, responseType);
     return future;
   }
 
-  @Override
-  public Object end(BaseTracer tracer, Context context, Object returnValue) {
-    ListenableFuture<?> future = (ListenableFuture<?>) returnValue;
-    end(
-        context,
-        future,
-        (result, error) -> {
-          if (error == null) {
-            tracer.end(context);
-          } else {
-            tracer.endExceptionally(context, error);
-          }
-        });
-    return future;
-  }
-
-  private void end(Context context, ListenableFuture<?> future, BiConsumer<Object, Throwable> end) {
+  private <REQUEST, RESPONSE> void end(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      ListenableFuture<?> future,
+      Class<RESPONSE> responseType) {
     if (future.isDone()) {
       if (future.isCancelled()) {
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
         }
-        end.accept(null, null);
+        instrumenter.end(context, request, null, null);
       } else {
         try {
           Object response = Uninterruptibles.getUninterruptibly(future);
-          end.accept(response, null);
+          instrumenter.end(context, request, tryToGetResponse(responseType, response), null);
         } catch (Throwable exception) {
-          end.accept(null, exception);
+          instrumenter.end(context, request, null, exception);
         }
       }
     } else {
-      future.addListener(() -> end(context, future, end), Runnable::run);
+      future.addListener(
+          () -> end(instrumenter, context, request, future, responseType), Runnable::run);
     }
   }
 

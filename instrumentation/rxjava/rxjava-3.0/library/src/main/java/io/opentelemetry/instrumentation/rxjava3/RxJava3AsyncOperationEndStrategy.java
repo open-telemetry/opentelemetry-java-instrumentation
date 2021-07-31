@@ -10,8 +10,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -25,8 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Publisher;
 
-public final class RxJava3AsyncOperationEndStrategy
-    implements AsyncOperationEndStrategy, AsyncSpanEndStrategy {
+public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
 
@@ -63,34 +60,14 @@ public final class RxJava3AsyncOperationEndStrategy
       Object asyncValue,
       Class<RESPONSE> responseType) {
 
-    return end(
-        asyncValue,
+    EndOnFirstNotificationConsumer<Object> notificationConsumer =
         new EndOnFirstNotificationConsumer<Object>(context) {
           @Override
           protected void end(Object response, Throwable error) {
             instrumenter.end(context, request, tryToGetResponse(responseType, response), error);
           }
-        });
-  }
+        };
 
-  @Override
-  public Object end(BaseTracer tracer, Context context, Object returnValue) {
-    return end(
-        returnValue,
-        new EndOnFirstNotificationConsumer<Object>(context) {
-          @Override
-          protected void end(Object response, Throwable error) {
-            if (error != null) {
-              tracer.endExceptionally(context, error);
-            } else {
-              tracer.end(context);
-            }
-          }
-        });
-  }
-
-  private static <T> Object end(
-      Object asyncValue, EndOnFirstNotificationConsumer<T> notificationConsumer) {
     if (asyncValue instanceof Completable) {
       return endWhenComplete((Completable) asyncValue, notificationConsumer);
     } else if (asyncValue instanceof Maybe) {
