@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rxjava3;
 
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -20,7 +22,6 @@ import io.reactivex.rxjava3.functions.BiConsumer;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Publisher;
 
 public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
@@ -128,14 +129,6 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
         .doOnComplete(notificationConsumer)
         .doOnError(notificationConsumer)
         .doOnCancel(notificationConsumer::onCancelOrDispose);
-  }
-
-  @Nullable
-  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
-    if (responseType.isInstance(result)) {
-      return responseType.cast(result);
-    }
-    return null;
   }
 
   /**

@@ -63,7 +63,7 @@ class AsyncOperationEndSupportTest {
   }
 
   @Test
-  void shouldEndImmediatelyWhenAsyncWrapperisOfWrongType() {
+  void shouldEndImmediatelyWhenAsyncWrapperIsOfWrongType() {
     // given
     AsyncOperationEndSupport<String, String> underTest =
         AsyncOperationEndSupport.create(instrumenter, String.class, CompletableFuture.class);
@@ -76,7 +76,7 @@ class AsyncOperationEndSupportTest {
     // then
     assertSame("not async", result);
 
-    verify(instrumenter).end(context, "request", null, null);
+    verify(instrumenter).end(context, "request", "not async", null);
   }
 
   @Test

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.guava;
 
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.opentelemetry.api.common.AttributeKey;
@@ -12,7 +14,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
@@ -74,13 +75,5 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
       future.addListener(
           () -> end(instrumenter, context, request, future, responseType), Runnable::run);
     }
-  }
-
-  @Nullable
-  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
-    if (responseType.isInstance(result)) {
-      return responseType.cast(result);
-    }
-    return null;
   }
 }

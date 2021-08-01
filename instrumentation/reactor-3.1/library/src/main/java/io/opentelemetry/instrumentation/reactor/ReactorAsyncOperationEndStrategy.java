@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -12,7 +14,6 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -67,14 +68,6 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
           .doOnComplete(notificationConsumer)
           .doOnCancel(notificationConsumer::onCancel);
     }
-  }
-
-  @Nullable
-  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
-    if (responseType.isInstance(result)) {
-      return responseType.cast(result);
-    }
-    return null;
   }
 
   /**
