@@ -257,6 +257,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         });
   }
 
+  @Test
+  void successfulRequestWithNotSampledParent() throws InterruptedException {
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+    int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    // sleep to ensure no spans are emitted
+    Thread.sleep(200);
+
+    assertThat(testing.traces()).isEmpty();
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
   void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method) {
