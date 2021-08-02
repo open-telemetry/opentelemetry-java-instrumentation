@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.ratpack.server
 
 import io.opentelemetry.api.common.AttributeKey
@@ -14,7 +19,6 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest impl
       tracing.configureServerRegistry(it)
     }
   }
-
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false

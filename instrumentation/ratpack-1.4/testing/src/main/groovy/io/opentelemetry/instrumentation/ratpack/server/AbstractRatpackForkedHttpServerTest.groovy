@@ -13,14 +13,22 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import ratpack.error.ServerErrorHandler
+import ratpack.exec.Execution
 import ratpack.exec.Promise
+import ratpack.exec.Result
+import ratpack.exec.util.ParallelBatch
 import ratpack.server.RatpackServer
 
-abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpServerTest {
+abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpServerTest {
 
   @Override
   RatpackServer startServer(int bindPort) {
+
     def ratpack = RatpackServer.start {
       it.serverConfig {
         it.port(bindPort)
@@ -34,7 +42,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {context ->
             Promise.sync {
               SUCCESS
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(endpoint.body)
               }
@@ -45,7 +53,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {context ->
             Promise.sync {
               INDEXED_CHILD
-            } then {
+            }.fork().then {
               controller(INDEXED_CHILD) {
                 INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
                 context.response.status(INDEXED_CHILD.status).send()
@@ -57,7 +65,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all { context ->
             Promise.sync {
               QUERY_PARAM
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(context.request.query)
               }
@@ -68,7 +76,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {context ->
             Promise.sync {
               REDIRECT
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 context.redirect(endpoint.body)
               }
@@ -79,7 +87,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {context ->
             Promise.sync {
               ERROR
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(endpoint.body)
               }
@@ -90,7 +98,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {
             Promise.sync {
               EXCEPTION
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 throw new Exception(endpoint.body)
               }
@@ -101,9 +109,25 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.all {context ->
             Promise.sync {
               PATH_PARAM
-            } then { endpoint ->
+            }.fork().then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(context.pathTokens.id)
+              }
+            }
+          }
+        }
+        it.prefix("fork_and_yieldAll") {
+          it.all {context ->
+            def promise = Promise.async { upstream ->
+              Execution.fork().start({
+                upstream.accept(Result.success(SUCCESS))
+              })
+            }
+            ParallelBatch.of(promise).yieldAll().flatMap { list ->
+              Promise.sync { list.get(0).value }
+            } then { endpoint ->
+              controller(endpoint) {
+                context.response.status(endpoint.status).send(endpoint.body)
               }
             }
           }
@@ -115,5 +139,45 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
     assert ratpack.bindPort == bindPort
     assert ratpack.bindHost == 'localhost'
     return ratpack
+  }
+
+  def "test fork and yieldAll"() {
+    setup:
+    def url =  address.resolve("fork_and_yieldAll").toString()
+    url = url.replace("http://", "h1c://")
+    def request = AggregatedHttpRequest.of(HttpMethod.GET, url)
+    AggregatedHttpResponse response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
+
+    assertTraces(1) {
+      trace(0, 2 + (hasHandlerSpan(SUCCESS) ? 1 : 0)) {
+        span(0) {
+          name "/fork_and_yieldAll"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        if (hasHandlerSpan(SUCCESS)) {
+          span(1) {
+            name "/fork_and_yieldAll"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
+          span(2) {
+            name "controller"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
+        } else {
+          span(1) {
+            name "controller"
+            kind SpanKind.INTERNAL
+            childOf span(0)
+          }
+        }
+      }
+    }
   }
 }

@@ -5,12 +5,17 @@
 
 package server
 
-import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackAsyncHttpServerTest
+import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackRoutesTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import ratpack.server.RatpackServerSpec
 
-class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest implements AgentTestTrait {
+class RatpackRoutesTest extends AbstractRatpackRoutesTest implements AgentTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
+  }
+
+  @Override
+  boolean hasHandlerSpan() {
+    return true
   }
 }

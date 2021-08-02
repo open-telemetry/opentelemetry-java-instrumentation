@@ -15,7 +15,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -24,7 +23,7 @@ import ratpack.handling.Context
 import ratpack.server.RatpackServer
 import ratpack.server.RatpackServerSpec
 
-abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServer> implements AgentTestTrait {
+abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServer> {
 
   abstract void configure(RatpackServerSpec serverSpec)
 
@@ -97,6 +96,9 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
     return ratpack
   }
 
+  // TODO(anuraaga): The default Ratpack error handler also returns a 500 which is all we test, so
+  // we don't actually have test coverage ensuring our instrumentation correctly delegates to this
+  // user registered handler.
   static class TestErrorHandler implements ServerErrorHandler {
     @Override
     void error(Context context, Throwable throwable) throws Exception {

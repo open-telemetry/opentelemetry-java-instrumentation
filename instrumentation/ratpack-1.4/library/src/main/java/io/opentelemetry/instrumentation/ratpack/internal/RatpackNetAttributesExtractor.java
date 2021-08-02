@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.ratpack.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
@@ -27,6 +32,7 @@ public final class RatpackNetAttributesExtractor extends NetAttributesExtractor<
   @Override
   @Nullable
   public String peerIp(Request request, @Nullable Response response) {
-    return null;
+    // On the server, remoteAddress is always an IP address.
+    return request.getRemoteAddress().getHost();
   }
 }

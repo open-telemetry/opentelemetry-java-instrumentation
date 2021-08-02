@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.server.RatpackServerSpec
 
-class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements LibraryTestTrait {
+class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
     RatpackTracing tracing = RatpackTracing.create(openTelemetry)
@@ -19,7 +19,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements Lib
       tracing.configureServerRegistry(it)
     }
   }
-
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false

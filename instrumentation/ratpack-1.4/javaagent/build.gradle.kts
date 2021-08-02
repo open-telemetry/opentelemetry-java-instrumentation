@@ -15,6 +15,8 @@ dependencies {
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
+  testImplementation(project(":instrumentation:ratpack-1.4:testing"))
+
   testLibrary("io.ratpack:ratpack-test:1.4.0")
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {

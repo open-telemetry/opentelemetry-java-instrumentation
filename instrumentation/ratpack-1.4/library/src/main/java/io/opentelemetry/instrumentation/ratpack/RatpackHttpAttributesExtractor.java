@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
@@ -27,7 +32,8 @@ final class RatpackHttpAttributesExtractor extends HttpAttributesExtractor<Reque
     if (publicAddress == null) {
       return null;
     }
-    return publicAddress.builder()
+    return publicAddress
+        .builder()
         .path(request.getPath())
         .params(request.getQueryParams())
         .build()
@@ -73,8 +79,7 @@ final class RatpackHttpAttributesExtractor extends HttpAttributesExtractor<Reque
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(
-      Request request, @Nullable Response response) {
+  protected Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
     return null;
   }
 

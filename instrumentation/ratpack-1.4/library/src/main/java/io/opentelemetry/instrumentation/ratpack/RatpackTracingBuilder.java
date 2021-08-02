@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -12,14 +17,15 @@ import java.util.List;
 import ratpack.http.Request;
 import ratpack.http.Response;
 
+/** A builder for {@link RatpackTracing}. */
 public final class RatpackTracingBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.4";
 
   private final OpenTelemetry openTelemetry;
 
-  private final List<AttributesExtractor<? super Request, ? super Response>>
-      additionalExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
+      new ArrayList<>();
 
   RatpackTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -35,12 +41,14 @@ public final class RatpackTracingBuilder {
     return this;
   }
 
+  /** Returns a new {@link RatpackTracing} with the configuration of this builder. */
   public RatpackTracing build() {
     RatpackNetAttributesExtractor netAttributes = new RatpackNetAttributesExtractor();
     RatpackHttpAttributesExtractor httpAttributes = new RatpackHttpAttributesExtractor();
 
-    InstrumenterBuilder<Request, Response> builder = Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributes));
+    InstrumenterBuilder<Request, Response> builder =
+        Instrumenter.newBuilder(
+            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes));
 
     builder.setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes));
     builder.addAttributesExtractor(netAttributes);
