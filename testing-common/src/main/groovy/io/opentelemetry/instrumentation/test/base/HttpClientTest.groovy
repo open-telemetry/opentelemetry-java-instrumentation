@@ -227,6 +227,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def setupSpec() {
     server = new HttpClientTestServer(openTelemetry)
     server.start()
+    junitTest.setupOptions()
     junitTest.setTesting(testRunner(), server)
   }
 
