@@ -8,8 +8,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -44,7 +44,7 @@ public class AgentResolver {
     Response response = client.newCall(request).execute();
     byte[] raw = response.body().bytes();
     Path path = Paths.get(".", "opentelemetry-javaagent-all.jar");
-    Files.write(path, raw, StandardOpenOption.WRITE,  StandardOpenOption.TRUNCATE_EXISTING);
+    Files.write(path, raw, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     return path;
   }
 }
