@@ -57,10 +57,4 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   boolean testWithClientParent() {
     false
   }
-
-  // TODO: context not propagated to callback
-  @Override
-  boolean testErrorWithCallback() {
-    return false
-  }
 }

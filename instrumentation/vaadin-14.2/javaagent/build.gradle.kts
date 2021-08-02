@@ -41,12 +41,6 @@ tasks {
   val vaadin16Test by existing
   val vaadin14LatestTest by existing
 
-  withType<Test>().configureEach {
-    // TODO(anuraaga): Reenable after fixing
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3724
-    enabled = gradle.startParameter.taskNames.any { it.contains(":vaadin-14.2") }
-  }
-
   named<Test>("test") {
     dependsOn(vaadin142Test)
     dependsOn(vaadin16Test)
