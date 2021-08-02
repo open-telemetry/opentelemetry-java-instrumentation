@@ -223,6 +223,7 @@ tasks.withType<Test>().configureEach {
   }
 
   testLogging {
+    showStandardStreams = true
     exceptionFormat = TestExceptionFormat.FULL
   }
 }
