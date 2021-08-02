@@ -32,7 +32,6 @@ public final class RatpackNetAttributesExtractor extends NetAttributesExtractor<
   @Override
   @Nullable
   public String peerIp(Request request, @Nullable Response response) {
-    // On the server, remoteAddress is always an IP address.
-    return request.getRemoteAddress().getHost();
+    return null;
   }
 }

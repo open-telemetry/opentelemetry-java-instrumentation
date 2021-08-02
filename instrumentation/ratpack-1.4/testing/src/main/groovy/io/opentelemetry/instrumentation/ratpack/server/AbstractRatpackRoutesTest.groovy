@@ -103,7 +103,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${app.bindPort}/${path}"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
