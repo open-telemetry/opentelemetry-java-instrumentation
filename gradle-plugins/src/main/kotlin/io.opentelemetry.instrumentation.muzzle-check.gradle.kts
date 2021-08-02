@@ -34,11 +34,11 @@ val RANGE_COUNT_LIMIT = 10
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
-val muzzleTooling by configurations.creating {
+val muzzleTooling: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
-val muzzleBootstrap by configurations.creating {
+val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
@@ -123,19 +123,20 @@ if (hasRelevantTask) {
 }
 
 fun createInstrumentationClassloader(): ClassLoader {
-  logger.info("Creating instrumentation classpath for: ${name}")
+  logger.info("Creating instrumentation class loader for: $path")
   val runtimeClasspath = sourceSets.main.get().runtimeClasspath
-  return classpathLoader(runtimeClasspath, MuzzleGradlePluginUtil::class.java.classLoader)
+  return classpathLoader(runtimeClasspath + muzzleTooling, ClassLoader.getPlatformClassLoader())
 }
 
 fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader {
+  logger.info("Adding to classloader:")
   val urls: Array<URL> = StreamSupport.stream(classpath.spliterator(), false)
     .map {
       logger.info("--${it}")
       it.toURI().toURL()
     }
     .toArray(::arrayOfNulls)
-  if(parent is URLClassLoader) {
+  if (parent is URLClassLoader) {
     parent.urLs.forEach {
       logger.info("--${it}")
     }
@@ -238,10 +239,8 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 }
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
-  val userUrls = objects.fileCollection()
-  logger.info("Creating task classpath")
-  userUrls.from(muzzleTaskConfiguration.resolvedConfiguration.files)
-  return classpathLoader(userUrls.plus(muzzleBootstrap), ClassLoader.getPlatformClassLoader())
+  logger.info("Creating user classloader for muzzle check")
+  return classpathLoader(muzzleTaskConfiguration + muzzleBootstrap, ClassLoader.getPlatformClassLoader())
 }
 
 fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession): Set<MuzzleDirective> {
