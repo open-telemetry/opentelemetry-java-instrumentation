@@ -104,9 +104,8 @@ public class WithSpanAspectTest {
             return null;
           }
         };
-    WithSpanAspectAttributeBinder attributeBinder =
-        new WithSpanAspectAttributeBinder(parameterNameDiscoverer);
-    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry(), attributeBinder);
+
+    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry(), parameterNameDiscoverer);
     factory.addAspect(aspect);
 
     withSpanTester = factory.getProxy();

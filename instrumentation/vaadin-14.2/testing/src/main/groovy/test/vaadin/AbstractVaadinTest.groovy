@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import java.util.concurrent.TimeUnit
-import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.firefox.FirefoxOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
@@ -27,7 +27,7 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest)
 
   @Shared
-  BrowserWebDriverContainer<?> chrome
+  BrowserWebDriverContainer<?> browser
 
   @SpringBootApplication
   @EnableVaadin("test.vaadin")
@@ -46,16 +46,16 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   def setupSpec() {
     Testcontainers.exposeHostPorts(port)
 
-    chrome = new BrowserWebDriverContainer<>()
-      .withCapabilities(new ChromeOptions())
+    browser = new BrowserWebDriverContainer<>()
+      .withCapabilities(new FirefoxOptions())
       .withLogConsumer(new Slf4jLogConsumer(logger))
-    chrome.start()
+    browser.start()
 
     address = new URI("http://host.testcontainers.internal:$port" + getContextPath() + "/")
   }
 
   def cleanupSpec() {
-    chrome?.stop()
+    browser?.stop()
   }
 
   @Override
@@ -91,7 +91,7 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   }
 
   def getWebDriver() {
-    return chrome.getWebDriver()
+    return browser.getWebDriver()
   }
 
   abstract List<String> getRequestHandlers()

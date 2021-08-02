@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
+import io.opentelemetry.instrumentation.spring.web.SpringWebTracing;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -29,17 +29,20 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
     RestTemplate restTemplate = (RestTemplate) bean;
     OpenTelemetry openTelemetry = openTelemetryProvider.getIfUnique();
     if (openTelemetry != null) {
-      addRestTemplateInterceptorIfNotPresent(restTemplate, openTelemetry);
+      ClientHttpRequestInterceptor interceptor =
+          SpringWebTracing.create(openTelemetry).newInterceptor();
+      addRestTemplateInterceptorIfNotPresent(restTemplate, interceptor);
     }
     return restTemplate;
   }
 
   private static void addRestTemplateInterceptorIfNotPresent(
-      RestTemplate restTemplate, OpenTelemetry openTelemetry) {
+      RestTemplate restTemplate, ClientHttpRequestInterceptor instrumentationInterceptor) {
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
-        .noneMatch(interceptor -> interceptor instanceof RestTemplateInterceptor)) {
-      restTemplateInterceptors.add(0, new RestTemplateInterceptor(openTelemetry));
+        .noneMatch(
+            interceptor -> interceptor.getClass() == instrumentationInterceptor.getClass())) {
+      restTemplateInterceptors.add(0, instrumentationInterceptor);
     }
   }
 }
