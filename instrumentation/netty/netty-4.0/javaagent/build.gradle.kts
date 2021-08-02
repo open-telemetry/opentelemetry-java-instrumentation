@@ -29,6 +29,25 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.56.Final")
 }
 
+tasks {
+  val testConnectionSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("Netty40ConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/Netty40ConnectionSpanTest.*")
+    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+  }
+
+  named<Test>("test") {
+    dependsOn(testConnectionSpan)
+    filter {
+      excludeTestsMatching("Netty40ConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+  }
+}
+
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
 if (!(findProperty("testLatestDeps") as Boolean)) {
   configurations.configureEach {

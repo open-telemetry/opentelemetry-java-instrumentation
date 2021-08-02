@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
-import io.opentelemetry.javaagent.muzzle.BogusClassLoader
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
@@ -90,8 +89,6 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
   // removing leading ':' if present
   val taskName = it.removePrefix(":")
   val projectPath = project.path.substring(1)
-  // Either the specific muzzle task in this project or the top level, full-project
-  // muzzle task.
   // Either the specific muzzle task in this project or the top level, full-project
   // muzzle task.
   taskName == "${projectPath}:muzzle" || taskName == "muzzle"
@@ -217,19 +214,16 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     doLast {
       val instrumentationCL = createInstrumentationClassloader()
       val ccl = Thread.currentThread().contextClassLoader
-      val bogusLoader = BogusClassLoader()
       val userCL = createClassLoaderForTask(config)
-      Thread.currentThread().contextClassLoader = bogusLoader
+      Thread.currentThread().contextClassLoader = instrumentationCL
       try {
-        // find all instrumenters, get muzzle, and assert
         MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL, muzzleDirective.assertPass.get())
       } finally {
         Thread.currentThread().contextClassLoader = ccl
       }
 
       for (thread in Thread.getAllStackTraces().keys) {
-        if (thread.contextClassLoader === bogusLoader
-          || thread.contextClassLoader === instrumentationCL
+        if (thread.contextClassLoader === instrumentationCL
           || thread.contextClassLoader === userCL) {
           throw GradleException(
             "Task ${taskName} has spawned a thread: ${thread} with classloader ${thread.contextClassLoader}. " +

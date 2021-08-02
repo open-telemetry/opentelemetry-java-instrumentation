@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.httpclients;
+package io.opentelemetry.instrumentation.spring.web;
 
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.mockito.BDDMockito.then;
@@ -17,9 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 
 @ExtendWith(MockitoExtension.class)
-class RestTemplateInterceptorTest {
+class SpringWebTracingTest {
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -30,7 +31,8 @@ class RestTemplateInterceptorTest {
   @Test
   void shouldSkipWhenContextHasClientSpan() throws Exception {
     // given
-    RestTemplateInterceptor interceptor = new RestTemplateInterceptor(testing.getOpenTelemetry());
+    ClientHttpRequestInterceptor interceptor =
+        SpringWebTracing.create(testing.getOpenTelemetry()).newInterceptor();
 
     // when
     testing.runWithClientSpan(

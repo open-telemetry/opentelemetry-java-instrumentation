@@ -12,18 +12,32 @@ import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
-import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import net.bytebuddy.dynamic.ClassFileLocator;
 
-/** Entry point for the muzzle gradle plugin. */
+/**
+ * Entry point for the muzzle gradle plugin.
+ * <p>
+ * In order to understand this class and its weirdness, one has to remember that there are three
+ * different independent class loaders at play here.
+ * <p>
+ * First, Gradle class loader that has loaded the muzzle-check plugin that calls this class. This
+ * one has a lot of Gradle specific stuff and we don't want that it to be available during muzzle checks.
+ * <p>
+ * Second, there is agent or instrumentation class loader, which contains all InstrumentationModules
+ * and helper classes. The actual muzzle check process happens "inside" that class loader. This means
+ * that we load {@link io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher} from it and we
+ * allow it to find all InstrumentationModules from agent class loader.
+ * <p>
+ * Finally, there is user class loader. It contains the specific version of the instrumented library
+ * that we want to muzzle-check: "does this version provide all the expected hooks and classes and
+ * methods that our instrumentations expect".
+ */
+
+// TODO the next line is not true anymore. Switch from System.err to Gradle logger.
 // Runs in special classloader so tedious to provide access to the Gradle logger.
 @SuppressWarnings("SystemOut")
 public final class MuzzleGradlePluginUtil {
@@ -52,82 +66,40 @@ public final class MuzzleGradlePluginUtil {
    */
   public static void assertInstrumentationMuzzled(
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
-      throws Exception {
-    // muzzle validate all instrumenters
-    int validatedModulesCount = 0;
-    for (InstrumentationModule instrumentationModule :
-        ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-      ReferenceMatcher muzzle =
-          new ReferenceMatcher(
-              instrumentationModule.getMuzzleHelperClassNames(),
-              instrumentationModule.getMuzzleReferences(),
-              instrumentationModule::isHelperClass);
-      List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-      boolean classLoaderMatch =
-          instrumentationModule.classLoaderMatcher().matches(userClassLoader);
-      boolean passed = mismatches.isEmpty() && classLoaderMatch;
+    Class<?> matcherClass = agentClassLoader
+        .loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher");
 
-      if (passed && !assertPass) {
-        System.err.println(
-            "MUZZLE PASSED "
-                + instrumentationModule.getClass().getSimpleName()
-                + " BUT FAILURE WAS EXPECTED");
-        throw new IllegalStateException("Instrumentation unexpectedly passed Muzzle validation");
-      } else if (!passed && assertPass) {
-        System.err.println(
-            "FAILED MUZZLE VALIDATION: "
-                + instrumentationModule.getClass().getName()
-                + " mismatches:");
+    //We cannot reference Mismatch class directly here, because we are loaded from a differen classloader.
+    Map<String, List<Object>> allMismatches = (Map<String, List<Object>>) matcherClass
+        .getMethod("matchesAll", ClassLoader.class, boolean.class)
+        .invoke(null, userClassLoader, assertPass);
 
-        if (!classLoaderMatch) {
-          System.err.println("-- classloader mismatch");
-        }
+    allMismatches.forEach(
+        (moduleName, mismatches) -> {
+          boolean passed = mismatches.isEmpty();
 
-        for (Mismatch mismatch : mismatches) {
-          System.err.println("-- " + mismatch);
-        }
-        throw new IllegalStateException("Instrumentation failed Muzzle validation");
-      }
+          if (passed && !assertPass) {
+            System.err.println("MUZZLE PASSED " + moduleName + " BUT FAILURE WAS EXPECTED");
+            throw new IllegalStateException(
+                "Instrumentation unexpectedly passed Muzzle validation");
+          } else if (!passed && assertPass) {
+            System.err.println("FAILED MUZZLE VALIDATION: " + moduleName + " mismatches:");
 
-      validatedModulesCount++;
-    }
-    // run helper injector on all instrumentation modules
-    if (assertPass) {
-      for (InstrumentationModule instrumentationModule :
-          ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-        try {
-          // verify helper injector works
-          List<String> allHelperClasses = instrumentationModule.getMuzzleHelperClassNames();
-          if (!allHelperClasses.isEmpty()) {
-            new HelperInjector(
-                    MuzzleGradlePluginUtil.class.getSimpleName(),
-                    createHelperMap(allHelperClasses, agentClassLoader))
-                .transform(null, null, userClassLoader, null);
+            for (Object mismatch : mismatches) {
+              System.err.println("-- " + mismatch);
+            }
+            throw new IllegalStateException("Instrumentation failed Muzzle validation");
           }
-        } catch (RuntimeException e) {
-          System.err.println(
-              "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
-          throw e;
-        }
-      }
-    }
+        });
+
+    int validatedModulesCount = allMismatches.size();
     if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
       throw new IllegalStateException(errorMessage);
     }
-  }
-
-  private static Map<String, byte[]> createHelperMap(
-      Collection<String> helperClassNames, ClassLoader agentClassLoader) throws IOException {
-    Map<String, byte[]> helperMap = new LinkedHashMap<>(helperClassNames.size());
-    for (String helperName : helperClassNames) {
-      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(agentClassLoader);
-      byte[] classBytes = locator.locate(helperName).resolve();
-      helperMap.put(helperName, classBytes);
-    }
-    return helperMap;
   }
 
   /**

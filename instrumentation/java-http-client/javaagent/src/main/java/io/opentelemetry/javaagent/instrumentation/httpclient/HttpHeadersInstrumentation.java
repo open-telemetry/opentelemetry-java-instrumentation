@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.net.http.HttpHeaders;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,9 +39,7 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      if (Java8BytecodeBridge.currentSpan().isRecording()) {
-        headers = tracer().inject(headers);
-      }
+      headers = tracer().inject(headers);
     }
   }
 }

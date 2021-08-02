@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
-import io.netty.channel.ChannelFuture;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.AbstractNettyHttpClientTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyHttpClientTracerAccess;
 
@@ -24,11 +22,6 @@ public class NettyHttpClientTracer extends AbstractNettyHttpClientTracer<NettyRe
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
-  }
-
-  @Override
-  protected Context getAndRemoveConnectContext(ChannelFuture channelFuture) {
-    return channelFuture.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
   }
 
   @Override
