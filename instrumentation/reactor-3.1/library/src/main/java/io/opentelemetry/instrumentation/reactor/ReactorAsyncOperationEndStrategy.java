@@ -7,21 +7,15 @@ package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
+import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
-  private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
-      AttributeKey.booleanKey("reactor.canceled");
-
   public static ReactorAsyncOperationEndStrategy create() {
     return newBuilder().build();
   }
@@ -49,71 +43,38 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
       Object asyncValue,
       Class<RESPONSE> responseType) {
 
-    EndOnFirstNotificationConsumer notificationConsumer =
-        new EndOnFirstNotificationConsumer(context) {
-          @Override
-          protected void end(Object result, Throwable error) {
-            instrumenter.end(context, request, tryToGetResponse(responseType, result), error);
-          }
-        };
+    if (tryEndSynchronously(instrumenter, context, request, asyncValue, responseType)) {
+      return asyncValue;
+    }
 
     if (asyncValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) asyncValue;
-      return mono.doOnError(notificationConsumer)
-          .doOnSuccess(notificationConsumer::onSuccess)
-          .doOnCancel(notificationConsumer::onCancel);
+      return InstrumentedOperator.transformMono(
+          mono, instrumenter, context, request, responseType, captureExperimentalSpanAttributes);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) asyncValue);
-      return flux.doOnError(notificationConsumer)
-          .doOnComplete(notificationConsumer)
-          .doOnCancel(notificationConsumer::onCancel);
+      return InstrumentedOperator.transformFlux(
+          flux, instrumenter, context, request, responseType, captureExperimentalSpanAttributes);
     }
   }
 
-  /**
-   * Helper class to ensure that the span is ended exactly once regardless of how many OnComplete or
-   * OnError notifications are received. Multiple notifications can happen anytime multiple
-   * subscribers subscribe to the same publisher.
-   */
-  private abstract class EndOnFirstNotificationConsumer extends AtomicBoolean
-      implements Runnable, Consumer<Throwable> {
+  private static <REQUEST, RESPONSE> boolean tryEndSynchronously(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      Object asyncValue,
+      Class<RESPONSE> responseType) {
 
-    private final Context context;
-
-    protected EndOnFirstNotificationConsumer(Context context) {
-      super(false);
-      this.context = context;
-    }
-
-    public <T> void onSuccess(T result) {
-      accept(result, null);
-    }
-
-    public void onCancel() {
-      if (compareAndSet(false, true)) {
-        if (captureExperimentalSpanAttributes) {
-          Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
-        }
-        end(null, null);
+    if (asyncValue instanceof Fuseable.ScalarCallable) {
+      Fuseable.ScalarCallable<?> scalarCallable = (Fuseable.ScalarCallable<?>) asyncValue;
+      try {
+        Object result = scalarCallable.call();
+        instrumenter.end(context, request, tryToGetResponse(responseType, result), null);
+      } catch (Throwable error) {
+        instrumenter.end(context, request, null, error);
       }
+      return true;
     }
-
-    @Override
-    public void run() {
-      accept(null, null);
-    }
-
-    @Override
-    public void accept(Throwable exception) {
-      end(null, exception);
-    }
-
-    private void accept(Object result, Throwable error) {
-      if (compareAndSet(false, true)) {
-        end(result, error);
-      }
-    }
-
-    protected abstract void end(Object result, Throwable error);
+    return false;
   }
 }

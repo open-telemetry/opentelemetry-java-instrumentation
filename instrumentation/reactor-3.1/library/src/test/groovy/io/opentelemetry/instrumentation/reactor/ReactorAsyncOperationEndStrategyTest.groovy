@@ -43,35 +43,28 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       underTest.supports(Mono)
     }
 
-    def "ends span on already completed"() {
+    def "ends span synchronously on already completed"() {
       when:
-      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.just(response), String)
-      StepVerifier.create(result)
-        .expectNext(response)
-        .verifyComplete()
+      underTest.end(instrumenter, context, request, Mono.just(response), String)
 
       then:
       1 * instrumenter.end(context, request, response, null)
     }
 
-    def "ends span on already empty"() {
+    def "ends span synchronously on already empty"() {
       when:
-      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.empty(), String)
-      StepVerifier.create(result)
-        .verifyComplete()
+      underTest.end(instrumenter, context, request, Mono.empty(), String)
 
       then:
       1 * instrumenter.end(context, request, null, null)
     }
 
-    def "ends span on already errored"() {
+    def "ends span synchronously on already errored"() {
       given:
       def exception = new IllegalStateException()
 
       when:
-      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.error(exception), String)
-      StepVerifier.create(result)
-        .verifyErrorMatches({  it == exception })
+      underTest.end(instrumenter, context, request, Mono.error(exception), String)
 
       then:
       1 * instrumenter.end(context, request, null, exception)
@@ -187,10 +180,12 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
-    def "ends span once for multiple subscribers"() {
+    def "ends span once for each subscription"() {
+      given:
+      def mono = Mono.defer({Mono.just(response)})
 
       when:
-      def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.just(response), String)
+      def result = (Mono<?>) underTest.end(instrumenter, context, request, mono, String)
       StepVerifier.create(result)
         .expectNext(response)
         .verifyComplete()
@@ -202,7 +197,9 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
         .verifyComplete()
 
       then:
-      1 * instrumenter.end(context, request, response, null)
+      3 * instrumenter.end(context, request, response, null)
+      2 * instrumenter.shouldStart(_, request) >> true
+      2 * instrumenter.start(_, request) >> context
     }
   }
 
@@ -212,35 +209,28 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       underTest.supports(Flux)
     }
 
-    def "ends span on already completed"() {
+    def "ends span synchronously on already completed"() {
       when:
-      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.just(response), String)
-      StepVerifier.create(result)
-        .expectNext(response)
-        .verifyComplete()
+      underTest.end(instrumenter, context, request, Flux.just(response), String)
+
+      then:
+      1 * instrumenter.end(context, request, response, null)
+    }
+
+    def "ends span synchronously on already empty"() {
+      when:
+      underTest.end(instrumenter, context, request, Flux.empty(), String)
 
       then:
       1 * instrumenter.end(context, request, null, null)
     }
 
-    def "ends span on already empty"() {
-      when:
-      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.empty(), String)
-      StepVerifier.create(result)
-        .verifyComplete()
-
-      then:
-      1 * instrumenter.end(context, request, null, null)
-    }
-
-    def "ends span on already errored"() {
+    def "ends synchronously span on already errored"() {
       given:
       def exception = new IllegalStateException()
 
       when:
-      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.error(exception), String)
-      StepVerifier.create(result)
-        .verifyErrorMatches({  it == exception })
+      underTest.end(instrumenter, context, request, Flux.error(exception), String)
 
       then:
       1 * instrumenter.end(context, request, null, exception)
@@ -265,7 +255,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
         .verifyComplete()
 
       then:
-      1 * instrumenter.end(context, request, null, null)
+      1 * instrumenter.end(context, request, response, null)
     }
 
     def "ends span when empty"() {
@@ -353,9 +343,12 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
-    def "ends span once for multiple subscribers"() {
+    def "ends span once for each subscription"() {
+      given:
+      def flux = Flux.defer({ Flux.just(response) })
+
       when:
-      def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.just(response), String)
+      def result = (Flux<?>) underTest.end(instrumenter, context, request, flux, String)
       StepVerifier.create(result)
         .expectNext(response)
         .verifyComplete()
@@ -367,7 +360,9 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
         .verifyComplete()
 
       then:
-      1 * instrumenter.end(context, request, null, null)
+      3 * instrumenter.end(context, request, response, null)
+      2 * instrumenter.shouldStart(_, request) >> true
+      2 * instrumenter.start(_, request) >> context
     }
   }
 }
