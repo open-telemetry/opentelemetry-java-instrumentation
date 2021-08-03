@@ -53,6 +53,7 @@ public final class RatpackTracingBuilder {
     builder.setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes));
     builder.addAttributesExtractor(netAttributes);
     builder.addAttributesExtractor(httpAttributes);
+    builder.addAttributesExtractors(additionalExtractors);
 
     return new RatpackTracing(builder.newServerInstrumenter(new RatpackGetter()));
   }
