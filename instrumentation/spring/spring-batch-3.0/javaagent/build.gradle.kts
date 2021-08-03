@@ -32,9 +32,10 @@ tasks {
   val testItemLevelSpan by registering(Test::class) {
     filter {
       includeTestsMatching("*ItemLevelSpanTest")
+      includeTestsMatching("*CustomSpanEventTest")
       isFailOnNoMatchingTests = false
     }
-    include("**/*ItemLevelSpanTest.*")
+    include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
   }
   
@@ -44,11 +45,13 @@ tasks {
     filter {
       excludeTestsMatching("*ChunkRootSpanTest")
       excludeTestsMatching("*ItemLevelSpanTest")
+      excludeTestsMatching("*CustomSpanEventTest")
       isFailOnNoMatchingTests = false
     }
   }
 
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
   }
 }
