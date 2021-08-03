@@ -9,18 +9,18 @@ import io.opentelemetry.config.TestConfig;
 
 public class AppPerfResults {
 
-  private final Agent agent;
-  private final TestConfig config;
-  private final double iterationAvg;
-  private final double iterationP95;
-  private final double requestAvg;
-  private final double requestP95;
-  private final long totalGCTime;
-  private final long totalAllocated;
-  private final MinMax heapUsed;
-  private final float maxThreadContextSwitchRate;
-  private final long startupDurationMs;
-  private final long peakThreadCount;
+  final Agent agent;
+  final TestConfig config;
+  final double iterationAvg;
+  final double iterationP95;
+  final double requestAvg;
+  final double requestP95;
+  final long totalGCTime;
+  final long totalAllocated;
+  final MinMax heapUsed;
+  final float maxThreadContextSwitchRate;
+  final long startupDurationMs;
+  final long peakThreadCount;
 
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
@@ -37,62 +37,13 @@ public class AppPerfResults {
     this.peakThreadCount = builder.peakThreadCount;
   }
 
-  Agent getAgent() {
-    return agent;
+  double getTotalAllocatedMB() {
+    return totalAllocated / (1024.0 * 1024.0);
   }
 
   String getAgentName() {
     return agent.getName();
   }
-
-  TestConfig getConfig() {
-    return config;
-  }
-
-  double getIterationAvg() {
-    return iterationAvg;
-  }
-
-  double getIterationP95() {
-    return iterationP95;
-  }
-
-  double getRequestAvg() {
-    return requestAvg;
-  }
-
-  double getRequestP95() {
-    return requestP95;
-  }
-
-  long getTotalGCTime() {
-    return totalGCTime;
-  }
-
-  long getTotalAllocated() {
-    return totalAllocated;
-  }
-
-  double getTotalAllocatedMB() {
-    return totalAllocated / (1024.0 * 1024.0);
-  }
-
-  MinMax getHeapUsed() {
-    return heapUsed;
-  }
-
-  float getMaxThreadContextSwitchRate() {
-    return maxThreadContextSwitchRate;
-  }
-
-  long getStartupDurationMs() {
-    return startupDurationMs;
-  }
-
-  public long getPeakThreadCount() {
-    return peakThreadCount;
-  }
-
   static Builder builder() {
     return new Builder();
   }
