@@ -1,6 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
-import java.time.Duration
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import java.time.Duration
 
 plugins {
   `java-library`
@@ -187,7 +187,6 @@ gradle.sharedServices.registerIfAbsent("testcontainersBuildService", Testcontain
   maxParallelUsages.convention(2)
 }
 
-val testJavaVersion = gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
 val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
@@ -228,11 +227,16 @@ tasks.withType<Test>().configureEach {
 }
 
 afterEvaluate {
+  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+  val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
+    ?: false
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
       javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+        implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
       })
+      println("javaLauncher set to ${javaLauncher.get().executablePath} for testJavaVersion=$testJavaVersion")
       isEnabled = isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
