@@ -14,7 +14,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
 abstract class CustomSpanEventTest extends AgentInstrumentationSpecification {
-  static final boolean versionGreaterThan4_0 = Boolean.getBoolean("testLatestDeps")
+  static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps")
 
   abstract runJob(String jobName, Map<String, JobParameter> params = emptyMap())
 
@@ -44,7 +44,7 @@ abstract class CustomSpanEventTest extends AgentInstrumentationSpecification {
           // CompositeChunkListener has broken ordering that causes listeners that do not override order() to appear first at all times
           // because of that a custom ChunkListener will always see a Step span when using spring-batch versions [3, 4)
           // that bug was fixed in 4.0
-          if (versionGreaterThan4_0) {
+          if (VERSION_GREATER_THAN_4_0) {
             events(2)
             event(0) {
               eventName "step.before"
@@ -76,7 +76,7 @@ abstract class CustomSpanEventTest extends AgentInstrumentationSpecification {
           // CompositeChunkListener has broken ordering that causes listeners that do not override order() to appear first at all times
           // because of that a custom ChunkListener will always see a Step span when using spring-batch versions [3, 4)
           // that bug was fixed in 4.0
-          if (versionGreaterThan4_0) {
+          if (VERSION_GREATER_THAN_4_0) {
             events(2)
             event(0) {
               eventName "chunk.before"
