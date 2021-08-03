@@ -6,6 +6,7 @@ package io.opentelemetry.containers;
 
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
+import io.opentelemetry.util.NamingConventions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -14,6 +15,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
+import java.nio.file.Path;
 import java.time.Duration;
 
 public class K6Container {
@@ -21,15 +23,17 @@ public class K6Container {
   private final Network network;
   private final Agent agent;
   private final TestConfig config;
+  private final NamingConventions namingConventions;
 
-  public K6Container(Network network, Agent agent, TestConfig config) {
+  public K6Container(Network network, Agent agent, TestConfig config, NamingConventions namingConvention) {
     this.network = network;
     this.agent = agent;
     this.config = config;
+    this.namingConventions = namingConvention;
   }
 
   public GenericContainer<?> build(){
-    String k6OutputFile = "/results/k6_out_" + agent + ".json";
+    Path k6OutputFile = namingConventions.container.k6Results(agent);
     return new GenericContainer<>(
         DockerImageName.parse("loadimpact/k6"))
         .withNetwork(network)
@@ -37,13 +41,13 @@ public class K6Container {
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withCopyFileToContainer(
             MountableFile.forHostPath("./k6"), "/app")
-        .withFileSystemBind(".", "/results")
+        .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .withCommand(
             "run",
             "-u", String.valueOf(config.getConcurrentConnections()),
             "-i", String.valueOf(config.getTotalIterations()),
             "--rps", String.valueOf(config.getMaxRequestRate()),
-            "--summary-export", k6OutputFile,
+            "--summary-export", k6OutputFile.toString(),
             "/app/basic.js"
         )
         .withStartupCheckStrategy(

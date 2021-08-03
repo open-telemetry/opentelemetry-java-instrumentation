@@ -227,6 +227,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def setupSpec() {
     server = new HttpClientTestServer(openTelemetry)
     server.start()
+    junitTest.setupOptions()
     junitTest.setTesting(testRunner(), server)
   }
 
@@ -262,6 +263,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method << BODY_METHODS
   }
 
+  def "basic GET request with not sampled parent"() {
+    expect:
+    junitTest.successfulRequestWithNotSampledParent()
+  }
+
   def "should suppress nested CLIENT span if already under parent CLIENT span (#method)"() {
     assumeTrue(testWithClientParent())
     expect:
@@ -270,7 +276,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     where:
     method << BODY_METHODS
   }
-
 
   //FIXME: add tests for POST with large/chunked data
 

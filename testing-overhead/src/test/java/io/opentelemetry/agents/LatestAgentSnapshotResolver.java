@@ -36,7 +36,7 @@ public class LatestAgentSnapshotResolver {
     String url = BASE_URL +  "/" + version + "/" + latestFilename;
     byte[] jarBytes = fetchBodyBytesFrom(url);
     Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT-all.jar");
-    Files.write(path, jarBytes, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+    Files.write(path, jarBytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     return Optional.of(path);
   }
 

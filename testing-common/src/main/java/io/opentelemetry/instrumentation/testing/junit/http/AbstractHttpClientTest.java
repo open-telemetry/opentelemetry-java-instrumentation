@@ -42,12 +42,15 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> {
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
@@ -136,6 +139,65 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   private InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
+  private final HttpClientTestOptions options = new HttpClientTestOptions();
+
+  @BeforeAll
+  void setupOptions() {
+    // TODO(anuraaga): Have subclasses configure options directly and remove mapping of legacy
+    // protected methods.
+    options.setHttpAttributes(this::httpAttributes);
+    options.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
+    Integer responseCodeOnError = responseCodeOnRedirectError();
+    if (responseCodeOnError != null) {
+      options.setResponseCodeOnRedirectError(responseCodeOnError);
+    }
+    options.setUserAgent(userAgent());
+    options.setClientSpanErrorMapper(this::clientSpanError);
+    options.setSingleConnectionFactory(this::createSingleConnection);
+    if (!testWithClientParent()) {
+      options.disableTestWithClientParent();
+    }
+    if (!testRedirects()) {
+      options.disableTestRedirects();
+    }
+    if (!testCircularRedirects()) {
+      options.disableTestCircularRedirects();
+    }
+    options.setMaxRedirects(maxRedirects());
+    if (!testReusedRequest()) {
+      options.disableTestReusedRequest();
+    }
+    if (!testConnectionFailure()) {
+      options.disableTestConnectionFailure();
+    }
+    if (testReadTimeout()) {
+      options.enableTestReadTimeout();
+    }
+    if (!testRemoteConnection()) {
+      options.disableTestRemoteConnection();
+    }
+    if (!testHttps()) {
+      options.disableTestHttps();
+    }
+    if (!testCausality()) {
+      options.disableTestCausality();
+    }
+    if (!testCausalityWithCallback()) {
+      options.disableTestCausalityWithCallback();
+    }
+    if (!testCallback()) {
+      options.disableTestCallback();
+    }
+    if (!testCallbackWithParent()) {
+      options.disableTestCallbackWithParent();
+    }
+    if (!testErrorWithCallback()) {
+      options.disableTestErrorWithCallback();
+    }
+
+    configure(options);
+  }
+
   @BeforeEach
   void verifyExtension() {
     if (testing == null) {
@@ -195,10 +257,24 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         });
   }
 
+  @Test
+  void successfulRequestWithNotSampledParent() throws InterruptedException {
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+    int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    // sleep to ensure no spans are emitted
+    Thread.sleep(200);
+
+    assertThat(testing.traces()).isEmpty();
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
   void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method) {
-    assumeTrue(testWithClientParent());
+    assumeTrue(options.testWithClientParent);
 
     URI uri = resolveAddress("/success");
     int responseCode = runUnderParentClientSpan(() -> doRequest(method, uri));
@@ -219,8 +295,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void requestWithCallbackAndParent() throws Throwable {
-    assumeTrue(testCallback());
-    assumeTrue(testCallbackWithParent());
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testCallbackWithParent);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -256,7 +332,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
-    assumeTrue(testCallback());
+    assumeTrue(options.testCallback);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -289,7 +365,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
-    assumeTrue(testRedirects());
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/redirect");
@@ -318,7 +394,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
-    assumeTrue(testRedirects());
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/another-redirect");
@@ -345,8 +421,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void circularRedirects() {
-    assumeTrue(testRedirects());
-    assumeTrue(testCircularRedirects());
+    assumeTrue(options.testRedirects);
+    assumeTrue(options.testCircularRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/circular-redirect");
@@ -358,7 +434,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -369,10 +445,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
           assertions.add(
               span ->
-                  assertClientSpan(span, uri, method, responseCodeOnRedirectError())
+                  assertClientSpan(span, uri, method, options.responseCodeOnRedirectError)
                       .hasParentSpanId(SpanId.getInvalid())
                       .hasEventsSatisfyingExactly(hasException(clientError)));
-          for (int i = 0; i < maxRedirects(); i++) {
+          for (int i = 0; i < options.maxRedirects; i++) {
             assertions.add(
                 span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
           }
@@ -382,7 +458,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void redirectToSecuredCopiesAuthHeader() {
-    assumeTrue(testRedirects());
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/to-secured");
@@ -439,7 +515,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void reuseRequest() {
-    assumeTrue(testReusedRequest());
+    assumeTrue(options.testReusedRequest);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -504,7 +580,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void connectionErrorUnopenedPort() {
-    assumeTrue(testConnectionFailure());
+    assumeTrue(options.testConnectionFailure);
 
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
@@ -517,7 +593,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -544,9 +620,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void connectionErrorUnopenedPortWithCallback() {
-    assumeTrue(testConnectionFailure());
-    assumeTrue(testCallback());
-    assumeTrue(testErrorWithCallback());
+    assumeTrue(options.testConnectionFailure);
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testErrorWithCallback);
 
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
@@ -565,7 +641,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -591,7 +667,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void connectionErrorNonRoutableAddress() {
-    assumeTrue(testRemoteConnection());
+    assumeTrue(options.testRemoteConnection);
 
     String method = "HEAD";
     URI uri = URI.create("https://192.0.2.1/");
@@ -604,7 +680,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -628,7 +704,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void readTimedOut() {
-    assumeTrue(testReadTimeout());
+    assumeTrue(options.testReadTimeout);
 
     String method = "GET";
     URI uri = resolveAddress("/read-timeout");
@@ -641,7 +717,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -670,8 +746,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
       disabledReason = "IBM JVM has different protocol support for TLS")
   @Test
   void httpsRequest() {
-    assumeTrue(testRemoteConnection());
-    assumeTrue(testHttps());
+    assumeTrue(options.testRemoteConnection);
+    assumeTrue(options.testHttps);
 
     String method = "GET";
     URI uri = URI.create("https://localhost:" + server.httpsPort() + "/success");
@@ -702,7 +778,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrency() {
-    assumeTrue(testCausality());
+    assumeTrue(options.testCausality);
 
     int count = 50;
     String method = "GET";
@@ -772,10 +848,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void highConcurrencyWithCallback() {
-    assumeTrue(testCausality());
-    assumeTrue(testCausalityWithCallback());
-    assumeTrue(testCallback());
-    assumeTrue(testCallbackWithParent());
+    assumeTrue(options.testCausality);
+    assumeTrue(options.testCausalityWithCallback);
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testCallbackWithParent);
 
     int count = 50;
     String method = "GET";
@@ -854,7 +930,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrencyOnSingleConnection() {
-    SingleConnection singleConnection = createSingleConnection("localhost", server.httpPort());
+    SingleConnection singleConnection =
+        options.singleConnectionFactory.apply("localhost", server.httpPort());
     assumeTrue(singleConnection != null);
 
     int count = 50;
@@ -931,7 +1008,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
     Set<AttributeKey<?>> httpClientAttributes = httpAttributes(uri);
-    return span.hasName(expectedClientSpanName(uri, method))
+    return span.hasName(options.expectedClientSpanNameMapper.apply(uri, method))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
@@ -995,7 +1072,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                         SemanticAttributes.HttpFlavorValues.HTTP_1_1);
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
-                String userAgent = userAgent();
+                String userAgent = options.userAgent;
                 if (userAgent != null) {
                   // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
                   // hasEntrySatisfying.
@@ -1156,6 +1233,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   protected boolean testErrorWithCallback() {
     return true;
   }
+
+  protected void configure(HttpClientTestOptions options) {}
 
   // Workaround until release of
   // https://github.com/open-telemetry/opentelemetry-java/pull/3409

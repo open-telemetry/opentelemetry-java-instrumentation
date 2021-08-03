@@ -53,7 +53,7 @@ tasks {
   }
 
   named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
     dependsOn(testConnectionSpan)
     filter {
