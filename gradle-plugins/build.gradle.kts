@@ -5,11 +5,10 @@ plugins {
   `maven-publish`
 
   id("com.gradle.plugin-publish")
-  id("io.github.gradle-nexus.publish-plugin")
 }
 
 group = "io.opentelemetry.instrumentation"
-version = "0.2.0-SNAPSHOT"
+version = "0.3.0"
 
 repositories {
   mavenCentral()
@@ -47,19 +46,16 @@ tasks.withType<Test>().configureEach {
 pluginBundle {
   website = "https://opentelemetry.io"
   vcsUrl = "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
-  tags = listOf("opentelemetry", "instrumentation")
+  tags = listOf("opentelemetry", "instrumentation", "java")
 }
 
-nexusPublishing {
-  packageGroup.set("io.opentelemetry")
-
-  repositories {
-    sonatype {
-      username.set(System.getenv("SONATYPE_USER"))
-      password.set(System.getenv("SONATYPE_KEY"))
+gradlePlugin {
+  plugins {
+    get("io.opentelemetry.instrumentation.muzzle-generation").apply {
+      displayName = "Muzzle safety net generation"
+    }
+    get("io.opentelemetry.instrumentation.muzzle-check").apply {
+      displayName = "Checks instrumented libraries against muzzle safety net"
     }
   }
-
-  connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
 }
