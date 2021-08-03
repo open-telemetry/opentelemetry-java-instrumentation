@@ -10,24 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is used to wrap lambda callables since currently we cannot instrument them
+ * This is used to wrap lambda callables since currently we cannot instrument them.
  *
  * <p>FIXME: We should remove this once https://github.com/raphw/byte-buddy/issues/558 is fixed
  */
-public final class CallableWrapper implements Callable {
+public final class CallableWrapper<T> implements Callable<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(CallableWrapper.class);
-
-  private final Callable callable;
-
-  public CallableWrapper(Callable callable) {
-    this.callable = callable;
-  }
-
-  @Override
-  public Object call() throws Exception {
-    return callable.call();
-  }
 
   public static Callable<?> wrapIfNeeded(Callable<?> task) {
     // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
@@ -37,5 +26,16 @@ public final class CallableWrapper implements Callable {
       return new CallableWrapper(task);
     }
     return task;
+  }
+
+  private final Callable<T> callable;
+
+  private CallableWrapper(Callable<T> callable) {
+    this.callable = callable;
+  }
+
+  @Override
+  public T call() throws Exception {
+    return callable.call();
   }
 }
