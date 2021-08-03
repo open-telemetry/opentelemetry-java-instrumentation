@@ -22,7 +22,7 @@ final class OpenTelemetryServerErrorHandler implements ServerErrorHandler {
             OpenTelemetryServerHandler.ErrorHolder.class,
             new OpenTelemetryServerHandler.ErrorHolder(throwable));
 
-    ServerErrorHandler delegate = RatpackProductionErrorHandler.INSTANCE;
+    ServerErrorHandler delegate = OpenTelemetryFallbackErrorHandler.INSTANCE;
     for (ServerErrorHandler errorHandler : context.getAll(ServerErrorHandler.class)) {
       if (errorHandler != INSTANCE) {
         delegate = errorHandler;

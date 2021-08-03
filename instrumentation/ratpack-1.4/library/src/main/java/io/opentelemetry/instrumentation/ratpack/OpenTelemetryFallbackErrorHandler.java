@@ -31,17 +31,19 @@ import ratpack.handling.Context;
 // Copied from
 // https://github.com/ratpack/ratpack/blob/master/ratpack-core/src/main/java/ratpack/core/error/internal/DefaultProductionErrorHandler.java
 // since it is internal and has had breaking changes.
-final class RatpackProductionErrorHandler implements ClientErrorHandler, ServerErrorHandler {
+final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, ServerErrorHandler {
 
-  static final RatpackProductionErrorHandler INSTANCE = new RatpackProductionErrorHandler();
+  static final OpenTelemetryFallbackErrorHandler INSTANCE = new OpenTelemetryFallbackErrorHandler();
 
-  private static final Logger logger = LoggerFactory.getLogger(RatpackProductionErrorHandler.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(OpenTelemetryFallbackErrorHandler.class);
 
-  RatpackProductionErrorHandler() {}
+  OpenTelemetryFallbackErrorHandler() {}
 
   @Override
   public void error(Context context, int statusCode) {
     if (logger.isWarnEnabled()) {
+      WarnOnce.execute();
       logger.warn(getMsg(ClientErrorHandler.class, "client error", context));
     }
     context.getResponse().status(statusCode).send();
@@ -50,6 +52,7 @@ final class RatpackProductionErrorHandler implements ClientErrorHandler, ServerE
   @Override
   public void error(Context context, Throwable throwable) {
     if (logger.isWarnEnabled()) {
+      WarnOnce.execute();
       logger.warn(getMsg(ServerErrorHandler.class, "server error", context) + "\n", throwable);
     }
     context.getResponse().status(500).send();
@@ -66,5 +69,17 @@ final class RatpackProductionErrorHandler implements ClientErrorHandler, ServerE
         + ", uri: "
         + context.getRequest().getRawUri()
         + ")";
+  }
+
+  private static class WarnOnce {
+    static {
+      logger.warn(
+          "Logging error using OpenTelemetryFallbackErrorHandler. This indicates "
+              + "OpenTelemetry could not find a registered error handler which is not expected. "
+              + "Log messages will only be outputed to console.");
+    }
+
+    // Warned once in static initializer, this is just to trigger classload.
+    static void execute() {}
   }
 }
