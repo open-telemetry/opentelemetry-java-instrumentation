@@ -94,10 +94,4 @@ final class ApacheHttpClientHttpAttributesExtractor
   protected String route(ApacheHttpClientRequest request) {
     return null;
   }
-
-  @Override
-  @Nullable
-  protected String clientIp(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

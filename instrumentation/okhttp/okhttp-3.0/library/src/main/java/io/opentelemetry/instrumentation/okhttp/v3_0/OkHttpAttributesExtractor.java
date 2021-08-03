@@ -83,11 +83,6 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   }
 
   @Override
-  protected @Nullable String clientIp(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   protected Integer statusCode(Request request, Response response) {
     return response.code();
   }
