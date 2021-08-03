@@ -20,7 +20,7 @@ service:
     traces:
       receivers: [ otlp ]
       processors: [ batch ]
-      exporters: [ logging/logging_debug ]
+      exporters: [ logging/logging_info ]
     metrics:
       receivers: [ otlp ]
       processors: [ batch ]
@@ -28,6 +28,6 @@ service:
     logs:
       receivers: [ otlp ]
       processors: [ batch ]
-      exporters: [ logging/logging_debug  ]
+      exporters: [ logging/logging_info  ]
 
   extensions: [ health_check ]
