@@ -93,7 +93,7 @@ abstract class OpenTelemetryHandlerMappingFilterTest extends AgentInstrumentatio
   }
 }
 
-// spring is inside ear lib
+// spring is inside ear/lib
 class LibsInEarTest extends OpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {

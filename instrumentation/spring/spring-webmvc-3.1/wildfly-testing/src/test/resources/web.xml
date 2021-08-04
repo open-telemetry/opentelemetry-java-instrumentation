@@ -13,7 +13,7 @@
 
   <!--
     Spring boot automatically registers a servlet filter when spring bean implements
-    javax.servlet.Filter but vanilla spring does not, so we need to add a placeholder
+    javax.servlet.Filter but vanilla spring does not so we need to add a placeholder
     for our servlet filter here.
   -->
   <filter>
