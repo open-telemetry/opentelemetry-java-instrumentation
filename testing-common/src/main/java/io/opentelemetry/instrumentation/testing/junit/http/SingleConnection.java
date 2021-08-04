@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Helper class for http client tests which require a single connection.
@@ -24,6 +22,5 @@ import java.util.concurrent.TimeoutException;
 public interface SingleConnection {
   String REQUEST_ID_HEADER = "test-request-id";
 
-  int doRequest(String path, Map<String, String> headers)
-      throws ExecutionException, InterruptedException, TimeoutException;
+  int doRequest(String path, Map<String, String> headers) throws Exception;
 }
