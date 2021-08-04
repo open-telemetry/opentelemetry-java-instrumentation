@@ -103,8 +103,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
+        suppressed = ServerSpan.exists(parentContext);
+        break;
       case CONSUMER:
-        suppressed = ServerSpan.exists(parentContext) || ConsumerSpan.exists(parentContext);
+        suppressed = ConsumerSpan.exists(parentContext);
         break;
       case CLIENT:
         suppressed = ClientSpan.exists(parentContext);
