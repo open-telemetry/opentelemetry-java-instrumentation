@@ -15,17 +15,6 @@ muzzle {
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
     assertInverse.set(true)
   }
-
-  // FIXME: webmvc depends on web, so we need a separate instrumentation for spring-web specifically.
-  fail {
-    group.set("org.springframework")
-    module.set("spring-web")
-    versions.set("[,]")
-    // these versions depend on org.springframework:spring-web which has a bad dependency on
-    // javax.faces:jsf-api:1.1 which was released as pom only
-    skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
-    extraDependency("javax.servlet:javax.servlet-api:3.0.1")
-  }
 }
 
 val versions: Map<String, String> by project
@@ -36,12 +25,11 @@ dependencies {
 //  compileOnly("org.springframework:spring-webmvc:2.5.6")
 //  compileOnly("javax.servlet:servlet-api:2.4")
 
-  testImplementation(project(":testing-common"))
-
   // Include servlet instrumentation for verifying the tomcat requests
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-web-3.1:javaagent"))
 
   testImplementation("javax.validation:validation-api:1.1.0.Final")
   testImplementation("org.hibernate:hibernate-validator:5.4.2.Final")

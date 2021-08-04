@@ -21,7 +21,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.Ordered;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -120,13 +119,5 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   public int getOrder() {
     // Run after all HIGHEST_PRECEDENCE items
     return Ordered.HIGHEST_PRECEDENCE + 1;
-  }
-
-  public static class BeanDefinition extends GenericBeanDefinition {
-    public BeanDefinition() {
-      setScope(SCOPE_SINGLETON);
-      setBeanClass(OpenTelemetryHandlerMappingFilter.class);
-      setBeanClassName(OpenTelemetryHandlerMappingFilter.class.getName());
-    }
   }
 }
