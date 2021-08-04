@@ -1,5 +1,5 @@
 import http from "k6/http";
-import { check } from "k6";
+import {check} from "k6";
 import names from "./names.js";
 
 const baseUri = `http://petclinic:9966/petclinic/api`;
@@ -62,6 +62,25 @@ export default function() {
     check(responses[1], { "pet exists 200": r => r.status === 200});
     check(responses[2], { "pet exists 200": r => r.status === 200});
 
+    // Clean up after ourselves.
+    // Delete pets
+    const petDeletes = http.batch([
+      ["DELETE", `${baseUri}/pets/${JSON.parse(newPetResponses[0].body).id}`],
+      ["DELETE", `${baseUri}/pets/${JSON.parse(newPetResponses[1].body).id}`],
+      ["DELETE", `${baseUri}/pets/${JSON.parse(newPetResponses[2].body).id}`]
+    ]);
+
+    check(petDeletes[0], { "pet deleted 204": r => r.status === 204});
+    check(petDeletes[1], { "pet deleted 204": r => r.status === 204});
+    check(petDeletes[2], { "pet deleted 204": r => r.status === 204});
+
+    // Delete owner
+    const delOwner = http.del(`${baseUri}/owners/${ownerId}`);
+    check(delOwner, { "owner deleted 204": r => r.status === 204});
+
+    // Delete vet
+    const delVet = http.del(`${baseUri}/vets/${vetId}`);
+    check(delVet, { "owner deleted 204": r => r.status === 204});
 
     //TODO: Set up a visit or two
     //TODO: Fetch out the owner again because their model has been updated.
