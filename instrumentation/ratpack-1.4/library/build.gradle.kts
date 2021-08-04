@@ -1,23 +1,12 @@
 plugins {
-  id("otel.javaagent-instrumentation")
-}
-
-muzzle {
-  pass {
-    group.set("io.ratpack")
-    module.set("ratpack-core")
-    versions.set("[1.4.0,)")
-  }
+  id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
   library("io.ratpack:ratpack-core:1.4.0")
 
-  implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
-
   testImplementation(project(":instrumentation:ratpack-1.4:testing"))
-
-  testLibrary("io.ratpack:ratpack-test:1.4.0")
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
