@@ -25,6 +25,8 @@ import org.junit.runner.RunWith
 
 @RunWith(ArquillianSputnik)
 @RunAsClient
+// Test that OpenTelemetryHandlerMappingFilter injection works when spring libraries are in various
+// locations inside deployment.
 abstract class OpenTelemetryHandlerMappingFilterTest extends AgentInstrumentationSpecification {
 
   static WebClient client = WebClient.of()
@@ -91,6 +93,7 @@ abstract class OpenTelemetryHandlerMappingFilterTest extends AgentInstrumentatio
   }
 }
 
+// spring is inside ear lib
 class LibsInEarTest extends OpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {
@@ -110,6 +113,7 @@ class LibsInEarTest extends OpenTelemetryHandlerMappingFilterTest {
   }
 }
 
+// spring is inside war/WEB-INF/lib
 class LibsInWarTest extends OpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {
@@ -129,6 +133,7 @@ class LibsInWarTest extends OpenTelemetryHandlerMappingFilterTest {
   }
 }
 
+// Everything except spring-webmvc is in ear/lib, spring-webmvc is in war/WEB-INF/lib
 class MixedLibsTest extends OpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {
