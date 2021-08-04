@@ -27,7 +27,7 @@ import ratpack.test.exec.ExecHarness;
 
 public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
 
-  private static final ExecHarness exec = ExecHarness.harness();
+  private final ExecHarness exec = ExecHarness.harness();
 
   private HttpClient client;
   private HttpClient singleConnectionClient;
@@ -42,6 +42,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   void cleanUpClient() {
     client.close();
     singleConnectionClient.close();
+    exec.close();
   }
 
   protected HttpClient buildHttpClient() throws Exception {
