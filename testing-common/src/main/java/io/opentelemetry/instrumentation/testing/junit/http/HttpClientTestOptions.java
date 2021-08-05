@@ -26,10 +26,13 @@ public final class HttpClientTestOptions {
                   SemanticAttributes.HTTP_FLAVOR,
                   SemanticAttributes.HTTP_USER_AGENT)));
 
+  public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
+      (uri, method) -> method != null ? "HTTP " + method : "HTTP request";
+
   Function<URI, Set<AttributeKey<?>>> httpAttributes = unused -> DEFAULT_HTTP_ATTRIBUTES;
 
   BiFunction<URI, String, String> expectedClientSpanNameMapper =
-      (uri, method) -> method != null ? "HTTP " + method : "HTTP request";
+      DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER;
 
   Integer responseCodeOnRedirectError = null;
   String userAgent = null;
