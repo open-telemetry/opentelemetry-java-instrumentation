@@ -9,14 +9,12 @@ import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import ratpack.exec.ExecController;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -34,8 +32,11 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
 
   @BeforeAll
   void setUpClient() throws Exception {
-    client = buildHttpClient();
-    singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
+    exec.run(
+        unused -> {
+          client = buildHttpClient();
+          singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
+        });
   }
 
   @AfterAll
@@ -50,19 +51,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   protected HttpClient buildHttpClient(Action<? super HttpClientSpec> action) throws Exception {
-    return HttpClient.of(
-        spec -> {
-          // execController method added in 1.9
-          try {
-            Method execController =
-                HttpClientSpec.class.getMethod("execController", ExecController.class);
-            execController.invoke(spec, exec.getController());
-          } catch (NoSuchMethodException e) {
-            // Ignore
-          }
-
-          action.execute(spec);
-        });
+    return HttpClient.of(action);
   }
 
   @Override
