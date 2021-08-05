@@ -48,7 +48,6 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
         requestContentLengthUncompressed(request, response));
     set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, serverName(request, response));
-    set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request, response));
     if (response != null) {
       Integer statusCode = statusCode(request, response);
       if (statusCode != null) {
@@ -126,15 +125,6 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
    */
   @Nullable
   protected abstract String serverName(REQUEST request, @Nullable RESPONSE response);
-
-  /**
-   * Extracts the {@code http.client_ip} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  protected abstract String clientIp(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * Extracts the {@code http.status_code} span attribute.
