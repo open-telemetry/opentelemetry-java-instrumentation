@@ -106,12 +106,6 @@ final class RatpackHttpAttributesExtractor extends HttpAttributesExtractor<Reque
   }
 
   @Override
-  @Nullable
-  protected String clientIp(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   protected Integer statusCode(Request request, Response response) {
     return response.getStatus().getCode();
   }
