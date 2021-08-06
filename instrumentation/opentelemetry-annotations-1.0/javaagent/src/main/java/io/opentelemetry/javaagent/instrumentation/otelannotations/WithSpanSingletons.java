@@ -15,11 +15,11 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class WithSpanInstrumenter {
+public final class WithSpanSingletons {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-annotations-1.0";
 
-  private static final Logger logger = LoggerFactory.getLogger(WithSpanInstrumenter.class);
+  private static final Logger logger = LoggerFactory.getLogger(WithSpanSingletons.class);
   private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
@@ -34,23 +34,21 @@ public final class WithSpanInstrumenter {
 
   private static Instrumenter<Method, Object> createInstrumenter() {
     return Instrumenter.newBuilder(
-            GlobalOpenTelemetry.get(),
-            INSTRUMENTATION_NAME,
-            WithSpanInstrumenter::spanNameFromMethod)
-        .newInstrumenter(WithSpanInstrumenter::spanKindFromMethod);
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
+        .newInstrumenter(WithSpanSingletons::spanKindFromMethod);
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
     return Instrumenter.newBuilder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            WithSpanInstrumenter::spanNameFromMethodRequest)
+            WithSpanSingletons::spanNameFromMethodRequest)
         .addAttributesExtractor(
             MethodSpanAttributesExtractor.newInstance(
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
-        .newInstrumenter(WithSpanInstrumenter::spanKindFromMethodRequest);
+        .newInstrumenter(WithSpanSingletons::spanKindFromMethodRequest);
   }
 
   private static SpanKind spanKindFromMethodRequest(MethodRequest request) {

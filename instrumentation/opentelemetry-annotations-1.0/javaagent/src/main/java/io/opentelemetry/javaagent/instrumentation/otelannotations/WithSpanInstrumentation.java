@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanInstrumenter.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanInstrumenter.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;

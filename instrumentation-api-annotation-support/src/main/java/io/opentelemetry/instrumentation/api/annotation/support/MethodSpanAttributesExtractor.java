@@ -69,7 +69,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     AttributeBindings bindings = EmptyAttributeBindings.INSTANCE;
 
     Parameter[] parameters = method.getParameters();
-    if (parameters == null || parameters.length == 0) {
+    if (parameters.length == 0) {
       return bindings;
     }
 

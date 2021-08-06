@@ -23,5 +23,5 @@ public interface ParameterAttributeNamesExtractor {
    * @return an array of the attribute names
    */
   @Nullable
-  String[] extract(Method method, Parameter[] parameters);
+  String @Nullable [] extract(Method method, Parameter[] parameters);
 }
