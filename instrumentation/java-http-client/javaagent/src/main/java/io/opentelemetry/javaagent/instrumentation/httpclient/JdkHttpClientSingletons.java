@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -21,10 +23,12 @@ public class JdkHttpClientSingletons {
 
   static {
     SETTER = new HttpHeadersInjectAdapter(GlobalOpenTelemetry.getPropagators());
-    var httpAttributesExtractor = new JdkHttpAttributesExtractor();
-    var spanNameExtractor = HttpSpanNameExtractor.create(httpAttributesExtractor);
-    var spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    var netAttributesExtractor = new JdkHttpNetAttributesExtractor();
+    JdkHttpAttributesExtractor httpAttributesExtractor = new JdkHttpAttributesExtractor();
+    SpanNameExtractor<HttpRequest> spanNameExtractor =
+        HttpSpanNameExtractor.create(httpAttributesExtractor);
+    SpanStatusExtractor<HttpRequest, HttpResponse<?>> spanStatusExtractor =
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    JdkHttpNetAttributesExtractor netAttributesExtractor = new JdkHttpNetAttributesExtractor();
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse<?>>newBuilder(
