@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,7 +39,7 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      headers = tracer().inject(headers);
+      headers = setter().inject(headers);
     }
   }
 }
