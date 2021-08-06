@@ -13,6 +13,7 @@ import io.opentelemetry.config.TestConfig;
 import io.opentelemetry.containers.CollectorContainer;
 import io.opentelemetry.containers.K6Container;
 import io.opentelemetry.containers.PetClinicRestContainer;
+import io.opentelemetry.containers.PostgresContainer;
 import io.opentelemetry.results.AppPerfResults;
 import io.opentelemetry.results.ConsoleResultsPersister;
 import io.opentelemetry.results.ResultsCollector;
@@ -67,6 +68,9 @@ public class OverheadTests {
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
+    GenericContainer<?> postgres = new PostgresContainer(NETWORK).build();
+    postgres.start();
+
     GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build();
     long start = System.currentTimeMillis();
     petclinic.start();
@@ -81,8 +85,7 @@ public class OverheadTests {
     while (petclinic.isRunning()) {
       TimeUnit.MILLISECONDS.sleep(500);
     }
-
-    //TODO: Parse and aggregate the test results.
+    postgres.stop();
   }
 
   private void writeStartupTimeFile(Agent agent, long start) throws IOException {

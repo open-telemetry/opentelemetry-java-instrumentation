@@ -4,15 +4,14 @@
  */
 package io.opentelemetry.containers;
 
+import io.opentelemetry.agents.Agent;
+import io.opentelemetry.agents.AgentResolver;
+import io.opentelemetry.util.NamingConventions;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import io.opentelemetry.agents.Agent;
-import io.opentelemetry.agents.AgentResolver;
-import io.opentelemetry.util.NamingConventions;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +53,11 @@ public class PetClinicRestContainer {
         .withExposedPorts(PETCLINIC_PORT)
         .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
+        .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
+        .withEnv("spring_datasource_url", "jdbc:postgresql://postgres:5432/" + PostgresContainer.DATABASE_NAME)
+        .withEnv("spring_datasource_username", PostgresContainer.USERNAME)
+        .withEnv("spring_datasource_password", PostgresContainer.PASSWORD)
+        .withEnv("spring_jpa_hibernate_ddl-auto", "none")
         .dependsOn(collector)
         .withCommand(buildCommandline(agentJar));
 

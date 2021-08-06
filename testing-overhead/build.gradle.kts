@@ -8,6 +8,7 @@ repositories {
 
 dependencies {
   testImplementation("org.testcontainers:testcontainers:1.15.3")
+  testImplementation("org.testcontainers:postgresql:1.15.3")
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.2")
   testImplementation("com.squareup.okhttp3:okhttp:4.9.1")
