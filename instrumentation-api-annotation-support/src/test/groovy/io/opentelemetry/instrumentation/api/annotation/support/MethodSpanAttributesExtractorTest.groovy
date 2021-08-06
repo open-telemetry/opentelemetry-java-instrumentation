@@ -64,30 +64,6 @@ class MethodSpanAttributesExtractorTest extends Specification {
     0 * builder.put(*_)
   }
 
-  def "does not extract attributes for null attribute name array"() {
-    given:
-    def request = new Object()
-    def method = TestClass.getDeclaredMethod("method", String, String, String)
-    AttributesBuilder builder = Mock()
-
-    Cache<Method, AttributeBindings> cache = Mock {
-      1 * computeIfAbsent(method, _ as Function<Method, AttributeBindings>) >> { m, fn -> fn.apply(m) }
-    }
-
-    def extractor = new MethodSpanAttributesExtractor<Object, Object>(
-      { r -> method },
-      { m, p -> null as String[] },
-      { r -> [ "a", "b", "c" ] as String[] },
-      cache
-    )
-
-    when:
-    extractor.onStart(builder, request)
-
-    then:
-    0 * builder.put(*_)
-  }
-
   def "does not extract attributes for method with attribute names array with fewer elements than parameters"() {
     given:
     def request = new Object()

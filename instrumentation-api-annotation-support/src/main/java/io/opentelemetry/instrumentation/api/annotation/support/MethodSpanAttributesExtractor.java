@@ -74,7 +74,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     String[] attributeNames = parameterAttributeNamesExtractor.extract(method, parameters);
-    if (attributeNames == null || attributeNames.length != parameters.length) {
+    if (attributeNames.length != parameters.length) {
       return bindings;
     }
 
