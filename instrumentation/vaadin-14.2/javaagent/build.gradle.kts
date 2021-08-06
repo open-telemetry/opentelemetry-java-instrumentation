@@ -49,6 +49,10 @@ tasks {
     }
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
+
+  named<Test>("latestDepTest") {
+    jvmArgs("-Dotel.instrumentation.vaadin.test-mode=true")
+  }
 }
 
 dependencies {
