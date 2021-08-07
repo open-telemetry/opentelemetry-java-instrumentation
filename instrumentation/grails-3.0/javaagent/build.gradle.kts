@@ -34,6 +34,9 @@ val springBootVersion = "1.2.5.RELEASE"
 dependencies {
   library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
