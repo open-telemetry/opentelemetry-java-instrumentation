@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-public final class JaxRsPathUtil {
-  private JaxRsPathUtil() {}
+public final class JaxrsPathUtil {
+  private JaxrsPathUtil() {}
 
   public static String normalizePath(String path) {
     // ensure that non-empty path starts with /

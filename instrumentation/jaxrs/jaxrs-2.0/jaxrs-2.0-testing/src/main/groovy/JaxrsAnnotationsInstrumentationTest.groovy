@@ -18,7 +18,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import spock.lang.Unroll
 
-abstract class JaxRsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
+abstract class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
     setup:
