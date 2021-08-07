@@ -71,15 +71,16 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
         return;
       }
-      if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
-        return;
-      }
 
       // Name the parent span based on the matching pattern
       ServerSpanNaming.updateServerSpanName(
           parentContext,
           CONTROLLER,
           SpringWebMvcServerSpanNaming.getServerSpanNameSupplier(parentContext, request));
+
+      if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
+        return;
+      }
 
       // Now create a span for handler/controller execution.
       context = handlerInstrumenter().start(parentContext, handler);
