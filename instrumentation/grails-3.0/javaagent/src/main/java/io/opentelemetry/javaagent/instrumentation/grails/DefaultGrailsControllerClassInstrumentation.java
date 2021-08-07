@@ -47,31 +47,31 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         @Advice.Argument(0) Object controller,
         @Advice.Argument(1) String action,
         @Advice.FieldValue("defaultActionName") String defaultActionName,
-        @Advice.Local("otelRequest") HandlerData request,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = new HandlerData(controller, action != null ? action : defaultActionName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      handlerData = new HandlerData(controller, action != null ? action : defaultActionName);
+      if (!instrumenter().shouldStart(parentContext, handlerData)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = instrumenter().start(parentContext, handlerData);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") HandlerData request,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }
