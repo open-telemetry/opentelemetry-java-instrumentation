@@ -47,12 +47,12 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         @Advice.Argument(0) Object controller,
         @Advice.Argument(1) String action,
         @Advice.FieldValue("defaultActionName") String defaultActionName,
-        @Advice.Local("otelRequest") ControllerAction request,
+        @Advice.Local("otelRequest") HandlerData request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = ControllerAction.create(controller, action != null ? action : defaultActionName);
+      request = new HandlerData(controller, action != null ? action : defaultActionName);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -64,7 +64,7 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ControllerAction request,
+        @Advice.Local("otelRequest") HandlerData request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
