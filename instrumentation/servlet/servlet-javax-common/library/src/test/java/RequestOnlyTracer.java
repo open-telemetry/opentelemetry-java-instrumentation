@@ -37,6 +37,6 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
 
   @Override
   protected String getInstrumentationName() {
-    return null;
+    return "test";
   }
 }

@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class LibertyDispatcherTracer
     extends HttpServerTracer<
         LibertyRequestWrapper, LibertyResponseWrapper, LibertyConnectionWrapper, Void> {
-  private static final Logger log = LoggerFactory.getLogger(LibertyDispatcherTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(LibertyDispatcherTracer.class);
   private static final LibertyDispatcherTracer TRACER = new LibertyDispatcherTracer();
 
   public static LibertyDispatcherTracer tracer() {
@@ -26,7 +26,7 @@ public class LibertyDispatcherTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.liberty-dispatcher";
+    return "io.opentelemetry.liberty-dispatcher";
   }
 
   @Override
@@ -37,8 +37,8 @@ public class LibertyDispatcherTracer
 
   @Override
   @Nullable
-  protected String peerHostIP(LibertyConnectionWrapper libertyConnectionWrapper) {
-    return libertyConnectionWrapper.peerHostIP();
+  protected String peerHostIp(LibertyConnectionWrapper libertyConnectionWrapper) {
+    return libertyConnectionWrapper.peerHostIp();
   }
 
   @Override
@@ -80,7 +80,7 @@ public class LibertyDispatcherTracer
               null)
           .toString();
     } catch (URISyntaxException e) {
-      log.debug("Failed to construct request URI", e);
+      logger.debug("Failed to construct request URI", e);
       return null;
     }
   }

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStrea
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,7 +28,7 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("process")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("process")),
         StreamTaskStopInstrumentation.class.getName() + "$StopSpanAdvice");
   }
 

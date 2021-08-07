@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,12 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
 import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class MethodInstrumentation implements TypeInstrumentation {
@@ -38,7 +40,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named(className));
+    return hasSuperType(named(className));
   }
 
   @Override
@@ -70,9 +72,13 @@ public class MethodInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
       scope.close();
-      instrumenter().end(context, method, null, throwable);
+
+      returnValue =
+          AsyncOperationEndSupport.create(instrumenter(), Void.class, method.getReturnType())
+              .asyncEnd(context, method, returnValue, throwable);
     }
   }
 }

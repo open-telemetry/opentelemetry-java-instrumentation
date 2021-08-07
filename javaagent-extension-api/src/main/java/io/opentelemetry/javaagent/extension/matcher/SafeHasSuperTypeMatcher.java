@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
 import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.safeAsErasure;
+import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
 
   /** The matcher to apply to any super type of the matched type. */
   private final ElementMatcher<TypeDescription.Generic> matcher;
@@ -102,8 +102,8 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     try {
       return typeDefinition.getSuperClass();
     } catch (Throwable e) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "{} trying to get super class for target {}: {}",
             e.getClass().getSimpleName(),
             safeTypeDefinitionName(typeDefinition),
@@ -192,8 +192,8 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     }
 
     private static void logException(TypeDefinition typeDefinition, Throwable e) {
-      if (log.isDebugEnabled()) {
-        log.debug(
+      if (logger.isDebugEnabled()) {
+        logger.debug(
             "{} trying to get interfaces for target {}: {}",
             e.getClass().getSimpleName(),
             safeTypeDefinitionName(typeDefinition),

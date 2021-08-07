@@ -96,3 +96,36 @@ Method parameters should never be declared `final`.
 
 Local variables should only be declared `final` if they are not initialized inline
 (declaring these vars `final` can help prevent accidental double-initialization).
+
+### `@Nullable` annotation usage
+
+[Note: this section is aspirational, as opposed to a reflection of the current codebase]
+
+All parameters and fields which can be `null` should be annotated with `@Nullable`
+(specifically `org.checkerframework.checker.nullness.qual.Nullable`, which is included by the
+`otel.java-conventions` gradle plugin as a `compileOnly` dependency).
+
+There is no need to use `@NonNull`, as this is the default, which should be declared in a
+`package-info.java` file on the root package of each module, e.g.
+
+```java
+@DefaultQualifier(
+    value = NonNull.class,
+    locations = {TypeUseLocation.FIELD, TypeUseLocation.PARAMETER, TypeUseLocation.RETURN})
+package io.opentelemetry.instrumentation.api;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+```
+
+Public APIs should still defensively check for `null` parameters, even if the parameter is not
+annotated with `@Nullable`. Internal APIs do not need to defensively check for `null` parameters.
+
+To help enforce `@Nullable` annotation usage, the `otel.nullaway-conventions` gradle plugin
+should be used in all modules to perform basic nullable usage validation:
+
+```kotlin
+plugins {
+  id("otel.nullaway-conventions")
+}
+```

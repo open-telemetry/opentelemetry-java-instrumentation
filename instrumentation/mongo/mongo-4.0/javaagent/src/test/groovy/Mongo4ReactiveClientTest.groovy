@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import com.mongodb.MongoClientSettings
 import com.mongodb.ServerAddress
 import com.mongodb.client.result.DeleteResult
@@ -78,7 +76,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   MongoCollection<Document> setupInsert(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
       db.createCollection(collectionName).subscribe(toSubscriber { latch1.countDown() })
@@ -100,7 +98,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
       db.createCollection(collectionName).subscribe(toSubscriber { latch1.countDown() })
@@ -130,7 +128,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   MongoCollection<Document> setupDelete(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
       db.createCollection(collectionName).subscribe(toSubscriber { latch1.countDown() })
@@ -168,7 +166,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   void error(String dbName, String collectionName) {
-    MongoCollection<Document> collection = runUnderTrace("setup") {
+    MongoCollection<Document> collection = runWithSpan("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch = new CountDownLatch(1)
       db.createCollection(collectionName).subscribe(toSubscriber {

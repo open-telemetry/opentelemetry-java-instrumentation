@@ -14,9 +14,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -51,23 +51,22 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State addListenerEnter(
+    public static PropagatedContext addListenerEnter(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
-      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
-        task = newTask;
-        ContextStore<Runnable, State> contextStore =
-            InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, context);
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        task = RunnableWrapper.wrapIfNeeded(task);
+        ContextStore<Runnable, PropagatedContext> contextStore =
+            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addListenerExit(
-        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 }

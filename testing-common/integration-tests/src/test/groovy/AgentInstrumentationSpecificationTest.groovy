@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
@@ -47,7 +45,7 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
 
   def "waiting for child spans times out"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       waitForTraces(1)
     }
 
@@ -64,7 +62,7 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
 
   def "excluded classes are not instrumented"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       subject.run()
     }
 
@@ -95,8 +93,8 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
 
   def "test unblocked by completed span"() {
     setup:
-    runUnderTrace("parent") {
-      runUnderTrace("child") {}
+    runWithSpan("parent") {
+      runWithSpan("child") {}
     }
 
     expect:

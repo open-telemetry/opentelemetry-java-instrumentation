@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
@@ -38,7 +36,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
   @Shared
   def scalaInvokeForkJoinTask = { e, c -> e.invoke((ForkJoinTask) c) }
 
-  def "#poolImpl '#name' propagates"() {
+  def "#poolImpl '#testName' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -46,7 +44,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new ScalaAsyncChild()
           // this child won't
@@ -62,8 +60,16 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -72,7 +78,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    name                   | method                   | poolImpl
+    testName               | method                   | poolImpl
     "execute Runnable"     | executeRunnable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Runnable"      | submitRunnable           | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     "submit Callable"      | submitCallable           | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
@@ -86,7 +92,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     "invoke ForkJoinTask"  | scalaInvokeForkJoinTask  | new ForkJoinPool()
   }
 
-  def "#poolImpl '#name' reports after canceled jobs"() {
+  def "#poolImpl '#testName' reports after canceled jobs"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -96,7 +102,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well
@@ -136,7 +142,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
-    name              | method         | poolImpl
+    testName          | method         | poolImpl
     "submit Runnable" | submitRunnable | new ForkJoinPool()
     "submit Callable" | submitCallable | new ForkJoinPool()
   }

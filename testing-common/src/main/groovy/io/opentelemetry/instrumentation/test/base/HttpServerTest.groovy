@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static org.junit.Assume.assumeTrue
@@ -35,7 +34,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import spock.lang.Unroll
 
 @Unroll
@@ -390,9 +388,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     int count = 100
     def endpoint = INDEXED_CHILD
 
-    def latch = new CountDownLatch(1)
+    def latch = new CountDownLatch(count)
 
-    def pool = Executors.newFixedThreadPool(4)
     def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
     def setter = { HttpRequestBuilder carrier, String name, String value ->
       carrier.header(name, value)
@@ -400,22 +397,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     when:
     count.times { index ->
-      def job = {
-        latch.await()
-        HttpRequestBuilder request = HttpRequest.builder()
-          // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-          .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
-          .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
-        runUnderTrace("client " + index) {
-          Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
-          propagator.inject(Context.current(), request, setter)
-          client.execute(request.build()).aggregate().join()
+      HttpRequestBuilder request = HttpRequest.builder()
+        // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+        .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
+        .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
+      runUnderTrace("client " + index) {
+        Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
+        propagator.inject(Context.current(), request, setter)
+        client.execute(request.build()).aggregate().thenRun {
+          latch.countDown()
         }
-
       }
-      pool.submit(job)
     }
-    latch.countDown()
+    latch.await()
 
     then:
     assertTraces(count) {
@@ -425,8 +419,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
 
-          basicSpan(it, 0, "client " + requestId, null, null) {
-            "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
+          span(0) {
+            name "client " + requestId
+            kind SpanKind.INTERNAL
+            hasNoParent()
+            attributes {
+              "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
+            }
           }
           indexedServerSpan(it, span(0), requestId)
 
@@ -442,9 +441,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
     }
-
-    cleanup:
-    pool.shutdownNow()
   }
 
   //FIXME: add tests for POST with large/chunked data
@@ -613,6 +609,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
+    def extraAttributes = extraAttributes()
     ServerEndpoint endpoint = INDEXED_CHILD
     trace.span(1) {
       name expectedServerSpanName(endpoint)
@@ -627,6 +624,36 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
+          // currently reports '/*' which is a fallback route.
+          "${SemanticAttributes.HTTP_ROUTE}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "?id=$requestId"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
       }
     }
   }

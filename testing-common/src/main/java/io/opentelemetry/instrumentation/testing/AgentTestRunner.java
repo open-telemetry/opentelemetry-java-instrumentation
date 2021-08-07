@@ -10,6 +10,7 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -35,6 +36,12 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     return INSTANCE;
   }
 
+  private final TestInstrumenters testInstrumenters;
+
+  private AgentTestRunner() {
+    testInstrumenters = new TestInstrumenters(getOpenTelemetry());
+  }
+
   @Override
   public void beforeTestClass() {
     TestAgentListenerAccess.reset();
@@ -46,6 +53,11 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
             + " Instrumentation errors during test";
+    // additional library ignores are ignored during tests, because they can make it really
+    // confusing for contributors wondering why their instrumentation is not applied
+    //
+    // but we then need to make sure that the additional library ignores won't then silently prevent
+    // the instrumentation from being applied in real life outside of these tests
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
         : "Transformed classes match global libraries ignore matcher: "
             + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
@@ -76,5 +88,27 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     return AgentTestingExporterAccess.forceFlushCalled();
   }
 
-  private AgentTestRunner() {}
+  @Override
+  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithClientSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithClientSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithServerSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithServerSpan(spanName, callback);
+  }
+
+  @Override
+  public <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
 }

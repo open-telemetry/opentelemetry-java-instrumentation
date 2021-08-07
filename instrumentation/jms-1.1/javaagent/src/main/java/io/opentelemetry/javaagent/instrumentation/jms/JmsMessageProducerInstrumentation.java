@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jms.JmsSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -59,11 +59,12 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Message message,
         @Advice.This MessageProducer producer,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(MessageProducer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -86,17 +87,19 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
 
-      scope.close();
-      producerInstrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        producerInstrumenter().end(context, request, null, throwable);
+      }
     }
   }
 
@@ -107,11 +110,12 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
-      if (callDepth > 0) {
+      callDepth = CallDepth.forClass(MessageProducer.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -127,17 +131,19 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
 
-      scope.close();
-      producerInstrumenter().end(context, request, null, throwable);
+      if (scope != null) {
+        scope.close();
+        producerInstrumenter().end(context, request, null, throwable);
+      }
     }
   }
 }

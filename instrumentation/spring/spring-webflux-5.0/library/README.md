@@ -47,15 +47,15 @@ For Gradle add to your dependencies:
 
 ```groovy
 // opentelemetry instrumentation
-implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.0:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.0:OPENTELEMETRY_VERSION")
 
 // opentelemetry exporter
 // replace this default exporter with your opentelemetry exporter (ex. otlp/zipkin/jaeger/..)
-implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
 
 // required to instrument spring-webmvc
 // this artifact should already be present in your application
-implementation 'org.springframework:spring-webflux:SPRING_VERSION'
+implementation("org.springframework:spring-webflux:SPRING_VERSION")
 ```
 
 ### Features

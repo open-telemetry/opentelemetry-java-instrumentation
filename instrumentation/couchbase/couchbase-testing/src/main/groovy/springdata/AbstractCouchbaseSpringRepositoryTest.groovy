@@ -5,14 +5,14 @@
 
 package springdata
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
+import io.opentelemetry.api.trace.SpanKind
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -115,7 +115,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def result
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       result = FIND(repo, "1")
     }
@@ -124,7 +124,11 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     result == doc
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
         assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), span(0))
       }
@@ -141,7 +145,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def doc = new Doc()
 
     when:
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       doc.data = "other data"
       repo.save(doc)
@@ -151,7 +155,11 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
         assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
       }
@@ -169,7 +177,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     def result
 
     when: // DELETE
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       repo.save(doc)
       repo.delete("1")
       result = repo.findAll().iterator().hasNext()
@@ -179,7 +187,11 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     assert !result
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "someTrace")
+        span(0) {
+          name "someTrace"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         def dbName = bucketCouchbase.name()
         assertCouchbaseCall(it, 1, "Bucket.upsert", dbName, span(0))

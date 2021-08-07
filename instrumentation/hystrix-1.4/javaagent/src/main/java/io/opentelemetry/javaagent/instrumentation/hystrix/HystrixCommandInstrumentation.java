@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;

@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
-import io.opentelemetry.javaagent.instrumentation.api.jaxrs.JaxrsContextPath;
+import io.opentelemetry.javaagent.bootstrap.jaxrs.ClassHierarchyIterable;
+import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -225,6 +225,6 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxrs-2.0-common";
+    return "io.opentelemetry.jaxrs-2.0-common";
   }
 }

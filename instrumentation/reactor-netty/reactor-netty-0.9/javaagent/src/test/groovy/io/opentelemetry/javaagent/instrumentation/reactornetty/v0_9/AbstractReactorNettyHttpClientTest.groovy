@@ -6,16 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.atomic.AtomicReference
 import reactor.netty.http.client.HttpClient
@@ -53,7 +51,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     request.responseSingle {resp, content ->
       // Make sure to consume content since that's when we close the span.
       content.map { resp }
@@ -76,7 +74,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  Throwable clientSpanError(URI uri, Throwable exception) {
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -84,7 +82,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
           exception = exception.getCause()
       }
     }
-    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+    return exception
   }
 
   @Override
@@ -113,7 +111,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       .doAfterResponse({ rs, con -> afterResponseSpan.set(Span.current()) })
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
@@ -130,7 +128,11 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         def parentSpan = span(0)
         def nettyClientSpan = span(1)
 
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, parentSpan, "GET", resolveAddress("/success"))
         serverSpan(it, 2, nettyClientSpan)
 
@@ -150,7 +152,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       .doOnRequestError({ rq, err -> onRequestErrorSpan.set(Span.current()) })
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       httpClient.get()
         .uri("http://localhost:$UNUSABLE_PORT/")
         .responseSingle {resp, content ->
@@ -167,7 +169,13 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       trace(0, 2) {
         def parentSpan = span(0)
 
-        basicSpan(it, 0, "parent", null, ex)
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          status StatusCode.ERROR
+          errorEvent(ex.class, ex.message)
+        }
         span(1) {
           def actualException = ex.cause
           kind SpanKind.CLIENT

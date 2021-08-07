@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.ws.SpringWsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -16,7 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -54,9 +54,11 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.Origin Method method,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(PayloadRoot.class) > 0) {
+      callDepth = CallDepth.forClass(PayloadRoot.class);
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
       context = tracer().startSpan(method);
@@ -66,12 +68,12 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(PayloadRoot.class);
 
       scope.close();
       if (throwable == null) {

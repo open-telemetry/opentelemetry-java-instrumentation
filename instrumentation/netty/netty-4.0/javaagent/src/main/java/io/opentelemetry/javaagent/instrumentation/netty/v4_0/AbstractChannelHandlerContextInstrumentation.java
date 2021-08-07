@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.Attribute;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,19 +36,29 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(named("notifyHandlerException"))
+            .and(named("invokeExceptionCaught"))
             .and(takesArgument(0, named(Throwable.class.getName()))),
         AbstractChannelHandlerContextInstrumentation.class.getName()
-            + "$NotifyHandlerExceptionAdvice");
+            + "$InvokeExceptionCaughtAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class NotifyHandlerExceptionAdvice {
+  public static class InvokeExceptionCaughtAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(@Advice.Argument(0) Throwable throwable) {
+    public static void onEnter(
+        @Advice.This ChannelHandlerContext channelContext,
+        @Advice.Argument(0) Throwable throwable) {
       if (throwable != null) {
-        tracer().onException(Java8BytecodeBridge.currentContext(), throwable);
+        Attribute<Context> clientContextAttr =
+            channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+        Context context = clientContextAttr.get();
+        if (context != null) {
+          NettyHttpClientTracer.tracer().endExceptionally(context, throwable);
+        } else {
+          NettyHttpServerTracer.tracer()
+              .onException(Java8BytecodeBridge.currentContext(), throwable);
+        }
       }
     }
   }

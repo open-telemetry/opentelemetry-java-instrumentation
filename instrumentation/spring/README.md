@@ -69,18 +69,18 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### OpenTelemetry
 ```gradle
-implementation "io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION"
-implementation "io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 ```
 
 #### LoggingExporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
 ```
 
 #### Jaeger Exporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
 compile "io.grpc:grpc-netty:1.30.2"
 ```
 
@@ -394,7 +394,7 @@ The preHandle method starts a span for each request. This implementation is show
 
 @Component
 public class ControllerFilter implements Filter {
-  private static final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
+  private static final Logger logger = Logger.getLogger(ControllerFilter.class.getName());
 
   @Autowired
   Tracer tracer;
@@ -414,12 +414,12 @@ public class ControllerFilter implements Filter {
     Span currentSpan;
     try (Scope scope = tracer.withSpan(currentSpan)) {
       Context context = OpenTelemetry.getPropagators().getTextMapPropagator()
-        .extract(Context.current(), req, GETTER);
+          .extract(Context.current(), req, GETTER);
       currentSpan = createSpanWithParent(req, context);
       currentSpan.addEvent("dofilter");
       chain.doFilter(req, response);
     } finally {
-         currentSpan.end();
+      currentSpan.end();
     }
 
     LOG.info("end doFilter");
@@ -612,7 +612,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### Gradle
 ```gradle
-implementation "io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Create two Spring Projects
@@ -843,13 +843,13 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
 ```gradle
 
 //opentelemetry starter with zipkin configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with jaeger configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with otlp configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION")
 ```
 
 #### Exporter Configuration Properties

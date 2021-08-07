@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,12 +29,13 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.hibernate.SessionFactory");
+    return hasClassesNamed("org.hibernate.SessionFactory", "org.hibernate.SessionBuilder");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.hibernate.SessionFactory"));
+    return implementsInterface(
+        named("org.hibernate.SessionFactory").or(named("org.hibernate.SessionBuilder")));
   }
 
   @Override

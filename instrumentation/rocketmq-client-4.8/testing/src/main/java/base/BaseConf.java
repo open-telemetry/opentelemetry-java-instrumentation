@@ -8,12 +8,12 @@ package base;
 import java.util.UUID;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.consumer.listener.MessageListener;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
-import org.apache.rocketmq.test.listener.AbstractListener;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
@@ -45,7 +45,7 @@ public final class BaseConf {
   }
 
   public static DefaultMQPushConsumer getConsumer(
-      String nsAddr, String topic, String subExpression, AbstractListener listener)
+      String nsAddr, String topic, String subExpression, MessageListener listener)
       throws MQClientException {
     DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup");
     consumer.setInstanceName(RandomUtil.getStringByUUID());

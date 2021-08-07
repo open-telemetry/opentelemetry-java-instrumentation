@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 final class CamelEventNotifier extends EventNotifierSupport {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CamelEventNotifier.class);
+  private static final Logger logger = LoggerFactory.getLogger(CamelEventNotifier.class);
 
   @Override
   public void notify(EventObject event) {
@@ -46,7 +46,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
         onExchangeSent((ExchangeSentEvent) event);
       }
     } catch (Throwable t) {
-      LOG.warn("Failed to capture tracing data", t);
+      logger.warn("Failed to capture tracing data", t);
     }
   }
 
@@ -65,7 +65,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     ActiveSpanManager.activate(ese.getExchange(), span, sd.getInitiatorSpanKind());
     CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
 
-    LOG.debug("[Exchange sending] Initiator span started: {}", span);
+    logger.debug("[Exchange sending] Initiator span started: {}", span);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
@@ -77,11 +77,11 @@ final class CamelEventNotifier extends EventNotifierSupport {
 
     Span span = ActiveSpanManager.getSpan(event.getExchange());
     if (span != null) {
-      LOG.debug("[Exchange sent] Initiator span finished: {}", span);
+      logger.debug("[Exchange sent] Initiator span finished: {}", span);
       sd.post(span, event.getExchange(), event.getEndpoint());
       ActiveSpanManager.deactivate(event.getExchange());
     } else {
-      LOG.warn("Could not find managed span for exchange: {}", event.getExchange());
+      logger.warn("Could not find managed span for exchange: {}", event.getExchange());
     }
   }
 

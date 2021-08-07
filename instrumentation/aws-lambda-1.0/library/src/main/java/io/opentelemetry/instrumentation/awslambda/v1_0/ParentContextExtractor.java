@@ -25,7 +25,7 @@ public final class ParentContextExtractor {
     Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
-      parentContext = fromXRayHeader(parentTraceHeader);
+      parentContext = fromXrayHeader(parentTraceHeader);
     }
     if (!isValidAndSampled(parentContext)) {
       // try http
@@ -50,7 +50,7 @@ public final class ParentContextExtractor {
   // lower-case map getter used for extraction
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
-  static Context fromXRayHeader(String parentHeader) {
+  static Context fromXrayHeader(String parentHeader) {
     return AwsXrayPropagator.getInstance()
         .extract(
             // see BaseTracer#extract() on why we're using root() here

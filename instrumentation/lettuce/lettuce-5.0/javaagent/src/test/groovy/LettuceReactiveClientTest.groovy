@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
@@ -280,7 +279,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
 
   def "blocking subscriber"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .block()
@@ -320,7 +319,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
 
   def "async subscriber"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .subscribe()
@@ -360,7 +359,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
 
   def "async subscriber with specific thread pool"() {
     when:
-    runUnderTrace("test-parent") {
+    runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
         .subscribeOn(Schedulers.elastic())

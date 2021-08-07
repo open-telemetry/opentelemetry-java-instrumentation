@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseTracer {
 
-  private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpClientTracer.class);
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
@@ -201,7 +201,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
         setter.setAttribute(SemanticAttributes.HTTP_URL, sanitized.toString());
       }
     } catch (Exception e) {
-      log.debug("Error tagging url", e);
+      logger.debug("Error tagging url", e);
     }
   }
 

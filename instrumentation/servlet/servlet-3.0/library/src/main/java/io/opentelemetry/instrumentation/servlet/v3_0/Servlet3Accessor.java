@@ -31,8 +31,6 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
       request
           .getAsyncContext()
           .addListener(new Listener(listener), request, (HttpServletResponse) response);
-    } else {
-      request.getAsyncContext().addListener(new Listener(listener));
     }
   }
 

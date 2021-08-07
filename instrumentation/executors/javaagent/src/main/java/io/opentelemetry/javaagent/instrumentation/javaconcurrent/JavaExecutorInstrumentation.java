@@ -10,14 +10,15 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,22 +70,22 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
   public static class SetExecuteRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         task = RunnableWrapper.wrapIfNeeded(task);
-        ContextStore<Runnable, State> contextStore =
-            InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8BytecodeBridge.currentContext());
+        ContextStore<Runnable, PropagatedContext> contextStore =
+            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 
@@ -92,21 +93,21 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
   public static class SetJavaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask<?>, State> contextStore =
-            InstrumentationContext.get(ForkJoinTask.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8BytecodeBridge.currentContext());
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
+            InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 
@@ -114,29 +115,29 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
   public static class SetSubmitRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         task = RunnableWrapper.wrapIfNeeded(task);
-        ContextStore<Runnable, State> contextStore =
-            InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8BytecodeBridge.currentContext());
+        ContextStore<Runnable, PropagatedContext> contextStore =
+            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state,
+        @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
-      if (state != null && future != null) {
-        ContextStore<Future<?>, State> contextStore =
-            InstrumentationContext.get(Future.class, State.class);
-        contextStore.put(future, state);
+      if (propagatedContext != null && future != null) {
+        ContextStore<Future<?>, PropagatedContext> contextStore =
+            InstrumentationContext.get(Future.class, PropagatedContext.class);
+        contextStore.put(future, propagatedContext);
       }
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 
@@ -144,29 +145,29 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
   public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         task = CallableWrapper.wrapIfNeeded(task);
-        ContextStore<Callable<?>, State> contextStore =
-            InstrumentationContext.get(Callable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8BytecodeBridge.currentContext());
+        ContextStore<Callable<?>, PropagatedContext> contextStore =
+            InstrumentationContext.get(Callable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state,
+        @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
-      if (state != null && future != null) {
-        ContextStore<Future<?>, State> contextStore =
-            InstrumentationContext.get(Future.class, State.class);
-        contextStore.put(future, state);
+      if (propagatedContext != null && future != null) {
+        ContextStore<Future<?>, PropagatedContext> contextStore =
+            InstrumentationContext.get(Future.class, PropagatedContext.class);
+        contextStore.put(future, propagatedContext);
       }
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 
@@ -176,22 +177,28 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
-      if (tasks != null) {
-        Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
-        for (Callable<?> task : tasks) {
-          if (task != null) {
-            Callable<?> newTask = CallableWrapper.wrapIfNeeded(task);
-            wrappedTasks.add(newTask);
-            ContextStore<Callable<?>, State> contextStore =
-                InstrumentationContext.get(Callable.class, State.class);
-            ExecutorInstrumentationUtils.setupState(
-                contextStore, newTask, Java8BytecodeBridge.currentContext());
-          }
-        }
-        tasks = wrappedTasks;
-        return tasks;
+      if (tasks == null) {
+        return Collections.emptyList();
       }
-      return Collections.emptyList();
+
+      Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+      Context context = Java8BytecodeBridge.currentContext();
+      for (Callable<?> task : tasks) {
+        if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+          Callable<?> newTask = CallableWrapper.wrapIfNeeded(task);
+          wrappedTasks.add(newTask);
+          ContextStore<Callable<?>, PropagatedContext> contextStore =
+              InstrumentationContext.get(Callable.class, PropagatedContext.class);
+          ExecutorAdviceHelper.attachContextToTask(context, contextStore, newTask);
+        } else {
+          // note that task may be null here
+          wrappedTasks.add(task);
+        }
+      }
+      tasks = wrappedTasks;
+      // returning tasks and not propagatedContexts to avoid allocating another list just for an
+      // edge case (exception)
+      return tasks;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -207,23 +214,13 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
        any parent spans in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
-      if (null != throwable) {
+      if (throwable != null) {
         for (Callable<?> task : wrappedTasks) {
           if (task != null) {
-            ContextStore<Callable<?>, State> contextStore =
-                InstrumentationContext.get(Callable.class, State.class);
-            State state = contextStore.get(task);
-            if (state != null) {
-              /*
-              Note: this may potentially clear somebody else's parent span if we didn't set it
-              up in setupState because it was already present before us. This should be safe but
-              may lead to non-attributed async work in some very rare cases.
-              Alternative is to not clear parent span here if we did not set it up in setupState
-              but this may potentially lead to memory leaks if callers do not properly handle
-              exceptions.
-               */
-              state.clearParentContext();
-            }
+            ContextStore<Callable<?>, PropagatedContext> contextStore =
+                InstrumentationContext.get(Callable.class, PropagatedContext.class);
+            PropagatedContext propagatedContext = contextStore.get(task);
+            ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
           }
         }
       }

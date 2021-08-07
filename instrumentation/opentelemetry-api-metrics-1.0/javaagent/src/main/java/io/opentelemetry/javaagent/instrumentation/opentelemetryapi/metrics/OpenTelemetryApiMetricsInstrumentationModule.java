@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class OpenTelemetryApiMetricsInstrumentationModule extends InstrumentationModule {
   public OpenTelemetryApiMetricsInstrumentationModule() {
-    super("opentelemetry-metrics-api");
+    super("opentelemetry-api-metrics");
   }
 
   @Override

@@ -1,0 +1,13 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+muzzle {
+  pass {
+    coreJdk()
+  }
+}
+
+dependencies {
+  testImplementation("org.springframework:spring-web:4.3.7.RELEASE")
+}

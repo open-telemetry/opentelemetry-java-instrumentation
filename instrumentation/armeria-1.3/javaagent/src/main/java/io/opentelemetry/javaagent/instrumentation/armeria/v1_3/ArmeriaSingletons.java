@@ -10,9 +10,8 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracing;
-import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracingBuilder;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import java.util.function.Function;
 
@@ -24,16 +23,14 @@ public final class ArmeriaSingletons {
   public static final Function<? super HttpService, ? extends HttpService> SERVER_DECORATOR;
 
   static {
-    ArmeriaTracingBuilder builder = ArmeriaTracing.newBuilder(GlobalOpenTelemetry.get());
+    PeerServiceAttributesExtractor<RequestContext, RequestLog> peerServiceAttributesExtractor =
+        PeerServiceAttributesExtractor.create(new ArmeriaNetAttributesExtractor());
 
-    AttributesExtractor<RequestContext, RequestLog> peerServiceAttributesExtractor =
-        PeerServiceAttributesExtractor.createUsingReflection(
-            "io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaNetAttributesExtractor");
-    if (peerServiceAttributesExtractor != null) {
-      builder.addAttributeExtractor(peerServiceAttributesExtractor);
-    }
+    ArmeriaTracing tracing =
+        ArmeriaTracing.newBuilder(GlobalOpenTelemetry.get())
+            .addAttributeExtractor(peerServiceAttributesExtractor)
+            .build();
 
-    ArmeriaTracing tracing = builder.build();
     CLIENT_DECORATOR = tracing.newClientDecorator();
     SERVER_DECORATOR = tracing.newServiceDecorator();
   }

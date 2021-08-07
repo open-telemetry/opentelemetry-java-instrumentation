@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import io.netty.bootstrap.Bootstrap
@@ -27,10 +25,13 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.timeout.ReadTimeoutHandler
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.test.base.SingleConnection
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -49,11 +50,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   @Shared
   private Bootstrap httpsBootstrap = buildBootstrap(true)
 
+  @Shared
+  private Bootstrap readTimeoutBootstrap = buildBootstrap(false, true)
+
   def cleanupSpec() {
     eventLoopGroup?.shutdownGracefully()
   }
 
-  Bootstrap buildBootstrap(boolean https) {
+  Bootstrap buildBootstrap(boolean https, boolean readTimeout = false) {
     Bootstrap bootstrap = new Bootstrap()
     bootstrap.group(eventLoopGroup)
       .channel(getChannelClass())
@@ -65,6 +69,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           if (https) {
             SslContext sslContext = SslContextBuilder.forClient().build()
             pipeline.addLast(sslContext.newHandler(socketChannel.alloc()))
+          }
+          if (readTimeout) {
+            pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
           }
           pipeline.addLast(new HttpClientCodec())
         }
@@ -82,7 +89,12 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   Bootstrap getBootstrap(URI uri) {
-    return uri.getScheme() == "https" ? httpsBootstrap : bootstrap
+    if (uri.getScheme() == "https") {
+      return httpsBootstrap
+    } else if (uri.getPath() == "/read-timeout") {
+      return readTimeoutBootstrap
+    }
+    return bootstrap
   }
 
   @Override
@@ -103,7 +115,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     Channel ch
     try {
       ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
@@ -145,6 +157,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     false
   }
 
+  @Override
+  boolean testReadTimeout() {
+    true
+  }
+
   def "test connection reuse and second request with lazy execute"() {
     setup:
     //Create a simple Netty pipeline
@@ -165,7 +182,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     when:
     // note that this is a purely asynchronous request
-    runUnderTrace("parent1") {
+    runWithSpan("parent1") {
       ch = b.connect("localhost", server.httpPort()).sync().channel()
       ch.write(request)
       ch.flush()
@@ -174,7 +191,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     // the complex sequence of events
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -182,19 +203,27 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // now run a second request through the same channel
-    runUnderTrace("parent2") {
+    runWithSpan("parent2") {
       ch.write(request)
       ch.flush()
     }
 
     assertTraces(2) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent1")
+        span(0) {
+          name "parent1"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
       trace(1, 3) {
-        basicSpan(it, 0, "parent2")
+        span(0) {
+          name "parent2"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         clientSpan(it, 1, span(0))
         serverSpan(it, 2, span(1))
       }
@@ -283,7 +312,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     def annotatedClass = new TracedClass()
 
     when:
-    def responseCode = runUnderTrace("parent") {
+    def responseCode = runWithSpan("parent") {
       annotatedClass.tracedMethod(method)
     }
 
@@ -291,7 +320,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     responseCode == 200
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           childOf span(0)
           name "tracedMethod"
@@ -310,7 +343,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   class TracedClass {
     int tracedMethod(String method) {
       def uri = resolveAddress("/success")
-      runUnderTrace("tracedMethod") {
+      runWithSpan("tracedMethod") {
         doRequest(method, uri)
       }
     }

@@ -31,12 +31,6 @@ public class Tomcat7ServerHandlerAdvice {
     context = tracer().startServerSpan(request);
 
     scope = context.makeCurrent();
-
-    TomcatServerHandlerAdviceHelper.attachResponseToRequest(
-        Tomcat7ServletEntityProvider.INSTANCE,
-        Servlet3HttpServerTracer.tracer(),
-        request,
-        response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

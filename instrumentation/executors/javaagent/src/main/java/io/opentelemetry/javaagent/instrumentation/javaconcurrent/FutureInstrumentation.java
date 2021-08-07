@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FutureInstrumentation implements TypeInstrumentation {
-  private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
+  private static final Logger logger = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
    * Only apply executor instrumentation to allowed executors. In the future, this restriction may
@@ -79,8 +79,8 @@ public class FutureInstrumentation implements TypeInstrumentation {
       @Override
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
-        if (!allowed && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
-          log.debug("Skipping future instrumentation for {}", target.getName());
+        if (!allowed && logger.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+          logger.debug("Skipping future instrumentation for {}", target.getName());
         }
         return allowed;
       }
@@ -102,11 +102,11 @@ public class FutureInstrumentation implements TypeInstrumentation {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another
-      ContextStore<Future<?>, State> contextStore =
-          InstrumentationContext.get(Future.class, State.class);
-      State state = contextStore.get(future);
-      if (state != null) {
-        state.clearParentContext();
+      ContextStore<Future<?>, PropagatedContext> contextStore =
+          InstrumentationContext.get(Future.class, PropagatedContext.class);
+      PropagatedContext propagatedContext = contextStore.get(future);
+      if (propagatedContext != null) {
+        propagatedContext.clear();
       }
     }
   }

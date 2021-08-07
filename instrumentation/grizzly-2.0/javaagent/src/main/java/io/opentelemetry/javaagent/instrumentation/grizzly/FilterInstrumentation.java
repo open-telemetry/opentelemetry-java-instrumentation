@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

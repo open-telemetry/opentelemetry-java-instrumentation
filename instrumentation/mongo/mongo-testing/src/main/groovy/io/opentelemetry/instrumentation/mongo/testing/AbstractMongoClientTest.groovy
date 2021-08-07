@@ -6,9 +6,8 @@
 package io.opentelemetry.instrumentation.mongo.testing
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -80,14 +79,18 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollection(dbName, collectionName)
     }
 
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -103,14 +106,18 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection no description"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionNoDescription(dbName, collectionName)
     }
 
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0), {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -126,14 +133,18 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection calling build twice"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionCallingBuildTwice(dbName, collectionName)
     }
 
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
@@ -149,7 +160,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test get collection"() {
     when:
-    def count = runUnderTrace("parent") {
+    def count = runWithSpan("parent") {
       getCollection(dbName, collectionName)
     }
 
@@ -157,7 +168,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     count == 0
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\":\"$collectionName\"}" ||
@@ -175,7 +190,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test insert"() {
     when:
     def collection = setupInsert(dbName, collectionName)
-    def count = runUnderTrace("parent") {
+    def count = runWithSpan("parent") {
       insert(collection)
     }
 
@@ -183,7 +198,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     count == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "insert", collectionName, dbName, span(0)) {
           assert it == "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}" ||
             it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
@@ -206,7 +225,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test update"() {
     when:
     def collection = setupUpdate(dbName, collectionName)
-    int modifiedCount = runUnderTrace("parent") {
+    int modifiedCount = runWithSpan("parent") {
       update(collection)
     }
 
@@ -214,7 +233,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     modifiedCount == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "update", collectionName, dbName, span(0)) {
           assert it == "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}" ||
             it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
@@ -237,7 +260,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test delete"() {
     when:
     def collection = setupDelete(dbName, collectionName)
-    int deletedCount = runUnderTrace("parent") {
+    int deletedCount = runWithSpan("parent") {
       delete(collection)
     }
 
@@ -245,7 +268,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     deletedCount == 1
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "delete", collectionName, dbName, span(0)) {
           assert it == "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}" ||
             it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
@@ -268,14 +295,18 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def "test collection name for getMore command"() {
     when:
     def collection = setupGetMore(dbName, collectionName)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       getMore(collection)
     }
 
     then:
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "find", collectionName, dbName, span(0)) {
           assert it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}'
           true
@@ -308,14 +339,18 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test create collection with already built ClientOptions"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       createCollectionWithAlreadyBuiltClientOptions(dbName, collectionName)
     }
 
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
           assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}"
           true

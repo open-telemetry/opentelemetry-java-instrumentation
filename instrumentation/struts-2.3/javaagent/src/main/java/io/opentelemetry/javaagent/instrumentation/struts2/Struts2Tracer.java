@@ -72,6 +72,6 @@ public class Struts2Tracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.struts-2.3";
+    return "io.opentelemetry.struts-2.3";
   }
 }

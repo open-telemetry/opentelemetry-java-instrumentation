@@ -27,7 +27,7 @@ final class RocketMqProducerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rocketmq-client";
+    return "io.opentelemetry.rocketmq-client-4.8";
   }
 
   Context startProducerSpan(Context parentContext, String addr, Message msg) {

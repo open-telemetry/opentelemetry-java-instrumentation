@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.spring-webmvc-3.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-3.1";
 
   private static final Instrumenter<Object, Void> HANDLER_INSTRUMENTER;
 

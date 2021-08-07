@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 final class CamelRoutePolicy extends RoutePolicySupport {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CamelRoutePolicy.class);
+  private static final Logger logger = LoggerFactory.getLogger(CamelRoutePolicy.class);
 
   private static Span spanOnExchangeBegin(
       Route route, Exchange exchange, SpanDecorator sd, Context parentContext, SpanKind spanKind) {
@@ -68,9 +68,9 @@ final class CamelRoutePolicy extends RoutePolicySupport {
       Span span = spanOnExchangeBegin(route, exchange, sd, parentContext, spanKind);
       sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
       ActiveSpanManager.activate(exchange, span, spanKind);
-      LOG.debug("[Route start] Receiver span started {}", span);
+      logger.debug("[Route start] Receiver span started {}", span);
     } catch (Throwable t) {
-      LOG.warn("Failed to capture tracing data", t);
+      logger.warn("Failed to capture tracing data", t);
     }
   }
 
@@ -81,15 +81,15 @@ final class CamelRoutePolicy extends RoutePolicySupport {
       Span span = ActiveSpanManager.getSpan(exchange);
       if (span != null) {
 
-        LOG.debug("[Route finished] Receiver span finished {}", span);
+        logger.debug("[Route finished] Receiver span finished {}", span);
         SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
         sd.post(span, exchange, route.getEndpoint());
         ActiveSpanManager.deactivate(exchange);
       } else {
-        LOG.warn("Could not find managed span for exchange={}", exchange);
+        logger.warn("Could not find managed span for exchange={}", exchange);
       }
     } catch (Throwable t) {
-      LOG.warn("Failed to capture tracing data", t);
+      logger.warn("Failed to capture tracing data", t);
     }
   }
 }

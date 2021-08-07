@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public final class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
-  private static final Logger log = LoggerFactory.getLogger(RoutingContextHandlerWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(RoutingContextHandlerWrapper.class);
 
   private final Handler<RoutingContext> handler;
 
@@ -38,7 +38,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
         serverSpan.updateName(context.currentRoute().getPath());
       }
     } catch (RuntimeException ex) {
-      log.error("Failed to update server span name with vert.x route", ex);
+      logger.error("Failed to update server span name with vert.x route", ex);
     }
     try {
       handler.handle(context);

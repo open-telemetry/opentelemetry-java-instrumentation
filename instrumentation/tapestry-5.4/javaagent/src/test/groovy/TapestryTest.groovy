@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -94,7 +93,11 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
     assertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, getContextPath() + "/Index")
-        basicSpan(it, 1, "activate/Index", span(0))
+        span(1) {
+          name "activate/Index"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -112,13 +115,29 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
     assertTraces(2) {
       trace(0, 4) {
         serverSpan(it, 0, getContextPath() + "/Index")
-        basicSpan(it, 1, "activate/Index", span(0))
-        basicSpan(it, 2, "action/Index:start", span(0))
-        basicSpan(it, 3, "Response.sendRedirect", span(2))
+        span(1) {
+          name "activate/Index"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "action/Index:start"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(3) {
+          name "Response.sendRedirect"
+          kind SpanKind.INTERNAL
+          childOf span(2)
+        }
       }
       trace(1, 2) {
         serverSpan(it, 0, getContextPath() + "/Other")
-        basicSpan(it, 1, "activate/Other", span(0))
+        span(1) {
+          name "activate/Other"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -130,6 +149,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
     expect:
     response.status().code() == 500
+    def ex = new IllegalStateException("expected")
 
     assertTraces(1) {
       trace(0, 3) {
@@ -139,8 +159,18 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
           name getContextPath() + "/Index"
           status ERROR
         }
-        basicSpan(it, 1, "activate/Index", span(0))
-        basicSpan(it, 2, "action/Index:exception", span(0), new IllegalStateException("expected"))
+        span(1) {
+          name "activate/Index"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "action/Index:exception"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+          status ERROR
+          errorEvent(ex.class, ex.message)
+        }
       }
     }
   }

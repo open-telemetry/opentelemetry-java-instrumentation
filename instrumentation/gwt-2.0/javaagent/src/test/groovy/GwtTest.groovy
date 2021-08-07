@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
-import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.firefox.FirefoxOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
@@ -24,7 +24,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   private static final Logger logger = LoggerFactory.getLogger(GwtTest)
 
   @Shared
-  BrowserWebDriverContainer<?> chrome
+  BrowserWebDriverContainer<?> browser
 
   @Override
   Server startServer(int port) {
@@ -52,16 +52,16 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   def setupSpec() {
     Testcontainers.exposeHostPorts(port)
 
-    chrome = new BrowserWebDriverContainer<>()
-      .withCapabilities(new ChromeOptions())
+    browser = new BrowserWebDriverContainer<>()
+      .withCapabilities(new FirefoxOptions())
       .withLogConsumer(new Slf4jLogConsumer(logger))
-    chrome.start()
+    browser.start()
 
     address = new URI("http://host.testcontainers.internal:$port" + getContextPath() + "/")
   }
 
   def cleanupSpec() {
-    chrome?.stop()
+    browser?.stop()
   }
 
   @Override
@@ -70,7 +70,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   }
 
   def getDriver() {
-    def driver = chrome.getWebDriver()
+    def driver = browser.getWebDriver()
     driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS)
     return driver
   }
@@ -86,6 +86,8 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     // wait for page to load
     driver.findElementByClassName("greeting.button")
     assertTraces(4) {
+      traces.sort(orderByRootSpanName("/*", "HTTP GET"))
+
       // /xyz/greeting.html
       trace(0, 1) {
         serverSpan(it, 0, getContextPath() + "/*")

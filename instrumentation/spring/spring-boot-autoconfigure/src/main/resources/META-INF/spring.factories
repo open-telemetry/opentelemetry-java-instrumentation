@@ -3,6 +3,7 @@ io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpa
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate.RestTemplateAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient.WebClientAutoConfiguration,\

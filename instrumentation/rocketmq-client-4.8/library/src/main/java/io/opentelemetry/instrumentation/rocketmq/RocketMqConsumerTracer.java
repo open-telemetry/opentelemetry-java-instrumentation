@@ -34,7 +34,7 @@ final class RocketMqConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rocketmq-client";
+    return "io.opentelemetry.rocketmq-client-4.8";
   }
 
   Context startSpan(Context parentContext, List<MessageExt> msgs) {

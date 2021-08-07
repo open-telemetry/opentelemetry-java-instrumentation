@@ -8,8 +8,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -60,7 +58,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         }
         .addExactPath("sendResponse") { exchange ->
           Span.current().addEvent("before-event")
-          runUnderTrace("sendResponse") {
+          runWithSpan("sendResponse") {
             exchange.setStatusCode(StatusCodes.OK)
             exchange.getResponseSender().send("sendResponse")
           }
@@ -70,7 +68,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         }
         .addExactPath("sendResponseWithException") { exchange ->
           Span.current().addEvent("before-event")
-          runUnderTrace("sendResponseWithException") {
+          runWithSpan("sendResponseWithException") {
             exchange.setStatusCode(StatusCodes.OK)
             exchange.getResponseSender().send("sendResponseWithException")
           }
@@ -129,7 +127,11 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
           }
         }
-        basicSpan(it, 1, "sendResponse", span(0))
+        span(1) {
+          name "sendResponse"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }
@@ -171,7 +173,11 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
           }
         }
-        basicSpan(it, 1, "sendResponseWithException", span(0))
+        span(1) {
+          name "sendResponseWithException"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
   }

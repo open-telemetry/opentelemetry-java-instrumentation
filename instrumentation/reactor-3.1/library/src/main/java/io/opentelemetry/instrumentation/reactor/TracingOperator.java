@@ -23,7 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;
@@ -44,10 +44,13 @@ public final class TracingOperator {
     return new TracingOperatorBuilder();
   }
 
-  private final boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   TracingOperator(boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.asyncOperationEndStrategy =
+        ReactorAsyncOperationEndStrategy.newBuilder()
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .build();
   }
 
   /**
@@ -57,26 +60,31 @@ public final class TracingOperator {
    * application.
    */
   public void registerOnEachOperator() {
-    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
-    AsyncSpanEndStrategies.getInstance()
-        .registerStrategy(
-            ReactorAsyncSpanEndStrategy.newBuilder()
-                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-                .build());
+    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.class);
+    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
   }
 
-  private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {
-    return Operators.lift(new Lifter<>());
+  private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
+      ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
+    return Operators.lift(new Lifter<>(asyncOperationEndStrategy));
   }
 
   public static class Lifter<T>
       implements BiFunction<Scannable, CoreSubscriber<? super T>, CoreSubscriber<? super T>> {
+
+    /** Holds reference to strategy to prevent it from being collected. */
+    @SuppressWarnings("FieldCanBeLocal")
+    private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
+
+    public Lifter(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
+      this.asyncOperationEndStrategy = asyncOperationEndStrategy;
+    }
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {

@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.api.trace.Span
@@ -70,7 +69,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   def "trace request (useCaches: #useCaches)"() {
     setup:
     def url = resolveAddress("/success").toURL()
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
       assert Span.current().getSpanContext().isValid()
@@ -154,7 +153,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   def "test broken API usage"() {
     setup:
     def url = resolveAddress("/success").toURL()
-    HttpURLConnection connection = runUnderTrace("someTrace") {
+    HttpURLConnection connection = runWithSpan("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestProperty("Connection", "close")
       assert Span.current().getSpanContext().isValid()
@@ -199,7 +198,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   def "test post request"() {
     setup:
     def url = resolveAddress("/success").toURL()
-    runUnderTrace("someTrace") {
+    runWithSpan("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestMethod("POST")
 

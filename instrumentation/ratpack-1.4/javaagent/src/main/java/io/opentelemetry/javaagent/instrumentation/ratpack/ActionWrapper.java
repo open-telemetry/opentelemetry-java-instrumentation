@@ -13,7 +13,7 @@ import ratpack.func.Action;
 
 public class ActionWrapper<T> implements Action<T> {
 
-  private static final Logger log = LoggerFactory.getLogger(ActionWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ActionWrapper.class);
 
   private final Action<T> delegate;
   private final Context parentContext;
@@ -35,7 +35,7 @@ public class ActionWrapper<T> implements Action<T> {
     if (delegate instanceof ActionWrapper) {
       return delegate;
     }
-    log.debug("Wrapping action task {}", delegate);
+    logger.debug("Wrapping action task {}", delegate);
     return new ActionWrapper(delegate, Context.current());
   }
 }

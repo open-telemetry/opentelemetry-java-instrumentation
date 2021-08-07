@@ -7,7 +7,6 @@ package springdata
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -61,7 +60,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
-    runUnderTrace("setup") {
+    runWithSpan("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)

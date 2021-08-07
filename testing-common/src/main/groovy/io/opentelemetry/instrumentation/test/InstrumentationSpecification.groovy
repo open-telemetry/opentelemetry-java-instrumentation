@@ -13,10 +13,10 @@ import io.opentelemetry.context.ContextStorage
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Specification
-
 /**
  * Base class for test specifications that are shared between instrumentation libraries and agent.
  * The methods in this class are implemented by {@link AgentTestTrait} and
@@ -97,5 +97,29 @@ abstract class InstrumentationSpecification extends Specification {
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
     InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec)
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
+   * spanName}.
+   */
+  def <T> T runWithSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithSpan(spanName, (ThrowingSupplier) callback)
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  def <T> T runWithClientSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithClientSpan(spanName, (ThrowingSupplier) callback)
+  }
+
+  /**
+   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * spanName}.
+   */
+  def <T> T runWithServerSpan(String spanName, Closure callback) {
+    return (T) testRunner().runWithServerSpan(spanName, (ThrowingSupplier) callback)
   }
 }

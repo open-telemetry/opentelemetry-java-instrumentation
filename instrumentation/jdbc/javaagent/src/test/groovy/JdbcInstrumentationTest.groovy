@@ -5,12 +5,13 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.jdbc.TestConnection
+import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.sql.CallableStatement
@@ -28,8 +29,6 @@ import org.h2.jdbcx.JdbcDataSource
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
-import test.TestConnection
-import test.TestDriver
 
 @Unroll
 class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
@@ -167,7 +166,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery(query)
     }
 
@@ -176,7 +175,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -222,7 +225,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared statement execute on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       assert statement.execute()
       return statement.resultSet
     }
@@ -232,7 +235,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -271,7 +278,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared statement query on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -280,7 +287,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -319,7 +330,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "prepared call on #system with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     CallableStatement statement = connection.prepareCall(query)
-    ResultSet resultSet = runUnderTrace("parent") {
+    ResultSet resultSet = runWithSpan("parent") {
       return statement.executeQuery()
     }
 
@@ -328,7 +339,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -370,13 +385,17 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     def sql = connection.nativeSQL(query)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return !statement.execute(sql)
     }
     statement.updateCount == 0
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name dbNameLower
           kind CLIENT
@@ -420,12 +439,16 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     PreparedStatement statement = connection.prepareStatement(sql)
 
     expect:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       return statement.executeUpdate() == 0
     }
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name dbNameLower
           kind CLIENT
@@ -466,11 +489,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     when:
     try {
       connection = new TestConnection(true)
+      connection.url = "jdbc:testdb://localhost"
     } catch (Exception ignored) {
       connection = driver.connect(jdbcUrl, null)
     }
 
-    def (Statement statement, ResultSet rs) = runUnderTrace("parent") {
+    def (Statement statement, ResultSet rs) = runWithSpan("parent") {
       if (prepareStatement) {
         def statement = connection.prepareStatement(query)
         return new Tuple(statement, statement.executeQuery())
@@ -485,7 +509,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     rs.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -530,14 +558,18 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       datasource.getConnection().close()
     }
 
     then:
     assertTraces(1) {
       trace(0, recursive ? 3 : 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
 
         span(1) {
           name "${datasource.class.simpleName}.getConnection"
@@ -580,10 +612,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "test getClientInfo exception"() {
     setup:
     Connection connection = new TestConnection(false)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
     Statement statement = null
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -591,7 +624,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "DB Query"
           kind CLIENT
@@ -620,7 +657,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
     when:
     def connection = driver.connect(url, null)
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       def statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -628,7 +665,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name spanName
           kind CLIENT
@@ -720,16 +761,21 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "should handle recursive Statements inside Connection.getMetaData(): #desc"() {
     given:
     def connection = new DbCallingConnection(usePreparedStatementInConnection)
+    connection.url = "jdbc:testdb://localhost"
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       executeQueryFunction(connection, "SELECT * FROM table")
     }
 
     then:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "SELECT table"
           kind CLIENT

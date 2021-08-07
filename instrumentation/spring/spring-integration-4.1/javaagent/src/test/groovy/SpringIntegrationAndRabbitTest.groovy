@@ -56,7 +56,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         }
         span(3) {
           // span created by rabbitmq instrumentation
-          name "testTopic -> testTopic send"
+          name "testTopic send"
           childOf span(1)
           kind PRODUCER
           attributes {
@@ -68,11 +68,11 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
         // that's why the rabbitmq CONSUMER span will never have any child span (and propagate context, actually)
-        // and that's why spring-integration creates another CONSUMER span
         span(4) {
           // span created by rabbitmq instrumentation
           name ~/testTopic.anonymous.[-\w]+ process/
@@ -84,14 +84,23 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
+        // spring-integration will detect that spring-rabbit has already created a consumer span and back off
         span(5) {
-          // span created by spring-integration instrumentation
-          name "testConsumer.input process"
+          // span created by spring-rabbit instrumentation
+          name "testTopic process"
           childOf span(3)
           kind CONSUMER
-          attributes {}
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+          }
         }
         span(6) {
           name "consumer"

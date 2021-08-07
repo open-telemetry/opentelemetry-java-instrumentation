@@ -5,9 +5,8 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -66,12 +65,12 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     when:
     String greeting = "Hello Spring Kafka Sender!"
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       producer.send(new ProducerRecord(SHARED_TOPIC, greeting)) { meta, ex ->
         if (ex == null) {
-          runUnderTrace("producer callback") {}
+          runWithSpan("producer callback") {}
         } else {
-          runUnderTrace("producer exception: " + ex) {}
+          runWithSpan("producer exception: " + ex) {}
         }
       }
     }
@@ -84,7 +83,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
@@ -110,7 +113,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
-        basicSpan(it, 3, "producer callback", span(0))
+        span(3) {
+          name "producer callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -156,11 +163,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     when:
     String greeting = "Hello Spring Kafka Sender!"
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       kafkaTemplate.send(SHARED_TOPIC, greeting).addCallback({
-        runUnderTrace("producer callback") {}
+        runWithSpan("producer callback") {}
       }, { ex ->
-        runUnderTrace("producer exception: " + ex) {}
+        runWithSpan("producer exception: " + ex) {}
       })
     }
 
@@ -172,7 +179,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     assertTraces(1) {
       trace(0, 4) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
@@ -198,7 +209,11 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
-        basicSpan(it, 3, "producer callback", span(0))
+        span(3) {
+          name "producer callback"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

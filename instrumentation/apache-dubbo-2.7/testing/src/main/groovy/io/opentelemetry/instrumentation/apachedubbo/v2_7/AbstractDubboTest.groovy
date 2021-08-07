@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -80,7 +80,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
     def o = new Object[1]
     o[0] = "hello"
-    def response = runUnderTrace("parent") {
+    def response = runWithSpan("parent") {
       genericService.$invoke("hello", [String.getName()] as String[], o)
     }
 
@@ -88,7 +88,11 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     response == "hello"
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "org.apache.dubbo.rpc.service.GenericService/\$invoke"
           kind CLIENT
@@ -147,7 +151,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
     def o = new Object[1]
     o[0] = "hello"
-    def responseAsync = runUnderTrace("parent") {
+    def responseAsync = runWithSpan("parent") {
       genericService.$invokeAsync("hello", [String.getName()] as String[], o)
     }
 
@@ -155,7 +159,11 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     responseAsync.get() == "hello"
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent")
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
         span(1) {
           name "org.apache.dubbo.rpc.service.GenericService/\$invokeAsync"
           kind CLIENT

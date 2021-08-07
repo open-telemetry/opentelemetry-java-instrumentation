@@ -1,9 +1,0 @@
-/*
- * Classes that are common to all versions of the Hibernate instrumentation.
- */
-
-apply plugin: "otel.library-instrumentation"
-
-dependencies {
-  compileOnly project(':javaagent-api')
-}

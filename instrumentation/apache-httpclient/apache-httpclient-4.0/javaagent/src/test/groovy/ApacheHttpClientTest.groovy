@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Consumer
 import org.apache.http.HttpHost
@@ -59,7 +60,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
-  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     try {
       executeRequestWithCallback(request, uri) {
         it.entity?.content?.close() // Make sure the connection is closed.
@@ -98,7 +99,27 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+      callback.accept(it)
+    }
+  }
+}
+
+class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override
@@ -117,7 +138,27 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
+    // also testing with an absolute path below
     return new BasicHttpRequest(method, fullPathFromURI(uri))
+  }
+
+  @Override
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+  }
+
+  @Override
+  void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+      callback.accept(it)
+    }, new BasicHttpContext())
+  }
+}
+
+class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
+  @Override
+  BasicHttpRequest createRequest(String method, URI uri) {
+    return new BasicHttpRequest(method, uri.toString())
   }
 
   @Override

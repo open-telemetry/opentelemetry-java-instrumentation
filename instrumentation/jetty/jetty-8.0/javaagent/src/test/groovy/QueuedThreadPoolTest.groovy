@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jetty.JavaLambdaMaker
 import org.eclipse.jetty.util.thread.QueuedThreadPool
@@ -24,7 +23,7 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           // this child will have a span
           def child1 = new JavaAsyncChild()
           // this child won't
@@ -40,8 +39,16 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -61,7 +68,7 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     new Runnable() {
       @Override
       void run() {
-        runUnderTrace("parent") {
+        runWithSpan("parent") {
           pool.dispatch(JavaLambdaMaker.lambda(child))
         }
       }
@@ -73,8 +80,16 @@ class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "asyncChild", span(0))
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "asyncChild"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 

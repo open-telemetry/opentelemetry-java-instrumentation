@@ -11,12 +11,12 @@ import org.slf4j.LoggerFactory;
 
 public final class VersionLogger {
 
-  private static final Logger log = LoggerFactory.getLogger(VersionLogger.class);
+  private static final Logger logger = LoggerFactory.getLogger(VersionLogger.class);
 
   public static void logAllVersions() {
-    log.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
-    if (log.isDebugEnabled()) {
-      log.debug(
+    logger.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
+    if (logger.isDebugEnabled()) {
+      logger.debug(
           "Running on Java {}. JVM {} - {} - {}",
           System.getProperty("java.version"),
           System.getProperty("java.vm.name"),

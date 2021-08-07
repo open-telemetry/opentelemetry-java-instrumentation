@@ -57,6 +57,6 @@ public class KafkaStreamsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kafka-streams-0.11";
+    return "io.opentelemetry.kafka-streams-0.11";
   }
 }

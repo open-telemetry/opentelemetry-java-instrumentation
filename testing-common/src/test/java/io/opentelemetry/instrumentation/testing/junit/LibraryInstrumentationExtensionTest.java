@@ -15,15 +15,20 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LibraryInstrumentationExtensionTest {
+
+  static {
+    // TODO: remove once test depedency on javaagent-tooling is removed
+    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+  }
+
   @RegisterExtension
-  static final LibraryInstrumentationExtension instrumentation =
-      LibraryInstrumentationExtension.create();
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   // repeated test verifies that the telemetry data is cleared between test runs
   @RepeatedTest(5)
   void shouldCollectTraces() throws TimeoutException, InterruptedException {
     // when
-    TraceUtils.runUnderTrace(
+    testing.runWithSpan(
         "parent",
         () -> {
           TraceUtils.runInternalSpan("child");
@@ -31,7 +36,7 @@ class LibraryInstrumentationExtensionTest {
         });
 
     // then
-    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
         .hasSize(1)
         .hasTracesSatisfyingExactly(

@@ -44,7 +44,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20210428.792292726"
+    String extraTag = "20210704.998730666"
     String fullSuffix = "-${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + fullSuffix
   }

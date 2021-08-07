@@ -14,16 +14,12 @@ import com.rabbitmq.client.ShutdownSignalException;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Wrapping the consumer instead of instrumenting it directly because it doesn't get access to the
  * queue name when the message is consumed.
  */
 public class TracedDelegatingConsumer implements Consumer {
-
-  private static final Logger log = LoggerFactory.getLogger(TracedDelegatingConsumer.class);
 
   private final String queue;
   private final Consumer delegate;

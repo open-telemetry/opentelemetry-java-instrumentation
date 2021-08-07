@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -38,6 +38,6 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new HttpClientInstrumentation());
+    return asList(new HttpClientInstrumentation(), new TransportConnectorInstrumentation());
   }
 }

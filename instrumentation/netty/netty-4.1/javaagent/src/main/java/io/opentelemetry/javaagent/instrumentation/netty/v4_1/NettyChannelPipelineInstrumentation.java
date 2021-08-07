@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelHandler;
@@ -20,13 +19,9 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.util.Attribute;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler;
@@ -49,9 +44,6 @@ public class NettyChannelPipelineInstrumentation
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("connect")).and(returns(named("io.netty.channel.ChannelFuture"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineConnectAdvice");
   }
 
   /**
@@ -63,7 +55,9 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
+    public static void trackCallDepth(
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -73,19 +67,19 @@ public class NettyChannelPipelineInstrumentation
       // Using the specific handler key instead of the generic ChannelPipeline.class will help us
       // both to handle such cases and avoid adding our additional handlers in case of internal
       // calls of `addLast` to other method overloads with a compatible signature.
-      return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
+      callDepth = CallDepth.forClass(handler.getClass());
+      callDepth.getAndIncrement();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
-        @Advice.Argument(2) ChannelHandler handler) {
-      if (callDepth > 0) {
+        @Advice.Argument(2) ChannelHandler handler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(handler.getClass());
 
       String name = handlerName;
       if (name == null) {
@@ -125,16 +119,6 @@ public class NettyChannelPipelineInstrumentation
           // Prevented adding duplicate handlers.
         }
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ChannelPipelineConnectAdvice {
-
-    @Advice.OnMethodEnter
-    public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Attribute<Context> attribute = pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT);
-      attribute.compareAndSet(null, Java8BytecodeBridge.currentContext());
     }
   }
 }

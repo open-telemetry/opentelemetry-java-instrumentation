@@ -11,7 +11,6 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-// TODO: add javadoc
 class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
   private final ElementMatcher<TypeDescription.Generic> matcher;

@@ -51,7 +51,7 @@ public class JakartaServletHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet-5.0";
+    return "io.opentelemetry.servlet-5.0";
   }
 
   @Override

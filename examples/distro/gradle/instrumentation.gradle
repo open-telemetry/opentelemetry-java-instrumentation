@@ -12,11 +12,10 @@ configurations {
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
   compileOnly deps.bytebuddy
-  compileOnly deps.bytebuddyagent
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
 

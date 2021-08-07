@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.apache.dubbo.rpc.RpcInvocation;
+import org.apache.dubbo.rpc.RpcContext;
 
-class DubboInjectAdapter implements TextMapSetter<RpcInvocation> {
+class DubboInjectAdapter implements TextMapSetter<RpcContext> {
 
   static final DubboInjectAdapter SETTER = new DubboInjectAdapter();
 
   @Override
-  public void set(RpcInvocation rpcInvocation, String key, String value) {
-    rpcInvocation.setAttachment(key, value);
+  public void set(RpcContext rpcContext, String key, String value) {
+    rpcContext.setAttachment(key, value);
   }
 }

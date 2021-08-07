@@ -9,9 +9,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -133,8 +132,16 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicServerSpan(it, 0, getContextPath() + "/dispatch", null)
-        basicSpan(it, 1, "GreetingAction.dispatch_servlet", span(0))
+        span(0) {
+          name getContextPath() + "/dispatch"
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "GreetingAction.dispatch_servlet"
+          kind INTERNAL
+          childOf span(0)
+        }
       }
     }
   }

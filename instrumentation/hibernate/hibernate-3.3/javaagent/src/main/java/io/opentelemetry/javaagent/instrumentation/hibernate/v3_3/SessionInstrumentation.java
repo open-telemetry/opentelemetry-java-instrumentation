@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getEntityName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -20,13 +21,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -131,9 +131,17 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void startMethod(
         @Advice.This Object session,
         @Advice.Origin("#m") String name,
-        @Advice.Argument(0) Object entity,
+        @Advice.Origin("#d") String descriptor,
+        @Advice.Argument(0) Object arg0,
+        @Advice.Argument(value = 1, optional = true) Object arg1,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
+
+      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
 
       Context sessionContext = null;
       if (session instanceof Session) {
@@ -150,12 +158,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return; // No state found. We aren't in a Session.
       }
 
-      if (CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class) > 0) {
-        return; // This method call is being traced already.
-      }
-
       if (!SCOPE_ONLY_METHODS.contains(name)) {
-        spanContext = tracer().startSpan(sessionContext, "Session." + name, entity);
+        String entityName =
+            getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
+        spanContext = tracer().startSpan(sessionContext, "Session." + name, entityName);
         scope = spanContext.makeCurrent();
       } else {
         scope = sessionContext.makeCurrent();
@@ -165,14 +171,17 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
-        @Advice.Origin("#m") String name,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context spanContext,
         @Advice.Local("otelScope") Scope scope) {
 
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(spanContext, throwable, "Session." + name, returned);
+        SessionMethodUtils.end(spanContext, throwable);
       }
     }
   }

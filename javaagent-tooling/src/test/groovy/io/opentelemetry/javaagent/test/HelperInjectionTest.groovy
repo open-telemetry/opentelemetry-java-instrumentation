@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.test
 
 import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
@@ -29,7 +28,7 @@ class HelperInjectionTest extends Specification {
     ClassLoader helpersSourceLoader = new URLClassLoader(helpersSourceUrls)
 
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    HelperInjector injector = new HelperInjector("test", [helperClassName], [], helpersSourceLoader)
+    HelperInjector injector = new HelperInjector("test", [helperClassName], [], helpersSourceLoader, null)
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 
     when:
@@ -61,7 +60,7 @@ class HelperInjectionTest extends Specification {
     ByteBuddyAgent.install()
     AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    HelperInjector injector = new HelperInjector("test", [helperClassName], [], this.class.classLoader)
+    HelperInjector injector = new HelperInjector("test", [helperClassName], [], this.class.classLoader, ByteBuddyAgent.getInstrumentation())
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)
 
     when:
@@ -70,10 +69,11 @@ class HelperInjectionTest extends Specification {
     thrown ClassNotFoundException
 
     when:
-    injector.transform(null, null, BOOTSTRAP_CLASSLOADER, null)
+    def bootstrapClassloader = null
+    injector.transform(null, null, bootstrapClassloader, null)
     Class<?> helperClass = bootstrapChild.loadClass(helperClassName)
     then:
-    helperClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
+    helperClass.getClassLoader() == bootstrapClassloader
   }
 
   def "check hard references on class injection"() {

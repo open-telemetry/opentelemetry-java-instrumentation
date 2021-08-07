@@ -1,9 +1,0 @@
-// not applying $rootDir/gradle/instrumentation.gradle because that brings running tests with agent
-// infrastructure, and this module only wants to run unit tests
-
-ext.mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
-
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.publish-conventions"
-
-archivesBaseName = projectDir.parentFile.name

@@ -6,15 +6,14 @@
 package io.opentelemetry.instrumentation.reactor
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import java.time.Duration
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
@@ -46,18 +45,30 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   def "Publisher '#paramName' test"() {
     when:
-    def result = runUnderTrace(publisherSupplier)
+    def result = runWithSpan(publisherSupplier)
 
     then:
     result == expected
     and:
     assertTraces(1) {
       trace(0, workSpans + 2) {
-        basicSpan(it, 0, "trace-parent")
-        basicSpan(it, 1, "publisher-parent", span(0))
+        span(0) {
+          name "trace-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         for (int i = 0; i < workSpans; i++) {
-          basicSpan(it, 2 + i, "add one", span(1))
+          span(2 + i) {
+            name "add one"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
       }
     }
@@ -90,7 +101,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   def "Publisher error '#paramName' test"() {
     when:
-    runUnderTrace(publisherSupplier)
+    runWithSpan(publisherSupplier)
 
     then:
     def exception = thrown RuntimeException
@@ -109,7 +120,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
         // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 1, "publisher-parent", span(0))
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -121,7 +136,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   def "Publisher step '#paramName' test"() {
     when:
-    runUnderTrace(publisherSupplier)
+    runWithSpan(publisherSupplier)
 
     then:
     def exception = thrown IllegalStateException
@@ -140,7 +155,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
         // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 1, "publisher-parent", span(0))
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
@@ -175,7 +194,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
           }
         }
 
-        basicSpan(it, 1, "publisher-parent", span(0))
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
       }
     }
 
@@ -187,7 +210,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   def "Publisher chain spans have the correct parent for '#paramName'"() {
     when:
-    runUnderTrace(publisherSupplier)
+    runWithSpan(publisherSupplier)
 
     then:
     assertTraces(1) {
@@ -199,7 +222,11 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
           }
         }
 
-        basicSpan(it, 1, "publisher-parent", span(0))
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
 
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
@@ -224,7 +251,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   def "Publisher chain spans have the correct parents from assembly time '#paramName'"() {
     when:
-    runUnderTrace {
+    runWithSpan {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
       Publisher<Integer> publisher = publisherSupplier()
 
@@ -248,13 +275,33 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, (workItems * 2) + 3) {
-        basicSpan(it, 0, "trace-parent")
-        basicSpan(it, 1, "publisher-parent", span(0))
-        basicSpan(it, 2, "intermediate", span(1))
+        span(0) {
+          name "trace-parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "publisher-parent"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "intermediate"
+          kind SpanKind.INTERNAL
+          childOf span(1)
+        }
 
         for (int i = 0; i < 2 * workItems; i = i + 2) {
-          basicSpan(it, 3 + i, "add one", span(1))
-          basicSpan(it, 3 + i + 1, "add two", span(1))
+          span(3 + i) {
+            name "add one"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
+          span(3 + i + 1) {
+            name "add two"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
         }
       }
     }
@@ -282,19 +329,19 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
             .map({ it })
             .delayElement(Duration.ofMillis(10))
             .doOnSuccess({
-              TraceUtils.runUnderTrace("inner") {
+              runWithSpan("inner") {
                 Span.current().setAttribute("iteration", iteration)
               }
             })
 
-          TraceUtils.runUnderTrace("middle") {
+          runWithSpan("middle") {
             Span.current().setAttribute("iteration", iteration)
             middle.subscribe()
           }
         })
 
       // Context must propagate even if only subscribe is in root span scope
-      TraceUtils.runUnderTrace("outer") {
+      runWithSpan("outer") {
         Span.current().setAttribute("iteration", iteration)
         outer.subscribe()
       }
@@ -348,13 +395,13 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
               .delayElements(Duration.ofMillis(10))
               .doOnEach({ innerSignal ->
                 if (innerSignal.hasValue()) {
-                  TraceUtils.runUnderTrace("inner " + value + innerSignal.get()) {
+                  runWithSpan("inner " + value + innerSignal.get()) {
                     Span.current().setAttribute("iteration", iteration)
                   }
                 }
               })
 
-            TraceUtils.runUnderTrace("middle " + value) {
+            runWithSpan("middle " + value) {
               Span.current().setAttribute("iteration", iteration)
               middle.subscribe()
             }
@@ -362,7 +409,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
         })
 
       // Context must propagate even if only subscribe is in root span scope
-      TraceUtils.runUnderTrace("outer") {
+      runWithSpan("outer") {
         Span.current().setAttribute("iteration", iteration)
         outer.subscribe()
       }
@@ -413,8 +460,8 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     assert remainingIterations.isEmpty()
   }
 
-  def runUnderTrace(def publisherSupplier) {
-    TraceUtils.runUnderTrace("trace-parent") {
+  def runWithSpan(def publisherSupplier) {
+    runWithSpan("trace-parent") {
       def tracer = GlobalOpenTelemetry.getTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = Context.current().with(span).makeCurrent()
@@ -436,7 +483,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
   }
 
   def cancelUnderTrace(def publisherSupplier) {
-    TraceUtils.runUnderTrace("trace-parent") {
+    runWithSpan("trace-parent") {
       def tracer = GlobalOpenTelemetry.getTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = Context.current().with(span).makeCurrent()

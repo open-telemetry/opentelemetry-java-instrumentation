@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -22,7 +22,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.startsWith("com.couchbase.client.tracing.opentelemetry");
+    return className.startsWith("com.couchbase.v3_1.client.tracing.opentelemetry");
   }
 
   @Override

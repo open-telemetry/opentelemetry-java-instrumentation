@@ -156,7 +156,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected void onConnection(SpanBuilder spanBuilder, CONNECTION connection) {
     // TODO: use NetPeerAttributes here
-    spanBuilder.setAttribute(SemanticAttributes.NET_PEER_IP, peerHostIP(connection));
+    spanBuilder.setAttribute(SemanticAttributes.NET_PEER_IP, peerHostIp(connection));
     Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
     if (port != null && port > 0) {
@@ -199,14 +199,14 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       }
       spanBuilder.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
     }
-    spanBuilder.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIP(connection, request));
+    spanBuilder.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIp(connection, request));
   }
 
-  private String clientIP(CONNECTION connection, REQUEST request) {
+  private String clientIp(CONNECTION connection, REQUEST request) {
     // try Forwarded
     String forwarded = requestHeader(request, "Forwarded");
     if (forwarded != null) {
-      forwarded = extractForwardedFor(forwarded);
+      forwarded = extractForwarded(forwarded);
       if (forwarded != null) {
         return forwarded;
       }
@@ -215,22 +215,18 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // try X-Forwarded-For
     forwarded = requestHeader(request, "X-Forwarded-For");
     if (forwarded != null) {
-      // may be split by ,
-      int endIndex = forwarded.indexOf(',');
-      if (endIndex > 0) {
-        forwarded = forwarded.substring(0, endIndex);
-      }
-      if (!forwarded.isEmpty()) {
+      forwarded = extractForwardedFor(forwarded);
+      if (forwarded != null) {
         return forwarded;
       }
     }
 
     // fallback to peer IP if there are no proxy headers
-    return peerHostIP(connection);
+    return peerHostIp(connection);
   }
 
   // VisibleForTesting
-  static String extractForwardedFor(String forwarded) {
+  static String extractForwarded(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
       return null;
@@ -239,9 +235,42 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     if (start >= forwarded.length() - 1) { // the value after for= must not be empty
       return null;
     }
+    return extractIpAddress(forwarded, start);
+  }
+
+  // VisibleForTesting
+  static String extractForwardedFor(String forwarded) {
+    return extractIpAddress(forwarded, 0);
+  }
+
+  // from https://www.rfc-editor.org/rfc/rfc7239
+  //  "Note that IPv6 addresses may not be quoted in
+  //   X-Forwarded-For and may not be enclosed by square brackets, but they
+  //   are quoted and enclosed in square brackets in Forwarded"
+  // and also (applying to Forwarded but not X-Forwarded-For)
+  //  "It is important to note that an IPv6 address and any nodename with
+  //   node-port specified MUST be quoted, since ':' is not an allowed
+  //   character in 'token'."
+  private static String extractIpAddress(String forwarded, int start) {
+    if (forwarded.length() == start) {
+      return null;
+    }
+    if (forwarded.charAt(start) == '"') {
+      return extractIpAddress(forwarded, start + 1);
+    }
+    if (forwarded.charAt(start) == '[') {
+      int end = forwarded.indexOf(']', start + 1);
+      if (end == -1) {
+        return null;
+      }
+      return forwarded.substring(start + 1, end);
+    }
+    boolean inIpv4 = false;
     for (int i = start; i < forwarded.length() - 1; i++) {
       char c = forwarded.charAt(i);
-      if (c == ',' || c == ';') {
+      if (c == '.') {
+        inIpv4 = true;
+      } else if (c == ',' || c == ';' || c == '"' || (inIpv4 && c == ':')) {
         if (i == start) { // empty string
           return null;
         }
@@ -263,7 +292,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   protected abstract Integer peerPort(CONNECTION connection);
 
   @Nullable
-  protected abstract String peerHostIP(CONNECTION connection);
+  protected abstract String peerHostIp(CONNECTION connection);
 
   protected abstract String flavor(CONNECTION connection, REQUEST request);
 

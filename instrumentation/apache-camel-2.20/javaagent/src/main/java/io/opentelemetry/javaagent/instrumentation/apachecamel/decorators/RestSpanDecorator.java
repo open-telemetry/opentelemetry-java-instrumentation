@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 class RestSpanDecorator extends HttpSpanDecorator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RestSpanDecorator.class);
+  private static final Logger logger = LoggerFactory.getLogger(RestSpanDecorator.class);
 
   @Override
   protected String getPath(Exchange exchange, Endpoint endpoint) {
@@ -52,7 +52,7 @@ class RestSpanDecorator extends HttpSpanDecorator {
         try {
           path = URLDecoder.decode(path, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-          LOG.debug("Failed to decode URL path '{}', ignoring exception", path, e);
+          logger.debug("Failed to decode URL path '{}', ignoring exception", path, e);
         }
       }
     }

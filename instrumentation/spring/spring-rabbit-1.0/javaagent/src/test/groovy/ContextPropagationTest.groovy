@@ -7,7 +7,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -65,7 +64,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     def channel = connection.createChannel()
 
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       applicationContext.getBean(AmqpTemplate)
         .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
     }
@@ -78,7 +77,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
         }
         span(1) {
           // created by rabbitmq instrumentation
-          name "<default> -> testQueue send"
+          name "<default> send"
           kind PRODUCER
           childOf span(0)
           attributes {
@@ -90,8 +89,11 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "<default>"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
+        // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
+        // that's why the rabbitmq CONSUMER span will never have any child span (and propagate context, actually)
         span(2) {
           // created by rabbitmq instrumentation
           name "testQueue process"
@@ -103,10 +105,11 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
           }
         }
         span(3) {
-          // created by spring-amqp instrumentation
+          // created by spring-rabbit instrumentation
           name "testQueue process"
           kind CONSUMER
           childOf span(1)

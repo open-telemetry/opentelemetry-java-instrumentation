@@ -40,7 +40,7 @@ public class OpenTelemetryFilter implements Filter {
     final Context context;
     if (kind.equals(CLIENT)) {
       context = tracer.startClientSpan(interfaceName, methodName);
-      tracer.inject(context, (RpcInvocation) invocation, DubboInjectAdapter.SETTER);
+      tracer.inject(context, rpcContext, DubboInjectAdapter.SETTER);
     } else {
       context = tracer.startServerSpan(interfaceName, methodName, (RpcInvocation) invocation);
     }

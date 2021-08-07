@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -32,9 +32,9 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new BootstrapInstrumentation(),
         new ChannelInstrumentation(),
         new NettyFutureInstrumentation(),
-        new ChannelFutureListenerInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
         new AbstractChannelHandlerContextInstrumentation());
   }

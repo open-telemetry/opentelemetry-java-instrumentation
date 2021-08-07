@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
 public final class MethodSingletons {
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.external-annotations";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 

@@ -33,6 +33,6 @@ public class SpringWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-ws-2.0";
+    return "io.opentelemetry.spring-ws-2.0";
   }
 }
