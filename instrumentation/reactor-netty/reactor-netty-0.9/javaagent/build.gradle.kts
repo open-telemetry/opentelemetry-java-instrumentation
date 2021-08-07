@@ -25,3 +25,22 @@ dependencies {
 
   latestDepTestLibrary("io.projectreactor.netty:reactor-netty:(,1.0.0)")
 }
+
+tasks {
+  val testConnectionSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("ReactorNettyConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/ReactorNettyConnectionSpanTest.*")
+    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+  }
+
+  named<Test>("test") {
+    dependsOn(testConnectionSpan)
+    filter {
+      excludeTestsMatching("ReactorNettyConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+  }
+}

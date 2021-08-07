@@ -24,6 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -58,31 +59,25 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private String getStatement(Exchange exchange, Endpoint endpoint) {
+  // visible for testing
+  String getStatement(Exchange exchange, Endpoint endpoint) {
     switch (component) {
-      case "mongodb":
-        Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
-        return mongoParameters.toString();
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
         if (cqlObj != null) {
-          return cqlObj.toString();
-        }
-        Map<String, String> cqlParameters = toQueryParameters(endpoint.getEndpointUri());
-        if (cqlParameters.containsKey("cql")) {
-          return cqlParameters.get("cql");
+          return SqlStatementSanitizer.sanitize(cqlObj.toString()).getFullStatement();
         }
         return null;
       case "jdbc":
         Object body = exchange.getIn().getBody();
         if (body instanceof String) {
-          return (String) body;
+          return SqlStatementSanitizer.sanitize((String) body).getFullStatement();
         }
         return null;
       case "sql":
         Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
         if (sqlquery instanceof String) {
-          return (String) sqlquery;
+          return SqlStatementSanitizer.sanitize((String) sqlquery).getFullStatement();
         }
         return null;
       default:

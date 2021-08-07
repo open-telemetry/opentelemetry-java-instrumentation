@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.annotation.support.async.Jdk8AsyncOperationEndStrategy;
 import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -39,28 +38,31 @@ public final class WeakRefAsyncOperationEndStrategies extends AsyncOperationEndS
 
   @Override
   public void unregisterStrategy(AsyncOperationEndStrategy strategy) {
-    ListIterator<WeakReference<AsyncOperationEndStrategy>> it = strategies.listIterator();
-    while (it.hasNext()) {
-      AsyncOperationEndStrategy s = it.next().get();
-      if (s == null || s == strategy) {
-        it.remove();
-        break;
-      }
-    }
+    strategies.removeIf(
+        ref -> {
+          AsyncOperationEndStrategy s = ref.get();
+          return s == null || s == strategy;
+        });
   }
 
   @Nullable
   @Override
   public AsyncOperationEndStrategy resolveStrategy(Class<?> returnType) {
-    ListIterator<WeakReference<AsyncOperationEndStrategy>> it = strategies.listIterator();
-    while (it.hasNext()) {
-      AsyncOperationEndStrategy s = it.next().get();
-      if (s == null) {
-        it.remove();
-      } else if (s.supports(returnType)) {
-        return s;
+    boolean purgeCollectedWeakReferences = false;
+    try {
+      for (WeakReference<AsyncOperationEndStrategy> ref : strategies) {
+        AsyncOperationEndStrategy s = ref.get();
+        if (s == null) {
+          purgeCollectedWeakReferences = true;
+        } else if (s.supports(returnType)) {
+          return s;
+        }
+      }
+      return null;
+    } finally {
+      if (purgeCollectedWeakReferences) {
+        strategies.removeIf(ref -> ref.get() == null);
       }
     }
-    return null;
   }
 }

@@ -183,4 +183,20 @@ public abstract class Mismatch {
       return "InstrumentationModule classloader check";
     }
   }
+
+  /**
+   * Represents failure to inject {@link InstrumentationModule#getMuzzleHelperClassNames()} into
+   * some classloader.
+   */
+  public static class HelperClassesInjectionError extends Mismatch {
+
+    public HelperClassesInjectionError() {
+      super(Collections.emptyList());
+    }
+
+    @Override
+    String getMismatchDetails() {
+      return "Failed to inject helper classes. Are Helpers being injected in the correct order?";
+    }
+  }
 }

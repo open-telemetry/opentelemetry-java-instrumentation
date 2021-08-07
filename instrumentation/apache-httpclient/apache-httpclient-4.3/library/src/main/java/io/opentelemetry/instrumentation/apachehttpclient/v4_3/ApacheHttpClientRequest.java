@@ -12,7 +12,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,18 +25,12 @@ public final class ApacheHttpClientRequest {
   private final HttpRequest delegate;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
-    URI calculatedUri = null;
-    if (httpRequest instanceof HttpUriRequest) {
-      calculatedUri = ((HttpUriRequest) httpRequest).getURI();
+    URI calculatedUri = getUri(httpRequest);
+    if (calculatedUri != null && httpHost != null) {
+      uri = getCalculatedUri(httpHost, calculatedUri);
+    } else {
+      uri = calculatedUri;
     }
-    if (calculatedUri == null && httpHost != null) {
-      try {
-        calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
-      } catch (URISyntaxException e) {
-        // Ignore
-      }
-    }
-    uri = calculatedUri;
     delegate = httpRequest;
   }
 
@@ -130,6 +123,34 @@ public final class ApacheHttpClientRequest {
       default:
         logger.debug("no default port mapping for scheme: {}", uri.getScheme());
         return null;
+    }
+  }
+
+  @Nullable
+  private static URI getUri(HttpRequest httpRequest) {
+    try {
+      // this can be relative or absolute
+      return new URI(httpRequest.getRequestLine().getUri());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
+    try {
+      return new URI(
+          httpHost.getSchemeName(),
+          null,
+          httpHost.getHostName(),
+          httpHost.getPort(),
+          uri.getPath(),
+          uri.getQuery(),
+          uri.getFragment());
+    } catch (URISyntaxException e) {
+      logger.debug(e.getMessage(), e);
+      return null;
     }
   }
 }

@@ -14,6 +14,7 @@ import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
@@ -70,27 +71,20 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
                 requestResult.complete(() -> response.status().code(), throwable));
   }
 
-  // Not supported yet: https://github.com/line/armeria/issues/2489
   @Override
-  protected final boolean testRedirects() {
-    return false;
-  }
-
-  @Override
-  protected final boolean testReusedRequest() {
+  protected void configure(HttpClientTestOptions options) {
+    // Not supported yet: https://github.com/line/armeria/issues/2489
+    options.disableTestRedirects();
     // armeria requests can't be reused
-    return false;
-  }
+    options.disableTestReusedRequest();
 
-  @Override
-  protected Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = new HashSet<>();
     extra.add(SemanticAttributes.HTTP_HOST);
     extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
     extra.add(SemanticAttributes.HTTP_SCHEME);
     extra.add(SemanticAttributes.HTTP_TARGET);
-    extra.addAll(super.httpAttributes(uri));
-    return extra;
+    extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    options.setHttpAttributes(unused -> extra);
   }
 }

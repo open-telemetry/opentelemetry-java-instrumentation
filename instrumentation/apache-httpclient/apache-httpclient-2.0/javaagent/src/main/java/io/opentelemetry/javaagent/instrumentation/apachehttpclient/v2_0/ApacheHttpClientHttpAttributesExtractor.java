@@ -116,12 +116,6 @@ final class ApacheHttpClientHttpAttributesExtractor
     return null;
   }
 
-  @Override
-  @Nullable
-  protected String clientIp(HttpMethod request, @Nullable HttpMethod response) {
-    return null;
-  }
-
   // mirroring implementation HttpMethodBase.getURI(), to avoid converting to URI and back to String
   private static String getUrl(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();

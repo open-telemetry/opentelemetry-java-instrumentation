@@ -31,9 +31,10 @@ public class VertxClientTracer extends AbstractVertxClientTracer {
   @Override
   @Nullable
   protected URI url(HttpClientRequest request) throws URISyntaxException {
-    if (request.absoluteURI().startsWith(request.getURI())) {
-      return new URI(request.getURI());
+    URI uri = new URI(request.getURI());
+    if (!uri.isAbsolute()) {
+      uri = new URI(request.absoluteURI());
     }
-    return new URI(request.absoluteURI());
+    return uri;
   }
 }

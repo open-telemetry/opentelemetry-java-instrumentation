@@ -10,10 +10,12 @@ plugins {
 description = "OpenTelemetry Javaagent for testing"
 group = "io.opentelemetry.javaagent"
 
+// this configuration collects libs that will be placed in the bootstrap classloader
 val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
+// this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
 val javaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
@@ -35,6 +37,7 @@ dependencies {
   javaagentLibs(project(":testing:agent-exporter"))
   javaagentLibs(project(":javaagent-extension-api"))
   javaagentLibs(project(":javaagent-tooling"))
+  javaagentLibs(project(":muzzle"))
 
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
   javaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -59,11 +62,9 @@ val javaagentDependencies = dependencies
 project(":instrumentation").subprojects {
   val subProj = this
 
-  plugins.withId("java") {
-    if (subProj.name == "bootstrap") {
-      javaagentDependencies.run {
-        add(bootstrapLibs.name, project(subProj.path))
-      }
+  plugins.withId("otel.javaagent-bootstrap") {
+    javaagentDependencies.run {
+      add(bootstrapLibs.name, project(subProj.path))
     }
   }
 }
@@ -87,25 +88,11 @@ tasks {
     }
   }
 
-  fun isolateAgentClasses (jars: Iterable<File>): CopySpec {
-    return copySpec {
-      jars.forEach {
-        from(zipTree(it)) {
-          // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-          into("inst")
-          rename("""(^.*)\.class$""", "$1.classdata")
-          // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-          rename("""^LICENSE$""", "LICENSE.renamed")
-        }
-      }
-    }
-  }
-
   val shadowJar by existing(ShadowJar::class) {
-    dependsOn(relocateJavaagentLibs)
-
     configurations = listOf(bootstrapLibs)
-    with(isolateAgentClasses(relocateJavaagentLibs.get().outputs.files))
+
+    dependsOn(relocateJavaagentLibs)
+    isolateClasses(relocateJavaagentLibs.get().outputs.files)
 
     archiveClassifier.set("")
 
@@ -122,12 +109,11 @@ tasks {
 
   afterEvaluate {
     withType<Test>().configureEach {
+      dependsOn(shadowJar)
       inputs.file(shadowJar.get().archiveFile)
 
       jvmArgs("-Dotel.javaagent.debug=true")
       jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile.absolutePath}")
-
-      dependsOn(shadowJar)
     }
   }
 
@@ -137,6 +123,18 @@ tasks {
       named<MavenPublication>("maven") {
         project.shadow.component(this)
       }
+    }
+  }
+}
+
+fun CopySpec.isolateClasses(jars: Iterable<File>) {
+  jars.forEach {
+    from(zipTree(it)) {
+      // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+      into("inst")
+      rename("(^.*)\\.class\$", "\$1.classdata")
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename("""^LICENSE$""", "LICENSE.renamed")
     }
   }
 }

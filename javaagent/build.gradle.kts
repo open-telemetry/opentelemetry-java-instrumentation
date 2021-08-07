@@ -11,12 +11,32 @@ plugins {
 }
 
 description = "OpenTelemetry Javaagent"
-
 group = "io.opentelemetry.javaagent"
 
+// this configuration collects libs that will be placed in the bootstrap classloader
 val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
+}
+// this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
+val javaagentLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+// this configuration collects just exporter libs (also placed in the agent classloader & isolated from the instrumented application)
+val exporterLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+
+// exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
+listOf(javaagentLibs, exporterLibs).forEach {
+  it.run {
+    exclude("org.slf4j")
+    exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-api-metrics")
+    exclude("io.opentelemetry", "opentelemetry-semconv")
+  }
 }
 
 val licenseReportDependencies by configurations.creating {
@@ -30,7 +50,13 @@ dependencies {
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")
 
-  // We only have compileOnly dependencies on these to make sure they don"t leak into POMs.
+  javaagentLibs(project(":javaagent-extension-api"))
+  javaagentLibs(project(":javaagent-tooling"))
+  javaagentLibs(project(":muzzle"))
+
+  exporterLibs(project(":javaagent-exporters"))
+
+  // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
   licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
     isTransitive = false
   }
@@ -50,26 +76,20 @@ dependencies {
 
 val javaagentDependencies = dependencies
 
-// collect all bootstrap instrumentation dependencies
+// collect all bootstrap and javaagent instrumentation dependencies
 project(":instrumentation").subprojects {
   val subProj = this
 
-  plugins.withId("java") {
-    if (subProj.name == "bootstrap") {
-      javaagentDependencies.run {
-        add(bootstrapLibs.name, project(subProj.path))
-      }
+  plugins.withId("otel.javaagent-bootstrap") {
+    javaagentDependencies.run {
+      add(bootstrapLibs.name, project(subProj.path))
     }
   }
-}
 
-fun isolateSpec(projectsWithShadowJar: Collection<Project>): CopySpec = copySpec {
-  from(projectsWithShadowJar.map { zipTree(it.tasks.getByName<ShadowJar>("shadowJar").archiveFile) }) {
-    // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-    into("inst")
-    rename("""(^.*)\.class$""", "$1.classdata")
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename("""^LICENSE$""", "LICENSE.renamed")
+  plugins.withId("otel.javaagent-instrumentation") {
+    javaagentDependencies.run {
+      add(javaagentLibs.name, project(subProj.path))
+    }
   }
 }
 
@@ -80,27 +100,41 @@ tasks {
     }
   }
 
-  //Includes everything needed for OOTB experience
-  val shadowJar by existing(ShadowJar::class) {
-    archiveClassifier.set("all")
-    val projectsWithShadowJar = listOf(project(":instrumentation"), project(":javaagent-exporters"))
-    projectsWithShadowJar.forEach {
-      dependsOn("${it.path}:shadowJar")
+  // lightShadow is the default classifier we publish so disable the default jar.
+  jar {
+    enabled = false
+  }
+
+  val relocateJavaagentLibs by registering(ShadowJar::class) {
+    configurations = listOf(javaagentLibs)
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
+    archiveFileName.set("javaagentLibs-relocated.jar")
+
+    // exclude bootstrap projects from javaagent libs - they won't be added to inst/
+    dependencies {
+      exclude(project(":instrumentation-api"))
+      exclude(project(":instrumentation-api-annotation-support"))
+      exclude(project(":javaagent-bootstrap"))
+      exclude(project(":javaagent-instrumentation-api"))
     }
-    with(isolateSpec(projectsWithShadowJar))
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  }
+
+  val relocateExporterLibs by registering(ShadowJar::class) {
+    configurations = listOf(exporterLibs)
+
+    archiveFileName.set("exporterLibs-relocated.jar")
   }
 
   //Includes instrumentations, but not exporters
   val lightShadow by registering(ShadowJar::class) {
-    archiveClassifier.set("")
-    dependsOn(":instrumentation:shadowJar")
-    val projectsWithShadowJar = listOf(project(":instrumentation"))
-    with(isolateSpec(projectsWithShadowJar))
-  }
-
-  withType<ShadowJar>().configureEach {
     configurations = listOf(bootstrapLibs)
+
+    dependsOn(relocateJavaagentLibs)
+    isolateClasses(relocateJavaagentLibs.get().outputs.files)
+
+    archiveClassifier.set("")
 
     manifest {
       attributes(
@@ -113,31 +147,41 @@ tasks {
     }
   }
 
-  // lightShadow is the default classifier we publish so disable the default jar.
-  jar {
-    enabled = false
+  //Includes everything needed for OOTB experience
+  val shadowJar by existing(ShadowJar::class) {
+    configurations = listOf(bootstrapLibs)
+
+    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
+    isolateClasses(relocateJavaagentLibs.get().outputs.files)
+    isolateClasses(relocateExporterLibs.get().outputs.files)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    archiveClassifier.set("all")
+
+    manifest {
+      attributes(lightShadow.get().manifest.attributes)
+    }
+  }
+
+  assemble {
+    dependsOn(lightShadow, shadowJar)
   }
 
   withType<Test>().configureEach {
+    dependsOn(shadowJar)
     inputs.file(shadowJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
     doFirst {
       // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${shadowJar.get().archivePath}")
+      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
     }
 
     testLogging {
       events("started")
     }
-
-    dependsOn(shadowJar)
-  }
-
-  named("assemble") {
-    dependsOn(lightShadow)
-    dependsOn(shadowJar)
   }
 
   val cleanLicenses by registering(Delete::class) {
@@ -170,4 +214,16 @@ licenseReport {
   )
 
   filters = arrayOf(LicenseBundleNormalizer("$projectDir/license-normalizer-bundle.json", true))
+}
+
+fun CopySpec.isolateClasses(jars: Iterable<File>) {
+  jars.forEach {
+    from(zipTree(it)) {
+      // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+      into("inst")
+      rename("(^.*)\\.class\$", "\$1.classdata")
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename("""^LICENSE$""", "LICENSE.renamed")
+    }
+  }
 }

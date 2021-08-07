@@ -24,3 +24,22 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
 }
+
+tasks {
+  val testConnectionSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("ReactorNettyConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/ReactorNettyConnectionSpanTest.*")
+    jvmArgs("-Dotel.instrumentation.reactor-netty.always-create-connect-span=true")
+  }
+
+  named<Test>("test") {
+    dependsOn(testConnectionSpan)
+    filter {
+      excludeTestsMatching("ReactorNettyConnectionSpanTest")
+      isFailOnNoMatchingTests = false
+    }
+  }
+}

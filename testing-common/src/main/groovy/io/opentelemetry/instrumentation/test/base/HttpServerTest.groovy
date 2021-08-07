@@ -608,6 +608,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
+    def extraAttributes = extraAttributes()
     ServerEndpoint endpoint = INDEXED_CHILD
     trace.span(1) {
       name expectedServerSpanName(endpoint)
@@ -622,6 +623,36 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
+          // currently reports '/*' which is a fallback route.
+          "${SemanticAttributes.HTTP_ROUTE}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "?id=$requestId"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
       }
     }
   }

@@ -25,7 +25,6 @@ package io.opentelemetry.instrumentation.rxjava2;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
@@ -254,8 +253,6 @@ public final class TracingAssembly {
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
 
-    AsyncSpanEndStrategies.getInstance().registerStrategy(asyncOperationEndStrategy);
-
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
@@ -293,10 +290,7 @@ public final class TracingAssembly {
 
   private static void disableWithSpanStrategy() {
     if (asyncOperationEndStrategy != null) {
-      AsyncSpanEndStrategies.getInstance().unregisterStrategy(asyncOperationEndStrategy);
-
       AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-
       asyncOperationEndStrategy = null;
     }
   }

@@ -34,6 +34,7 @@ dependencies {
   testLibrary("org.apache.camel:camel-jaxb-starter:$camelversion")
   testLibrary("org.apache.camel:camel-undertow:$camelversion")
   testLibrary("org.apache.camel:camel-aws:$camelversion")
+  testLibrary("org.apache.camel:camel-cassandraql:$camelversion")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
@@ -43,6 +44,7 @@ dependencies {
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
   testImplementation("org.testcontainers:localstack:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:cassandra:${versions["org.testcontainers"]}")
 
   latestDepTestLibrary("org.apache.camel:camel-core:2.+")
   latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+")
@@ -51,6 +53,7 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-jaxb-starter:2.+")
   latestDepTestLibrary("org.apache.camel:camel-undertow:2.+")
   latestDepTestLibrary("org.apache.camel:camel-aws:2.+")
+  latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+")
 }
 
 tasks {

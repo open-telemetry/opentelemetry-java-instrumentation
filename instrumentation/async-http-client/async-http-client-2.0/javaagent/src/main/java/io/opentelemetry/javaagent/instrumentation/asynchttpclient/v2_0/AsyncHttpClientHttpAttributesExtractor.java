@@ -99,10 +99,4 @@ final class AsyncHttpClientHttpAttributesExtractor
   protected String route(Request request) {
     return null;
   }
-
-  @Override
-  @Nullable
-  protected String clientIp(Request request, @Nullable Response response) {
-    return null;
-  }
 }

@@ -15,8 +15,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.TaskAdviceHelper;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,9 +43,9 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
-      ContextStore<Envelope, State> contextStore =
-          InstrumentationContext.get(Envelope.class, State.class);
-      return AdviceUtils.startTaskScope(contextStore, envelope);
+      ContextStore<Envelope, PropagatedContext> contextStore =
+          InstrumentationContext.get(Envelope.class, PropagatedContext.class);
+      return TaskAdviceHelper.makePropagatedContextCurrent(contextStore, envelope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -61,9 +61,9 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
-      ContextStore<SystemMessage, State> contextStore =
-          InstrumentationContext.get(SystemMessage.class, State.class);
-      return AdviceUtils.startTaskScope(contextStore, systemMessage);
+      ContextStore<SystemMessage, PropagatedContext> contextStore =
+          InstrumentationContext.get(SystemMessage.class, PropagatedContext.class);
+      return TaskAdviceHelper.makePropagatedContextCurrent(contextStore, systemMessage);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

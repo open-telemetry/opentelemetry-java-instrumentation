@@ -67,5 +67,5 @@ tasks.withType<Test>().configureEach {
   // a good approach. Come up with a better one and enable this.
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

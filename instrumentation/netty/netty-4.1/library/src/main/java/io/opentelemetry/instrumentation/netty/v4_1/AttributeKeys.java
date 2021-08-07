@@ -10,8 +10,6 @@ import io.opentelemetry.context.Context;
 
 public final class AttributeKeys {
 
-  public static final AttributeKey<Context> CONNECT_CONTEXT =
-      AttributeKey.valueOf(AttributeKeys.class, "connect-context");
   public static final AttributeKey<Context> WRITE_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "passed-context");
 

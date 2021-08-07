@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelHandler;
@@ -19,12 +18,9 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.util.Attribute;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
@@ -46,9 +42,6 @@ public class NettyChannelPipelineInstrumentation
             .and(nameStartsWith("add"))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("connect")).and(returns(named("io.netty.channel.ChannelFuture"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineConnectAdvice");
   }
 
   /**
@@ -101,17 +94,6 @@ public class NettyChannelPipelineInstrumentation
           // Prevented adding duplicate handlers.
         }
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ChannelPipelineConnectAdvice {
-
-    @Advice.OnMethodEnter
-    public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Context context = Java8BytecodeBridge.currentContext();
-      Attribute<Context> attribute = pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT);
-      attribute.compareAndSet(null, context);
     }
   }
 }
