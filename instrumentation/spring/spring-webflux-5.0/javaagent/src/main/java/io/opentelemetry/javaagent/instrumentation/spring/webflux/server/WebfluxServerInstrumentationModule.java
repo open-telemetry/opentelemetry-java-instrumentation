@@ -21,9 +21,6 @@ public class WebfluxServerInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new DispatcherHandlerInstrumentation(),
-        new HandlerAdapterInstrumentation(),
-        new RouterFunctionInstrumentation());
+    return asList(new HandlerAdapterInstrumentation(), new RouterFunctionInstrumentation());
   }
 }

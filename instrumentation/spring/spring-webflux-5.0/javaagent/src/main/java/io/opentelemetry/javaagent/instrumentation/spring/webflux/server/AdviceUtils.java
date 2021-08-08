@@ -13,8 +13,6 @@ import reactor.core.publisher.Mono;
 
 public class AdviceUtils {
 
-  public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
-
   public static String spanNameForHandler(Object handler) {
     String className = ClassNames.simpleName(handler.getClass());
     int lambdaIdx = className.indexOf("$$Lambda$");

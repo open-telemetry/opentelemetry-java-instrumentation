@@ -69,11 +69,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parentContext = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
-
-      if (parentContext == null) {
-        return;
-      }
+      Context parentContext = Context.current();
 
       Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
 
