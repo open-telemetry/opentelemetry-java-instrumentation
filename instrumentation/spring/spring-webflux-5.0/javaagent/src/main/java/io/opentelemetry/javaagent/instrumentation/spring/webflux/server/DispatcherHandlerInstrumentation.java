@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -54,7 +53,7 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelContext") Context otelContext) {
 
-      otelContext = tracer().startSpan("DispatcherHandler.handle", SpanKind.INTERNAL);
+      otelContext = instrumenter().start(Context.current(), null);
       // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
       // right things so we have to store the context in request itself.
       exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, otelContext);
