@@ -52,9 +52,9 @@ dependencies {
   testCompileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
   testCompileOnly("io.projectreactor.netty:reactor-netty-http:1.0.7")
 
-  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.5.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.5.0")
   testImplementation("org.spockframework:spock-spring:1.1-groovy-2.4")
 }
 
@@ -67,6 +67,9 @@ tasks.withType<Test>().configureEach {
   // leaks. Adding Thread.sleep(1000) just before checking for leaks allows it to pass but is not
   // a good approach. Come up with a better one and enable this.
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+
+//  jvmArgs("-Xint")
+//  jvmArgs("-Dio.netty.defaultPromise.maxListenerStackDepth=1")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
