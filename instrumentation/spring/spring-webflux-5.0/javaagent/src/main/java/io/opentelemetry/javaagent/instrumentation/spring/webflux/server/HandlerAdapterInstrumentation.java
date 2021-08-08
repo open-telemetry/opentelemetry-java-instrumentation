@@ -32,7 +32,6 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
-import reactor.core.publisher.Mono;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -115,7 +114,6 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Return(readOnly = false) Mono<Void> mono,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -124,11 +122,13 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      if (mono != null) {
-        mono = AdviceUtils.setPublisherSpan(mono, context);
-        // span finished in SpanFinishingSubscriber
-      } else {
+      if (throwable != null) {
         instrumenter().end(context, null, null, throwable);
+      } else {
+        exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, context);
+        // span finished by wrapped Mono in DispatcherHandlerInstrumentation
+        // the Mono is already wrapped at this point, but doesn't read the CONTEXT_ATTRIBUTE until
+        // the Mono is resolved, which is after this point
       }
     }
   }
