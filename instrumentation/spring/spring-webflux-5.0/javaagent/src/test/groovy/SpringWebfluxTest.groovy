@@ -101,7 +101,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
               "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
@@ -165,7 +164,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
               "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
@@ -248,7 +246,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
               "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
@@ -342,7 +339,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "spring-webflux.request.predicate" "(POST && /echo)"
             "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(EchoHandlerFunction.getName())
             }
@@ -398,7 +394,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
               "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
@@ -452,7 +447,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "spring-webflux.request.predicate" "(GET && /double-greet-redirect)"
             "spring-webflux.handler.type" { String tagVal ->
               return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 || tagVal.contains("Lambda"))
@@ -481,7 +475,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "spring-webflux.request.predicate" "(GET && /double-greet)"
             "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
             }
@@ -533,7 +526,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             attributes {
               if (annotatedMethod == null) {
                 // Functional API
-                "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
                 "spring-webflux.handler.type" { String tagVal ->
                   return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 }

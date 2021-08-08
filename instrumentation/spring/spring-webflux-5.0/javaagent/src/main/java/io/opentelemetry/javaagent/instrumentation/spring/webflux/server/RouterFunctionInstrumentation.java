@@ -70,8 +70,6 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable) {
       if (throwable == null) {
         result = result.doOnSuccessOrError(new RouteOnSuccessOrError(thiz, serverRequest));
-      } else {
-        AdviceUtils.finishSpanIfPresent(serverRequest, throwable);
       }
     }
   }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -31,6 +32,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
+import reactor.core.publisher.Mono;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -64,55 +66,73 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
-      if (handler != null && context != null) {
-        Span span = Span.fromContext(context);
-        String handlerType;
-        String spanName;
+      Context parentContext = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
 
-        if (handler instanceof HandlerMethod) {
-          // Special case for requests mapped with annotations
-          HandlerMethod handlerMethod = (HandlerMethod) handler;
-          spanName = SpanNames.fromMethod(handlerMethod.getMethod());
-          handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
-        } else {
-          spanName = AdviceUtils.spanNameForHandler(handler);
-          handlerType = handler.getClass().getName();
-        }
-
-        span.updateName(spanName);
-        if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
-          span.setAttribute("spring-webflux.handler.type", handlerType);
-        }
-
-        scope = context.makeCurrent();
+      if (parentContext == null) {
+        return;
       }
 
-      if (context != null) {
-        Span serverSpan = ServerSpan.fromContextOrNull(context);
+      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
 
-        PathPattern bestPattern =
-            exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        if (serverSpan != null && bestPattern != null) {
-          serverSpan.updateName(
-              ServletContextPath.prepend(Context.current(), bestPattern.toString()));
-        }
+      PathPattern bestPattern =
+          exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      if (serverSpan != null && bestPattern != null) {
+        serverSpan.updateName(
+            ServletContextPath.prepend(Context.current(), bestPattern.toString()));
       }
+
+      if (handler == null) {
+        return;
+      }
+
+      if (!instrumenter().shouldStart(parentContext, null)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, null);
+
+      Span span = Span.fromContext(context);
+      String handlerType;
+      String spanName;
+
+      if (handler instanceof HandlerMethod) {
+        // Special case for requests mapped with annotations
+        HandlerMethod handlerMethod = (HandlerMethod) handler;
+        spanName = SpanNames.fromMethod(handlerMethod.getMethod());
+        handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
+      } else {
+        spanName = AdviceUtils.spanNameForHandler(handler);
+        handlerType = handler.getClass().getName();
+      }
+
+      span.updateName(spanName);
+      if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
+        span.setAttribute("spring-webflux.handler.type", handlerType);
+      }
+
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) ServerWebExchange exchange,
+        @Advice.Return(readOnly = false) Mono<Void> mono,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (throwable != null) {
-        AdviceUtils.finishSpanIfPresent(exchange, throwable);
+      if (scope == null) {
+        return;
       }
-      if (scope != null) {
-        scope.close();
+      scope.close();
+
+      if (mono != null) {
+        mono = AdviceUtils.setPublisherSpan(mono, context);
         // span finished in SpanFinishingSubscriber
+      } else {
+        instrumenter().end(context, null, null, throwable);
       }
     }
   }
