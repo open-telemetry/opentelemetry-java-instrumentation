@@ -1,20 +1,7 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.ClassHierarchyIterable;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -22,15 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class JaxRsAnnotationsTracer extends BaseTracer {
+public class HandlerData {
 
-  private static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
-
-  public static JaxRsAnnotationsTracer tracer() {
-    return TRACER;
-  }
-
-  private final ClassValue<Map<Method, String>> spanNames =
+  private static final ClassValue<Map<Method, String>> serverSpanNames =
       new ClassValue<Map<Method, String>>() {
         @Override
         protected Map<Method, String> computeValue(Class<?> type) {
@@ -38,37 +19,24 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
         }
       };
 
-  public Context startSpan(Class<?> target, Method method) {
-    String pathBasedSpanName = getPathSpanName(target, method);
-    Context parentContext = Context.current();
-    Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
+  private final Class<?> target;
+  private final Method method;
 
-    // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
-    String spanName;
-    if (serverSpan == null) {
-      spanName = pathBasedSpanName;
-    } else {
-      spanName = SpanNames.fromMethod(target, method);
-      updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
-    }
-
-    SpanBuilder spanBuilder = spanBuilder(parentContext, spanName, SpanKind.INTERNAL);
-    setCodeAttributes(spanBuilder, target, method);
-    Span span = spanBuilder.startSpan();
-    return parentContext.with(span);
+  public HandlerData(Class<?> target, Method method) {
+    this.target = target;
+    this.method = method;
   }
 
-  private static void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
-    spanBuilder.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
-    if (method != null) {
-      spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
-    }
+  String spanName() {
+    return SpanNames.fromMethod(target, method);
   }
 
-  private static void updateServerSpanName(Context context, Span span, String spanName) {
-    if (!spanName.isEmpty()) {
-      span.updateName(ServletContextPath.prepend(context, spanName));
-    }
+  public Class<?> codeClass() {
+    return target;
+  }
+
+  public String methodName() {
+    return method.getName();
   }
 
   /**
@@ -77,8 +45,8 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getPathSpanName(Class<?> target, Method method) {
-    Map<Method, String> classMap = spanNames.get(target);
+  String getServerSpanName() {
+    Map<Method, String> classMap = serverSpanNames.get(target);
     String spanName = classMap.get(method);
     if (spanName == null) {
       String httpMethod = null;
@@ -168,11 +136,12 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     StringBuilder spanNameBuilder = new StringBuilder();
     boolean skipSlash = false;
     if (classPath != null) {
-      if (!classPath.value().startsWith("/")) {
+      String classPathValue = classPath.value();
+      if (!classPathValue.startsWith("/")) {
         spanNameBuilder.append("/");
       }
-      spanNameBuilder.append(classPath.value());
-      skipSlash = classPath.value().endsWith("/");
+      spanNameBuilder.append(classPathValue);
+      skipSlash = classPathValue.endsWith("/") || classPathValue.isEmpty();
     }
 
     if (methodPath != null) {
@@ -188,10 +157,5 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     }
 
     return spanNameBuilder.toString().trim();
-  }
-
-  @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.jaxrs-1.0";
   }
 }
