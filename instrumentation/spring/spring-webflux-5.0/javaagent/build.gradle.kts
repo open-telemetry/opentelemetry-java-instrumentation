@@ -61,6 +61,7 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
+  // TODO(trask): try removing this if/when latest webflux instrumentations changes prove out
   // TODO(anuraaga): There is no actual context leak - it just seems that the server-side does not
   // fully complete processing before the test cases finish, which is when we check for context
   // leaks. Adding Thread.sleep(1000) just before checking for leaks allows it to pass but is not
