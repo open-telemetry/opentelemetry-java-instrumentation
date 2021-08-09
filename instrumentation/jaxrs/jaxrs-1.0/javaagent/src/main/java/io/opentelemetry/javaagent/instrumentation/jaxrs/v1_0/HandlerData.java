@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -30,10 +29,6 @@ public class HandlerData {
   public HandlerData(Class<?> target, Method method) {
     this.target = target;
     this.method = method;
-  }
-
-  String spanName() {
-    return SpanNames.fromMethod(target, method);
   }
 
   public Class<?> codeClass() {

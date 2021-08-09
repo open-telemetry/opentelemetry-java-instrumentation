@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 
 public final class JaxrsSingletons {
 
@@ -23,9 +25,12 @@ public final class JaxrsSingletons {
   static {
     CodeAttributesExtractor<HandlerData, Void> codeAttributesExtractor =
         new JaxrsCodeAttributesExtractor();
+    SpanNameExtractor<HandlerData> spanNameExtractor =
+        CodeSpanNameExtractor.create(codeAttributesExtractor);
+
     INSTRUMENTER =
         Instrumenter.<HandlerData, Void>newBuilder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HandlerData::spanName)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(codeAttributesExtractor)
             .newInstrumenter();
   }
