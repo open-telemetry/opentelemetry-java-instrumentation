@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 public class AdviceUtils {
 
-  public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
+  public static final String ON_SPAN_END = AdviceUtils.class.getName() + ".Context";
 
   public static String spanNameForHandler(Object handler) {
     String className = ClassNames.simpleName(handler.getClass());
@@ -27,6 +27,15 @@ public class AdviceUtils {
     return className + ".handle";
   }
 
+  public static void registerOnSpanEnd(
+      ServerWebExchange exchange, Context context, Object handler) {
+    exchange
+        .getAttributes()
+        .put(
+            AdviceUtils.ON_SPAN_END,
+            (AdviceUtils.OnSpanEnd) t -> instrumenter().end(context, handler, null, t));
+  }
+
   public static <T> Mono<T> end(Mono<T> mono, ServerWebExchange exchange) {
     return mono.doOnError(throwable -> end(exchange, throwable))
         .doOnSuccess(t -> end(exchange, null))
@@ -34,9 +43,13 @@ public class AdviceUtils {
   }
 
   private static void end(ServerWebExchange exchange, @Nullable Throwable throwable) {
-    Context context = (Context) exchange.getAttributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
-    if (context != null) {
-      instrumenter().end(context, null, null, throwable);
+    OnSpanEnd onSpanEnd = (OnSpanEnd) exchange.getAttributes().get(AdviceUtils.ON_SPAN_END);
+    if (onSpanEnd != null) {
+      onSpanEnd.end(throwable);
     }
+  }
+
+  interface OnSpanEnd {
+    void end(Throwable throwable);
   }
 }

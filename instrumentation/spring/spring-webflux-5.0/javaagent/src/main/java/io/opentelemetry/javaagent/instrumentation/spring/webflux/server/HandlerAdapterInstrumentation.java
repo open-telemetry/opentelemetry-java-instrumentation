@@ -21,14 +21,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
@@ -83,37 +80,18 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!instrumenter().shouldStart(parentContext, null)) {
+      if (!instrumenter().shouldStart(parentContext, handler)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, null);
-
-      Span span = Span.fromContext(context);
-      String handlerType;
-      String spanName;
-
-      if (handler instanceof HandlerMethod) {
-        // Special case for requests mapped with annotations
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        spanName = SpanNames.fromMethod(handlerMethod.getMethod());
-        handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
-      } else {
-        spanName = AdviceUtils.spanNameForHandler(handler);
-        handlerType = handler.getClass().getName();
-      }
-
-      span.updateName(spanName);
-      if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
-        span.setAttribute("spring-webflux.handler.type", handlerType);
-      }
-
+      context = instrumenter().start(parentContext, handler);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) ServerWebExchange exchange,
+        @Advice.Argument(1) Object handler,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -123,11 +101,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        instrumenter().end(context, null, null, throwable);
+        instrumenter().end(context, handler, null, throwable);
       } else {
-        exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, context);
+        AdviceUtils.registerOnSpanEnd(exchange, context, handler);
         // span finished by wrapped Mono in DispatcherHandlerInstrumentation
-        // the Mono is already wrapped at this point, but doesn't read the CONTEXT_ATTRIBUTE until
+        // the Mono is already wrapped at this point, but doesn't read the ON_SPAN_END until
         // the Mono is resolved, which is after this point
       }
     }

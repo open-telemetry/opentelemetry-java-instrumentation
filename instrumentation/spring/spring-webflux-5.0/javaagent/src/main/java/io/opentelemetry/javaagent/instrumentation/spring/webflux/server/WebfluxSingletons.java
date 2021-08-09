@@ -7,20 +7,27 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 
 public final class WebfluxSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
-  private static final Instrumenter<Void, Void> INSTRUMENTER;
+  private static final Instrumenter<Object, Void> INSTRUMENTER;
 
   static {
-    INSTRUMENTER =
-        Instrumenter.<Void, Void>newBuilder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, v -> "DispatcherHandler.handle")
-            .newInstrumenter();
+    InstrumenterBuilder<Object, Void> builder =
+        Instrumenter.newBuilder(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new WebfluxSpanNameExtractor());
+
+    if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
+      builder.addAttributesExtractor(new HandlerTypeAttributeExtractor());
+    }
+
+    INSTRUMENTER = builder.newInstrumenter();
   }
 
-  public static Instrumenter<Void, Void> instrumenter() {
+  public static Instrumenter<Object, Void> instrumenter() {
     return INSTRUMENTER;
   }
 
