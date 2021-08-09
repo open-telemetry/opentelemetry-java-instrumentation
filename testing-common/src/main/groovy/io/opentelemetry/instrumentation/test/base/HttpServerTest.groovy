@@ -598,7 +598,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
         if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+          // "localhost" on linux, "127.0.0.1" on windows
+          "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
         }
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
