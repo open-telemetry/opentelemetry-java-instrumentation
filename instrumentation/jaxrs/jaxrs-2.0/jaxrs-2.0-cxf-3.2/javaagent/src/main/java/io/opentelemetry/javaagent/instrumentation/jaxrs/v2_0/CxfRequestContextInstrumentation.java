@@ -98,6 +98,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
+      scope.close();
       instrumenter().end(context, handlerData, null, throwable);
     }
   }

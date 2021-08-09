@@ -67,6 +67,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
       if (scope == null) {
         return;
       }
+      scope.close();
       instrumenter().end(context, handlerData, null, throwable);
     }
   }

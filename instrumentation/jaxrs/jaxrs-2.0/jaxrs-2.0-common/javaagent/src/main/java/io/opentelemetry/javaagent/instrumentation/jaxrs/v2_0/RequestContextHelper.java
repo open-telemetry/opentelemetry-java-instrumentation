@@ -32,11 +32,9 @@ public final class RequestContextHelper {
         ServerSpanNaming.Source.CONTROLLER,
         JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
 
-    // if there's no current span or it's the same as the server (servlet) span we need to start
-    // a JAX-RS one
-    // in other case, DefaultRequestContextInstrumentation must have already run so it's enough
-    // to just update the names
     if (currentSpan != null && currentSpan != serverSpan) {
+      // there's already an active span, and it's not the same as the server (servlet) span,
+      // so we don't want to start a JAX-RS one
       return null;
     }
 
