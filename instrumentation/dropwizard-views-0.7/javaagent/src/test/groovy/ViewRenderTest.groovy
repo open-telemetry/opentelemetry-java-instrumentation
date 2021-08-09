@@ -46,4 +46,17 @@ class ViewRenderTest extends AgentInstrumentationSpecification {
 
     view = new View(template, StandardCharsets.UTF_8) {}
   }
+
+  def "do not create span when there's no parent"() {
+    setup:
+    def outputStream = new ByteArrayOutputStream()
+    def view = new View("/views/ftl/utf8.ftl", StandardCharsets.UTF_8) {}
+
+    when:
+    new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream)
+
+    then:
+    Thread.sleep(500)
+    assert traces.isEmpty()
+  }
 }

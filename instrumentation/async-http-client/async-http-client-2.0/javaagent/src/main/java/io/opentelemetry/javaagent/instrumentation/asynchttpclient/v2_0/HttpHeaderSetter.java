@@ -10,8 +10,6 @@ import org.asynchttpclient.Request;
 
 public class HttpHeaderSetter implements TextMapSetter<Request> {
 
-  public static final HttpHeaderSetter SETTER = new HttpHeaderSetter();
-
   @Override
   public void set(Request carrier, String key, String value) {
     carrier.getHeaders().set(key, value);
