@@ -57,13 +57,12 @@ class JdkHttpAttributesExtractor extends HttpAttributesExtractor<HttpRequest, Ht
   }
 
   @Override
-  protected @Nullable Integer statusCode(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
+  protected Integer statusCode(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
     return httpResponse.statusCode();
   }
 
   @Override
-  protected @Nullable String flavor(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
+  protected String flavor(HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
     if (httpResponse != null && httpResponse.version() == Version.HTTP_2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }

@@ -19,7 +19,7 @@ public class JdkHttpNetAttributesExtractor
   private static final Logger logger = LoggerFactory.getLogger(JdkHttpNetAttributesExtractor.class);
 
   @Override
-  public @Nullable String transport(HttpRequest httpRequest) {
+  public String transport(HttpRequest httpRequest) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Context propagation is initiated in via {@link HttpHeadersInstrumentation}. */
+/** Context propagation is initiated via {@link HttpHeadersInstrumentation}. */
 public class HttpHeadersInjectAdapter implements TextMapSetter<HttpRequest> {
 
   private final ContextPropagators contextPropagators;
