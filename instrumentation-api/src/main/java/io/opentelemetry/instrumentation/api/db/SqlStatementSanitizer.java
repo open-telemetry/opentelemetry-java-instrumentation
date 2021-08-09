@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetric
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)
@@ -21,7 +22,7 @@ public final class SqlStatementSanitizer {
   private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
       Cache.newBuilder().setMaximumSize(1000).build();
 
-  public static SqlStatementInfo sanitize(String statement) {
+  public static SqlStatementInfo sanitize(@Nullable String statement) {
     if (!isStatementSanitizationEnabled() || statement == null) {
       return SqlStatementInfo.create(statement, null, null);
     }
