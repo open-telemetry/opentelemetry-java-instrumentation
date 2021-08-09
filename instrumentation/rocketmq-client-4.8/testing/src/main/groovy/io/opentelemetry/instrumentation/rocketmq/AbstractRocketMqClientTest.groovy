@@ -93,6 +93,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         span(1) {
           name sharedTopic + " process"
           kind CONSUMER
+          childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic

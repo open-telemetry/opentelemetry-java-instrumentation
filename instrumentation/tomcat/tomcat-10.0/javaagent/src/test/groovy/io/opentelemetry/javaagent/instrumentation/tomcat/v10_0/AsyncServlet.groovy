@@ -17,18 +17,17 @@ import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import java.util.concurrent.Phaser
+import java.util.concurrent.CountDownLatch
 
 @WebServlet(asyncSupported = true)
 class AsyncServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) {
     HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
-    def phaser = new Phaser(2)
+    def latch = new CountDownLatch(1)
     def context = req.startAsync()
     context.start {
       try {
-        phaser.arriveAndAwaitAdvance()
         HttpServerTest.controller(endpoint) {
           resp.contentType = "text/plain"
           switch (endpoint) {
@@ -64,10 +63,9 @@ class AsyncServlet extends HttpServlet {
           }
         }
       } finally {
-        phaser.arriveAndDeregister()
+        latch.countDown()
       }
     }
-    phaser.arriveAndAwaitAdvance()
-    phaser.arriveAndAwaitAdvance()
+    latch.await()
   }
 }
