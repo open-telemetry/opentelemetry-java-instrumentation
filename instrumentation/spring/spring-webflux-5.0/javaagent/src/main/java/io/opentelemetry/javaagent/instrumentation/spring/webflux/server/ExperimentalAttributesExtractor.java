@@ -11,14 +11,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.method.HandlerMethod;
 
-public class HandlerTypeAttributeExtractor extends AttributesExtractor<Object, Void> {
+public class ExperimentalAttributesExtractor extends AttributesExtractor<Object, Void> {
 
-  private static final AttributeKey<String> HANDLER_TYPE_ATTRIBUTE_KEY =
+  private static final AttributeKey<String> HANDLER_TYPE =
       AttributeKey.stringKey("spring-webflux.handler.type");
 
   @Override
   protected void onStart(AttributesBuilder attributes, Object handler) {
-    attributes.put(HANDLER_TYPE_ATTRIBUTE_KEY, getHandlerType(handler));
+    attributes.put(HANDLER_TYPE, getHandlerType(handler));
   }
 
   @Override
