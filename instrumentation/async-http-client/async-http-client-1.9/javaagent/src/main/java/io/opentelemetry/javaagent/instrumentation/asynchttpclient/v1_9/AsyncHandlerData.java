@@ -6,18 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import com.google.auto.value.AutoValue;
+import com.ning.http.client.Request;
 import io.opentelemetry.context.Context;
 
 @AutoValue
-public abstract class Contexts {
+public abstract class AsyncHandlerData {
 
-  public static Contexts create(Context parentContext, Context context) {
-    return new AutoValue_Contexts(parentContext, context);
+  public static AsyncHandlerData create(Context parentContext, Context context, Request request) {
+    return new AutoValue_AsyncHandlerData(parentContext, context, request);
   }
 
   public abstract Context getParentContext();
 
   public abstract Context getContext();
 
-  Contexts() {}
+  public abstract Request getRequest();
 }
