@@ -49,6 +49,7 @@ public class AdviceUtils {
     }
   }
 
+  @FunctionalInterface
   interface OnSpanEnd {
     void end(Throwable throwable);
   }
