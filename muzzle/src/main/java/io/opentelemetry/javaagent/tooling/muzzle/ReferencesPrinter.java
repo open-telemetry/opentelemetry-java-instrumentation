@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
 import java.util.ServiceLoader;
 
+@SuppressWarnings("SystemOut")
 public final class ReferencesPrinter {
 
   private static final String INDENT = "  ";
