@@ -1,10 +1,7 @@
-package io.opentelemetry.instrumentation.okhttp.v4_0;
+package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -13,6 +10,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 class TracingCallFactory implements Call.Factory {
   private static final Cache<Request, Context> contextsByRequest = Cache.newBuilder().setWeakKeys().build();

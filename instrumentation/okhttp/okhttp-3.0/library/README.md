@@ -30,33 +30,28 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-okhttp-3.0:OPENTE
 
 ### Usage
 
-The instrumentation library provides an OkHttp `Interceptor` implementation which instruments http
-client calls, including context propagation on the outgoing request, and span attributes based on
-the OpenTelemetry semantic conventions.
-
-This instrumentation is only reliable for non-asynchronous usages of the `Call`. If you need instrumentation
-for `Call.enqueue(Callback)` usages, it is recommended that you use the newer instrumentation which works
-with okhttp3 versions 4+.
+The instrumentation library provides an OkHttp `Call.Factory` implementation that wraps
+an instance of the `OkHttpClient` to provide OpenTelemetry-based spans and context
+propagation.
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTracing;
-import okhttp3.Interceptor;
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
 
 import java.util.concurrent.ExecutorService;
 
 public class OkHttpConfiguration {
 
-  public Interceptor createInterceptor(OpenTelemetry openTelemetry) {
-    return OkHttpTracing.newBuilder(openTelemetry).build().newInterceptor();
+  //Use this Call.Factory implementation for making standard http client calls.
+  public Call.Factory createInterceptor(OpenTelemetry openTelemetry) {
+    return OkHttpTracing.newBuilder(openTelemetry).build().newCallFactory(createClient());
   }
 
-  public OkHttpClient createClient(OpenTelemetry openTelemetry, ExecutorService executorService) {
-    return new OkHttpClient.Builder()
-        .addInterceptor(createInterceptor(openTelemetry))
-        .build();
+  //your configuration of the OkHttpClient goes here:
+  public OkHttpClient createClient() {
+    return new OkHttpClient.Builder().build();
   }
 }
 ```

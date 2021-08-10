@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Headers
@@ -22,17 +21,18 @@ import okhttp3.Response
 import okhttp3.internal.http.HttpMethod
 import spock.lang.Shared
 
+import java.util.concurrent.TimeUnit
+
 abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
-  abstract OkHttpClient.Builder configureClient(OkHttpClient.Builder clientBuilder)
+  abstract Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder)
 
   @Shared
-  def client = configureClient(
+  Call.Factory client = createCallFactory(
     new OkHttpClient.Builder()
       .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
       .protocols(Arrays.asList(Protocol.HTTP_1_1))
       .retryOnConnectionFailure(false))
-    .build()
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -45,7 +45,10 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
   @Override
   int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
-    return client.newCall(request).execute().code()
+    def response = client.newCall(request).execute()
+    response.body().withCloseable {
+      return response.code()
+    }
   }
 
   @Override
@@ -58,7 +61,9 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
       @Override
       void onResponse(Call call, Response response) throws IOException {
-        requestResult.complete(response.code())
+        response.body().withCloseable {
+          requestResult.complete(response.code())
+        }
       }
     })
   }
@@ -84,25 +89,5 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
     }
 
     attributes
-  }
-
-  def "reused builder has one interceptor"() {
-    when:
-    def builder = configureClient(new OkHttpClient.Builder()
-      .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-      .retryOnConnectionFailure(false))
-    builder.build()
-    def newClient = builder.build()
-
-    then:
-    newClient.interceptors().size() == 1
-  }
-
-  def "builder created from client has one interceptor"() {
-    when:
-    def newClient = client.newBuilder().build()
-
-    then:
-    newClient.interceptors().size() == 1
   }
 }
