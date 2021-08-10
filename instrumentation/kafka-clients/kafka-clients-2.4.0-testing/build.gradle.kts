@@ -5,7 +5,7 @@ plugins {
 dependencies {
   library("org.apache.kafka:kafka-clients:2.4.0")
 
-  testInstrumentation(project(":instrumentation:kafka-clients-0.11:javaagent"))
+  testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
 
   testLibrary("org.springframework.kafka:spring-kafka:2.4.0.RELEASE")
   testLibrary("org.springframework.kafka:spring-kafka-test:2.4.0.RELEASE")

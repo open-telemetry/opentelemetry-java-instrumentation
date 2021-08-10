@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
+
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
   testLibrary("org.springframework.kafka:spring-kafka:1.3.3.RELEASE")
