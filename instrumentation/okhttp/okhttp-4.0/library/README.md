@@ -1,4 +1,4 @@
-# Manual Instrumentation for OkHttp3 version 3.0.0+
+# Manual Instrumentation for OkHttp3 version 4.0.0+
 
 Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/okhttp/).
 
@@ -16,7 +16,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-okhttp-3.0</artifactId>
+    <artifactId>opentelemetry-okhttp-4.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -25,38 +25,35 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-okhttp-3.0:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-okhttp-4.0:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage
 
-The instrumentation library provides an OkHttp `Interceptor` implementation which instruments http
+The instrumentation library provides an OkHttp `Call.Factory` implementation which instruments http
 client calls, including context propagation on the outgoing request, and span attributes based on
 the OpenTelemetry semantic conventions.
-
-This instrumentation is only reliable for non-asynchronous usages of the `Call`. If you need instrumentation
-for `Call.enqueue(Callback)` usages, it is recommended that you use the newer instrumentation which works
-with okhttp3 versions 4+.
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTracing;
-import okhttp3.Interceptor;
+import io.opentelemetry.instrumentation.okhttp.v4_0.OkHttpTracing;
 import okhttp3.OkHttpClient;
+import okhttp3.Call;
 
 import java.util.concurrent.ExecutorService;
 
 public class OkHttpConfiguration {
 
-  public Interceptor createInterceptor(OpenTelemetry openTelemetry) {
-    return OkHttpTracing.newBuilder(openTelemetry).build().newInterceptor();
+  public Call.Factory createCallFactory(OkHttpClient okHttpClient) {
+    return OkHttpTracing.newBuilder(openTelemetry)
+        .build()
+        .newCallFactory(okHttpClient);
   }
 
   public OkHttpClient createClient(OpenTelemetry openTelemetry, ExecutorService executorService) {
-    return new OkHttpClient.Builder()
-        .addInterceptor(createInterceptor(openTelemetry))
-        .build();
+    //configure your OkHttpClient here
+    return new OkHttpClient.Builder().build();
   }
 }
 ```
