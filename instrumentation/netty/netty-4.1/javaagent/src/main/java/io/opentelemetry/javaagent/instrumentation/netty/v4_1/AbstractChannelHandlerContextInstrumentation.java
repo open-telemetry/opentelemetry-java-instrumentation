@@ -44,16 +44,14 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
     public static void onEnter(
         @Advice.This ChannelHandlerContext channelContext,
         @Advice.Argument(0) Throwable throwable) {
-      if (throwable != null) {
-        if (channelContext.channel().hasAttr(AttributeKeys.CLIENT_CONTEXT)) {
-          Attribute<Context> clientContextAttr =
-              channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-          NettyHttpClientTracer.tracer().endExceptionally(clientContextAttr.get(), throwable);
-        } else if (channelContext.channel().hasAttr(AttributeKeys.SERVER_SPAN)) {
-          Attribute<Context> clientContextAttr =
-              channelContext.channel().attr(AttributeKeys.SERVER_SPAN);
-          NettyHttpClientTracer.tracer().onException(clientContextAttr.get(), throwable);
-        }
+      if (channelContext.channel().hasAttr(AttributeKeys.CLIENT_CONTEXT)) {
+        Attribute<Context> clientContextAttr =
+            channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+        NettyHttpClientTracer.tracer().endExceptionally(clientContextAttr.get(), throwable);
+      } else if (channelContext.channel().hasAttr(AttributeKeys.SERVER_CONTEXT)) {
+        Attribute<Context> clientContextAttr =
+            channelContext.channel().attr(AttributeKeys.SERVER_CONTEXT);
+        NettyHttpClientTracer.tracer().onException(clientContextAttr.get(), throwable);
       }
     }
   }
