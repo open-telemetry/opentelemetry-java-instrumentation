@@ -27,8 +27,7 @@ final class TracingInterceptor implements Interceptor {
   @Override
   public Response intercept(Chain chain) throws IOException {
     Request request = chain.request();
-    //we tag the request with the context when the call is being built in the TracingCallFactory.
-    Context parentContext = request.tag(Context.class);
+    Context parentContext = TracingCallFactory.getCallingContextForRequest(request);
     if (parentContext == null) {
       parentContext = Context.current();
     }

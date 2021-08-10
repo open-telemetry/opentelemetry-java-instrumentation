@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-  library("com.squareup.okhttp3:okhttp:4.0.0")
+  library("com.squareup.okhttp3:okhttp:3.0.0")
 }

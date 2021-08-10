@@ -60,6 +60,7 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   }
 
   @Override
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   protected @Nullable String flavor(Request request, @Nullable Response response) {
     if (response == null) {
       return null;

@@ -3,25 +3,33 @@ package io.opentelemetry.instrumentation.okhttp.v4_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okio.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 class TracingCallFactory implements Call.Factory {
+  private static final Cache<Request, Context> contextsByRequest = Cache.newBuilder().setWeakKeys().build();
   private final OkHttpClient okHttpClient;
 
   TracingCallFactory(OkHttpClient okHttpClient) {this.okHttpClient = okHttpClient;}
 
+  @Nullable
+  static Context getCallingContextForRequest(Request request) {
+    return contextsByRequest.get(request);
+  }
+
   @Override
   public Call newCall(Request request) {
     Context callingContext = Context.current();
-    Request taggedRequest = request.newBuilder()
-        .tag(Context.class, callingContext)
-        .build();
-    return new TracingCall(okHttpClient.newCall(taggedRequest), callingContext);
+    contextsByRequest.put(request, callingContext);
+    return new TracingCall(okHttpClient.newCall(request), callingContext);
   }
 
   static class TracingCall implements Call {
@@ -39,9 +47,13 @@ class TracingCallFactory implements Call.Factory {
     }
 
     @Override
-
-    public Call clone() {
-      return new TracingCall(delegate.clone(), Context.current());
+    public Call clone() throws CloneNotSupportedException {
+      try {
+        Method clone = delegate.getClass().getDeclaredMethod("clone");
+        return new TracingCall((Call) clone.invoke(delegate), Context.current());
+      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        return (Call) super.clone();
+      }
     }
 
     @Override
@@ -71,9 +83,14 @@ class TracingCallFactory implements Call.Factory {
       return delegate.request();
     }
 
-    @Override
     public Timeout timeout() {
-      return delegate.timeout();
+      try {
+        Method timeout = delegate.getClass().getMethod("timeout");
+        return (Timeout) timeout.invoke(delegate);
+      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        //do nothing...we're before 3.12, or something else has gone wrong that we can't do anything about.
+        return Timeout.NONE;
+      }
     }
 
     private static class TracingCallback implements Callback {
