@@ -21,6 +21,7 @@ import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -30,6 +31,9 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 public class OverheadTests {
 
@@ -76,6 +80,12 @@ public class OverheadTests {
     petclinic.start();
     writeStartupTimeFile(agent, start);
 
+    if(config.getWarmupSeconds() > 0){
+      doWarmupPhase(config);
+    }
+
+    startRecording(agent);
+
     GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
     k6.start();
 
@@ -86,6 +96,38 @@ public class OverheadTests {
       TimeUnit.MILLISECONDS.sleep(500);
     }
     postgres.stop();
+  }
+
+  private void startRecording(Agent agent) {
+    Path outFile = namingConventions.container.jfrFile(agent);
+    String[] cmd = new String[]{
+        "java", "/app/src/test/java/io/opentelemetry/util/JMXRemoteRecorder.java",
+        "petclinic", String.valueOf(PetClinicRestContainer.PETCLINIC_JMX_PORT),
+        "petclinic", "profile", outFile.toString()
+    };
+    GenericContainer<?> container = new GenericContainer<>(
+        DockerImageName.parse("adoptopenjdk:11-jdk"))
+        .withNetwork(NETWORK)
+        .withFileSystemBind(".", "/app")
+        .withCommand(cmd)
+        .withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofSeconds(30)));
+    container.start();
+  }
+
+  private void doWarmupPhase(TestConfig testConfig) {
+    long start = System.currentTimeMillis();
+    System.out.println("Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
+    while(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start) < testConfig.getWarmupSeconds()){
+      GenericContainer<?> k6 = new GenericContainer<>(
+          DockerImageName.parse("loadimpact/k6"))
+          .withNetwork(NETWORK)
+          .withCopyFileToContainer(
+              MountableFile.forHostPath("./k6"), "/app")
+          .withCommand("run", "-u", "5", "-i", "25", "/app/basic.js")
+          .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+      k6.start();
+    }
+    System.out.println("Warmup complete.");
   }
 
   private void writeStartupTimeFile(Agent agent, long start) throws IOException {

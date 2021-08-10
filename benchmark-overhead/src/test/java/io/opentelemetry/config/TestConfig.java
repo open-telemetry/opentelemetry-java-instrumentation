@@ -17,7 +17,7 @@ public class TestConfig {
 
   private final static int DEFAULT_MAX_REQUEST_RATE = 0;  // none
   private final static int DEFAULT_CONCURRENT_CONNECTIONS = 5;
-  private final static int DEFAULT_TOTAL_ITERATIONS = 500;
+  private final static int DEFAULT_TOTAL_ITERATIONS = 5000;
 
   private final String name;
   private final String description;
@@ -25,6 +25,7 @@ public class TestConfig {
   private final int maxRequestRate;
   private final int concurrentConnections;
   private final int totalIterations;
+  private final int warmupSeconds;
 
   public TestConfig(Builder builder) {
     this.name = builder.name;
@@ -33,6 +34,7 @@ public class TestConfig {
     this.maxRequestRate = builder.maxRequestRate;
     this.concurrentConnections = builder.concurrentConnections;
     this.totalIterations = builder.totalIterations;
+    this.warmupSeconds = builder.warmupSeconds;
   }
 
   public String getName() {
@@ -59,7 +61,11 @@ public class TestConfig {
     return totalIterations;
   }
 
-  static Builder builder() {
+  public int getWarmupSeconds() {
+    return warmupSeconds;
+  }
+
+  public static Builder builder() {
     return new Builder();
   }
 
@@ -70,6 +76,7 @@ public class TestConfig {
     private int maxRequestRate = DEFAULT_MAX_REQUEST_RATE;
     private int concurrentConnections = DEFAULT_CONCURRENT_CONNECTIONS;
     private int totalIterations = DEFAULT_TOTAL_ITERATIONS;
+    public int warmupSeconds = 0;
 
     Builder name(String name) {
       this.name = name;
@@ -98,6 +105,11 @@ public class TestConfig {
 
     Builder totalIterations(int totalIterations) {
       this.totalIterations = totalIterations;
+      return this;
+    }
+
+    Builder warmupSeconds(int warmupSeconds){
+      this.warmupSeconds = warmupSeconds;
       return this;
     }
 

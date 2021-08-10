@@ -17,18 +17,21 @@ public enum Configs {
       .name("release")
       .description("compares the latest stable release to no agent")
       .withAgents(Agent.NONE, Agent.LATEST_RELEASE)
+      .warmupSeconds(30)
       .build()
   ),
   SNAPSHOT(TestConfig.builder()
       .name("snapshot")
       .description("compares the latest snapshot to no agent")
       .withAgents(Agent.NONE, Agent.LATEST_SNAPSHOT)
+      .warmupSeconds(30)
       .build()
   ),
   SNAPSHOT_REGRESSION(TestConfig.builder()
       .name("snapshot-regression")
       .description("compares the latest snapshot to the latest stable release")
       .withAgents(Agent.LATEST_RELEASE, Agent.LATEST_SNAPSHOT)
+      .warmupSeconds(30)
       .build()
   )
   ;

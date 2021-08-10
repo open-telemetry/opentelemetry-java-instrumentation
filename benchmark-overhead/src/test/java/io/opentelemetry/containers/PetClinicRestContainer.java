@@ -27,6 +27,7 @@ public class PetClinicRestContainer {
 
   private static final Logger logger = LoggerFactory.getLogger(PetClinicRestContainer.class);
   private static final int PETCLINIC_PORT = 9966;
+  public static final int PETCLINIC_JMX_PORT = 9000;
   private final AgentResolver agentResolver = new AgentResolver();
 
   private final Network network;
@@ -50,7 +51,7 @@ public class PetClinicRestContainer {
         .withNetwork(network)
         .withNetworkAliases("petclinic")
         .withLogConsumer(new Slf4jLogConsumer(logger))
-        .withExposedPorts(PETCLINIC_PORT)
+        .withExposedPorts(PETCLINIC_PORT, PETCLINIC_JMX_PORT)
         .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
         .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
@@ -71,11 +72,14 @@ public class PetClinicRestContainer {
 
   @NotNull
   private String[] buildCommandline(Optional<Path> agentJar) {
-    Path jfrFile = namingConventions.container.jfrFile(this.agent);
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
-        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename="
-            + jfrFile,
+        "-Dcom.sun.management.jmxremote.port=" + PETCLINIC_JMX_PORT,
+        "-Dcom.sun.management.jmxremote.rmi.port=" + PETCLINIC_JMX_PORT,
+        "-Dcom.sun.management.jmxremote.local.only=false",
+        "-Dcom.sun.management.jmxremote.authenticate=false",
+        "-Dcom.sun.management.jmxremote.ssl=false",
+        "-Djava.rmi.server.hostname=petclinic",
         "-Dotel.traces.exporter=otlp",
         "-Dotel.imr.export.interval=5000",
         "-Dotel.exporter.otlp.insecure=true",
