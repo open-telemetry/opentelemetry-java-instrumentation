@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.tracer.ClassNames;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A helper {@link SpanNameExtractor} implementation for instrumentations that target specific Java
@@ -37,7 +38,7 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     return className + "." + methodName;
   }
 
-  private static String defaultString(String s) {
+  private static String defaultString(@Nullable String s) {
     return s == null ? "<unknown>" : s;
   }
 }
