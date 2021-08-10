@@ -46,9 +46,9 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Return(readOnly = false) Mono<Void> mono) {
       if (mono != null) {
-        // note: it seems like this code should go in HandleAdvice @OnMethodExit
-        // but for some reason "GET to bad endpoint annotation API fail Mono" test fails
-        // with that placement
+        // note: it seems like this code should go in @OnMethodExit of
+        // HandlerAdapterInstrumentation.HandleAdvice instead, but for some reason "GET to bad
+        // endpoint annotation API fail Mono" test fails with that placement
         mono = AdviceUtils.end(mono, exchange);
       }
     }
