@@ -22,4 +22,13 @@ public class NamingConventionTest {
     assertEquals("otel.instrumentation.common.db.statement.sanitizer.enabled", result2);
   }
 
+  @Test
+  void hyphensAndUnderscoresDoNotNormalizeTheSame() {
+    String result1 = NamingConvention.DOT.normalize("otel.something_else_entirely.foobar");
+    assertEquals("otel.something_else_entirely.foobar", result1);
+
+    String result2 = NamingConvention.DOT.normalize("otel.something-else-entirely.foobar");
+    assertEquals("otel.something.else.entirely.foobar", result2);
+  }
+
 }
