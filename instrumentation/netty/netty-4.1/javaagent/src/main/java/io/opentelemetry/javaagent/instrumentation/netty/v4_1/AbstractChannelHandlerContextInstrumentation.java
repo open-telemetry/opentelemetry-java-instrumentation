@@ -49,9 +49,9 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
             channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
         NettyHttpClientTracer.tracer().endExceptionally(clientContextAttr.get(), throwable);
       } else if (channelContext.channel().hasAttr(AttributeKeys.SERVER_CONTEXT)) {
-        Attribute<Context> clientContextAttr =
+        Attribute<Context> serverContextAttr =
             channelContext.channel().attr(AttributeKeys.SERVER_CONTEXT);
-        NettyHttpClientTracer.tracer().onException(clientContextAttr.get(), throwable);
+        NettyHttpClientTracer.tracer().onException(serverContextAttr.get(), throwable);
       }
     }
   }
