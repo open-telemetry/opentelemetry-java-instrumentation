@@ -20,8 +20,6 @@ public class AttributeKeys {
         }
       };
 
-  public static final AttributeKey<Context> CONNECT_CONTEXT =
-      attributeKey(AttributeKeys.class.getName() + ".connect-context");
   public static final AttributeKey<Context> WRITE_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".write-context");
 
