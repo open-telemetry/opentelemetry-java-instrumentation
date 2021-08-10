@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxRsAnnotationsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,16 +17,18 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import javax.ws.rs.Path;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
+public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -55,7 +57,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
                             "javax.ws.rs.OPTIONS",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
-        JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -66,13 +68,27 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       callDepth = CallDepth.forClass(Path.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
-      context = tracer().startSpan(target.getClass(), method);
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      handlerData = new HandlerData(target.getClass(), method);
+
+      ServerSpanNaming.updateServerSpanName(
+          parentContext,
+          ServerSpanNaming.Source.CONTROLLER,
+          JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
+
+      if (!instrumenter().shouldStart(parentContext, handlerData)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, handlerData);
       scope = context.makeCurrent();
     }
 
@@ -80,18 +96,18 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
+      if (scope == null) {
+        return;
       }
+      scope.close();
+      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

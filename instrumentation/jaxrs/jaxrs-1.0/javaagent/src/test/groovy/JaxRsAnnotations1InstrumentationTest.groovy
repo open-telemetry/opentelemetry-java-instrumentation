@@ -20,30 +20,6 @@ import spock.lang.Unroll
 
 class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecification {
 
-  def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
-    setup:
-    def jax = new Jax() {
-      @POST
-      @Path("/a")
-      void call() {
-      }
-    }
-    jax.call()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "/a"
-          attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" jax.getClass().getName()
-            "${SemanticAttributes.CODE_FUNCTION.key}" "call"
-          }
-        }
-      }
-    }
-  }
-
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:

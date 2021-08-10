@@ -16,8 +16,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JaxRsInstrumentationModule extends InstrumentationModule {
-  public JaxRsInstrumentationModule() {
+public class JaxrsInstrumentationModule extends InstrumentationModule {
+  public JaxrsInstrumentationModule() {
     super("jaxrs", "jaxrs-1.0");
   }
 
@@ -29,6 +29,6 @@ public class JaxRsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new JaxRsAnnotationsInstrumentation());
+    return singletonList(new JaxrsAnnotationsInstrumentation());
   }
 }
