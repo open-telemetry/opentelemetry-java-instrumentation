@@ -84,8 +84,8 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", testName, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), testName)
+        assertCouchbaseCall(it, 2, "Bucket.get", span(0), testName)
       }
     }
 
@@ -113,8 +113,8 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", testName, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", testName, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), testName)
+        assertCouchbaseCall(it, 2, "Bucket.remove", span(0), testName)
       }
     }
     clearExportedData()
@@ -126,7 +126,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     result == null
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.get", testName)
+        assertCouchbaseCall(it, 0, "Bucket.get", null, testName)
       }
     }
 
