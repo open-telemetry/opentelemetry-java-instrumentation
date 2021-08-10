@@ -15,8 +15,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JaxRsInstrumentationModule extends InstrumentationModule {
-  public JaxRsInstrumentationModule() {
+public class JaxrsInstrumentationModule extends InstrumentationModule {
+  public JaxrsInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0");
   }
 
@@ -31,7 +31,7 @@ public class JaxRsInstrumentationModule extends InstrumentationModule {
     return asList(
         new ContainerRequestFilterInstrumentation(),
         new DefaultRequestContextInstrumentation(),
-        new JaxRsAnnotationsInstrumentation(),
-        new JaxRsAsyncResponseInstrumentation());
+        new JaxrsAnnotationsInstrumentation(),
+        new JaxrsAsyncResponseInstrumentation());
   }
 }

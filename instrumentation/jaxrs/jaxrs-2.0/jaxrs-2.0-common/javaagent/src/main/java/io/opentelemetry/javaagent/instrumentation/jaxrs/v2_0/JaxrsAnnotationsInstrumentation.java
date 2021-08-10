@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,11 +17,13 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
@@ -31,7 +33,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
+public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.ws.rs.Path");
@@ -60,7 +62,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
                             "javax.ws.rs.PATCH",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
-        JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -72,6 +74,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
@@ -80,11 +83,11 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ContextStore<AsyncResponse, Context> contextStore = null;
+      ContextStore<AsyncResponse, AsyncResponseData> contextStore = null;
       for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
           asyncResponse = (AsyncResponse) arg;
-          contextStore = InstrumentationContext.get(AsyncResponse.class, Context.class);
+          contextStore = InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
           if (contextStore.get(asyncResponse) != null) {
             /*
              * We are probably in a recursive call and don't want to start a new span because it
@@ -98,13 +101,24 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         }
       }
 
-      context = tracer().startSpan(target.getClass(), method);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      handlerData = new HandlerData(target.getClass(), method);
 
-      if (contextStore != null && asyncResponse != null) {
-        contextStore.put(asyncResponse, context);
+      ServerSpanNaming.updateServerSpanName(
+          parentContext,
+          ServerSpanNaming.Source.CONTROLLER,
+          JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
+
+      if (!instrumenter().shouldStart(parentContext, handlerData)) {
+        return;
       }
 
+      context = instrumenter().start(parentContext, handlerData);
       scope = context.makeCurrent();
+
+      if (contextStore != null && asyncResponse != null) {
+        contextStore.put(asyncResponse, AsyncResponseData.create(context, handlerData));
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -112,6 +126,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
@@ -119,13 +134,14 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (context == null || scope == null) {
+      if (scope == null) {
         return;
       }
 
+      scope.close();
+
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
         return;
       }
 
@@ -134,18 +150,18 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
       if (asyncResponse != null && !asyncResponse.isSuspended()) {
         // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        InstrumentationContext.get(AsyncResponse.class, Context.class).put(asyncResponse, null);
+        InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class)
+            .put(asyncResponse, null);
       }
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
-        asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(context));
+        asyncReturnValue =
+            asyncReturnValue.handle(new CompletionStageFinishCallback<>(context, handlerData));
       }
       if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
-        tracer().end(context);
+        instrumenter().end(context, handlerData, null, null);
       }
-      // else span finished by AsyncResponseAdvice
-
-      scope.close();
+      // else span finished by AsyncResponse*Advice
     }
   }
 }
