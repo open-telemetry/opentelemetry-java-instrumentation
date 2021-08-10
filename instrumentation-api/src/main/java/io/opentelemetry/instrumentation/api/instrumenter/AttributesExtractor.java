@@ -42,7 +42,8 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
    * value} is not {@code null}.
    */
-  protected static <T> void set(AttributesBuilder attributes, AttributeKey<T> key, T value) {
+  protected static <T> void set(
+      AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
     if (value != null) {
       attributes.put(key, value);
     }

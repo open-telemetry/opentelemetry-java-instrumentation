@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
+public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,13 +39,13 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Object.class)).and(isPublic()),
-        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
+        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
     transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Throwable.class)).and(isPublic()),
-        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseThrowableAdvice");
+        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseThrowableAdvice");
     transformer.applyAdviceToMethod(
         named("cancel"),
-        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
+        JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -54,13 +54,13 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, Context> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Context.class);
+      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
 
-      Context context = contextStore.get(asyncResponse);
-      if (context != null) {
+      AsyncResponseData data = contextStore.get(asyncResponse);
+      if (data != null) {
         contextStore.put(asyncResponse, null);
-        tracer().end(context);
+        instrumenter().end(data.getContext(), data.getHandlerData(), null, null);
       }
     }
   }
@@ -72,13 +72,13 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.This AsyncResponse asyncResponse, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncResponse, Context> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Context.class);
+      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
 
-      Context context = contextStore.get(asyncResponse);
-      if (context != null) {
+      AsyncResponseData data = contextStore.get(asyncResponse);
+      if (data != null) {
         contextStore.put(asyncResponse, null);
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(data.getContext(), data.getHandlerData(), null, throwable);
       }
     }
   }
@@ -89,16 +89,17 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, Context> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Context.class);
+      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
 
-      Context context = contextStore.get(asyncResponse);
-      if (context != null) {
+      AsyncResponseData data = contextStore.get(asyncResponse);
+      if (data != null) {
         contextStore.put(asyncResponse, null);
+        Context context = data.getContext();
         if (JaxrsConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
           Java8BytecodeBridge.spanFromContext(context).setAttribute("jaxrs.canceled", true);
         }
-        tracer().end(context);
+        instrumenter().end(context, data.getHandlerData(), null, null);
       }
     }
   }

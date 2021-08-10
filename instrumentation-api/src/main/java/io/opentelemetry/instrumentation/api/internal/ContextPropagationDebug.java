@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,7 @@ public final class ContextPropagationDebug {
     }
   }
 
+  @Nullable
   private static List<Propagation> getPropagations(Context context) {
     return context.get(THREAD_PROPAGATION_LOCATIONS);
   }
