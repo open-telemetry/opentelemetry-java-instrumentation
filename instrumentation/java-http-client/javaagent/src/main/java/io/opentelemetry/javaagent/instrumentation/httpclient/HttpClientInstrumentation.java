@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -71,17 +71,18 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      context = instrumenter().start(parentContext, httpRequest);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return HttpResponse<?> result,
+        @Advice.Argument(0) HttpRequest httpRequest,
+        @Advice.Return HttpResponse<?> httpResponse,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -90,11 +91,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, result);
-      } else {
-        tracer().endExceptionally(context, result, throwable);
-      }
+      instrumenter().end(context, httpRequest, httpResponse, throwable);
     }
   }
 
@@ -112,16 +109,17 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       if (bodyHandler != null) {
         bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
       }
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      context = instrumenter().start(parentContext, httpRequest);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -133,9 +131,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(context, null, throwable);
+        instrumenter().end(context, httpRequest, null, throwable);
       } else {
-        future = future.whenComplete(new ResponseConsumer(context));
+        future = future.whenComplete(new ResponseConsumer(context, httpRequest));
         future = CompletableFutureWrapper.wrap(future, parentContext);
       }
     }
