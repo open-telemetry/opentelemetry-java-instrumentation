@@ -26,7 +26,7 @@ public final class ReferencesPrinter {
    */
   public static void printMuzzleReferences() {
     for (InstrumentationModule instrumentationModule :
-        ServiceLoader.load(InstrumentationModule.class, ReferencesPrinter.class.getClassLoader())) {
+        ServiceLoader.load(InstrumentationModule.class)) {
       try {
         System.out.println(instrumentationModule.getClass().getName());
         for (ClassRef ref : instrumentationModule.getMuzzleReferences().values()) {
