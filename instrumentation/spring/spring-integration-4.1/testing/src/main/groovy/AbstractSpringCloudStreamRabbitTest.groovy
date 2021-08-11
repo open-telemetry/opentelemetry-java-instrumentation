@@ -25,23 +25,18 @@ abstract class AbstractSpringCloudStreamRabbitTest extends InstrumentationSpecif
 
     then:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           name "producer"
         }
         span(1) {
-          name "testProducer.output process"
+          name "testConsumer.input process"
           childOf span(0)
           kind CONSUMER
         }
         span(2) {
-          name "testConsumer.input process"
-          childOf span(1)
-          kind CONSUMER
-        }
-        span(3) {
           name "consumer"
-          childOf span(2)
+          childOf span(1)
         }
       }
     }
