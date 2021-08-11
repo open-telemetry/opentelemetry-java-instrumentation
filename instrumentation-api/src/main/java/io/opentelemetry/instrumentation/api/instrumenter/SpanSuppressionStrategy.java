@@ -10,21 +10,21 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import java.util.Collections;
 import java.util.List;
 
 abstract class SpanSuppressionStrategy {
   private static final SpanSuppressionStrategy SERVER_STRATEGY =
-      new SuppressIfSameSpanKey(Collections.singletonList(SpanKey.SERVER));
+      new SuppressIfSameSpanKey(singletonList(SpanKey.SERVER));
   private static final SpanSuppressionStrategy CONSUMER_STRATEGY =
-      new NeverSuppressAndStore(Collections.singletonList(SpanKey.CONSUMER));
+      new NeverSuppressAndStore(singletonList(SpanKey.CONSUMER));
+  private static final SpanSuppressionStrategy ALL_CLIENTS_STRATEGY =
+      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_CLIENTS));
+  private static final SpanSuppressionStrategy ALL_PRODUCERS_STRATEGY =
+      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_PRODUCERS));
 
-  public static final CompositeStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY =
+  public static final SpanSuppressionStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY =
       new CompositeStrategy(
-          new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_CLIENTS)),
-          new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_PRODUCERS)),
-          SERVER_STRATEGY,
-          CONSUMER_STRATEGY);
+          ALL_CLIENTS_STRATEGY, ALL_PRODUCERS_STRATEGY, SERVER_STRATEGY, CONSUMER_STRATEGY);
 
   private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY =
       new CompositeStrategy(
