@@ -15,19 +15,20 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class CouchbaseRequest {
 
-  private static final ClassValue<Map<Method, String>> methodOperationNames =
-      new ClassValue<Map<Method, String>>() {
+  private static final ClassValue<Map<String, String>> methodOperationNames =
+      new ClassValue<Map<String, String>>() {
         @Override
-        protected Map<Method, String> computeValue(Class<?> type) {
+        protected Map<String, String> computeValue(Class<?> type) {
           return new ConcurrentHashMap<>();
         }
       };
 
-  public static CouchbaseRequest create(@Nullable String bucket, Method method) {
+  public static CouchbaseRequest create(
+      @Nullable String bucket, Class<?> declaringClass, String methodName) {
     String operation =
         methodOperationNames
-            .get(method.getDeclaringClass())
-            .computeIfAbsent(method, CouchbaseRequest::computeOperation);
+            .get(declaringClass)
+            .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
     return new AutoValue_CouchbaseRequest(bucket, null, operation, true);
   }
 
@@ -38,11 +39,10 @@ public abstract class CouchbaseRequest {
         bucket, statement.getFullStatement(), statement.getOperation(), false);
   }
 
-  private static String computeOperation(Method method) {
-    Class<?> declaringClass = method.getDeclaringClass();
+  private static String computeOperation(Class<?> declaringClass, String methodName) {
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-    return className + "." + method.getName();
+    return className + "." + methodName;
   }
 
   @Nullable

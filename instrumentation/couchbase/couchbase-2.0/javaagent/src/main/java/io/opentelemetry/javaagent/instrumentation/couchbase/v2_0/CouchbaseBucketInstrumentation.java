@@ -54,14 +54,15 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CouchbaseRequest request = CouchbaseRequest.create(bucket, method);
+      CouchbaseRequest request = CouchbaseRequest.create(bucket, declaringClass, methodName);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
@@ -77,7 +78,8 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void subscribeResult(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Argument(value = 0, optional = true) Object query,
         @Advice.Return(readOnly = false) Observable<?> result,
@@ -88,7 +90,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
       CouchbaseRequest request =
           query == null
-              ? CouchbaseRequest.create(bucket, method)
+              ? CouchbaseRequest.create(bucket, declaringClass, methodName)
               : CouchbaseRequest.create(bucket, query);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
