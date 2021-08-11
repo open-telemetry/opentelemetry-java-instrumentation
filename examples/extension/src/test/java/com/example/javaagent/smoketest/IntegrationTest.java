@@ -112,7 +112,7 @@ abstract class IntegrationTest {
       //Asks instrumentation agent to include extensions from given location into its runtime
       result = result.withCopyFileToContainer(
           MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
-          .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", extensionLocation);
+          .withEnv("OTEL_JAVAAGENT_EXTENSIONS", extensionLocation);
     }
     return result;
   }

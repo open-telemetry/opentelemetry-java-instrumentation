@@ -51,6 +51,12 @@ public class ExtensionClassLoader extends URLClassLoader {
     extensions.addAll(
         parseLocation(
             System.getProperty(
+                "otel.javaagent.extensions",
+                System.getenv("OTEL_JAVAAGENT_EXTENSIONS")),
+            javaagentFile));
+    extensions.addAll(
+        parseLocation(
+            System.getProperty(
                 "otel.javaagent.experimental.extensions",
                 System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")),
             javaagentFile));
