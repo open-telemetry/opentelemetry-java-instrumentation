@@ -335,11 +335,11 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   yieldAll(allVersionArtifacts)
 }
 
-fun withContextClassLoader(classLoader: ClassLoader, func: () -> Unit) {
+fun withContextClassLoader(classLoader: ClassLoader, action: () -> Unit) {
   val currentClassLoader = Thread.currentThread().contextClassLoader
   Thread.currentThread().contextClassLoader = classLoader
   try {
-    func()
+    action()
   } finally {
     Thread.currentThread().contextClassLoader = currentClassLoader
   }
