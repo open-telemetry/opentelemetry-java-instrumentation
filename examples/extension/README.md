@@ -17,12 +17,12 @@ To add the extension to the instrumentation agent:
 
      ```bash
      java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-          -Dotel.javaagent.experimental.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
+          -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
           -jar myapp.jar
      ```
 ## Embed extensions in the OpenTelemetry Agent
 
-To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.experimental.extensions` command line option.
+To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.extensions` command line option.
 
 For more information, see the `extendedAgent` task in [build.gradle](build.gradle).
 ## Extensions examples
