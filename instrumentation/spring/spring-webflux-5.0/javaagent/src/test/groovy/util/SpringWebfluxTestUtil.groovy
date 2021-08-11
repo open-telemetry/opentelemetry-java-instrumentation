@@ -11,6 +11,10 @@ import java.util.concurrent.TimeUnit
 
 class SpringWebfluxTestUtil {
 
+  // Spring webflux tests complete before all request processing threads have completed. This creates
+  // false positive notifications for leaked scopes when strict context checks are enabled. Here we
+  // wait for the request processing code to exit and close its scopes to avoid failing strict context
+  // check.
   static waitForRequestsToComplete() {
     await()
       .atMost(15, TimeUnit.SECONDS)
