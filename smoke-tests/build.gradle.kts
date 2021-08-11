@@ -47,11 +47,9 @@ tasks {
     //  this needs to be long enough so that smoke tests that are just running slow don"t time out
     timeout.set(Duration.ofMinutes(45))
 
-    println(gradle.startParameter.taskNames)
     // We enable/disable smoke tests based on the java version requests
     // In addition to that we disable them on normal test task to only run when explicitly requested.
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
-    println("Smoke tests enabled: $enabled")
 
     val suites = mapOf(
       "glassfish" to listOf("**/GlassFishSmokeTest.*"),

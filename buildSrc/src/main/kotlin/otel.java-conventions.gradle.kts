@@ -236,7 +236,6 @@ afterEvaluate {
         languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
         implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
       })
-      println("javaLauncher set to ${javaLauncher.get().executablePath} for testJavaVersion=$testJavaVersion")
       isEnabled = isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
