@@ -11,14 +11,22 @@ import io.opentelemetry.context.Context;
 import java.util.Collections;
 import java.util.List;
 
-abstract class SpanSuppressionStrategy {
+import static java.util.Collections.singletonList;
 
-  private static final SpanSuppressionStrategy SERVER_STRATEGY = new SuppressIfSameType(
+abstract class SpanSuppressionStrategy {
+  private static final SpanSuppressionStrategy SERVER_STRATEGY = new SuppressIfSameSpanKey(
       Collections.singletonList(SpanKey.SERVER));
   private static final SpanSuppressionStrategy CONSUMER_STRATEGY = new NeverSuppressAndStore(
       Collections.singletonList(SpanKey.CONSUMER));
 
+  public static final CompositeStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY = new CompositeStrategy(
+      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_CLIENTS)),
+      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_PRODUCERS)),
+      SERVER_STRATEGY,
+      CONSUMER_STRATEGY);
+
   private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY = new CompositeStrategy(
+      NeverSuppress.INSTANCE,
       NeverSuppress.INSTANCE,
       SERVER_STRATEGY,
       CONSUMER_STRATEGY);
@@ -28,8 +36,10 @@ abstract class SpanSuppressionStrategy {
       return NO_CLIENT_SUPPRESSION_STRATEGY;
     }
 
+    SpanSuppressionStrategy clientOrProducerStrategy = new SuppressIfSameSpanKey(clientSpanKeys);
     return new CompositeStrategy(
-        new SuppressIfSameType(clientSpanKeys),
+        clientOrProducerStrategy,
+        clientOrProducerStrategy,
         SERVER_STRATEGY,
         CONSUMER_STRATEGY);
   }
@@ -38,11 +48,11 @@ abstract class SpanSuppressionStrategy {
 
   abstract boolean shouldSuppress(Context parentContext, SpanKind spanKind);
 
-  static final class SuppressIfSameType extends SpanSuppressionStrategy {
+  static final class SuppressIfSameSpanKey extends SpanSuppressionStrategy {
 
     private final List<SpanKey> outgoingSpanKeys;
 
-    SuppressIfSameType(List<SpanKey> outgoingSpanKeys) {
+    SuppressIfSameSpanKey(List<SpanKey> outgoingSpanKeys) {
       this.outgoingSpanKeys = outgoingSpanKeys;
     }
 
@@ -56,12 +66,12 @@ abstract class SpanSuppressionStrategy {
 
     @Override
     boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-        for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
-          if (outgoingSpanKey.fromContextOrNull(parentContext) == null) {
-            return false;
-          }
+      for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
+        if (outgoingSpanKey.fromContextOrNull(parentContext) == null) {
+          return false;
         }
-        return true;
+      }
+      return true;
     }
   }
 
@@ -104,12 +114,14 @@ abstract class SpanSuppressionStrategy {
 
   static final class CompositeStrategy extends SpanSuppressionStrategy {
     private final SpanSuppressionStrategy clientStrategy;
+    private final SpanSuppressionStrategy producerStrategy;
     private final SpanSuppressionStrategy serverStrategy;
     private final SpanSuppressionStrategy consumerStrategy;
 
-    CompositeStrategy(SpanSuppressionStrategy client, SpanSuppressionStrategy server,
+    CompositeStrategy(SpanSuppressionStrategy client, SpanSuppressionStrategy producer, SpanSuppressionStrategy server,
         SpanSuppressionStrategy consumer) {
       this.clientStrategy = client;
+      this.producerStrategy = producer;
       this.serverStrategy = server;
       this.consumerStrategy = consumer;
     }
@@ -118,8 +130,9 @@ abstract class SpanSuppressionStrategy {
     Context storeInContext(Context context, SpanKind spanKind, Span span) {
       switch (spanKind) {
         case CLIENT:
-        case PRODUCER:
           return clientStrategy.storeInContext(context, spanKind, span);
+        case PRODUCER:
+          return producerStrategy.storeInContext(context, spanKind, span);
         case SERVER:
           return serverStrategy.storeInContext(context, spanKind, span);
         case CONSUMER:
@@ -134,8 +147,9 @@ abstract class SpanSuppressionStrategy {
     boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
       switch (spanKind) {
         case CLIENT:
-        case PRODUCER:
           return clientStrategy.shouldSuppress(parentContext, spanKind);
+        case PRODUCER:
+          return producerStrategy.shouldSuppress(parentContext, spanKind);
         case SERVER:
           return serverStrategy.shouldSuppress(parentContext, spanKind);
         case CONSUMER:

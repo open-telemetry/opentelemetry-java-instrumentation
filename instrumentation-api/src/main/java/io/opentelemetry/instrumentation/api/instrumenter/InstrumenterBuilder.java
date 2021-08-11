@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -39,7 +38,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       Config.get()
           .getBooleanProperty("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
-  private static final SpanSuppressionStrategy ALL_CLIENT_SUPPRESSION_STRATEGY = SpanSuppressionStrategy.from(singletonList(SpanKey.OUTGOING));
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
@@ -240,7 +238,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
     if (!enableSpanSuppressionByType) {
       // if not enabled, preserve current behavior, not distinguishing types
-      return ALL_CLIENT_SUPPRESSION_STRATEGY;
+      return SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
     }
 
     List<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);

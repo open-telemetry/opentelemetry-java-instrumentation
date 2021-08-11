@@ -28,11 +28,11 @@ public final class ClientSpan {
    */
   @Nullable
   public static Span fromContextOrNull(Context context) {
-    return SpanKey.OUTGOING.fromContextOrNull(context);
+    return SpanKey.ALL_CLIENTS.fromContextOrNull(context);
   }
 
   public static Context with(Context context, Span clientSpan) {
-    return SpanKey.OUTGOING.with(context, clientSpan);
+    return SpanKey.ALL_CLIENTS.with(context, clientSpan);
   }
 
   private ClientSpan() {}

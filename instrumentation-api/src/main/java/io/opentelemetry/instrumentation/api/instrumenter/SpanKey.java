@@ -34,10 +34,14 @@ public final class SpanKey {
       ContextKey.named("opentelemetry-traces-span-key-messaging");
 
   // this is used instead of above, depending on the configuration value for
-  // otel.instrumentation.experimental.span-suppression-by-type
-  // named outgoing because it covers both client and producer spans
-  private static final ContextKey<Span> OUTGOING_KEY =
+  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
+  private static final ContextKey<Span> CLIENT_KEY =
       ContextKey.named("opentelemetry-traces-span-key-client");
+
+  // this is used instead of above, depending on the configuration value for
+  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
+  private static final ContextKey<Span> PRODUCER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-producer");
 
   public static final SpanKey SERVER = new SpanKey(SERVER_KEY);
   public static final SpanKey CONSUMER = new SpanKey(CONSUMER_KEY);
@@ -48,9 +52,9 @@ public final class SpanKey {
   static final SpanKey MESSAGING_PRODUCER = new SpanKey(MESSAGING_KEY);
 
   // this is used instead of above, depending on the configuration value for
-  // otel.instrumentation.experimental.span-suppression-by-type
-  // named outgoing because it covers both client and producer spans
-  public static final SpanKey OUTGOING = new SpanKey(OUTGOING_KEY);
+  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
+  public static final SpanKey ALL_CLIENTS = new SpanKey(CLIENT_KEY);
+  public static final SpanKey ALL_PRODUCERS = new SpanKey(PRODUCER_KEY);
 
   private final ContextKey<Span> key;
 

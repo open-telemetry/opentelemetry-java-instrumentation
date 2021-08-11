@@ -107,6 +107,30 @@ public class SpanSuppressionStrategyTest {
 
     assertThat(strategy.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
     assertThat(strategy.shouldSuppress(context, SpanKind.PRODUCER)).isTrue();
+
+    allClientSpanKeys().forEach(anotherKey -> {
+      if (spanKey != anotherKey) {
+        SpanSuppressionStrategy anotherStrategy = SpanSuppressionStrategy.from(Collections.singletonList(anotherKey));
+        assertThat(anotherStrategy.shouldSuppress(context, SpanKind.CLIENT)).isFalse();
+        assertThat(anotherStrategy.shouldSuppress(context, SpanKind.PRODUCER)).isFalse();
+      }
+    });
+  }
+
+  @Test
+  public void allNestedOutgoing_producerDoesNotSuppressClient() {
+    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
+
+    Context contextClient =
+        SpanKey.ALL_CLIENTS.with(Context.root(), SPAN);
+    Context contextProducer =
+        SpanKey.ALL_PRODUCERS.with(Context.root(), SPAN);
+
+    assertThat(strategy.shouldSuppress(contextClient, SpanKind.CLIENT)).isTrue();
+    assertThat(strategy.shouldSuppress(contextClient, SpanKind.PRODUCER)).isFalse();
+
+    assertThat(strategy.shouldSuppress(contextProducer, SpanKind.CLIENT)).isFalse();
+    assertThat(strategy.shouldSuppress(contextProducer, SpanKind.PRODUCER)).isTrue();
   }
 
   @Test
@@ -177,7 +201,8 @@ public class SpanSuppressionStrategyTest {
 
   private static Stream<SpanKey> allClientSpanKeys() {
     return Stream.of(
-        SpanKey.OUTGOING,
+        SpanKey.ALL_CLIENTS,
+        SpanKey.ALL_PRODUCERS,
         SpanKey.HTTP_CLIENT,
         SpanKey.DB_CLIENT,
         SpanKey.RPC_CLIENT,
