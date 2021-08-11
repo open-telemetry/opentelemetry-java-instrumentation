@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
+import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -56,7 +58,8 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      result = Observable.create(CouchbaseOnSubscribe.create(result, null, method));
+      CouchbaseRequest request = CouchbaseRequest.create(null, method);
+      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

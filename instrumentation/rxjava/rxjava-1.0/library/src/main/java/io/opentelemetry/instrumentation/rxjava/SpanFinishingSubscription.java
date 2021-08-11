@@ -6,24 +6,27 @@
 package io.opentelemetry.instrumentation.rxjava;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;
 
-public class SpanFinishingSubscription implements Subscription {
-  private final BaseTracer tracer;
+final class SpanFinishingSubscription<REQUEST> implements Subscription {
+  private final Instrumenter<REQUEST, ?> instrumenter;
   private final AtomicReference<Context> contextRef;
+  private final REQUEST request;
 
-  public SpanFinishingSubscription(BaseTracer tracer, AtomicReference<Context> contextRef) {
-    this.tracer = tracer;
+  SpanFinishingSubscription(
+      Instrumenter<REQUEST, ?> instrumenter, AtomicReference<Context> contextRef, REQUEST request) {
+    this.instrumenter = instrumenter;
     this.contextRef = contextRef;
+    this.request = request;
   }
 
   @Override
   public void unsubscribe() {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      tracer.end(context);
+      instrumenter.end(context, request, null, null);
     }
   }
 

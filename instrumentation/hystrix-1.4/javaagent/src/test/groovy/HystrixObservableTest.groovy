@@ -63,7 +63,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -156,7 +156,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -165,7 +165,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
       }
@@ -251,7 +251,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -262,7 +262,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
       }

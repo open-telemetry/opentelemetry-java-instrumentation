@@ -21,7 +21,7 @@ public final class TracingHandler implements Handler {
   @Override
   public void handle(Context ctx) {
     Attribute<io.opentelemetry.context.Context> spanAttribute =
-        ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_SPAN);
+        ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_CONTEXT);
     io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
     // Must use context from channel, as executor instrumentation is not accurate - Ratpack

@@ -71,7 +71,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -86,7 +86,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(4) {

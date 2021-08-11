@@ -7,22 +7,28 @@ package io.opentelemetry.instrumentation.rxjava;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
-public class TracedSubscriber<T> extends Subscriber<T> {
+final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
 
-  private final AtomicReference<Context> contextRef;
   private final Subscriber<T> delegate;
-  private final BaseTracer tracer;
+  private final Instrumenter<REQUEST, ?> instrumenter;
+  private final AtomicReference<Context> contextRef;
+  private final REQUEST request;
 
-  public TracedSubscriber(Context context, Subscriber<T> delegate, BaseTracer tracer) {
-    contextRef = new AtomicReference<>(context);
+  TracedSubscriber(
+      Subscriber<T> delegate,
+      Instrumenter<REQUEST, ?> instrumenter,
+      Context context,
+      REQUEST request) {
     this.delegate = delegate;
-    this.tracer = tracer;
-    SpanFinishingSubscription subscription = new SpanFinishingSubscription(tracer, contextRef);
-    delegate.add(subscription);
+    this.instrumenter = instrumenter;
+    this.contextRef = new AtomicReference<>(context);
+    this.request = request;
+
+    delegate.add(new SpanFinishingSubscription<>(instrumenter, contextRef, request));
   }
 
   @Override
@@ -60,11 +66,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
         error = t;
         throw t;
       } finally {
-        if (error != null) {
-          tracer.endExceptionally(context, error);
-        } else {
-          tracer.end(context);
-        }
+        instrumenter.end(context, request, null, error);
       }
     } else {
       delegate.onCompleted();
@@ -75,7 +77,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      tracer.endExceptionally(context, e);
+      instrumenter.end(context, request, null, e);
     }
     // TODO (trask) should this be wrapped in parent of context(?)
     delegate.onError(e);

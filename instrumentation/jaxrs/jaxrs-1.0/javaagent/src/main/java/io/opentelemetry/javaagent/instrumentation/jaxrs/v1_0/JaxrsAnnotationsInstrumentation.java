@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,21 +17,19 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
-import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
-import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
+public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.ws.rs.Path");
@@ -57,10 +55,9 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
                             "javax.ws.rs.GET",
                             "javax.ws.rs.HEAD",
                             "javax.ws.rs.OPTIONS",
-                            "javax.ws.rs.PATCH",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
-        JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -70,82 +67,47 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
-        @Advice.AllArguments Object[] args,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
+        @Advice.Local("otelScope") Scope scope) {
       callDepth = CallDepth.forClass(Path.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
-      ContextStore<AsyncResponse, Context> contextStore = null;
-      for (Object arg : args) {
-        if (arg instanceof AsyncResponse) {
-          asyncResponse = (AsyncResponse) arg;
-          contextStore = InstrumentationContext.get(AsyncResponse.class, Context.class);
-          if (contextStore.get(asyncResponse) != null) {
-            /*
-             * We are probably in a recursive call and don't want to start a new span because it
-             * would replace the existing span in the asyncResponse and cause it to never finish. We
-             * could work around this by using a list instead, but we likely don't want the extra
-             * span anyway.
-             */
-            return;
-          }
-          break;
-        }
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      handlerData = new HandlerData(target.getClass(), method);
+
+      ServerSpanNaming.updateServerSpanName(
+          parentContext,
+          ServerSpanNaming.Source.CONTROLLER,
+          JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
+
+      if (!instrumenter().shouldStart(parentContext, handlerData)) {
+        return;
       }
 
-      context = tracer().startSpan(target.getClass(), method);
-
-      if (contextStore != null && asyncResponse != null) {
-        contextStore.put(asyncResponse, context);
-      }
-
+      context = instrumenter().start(parentContext, handlerData);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHandlerData") HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
+        @Advice.Local("otelScope") Scope scope) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      if (context == null || scope == null) {
+      if (scope == null) {
         return;
       }
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-        scope.close();
-        return;
-      }
-
-      CompletionStage<?> asyncReturnValue =
-          returnValue instanceof CompletionStage ? (CompletionStage<?>) returnValue : null;
-
-      if (asyncResponse != null && !asyncResponse.isSuspended()) {
-        // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        InstrumentationContext.get(AsyncResponse.class, Context.class).put(asyncResponse, null);
-      }
-      if (asyncReturnValue != null) {
-        // span finished by CompletionStageFinishCallback
-        asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(context));
-      }
-      if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
-        tracer().end(context);
-      }
-      // else span finished by AsyncResponseAdvice
-
       scope.close();
+      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }
