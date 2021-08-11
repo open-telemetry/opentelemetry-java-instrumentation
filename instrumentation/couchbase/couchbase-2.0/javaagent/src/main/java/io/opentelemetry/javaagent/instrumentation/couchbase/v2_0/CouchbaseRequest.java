@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
