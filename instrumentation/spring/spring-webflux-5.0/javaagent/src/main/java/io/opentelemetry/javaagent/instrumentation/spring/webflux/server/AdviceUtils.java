@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 import java.util.Map;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -27,8 +28,7 @@ public class AdviceUtils {
     return className + ".handle";
   }
 
-  public static <T> Mono<T> setPublisherSpan(
-      Mono<T> mono, io.opentelemetry.context.Context context) {
+  public static <T> Mono<T> setPublisherSpan(Mono<T> mono, Context context) {
     return mono.doOnError(t -> finishSpanIfPresent(context, t))
         .doOnSuccess(x -> finishSpanIfPresent(context, null))
         .doOnCancel(() -> finishSpanIfPresent(context, null));
@@ -46,7 +46,7 @@ public class AdviceUtils {
     }
   }
 
-  static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
+  static void finishSpanIfPresent(Context context, Throwable throwable) {
     if (context != null) {
       Span span = Span.fromContext(context);
       if (throwable != null) {
@@ -59,8 +59,7 @@ public class AdviceUtils {
 
   private static void finishSpanIfPresentInAttributes(
       Map<String, Object> attributes, Throwable throwable) {
-    io.opentelemetry.context.Context context =
-        (io.opentelemetry.context.Context) attributes.remove(CONTEXT_ATTRIBUTE);
+    Context context = (Context) attributes.remove(CONTEXT_ATTRIBUTE);
     finishSpanIfPresent(context, throwable);
   }
 }
