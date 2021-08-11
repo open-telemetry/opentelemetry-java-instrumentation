@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0
 
 import io.opentelemetry.instrumentation.okhttp.v3_0.AbstractOkHttp3Test
-import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTracing
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import okhttp3.Call
 import okhttp3.OkHttpClient

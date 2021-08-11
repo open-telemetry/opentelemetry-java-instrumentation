@@ -39,12 +39,12 @@ public final class OkHttpTracing {
   /**
    * Returns a new {@link Interceptor} that can be used with methods like {@link
    * okhttp3.OkHttpClient.Builder#addInterceptor(Interceptor)}.
-   * <p>
-   * Important: asynchronous calls using {@link okhttp3.Call.Factory#enqueue(Callback)}
-   * will *not* work correctly using just this interceptor.
-   * <p>
-   * It is strongly recommended that you use the {@link #newCallFactory(OkHttpClient)}
-   * method to decorate your {@link OkHttpClient}, rather than using this method directly.
+   *
+   * <p>Important: asynchronous calls using {@link okhttp3.Call.Factory#enqueue(Callback)} will
+   * *not* work correctly using just this interceptor.
+   *
+   * <p>It is strongly recommended that you use the {@link #newCallFactory(OkHttpClient)} method to
+   * decorate your {@link OkHttpClient}, rather than using this method directly.
    *
    * @deprecated Please use the {@link #newCallFactory(OkHttpClient)} method instead.
    */
@@ -56,19 +56,15 @@ public final class OkHttpTracing {
   /**
    * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
    * {@link OkHttpClient} instance.
-   * <p>
-   * Using this method will result in proper propagation and span parenting,
-   * for both synchronous ( {@link Call#execute()} )
-   * and asynchronous ( {@link Call#enqueue(Callback)} ) usages.
+   *
+   * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
+   * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
    *
    * @param baseClient An instance of OkHttpClient configured as desired.
-   * @return a {@link okhttp3.Call.Factory} for creating new {@link Call} instances.
+   * @return a {@link Call.Factory} for creating new {@link Call} instances.
    */
   public Call.Factory newCallFactory(OkHttpClient baseClient) {
-    OkHttpClient tracingClient = baseClient.newBuilder()
-        .addInterceptor(newInterceptor())
-        .build();
+    OkHttpClient tracingClient = baseClient.newBuilder().addInterceptor(newInterceptor()).build();
     return new TracingCallFactory(tracingClient);
   }
-
 }

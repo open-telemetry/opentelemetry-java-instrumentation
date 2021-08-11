@@ -45,7 +45,7 @@ import java.util.concurrent.ExecutorService;
 public class OkHttpConfiguration {
 
   //Use this Call.Factory implementation for making standard http client calls.
-  public Call.Factory createInterceptor(OpenTelemetry openTelemetry) {
+  public Call.Factory createTracedClient(OpenTelemetry openTelemetry) {
     return OkHttpTracing.newBuilder(openTelemetry).build().newCallFactory(createClient());
   }
 

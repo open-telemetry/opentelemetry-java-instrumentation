@@ -74,6 +74,7 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
         return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
       case SPDY_3:
         return SemanticAttributes.HttpFlavorValues.SPDY;
+        // No OTel mapping for other protocols like H2C.
       default:
         return null;
     }
