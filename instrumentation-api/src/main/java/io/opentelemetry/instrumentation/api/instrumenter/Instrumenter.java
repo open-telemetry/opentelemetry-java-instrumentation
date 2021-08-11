@@ -99,7 +99,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
     SpanKind spanKind = spanKindExtractor.extract(request);
-    boolean suppressed = spanSuppressionStrategy.shouldSuppress(spanKind, parentContext);
+    boolean suppressed = spanSuppressionStrategy.shouldSuppress(parentContext, spanKind);
 
     if (suppressed) {
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
@@ -146,7 +146,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = spanBuilder.startSpan();
     context = context.with(span);
 
-    return spanSuppressionStrategy.storeInContext(spanKind, context, span);
+    return spanSuppressionStrategy.storeInContext(context, spanKind, span);
   }
 
   /**

@@ -185,8 +185,6 @@ class InstrumenterTest {
 
   @Test
   void server_error() {
-    InstrumentationType instrumentationType = InstrumentationType.getOrCreate("test");
-
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
@@ -836,7 +834,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.HTTP, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.HTTP_CLIENT, context);
   }
 
   @Test
@@ -847,7 +845,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.DB, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.DB_CLIENT, context);
   }
 
   @Test
@@ -858,7 +856,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.RPC, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.RPC_CLIENT, context);
   }
 
   @Test
@@ -869,7 +867,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING_PRODUCER, context);
   }
 
   @Test
@@ -885,7 +883,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING_PRODUCER, context);
   }
 
   @Test
@@ -900,10 +898,10 @@ class InstrumenterTest {
 
     assertThat(span).isNotNull();
 
-    assertThat(SpanKey.HTTP.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.DB.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.RPC.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.MESSAGING.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.RPC_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.MESSAGING_PRODUCER.fromContextOrNull(context)).isNull();
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {

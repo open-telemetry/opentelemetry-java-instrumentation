@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * A builder of {@link Instrumenter}. Instrumentation libraries should generally expose their own
@@ -40,6 +39,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       Config.get()
           .getBooleanProperty("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
+  private static final SpanSuppressionStrategy ALL_CLIENT_SUPPRESSION_STRATEGY = SpanSuppressionStrategy.from(singletonList(SpanKey.OUTGOING));
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
@@ -240,7 +240,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
     if (!enableSpanSuppressionByType) {
       // if not enabled, preserve current behavior, not distinguishing types
-      return SpanSuppressionStrategy.from(singletonList(SpanKey.OUTGOING));
+      return ALL_CLIENT_SUPPRESSION_STRATEGY;
     }
 
     List<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
@@ -253,13 +253,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     List<SpanKey> spanKeys = new ArrayList<>();
     for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
       if (attributeExtractor instanceof HttpAttributesExtractor) {
-        spanKeys.add(SpanKey.HTTP);
+        spanKeys.add(SpanKey.HTTP_CLIENT);
       } else if (attributeExtractor instanceof RpcAttributesExtractor) {
-        spanKeys.add(SpanKey.RPC);
+        spanKeys.add(SpanKey.RPC_CLIENT);
       } else if (attributeExtractor instanceof DbAttributesExtractor) {
-        spanKeys.add(SpanKey.DB);
+        spanKeys.add(SpanKey.DB_CLIENT);
       } else if (attributeExtractor instanceof MessagingAttributesExtractor) {
-        spanKeys.add(SpanKey.MESSAGING);
+        spanKeys.add(SpanKey.MESSAGING_PRODUCER);
       }
     }
     return spanKeys;

@@ -42,10 +42,10 @@ public final class SpanKey {
   public static final SpanKey SERVER = new SpanKey(SERVER_KEY);
   public static final SpanKey CONSUMER = new SpanKey(CONSUMER_KEY);
 
-  static final SpanKey HTTP = new SpanKey(HTTP_KEY);
-  static final SpanKey RPC = new SpanKey(RPC_KEY);
-  static final SpanKey DB = new SpanKey(DB_KEY);
-  static final SpanKey MESSAGING = new SpanKey(MESSAGING_KEY);
+  static final SpanKey HTTP_CLIENT = new SpanKey(HTTP_KEY);
+  static final SpanKey RPC_CLIENT = new SpanKey(RPC_KEY);
+  static final SpanKey DB_CLIENT = new SpanKey(DB_KEY);
+  static final SpanKey MESSAGING_PRODUCER = new SpanKey(MESSAGING_KEY);
 
   // this is used instead of above, depending on the configuration value for
   // otel.instrumentation.experimental.span-suppression-by-type
