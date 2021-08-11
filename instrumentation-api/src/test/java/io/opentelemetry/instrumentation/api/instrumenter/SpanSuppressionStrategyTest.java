@@ -26,22 +26,22 @@ public class SpanSuppressionStrategyTest {
   public void serverSpan_getSet() {
     assertThat(SpanKey.SERVER.fromContextOrNull(Context.root())).isNull();
 
-    Context context =
-        SpanKey.SERVER.with(Context.root(), SPAN);
+    Context context = SpanKey.SERVER.with(Context.root(), SPAN);
 
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.SERVER));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.SERVER));
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isTrue();
 
     assertThat(SpanKey.SERVER.fromContextOrNull(context)).isSameAs(SPAN);
-    allClientSpanKeys()
-        .forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
+    allClientSpanKeys().forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
 
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isNull();
   }
 
   @Test
   public void serverSpan_getSetWithStrategy() {
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.SERVER));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.SERVER));
     assertThat(strategy.shouldSuppress(Context.root(), SpanKind.SERVER)).isFalse();
     assertThat(SpanKey.SERVER.fromContextOrNull(Context.root())).isNull();
 
@@ -50,28 +50,26 @@ public class SpanSuppressionStrategyTest {
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isTrue();
     assertThat(SpanKey.SERVER.fromContextOrNull(context)).isSameAs(SPAN);
 
-    allClientSpanKeys()
-        .forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
+    allClientSpanKeys().forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
 
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isNull();
   }
 
   @Test
   public void consumerSpan_getSet() {
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.CONSUMER));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(Collections.singletonList(SpanKey.CONSUMER));
 
     assertThat(strategy.shouldSuppress(Context.root(), SpanKind.CONSUMER)).isFalse();
     assertThat(SpanKey.CONSUMER.fromContextOrNull(Context.root())).isNull();
 
-    Context context =
-        SpanKey.CONSUMER.with(Context.root(), SPAN);
+    Context context = SpanKey.CONSUMER.with(Context.root(), SPAN);
 
     // never suppress CONSUMER
     assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
 
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isSameAs(SPAN);
-    allClientSpanKeys()
-        .forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
+    allClientSpanKeys().forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
 
     assertThat(SpanKey.SERVER.fromContextOrNull(context)).isNull();
   }
@@ -79,11 +77,11 @@ public class SpanSuppressionStrategyTest {
   @ParameterizedTest
   @MethodSource("allClientSpanKeys")
   public void clientSpan_differentForAllTypes(SpanKey spanKey) {
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(Collections.singletonList(spanKey));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(Collections.singletonList(spanKey));
     assertThat(strategy.shouldSuppress(Context.root(), SpanKind.CLIENT)).isFalse();
 
-    Context context =
-        spanKey.with(Context.root(), SPAN);
+    Context context = spanKey.with(Context.root(), SPAN);
 
     assertThat(strategy.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isFalse();
@@ -93,38 +91,39 @@ public class SpanSuppressionStrategyTest {
 
     allClientSpanKeys()
         .filter(key -> key != spanKey)
-        .forEach(
-            key -> assertThat(key.fromContextOrNull(context)).isNull());
+        .forEach(key -> assertThat(key.fromContextOrNull(context)).isNull());
   }
 
   @ParameterizedTest
   @MethodSource("allClientSpanKeys")
   public void client_sameAsProducer(SpanKey spanKey) {
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(Collections.singletonList(spanKey));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(Collections.singletonList(spanKey));
 
-    Context context =
-        spanKey.with(Context.root(), SPAN);
+    Context context = spanKey.with(Context.root(), SPAN);
 
     assertThat(strategy.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
     assertThat(strategy.shouldSuppress(context, SpanKind.PRODUCER)).isTrue();
 
-    allClientSpanKeys().forEach(anotherKey -> {
-      if (spanKey != anotherKey) {
-        SpanSuppressionStrategy anotherStrategy = SpanSuppressionStrategy.from(Collections.singletonList(anotherKey));
-        assertThat(anotherStrategy.shouldSuppress(context, SpanKind.CLIENT)).isFalse();
-        assertThat(anotherStrategy.shouldSuppress(context, SpanKind.PRODUCER)).isFalse();
-      }
-    });
+    allClientSpanKeys()
+        .forEach(
+            anotherKey -> {
+              if (spanKey != anotherKey) {
+                SpanSuppressionStrategy anotherStrategy =
+                    SpanSuppressionStrategy.from(Collections.singletonList(anotherKey));
+                assertThat(anotherStrategy.shouldSuppress(context, SpanKind.CLIENT)).isFalse();
+                assertThat(anotherStrategy.shouldSuppress(context, SpanKind.PRODUCER)).isFalse();
+              }
+            });
   }
 
   @Test
   public void allNestedOutgoing_producerDoesNotSuppressClient() {
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
 
-    Context contextClient =
-        SpanKey.ALL_CLIENTS.with(Context.root(), SPAN);
-    Context contextProducer =
-        SpanKey.ALL_PRODUCERS.with(Context.root(), SPAN);
+    Context contextClient = SpanKey.ALL_CLIENTS.with(Context.root(), SPAN);
+    Context contextProducer = SpanKey.ALL_PRODUCERS.with(Context.root(), SPAN);
 
     assertThat(strategy.shouldSuppress(contextClient, SpanKind.CLIENT)).isTrue();
     assertThat(strategy.shouldSuppress(contextClient, SpanKind.PRODUCER)).isFalse();
@@ -136,8 +135,8 @@ public class SpanSuppressionStrategyTest {
   @Test
   public void multipleKeys() {
 
-    SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(
-        allClientSpanKeys().collect(Collectors.toList()));
+    SpanSuppressionStrategy strategy =
+        SpanSuppressionStrategy.from(allClientSpanKeys().collect(Collectors.toList()));
 
     Context context = strategy.storeInContext(Context.root(), SpanKind.CLIENT, SPAN);
 
@@ -146,9 +145,11 @@ public class SpanSuppressionStrategyTest {
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isFalse();
     assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
 
-    allClientSpanKeys().forEach(key -> {
-      assertThat(key.fromContextOrNull(context)).isSameAs(SPAN);
-    });
+    allClientSpanKeys()
+        .forEach(
+            key -> {
+              assertThat(key.fromContextOrNull(context)).isSameAs(SPAN);
+            });
   }
 
   @Test
@@ -164,9 +165,11 @@ public class SpanSuppressionStrategyTest {
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isFalse();
     assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
 
-    allClientSpanKeys().forEach(key -> {
-      assertThat(key.fromContextOrNull(context)).isNull();
-    });
+    allClientSpanKeys()
+        .forEach(
+            key -> {
+              assertThat(key.fromContextOrNull(context)).isNull();
+            });
   }
 
   @Test
@@ -179,9 +182,11 @@ public class SpanSuppressionStrategyTest {
     assertThat(strategy.shouldSuppress(context, SpanKind.SERVER)).isTrue();
     assertThat(SpanKey.SERVER.fromContextOrNull(context)).isSameAs(SPAN);
 
-    allClientSpanKeys().forEach(key -> {
-      assertThat(key.fromContextOrNull(context)).isNull();
-    });
+    allClientSpanKeys()
+        .forEach(
+            key -> {
+              assertThat(key.fromContextOrNull(context)).isNull();
+            });
   }
 
   @Test
@@ -194,9 +199,11 @@ public class SpanSuppressionStrategyTest {
     assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isSameAs(SPAN);
 
-    allClientSpanKeys().forEach(key -> {
-      assertThat(key.fromContextOrNull(context)).isNull();
-    });
+    allClientSpanKeys()
+        .forEach(
+            key -> {
+              assertThat(key.fromContextOrNull(context)).isNull();
+            });
   }
 
   private static Stream<SpanKey> allClientSpanKeys() {

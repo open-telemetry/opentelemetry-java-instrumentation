@@ -5,31 +5,30 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-
 abstract class SpanSuppressionStrategy {
-  private static final SpanSuppressionStrategy SERVER_STRATEGY = new SuppressIfSameSpanKey(
-      Collections.singletonList(SpanKey.SERVER));
-  private static final SpanSuppressionStrategy CONSUMER_STRATEGY = new NeverSuppressAndStore(
-      Collections.singletonList(SpanKey.CONSUMER));
+  private static final SpanSuppressionStrategy SERVER_STRATEGY =
+      new SuppressIfSameSpanKey(Collections.singletonList(SpanKey.SERVER));
+  private static final SpanSuppressionStrategy CONSUMER_STRATEGY =
+      new NeverSuppressAndStore(Collections.singletonList(SpanKey.CONSUMER));
 
-  public static final CompositeStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY = new CompositeStrategy(
-      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_CLIENTS)),
-      new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_PRODUCERS)),
-      SERVER_STRATEGY,
-      CONSUMER_STRATEGY);
+  public static final CompositeStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY =
+      new CompositeStrategy(
+          new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_CLIENTS)),
+          new SuppressIfSameSpanKey(singletonList(SpanKey.ALL_PRODUCERS)),
+          SERVER_STRATEGY,
+          CONSUMER_STRATEGY);
 
-  private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY = new CompositeStrategy(
-      NeverSuppress.INSTANCE,
-      NeverSuppress.INSTANCE,
-      SERVER_STRATEGY,
-      CONSUMER_STRATEGY);
+  private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY =
+      new CompositeStrategy(
+          NeverSuppress.INSTANCE, NeverSuppress.INSTANCE, SERVER_STRATEGY, CONSUMER_STRATEGY);
 
   static SpanSuppressionStrategy from(List<SpanKey> clientSpanKeys) {
     if (clientSpanKeys.isEmpty()) {
@@ -38,10 +37,7 @@ abstract class SpanSuppressionStrategy {
 
     SpanSuppressionStrategy clientOrProducerStrategy = new SuppressIfSameSpanKey(clientSpanKeys);
     return new CompositeStrategy(
-        clientOrProducerStrategy,
-        clientOrProducerStrategy,
-        SERVER_STRATEGY,
-        CONSUMER_STRATEGY);
+        clientOrProducerStrategy, clientOrProducerStrategy, SERVER_STRATEGY, CONSUMER_STRATEGY);
   }
 
   abstract Context storeInContext(Context context, SpanKind spanKind, Span span);
@@ -108,7 +104,7 @@ abstract class SpanSuppressionStrategy {
 
     @Override
     boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-        return false;
+      return false;
     }
   }
 
@@ -118,7 +114,10 @@ abstract class SpanSuppressionStrategy {
     private final SpanSuppressionStrategy serverStrategy;
     private final SpanSuppressionStrategy consumerStrategy;
 
-    CompositeStrategy(SpanSuppressionStrategy client, SpanSuppressionStrategy producer, SpanSuppressionStrategy server,
+    CompositeStrategy(
+        SpanSuppressionStrategy client,
+        SpanSuppressionStrategy producer,
+        SpanSuppressionStrategy server,
         SpanSuppressionStrategy consumer) {
       this.clientStrategy = client;
       this.producerStrategy = producer;

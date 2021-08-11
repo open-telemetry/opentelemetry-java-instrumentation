@@ -36,7 +36,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /** Instrumentation type suppression configuration property key. */
   private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
       Config.get()
-          .getBooleanProperty("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
+          .getBooleanProperty(
+              "otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
   final OpenTelemetry openTelemetry;
   final Meter meter;

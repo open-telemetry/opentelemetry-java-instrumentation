@@ -12,10 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO make class (and fields/methods below) package-private after tracers are gone and no need for
 //  bridging from ClientSpan/ServerSpan/ConsumerSpan
-/**
- * Makes span keys for specific instrumentation accessible to enrich and
- * suppress spans.
- */
+/** Makes span keys for specific instrumentation accessible to enrich and suppress spans. */
 public final class SpanKey {
 
   private static final ContextKey<Span> SERVER_KEY =
