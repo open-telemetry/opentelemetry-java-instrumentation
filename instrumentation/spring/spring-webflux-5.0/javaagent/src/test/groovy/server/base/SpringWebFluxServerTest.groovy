@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
+import util.SpringWebfluxTestUtil
 
 abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplicationContext> implements AgentTestTrait  {
   protected abstract Class<?> getApplicationClass();
@@ -31,6 +32,10 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
   @Override
   void stopServer(ConfigurableApplicationContext ctx) {
     ctx.close()
+  }
+
+  def cleanup() {
+    SpringWebfluxTestUtil.waitForRequestsToComplete()
   }
 
   @Override

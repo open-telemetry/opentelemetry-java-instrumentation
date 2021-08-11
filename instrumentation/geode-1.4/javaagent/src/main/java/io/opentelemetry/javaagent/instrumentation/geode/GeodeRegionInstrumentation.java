@@ -19,7 +19,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -68,13 +67,13 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      request = GeodeRequest.create(region, method.getName(), null);
+      request = GeodeRequest.create(region, methodName, null);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -104,14 +103,14 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) String query,
         @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      request = GeodeRequest.create(region, method.getName(), query);
+      request = GeodeRequest.create(region, methodName, query);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
