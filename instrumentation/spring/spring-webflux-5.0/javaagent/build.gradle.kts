@@ -52,18 +52,15 @@ dependencies {
   testCompileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
   testCompileOnly("io.projectreactor.netty:reactor-netty-http:1.0.7")
 
-  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.5.0")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.0")
-  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.5.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
   testImplementation("org.spockframework:spock-spring:1.1-groovy-2.4")
 }
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
-
-//  jvmArgs("-Xint")
-//  jvmArgs("-Dio.netty.defaultPromise.maxListenerStackDepth=1")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
