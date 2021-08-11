@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
+import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -52,14 +53,16 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
+      CouchbaseRequest request = CouchbaseRequest.create(bucket, declaringClass, methodName);
+      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 
@@ -74,7 +77,8 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void subscribeResult(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Argument(value = 0, optional = true) Object query,
         @Advice.Return(readOnly = false) Observable<?> result,
@@ -83,15 +87,11 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (query != null) {
-        // A query can be of many different types. We could track the creation of them and try to
-        // rewind back to when they were created from a string, but for now we rely on toString()
-        // returning something useful. That seems to be the case. If we're starting to see strange
-        // query texts, this is the place to look!
-        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, query));
-      } else {
-        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
-      }
+      CouchbaseRequest request =
+          query == null
+              ? CouchbaseRequest.create(bucket, declaringClass, methodName)
+              : CouchbaseRequest.create(bucket, query);
+      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

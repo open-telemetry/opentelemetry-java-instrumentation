@@ -79,7 +79,16 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
     }
 
     // fall back to sync end() if asyncValue type doesn't match
-    instrumenter.end(context, request, null, null);
+    instrumenter.end(context, request, tryToGetResponse(responseType, asyncValue), null);
     return asyncValue;
+  }
+
+  @Nullable
+  public static <RESPONSE> RESPONSE tryToGetResponse(
+      Class<RESPONSE> responseType, @Nullable Object asyncValue) {
+    if (responseType.isInstance(asyncValue)) {
+      return responseType.cast(asyncValue);
+    }
+    return null;
   }
 }

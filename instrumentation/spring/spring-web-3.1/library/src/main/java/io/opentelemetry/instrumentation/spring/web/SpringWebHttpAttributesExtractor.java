@@ -75,12 +75,6 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String clientIp(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Override
   protected Integer statusCode(HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
     try {
       return clientHttpResponse.getStatusCode().value();

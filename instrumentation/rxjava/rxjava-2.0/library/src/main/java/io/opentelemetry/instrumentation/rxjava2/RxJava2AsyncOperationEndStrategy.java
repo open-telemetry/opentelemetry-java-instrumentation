@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.rxjava2;
 
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -22,11 +22,9 @@ import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.parallel.ParallelFlowable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Publisher;
 
-public final class RxJava2AsyncOperationEndStrategy
-    implements AsyncOperationEndStrategy, AsyncSpanEndStrategy {
+public final class RxJava2AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
 
@@ -63,34 +61,14 @@ public final class RxJava2AsyncOperationEndStrategy
       Object asyncValue,
       Class<RESPONSE> responseType) {
 
-    return end(
-        asyncValue,
+    EndOnFirstNotificationConsumer<Object> notificationConsumer =
         new EndOnFirstNotificationConsumer<Object>(context) {
           @Override
           protected void end(Object response, Throwable error) {
             instrumenter.end(context, request, tryToGetResponse(responseType, response), error);
           }
-        });
-  }
+        };
 
-  @Override
-  public Object end(BaseTracer tracer, Context context, Object returnValue) {
-    return end(
-        returnValue,
-        new EndOnFirstNotificationConsumer<Object>(context) {
-          @Override
-          protected void end(Object response, Throwable error) {
-            if (error != null) {
-              tracer.endExceptionally(context, error);
-            } else {
-              tracer.end(context);
-            }
-          }
-        });
-  }
-
-  private static <T> Object end(
-      Object asyncValue, EndOnFirstNotificationConsumer<T> notificationConsumer) {
     if (asyncValue instanceof Completable) {
       return endWhenComplete((Completable) asyncValue, notificationConsumer);
     } else if (asyncValue instanceof Maybe) {
@@ -151,14 +129,6 @@ public final class RxJava2AsyncOperationEndStrategy
         .doOnComplete(notificationConsumer)
         .doOnError(notificationConsumer)
         .doOnCancel(notificationConsumer::onCancelOrDispose);
-  }
-
-  @Nullable
-  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
-    if (responseType.isInstance(result)) {
-      return responseType.cast(result);
-    }
-    return null;
   }
 
   /**

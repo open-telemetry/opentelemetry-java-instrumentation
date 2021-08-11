@@ -108,45 +108,13 @@ public final class MuzzleGradlePluginUtil {
    *
    * <p>Called by the {@code printMuzzleReferences} gradle task.
    */
-  public static void printMuzzleReferences(ClassLoader instrumentationClassLoader) {
-    for (InstrumentationModule instrumentationModule :
-        ServiceLoader.load(InstrumentationModule.class, instrumentationClassLoader)) {
-      try {
-        System.out.println(instrumentationModule.getClass().getName());
-        for (ClassRef ref : instrumentationModule.getMuzzleReferences().values()) {
-          System.out.print(prettyPrint(ref));
-        }
-      } catch (RuntimeException e) {
-        String message =
-            "Unexpected exception printing references for "
-                + instrumentationModule.getClass().getName();
-        System.out.println(message);
-        throw new IllegalStateException(message, e);
-      }
-    }
-  }
-
-  private static String prettyPrint(ClassRef ref) {
-    StringBuilder builder = new StringBuilder(INDENT).append(ref).append(lineSeparator());
-    if (!ref.getSources().isEmpty()) {
-      builder.append(INDENT).append(INDENT).append("Sources:").append(lineSeparator());
-      for (Source source : ref.getSources()) {
-        builder
-            .append(INDENT)
-            .append(INDENT)
-            .append(INDENT)
-            .append("at: ")
-            .append(source)
-            .append(lineSeparator());
-      }
-    }
-    for (FieldRef field : ref.getFields()) {
-      builder.append(INDENT).append(INDENT).append(field).append(lineSeparator());
-    }
-    for (MethodRef method : ref.getMethods()) {
-      builder.append(INDENT).append(INDENT).append(method).append(lineSeparator());
-    }
-    return builder.toString();
+  public static void printMuzzleReferences(ClassLoader instrumentationClassLoader)
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+          IllegalAccessException {
+    Class<?> matcherClass =
+        instrumentationClassLoader.loadClass(
+            "io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter");
+    matcherClass.getMethod("printMuzzleReferences").invoke(null);
   }
 
   private MuzzleGradlePluginUtil() {}

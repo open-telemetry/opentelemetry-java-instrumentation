@@ -53,14 +53,12 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext addListenerEnter(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       Context context = Java8BytecodeBridge.currentContext();
-      // TODO: shouldn't we check task? not newTask?
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, newTask)) {
-        task = newTask;
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        task = RunnableWrapper.wrapIfNeeded(task);
         ContextStore<Runnable, PropagatedContext> contextStore =
             InstrumentationContext.get(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, newTask);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }

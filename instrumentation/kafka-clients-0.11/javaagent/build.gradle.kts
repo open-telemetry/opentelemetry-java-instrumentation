@@ -18,7 +18,6 @@ dependencies {
   testLibrary("org.springframework.kafka:spring-kafka-test:1.3.3.RELEASE")
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testLibrary("org.assertj:assertj-core")
-  testImplementation("org.mockito:mockito-core")
 
   // Include latest version of kafka itself along with latest version of client libs.
   // This seems to help with jar compatibility hell.

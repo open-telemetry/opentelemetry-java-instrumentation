@@ -40,17 +40,33 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
   @ClassRule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, STREAM_PENDING, STREAM_PROCESSED)
 
+  Map<String, Object> senderProps() {
+    return KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+  }
+
+  Map<String, Object> consumerProps(String group, String autoCommit) {
+    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka)
+  }
+
+  void waitForAssignment(Object container) {
+    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+  }
+
+  def stopProducerFactory(DefaultKafkaProducerFactory producerFactory) {
+    producerFactory.stop()
+  }
+
   def "test kafka produce and consume with streams in-between"() {
     setup:
     def config = new Properties()
-    def senderProps = KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    def senderProps = senderProps()
     config.putAll(senderProps)
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-application")
     config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName())
     config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName())
 
     // CONFIGURE CONSUMER
-    def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(KafkaTestUtils.consumerProps("sender", "false", embeddedKafka))
+    def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProps("sender", "false"))
 
     def containerProperties
     try {
@@ -77,7 +93,7 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
     consumerContainer.start()
 
     // wait until the container has the required number of assigned partitions
-    ContainerTestUtils.waitForAssignment(consumerContainer, embeddedKafka.getPartitionsPerTopic())
+    waitForAssignment(consumerContainer)
 
     // CONFIGURE PROCESSOR
     def builder
@@ -223,7 +239,7 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
 
 
     cleanup:
-    producerFactory?.stop()
+    stopProducerFactory(producerFactory)
     streams?.close()
     consumerContainer?.stop()
   }

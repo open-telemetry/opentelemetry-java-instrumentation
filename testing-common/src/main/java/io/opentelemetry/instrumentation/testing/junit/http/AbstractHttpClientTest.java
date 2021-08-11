@@ -115,14 +115,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    * dedicated API for invoking synchronously, such as OkHttp's execute method.
    */
   protected abstract int sendRequest(
-      REQUEST request, String method, URI uri, Map<String, String> headers);
+      REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
 
   protected void sendRequestWithCallback(
       REQUEST request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      RequestResult requestResult)
+      throws Exception {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException();
   }
@@ -210,7 +211,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @ParameterizedTest
   @ValueSource(strings = {"/success", "/success?with=params"})
-  void successfulGetRequest(String path) {
+  void successfulGetRequest(String path) throws Exception {
     URI uri = resolveAddress(path);
     String method = "GET";
     int responseCode = doRequest(method, uri);
@@ -233,7 +234,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
-  void successfulRequestWithParent(String method) {
+  void successfulRequestWithParent(String method) throws Exception {
     URI uri = resolveAddress("/success");
     int responseCode = testing.runWithSpan("parent", () -> doRequest(method, uri));
 
@@ -258,7 +259,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void successfulRequestWithNotSampledParent() throws InterruptedException {
+  void successfulRequestWithNotSampledParent() throws Exception {
     String method = "GET";
     URI uri = resolveAddress("/success");
     int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
@@ -361,7 +362,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void basicRequestWith1Redirect() {
+  void basicRequestWith1Redirect() throws Exception {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
@@ -390,7 +391,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void basicRequestWith2Redirects() {
+  void basicRequestWith2Redirects() throws Exception {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
@@ -457,7 +458,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void redirectToSecuredCopiesAuthHeader() {
+  void redirectToSecuredCopiesAuthHeader() throws Exception {
     assumeTrue(options.testRedirects);
 
     String method = "GET";
@@ -514,7 +515,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void reuseRequest() {
+  void reuseRequest() throws Exception {
     assumeTrue(options.testReusedRequest);
 
     String method = "GET";
@@ -556,7 +557,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   //   (so that it propagates the same trace id / span id that it reports to the backend
   //   and the trace is not broken)
   @Test
-  void requestWithExistingTracingHeaders() {
+  void requestWithExistingTracingHeaders() throws Exception {
     String method = "GET";
     URI uri = resolveAddress("/success");
 
@@ -619,7 +620,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
-  void connectionErrorUnopenedPortWithCallback() {
+  void connectionErrorUnopenedPortWithCallback() throws Exception {
     assumeTrue(options.testConnectionFailure);
     assumeTrue(options.testCallback);
     assumeTrue(options.testErrorWithCallback);
@@ -745,7 +746,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
       matches = ".*IBM J9 VM.*",
       disabledReason = "IBM JVM has different protocol support for TLS")
   @Test
-  void httpsRequest() {
+  void httpsRequest() throws Exception {
     assumeTrue(options.testRemoteConnection);
     assumeTrue(options.testHttps);
 
@@ -796,15 +797,19 @@ public abstract class AbstractHttpClientTest<REQUEST> {
             } catch (InterruptedException e) {
               throw new AssertionError(e);
             }
-            testing.runWithSpan(
-                "Parent span " + index,
-                () -> {
-                  Span.current().setAttribute("test.request.id", index);
-                  doRequest(
-                      method,
-                      uri,
-                      Collections.singletonMap("test-request-id", String.valueOf(index)));
-                });
+            try {
+              testing.runWithSpan(
+                  "Parent span " + index,
+                  () -> {
+                    Span.current().setAttribute("test.request.id", index);
+                    doRequest(
+                        method,
+                        uri,
+                        Collections.singletonMap("test-request-id", String.valueOf(index)));
+                  });
+            } catch (Exception e) {
+              throw new AssertionError(e);
+            }
           };
       pool.submit(job);
     }
@@ -870,16 +875,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     } catch (InterruptedException e) {
                       throw new AssertionError(e);
                     }
-                    testing.runWithSpan(
-                        "Parent span " + index,
-                        () -> {
-                          Span.current().setAttribute("test.request.id", index);
-                          doRequestWithCallback(
-                              method,
-                              uri,
-                              Collections.singletonMap("test-request-id", String.valueOf(index)),
-                              () -> testing.runWithSpan("child", () -> {}));
-                        });
+                    try {
+                      testing.runWithSpan(
+                          "Parent span " + index,
+                          () -> {
+                            Span.current().setAttribute("test.request.id", index);
+                            doRequestWithCallback(
+                                method,
+                                uri,
+                                Collections.singletonMap("test-request-id", String.valueOf(index)),
+                                () -> testing.runWithSpan("child", () -> {}));
+                          });
+                    } catch (Exception e) {
+                      throw new AssertionError(e);
+                    }
                   };
               pool.submit(job);
             });
@@ -1007,7 +1016,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
-    Set<AttributeKey<?>> httpClientAttributes = httpAttributes(uri);
+    Set<AttributeKey<?>> httpClientAttributes = options.httpAttributes.apply(uri);
     return span.hasName(options.expectedClientSpanNameMapper.apply(uri, method))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
@@ -1255,22 +1264,22 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         .toArray(new Consumer[0]);
   }
 
-  private int doRequest(String method, URI uri) {
+  private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 
-  private int doRequest(String method, URI uri, Map<String, String> headers) {
+  private int doRequest(String method, URI uri, Map<String, String> headers) throws Exception {
     REQUEST request = buildRequest(method, uri, headers);
     return sendRequest(request, method, uri, headers);
   }
 
-  private int doReusedRequest(String method, URI uri) {
+  private int doReusedRequest(String method, URI uri) throws Exception {
     REQUEST request = buildRequest(method, uri, Collections.emptyMap());
     sendRequest(request, method, uri, Collections.emptyMap());
     return sendRequest(request, method, uri, Collections.emptyMap());
   }
 
-  private int doRequestWithExistingTracingHeaders(String method, URI uri) {
+  private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
     Map<String, String> headers = new HashMap();
     for (String field :
         testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
@@ -1280,20 +1289,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return sendRequest(request, method, uri, headers);
   }
 
-  private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback) {
+  private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback)
+      throws Exception {
     return doRequestWithCallback(method, uri, Collections.emptyMap(), callback);
   }
 
   private RequestResult doRequestWithCallback(
-      String method, URI uri, Map<String, String> headers, Runnable callback) {
+      String method, URI uri, Map<String, String> headers, Runnable callback) throws Exception {
     REQUEST request = buildRequest(method, uri, headers);
     RequestResult requestResult = new RequestResult(callback);
     sendRequestWithCallback(request, method, uri, headers, requestResult);
     return requestResult;
   }
 
-  // Visible for spock bridge.
-  URI resolveAddress(String path) {
+  protected URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -58,38 +59,47 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This AbstractRequestContextImpl requestContext,
+        @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
 
-      if (requestContext.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
-          && requestContext instanceof ContainerRequestContext) {
-        Message message = requestContext.getMessage();
-        OperationResourceInfoStack resourceInfoStack =
-            (OperationResourceInfoStack)
-                message.get("org.apache.cxf.jaxrs.model.OperationResourceInfoStack");
-        if (resourceInfoStack == null || resourceInfoStack.isEmpty()) {
-          return;
-        }
+      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null
+          || !(requestContext instanceof ContainerRequestContext)) {
+        return;
+      }
 
-        MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
-        Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
-        Class<?> resourceClass = invocationInfo.getRealClass();
+      Message message = requestContext.getMessage();
+      OperationResourceInfoStack resourceInfoStack =
+          (OperationResourceInfoStack)
+              message.get("org.apache.cxf.jaxrs.model.OperationResourceInfoStack");
+      if (resourceInfoStack == null || resourceInfoStack.isEmpty()) {
+        return;
+      }
 
-        context =
-            RequestContextHelper.createOrUpdateAbortSpan(
-                (ContainerRequestContext) requestContext, resourceClass, method);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
+      MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
+      Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
+      Class<?> resourceClass = invocationInfo.getRealClass();
+
+      handlerData = new HandlerData(resourceClass, method);
+      context =
+          RequestContextHelper.createOrUpdateAbortSpan(
+              (ContainerRequestContext) requestContext, handlerData);
+      if (context != null) {
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      RequestContextHelper.closeSpanAndScope(context, scope, throwable);
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

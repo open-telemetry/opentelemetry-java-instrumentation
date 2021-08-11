@@ -28,15 +28,33 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
   @Rule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)
 
+  abstract containerProperties()
+
+  Map<String, Object> senderProps() {
+    return KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+  }
+
+  Map<String, Object> consumerProps(String group, String autoCommit) {
+    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka)
+  }
+
+  void waitForAssignment(Object container) {
+    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+  }
+
+  def stopProducerFactory(DefaultKafkaProducerFactory producerFactory) {
+    producerFactory.stop()
+  }
+
   @Unroll
   def "test kafka client header propagation manual config"() {
     setup:
-    def senderProps = KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    def senderProps = senderProps()
     def producerFactory = new DefaultKafkaProducerFactory<String, String>(senderProps)
     def kafkaTemplate = new KafkaTemplate<String, String>(producerFactory)
 
     // set up the Kafka consumer properties
-    def consumerProperties = KafkaTestUtils.consumerProps("sender", "false", embeddedKafka)
+    def consumerProperties = consumerProps("sender", "false")
 
     // create a Kafka consumer factory
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
@@ -62,7 +80,7 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
     container.start()
 
     // wait until the container has the required number of assigned partitions
-    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+    waitForAssignment(container)
 
     when:
     String message = "Testing without headers"
@@ -75,7 +93,7 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
     received.headers().iterator().hasNext() == propagationEnabled
 
     cleanup:
-    producerFactory.stop()
+    stopProducerFactory(producerFactory)
     container?.stop()
   }
 }

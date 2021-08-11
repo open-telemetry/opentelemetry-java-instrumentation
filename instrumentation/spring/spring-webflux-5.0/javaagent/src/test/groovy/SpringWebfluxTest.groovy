@@ -27,6 +27,7 @@ import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
 import spock.lang.Unroll
+import util.SpringWebfluxTestUtil
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -61,6 +62,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         }
       })
       .build()
+  }
+
+  def cleanup() {
+    SpringWebfluxTestUtil.waitForRequestsToComplete()
   }
 
   @Unroll

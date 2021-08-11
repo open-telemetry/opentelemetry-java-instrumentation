@@ -184,17 +184,20 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
       Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
       Context context = Java8BytecodeBridge.currentContext();
       for (Callable<?> task : tasks) {
-        // TODO: missing shouldPropagateContext() check
-        if (task != null) {
+        if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
           Callable<?> newTask = CallableWrapper.wrapIfNeeded(task);
           wrappedTasks.add(newTask);
           ContextStore<Callable<?>, PropagatedContext> contextStore =
               InstrumentationContext.get(Callable.class, PropagatedContext.class);
           ExecutorAdviceHelper.attachContextToTask(context, contextStore, newTask);
+        } else {
+          // note that task may be null here
+          wrappedTasks.add(task);
         }
       }
       tasks = wrappedTasks;
-      // TODO: why are we returning tasks and not just states?
+      // returning tasks and not propagatedContexts to avoid allocating another list just for an
+      // edge case (exception)
       return tasks;
     }
 
@@ -211,23 +214,13 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
        any parent spans in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
-      if (null != throwable) {
+      if (throwable != null) {
         for (Callable<?> task : wrappedTasks) {
           if (task != null) {
             ContextStore<Callable<?>, PropagatedContext> contextStore =
                 InstrumentationContext.get(Callable.class, PropagatedContext.class);
             PropagatedContext propagatedContext = contextStore.get(task);
-            if (propagatedContext != null) {
-              /*
-              Note: this may potentially clear somebody else's parent span if we didn't set it
-              up in setupState because it was already present before us. This should be safe but
-              may lead to non-attributed async work in some very rare cases.
-              Alternative is to not clear parent span here if we did not set it up in setupState
-              but this may potentially lead to memory leaks if callers do not properly handle
-              exceptions.
-               */
-              propagatedContext.clear();
-            }
+            ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
           }
         }
       }

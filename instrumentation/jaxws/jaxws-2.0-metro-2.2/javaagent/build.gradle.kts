@@ -27,8 +27,5 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
-  // TODO (trask) revisit in a few months hopefully once 2.3.5 is published
-  //  and this can go back version '2.+'
-  // version 2.3.4 depends on org.glassfish.gmbal:gmbal-api-only:4.0.3 which does not exist
-  latestDepTestLibrary("com.sun.xml.ws:jaxws-rt:2.3.3")
+  latestDepTestLibrary("com.sun.xml.ws:jaxws-rt:2.+")
 }
