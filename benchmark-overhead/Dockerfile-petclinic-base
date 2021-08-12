@@ -10,6 +10,9 @@ RUN git clone http://github.com/spring-petclinic/spring-petclinic-rest.git
 WORKDIR /app/spring-petclinic-rest
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
+
+FROM bellsoft/liberica-openjdk-alpine:11
+COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
 EXPOSE 9966
 CMD ["java", "-jar", "spring-petclinic-rest.jar"]
