@@ -34,7 +34,7 @@ public class InstrumentationContext {
   public static <Q extends K, K, C> ContextStore<Q, C> get(
       Class<K> keyClass, Class<C> contextClass) {
     if (contextStoreSupplier == null) {
-      throw new IllegalStateException("");
+      throw new IllegalStateException("Context store supplier not set");
     }
     return contextStoreSupplier.get(keyClass, contextClass);
   }
