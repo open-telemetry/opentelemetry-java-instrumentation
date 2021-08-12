@@ -22,7 +22,7 @@ public class InstrumentationContext {
    * ContextStore} when it is already created. For this {@link ContextStore} either needs to be
    * added to {@code
    * io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule#getMuzzleContextStoreClasses()}
-   * or be used in an Advice class which automatically adds it to {@code
+   * or be used in an Advice or Helper class which automatically adds it to {@code
    * InstrumentationModule#getMuzzleContextStoreClasses()}
    *
    * @param keyClass The key class context is attached to.
