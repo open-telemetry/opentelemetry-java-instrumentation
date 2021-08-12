@@ -10,7 +10,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.SdkMeterProviderConfigurer;
@@ -65,6 +67,8 @@ public class OpenTelemetryInstaller implements AgentListener {
             });
       }
 
+      InstrumentationContext.internalSetContextStoreSupplier(
+          (keyClass, contextClass) -> FieldBackedProvider.getContextStore(keyClass, contextClass));
     } else {
       logger.info("Tracing is disabled.");
     }
