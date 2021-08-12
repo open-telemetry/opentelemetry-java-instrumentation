@@ -236,7 +236,7 @@ afterEvaluate {
         languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
         implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
       })
-      isEnabled = isJavaVersionAllowed(testJavaVersion)
+      isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
