@@ -30,8 +30,7 @@ public class AdviceUtils {
 
   public static <T> Mono<T> setPublisherSpan(Mono<T> mono, Context context) {
     return mono.doOnError(t -> finishSpanIfPresent(context, t))
-        .doOnSuccess(x -> finishSpanIfPresent(context, null))
-        .doOnCancel(() -> finishSpanIfPresent(context, null));
+        .doOnTerminate(() -> finishSpanIfPresent(context, null));
   }
 
   public static void finishSpanIfPresent(ServerWebExchange exchange, Throwable throwable) {
