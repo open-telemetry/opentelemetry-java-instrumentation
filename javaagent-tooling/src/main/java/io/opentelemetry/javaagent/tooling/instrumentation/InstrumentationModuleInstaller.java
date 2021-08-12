@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -113,9 +114,20 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule) {
     Map<String, String> contextStore = instrumentationModule.getMuzzleContextStoreClasses();
     if (!contextStore.isEmpty()) {
-      return new FieldBackedProvider(instrumentationModule.getClass(), contextStore);
+      return FieldBackedProviderFactory.get(instrumentationModule.getClass(), contextStore);
     } else {
       return NoopContextProvider.INSTANCE;
+    }
+  }
+
+  private static class FieldBackedProviderFactory {
+    static {
+      InstrumentationContext.internalSetContextStoreSupplier(
+          (keyClass, contextClass) -> FieldBackedProvider.getContextStore(keyClass, contextClass));
+    }
+
+    static FieldBackedProvider get(Class<?> instrumenterClass, Map<String, String> contextStore) {
+      return new FieldBackedProvider(instrumenterClass, contextStore);
     }
   }
 
