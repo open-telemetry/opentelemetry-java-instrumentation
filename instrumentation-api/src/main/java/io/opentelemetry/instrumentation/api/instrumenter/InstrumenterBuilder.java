@@ -32,7 +32,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
-  // TODO move this constant out of api and only use system property from javaagent?
   /** Instrumentation type suppression configuration property key. */
   private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
       Config.get()

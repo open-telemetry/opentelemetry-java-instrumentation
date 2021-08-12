@@ -10,8 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-// TODO make class (and fields/methods below) package-private after tracers are gone and no need for
-//  bridging from ClientSpan/ServerSpan/ConsumerSpan
 /** Makes span keys for specific instrumentation accessible to enrich and suppress spans. */
 public final class SpanKey {
 
@@ -35,8 +33,6 @@ public final class SpanKey {
   private static final ContextKey<Span> CLIENT_KEY =
       ContextKey.named("opentelemetry-traces-span-key-client");
 
-  // this is used instead of above, depending on the configuration value for
-  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
   private static final ContextKey<Span> PRODUCER_KEY =
       ContextKey.named("opentelemetry-traces-span-key-producer");
 
