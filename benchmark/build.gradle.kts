@@ -1,8 +1,11 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
   id("me.champeau.jmh")
   id("com.github.johnrengelman.shadow")
 
   id("otel.java-conventions")
+  id("otel.jmh-conventions")
 }
 
 dependencies {
@@ -22,6 +25,7 @@ dependencies {
   jmh("com.google.http-client:google-http-client:1.19.0")
   jmh("org.eclipse.jetty:jetty-server:9.4.1.v20170120")
   jmh("org.eclipse.jetty:jetty-servlet:9.4.1.v20170120")
+  jmh("org.slf4j:slf4j-api")
 
   // used to provide lots of classes for TypeMatchingBenchmark
   jmh("org.springframework:spring-web:4.3.28.RELEASE")
@@ -39,6 +43,16 @@ jmh {
 }
 
 tasks {
+
+  // without disabling errorprone, jmh task fails with
+  // Task :benchmark:jmhCompileGeneratedClasses FAILED
+  // error: plug-in not found: ErrorProne
+  withType<JavaCompile>().configureEach {
+    options.errorprone {
+      isEnabled.set(false)
+    }
+  }
+
   named("jmh") {
     dependsOn(":javaagent:shadowJar")
   }

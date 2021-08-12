@@ -13,7 +13,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
-import org.springframework.kafka.test.rule.KafkaEmbedded
+import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Unroll
@@ -26,24 +26,24 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
     System.getProperty("otel.instrumentation.kafka.client-propagation.enabled", "true"))
 
   @Rule
-  KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)
+  EmbeddedKafkaRule embeddedKafka = new EmbeddedKafkaRule(1, true, SHARED_TOPIC)
 
   abstract containerProperties()
 
   Map<String, Object> senderProps() {
-    return KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    return KafkaTestUtils.producerProps(embeddedKafka.getEmbeddedKafka().getBrokersAsString())
   }
 
   Map<String, Object> consumerProps(String group, String autoCommit) {
-    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka)
+    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka.getEmbeddedKafka())
   }
 
   void waitForAssignment(Object container) {
-    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getEmbeddedKafka().getPartitionsPerTopic())
   }
 
   def stopProducerFactory(DefaultKafkaProducerFactory producerFactory) {
-    producerFactory.stop()
+    producerFactory.destroy()
   }
 
   @Unroll

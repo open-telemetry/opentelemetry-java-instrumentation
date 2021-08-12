@@ -26,7 +26,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
-import org.springframework.kafka.test.rule.KafkaEmbedded
+import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Shared
@@ -38,22 +38,22 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
 
   @Shared
   @ClassRule
-  KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, STREAM_PENDING, STREAM_PROCESSED)
+  EmbeddedKafkaRule embeddedKafka = new EmbeddedKafkaRule(1, true, STREAM_PENDING, STREAM_PROCESSED)
 
   Map<String, Object> senderProps() {
-    return KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    return KafkaTestUtils.producerProps(embeddedKafka.getEmbeddedKafka().getBrokersAsString())
   }
 
   Map<String, Object> consumerProps(String group, String autoCommit) {
-    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka)
+    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka.getEmbeddedKafka())
   }
 
   void waitForAssignment(Object container) {
-    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getEmbeddedKafka().getPartitionsPerTopic())
   }
 
   def stopProducerFactory(DefaultKafkaProducerFactory producerFactory) {
-    producerFactory.stop()
+    producerFactory.destroy()
   }
 
   def "test kafka produce and consume with streams in-between"() {

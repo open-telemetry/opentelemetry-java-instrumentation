@@ -61,7 +61,9 @@ tasks.register("printMuzzleReferences") {
   dependsOn(compileMuzzle)
   doLast {
     val instrumentationCL = createInstrumentationClassloader()
-    MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
+    withContextClassLoader(instrumentationCL) {
+      MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
+    }
   }
 }
 
@@ -214,13 +216,9 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     dependsOn(configurations.named("runtimeClasspath"))
     doLast {
       val instrumentationCL = createInstrumentationClassloader()
-      val ccl = Thread.currentThread().contextClassLoader
       val userCL = createClassLoaderForTask(config)
-      Thread.currentThread().contextClassLoader = instrumentationCL
-      try {
+      withContextClassLoader(instrumentationCL) {
         MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL, muzzleDirective.assertPass.get())
-      } finally {
-        Thread.currentThread().contextClassLoader = ccl
       }
 
       for (thread in Thread.getAllStackTraces().keys) {
@@ -335,4 +333,14 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   }
 
   yieldAll(allVersionArtifacts)
+}
+
+fun withContextClassLoader(classLoader: ClassLoader, action: () -> Unit) {
+  val currentClassLoader = Thread.currentThread().contextClassLoader
+  Thread.currentThread().contextClassLoader = classLoader
+  try {
+    action()
+  } finally {
+    Thread.currentThread().contextClassLoader = currentClassLoader
+  }
 }

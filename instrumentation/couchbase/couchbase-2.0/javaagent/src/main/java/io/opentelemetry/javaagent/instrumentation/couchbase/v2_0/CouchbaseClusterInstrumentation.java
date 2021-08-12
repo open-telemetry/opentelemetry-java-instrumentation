@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,14 +50,15 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      CouchbaseRequest request = CouchbaseRequest.create(null, method);
+      CouchbaseRequest request = CouchbaseRequest.create(null, declaringClass, methodName);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }

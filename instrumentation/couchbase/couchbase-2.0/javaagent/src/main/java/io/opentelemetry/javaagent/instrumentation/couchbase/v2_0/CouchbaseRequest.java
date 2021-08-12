@@ -7,18 +7,27 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
-import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class CouchbaseRequest {
 
-  public static CouchbaseRequest create(@Nullable String bucket, Method method) {
-    Class<?> declaringClass = method.getDeclaringClass();
-    String className =
-        declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-    String operation = className + "." + method.getName();
+  private static final ClassValue<Map<String, String>> methodOperationNames =
+      new ClassValue<Map<String, String>>() {
+        @Override
+        protected Map<String, String> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
+  public static CouchbaseRequest create(
+      @Nullable String bucket, Class<?> declaringClass, String methodName) {
+    String operation =
+        methodOperationNames
+            .get(declaringClass)
+            .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
     return new AutoValue_CouchbaseRequest(bucket, null, operation, true);
   }
 
@@ -27,6 +36,12 @@ public abstract class CouchbaseRequest {
 
     return new AutoValue_CouchbaseRequest(
         bucket, statement.getFullStatement(), statement.getOperation(), false);
+  }
+
+  private static String computeOperation(Class<?> declaringClass, String methodName) {
+    String className =
+        declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
+    return className + "." + methodName;
   }
 
   @Nullable
