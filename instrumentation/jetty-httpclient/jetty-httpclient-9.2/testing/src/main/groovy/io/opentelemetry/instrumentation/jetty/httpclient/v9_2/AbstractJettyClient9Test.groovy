@@ -18,6 +18,7 @@ import org.eclipse.jetty.client.api.Result
 import org.eclipse.jetty.http.HttpMethod
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import spock.lang.Shared
+import spock.lang.Unroll
 
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
@@ -34,7 +35,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   Request jettyRequest = null
 
   def setupSpec() {
-
     //Start the main Jetty HttpClient and a https client
     client.start()
 
@@ -46,7 +46,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
-
     HttpClient theClient = uri.scheme == 'https' ? httpsClient : client
 
     Request request = theClient.newRequest(uri)
@@ -78,25 +77,21 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   }
 
   private static class JettyClientListener implements Request.FailureListener, Response.FailureListener {
-
     volatile Throwable failure
 
     @Override
     void onFailure(Request requestF, Throwable failure) {
       this.failure = failure
-
     }
 
     @Override
     void onFailure(Response responseF, Throwable failure) {
       this.failure = failure
     }
-
   }
 
   @Override
   void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-
     JettyClientListener jcl = new JettyClientListener()
 
     request.onRequestFailure(jcl)
@@ -108,7 +103,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     request.send(new Response.CompleteListener() {
       @Override
       void onComplete(Result result) {
-
         if (jcl.failure != null) {
           requestResult.complete(jcl.failure)
           return
@@ -118,7 +112,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
       }
     })
   }
-
 
   @Override
   boolean testRedirects() {
@@ -135,4 +128,27 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     super.httpAttributes(uri) + extra
   }
 
+  @Unroll
+  def "test content of #method request #url"() {
+    when:
+    def request = buildRequest(method, url, [:])
+    def response = request.send()
+
+    then:
+    response.status == 200
+    response.getContentAsString() == "Hello."
+
+    assertTraces(1) {
+      trace(0, 2) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1, span(0))
+      }
+    }
+
+    where:
+    path << ["/success"]
+
+    method = "GET"
+    url = resolveAddress(path)
+  }
 }
