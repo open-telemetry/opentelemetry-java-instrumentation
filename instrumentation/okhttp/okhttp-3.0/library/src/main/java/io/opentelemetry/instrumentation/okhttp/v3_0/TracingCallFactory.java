@@ -9,8 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -23,19 +24,22 @@ class TracingCallFactory implements Call.Factory {
   private static final Cache<Request, Context> contextsByRequest =
       Cache.newBuilder().setWeakKeys().build();
 
-  @Nullable private static Method timeoutMethod;
-  @Nullable private static Method cloneMethod;
+  @Nullable private static MethodHandle timeoutMethodHandle;
+  @Nullable private static MethodHandle cloneMethodHandle;
 
   static {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
-      timeoutMethod = Call.class.getMethod("timeout");
-    } catch (NoSuchMethodException e) {
-      timeoutMethod = null;
+      MethodType methodType = MethodType.methodType(Timeout.class);
+      timeoutMethodHandle = lookup.findVirtual(Call.class, "timeout", methodType);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      timeoutMethodHandle = null;
     }
     try {
-      cloneMethod = Call.class.getDeclaredMethod("clone");
-    } catch (NoSuchMethodException e) {
-      cloneMethod = null;
+      MethodType methodType = MethodType.methodType(Call.class);
+      cloneMethodHandle = lookup.findVirtual(Call.class, "clone", methodType);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      cloneMethodHandle = null;
     }
   }
 
@@ -74,14 +78,14 @@ class TracingCallFactory implements Call.Factory {
 
     @Override
     public Call clone() throws CloneNotSupportedException {
-      if (cloneMethod == null) {
+      if (cloneMethodHandle == null) {
         return (Call) super.clone();
       }
       try {
         // we pull the current context here, because the cloning might be happening in a different
         // context than the original call creation.
-        return new TracingCall((Call) cloneMethod.invoke(delegate), Context.current());
-      } catch (IllegalAccessException | InvocationTargetException e) {
+        return new TracingCall((Call) cloneMethodHandle.invoke(delegate), Context.current());
+      } catch (Throwable e) {
         return (Call) super.clone();
       }
     }
@@ -115,12 +119,12 @@ class TracingCallFactory implements Call.Factory {
 
     // @Override method was introduced in 3.12
     public Timeout timeout() {
-      if (timeoutMethod == null) {
+      if (timeoutMethodHandle == null) {
         return Timeout.NONE;
       }
       try {
-        return (Timeout) timeoutMethod.invoke(delegate);
-      } catch (IllegalAccessException | InvocationTargetException e) {
+        return (Timeout) timeoutMethodHandle.invoke(delegate);
+      } catch (Throwable e) {
         // do nothing...we're before 3.12, or something else has gone wrong that we can't do
         // anything about.
         return Timeout.NONE;
