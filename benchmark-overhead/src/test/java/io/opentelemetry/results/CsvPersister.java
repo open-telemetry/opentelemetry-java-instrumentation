@@ -23,7 +23,7 @@ class CsvPersister implements ResultsPersister {
 
     ensureFileCreated(results);
 
-    StringBuffer sb = new StringBuffer().append(System.currentTimeMillis() / 1000);
+    StringBuilder sb = new StringBuilder().append(System.currentTimeMillis() / 1000);
     doSorted(results, result -> {
       sb.append(",").append(result.startupDurationMs);
       sb.append(",").append(result.heapUsed.min);
