@@ -44,8 +44,16 @@ abstract class ArquillianJaxWsTest extends AgentInstrumentationSpecification {
       .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
   }
 
+  def getContextRoot() {
+    return url.getPath()
+  }
+
+  def getServicePath(String service) {
+    service
+  }
+
   def getAddress(String service) {
-    return url.resolve(service).toString()
+    return url.resolve(getServicePath(service)).toString()
   }
 
   @Unroll
@@ -83,7 +91,7 @@ abstract class ArquillianJaxWsTest extends AgentInstrumentationSpecification {
   }
 
   def serverSpanName(String service, String operation) {
-    return service + "Impl." + operation
+    return getContextRoot() + getServicePath(service) + "/" + service + "/" + operation
   }
 
   static serverSpan(TraceAssert trace, int index, String operation, Throwable exception = null) {
