@@ -49,6 +49,15 @@ class CsvPersister implements ResultsPersister {
     if (Files.exists(resultsFile)) {
       return;
     }
+    try {
+      String headerLine = createHeaderLine(results);
+      Files.writeString(resultsFile, headerLine);
+    } catch (IOException e) {
+      throw new RuntimeException("Error creating csv output stub", e);
+    }
+  }
+
+  private String createHeaderLine(List<AppPerfResults> results) {
     StringBuffer sb = new StringBuffer("timestamp");
     doSorted(results, result -> {
       String agent = result.getAgentName();
@@ -65,11 +74,7 @@ class CsvPersister implements ResultsPersister {
       sb.append(",").append(agent).append(":peakThreadCount");
     });
     sb.append("\n");
-    try {
-      Files.writeString(resultsFile, sb.toString());
-    } catch (IOException e) {
-      throw new RuntimeException("Error creating csv output stub", e);
-    }
+    return sb.toString();
   }
 
   private void doSorted(List<AppPerfResults> results, Consumer<AppPerfResults> consumer) {
