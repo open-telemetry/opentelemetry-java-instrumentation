@@ -35,6 +35,7 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
+
   // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
   // configure the logging levels
