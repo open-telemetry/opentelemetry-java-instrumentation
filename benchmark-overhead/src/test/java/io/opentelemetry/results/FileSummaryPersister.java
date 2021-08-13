@@ -19,8 +19,7 @@ class FileSummaryPersister implements ResultsPersister {
 
   @Override
   public void write(List<AppPerfResults> results) {
-    try {
-      PrintStream out = new PrintStream(file.toFile());
+    try (PrintStream out = new PrintStream(file.toFile())){
       new PrintStreamPersister(out).write(results);
     } catch (FileNotFoundException e) {
       throw new RuntimeException("Error opening output file for results", e);
