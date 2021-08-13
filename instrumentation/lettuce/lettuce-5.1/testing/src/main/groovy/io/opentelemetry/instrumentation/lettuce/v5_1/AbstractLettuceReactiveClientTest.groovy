@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.lettuce.core.RedisClient
@@ -74,22 +75,32 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
     Consumer<String> consumer = new Consumer<String>() {
       @Override
       void accept(String res) {
-        conds.evaluate {
-          assert res == "OK"
+        runWithSpan("callback") {
+          conds.evaluate {
+            assert res == "OK"
+          }
         }
       }
     }
 
     when:
-    reactiveCommands.set("TESTSETKEY", "TESTSETVAL").subscribe(consumer)
+    runWithSpan("parent") {
+      reactiveCommands.set("TESTSETKEY", "TESTSETVAL").subscribe(consumer)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "SET"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -103,6 +114,11 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           event(1) {
             eventName "redis.encode.end"
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
@@ -148,20 +164,30 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
     final defaultVal = "NOT THIS VALUE"
 
     when:
-    reactiveCommands.get("NON_EXISTENT_KEY").defaultIfEmpty(defaultVal).subscribe {
-      res ->
-        conds.evaluate {
-          assert res == defaultVal
-        }
+    runWithSpan("parent") {
+      reactiveCommands.get("NON_EXISTENT_KEY").defaultIfEmpty(defaultVal).subscribe {
+        res ->
+          runWithSpan("callback") {
+            conds.evaluate {
+              assert res == defaultVal
+            }
+          }
+      }
     }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -175,6 +201,11 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           event(1) {
             eventName "redis.encode.end"
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
