@@ -24,6 +24,10 @@ class CsvPersister implements ResultsPersister {
     ensureFileCreated(results);
 
     StringBuilder sb = new StringBuilder().append(System.currentTimeMillis() / 1000);
+    // Don't be confused by the loop -- This generates a single long csv line.
+    // Each result is for a given agent run, and we want all the fields for all agents on the same
+    // line so that we can create a columnar structure that allows us to more easily compare agent
+    // to agent for a given run.
     doSorted(results, result -> {
       sb.append(",").append(result.startupDurationMs);
       sb.append(",").append(result.heapUsed.min);
@@ -58,7 +62,11 @@ class CsvPersister implements ResultsPersister {
   }
 
   private String createHeaderLine(List<AppPerfResults> results) {
-    StringBuffer sb = new StringBuffer("timestamp");
+    StringBuilder sb = new StringBuilder("timestamp");
+    // Don't be confused by the loop -- This generates a single long csv line.
+    // Each result is for a given agent run, and we want all the fields for all agents on the same
+    // line so that we can create a columnar structure that allows us to more easily compare agent
+    // to agent for a given run.
     doSorted(results, result -> {
       String agent = result.getAgentName();
       sb.append(",").append(agent).append(":startupTimeMs");
