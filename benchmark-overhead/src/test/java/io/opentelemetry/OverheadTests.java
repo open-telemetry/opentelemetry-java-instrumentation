@@ -30,6 +30,9 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 public class OverheadTests {
 
@@ -76,6 +79,12 @@ public class OverheadTests {
     petclinic.start();
     writeStartupTimeFile(agent, start);
 
+    if(config.getWarmupSeconds() > 0){
+      doWarmupPhase(config);
+    }
+
+    startRecording(agent, petclinic);
+
     GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
     k6.start();
 
@@ -86,6 +95,28 @@ public class OverheadTests {
       TimeUnit.MILLISECONDS.sleep(500);
     }
     postgres.stop();
+  }
+
+  private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
+    Path outFile = namingConventions.container.jfrFile(agent);
+    String[] command = {"jcmd", "1", "JFR.start", "settings=profile", "dumponexit=true", "name=petclinic", "filename=" + outFile};
+    petclinic.execInContainer(command);
+  }
+
+  private void doWarmupPhase(TestConfig testConfig) {
+    long start = System.currentTimeMillis();
+    System.out.println("Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
+    while(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start) < testConfig.getWarmupSeconds()){
+      GenericContainer<?> k6 = new GenericContainer<>(
+          DockerImageName.parse("loadimpact/k6"))
+          .withNetwork(NETWORK)
+          .withCopyFileToContainer(
+              MountableFile.forHostPath("./k6"), "/app")
+          .withCommand("run", "-u", "5", "-i", "25", "/app/basic.js")
+          .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+      k6.start();
+    }
+    System.out.println("Warmup complete.");
   }
 
   private void writeStartupTimeFile(Agent agent, long start) throws IOException {
