@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import java.util.function.Supplier;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
@@ -19,12 +18,7 @@ public class JsfServerSpanNaming {
   public static void updateServerSpanName(FacesContext facesContext) {
     Context parentContext = Context.current();
     ServerSpanNaming.updateServerSpanName(
-        parentContext, CONTROLLER, getServerSpanNameSupplier(parentContext, facesContext));
-  }
-
-  private static Supplier<String> getServerSpanNameSupplier(
-      Context context, FacesContext facesContext) {
-    return () -> getServerSpanName(context, facesContext);
+        parentContext, CONTROLLER, () -> getServerSpanName(parentContext, facesContext));
   }
 
   private static String getServerSpanName(Context context, FacesContext facesContext) {
