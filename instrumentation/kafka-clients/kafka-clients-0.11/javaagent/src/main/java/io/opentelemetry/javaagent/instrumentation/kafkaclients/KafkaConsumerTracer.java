@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaHeadersGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -18,6 +18,7 @@ import org.apache.kafka.common.record.TimestampType;
 
 public class KafkaConsumerTracer extends BaseTracer {
   private static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
+  private static final KafkaHeadersGetter GETTER = new KafkaHeadersGetter();
 
   public static KafkaConsumerTracer tracer() {
     return TRACER;
@@ -45,7 +46,7 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
     if (KafkaClientsConfig.isPropagationEnabled()) {
-      return extract(record.headers(), GETTER);
+      return extract(record, GETTER);
     } else {
       return Context.current();
     }
