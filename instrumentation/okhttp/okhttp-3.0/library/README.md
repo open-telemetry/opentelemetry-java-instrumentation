@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/ok
 ### Add these dependencies to your project:
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.4.0`
+[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.5.0`
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -50,7 +50,7 @@ public class OkHttpConfiguration {
   }
 
   //your configuration of the OkHttpClient goes here:
-  public OkHttpClient createClient() {
+  private OkHttpClient createClient() {
     return new OkHttpClient.Builder().build();
   }
 }
