@@ -12,12 +12,12 @@ public class SpringWsCodeAttributesExtractor
     extends CodeAttributesExtractor<SpringWsRequest, Void> {
 
   @Override
-  protected @Nullable Class<?> codeClass(SpringWsRequest request) {
+  protected Class<?> codeClass(SpringWsRequest request) {
     return request.getCodeClass();
   }
 
   @Override
-  protected @Nullable String methodName(SpringWsRequest request) {
+  protected String methodName(SpringWsRequest request) {
     return request.getMethodName();
   }
 
