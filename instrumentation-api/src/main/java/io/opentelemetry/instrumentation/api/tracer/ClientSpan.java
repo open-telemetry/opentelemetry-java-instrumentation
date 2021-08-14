@@ -32,7 +32,7 @@ public final class ClientSpan {
   }
 
   public static Context with(Context context, Span clientSpan) {
-    return SpanKey.ALL_CLIENTS.with(context, clientSpan);
+    return SpanKey.ALL_CLIENTS.storeInContext(context, clientSpan);
   }
 
   private ClientSpan() {}

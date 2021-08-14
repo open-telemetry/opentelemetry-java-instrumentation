@@ -5,22 +5,22 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static java.util.Collections.singletonList;
+import static java.util.Collections.singleton;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import java.util.List;
+import java.util.Set;
 
 abstract class SpanSuppressionStrategy {
   private static final SpanSuppressionStrategy SERVER_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singletonList(SpanKey.SERVER));
+      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.SERVER));
   private static final SpanSuppressionStrategy CONSUMER_STRATEGY =
-      new NeverSuppressAndStoreStrategy(singletonList(SpanKey.CONSUMER));
+      new StoreOnlyStrategy(singleton(SpanKey.CONSUMER));
   private static final SpanSuppressionStrategy ALL_CLIENTS_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singletonList(SpanKey.ALL_CLIENTS));
+      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_CLIENTS));
   private static final SpanSuppressionStrategy ALL_PRODUCERS_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singletonList(SpanKey.ALL_PRODUCERS));
+      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_PRODUCERS));
 
   public static final SpanSuppressionStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY =
       new CompositeSuppressionStrategy(
@@ -28,12 +28,12 @@ abstract class SpanSuppressionStrategy {
 
   private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY =
       new CompositeSuppressionStrategy(
-          NeverSuppressOrStoreStrategy.INSTANCE,
-          NeverSuppressOrStoreStrategy.INSTANCE,
+          NoopSuppressionStrategy.INSTANCE,
+          NoopSuppressionStrategy.INSTANCE,
           SERVER_STRATEGY,
           CONSUMER_STRATEGY);
 
-  static SpanSuppressionStrategy from(List<SpanKey> clientSpanKeys) {
+  static SpanSuppressionStrategy from(Set<SpanKey> clientSpanKeys) {
     if (clientSpanKeys.isEmpty()) {
       return NO_CLIENT_SUPPRESSION_STRATEGY;
     }

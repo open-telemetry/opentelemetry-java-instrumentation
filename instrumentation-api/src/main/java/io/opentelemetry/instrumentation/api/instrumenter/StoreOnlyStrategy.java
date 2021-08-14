@@ -8,13 +8,21 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import java.util.Set;
 
-final class NeverSuppressOrStoreStrategy extends SpanSuppressionStrategy {
+final class StoreOnlyStrategy extends SpanSuppressionStrategy {
 
-  static final SpanSuppressionStrategy INSTANCE = new NeverSuppressOrStoreStrategy();
+  private final Set<SpanKey> outgoingSpanKeys;
+
+  StoreOnlyStrategy(Set<SpanKey> outgoingSpanKeys) {
+    this.outgoingSpanKeys = outgoingSpanKeys;
+  }
 
   @Override
   Context storeInContext(Context context, SpanKind spanKind, Span span) {
+    for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
+      context = outgoingSpanKey.storeInContext(context, span);
+    }
     return context;
   }
 

@@ -32,7 +32,7 @@ public final class ServerSpan {
   }
 
   public static Context with(Context context, Span serverSpan) {
-    return SpanKey.SERVER.with(context, serverSpan);
+    return SpanKey.SERVER.storeInContext(context, serverSpan);
   }
 
   private ServerSpan() {}

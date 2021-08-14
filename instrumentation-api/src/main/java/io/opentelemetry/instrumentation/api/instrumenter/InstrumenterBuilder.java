@@ -22,7 +22,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -241,14 +243,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       return SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
     }
 
-    List<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
+    Set<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
     return SpanSuppressionStrategy.from(spanKeys);
   }
 
-  private static List<SpanKey> spanKeysFromAttributeExtractor(
+  private static Set<SpanKey> spanKeysFromAttributeExtractor(
       List<? extends AttributesExtractor<?, ?>> attributesExtractors) {
 
-    List<SpanKey> spanKeys = new ArrayList<>();
+    Set<SpanKey> spanKeys = new HashSet<>();
     for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
       if (attributeExtractor instanceof HttpAttributesExtractor) {
         spanKeys.add(SpanKey.HTTP_CLIENT);

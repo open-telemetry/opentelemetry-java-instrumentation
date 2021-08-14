@@ -8,20 +8,20 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import java.util.List;
+import java.util.Set;
 
 final class SuppressIfSameSpanKeyStrategy extends SpanSuppressionStrategy {
 
-  private final List<SpanKey> outgoingSpanKeys;
+  private final Set<SpanKey> outgoingSpanKeys;
 
-  SuppressIfSameSpanKeyStrategy(List<SpanKey> outgoingSpanKeys) {
+  SuppressIfSameSpanKeyStrategy(Set<SpanKey> outgoingSpanKeys) {
     this.outgoingSpanKeys = outgoingSpanKeys;
   }
 
   @Override
   Context storeInContext(Context context, SpanKind spanKind, Span span) {
     for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
-      context = outgoingSpanKey.with(context, span);
+      context = outgoingSpanKey.storeInContext(context, span);
     }
     return context;
   }

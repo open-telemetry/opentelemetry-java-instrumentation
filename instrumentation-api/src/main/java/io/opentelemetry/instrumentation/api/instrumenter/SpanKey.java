@@ -55,7 +55,7 @@ public final class SpanKey {
     this.key = key;
   }
 
-  public Context with(Context context, Span span) {
+  public Context storeInContext(Context context, Span span) {
     return context.with(key, span);
   }
 

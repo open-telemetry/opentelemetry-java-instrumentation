@@ -34,7 +34,7 @@ public final class ConsumerSpan {
   }
 
   public static Context with(Context context, Span consumerSpan) {
-    return SpanKey.CONSUMER.with(context, consumerSpan);
+    return SpanKey.CONSUMER.storeInContext(context, consumerSpan);
   }
 
   private ConsumerSpan() {}

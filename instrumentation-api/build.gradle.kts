@@ -1,5 +1,6 @@
 plugins {
   id("org.xbib.gradle.plugin.jflex")
+
   id("otel.java-conventions")
   id("otel.jacoco-conventions")
   id("otel.publish-conventions")
