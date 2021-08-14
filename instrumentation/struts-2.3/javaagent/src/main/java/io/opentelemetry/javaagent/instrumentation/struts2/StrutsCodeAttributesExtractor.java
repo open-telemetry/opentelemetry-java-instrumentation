@@ -12,12 +12,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class StrutsCodeAttributesExtractor extends CodeAttributesExtractor<ActionInvocation, Void> {
 
   @Override
-  protected @Nullable Class<?> codeClass(ActionInvocation actionInvocation) {
+  protected Class<?> codeClass(ActionInvocation actionInvocation) {
     return actionInvocation.getAction().getClass();
   }
 
   @Override
-  protected @Nullable String methodName(ActionInvocation actionInvocation) {
+  protected String methodName(ActionInvocation actionInvocation) {
     return actionInvocation.getProxy().getMethod();
   }
 
