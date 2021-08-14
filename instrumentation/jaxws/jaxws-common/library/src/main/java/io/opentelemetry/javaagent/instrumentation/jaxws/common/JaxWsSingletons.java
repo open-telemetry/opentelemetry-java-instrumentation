@@ -22,7 +22,7 @@ public class JaxWsSingletons {
     SPAN_NAME_EXTRACTOR = CodeSpanNameExtractor.create(codeAttributes);
     INSTRUMENTER =
         Instrumenter.<JaxWsRequest, Void>newBuilder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, SPAN_NAME_EXTRACTOR)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JaxWsRequest::spanName)
             .addAttributesExtractor(codeAttributes)
             .newInstrumenter();
   }

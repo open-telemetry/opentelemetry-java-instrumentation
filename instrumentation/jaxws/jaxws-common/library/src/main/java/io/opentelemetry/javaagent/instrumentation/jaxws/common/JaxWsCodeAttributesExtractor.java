@@ -12,12 +12,12 @@ public class JaxWsCodeAttributesExtractor extends CodeAttributesExtractor<JaxWsR
 
   @Override
   protected Class<?> codeClass(JaxWsRequest request) {
-    return request.getCodeClass();
+    return request.codeClass();
   }
 
   @Override
   protected String methodName(JaxWsRequest request) {
-    return request.getMethodName();
+    return request.methodName();
   }
 
   @Override
