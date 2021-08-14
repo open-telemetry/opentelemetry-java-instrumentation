@@ -49,27 +49,18 @@ public final class MetroHelper {
   }
 
   public static void end(Packet packet, Throwable throwable) {
-    MetroRequest request = (MetroRequest) packet.invocationProperties.remove(REQUEST_KEY);
-    if (request == null) {
-      return;
-    }
     Scope scope = (Scope) packet.invocationProperties.remove(SCOPE_KEY);
     if (scope == null) {
       return;
     }
     scope.close();
 
+    MetroRequest request = (MetroRequest) packet.invocationProperties.remove(REQUEST_KEY);
     Context context = (Context) packet.invocationProperties.remove(CONTEXT_KEY);
     if (throwable == null) {
       throwable = (Throwable) packet.invocationProperties.remove(THROWABLE_KEY);
     }
     instrumenter().end(context, request, null, throwable);
-  }
-
-  public static String getSpanName(WSEndpoint endpoint, Packet packet) {
-    String serviceName = endpoint.getServiceName().getLocalPart();
-    String operationName = packet.getWSDLOperation().getLocalPart();
-    return serviceName + "/" + operationName;
   }
 
   public static void storeThrowable(Packet packet, Throwable throwable) {

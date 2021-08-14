@@ -42,17 +42,13 @@ public final class Axis2Helper {
   }
 
   public static void end(MessageContext message, Throwable throwable) {
-    Axis2Request request = (Axis2Request) message.getProperty(REQUEST_KEY);
-    if (request == null) {
-      return;
-    }
-
     Scope scope = (Scope) message.getProperty(SCOPE_KEY);
     if (scope == null) {
       return;
     }
-
     scope.close();
+
+    Axis2Request request = (Axis2Request) message.getProperty(REQUEST_KEY);
     Context context = (Context) message.getProperty(CONTEXT_KEY);
 
     message.setProperty(REQUEST_KEY, null);
@@ -60,12 +56,5 @@ public final class Axis2Helper {
     message.setProperty(SCOPE_KEY, null);
 
     instrumenter().end(context, request, null, throwable);
-  }
-
-  public static String getSpanName(MessageContext message) {
-    org.apache.axis2.context.MessageContext axisMessageContext = message.getAxisMessageContext();
-    String serviceName = axisMessageContext.getOperationContext().getServiceName();
-    String operationName = axisMessageContext.getOperationContext().getOperationName();
-    return serviceName + "/" + operationName;
   }
 }

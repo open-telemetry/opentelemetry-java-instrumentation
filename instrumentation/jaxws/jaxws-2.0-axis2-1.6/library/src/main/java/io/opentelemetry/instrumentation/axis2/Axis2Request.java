@@ -13,7 +13,7 @@ public class Axis2Request {
 
   public Axis2Request(MessageContext message) {
     this.message = message;
-    this.spanName = Axis2Helper.getSpanName(message);
+    this.spanName = getSpanName(message);
   }
 
   public MessageContext message() {
@@ -22,5 +22,12 @@ public class Axis2Request {
 
   public String spanName() {
     return spanName;
+  }
+
+  private static String getSpanName(MessageContext message) {
+    org.apache.axis2.context.MessageContext axisMessageContext = message.getAxisMessageContext();
+    String serviceName = axisMessageContext.getOperationContext().getServiceName();
+    String operationName = axisMessageContext.getOperationContext().getOperationName();
+    return serviceName + "/" + operationName;
   }
 }

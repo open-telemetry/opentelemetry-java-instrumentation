@@ -27,23 +27,22 @@ public class MetroServerSpanNaming {
     }
 
     Packet packet = metroRequest.packet();
-    String serverSpanName = spanName;
     HttpServletRequest request = (HttpServletRequest) packet.get(MessageContext.SERVLET_REQUEST);
     if (request != null) {
       String servletPath = request.getServletPath();
       if (!servletPath.isEmpty()) {
         String pathInfo = request.getPathInfo();
         if (pathInfo != null) {
-          serverSpanName = servletPath + "/" + spanName;
+          spanName = servletPath + "/" + spanName;
         } else {
           // when pathInfo is null then there is a servlet that is mapped to this exact service
           // servletPath already contains the service name
           String operationName = packet.getWSDLOperation().getLocalPart();
-          serverSpanName = servletPath + "/" + operationName;
+          spanName = servletPath + "/" + operationName;
         }
       }
     }
 
-    return ServletContextPath.prepend(context, serverSpanName);
+    return ServletContextPath.prepend(context, spanName);
   }
 }

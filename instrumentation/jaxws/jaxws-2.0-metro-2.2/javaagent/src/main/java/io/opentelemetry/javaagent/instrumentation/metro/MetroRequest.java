@@ -14,7 +14,7 @@ public class MetroRequest {
 
   public MetroRequest(WSEndpoint endpoint, Packet packet) {
     this.packet = packet;
-    this.spanName = MetroHelper.getSpanName(endpoint, packet);
+    this.spanName = getSpanName(endpoint, packet);
   }
 
   public String spanName() {
@@ -23,5 +23,11 @@ public class MetroRequest {
 
   public Packet packet() {
     return packet;
+  }
+
+  private static String getSpanName(WSEndpoint endpoint, Packet packet) {
+    String serviceName = endpoint.getServiceName().getLocalPart();
+    String operationName = packet.getWSDLOperation().getLocalPart();
+    return serviceName + "/" + operationName;
   }
 }

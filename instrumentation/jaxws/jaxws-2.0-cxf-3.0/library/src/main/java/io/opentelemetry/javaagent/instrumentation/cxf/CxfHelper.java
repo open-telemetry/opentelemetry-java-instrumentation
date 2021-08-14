@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
-import org.apache.cxf.service.model.BindingOperationInfo;
 
 public final class CxfHelper {
   private static final String REQUEST_KEY = CxfHelper.class.getName() + ".Request";
@@ -47,15 +46,13 @@ public final class CxfHelper {
 
   public static void end(Message message) {
     Exchange exchange = message.getExchange();
-    CxfRequest request = (CxfRequest) exchange.remove(REQUEST_KEY);
-    if (request == null) {
-      return;
-    }
     Scope scope = (Scope) exchange.remove(SCOPE_KEY);
     if (scope == null) {
       return;
     }
     scope.close();
+
+    CxfRequest request = (CxfRequest) exchange.remove(REQUEST_KEY);
     Context context = (Context) exchange.remove(CONTEXT_KEY);
 
     Throwable throwable = message.getContent(Exception.class);
@@ -63,17 +60,5 @@ public final class CxfHelper {
       throwable = throwable.getCause();
     }
     instrumenter().end(context, request, null, throwable);
-  }
-
-  public static String getSpanName(Message message) {
-    Exchange exchange = message.getExchange();
-    BindingOperationInfo bindingOperationInfo = exchange.get(BindingOperationInfo.class);
-    if (bindingOperationInfo == null) {
-      return null;
-    }
-
-    String serviceName = bindingOperationInfo.getBinding().getService().getName().getLocalPart();
-    String operationName = bindingOperationInfo.getOperationInfo().getName().getLocalPart();
-    return serviceName + "/" + operationName;
   }
 }

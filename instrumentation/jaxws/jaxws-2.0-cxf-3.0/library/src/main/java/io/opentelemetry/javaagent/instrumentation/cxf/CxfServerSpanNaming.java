@@ -24,15 +24,14 @@ public class CxfServerSpanNaming {
       return null;
     }
 
-    String serverSpanName = spanName;
     HttpServletRequest request = (HttpServletRequest) cxfRequest.message().get("HTTP.REQUEST");
     if (request != null) {
       String servletPath = request.getServletPath();
       if (!servletPath.isEmpty()) {
-        serverSpanName = servletPath + "/" + spanName;
+        spanName = servletPath + "/" + spanName;
       }
     }
 
-    return ServletContextPath.prepend(context, serverSpanName);
+    return ServletContextPath.prepend(context, spanName);
   }
 }

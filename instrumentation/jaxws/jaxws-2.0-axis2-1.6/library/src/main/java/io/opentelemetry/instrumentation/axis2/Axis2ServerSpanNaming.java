@@ -21,17 +21,16 @@ public class Axis2ServerSpanNaming {
 
   private static String getServerSpanName(Context context, Axis2Request axis2Request) {
     String spanName = axis2Request.spanName();
-    String serverSpanName = spanName;
     MessageContext message = axis2Request.message();
     HttpServletRequest request =
         (HttpServletRequest) message.getMEPContext().get("transport.http.servletRequest");
     if (request != null) {
       String servletPath = request.getServletPath();
       if (!servletPath.isEmpty()) {
-        serverSpanName = servletPath + "/" + spanName;
+        spanName = servletPath + "/" + spanName;
       }
     }
 
-    return ServletContextPath.prepend(context, serverSpanName);
+    return ServletContextPath.prepend(context, spanName);
   }
 }

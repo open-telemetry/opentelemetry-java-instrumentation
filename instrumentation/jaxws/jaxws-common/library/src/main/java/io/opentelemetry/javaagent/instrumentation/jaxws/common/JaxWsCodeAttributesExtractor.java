@@ -11,12 +11,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class JaxWsCodeAttributesExtractor extends CodeAttributesExtractor<JaxWsRequest, Void> {
 
   @Override
-  protected @Nullable Class<?> codeClass(JaxWsRequest request) {
+  protected Class<?> codeClass(JaxWsRequest request) {
     return request.getCodeClass();
   }
 
   @Override
-  protected @Nullable String methodName(JaxWsRequest request) {
+  protected String methodName(JaxWsRequest request) {
     return request.getMethodName();
   }
 
