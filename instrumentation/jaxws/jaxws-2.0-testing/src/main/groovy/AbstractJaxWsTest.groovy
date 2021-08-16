@@ -149,9 +149,6 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
   }
 
   def serverSpanName(String operation) {
-    if (operation == "hello") {
-      return "HelloServiceImpl." + operation
-    }
     return getContextPath() + "/ws/HelloService/" + operation
   }
 

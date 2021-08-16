@@ -10,10 +10,10 @@ import javax.enterprise.inject.Vetoed
 class TomeeJaxWsTest extends ArquillianJaxWsTest {
 
   @Override
-  def getAddress(String service) {
+  def getServicePath(String service) {
     if (service == "EjbHelloService") {
       service = "webservices/EjbHelloServiceImpl"
     }
-    return super.getAddress(service)
+    return service
   }
 }
