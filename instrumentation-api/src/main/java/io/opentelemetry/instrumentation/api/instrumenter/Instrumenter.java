@@ -159,11 +159,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    UnsafeAttributes unsafeAttributes = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributesBuilder, request, response);
+      extractor.onEnd(unsafeAttributes, request, response);
     }
-    Attributes attributes = attributesBuilder;
+    Attributes attributes = unsafeAttributes;
 
     for (RequestListener requestListener : requestListeners) {
       requestListener.end(context, attributes);
