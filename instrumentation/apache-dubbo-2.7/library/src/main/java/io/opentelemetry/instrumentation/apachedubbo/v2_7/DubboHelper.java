@@ -22,8 +22,4 @@ class DubboHelper {
   static String getSpanName(String interfaceName, String methodName) {
     return interfaceName + "/" + methodName;
   }
-
-  static StatusCode statusFromResult(Result result) {
-    return !result.hasException() ? StatusCode.UNSET : StatusCode.ERROR;
-  }
 }

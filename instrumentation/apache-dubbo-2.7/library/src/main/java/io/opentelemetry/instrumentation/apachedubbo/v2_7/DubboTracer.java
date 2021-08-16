@@ -49,10 +49,6 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
     if (result.hasException()) {
       onException(context, result.getException());
     }
-    StatusCode statusCode = DubboHelper.statusFromResult(result);
-    if (statusCode != StatusCode.UNSET) {
-      Span.fromContext(context).setStatus(statusCode);
-    }
     end(context);
   }
 
