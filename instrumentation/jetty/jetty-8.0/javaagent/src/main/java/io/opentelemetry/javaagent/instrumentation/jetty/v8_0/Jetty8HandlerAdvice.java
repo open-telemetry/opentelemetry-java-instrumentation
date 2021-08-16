@@ -29,7 +29,6 @@ public class Jetty8HandlerAdvice {
       @Advice.Local("otelScope") Scope scope) {
 
     // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
-    //todo: add test coverage for this ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
     request.setAttribute(ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
 
     Object existingContext = request.getAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE);
@@ -41,7 +40,7 @@ public class Jetty8HandlerAdvice {
     Context parentContext = currentContext();
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
-      //todo: document why and what is going on here ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+      // Without this we can get double error events in the error propagation case.
       context = AppServerBridge.init(context, /* shouldRecordException= */ false);
       request.setAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE, context);
       scope = context.makeCurrent();
