@@ -23,7 +23,7 @@ public class Jetty8Singletons {
   private static final SpanNameExtractor<HttpServletRequest> spanNameExtractor =
       new Jetty8SpanNameExtractor();
   private static final HttpAttributesExtractor<HttpServletRequest, HttpServletResponse>
-      attributesExtractor = new Jetty8AttributesExtactor();
+      attributesExtractor = new Jetty8AttributesExtractor();
   private static final SpanStatusExtractor<HttpServletRequest, HttpServletResponse>
       spanStatusExtractor = HttpSpanStatusExtractor.create(attributesExtractor);
   private static final NetAttributesExtractor<HttpServletRequest, HttpServletResponse>

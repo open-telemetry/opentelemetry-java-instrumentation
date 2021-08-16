@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-public class Jetty8AttributesExtactor
+public class Jetty8AttributesExtractor
     extends HttpAttributesExtractor<HttpServletRequest, HttpServletResponse> {
 
   @Override
@@ -21,28 +23,40 @@ public class Jetty8AttributesExtactor
 
   @Override
   protected @Nullable String url(HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRequestURL().toString();
+    URI uri = URI.create(httpServletRequest.getRequestURL().toString());
+
+    try {
+      return
+          new URI(uri.getScheme(),
+              null,
+              uri.getHost(),
+              uri.getPort(),
+              uri.getPath(),
+              httpServletRequest.getQueryString(), null)
+              .toString();
+    } catch (URISyntaxException e) {
+      return null;
+    }
   }
 
   @Override
   protected @Nullable String target(HttpServletRequest httpServletRequest) {
-    //    return URI.create(httpServletRequest.getRequestURI()).getPath();
     return null;
   }
 
   @Override
   protected @Nullable String host(HttpServletRequest httpServletRequest) {
-    return null; // httpServletRequest.getHeader("Host");
+    return null;
   }
 
   @Override
   protected @Nullable String route(HttpServletRequest httpServletRequest) {
-    return null; // httpServletRequest.getServletPath();
+    return null;
   }
 
   @Override
   protected @Nullable String scheme(HttpServletRequest httpServletRequest) {
-    return null; // httpServletRequest.getScheme();
+    return null;
   }
 
   @Override
@@ -53,7 +67,7 @@ public class Jetty8AttributesExtactor
   @Override
   protected @Nullable Long requestContentLength(
       HttpServletRequest httpServletRequest, @Nullable HttpServletResponse httpServletResponse) {
-    return null; // (long) httpServletRequest.getContentLength();
+    return null;
   }
 
   @Override
@@ -81,7 +95,7 @@ public class Jetty8AttributesExtactor
   @Override
   protected @Nullable String serverName(
       HttpServletRequest httpServletRequest, @Nullable HttpServletResponse httpServletResponse) {
-    return null; // return httpServletRequest.getServerName();
+    return null;
   }
 
   @Override
@@ -93,8 +107,7 @@ public class Jetty8AttributesExtactor
   @Override
   protected @Nullable Long responseContentLength(
       HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-    //    String length = httpServletResponse.getHeader("Content-Length");
-    return null; // return length == null ? null : Long.parseLong(length);
+    return null;
   }
 
   @Override

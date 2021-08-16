@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
+import static io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -25,22 +28,22 @@ public class Jetty8HandlerAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    //    Context attachedContext = tracer().getServerContext(request);
-    //    if (attachedContext != null) {
-    //      // We are inside nested handler, don't create new span
-    //      return;
-    //    }
-    //
-    //    context = tracer().startServerSpan(request);
-    //    scope = context.makeCurrent();
-
     // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
+    //todo: add test coverage for this ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+    request.setAttribute(ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
 
-    //    tracer().setAsyncListenerResponse(request, response);
+    Object existingContext = request.getAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE);
+    if (existingContext != null) {
+      // We are inside nested handler, don't create new span
+      return;
+    }
 
     Context parentContext = currentContext();
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
+      //todo: document why and what is going on here ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+      context = AppServerBridge.init(context, /* shouldRecordException= */ false);
+      request.setAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE, context);
       scope = context.makeCurrent();
     }
   }
@@ -59,7 +62,7 @@ public class Jetty8HandlerAdvice {
     scope.close();
 
     if (throwable != null) {
-      if(response.getStatus() < 400){
+      if (response.getStatus() < 400) {
         response.setStatus(500);
       }
     }

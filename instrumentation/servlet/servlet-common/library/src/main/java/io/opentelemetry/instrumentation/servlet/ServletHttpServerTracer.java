@@ -83,6 +83,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       Context context, Throwable throwable, RESPONSE response, long timestamp) {
     if (accessor.isResponseCommitted(response)) {
       super.endExceptionally(context, throwable, response, timestamp);
+      return;
     } else {
       // passing null response to super, in order to capture as 500 / INTERNAL, due to servlet spec
       // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
