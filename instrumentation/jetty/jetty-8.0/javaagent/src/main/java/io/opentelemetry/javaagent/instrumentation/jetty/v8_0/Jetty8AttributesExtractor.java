@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Jetty8AttributesExtractor
     extends HttpAttributesExtractor<HttpServletRequest, HttpServletResponse> {
@@ -26,14 +26,15 @@ public class Jetty8AttributesExtractor
     URI uri = URI.create(httpServletRequest.getRequestURL().toString());
 
     try {
-      return
-          new URI(uri.getScheme(),
+      return new URI(
+              uri.getScheme(),
               null,
               uri.getHost(),
               uri.getPort(),
               uri.getPath(),
-              httpServletRequest.getQueryString(), null)
-              .toString();
+              httpServletRequest.getQueryString(),
+              null)
+          .toString();
     } catch (URISyntaxException e) {
       return null;
     }
