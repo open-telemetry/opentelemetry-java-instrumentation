@@ -106,8 +106,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public static class ForkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterFork(
-        @Advice.This ForkJoinTask<?> task) {
+    public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
