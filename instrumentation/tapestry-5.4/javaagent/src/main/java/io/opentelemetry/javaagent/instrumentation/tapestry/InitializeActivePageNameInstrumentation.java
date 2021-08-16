@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import static io.opentelemetry.javaagent.instrumentation.tapestry.TapestryTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -56,7 +55,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
-      tracer().updateServerSpanName(parameters.getActivePageName());
+      TapestryServerSpanNaming.updateServerSpanName(parameters.getActivePageName());
     }
   }
 
@@ -65,7 +64,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
-      tracer().updateServerSpanName(parameters.getLogicalPageName());
+      TapestryServerSpanNaming.updateServerSpanName(parameters.getLogicalPageName());
     }
   }
 }
