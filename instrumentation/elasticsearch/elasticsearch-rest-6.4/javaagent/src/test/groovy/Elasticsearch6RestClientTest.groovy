@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
