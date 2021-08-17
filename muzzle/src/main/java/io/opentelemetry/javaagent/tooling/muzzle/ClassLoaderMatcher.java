@@ -82,11 +82,17 @@ public class ClassLoaderMatcher {
     try {
       // verify helper injector works
       List<String> allHelperClasses = instrumentationModule.getMuzzleHelperClassNames();
+      HelperResourcesImpl helperResources = new HelperResourcesImpl();
+      List<String> helperResourceNames = instrumentationModule.helperResourceNames();
+      for (String helperResourceName : helperResourceNames) {
+        helperResources.register(helperResourceName);
+      }
+      instrumentationModule.registerHelperResources(helperResources);
       if (!allHelperClasses.isEmpty()) {
         new HelperInjector(
                 instrumentationModule.instrumentationName(),
                 allHelperClasses,
-                instrumentationModule.helperResourceNames(),
+                helperResources.getResourceNameMappings(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
             .transform(null, null, classLoader, null);

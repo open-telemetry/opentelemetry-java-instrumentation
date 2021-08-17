@@ -56,10 +56,15 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
+    HelperResourcesImpl helperResources = new HelperResourcesImpl();
     List<String> helperResourceNames = instrumentationModule.helperResourceNames();
+    for (String helperResourceName : helperResourceNames) {
+      helperResources.register(helperResourceName);
+    }
+    instrumentationModule.registerHelperResources(helperResources);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
-      if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResources.getMappings().isEmpty()) {
         logger.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
             instrumentationModule.instrumentationName());
@@ -75,7 +80,7 @@ public final class InstrumentationModuleInstaller {
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
-            helperResourceNames,
+            helperResources.getMappings(),
             Utils.getExtensionsClassLoader(),
             instrumentation);
     InstrumentationContextProvider contextProvider =

@@ -63,7 +63,7 @@ public class HelperInjector implements Transformer {
   private final String requestingName;
 
   private final Set<String> helperClassNames;
-  private final Set<String> helperResourceNames;
+  private final Map<String, String> helperResourceMappings;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
@@ -87,14 +87,14 @@ public class HelperInjector implements Transformer {
   public HelperInjector(
       String requestingName,
       List<String> helperClassNames,
-      List<String> helperResourceNames,
+      Map<String, String> helperResourceMappings,
       // TODO can this be replaced with the context classloader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
-    this.helperResourceNames = new LinkedHashSet<>(helperResourceNames);
+    this.helperResourceMappings = helperResourceMappings;
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -106,7 +106,7 @@ public class HelperInjector implements Transformer {
     this.helperClassNames = helperMap.keySet();
     this.dynamicTypeMap.putAll(helperMap);
 
-    this.helperResourceNames = Collections.emptySet();
+    this.helperResourceMappings = Collections.emptyMap();
     this.helpersSource = null;
     this.instrumentation = instrumentation;
   }
@@ -149,16 +149,16 @@ public class HelperInjector implements Transformer {
       classLoader = injectHelperClasses(typeDescription, classLoader, module);
     }
 
-    if (helpersSource != null && !helperResourceNames.isEmpty()) {
-      for (String resourceName : helperResourceNames) {
-        URL resource = helpersSource.getResource(resourceName);
+    if (helpersSource != null && !helperResourceMappings.isEmpty()) {
+      for (Map.Entry<String, String> entry : helperResourceMappings.entrySet()) {
+        URL resource = helpersSource.getResource(entry.getValue());
         if (resource == null) {
-          logger.debug("Helper resource {} requested but not found.", resourceName);
+          logger.debug("Helper resource {} requested but not found.", entry.getValue());
           continue;
         }
 
-        logger.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
-        HelperResources.register(classLoader, resourceName, resource);
+        logger.debug("Injecting resource onto classloader {} -> {}", classLoader, entry.getKey());
+        HelperResources.register(classLoader, entry.getKey(), resource);
       }
     }
 
