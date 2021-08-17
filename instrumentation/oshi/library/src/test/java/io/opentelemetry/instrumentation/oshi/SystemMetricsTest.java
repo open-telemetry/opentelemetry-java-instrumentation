@@ -19,27 +19,30 @@ public class SystemMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("system.memory.usage", "By", MetricDataType.LONG_SUM, /* checkNonZeroValue= */ true);
+    verify("system.memory.usage", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ true);
     verify(
         "system.memory.utilization",
         "1",
         MetricDataType.DOUBLE_GAUGE,
         /* checkNonZeroValue= */ true);
 
-    verify("system.network.io", "By", MetricDataType.LONG_SUM, /* checkNonZeroValue= */ false);
+    verify("system.network.io", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ false);
     verify(
         "system.network.packets",
         "packets",
-        MetricDataType.LONG_SUM,
+        MetricDataType.LONG_GAUGE,
         /* checkNonZeroValue= */ false);
     verify(
-        "system.network.errors", "errors", MetricDataType.LONG_SUM, /* checkNonZeroValue= */ false);
+        "system.network.errors",
+        "errors",
+        MetricDataType.LONG_GAUGE,
+        /* checkNonZeroValue= */ false);
 
-    verify("system.disk.io", "By", MetricDataType.LONG_SUM, /* checkNonZeroValue= */ false);
+    verify("system.disk.io", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ false);
     verify(
         "system.disk.operations",
         "operations",
-        MetricDataType.LONG_SUM,
+        MetricDataType.LONG_GAUGE,
         /* checkNonZeroValue= */ false);
   }
 }

@@ -101,7 +101,7 @@ public class OpenTelemetryInstaller implements AgentListener {
       sdkMeterProviderBuilder.registerView(
           InstrumentSelector.builder()
               .setInstrumentNameRegex(".*duration")
-              .setInstrumentType(InstrumentType.VALUE_RECORDER)
+              .setInstrumentType(InstrumentType.HISTOGRAM)
               .build(),
           // Histogram buckets the same as the metrics prototype/prometheus.
           View.builder()

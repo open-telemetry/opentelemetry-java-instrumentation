@@ -1254,13 +1254,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 event
                     .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                     .hasAttributesSatisfying(
-                        attrs ->
+                        attrs -> {
+                          assertThat(attrs)
+                              .containsEntry(
+                                  SemanticAttributes.EXCEPTION_TYPE,
+                                  exception.getClass().getCanonicalName());
+                          if (exception.getMessage() != null) {
                             assertThat(attrs)
                                 .containsEntry(
-                                    SemanticAttributes.EXCEPTION_TYPE,
-                                    exception.getClass().getCanonicalName())
-                                .containsEntry(
-                                    SemanticAttributes.EXCEPTION_MESSAGE, exception.getMessage())))
+                                    SemanticAttributes.EXCEPTION_MESSAGE, exception.getMessage());
+                          }
+                        }))
         .toArray(new Consumer[0]);
   }
 
