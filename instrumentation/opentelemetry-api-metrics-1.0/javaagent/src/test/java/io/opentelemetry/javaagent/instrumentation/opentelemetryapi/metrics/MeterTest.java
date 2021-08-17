@@ -329,7 +329,6 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric -> {
-                  // No helper assertion for summary yet it seems.
                   assertThat(metric)
                       .hasDescription("d")
                       .hasUnit("u")
@@ -399,7 +398,6 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric -> {
-                  // No helper assertion for summary yet it seems.
                   assertThat(metric)
                       .hasDescription("d")
                       .hasUnit("u")
@@ -436,7 +434,6 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric -> {
-                  // No helper assertion for summary yet it seems.
                   assertThat(metric)
                       .hasDescription("d")
                       .hasUnit("u")
