@@ -9,7 +9,7 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.resource.ClientResources
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class LettuceAsyncSyncClientTest extends AbstractLettuceAsyncClientTest implements LibraryTestTrait {
+class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest implements LibraryTestTrait {
   @Override
   RedisClient createClient(String uri) {
     return RedisClient.create(
@@ -17,5 +17,11 @@ class LettuceAsyncSyncClientTest extends AbstractLettuceAsyncClientTest implemen
         .tracing(LettuceTracing.create(getOpenTelemetry()).newTracing())
         .build(),
       uri)
+  }
+
+  @Override
+  boolean testCallback() {
+    // context is not propagated into callbacks
+    return false
   }
 }
