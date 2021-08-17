@@ -9,12 +9,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerRequest;
 
 public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Throwable> {
 
@@ -23,12 +21,10 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   private static final Pattern METHOD_REGEX =
       Pattern.compile("^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) ");
 
-  private final RouterFunction routerFunction;
-  private final ServerRequest serverRequest;
+  private final RouterFunction<?> routerFunction;
 
-  public RouteOnSuccessOrError(RouterFunction routerFunction, ServerRequest serverRequest) {
+  public RouteOnSuccessOrError(RouterFunction<?> routerFunction) {
     this.routerFunction = routerFunction;
-    this.serverRequest = serverRequest;
   }
 
   @Override
@@ -36,13 +32,8 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     if (handler != null) {
       String predicateString = parsePredicateString();
       if (predicateString != null) {
-        Context context = (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
+        Context context = Context.current();
         if (context != null) {
-          if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
-            Span span = Span.fromContext(context);
-            span.setAttribute("spring-webflux.request.predicate", predicateString);
-          }
-
           Span serverSpan = ServerSpan.fromContextOrNull(context);
           if (serverSpan != null) {
             serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));

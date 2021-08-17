@@ -19,7 +19,7 @@ dependencies {
   compileOnly("org.apache.kafka:kafka-streams:0.11.0.0")
 
   // Include kafka-clients instrumentation for tests.
-  testInstrumentation(project(":instrumentation:kafka-clients-0.11:javaagent"))
+  testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
 
   testImplementation("org.apache.kafka:kafka-streams:0.11.0.0")
   testImplementation("org.apache.kafka:kafka-clients:0.11.0.0")

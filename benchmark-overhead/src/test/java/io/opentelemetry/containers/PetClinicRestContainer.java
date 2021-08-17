@@ -71,11 +71,8 @@ public class PetClinicRestContainer {
 
   @NotNull
   private String[] buildCommandline(Optional<Path> agentJar) {
-    Path jfrFile = namingConventions.container.jfrFile(this.agent);
     List<String> result = new ArrayList<>(Arrays.asList(
         "java",
-        "-XX:StartFlightRecording:dumponexit=true,disk=true,settings=profile,name=petclinic,filename="
-            + jfrFile,
         "-Dotel.traces.exporter=otlp",
         "-Dotel.imr.export.interval=5000",
         "-Dotel.exporter.otlp.insecure=true",

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import static io.opentelemetry.javaagent.instrumentation.tapestry.TapestryTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.tapestry.TapestrySingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,24 +47,32 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
     public static void onEnter(
         @Advice.This ComponentPageElementImpl componentPageElementImpl,
         @Advice.Argument(0) String eventType,
+        @Advice.Local("otelRequest") TapestryRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startEventSpan(eventType, componentPageElementImpl.getCompleteId());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+
+      request = new TapestryRequest(eventType, componentPageElementImpl.getCompleteId());
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") TapestryRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }

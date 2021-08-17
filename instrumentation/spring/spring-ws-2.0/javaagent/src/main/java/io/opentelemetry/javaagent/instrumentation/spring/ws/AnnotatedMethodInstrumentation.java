@@ -81,7 +81,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") SpringWsRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 

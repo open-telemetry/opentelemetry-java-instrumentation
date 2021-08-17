@@ -10,13 +10,21 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -25,6 +33,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
+
+  /** Instrumentation type suppression configuration property key. */
+  private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
   final OpenTelemetry openTelemetry;
   final Meter meter;
@@ -42,6 +56,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
   @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+
+  private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -120,6 +136,38 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  // visible for tests
+  /**
+   * Enables suppression based on client instrumentation type.
+   *
+   * <p><strong>When enabled, suppresses nested spans depending on their {@link SpanKind} and
+   * type</strong>.
+   *
+   * <ul>
+   *   <li>CLIENT and PRODUCER nested spans are suppressed based on their type (HTTP, RPC, DB,
+   *       MESSAGING) i.e. if span with the same type is on the context, new span of this type will
+   *       not be started.
+   * </ul>
+   *
+   * <p><strong>When disabled:</strong>
+   *
+   * <ul>
+   *   <li>CLIENT and PRODUCER nested spans are always suppressed
+   * </ul>
+   *
+   * <p><strong>In both cases:</strong>
+   *
+   * <ul>
+   *   <li>SERVER and CONSUMER nested spans are always suppressed
+   *   <li>INTERNAL spans are never suppressed
+   * </ul>
+   */
+  InstrumenterBuilder<REQUEST, RESPONSE> enableInstrumentationTypeSuppression(
+      boolean enableInstrumentationType) {
+    this.enableSpanSuppressionByType = enableInstrumentationType;
+    return this;
+  }
+
   /**
    * Returns a new {@link Instrumenter} which will create client spans and inject context into
    * requests.
@@ -187,6 +235,34 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
+  }
+
+  SpanSuppressionStrategy getSpanSuppressionStrategy() {
+    if (!enableSpanSuppressionByType) {
+      // if not enabled, preserve current behavior, not distinguishing types
+      return SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
+    }
+
+    Set<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
+    return SpanSuppressionStrategy.from(spanKeys);
+  }
+
+  private static Set<SpanKey> spanKeysFromAttributeExtractor(
+      List<? extends AttributesExtractor<?, ?>> attributesExtractors) {
+
+    Set<SpanKey> spanKeys = new HashSet<>();
+    for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
+      if (attributeExtractor instanceof HttpAttributesExtractor) {
+        spanKeys.add(SpanKey.HTTP_CLIENT);
+      } else if (attributeExtractor instanceof RpcAttributesExtractor) {
+        spanKeys.add(SpanKey.RPC_CLIENT);
+      } else if (attributeExtractor instanceof DbAttributesExtractor) {
+        spanKeys.add(SpanKey.DB_CLIENT);
+      } else if (attributeExtractor instanceof MessagingAttributesExtractor) {
+        spanKeys.add(SpanKey.MESSAGING_PRODUCER);
+      }
+    }
+    return spanKeys;
   }
 
   private interface InstrumenterConstructor<RQ, RS> {
