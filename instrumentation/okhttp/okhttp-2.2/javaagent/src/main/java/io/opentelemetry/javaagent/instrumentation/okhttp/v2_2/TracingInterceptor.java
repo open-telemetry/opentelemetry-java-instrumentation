@@ -47,9 +47,8 @@ public class TracingInterceptor implements Interceptor {
     return response;
   }
 
-  // Context injection is being handled manually for a reason: we want to use the OkHttp Request
-  // type for additional AttributeExtractors provided by the user of this library
-  // thus we must use Instrumenter<Request, Response>, and Request is immutable
+  // Request is immutable so we need to create a new request when injecting context propagation
+  // headers
   private Request injectContextToRequest(Request request, Context context) {
     Request.Builder requestBuilder = request.newBuilder();
     propagators
