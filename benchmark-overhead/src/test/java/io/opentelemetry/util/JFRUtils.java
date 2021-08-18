@@ -34,6 +34,12 @@ public class JFRUtils {
     });
   }
 
+  public static long findAverageLong(Path jfrFile, String eventName, String valueKey) throws IOException {
+    return reduce(jfrFile, eventName, valueKey,
+        new AverageSupport(),
+        AverageSupport::add).average();
+  }
+
   private static <T, V> T reduce(Path jfrFile, String eventName,
       String valueKey, T initial, BiFunction<T,V,T> reducer) throws IOException {
     RecordingFile recordingFile = new RecordingFile(jfrFile);
@@ -46,5 +52,18 @@ public class JFRUtils {
       }
     }
     return result;
+  }
+
+  static class AverageSupport {
+    long count;
+    long total;
+    AverageSupport add(long value){
+      count++;
+      total += value;
+      return this;
+    }
+    long average(){
+      return total/count;
+    }
   }
 }
