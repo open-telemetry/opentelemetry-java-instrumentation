@@ -42,64 +42,6 @@ class ConfigTest extends Specification {
     instrumentationNames = new TreeSet<String>(names)
   }
 
-  def "should get string property"() {
-    given:
-    def config = new ConfigBuilder().readProperties([
-      "property.string": "whatever"
-    ]).build()
-
-    expect:
-    config.getProperty("property.string") == "whatever"
-    config.getProperty("property.string", "default") == "whatever"
-    config.getProperty("does-not-exist") == null
-    config.getProperty("does-not-exist", "default") == "default"
-  }
-
-  def "should get boolean property"() {
-    given:
-    def config = new ConfigBuilder().readProperties([
-      "property.bool": "false"
-    ]).build()
-
-    expect:
-    !config.getBooleanProperty("property.bool", true)
-    config.getBooleanProperty("does-not-exist", true)
-  }
-
-  def "should get list property"() {
-    given:
-    def config = new ConfigBuilder().readProperties([
-      "property.list": "one, two, three"
-    ]).build()
-
-    expect:
-    config.getListProperty("property.list") == ["one", "two", "three"]
-    config.getListProperty("property.list", ["four"]) == ["one", "two", "three"]
-    config.getListProperty("does-not-exist") == []
-    config.getListProperty("does-not-exist", ["four"]) == ["four"]
-  }
-
-  def "should get map property"() {
-    given:
-    def config = new ConfigBuilder().readProperties([
-      "property.map": "one=1, two=2"
-    ]).build()
-
-    expect:
-    config.getMapProperty("property.map") == ["one": "1", "two": "2"]
-    config.getMapProperty("does-not-exist").isEmpty()
-  }
-
-  def "should return empty map when map property value is invalid"() {
-    given:
-    def config = new ConfigBuilder().readProperties([
-      "property.map": "one=1, broken!"
-    ]).build()
-
-    expect:
-    config.getMapProperty("property.map").isEmpty()
-  }
-
   def "should expose if agent debug is enabled"() {
     given:
     def config = new ConfigBuilder().readProperties([

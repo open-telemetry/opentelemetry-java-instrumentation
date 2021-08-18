@@ -11,6 +11,7 @@ import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesAdapter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.SdkMeterProviderConfigurer;
@@ -23,7 +24,6 @@ import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.view.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.view.View;
 import java.util.Arrays;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,14 +48,13 @@ public class OpenTelemetryInstaller implements AgentListener {
   public static synchronized void installAgentTracer(Config config) {
     if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
 
-      copySystemProperties(config);
-
       if (config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false)) {
         GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
       } else {
         System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
 
-        OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
+        OpenTelemetrySdk sdk =
+            OpenTelemetrySdkAutoConfiguration.initialize(true, new ConfigPropertiesAdapter(config));
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {
               CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
@@ -68,28 +67,6 @@ public class OpenTelemetryInstaller implements AgentListener {
     } else {
       logger.info("Tracing is disabled.");
     }
-  }
-
-  // OpenTelemetrySdkAutoConfiguration currently only supports configuration from environment. We
-  // massage any properties we have that aren't in the environment to system properties.
-  // TODO(anuraaga): Make this less hacky
-  private static void copySystemProperties(Config config) {
-    Map<String, String> allProperties = config.getAllProperties();
-    Map<String, String> environmentProperties =
-        Config.newBuilder()
-            .readEnvironmentVariables()
-            .readSystemProperties()
-            .build()
-            .getAllProperties();
-
-    allProperties.forEach(
-        (key, value) -> {
-          if (!environmentProperties.containsKey(key)
-              && key.startsWith("otel.")
-              && !key.startsWith("otel.instrumentation")) {
-            System.setProperty(key, value);
-          }
-        });
   }
 
   // Configure histogram metrics similarly to how the SDK will default in 1.5.0 for early feedback.
