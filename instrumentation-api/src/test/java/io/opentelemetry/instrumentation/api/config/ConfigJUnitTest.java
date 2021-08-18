@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
+// suppress duration unit check, e.g. ofMillis(5000) -> ofSeconds(5)
+@SuppressWarnings("CanonicalDuration")
 class ConfigJUnitTest {
   @Test
   void shouldGetString() {
