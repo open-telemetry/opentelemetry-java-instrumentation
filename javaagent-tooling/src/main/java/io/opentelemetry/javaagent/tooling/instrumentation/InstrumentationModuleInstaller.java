@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
-import io.opentelemetry.javaagent.tooling.muzzle.HelperResourcesImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
@@ -58,7 +58,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
-    HelperResourcesImpl helperResources = new HelperResourcesImpl();
+    HelperResourceBuilderImpl helperResources = new HelperResourceBuilderImpl();
     List<String> helperResourceNames = instrumentationModule.helperResourceNames();
     for (String helperResourceName : helperResourceNames) {
       helperResources.register(helperResourceName);

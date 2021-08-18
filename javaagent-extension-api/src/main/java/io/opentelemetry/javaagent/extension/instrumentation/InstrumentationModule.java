@@ -120,7 +120,7 @@ public abstract class InstrumentationModule implements Ordered {
   /**
    * Returns a list of resource names to inject into the user's class loader.
    *
-   * @deprecated use {@link #registerHelperResources(HelperResources)} instead.
+   * @deprecated use {@link #registerHelperResources(HelperResourceBuilder)} instead.
    */
   @Deprecated
   public List<String> helperResourceNames() {
@@ -128,7 +128,7 @@ public abstract class InstrumentationModule implements Ordered {
   }
 
   /** Register resource names to inject into the user's class loader. */
-  public void registerHelperResources(HelperResources helperResources) {}
+  public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {}
 
   /**
    * An instrumentation module can implement this method to make sure that the classloader contains

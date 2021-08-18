@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation;
 
-public interface HelperResources {
+public interface HelperResourceBuilder {
 
   /**
    * Registers a resource to be injected in the user's class loader.

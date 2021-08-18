@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.javaagent.extension.instrumentation.HelperResources;
+import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HelperResourcesImpl implements HelperResources {
+public class HelperResourceBuilderImpl implements HelperResourceBuilder {
 
   private final Map<String, String> resourcePathMappings = new HashMap<>();
 
