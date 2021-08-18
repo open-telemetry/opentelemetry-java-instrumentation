@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.api.config
 
 import spock.lang.Specification
 
-class ConfigTest extends Specification {
+// TODO: rewrite to Java & JUnit
+class ConfigSpockTest extends Specification {
   def "verify instrumentation config"() {
     setup:
     def config = new ConfigBuilder().readProperties([

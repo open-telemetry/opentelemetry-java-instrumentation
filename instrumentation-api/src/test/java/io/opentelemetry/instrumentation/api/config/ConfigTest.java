@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 // suppress duration unit check, e.g. ofMillis(5000) -> ofSeconds(5)
 @SuppressWarnings("CanonicalDuration")
-class ConfigJUnitTest {
+class ConfigTest {
   @Test
   void shouldGetString() {
     Config config = Config.newBuilder().addProperty("prop.string", "some text").build();
