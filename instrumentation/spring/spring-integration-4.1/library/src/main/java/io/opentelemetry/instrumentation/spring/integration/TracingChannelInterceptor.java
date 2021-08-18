@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
 import java.util.Map;
@@ -23,15 +22,11 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
+  private static final String CONTEXT_AND_SCOPE_KEY = ContextAndScope.class.getName();
+  private static final String SCOPE_KEY = TracingChannelInterceptor.class.getName() + ".scope";
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> instrumenter;
-
-  // TODO (trask): optimize for javaagent by using field-backed context store
-  private final Cache<MessageChannel, ContextAndScope> sendContextAndScopeHolder =
-      Cache.newBuilder().setWeakKeys().build();
-  private final Cache<MessageChannel, Scope> handleScopeHolder =
-      Cache.newBuilder().setWeakKeys().build();
 
   TracingChannelInterceptor(
       ContextPropagators propagators, Instrumenter<MessageWithChannel, Void> instrumenter) {
@@ -45,6 +40,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
 
     final Context context;
+    MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
 
     // only start a new CONSUMER span when there is no span in the context: this situation happens
     // when there's no other messaging instrumentation that can do this - this way
@@ -58,17 +54,16 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     //    instrumentation should not create another one
     if (shouldStart(parentContext, messageWithChannel)) {
       context = instrumenter.start(parentContext, messageWithChannel);
-      sendContextAndScopeHolder.put(
-          messageChannel, ContextAndScope.create(context, context.makeCurrent()));
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(context, context.makeCurrent()));
     } else {
       // in case there already was another span in the context: back off and just inject the current
       // context into the message
       context = parentContext;
-      sendContextAndScopeHolder.put(
-          messageChannel, ContextAndScope.create(null, context.makeCurrent()));
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(null, context.makeCurrent()));
     }
 
-    MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
     propagators
         .getTextMapPropagator()
         .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
@@ -86,10 +81,11 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    ContextAndScope contextAndScope = sendContextAndScopeHolder.get(messageChannel);
-    if (contextAndScope != null) {
-      contextAndScope.close();
-      Context context = contextAndScope.getContext();
+    Object contextAndScope = message.getHeaders().get(CONTEXT_AND_SCOPE_KEY);
+    if (contextAndScope instanceof ContextAndScope) {
+      ContextAndScope cas = (ContextAndScope) contextAndScope;
+      cas.close();
+      Context context = cas.getContext();
 
       if (context != null) {
         MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
@@ -121,17 +117,16 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
             .getTextMapPropagator()
             .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
     MessageHeaderAccessor messageHeaderAccessor = MessageHeaderAccessor.getMutableAccessor(message);
-    Message<?> messageWithHeaders = createMessageWithHeaders(message, messageHeaderAccessor);
-    handleScopeHolder.put(channel, context.makeCurrent());
-    return messageWithHeaders;
+    messageHeaderAccessor.setHeader(SCOPE_KEY, context.makeCurrent());
+    return createMessageWithHeaders(message, messageHeaderAccessor);
   }
 
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    Scope scope = handleScopeHolder.get(channel);
-    if (scope != null) {
-      scope.close();
+    Object scope = message.getHeaders().get(SCOPE_KEY);
+    if (scope instanceof Scope) {
+      ((Scope) scope).close();
     }
   }
 
