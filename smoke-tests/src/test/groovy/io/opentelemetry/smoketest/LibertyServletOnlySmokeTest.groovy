@@ -5,10 +5,7 @@
 
 package io.opentelemetry.smoketest
 
-import spock.lang.IgnoreIf
-
 @AppServer(version = "20.0.0.12", jdk = "8")
-@IgnoreIf({ os.windows }) //WindowsTestContainerManager does not support extra resources
 class LibertyServletOnlySmokeTest extends LibertySmokeTest {
 
   @Override
