@@ -220,7 +220,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
+          // Workaround until release of
           // https://github.com/open-telemetry/opentelemetry-java/pull/3386
           // in 1.5
           List<List<SpanData>> traces = testing.traces();
