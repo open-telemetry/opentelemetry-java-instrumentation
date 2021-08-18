@@ -40,6 +40,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(AgentContextStorage.class);
 
   public static final AgentContextStorage INSTANCE = new AgentContextStorage();
+  // unwrapped application root context
+  private static final Context APPLICATION_ROOT = Context.root();
+  // wrapped application root context
+  private static final Context ROOT =
+      new AgentContextWrapper(io.opentelemetry.context.Context.root(), APPLICATION_ROOT);
 
   public static io.opentelemetry.context.Context getAgentContext(Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
@@ -52,8 +57,20 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     return io.opentelemetry.context.Context.root();
   }
 
+  public static Context rootContextWrapper(Context applicationRootContext) {
+    // APPLICATION_ROOT is null when this method is called while the static initializer is
+    // initializing the value of APPLICATION_ROOT field
+    if (APPLICATION_ROOT == null) {
+      return applicationRootContext;
+    }
+    return ROOT;
+  }
+
   public static Context newContextWrapper(
       io.opentelemetry.context.Context agentContext, Context applicationContext) {
+    if (applicationContext instanceof AgentContextWrapper) {
+      applicationContext = ((AgentContextWrapper) applicationContext).applicationContext;
+    }
     return new AgentContextWrapper(agentContext, applicationContext);
   }
 
@@ -80,16 +97,17 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
         io.opentelemetry.context.Context.current();
     Context currentApplicationContext = currentAgentContext.get(APPLICATION_CONTEXT);
     if (currentApplicationContext == null) {
-      currentApplicationContext = Context.root();
-    }
-
-    if (currentApplicationContext == toAttach) {
-      return Scope.noop();
+      currentApplicationContext = APPLICATION_ROOT;
     }
 
     io.opentelemetry.context.Context newAgentContext;
     if (toAttach instanceof AgentContextWrapper) {
-      newAgentContext = ((AgentContextWrapper) toAttach).toAgentContext();
+      AgentContextWrapper wrapper = (AgentContextWrapper) toAttach;
+      if (currentApplicationContext == wrapper.applicationContext
+          && currentAgentContext == wrapper.agentContext) {
+        return Scope.noop();
+      }
+      newAgentContext = wrapper.toAgentContext();
     } else {
       newAgentContext = currentAgentContext.with(APPLICATION_CONTEXT, toAttach);
     }
@@ -102,9 +120,13 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     io.opentelemetry.context.Context agentContext = io.opentelemetry.context.Context.current();
     Context applicationContext = agentContext.get(APPLICATION_CONTEXT);
     if (applicationContext == null) {
-      applicationContext = Context.root();
+      applicationContext = APPLICATION_ROOT;
     }
-    return new AgentContextWrapper(io.opentelemetry.context.Context.current(), applicationContext);
+    if (applicationContext == APPLICATION_ROOT
+        && agentContext == io.opentelemetry.context.Context.root()) {
+      return ROOT;
+    }
+    return new AgentContextWrapper(agentContext, applicationContext);
   }
 
   @Override
@@ -121,6 +143,9 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     final Context applicationContext;
 
     AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
+      if (applicationContext instanceof AgentContextWrapper) {
+        throw new IllegalStateException("Expected unwrapped context");
+      }
       this.agentContext = agentContext;
       this.applicationContext = applicationContext;
     }
