@@ -22,8 +22,11 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
-  private static final String CONTEXT_AND_SCOPE_KEY = ContextAndScope.class.getName();
-  private static final String SCOPE_KEY = TracingChannelInterceptor.class.getName() + ".scope";
+  // some messaging products (e.g. IBM MQ) require message keys to be valid Java identifiers
+  private static final String CONTEXT_AND_SCOPE_KEY =
+      ContextAndScope.class.getName().replace('.', '_');
+  private static final String SCOPE_KEY =
+      TracingChannelInterceptor.class.getName().replace('.', '_') + "_scope";
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> instrumenter;
