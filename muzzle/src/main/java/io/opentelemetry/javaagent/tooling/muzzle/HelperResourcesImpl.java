@@ -11,24 +11,25 @@ import java.util.Map;
 
 public class HelperResourcesImpl implements HelperResources {
 
-  private final Map<String, String> resourceNameMappings = new HashMap<>();
+  private final Map<String, String> resourcePathMappings = new HashMap<>();
 
   @Override
-  public void register(String resourceName) {
-    resourceNameMappings.put(resourceName, resourceName);
+  public void register(String resourcePath) {
+    resourcePathMappings.put(resourcePath, resourcePath);
   }
 
   @Override
-  public void register(String resourceName, String resourceNameForContent) {
-    resourceNameMappings.put(resourceName, resourceNameForContent);
+  public void register(String applicationResourcePath, String agentResourcePath) {
+    resourcePathMappings.put(applicationResourcePath, agentResourcePath);
   }
 
   /**
-   * Returns the registered mappings, where the mapping key is the name of the resource to inject in
-   * to the user's class loader, and the value is name of the instrumentation resource which
-   * provides the content for injection.
+   * Returns the registered mappings, where the keys are the paths in the user's class loader at
+   * which to inject the resource ({@code applicationResourcePath}) and the values are the paths in
+   * the agent class loader from which to get the content for the resource ({@code
+   * agentResourcePath}).
    */
-  public Map<String, String> getResourceNameMappings() {
-    return resourceNameMappings;
+  public Map<String, String> getResourcePathMappings() {
+    return resourcePathMappings;
   }
 }

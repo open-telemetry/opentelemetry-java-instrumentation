@@ -92,7 +92,7 @@ public class ClassLoaderMatcher {
         new HelperInjector(
                 instrumentationModule.instrumentationName(),
                 allHelperClasses,
-                helperResources.getResourceNameMappings(),
+                helperResources.getResourcePathMappings(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
             .transform(null, null, classLoader, null);

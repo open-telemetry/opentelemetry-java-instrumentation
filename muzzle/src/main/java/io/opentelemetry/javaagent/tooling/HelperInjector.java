@@ -63,7 +63,7 @@ public class HelperInjector implements Transformer {
   private final String requestingName;
 
   private final Set<String> helperClassNames;
-  private final Map<String, String> helperResourceMappings;
+  private final Map<String, String> helperResourcePathMappings;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
@@ -87,14 +87,14 @@ public class HelperInjector implements Transformer {
   public HelperInjector(
       String requestingName,
       List<String> helperClassNames,
-      Map<String, String> helperResourceMappings,
+      Map<String, String> helperResourcePathMappings,
       // TODO can this be replaced with the context classloader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
-    this.helperResourceMappings = helperResourceMappings;
+    this.helperResourcePathMappings = helperResourcePathMappings;
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -106,7 +106,7 @@ public class HelperInjector implements Transformer {
     this.helperClassNames = helperMap.keySet();
     this.dynamicTypeMap.putAll(helperMap);
 
-    this.helperResourceMappings = Collections.emptyMap();
+    this.helperResourcePathMappings = Collections.emptyMap();
     this.helpersSource = null;
     this.instrumentation = instrumentation;
   }
@@ -149,16 +149,19 @@ public class HelperInjector implements Transformer {
       classLoader = injectHelperClasses(typeDescription, classLoader, module);
     }
 
-    if (helpersSource != null && !helperResourceMappings.isEmpty()) {
-      for (Map.Entry<String, String> entry : helperResourceMappings.entrySet()) {
-        URL resource = helpersSource.getResource(entry.getValue());
+    if (helpersSource != null && !helperResourcePathMappings.isEmpty()) {
+      for (Map.Entry<String, String> entry : helperResourcePathMappings.entrySet()) {
+        String agentResourcePath = entry.getValue();
+        String applicationResourcePath = entry.getKey();
+        URL resource = helpersSource.getResource(agentResourcePath);
         if (resource == null) {
-          logger.debug("Helper resource {} requested but not found.", entry.getValue());
+          logger.debug("Helper resource {} requested but not found.", agentResourcePath);
           continue;
         }
 
-        logger.debug("Injecting resource onto classloader {} -> {}", classLoader, entry.getKey());
-        HelperResources.register(classLoader, entry.getKey(), resource);
+        logger.debug(
+            "Injecting resource onto classloader {} -> {}", classLoader, applicationResourcePath);
+        HelperResources.register(classLoader, applicationResourcePath, resource);
       }
     }
 

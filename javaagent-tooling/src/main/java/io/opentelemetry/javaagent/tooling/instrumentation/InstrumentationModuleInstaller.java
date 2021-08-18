@@ -66,7 +66,7 @@ public final class InstrumentationModuleInstaller {
     instrumentationModule.registerHelperResources(helperResources);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
-      if (!helperClassNames.isEmpty() || !helperResources.getResourceNameMappings().isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResources.getResourcePathMappings().isEmpty()) {
         logger.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
             instrumentationModule.instrumentationName());
@@ -82,7 +82,7 @@ public final class InstrumentationModuleInstaller {
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
-            helperResources.getResourceNameMappings(),
+            helperResources.getResourcePathMappings(),
             Utils.getExtensionsClassLoader(),
             instrumentation);
     InstrumentationContextProvider contextProvider =

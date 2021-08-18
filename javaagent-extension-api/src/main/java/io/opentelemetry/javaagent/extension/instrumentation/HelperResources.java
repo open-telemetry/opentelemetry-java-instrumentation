@@ -10,23 +10,24 @@ public interface HelperResources {
   /**
    * Registers a resource to be injected in the user's class loader.
    *
-   * <p>This is a convenience method for {@code register(resourceName, resourceName)}.
+   * <p>This is a convenience method for {@code register(resourcePath, resourcePath)}.
    */
-  default void register(String resourceName) {
-    register(resourceName, resourceName);
+  default void register(String resourcePath) {
+    register(resourcePath, resourcePath);
   }
 
   /**
    * Registers a resource to be injected in the user's class loader.
    *
-   * <p>{@code resourceName} and {@code resourceNameForContent} can be the same, but it is often
-   * desirable to use a slightly different name or path for the resource file provided by the
-   * instrumentation so that multiple instrumentation modules (e.g. applying to different versions
-   * of a particular library) can co-exist inside the agent jar file.
+   * <p>{@code agentResourcePath} can be the same as {@code applicationResourcePath}, but it is
+   * often desirable to use a slightly different path for {@code agentResourcePath}, so that
+   * multiple versions of an instrumentation (each injecting their own version of the resource) can
+   * co-exist inside the agent jar file.
    *
-   * @param resourceName the name of the resource to inject in to the user's class loader
-   * @param resourceNameForContent the name of the instrumentation resource which provides the
-   *     content for injection
+   * @param applicationResourcePath the path in the user's class loader at which to inject the
+   *     resource
+   * @param agentResourcePath the path in the agent class loader from which to get the content for
+   *     the resource
    */
-  void register(String resourceName, String resourceNameForContent);
+  void register(String applicationResourcePath, String agentResourcePath);
 }
