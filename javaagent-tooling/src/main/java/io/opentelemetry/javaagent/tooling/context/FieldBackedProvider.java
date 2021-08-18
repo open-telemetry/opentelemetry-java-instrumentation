@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
@@ -137,6 +138,21 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     contextStoreImplementations = generateContextStoreImplementationClasses();
     contextStoreImplementationsInjector =
         bootstrapHelperInjector(contextStoreImplementations.values());
+  }
+
+  public static <Q extends K, K, C> ContextStore<Q, C> getContextStore(
+      Class<K> keyClass, Class<C> contextClass) {
+    try {
+      String contextStoreClassName =
+          getContextStoreImplementationClassName(keyClass.getName(), contextClass.getName());
+      Class<?> contextStoreClass = Class.forName(contextStoreClassName, false, null);
+      Method method = contextStoreClass.getMethod("getContextStore", Class.class, Class.class);
+      return (ContextStore<Q, C>) method.invoke(null, keyClass, contextClass);
+    } catch (ClassNotFoundException exception) {
+      throw new IllegalStateException("Context store not found", exception);
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
+      throw new IllegalStateException("Failed to get context store", exception);
+    }
   }
 
   @Override
@@ -989,10 +1005,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return (builder, typeDescription, classLoader, module) -> builder.visit(visitor);
   }
 
-  private String getContextStoreImplementationClassName(
+  private static String getContextStoreImplementationClassName(
       String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
-        + getClass().getSimpleName()
+        + FieldBackedProvider.class.getSimpleName()
         + "$ContextStore$"
         + Utils.convertToInnerClassName(keyClassName)
         + "$"
