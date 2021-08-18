@@ -4,7 +4,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResources;
 import java.util.HashMap;
 import java.util.Map;
 
-class HelperResourcesImpl implements HelperResources {
+public class HelperResourcesImpl implements HelperResources {
 
   private final Map<String, String> resourceNameMappings = new HashMap<>();
 
@@ -23,7 +23,7 @@ class HelperResourcesImpl implements HelperResources {
    * to the user's class loader, and the value is name of the instrumentation resource which
    * provides the content for injection.
    */
-  Map<String, String> getResourceNameMappings() {
+  public Map<String, String> getResourceNameMappings() {
     return resourceNameMappings;
   }
 }
