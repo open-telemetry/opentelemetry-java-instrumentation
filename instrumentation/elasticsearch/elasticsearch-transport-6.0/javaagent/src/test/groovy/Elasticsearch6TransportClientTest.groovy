@@ -143,7 +143,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
         span(0) {
           name "parent"
           status ERROR
-          errorEvent IndexNotFoundException, "no such index"
+          errorEvent IndexNotFoundException, ~/no such index( \[invalid-index])?/
           kind INTERNAL
           hasNoParent()
         }
