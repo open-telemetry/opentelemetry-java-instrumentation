@@ -21,6 +21,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new ContextInstrumentation(),
         new ContextStorageWrappersInstrumentation(),
         new OpenTelemetryInstrumentation(),
         new SpanInstrumentation());
