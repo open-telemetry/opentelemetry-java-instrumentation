@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.linecorp.armeria.client.ClientFactory;
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.client.WebClientBuilder;
@@ -21,19 +23,28 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   protected abstract WebClientBuilder configureClient(WebClientBuilder clientBuilder);
 
+  private AtomicBoolean decoratorCalled;
+
   private WebClient client;
 
   @BeforeEach
   void setupClient() {
+    decoratorCalled = new AtomicBoolean();
     client =
         configureClient(
                 WebClient.builder()
+                    .decorator((delegate, ctx, req) -> {
+                      decoratorCalled.set(true);
+                      return delegate.execute(ctx, req);
+                    })
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
   }
@@ -86,5 +97,11 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     extra.add(SemanticAttributes.HTTP_TARGET);
     extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     options.setHttpAttributes(unused -> extra);
+  }
+
+  @Test
+  void userDecoratorsNotClobbered() {
+    client.get(resolveAddress("/success").toString()).aggregate().join();
+    assertThat(decoratorCalled).isTrue();
   }
 }
