@@ -15,7 +15,7 @@ import io.opentelemetry.containers.K6Container;
 import io.opentelemetry.containers.PetClinicRestContainer;
 import io.opentelemetry.containers.PostgresContainer;
 import io.opentelemetry.results.AppPerfResults;
-import io.opentelemetry.results.ConsoleResultsPersister;
+import io.opentelemetry.results.MainResultsPersister;
 import io.opentelemetry.results.ResultsCollector;
 import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class OverheadTests {
       }
     });
     List<AppPerfResults> results = new ResultsCollector(namingConventions.local).collect(config);
-    new ConsoleResultsPersister().write(results);
+    new MainResultsPersister(config).write(results);
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
