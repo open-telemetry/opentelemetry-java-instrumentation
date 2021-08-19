@@ -41,10 +41,11 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     client =
         configureClient(
                 WebClient.builder()
-                    .decorator((delegate, ctx, req) -> {
-                      decoratorCalled.set(true);
-                      return delegate.execute(ctx, req);
-                    })
+                    .decorator(
+                        (delegate, ctx, req) -> {
+                          decoratorCalled.set(true);
+                          return delegate.execute(ctx, req);
+                        })
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
   }
