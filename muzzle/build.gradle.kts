@@ -9,6 +9,9 @@ dependencies {
   // Only used during compilation by bytebuddy plugin
   compileOnly("com.google.guava:guava")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   api("net.bytebuddy:byte-buddy")
 
   implementation(project(":javaagent-bootstrap"))
