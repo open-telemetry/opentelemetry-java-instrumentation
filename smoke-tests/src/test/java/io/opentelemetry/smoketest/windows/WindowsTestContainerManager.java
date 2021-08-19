@@ -18,6 +18,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
+import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -166,7 +167,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
-      Map<String, String> extraResources,
+      List<ResourceMapping> extraResources,
       TargetWaitStrategy waitStrategy) {
     stopTarget();
 
@@ -198,8 +199,9 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                 copyFileToContainer(
                     containerId, IOUtils.toByteArray(agentFileStream), "/" + TARGET_AGENT_FILENAME);
 
-                for (Map.Entry<String, String> e : extraResources.entrySet()) {
-                  copyResourceToContainer(containerId, e.getKey(), e.getValue());
+                for (ResourceMapping resource : extraResources) {
+                  copyResourceToContainer(
+                      containerId, resource.resourcePath(), resource.containerPath());
                 }
               } catch (Exception e) {
                 throw new IllegalStateException(e);

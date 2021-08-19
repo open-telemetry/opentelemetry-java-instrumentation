@@ -17,6 +17,9 @@ otelJava {
 
 val dockerJavaVersion = "3.2.5"
 dependencies {
+  testCompileOnly("com.google.auto.value:auto-value-annotations")
+  testAnnotationProcessor("com.google.auto.value:auto-value")
+
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
@@ -34,6 +37,8 @@ dependencies {
   testImplementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
   testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
+  // make IntelliJ see shaded Armeria
+  testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {
