@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
@@ -57,10 +58,15 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
+    HelperResourceBuilderImpl helperResources = new HelperResourceBuilderImpl();
     List<String> helperResourceNames = instrumentationModule.helperResourceNames();
+    for (String helperResourceName : helperResourceNames) {
+      helperResources.register(helperResourceName);
+    }
+    instrumentationModule.registerHelperResources(helperResources);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
-      if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResources.getResourcePathMappings().isEmpty()) {
         logger.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
             instrumentationModule.instrumentationName());
@@ -76,7 +82,7 @@ public final class InstrumentationModuleInstaller {
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
-            helperResourceNames,
+            helperResources.getResourcePathMappings(),
             Utils.getExtensionsClassLoader(),
             instrumentation);
     InstrumentationContextProvider contextProvider =
