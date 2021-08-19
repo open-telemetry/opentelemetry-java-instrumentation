@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
@@ -15,10 +16,12 @@ public class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
   private final Context context;
+  private final Context parentContext;
 
-  public RestResponseListener(ResponseListener listener, Context context) {
+  public RestResponseListener(ResponseListener listener, Context context, Context parentContext) {
     this.listener = listener;
     this.context = context;
+    this.parentContext = parentContext;
   }
 
   @Override
@@ -28,12 +31,16 @@ public class RestResponseListener implements ResponseListener {
     }
     tracer().end(context);
 
-    listener.onSuccess(response);
+    try (Scope ignored = parentContext.makeCurrent()) {
+      listener.onSuccess(response);
+    }
   }
 
   @Override
   public void onFailure(Exception e) {
     tracer().endExceptionally(context, e);
-    listener.onFailure(e);
+    try (Scope ignored = parentContext.makeCurrent()) {
+      listener.onFailure(e);
+    }
   }
 }
