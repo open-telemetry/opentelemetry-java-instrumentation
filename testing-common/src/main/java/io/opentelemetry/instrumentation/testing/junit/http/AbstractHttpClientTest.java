@@ -1048,10 +1048,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               } else {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                // TODO(anuraaga): Remove cast after
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3412
                 assertThat(attrs)
-                    .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
+                    .containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
               }
 
               // Optional
@@ -1083,10 +1081,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
                 String userAgent = options.userAgent;
                 if (userAgent != null) {
-                  // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                  // hasEntrySatisfying.
-                  // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                  assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_USER_AGENT);
                   assertThat(attrs)
                       .hasEntrySatisfying(
                           SemanticAttributes.HTTP_USER_AGENT,
@@ -1094,10 +1088,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_HOST)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_HOST);
                 // TODO(anuraaga): It's not well defined when instrumentation records with and
                 // without port. We should make this more uniform
                 assertThat(attrs)
@@ -1106,22 +1096,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                         host -> assertThat(host).startsWith(uri.getHost()));
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap())
-                    .containsKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                         length -> assertThat(length).isNotNegative());
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap())
-                    .containsKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
