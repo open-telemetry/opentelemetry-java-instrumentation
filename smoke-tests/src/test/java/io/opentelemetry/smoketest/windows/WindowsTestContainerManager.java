@@ -18,6 +18,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
+import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -160,14 +161,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     return extractMappedPort(target, originalPort);
   }
 
-  // TODO add support for extraResources
   @Override
   public Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
-      Map<String, String> extraResources,
+      List<ResourceMapping> extraResources,
       TargetWaitStrategy waitStrategy) {
     stopTarget();
 
@@ -198,6 +198,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
               try (InputStream agentFileStream = new FileInputStream(agentPath)) {
                 copyFileToContainer(
                     containerId, IOUtils.toByteArray(agentFileStream), "/" + TARGET_AGENT_FILENAME);
+
+                for (ResourceMapping resource : extraResources) {
+                  copyResourceToContainer(
+                      containerId, resource.resourcePath(), resource.containerPath());
+                }
               } catch (Exception e) {
                 throw new IllegalStateException(e);
               }
@@ -230,6 +235,14 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       return true;
     } catch (RuntimeException e) {
       return false;
+    }
+  }
+
+  private void copyResourceToContainer(
+      String containerId, String resourcePath, String containerPath) throws IOException {
+    try (InputStream is =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath)) {
+      copyFileToContainer(containerId, IOUtils.toByteArray(is), containerPath);
     }
   }
 
