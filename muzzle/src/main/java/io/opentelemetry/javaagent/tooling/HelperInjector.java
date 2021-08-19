@@ -84,7 +84,6 @@ public class HelperInjector implements Transformer {
    *     requires them to be injected in a specific order. And be careful, the class's package in
    *     library will be renamed like 'io.opentelemetry.instrumentation' to
    *     'io.opentelemetry.javaagent.shaded.instrumentation'
-   * @param helperResources
    */
   public HelperInjector(
       String requestingName,
