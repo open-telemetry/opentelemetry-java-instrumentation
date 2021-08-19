@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.OkHttp2Singletons.tracingInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -39,7 +40,7 @@ public class OkHttpClientInstrumentation implements TypeInstrumentation {
         }
       }
 
-      client.interceptors().add(new TracingInterceptor());
+      client.interceptors().add(tracingInterceptor());
     }
   }
 }
