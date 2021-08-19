@@ -52,10 +52,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      context = tracer().startSpan(currentContext(), null, method + " " + endpoint);
+      Context parentContext = currentContext();
+      context = tracer().startSpan(parentContext, null, method + " " + endpoint);
       scope = context.makeCurrent();
 
-      responseListener = new RestResponseListener(responseListener, context);
+      responseListener = new RestResponseListener(responseListener, context, parentContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
