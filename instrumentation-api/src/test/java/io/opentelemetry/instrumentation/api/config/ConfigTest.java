@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.config;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,8 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 // suppress duration unit check, e.g. ofMillis(5000) -> ofSeconds(5)
 @SuppressWarnings("CanonicalDuration")
@@ -25,10 +34,10 @@ class ConfigTest {
   void shouldGetString() {
     Config config = Config.newBuilder().addProperty("prop.string", "some text").build();
 
-    assertEquals("some text", config.getProperty("prop.string"));
-    assertEquals("some text", config.getProperty("prop.string", "default"));
-    assertNull(config.getProperty("prop.missing"));
-    assertEquals("default", config.getProperty("prop.missing", "default"));
+    assertEquals("some text", config.getString("prop.string"));
+    assertEquals("some text", config.getString("prop.string", "default"));
+    assertNull(config.getString("prop.missing"));
+    assertEquals("default", config.getString("prop.missing", "default"));
   }
 
   @Test
@@ -36,9 +45,9 @@ class ConfigTest {
     Config config = Config.newBuilder().addProperty("prop.boolean", "true").build();
 
     assertTrue(config.getBoolean("prop.boolean"));
-    assertTrue(config.getBooleanProperty("prop.boolean", false));
+    assertTrue(config.getBoolean("prop.boolean", false));
     assertNull(config.getBoolean("prop.missing"));
-    assertFalse(config.getBooleanProperty("prop.missing", false));
+    assertFalse(config.getBoolean("prop.missing", false));
   }
 
   @Test
@@ -127,13 +136,12 @@ class ConfigTest {
   void shouldGetList() {
     Config config = Config.newBuilder().addProperty("prop.list", "one, two ,three").build();
 
-    assertEquals(asList("one", "two", "three"), config.getListProperty("prop.list"));
+    assertEquals(asList("one", "two", "three"), config.getList("prop.list"));
     assertEquals(
-        asList("one", "two", "three"),
-        config.getListProperty("prop.list", singletonList("default")));
-    assertTrue(config.getListProperty("prop.missing").isEmpty());
+        asList("one", "two", "three"), config.getList("prop.list", singletonList("default")));
+    assertTrue(config.getList("prop.missing").isEmpty());
     assertEquals(
-        singletonList("default"), config.getListProperty("prop.missing", singletonList("default")));
+        singletonList("default"), config.getList("prop.missing", singletonList("default")));
   }
 
   @Test
@@ -144,17 +152,69 @@ class ConfigTest {
             .addProperty("prop.wrong", "one=1, but not two!")
             .build();
 
-    assertEquals(map("one", "1", "two", "2"), config.getMapProperty("prop.map"));
+    assertEquals(map("one", "1", "two", "2"), config.getMap("prop.map"));
     assertEquals(
-        map("one", "1", "two", "2"), config.getMapProperty("prop.map", singletonMap("three", "3")));
-    assertTrue(config.getMapProperty("prop.wrong").isEmpty());
+        map("one", "1", "two", "2"), config.getMap("prop.map", singletonMap("three", "3")));
+    assertTrue(config.getMap("prop.wrong").isEmpty());
     assertEquals(
-        singletonMap("three", "3"),
-        config.getMapProperty("prop.wrong", singletonMap("three", "3")));
-    assertTrue(config.getMapProperty("prop.missing").isEmpty());
+        singletonMap("three", "3"), config.getMap("prop.wrong", singletonMap("three", "3")));
+    assertTrue(config.getMap("prop.missing").isEmpty());
     assertEquals(
-        singletonMap("three", "3"),
-        config.getMapProperty("prop.missing", singletonMap("three", "3")));
+        singletonMap("three", "3"), config.getMap("prop.missing", singletonMap("three", "3")));
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(AgentDebugParams.class)
+  void shouldCheckIfAgentDebugModeIsEnabled(String propertyValue, boolean expected) {
+    Config config = Config.newBuilder().addProperty("otel.javaagent.debug", propertyValue).build();
+
+    assertEquals(expected, config.isAgentDebugEnabled());
+  }
+
+  private static class AgentDebugParams implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          Arguments.of("true", true), Arguments.of("blather", false), Arguments.of(null, false));
+    }
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(InstrumentationEnabledParams.class)
+  void shouldCheckIfInstrumentationIsEnabled(
+      List<String> names, boolean defaultEnabled, boolean expected) {
+    Config config =
+        Config.newBuilder()
+            .addProperty("otel.instrumentation.order.enabled", "true")
+            .addProperty("otel.instrumentation.test-prop.enabled", "true")
+            .addProperty("otel.instrumentation.disabled-prop.enabled", "false")
+            .addProperty("otel.instrumentation.test-env.enabled", "true")
+            .addProperty("otel.instrumentation.disabled-env.enabled", "false")
+            .build();
+
+    assertEquals(expected, config.isInstrumentationEnabled(new TreeSet<>(names), defaultEnabled));
+  }
+
+  private static class InstrumentationEnabledParams implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          Arguments.of(emptyList(), true, true),
+          Arguments.of(emptyList(), false, false),
+          Arguments.of(singletonList("invalid"), true, true),
+          Arguments.of(singletonList("invalid"), false, false),
+          Arguments.of(singletonList("test-prop"), false, true),
+          Arguments.of(singletonList("test-env"), false, true),
+          Arguments.of(singletonList("disabled-prop"), true, false),
+          Arguments.of(singletonList("disabled-env"), true, false),
+          Arguments.of(asList("other", "test-prop"), false, true),
+          Arguments.of(asList("other", "test-env"), false, true),
+          Arguments.of(singletonList("order"), false, true),
+          Arguments.of(asList("test-prop", "disabled-prop"), false, true),
+          Arguments.of(asList("disabled-env", "test-env"), false, true),
+          Arguments.of(asList("test-prop", "disabled-prop"), true, false),
+          Arguments.of(asList("disabled-env", "test-env"), true, false));
+    }
   }
 
   public static Map<String, String> map(String k1, String v1, String k2, String v2) {
