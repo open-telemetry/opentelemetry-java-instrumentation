@@ -63,6 +63,7 @@ public class JFRUtils {
       return this;
     }
     long average(){
+      if(count == 0) return -1;
       return total/count;
     }
   }
