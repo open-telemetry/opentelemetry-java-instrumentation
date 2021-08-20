@@ -66,8 +66,13 @@ public class OverheadTests {
         fail("Unhandled exception in " + config.getName(), e);
       }
     });
-    List<AppPerfResults> results = new ResultsCollector(namingConventions.local).collect(config);
-    new MainResultsPersister(config).write(results);
+    try {
+      List<AppPerfResults> results = new ResultsCollector(namingConventions.local).collect(config);
+      new MainResultsPersister(config).write(results);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {

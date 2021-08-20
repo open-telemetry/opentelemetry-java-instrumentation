@@ -20,5 +20,9 @@ dependencies {
 tasks {
   test {
     useJUnitPlatform()
+    testLogging {
+      outputs.upToDateWhen {false}
+      showStandardStreams = true
+    }
   }
 }
