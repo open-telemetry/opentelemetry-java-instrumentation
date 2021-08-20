@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+### ☢️ Behavioral changes
+
+- Rename jws-1.1 to jaxws-jws-api-1.1 (#3653)
+
+### 🌟 New javaagent instrumentation
+
+- Vertx http client 4 instrumentation (#3665)
+
+### 🌟 New library instrumentation
+
+- Add library instrumentation for Apache HTTPClient 4.3 (#3623)
+- Add library instrumentation for Ratpack server (#3749)
+
+### 📈 Enhancements
+
+- couchbase 3.2.0 (#3645)
+- Fix aws-sdk latest dep tests (#3646)
+- Netty4: handle read timeout (#3613)
+- Handle port and IPv6 in forwarded headers (#3651)
+- Netty connection failure handling (#3569)
+- Hibernate: set real span name on method entry (#3603)
+- Reduce overhead of unsampled requests (#3681)
+- Sanitize SQL in Apache Camel instrumentation (#3683, #3717)
+- Add option to create span on new netty connection (#3707)
+- Propagate context into jdk http client callback (#3719)
+- Instrument tomcat executor (#3789)
+- Add otlp-logging exporter (#3807)
+- Client span keys: suppressing same instrumentation (#3691)
+- Propagate context to lettuce callbacks (#3839)
+- Instrument ForkJoinTask.fork (#3849)
+- Implement a Call.Factory for okhttp 3.x+ library instrumentation (#3812)
+- record exception in dubbo inst (#3851)
+- Context propagation to elasticsearch callbacks (#3858, #3861)
+
+### 🛠️ Bug fixes
+
+- Okhttp3: fix concurrency test with callback (#3669)
+- Fix concurrency with callback test on okhttp3 latest (#3676)
+- Fix NPE in Apache HttpAsyncClient instrumentation (#3692)
+- Fix NullPointerException on tomcat (#3705)
+- Fix Apache HttpClient host + absolute uri (#3694)
+- Fix JDK http client propagation of non-sampled traces (#3736)
+- Resteasy: compile instrumentation against earliest supported version (#3777)
+- Limit netty exception capture to netty spans (#3809)
+- Fix wrapping jetty listeners (#3831, #3833)
+- Vertx: avoid double wrapping exception handler (#3848)
+- Don't clobber user decorators in Armeria client instrumentation (#3873)
+
+### 🧰 Tooling
+
+- Improve extension sample documentation and add it to the README file (#3656)
+- Extract muzzle check plugin (#3657)
+- Move instrumentation specific classes out of javaagent-instrumentation-api (#3604)
+- Publish muzze plugins to Gradle Plugin Portal (#3720, #3763)
+- Fill HTTP_CLIENT_IP in ServerInstrumenter (#3756)
+- Fix printMuzzleReferences gradle task (#3808)
+- Introduce stable property for external extensions (#3823)
+- Run tests on j9 JVM during CI (#3764)
+- Support looking up a ContextStore from outside of Advice (#3827)
+- Deprecate MetricExporterFactory (#3862)
+
 ## Version 1.4.0 - 2021-07-20
 
 ### ☢️ Behavioral changes
