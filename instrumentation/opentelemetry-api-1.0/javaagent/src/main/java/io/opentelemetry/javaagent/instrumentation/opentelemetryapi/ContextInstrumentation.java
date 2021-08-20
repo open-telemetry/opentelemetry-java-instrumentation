@@ -17,6 +17,12 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Returns {@link AgentContextStorage} as the implementation of {@link ContextStorage} in the
+ * application classpath. We do this instead of using the normal service loader mechanism to make
+ * sure there is no dependency on a system property or possibility of a user overriding this since
+ * it's required for instrumentation in the agent to work properly.
+ */
 public class ContextInstrumentation implements TypeInstrumentation {
 
   @Override
