@@ -79,7 +79,10 @@ public abstract class Config {
   /**
    * Returns a string-valued configuration property or {@code null} if a property with name {@code
    * name} has not been configured.
+   *
+   * @deprecated Use {@link #getString(String)} instead.
    */
+  @Deprecated
   @Nullable
   public String getProperty(String name) {
     return getRawProperty(name, null);
@@ -88,8 +91,28 @@ public abstract class Config {
   /**
    * Returns a string-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured.
+   *
+   * @deprecated Use {@link #getString(String, String)} instead.
    */
+  @Deprecated
   public String getProperty(String name, String defaultValue) {
+    return getRawProperty(name, defaultValue);
+  }
+
+  /**
+   * Returns a string-valued configuration property or {@code null} if a property with name {@code
+   * name} has not been configured.
+   */
+  @Nullable
+  public String getString(String name) {
+    return getRawProperty(name, null);
+  }
+
+  /**
+   * Returns a string-valued configuration property or {@code defaultValue} if a property with name
+   * {@code name} has not been configured.
+   */
+  public String getString(String name, String defaultValue) {
     return getRawProperty(name, defaultValue);
   }
 
@@ -106,6 +129,17 @@ public abstract class Config {
    * Returns a boolean-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured.
    */
+  public boolean getBoolean(String name, boolean defaultValue) {
+    return getTypedProperty(name, Boolean::parseBoolean, defaultValue);
+  }
+
+  /**
+   * Returns a boolean-valued configuration property or {@code defaultValue} if a property with name
+   * {@code name} has not been configured.
+   *
+   * @deprecated Use {@link #getBoolean(String, boolean)} instead.
+   */
+  @Deprecated
   public boolean getBooleanProperty(String name, boolean defaultValue) {
     return getTypedProperty(name, Boolean::parseBoolean, defaultValue);
   }
@@ -206,7 +240,10 @@ public abstract class Config {
    * Returns a list-valued configuration property or an empty list if a property with name {@code
    * name} has not been configured. The format of the original value must be comma-separated, e.g.
    * {@code one,two,three}.
+   *
+   * @deprecated Use {@link #getList(String)} instead.
    */
+  @Deprecated
   public List<String> getListProperty(String name) {
     return getListProperty(name, Collections.emptyList());
   }
@@ -215,8 +252,29 @@ public abstract class Config {
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured. The format of the original value must be comma-separated,
    * e.g. {@code one,two,three}.
+   *
+   * @deprecated Use {@link #getList(String, List)} instead.
    */
+  @Deprecated
   public List<String> getListProperty(String name, List<String> defaultValue) {
+    return getTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
+  }
+
+  /**
+   * Returns a list-valued configuration property or an empty list if a property with name {@code
+   * name} has not been configured. The format of the original value must be comma-separated, e.g.
+   * {@code one,two,three}.
+   */
+  public List<String> getList(String name) {
+    return getListProperty(name, Collections.emptyList());
+  }
+
+  /**
+   * Returns a list-valued configuration property or {@code defaultValue} if a property with name
+   * {@code name} has not been configured. The format of the original value must be comma-separated,
+   * e.g. {@code one,two,three}.
+   */
+  public List<String> getList(String name, List<String> defaultValue) {
     return getTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
   }
 
@@ -225,9 +283,22 @@ public abstract class Config {
    * name} has not been configured. The format of the original value must be comma-separated for
    * each key, with an '=' separating the key and value, e.g. {@code
    * key=value,anotherKey=anotherValue}.
+   *
+   * @deprecated Use {@link #getMap(String, Map)} instead.
    */
+  @Deprecated
   public Map<String, String> getMapProperty(String name) {
-    return getMapProperty(name, Collections.emptyMap());
+    return getMap(name, Collections.emptyMap());
+  }
+
+  /**
+   * Returns a map-valued configuration property or an empty map if a property with name {@code
+   * name} has not been configured. The format of the original value must be comma-separated for
+   * each key, with an '=' separating the key and value, e.g. {@code
+   * key=value,anotherKey=anotherValue}.
+   */
+  public Map<String, String> getMap(String name) {
+    return getMap(name, Collections.emptyMap());
   }
 
   /**
@@ -236,7 +307,7 @@ public abstract class Config {
    * for each key, with an '=' separating the key and value, e.g. {@code
    * key=value,anotherKey=anotherValue}.
    */
-  public Map<String, String> getMapProperty(String name, Map<String, String> defaultValue) {
+  public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     return getTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);
   }
 
