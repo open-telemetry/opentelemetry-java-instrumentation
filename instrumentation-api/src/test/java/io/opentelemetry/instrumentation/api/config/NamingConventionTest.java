@@ -1,8 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.config;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class NamingConventionTest {
 
@@ -16,8 +21,12 @@ public class NamingConventionTest {
   @Test
   void systemPropertyWithHyphen() {
     // Normalizes to the same thing
-    String result1 = NamingConvention.ENV_VAR.normalize("OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED");
-    String result2 = NamingConvention.DOT.normalize("otel.instrumentation.common.db-statement-sanitizer.enabled");
+    String result1 =
+        NamingConvention.ENV_VAR.normalize(
+            "OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED");
+    String result2 =
+        NamingConvention.DOT.normalize(
+            "otel.instrumentation.common.db-statement-sanitizer.enabled");
     assertEquals("otel.instrumentation.common.db.statement.sanitizer.enabled", result1);
     assertEquals("otel.instrumentation.common.db.statement.sanitizer.enabled", result2);
   }
@@ -30,5 +39,4 @@ public class NamingConventionTest {
     String result2 = NamingConvention.DOT.normalize("otel.something-else-entirely.foobar");
     assertEquals("otel.something.else.entirely.foobar", result2);
   }
-
 }
