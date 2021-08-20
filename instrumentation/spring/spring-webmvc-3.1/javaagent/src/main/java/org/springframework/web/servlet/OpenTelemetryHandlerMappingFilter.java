@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springwebmvc;
+package org.springframework.web.servlet;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +21,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.Ordered;
-import org.springframework.web.servlet.HandlerExecutionChain;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-public class HandlerMappingResourceNameFilter implements Filter, Ordered {
+public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private volatile List<HandlerMapping> handlerMappings;
 
   @Override
@@ -121,13 +119,5 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
   public int getOrder() {
     // Run after all HIGHEST_PRECEDENCE items
     return Ordered.HIGHEST_PRECEDENCE + 1;
-  }
-
-  public static class BeanDefinition extends GenericBeanDefinition {
-    public BeanDefinition() {
-      setScope(SCOPE_SINGLETON);
-      setBeanClass(HandlerMappingResourceNameFilter.class);
-      setBeanClassName(HandlerMappingResourceNameFilter.class.getName());
-    }
   }
 }
