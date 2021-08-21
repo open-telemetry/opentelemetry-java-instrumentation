@@ -65,7 +65,7 @@
   ([#3736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3736))
 - Limit netty exception capture to netty spans
   ([#3809](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3809))
-- Fix jetty httpclient returning empty response when instrumented 
+- Fix jetty httpclient returning empty response when instrumented
   ([#3831](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3831),
    [#3833](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3833))
 - Don't clobber user decorators in Armeria client instrumentation
