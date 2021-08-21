@@ -8,3 +8,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3.0:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=false")
+}
