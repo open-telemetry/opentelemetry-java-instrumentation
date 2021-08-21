@@ -1,0 +1,17 @@
+----------------------------------------------------------
+ Run at Sat Aug 21 05:33:59 UTC 2021
+ snapshot-regression : compares the latest snapshot to the latest stable release
+ 5 users, 5000 iterations
+----------------------------------------------------------
+Agent               :            latest         snapshot
+Startup time (ms)   :             15137            15353
+Total allocated MB  :          14961.89         14629.04
+Heap (min)          :          62764544         65508864
+Heap (max)          :         292714496        352754176
+Thread switch rate  :          37606.84          34286.4
+GC time             :        2426467878       1933721577
+Req. mean           :              9.15             9.02
+Req. p95            :             28.83            28.09
+Iter. mean          :            124.50           122.60
+Iter. p95           :            195.58           190.21
+Peak threads        :                47               46
