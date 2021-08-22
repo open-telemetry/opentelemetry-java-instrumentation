@@ -54,8 +54,8 @@ jobs:
           - 11
           - 15
         vm:
-         - hotspot
-         - openj9
+          - hotspot
+          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -232,6 +232,9 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Publish main repo artifacts locally to be used by examples
+        run: ./gradlew publishToMavenLocal
 
       - name: Build distro
         run: ./gradlew build
