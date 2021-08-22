@@ -7,12 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 
 public class StrutsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-2.3";
+
+  private static final boolean SUPPRESS_CONTROLLER_SPANS =
+      Config.get()
+          .getBoolean("otel.instrumentation.common.experimental.suppress-controller-spans", false);
 
   private static final Instrumenter<ActionInvocation, Void> INSTRUMENTER;
 
@@ -25,6 +30,7 @@ public class StrutsSingletons {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributes))
             .addAttributesExtractor(codeAttributes)
+            .setDisabled(SUPPRESS_CONTROLLER_SPANS)
             .newInstrumenter();
   }
 

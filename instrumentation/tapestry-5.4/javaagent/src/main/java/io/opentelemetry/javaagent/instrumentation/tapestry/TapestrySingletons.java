@@ -6,12 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.tapestry5.runtime.ComponentEventException;
 
 public class TapestrySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tapestry-5.4";
+
+  private static final boolean SUPPRESS_CONTROLLER_SPANS =
+      Config.get()
+          .getBoolean("otel.instrumentation.common.experimental.suppress-controller-spans", false);
 
   private static final Instrumenter<TapestryRequest, Void> INSTRUMENTER;
 
@@ -26,6 +31,7 @@ public class TapestrySingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(error);
                 })
+            .setDisabled(SUPPRESS_CONTROLLER_SPANS)
             .newInstrumenter();
   }
 

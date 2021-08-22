@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
@@ -20,6 +21,10 @@ public final class JaxrsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-2.0-common";
 
+  private static final boolean SUPPRESS_CONTROLLER_SPANS =
+      Config.get()
+          .getBoolean("otel.instrumentation.common.experimental.suppress-controller-spans", false);
+
   private static final Instrumenter<HandlerData, Void> INSTRUMENTER;
 
   static {
@@ -32,6 +37,7 @@ public final class JaxrsSingletons {
         Instrumenter.<HandlerData, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(codeAttributesExtractor)
+            .setDisabled(SUPPRESS_CONTROLLER_SPANS)
             .newInstrumenter();
   }
 
