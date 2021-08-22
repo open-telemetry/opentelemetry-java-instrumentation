@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.5.0 - 2021-08-22
 
 ### 🌟 New library instrumentation
 
@@ -45,6 +45,8 @@
    [#3861](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3861))
 - Added Vertx http client 4 instrumentation
   ([#3665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3665))
+- Make empty agent bridged context equal root context
+  ([#3869](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3869))
 
 ### 🛠️ Bug fixes
 
@@ -70,6 +72,10 @@
    [#3833](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3833))
 - Don't clobber user decorators in Armeria client instrumentation
   ([#3873](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3873))
+- Use valid Java identifiers for message keys
+  ([#3863](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3863))
+- Fix ClassNotFoundException: HandlerMappingResourceNameFilter in some ear deployments
+  ([#3718](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3718))
 
 ### 🧰 Tooling
 
@@ -94,6 +100,10 @@
   ([#3827](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3827))
 - Deprecate MetricExporterFactory
   ([#3862](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3862))
+- Don't pass configuration to SDK autoconfigure through system props
+  ([#3866](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3866))
+- Rename Config get*Property() methods to get*()
+  ([#3881](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3881))
 
 ## Version 1.4.0 - 2021-07-20
 
