@@ -102,7 +102,7 @@
   ([#3862](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3862))
 - Don't pass configuration to SDK autoconfigure through system props
   ([#3866](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3866))
-- Rename Config get*Property() methods to get*()
+- Rename Config get\*Property() methods to get\*()
   ([#3881](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3881))
 
 ## Version 1.4.0 - 2021-07-20
