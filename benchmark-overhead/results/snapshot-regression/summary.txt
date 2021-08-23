@@ -1,17 +1,17 @@
 ----------------------------------------------------------
- Run at Sun Aug 22 05:36:49 UTC 2021
+ Run at Mon Aug 23 05:37:07 UTC 2021
  snapshot-regression : compares the latest snapshot to the latest stable release
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :            latest         snapshot
-Startup time (ms)   :             16525            16672
-Total allocated MB  :          14640.91         14665.66
-Heap (min)          :          67555840         62142976
-Heap (max)          :         365829120        305790464
-Thread switch rate  :          35109.82          36501.8
-GC time             :        1925267662       2445394909
-Req. mean           :              9.43             9.60
-Req. p95            :             29.52            30.51
-Iter. mean          :            127.97           130.12
-Iter. p95           :            203.04           207.26
-Peak threads        :                47               47
+Startup time (ms)   :             18379            16547
+Total allocated MB  :          15030.38         14560.82
+Heap (min)          :          61341696         63963136
+Heap (max)          :         320497664        347695616
+Thread switch rate  :         31842.994        39058.863
+GC time             :        2707956726       2247842953
+Req. mean           :             10.64            10.13
+Req. p95            :             33.99            31.56
+Iter. mean          :            144.42           137.42
+Iter. p95           :            228.77           215.34
+Peak threads        :                48               48

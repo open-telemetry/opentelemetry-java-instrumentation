@@ -1,17 +1,17 @@
 ----------------------------------------------------------
- Run at Sun Aug 22 05:24:01 UTC 2021
+ Run at Mon Aug 23 05:23:33 UTC 2021
  release : compares the latest stable release to no agent
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :            latest             none
-Startup time (ms)   :             16368            13747
-Total allocated MB  :          14980.93          9640.23
-Heap (min)          :          62914560         49283072
-Heap (max)          :         379060224        255251968
-Thread switch rate  :           38207.1          34709.8
-GC time             :        1957367119       1839414632
-Req. mean           :              9.38             9.14
-Req. p95            :             29.19            28.73
-Iter. mean          :            127.34           123.23
-Iter. p95           :            197.05           210.07
-Peak threads        :                46               41
+Startup time (ms)   :             17898            14984
+Total allocated MB  :          14847.21          9465.19
+Heap (min)          :          63406592         56623104
+Heap (max)          :         354418688        256304128
+Thread switch rate  :           36178.8          36829.7
+GC time             :        2236987332       1891923844
+Req. mean           :             10.05             9.67
+Req. p95            :             31.84            30.19
+Iter. mean          :            136.82           129.77
+Iter. p95           :            219.71           225.07
+Peak threads        :                48               40
