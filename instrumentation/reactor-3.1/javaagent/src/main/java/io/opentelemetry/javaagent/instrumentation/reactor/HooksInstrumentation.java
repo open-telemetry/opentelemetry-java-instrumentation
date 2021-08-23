@@ -37,8 +37,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
       TracingOperator.newBuilder()
           .setCaptureExperimentalSpanAttributes(
               Config.get()
-                  .getBooleanProperty(
-                      "otel.instrumentation.reactor.experimental-span-attributes", false))
+                  .getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))
           .build()
           .registerOnEachOperator();
     }

@@ -17,7 +17,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTe
     producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTracing.newBuilder(openTelemetry)
       .setCaptureExperimentalSpanAttributes(
         Config.get()
-          .getBooleanProperty(
+          .getBoolean(
             "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
       .build().newTracingSendMessageHook())
   }
@@ -27,7 +27,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTe
     consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTracing.newBuilder(openTelemetry)
       .setCaptureExperimentalSpanAttributes(
         Config.get()
-          .getBooleanProperty(
+          .getBoolean(
             "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
       .build().newTracingConsumeMessageHook())
   }

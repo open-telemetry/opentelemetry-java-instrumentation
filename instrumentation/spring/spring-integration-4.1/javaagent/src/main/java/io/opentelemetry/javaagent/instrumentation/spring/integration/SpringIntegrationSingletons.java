@@ -17,7 +17,7 @@ public final class SpringIntegrationSingletons {
 
   private static final List<String> PATTERNS =
       Config.get()
-          .getListProperty(
+          .getList(
               "otel.instrumentation.spring-integration.global-channel-interceptor-patterns",
               singletonList("*"));
 

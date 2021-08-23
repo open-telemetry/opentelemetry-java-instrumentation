@@ -28,8 +28,7 @@ public class ReactorNettyTracer extends BaseTracer {
 
   private static final boolean alwaysCreateConnectSpan =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.reactor-netty.always-create-connect-span", false);
+          .getBoolean("otel.instrumentation.reactor-netty.always-create-connect-span", false);
 
   protected ReactorNettyTracer() {
     super(GlobalOpenTelemetry.get());

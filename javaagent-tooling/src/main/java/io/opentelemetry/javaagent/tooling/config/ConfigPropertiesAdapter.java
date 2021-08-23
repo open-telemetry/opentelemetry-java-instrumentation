@@ -22,7 +22,7 @@ public final class ConfigPropertiesAdapter implements ConfigProperties {
   @Nullable
   @Override
   public String getString(String name) {
-    return config.getProperty(name);
+    return config.getString(name);
   }
 
   @Nullable
@@ -57,11 +57,11 @@ public final class ConfigPropertiesAdapter implements ConfigProperties {
 
   @Override
   public List<String> getCommaSeparatedValues(String name) {
-    return config.getListProperty(name);
+    return config.getList(name);
   }
 
   @Override
   public Map<String, String> getCommaSeparatedMap(String name) {
-    return config.getMapProperty(name);
+    return config.getMap(name);
   }
 }

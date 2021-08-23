@@ -23,7 +23,7 @@ public final class NetPeerAttributes {
   // library usages
   public static final NetPeerAttributes INSTANCE =
       new NetPeerAttributes(
-          Config.get().getMapProperty("otel.instrumentation.common.peer-service-mapping"));
+          Config.get().getMap("otel.instrumentation.common.peer-service-mapping"));
 
   private final Map<String, String> peerServiceMapping;
 

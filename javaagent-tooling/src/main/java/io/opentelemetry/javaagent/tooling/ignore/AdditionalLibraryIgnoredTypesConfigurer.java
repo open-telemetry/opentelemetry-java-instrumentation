@@ -29,7 +29,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
   @Override
   public void configure(Config config, IgnoredTypesBuilder builder) {
-    if (config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
+    if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
       configure(builder);
     }
   }
