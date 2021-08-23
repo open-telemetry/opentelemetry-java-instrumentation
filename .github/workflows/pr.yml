@@ -56,13 +56,6 @@ jobs:
         vm:
           - hotspot
           - openj9
-        # THIS IS TEMPORARY TO FLUSH OUT SPORADIC FAILURES
-        count:
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
