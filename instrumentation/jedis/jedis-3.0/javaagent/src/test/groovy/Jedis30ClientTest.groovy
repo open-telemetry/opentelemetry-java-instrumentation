@@ -53,6 +53,8 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -78,6 +80,8 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -91,6 +95,8 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION.key" "GET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -116,6 +122,8 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -129,6 +137,8 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
