@@ -70,10 +70,6 @@ project(":instrumentation").subprojects {
 }
 
 tasks {
-  jar {
-    enabled = false
-  }
-
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
@@ -114,15 +110,6 @@ tasks {
 
       jvmArgs("-Dotel.javaagent.debug=true")
       jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile.absolutePath}")
-    }
-  }
-
-  // Because shadow does not use default configurations
-  publishing {
-    publications {
-      named<MavenPublication>("maven") {
-        project.shadow.component(this)
-      }
     }
   }
 }
