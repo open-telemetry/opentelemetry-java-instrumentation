@@ -7,9 +7,12 @@ package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.Objects;
+import java.util.function.BiFunction;
 import org.reactivestreams.Publisher;
 import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
@@ -24,10 +27,10 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
     return new ReactorAsyncOperationEndStrategyBuilder();
   }
 
-  private final boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationOptions options;
 
-  ReactorAsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  ReactorAsyncOperationEndStrategy(ReactorAsyncOperationOptions options) {
+    this.options = options;
   }
 
   @Override
@@ -43,30 +46,65 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
       Object asyncValue,
       Class<RESPONSE> responseType) {
 
-    if (tryEndSynchronously(instrumenter, context, request, asyncValue, responseType)) {
-      return asyncValue;
-    }
-
     if (asyncValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) asyncValue;
-      return InstrumentedOperator.transformMono(
-          mono, instrumenter, context, request, responseType, captureExperimentalSpanAttributes);
+      return instrumentMono(mono, instrumenter, context, request, responseType);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) asyncValue);
-      return InstrumentedOperator.transformFlux(
-          flux, instrumenter, context, request, responseType, captureExperimentalSpanAttributes);
+      return instrumentFlux(flux, instrumenter, context, request, responseType);
     }
   }
 
-  private static <REQUEST, RESPONSE> boolean tryEndSynchronously(
+  private <RESPONSE, REQUEST, T> Mono<T> instrumentMono(
+      Mono<T> mono,
       Instrumenter<REQUEST, RESPONSE> instrumenter,
       Context context,
       REQUEST request,
-      Object asyncValue,
+      Class<RESPONSE> responseType) {
+    Mono<T> withCheckpoint = checkpoint(mono, context, Mono::checkpoint);
+    if (tryEndSynchronously(mono, instrumenter, context, request, responseType)) {
+      return withCheckpoint;
+    }
+    return withCheckpoint.transform(
+        InstrumentedOperator.<REQUEST, RESPONSE, T>instrumentedLift(
+            instrumenter, context, request, responseType, options));
+  }
+
+  private <RESPONSE, REQUEST, T> Flux<T> instrumentFlux(
+      Flux<T> flux,
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      Class<RESPONSE> responseType) {
+    Flux<T> withCheckpoint = checkpoint(flux, context, Flux::checkpoint);
+    if (tryEndSynchronously(flux, instrumenter, context, request, responseType)) {
+      return withCheckpoint;
+    }
+    return withCheckpoint.transform(
+        InstrumentedOperator.<REQUEST, RESPONSE, T>instrumentedLift(
+            instrumenter, context, request, responseType, options));
+  }
+
+  private <T, P extends Publisher<T>> P checkpoint(
+      P publisher, Context context, BiFunction<P, String, P> checkpoint) {
+    if (options.emitCheckpoints()) {
+      Span currentSpan = Span.fromContextOrNull(context);
+      if (currentSpan != null) {
+        return checkpoint.apply(publisher, Objects.toString(currentSpan));
+      }
+    }
+    return publisher;
+  }
+
+  private static <REQUEST, RESPONSE> boolean tryEndSynchronously(
+      Publisher<?> publisher,
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
       Class<RESPONSE> responseType) {
 
-    if (asyncValue instanceof Fuseable.ScalarCallable) {
-      Fuseable.ScalarCallable<?> scalarCallable = (Fuseable.ScalarCallable<?>) asyncValue;
+    if (publisher instanceof Fuseable.ScalarCallable) {
+      Fuseable.ScalarCallable<?> scalarCallable = (Fuseable.ScalarCallable<?>) publisher;
       try {
         Object result = scalarCallable.call();
         instrumenter.end(context, request, tryToGetResponse(responseType, result), null);

@@ -25,7 +25,7 @@ final class InstrumentedSubscriber<REQUEST, RESPONSE, T>
   private final Context context;
   private final REQUEST request;
   private final Class<RESPONSE> responseType;
-  private final boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationOptions options;
   private final CoreSubscriber<T> actual;
   private Subscription subscription;
   private T value;
@@ -35,14 +35,14 @@ final class InstrumentedSubscriber<REQUEST, RESPONSE, T>
       Context context,
       REQUEST request,
       Class<RESPONSE> responseType,
-      boolean captureExperimentalSpanAttributes,
+      ReactorAsyncOperationOptions options,
       CoreSubscriber<T> actual) {
 
     this.instrumenter = instrumenter;
     this.context = context;
     this.request = request;
     this.responseType = responseType;
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.options = options;
     this.actual = actual;
   }
 
@@ -64,7 +64,7 @@ final class InstrumentedSubscriber<REQUEST, RESPONSE, T>
   @Override
   public void cancel() {
     if (subscription != null) {
-      if (captureExperimentalSpanAttributes) {
+      if (options.captureExperimentalSpanAttributes()) {
         Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
       }
       instrumenter.end(context, request, null, null);

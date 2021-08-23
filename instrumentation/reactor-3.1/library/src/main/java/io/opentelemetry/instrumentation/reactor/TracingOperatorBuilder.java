@@ -6,17 +6,30 @@
 package io.opentelemetry.instrumentation.reactor;
 
 public final class TracingOperatorBuilder {
-  private boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationEndStrategyBuilder asyncOperationEndStrategyBuilder;
 
-  TracingOperatorBuilder() {}
+  TracingOperatorBuilder() {
+    asyncOperationEndStrategyBuilder = ReactorAsyncOperationEndStrategy.newBuilder();
+  }
 
   public TracingOperatorBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    asyncOperationEndStrategyBuilder.setCaptureExperimentalSpanAttributes(
+        captureExperimentalSpanAttributes);
+    return this;
+  }
+
+  public TracingOperatorBuilder setEmitCheckpoints(boolean emitCheckpoints) {
+    asyncOperationEndStrategyBuilder.setEmitCheckpoints(emitCheckpoints);
+    return this;
+  }
+
+  public TracingOperatorBuilder setTraceMultipleSubscribers(boolean traceMultipleSubscribers) {
+    asyncOperationEndStrategyBuilder.setTraceMultipleSubscribers(traceMultipleSubscribers);
     return this;
   }
 
   public TracingOperator build() {
-    return new TracingOperator(captureExperimentalSpanAttributes);
+    return new TracingOperator(asyncOperationEndStrategyBuilder.build());
   }
 }

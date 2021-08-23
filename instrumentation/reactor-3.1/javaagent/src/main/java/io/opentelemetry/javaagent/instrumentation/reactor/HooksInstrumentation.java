@@ -34,10 +34,16 @@ public class HooksInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void postStaticInitializer() {
+      Config config = Config.get();
       TracingOperator.newBuilder()
           .setCaptureExperimentalSpanAttributes(
-              Config.get()
-                  .getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))
+              config.getBoolean(
+                  "otel.instrumentation.reactor.experimental-span-attributes", false))
+          .setEmitCheckpoints(
+              config.getBoolean("otel.instrumentation.reactor.emit-checkpoints", false))
+          .setTraceMultipleSubscribers(
+              config.getBoolean(
+                  "otel.instrumentation.reactor.trace-multiple-subscribers", false))
           .build()
           .registerOnEachOperator();
     }

@@ -13,8 +13,6 @@ import java.util.function.Function;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.Scannable;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
 final class InstrumentedOperator<REQUEST, RESPONSE, T>
@@ -24,46 +22,19 @@ final class InstrumentedOperator<REQUEST, RESPONSE, T>
   private final Context context;
   private final REQUEST request;
   private final Class<RESPONSE> responseType;
-  private final boolean captureExperimentalSpanAttributes;
+  private final ReactorAsyncOperationOptions options;
   private final AtomicBoolean firstSubscriber = new AtomicBoolean(true);
 
-  static <REQUEST, RESPONSE, T> Mono<T> transformMono(
-      Mono<T> mono,
-      Instrumenter<REQUEST, RESPONSE> instrumenter,
-      Context context,
-      REQUEST request,
-      Class<RESPONSE> responseType,
-      boolean captureExperimentalSpanAttributes) {
-
-    return mono.transform(
-        InstrumentedOperator.<REQUEST, RESPONSE, T>tracingLift(
-            instrumenter, context, request, responseType, captureExperimentalSpanAttributes));
-  }
-
-  static <REQUEST, RESPONSE, T> Flux<T> transformFlux(
-      Flux<T> flux,
-      Instrumenter<REQUEST, RESPONSE> instrumenter,
-      Context context,
-      REQUEST request,
-      Class<RESPONSE> responseType,
-      boolean captureExperimentalSpanAttributes) {
-
-    return flux.transform(
-        InstrumentedOperator.<REQUEST, RESPONSE, T>tracingLift(
-            instrumenter, context, request, responseType, captureExperimentalSpanAttributes));
-  }
-
-  private static <REQUEST, RESPONSE, T>
-      Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
+  static <REQUEST, RESPONSE, T>
+      Function<? super Publisher<T>, ? extends Publisher<T>> instrumentedLift(
           Instrumenter<REQUEST, RESPONSE> instrumenter,
           Context context,
           REQUEST request,
           Class<RESPONSE> responseType,
-          boolean captureExperimentalSpanAttributes) {
+          ReactorAsyncOperationOptions options) {
 
     return Operators.lift(
-        new InstrumentedOperator<>(
-            instrumenter, context, request, responseType, captureExperimentalSpanAttributes));
+        new InstrumentedOperator<>(instrumenter, context, request, responseType, options));
   }
 
   private InstrumentedOperator(
@@ -71,12 +42,12 @@ final class InstrumentedOperator<REQUEST, RESPONSE, T>
       Context context,
       REQUEST request,
       Class<RESPONSE> responseType,
-      boolean captureExperimentalSpanAttributes) {
+      ReactorAsyncOperationOptions options) {
     this.instrumenter = instrumenter;
     this.context = context;
     this.request = request;
     this.responseType = responseType;
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.options = options;
   }
 
   @Override
@@ -85,24 +56,16 @@ final class InstrumentedOperator<REQUEST, RESPONSE, T>
 
     if (isFirstSubscriber()) {
       return new InstrumentedSubscriber<>(
-          instrumenter,
-          context,
-          request,
-          responseType,
-          captureExperimentalSpanAttributes,
-          coreSubscriber);
+          instrumenter, context, request, responseType, options, coreSubscriber);
     }
 
-    Context parentContext = Context.current();
-    if (instrumenter.shouldStart(parentContext, request)) {
-      Context context = instrumenter.start(parentContext, request);
-      return new InstrumentedSubscriber<>(
-          instrumenter,
-          context,
-          request,
-          responseType,
-          captureExperimentalSpanAttributes,
-          coreSubscriber);
+    if (options.traceMultipleSubscribers()) {
+      Context parentContext = Context.current();
+      if (instrumenter.shouldStart(parentContext, request)) {
+        Context context = instrumenter.start(parentContext, request);
+        return new InstrumentedSubscriber<>(
+            instrumenter, context, request, responseType, options, coreSubscriber);
+      }
     }
     return coreSubscriber;
   }

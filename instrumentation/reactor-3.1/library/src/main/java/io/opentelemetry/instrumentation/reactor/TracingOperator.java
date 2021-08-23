@@ -46,11 +46,8 @@ public final class TracingOperator {
 
   private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
-  TracingOperator(boolean captureExperimentalSpanAttributes) {
-    this.asyncOperationEndStrategy =
-        ReactorAsyncOperationEndStrategy.newBuilder()
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .build();
+  TracingOperator(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
+    this.asyncOperationEndStrategy = asyncOperationEndStrategy;
   }
 
   /**
