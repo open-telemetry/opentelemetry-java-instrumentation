@@ -314,8 +314,6 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
 
     CreateContainerCmd createCommand = client.createContainerCmd(imageName);
     createAction.accept(createCommand);
-    // default appears to be 1gb which is not enough for liberty
-    createCommand.getHostConfig().withMemory(2_000_000_000L);
 
     String containerId = createCommand.exec().getId();
 
