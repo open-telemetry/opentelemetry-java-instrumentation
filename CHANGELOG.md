@@ -85,7 +85,7 @@
   ([#3657](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3657))
 - Move instrumentation specific classes out of javaagent-instrumentation-api
   ([#3604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3604))
-- Publish muzze plugins to Gradle Plugin Portal
+- Publish muzzle plugins to Gradle Plugin Portal
   ([#3720](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3720),
    [#3763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3763))
 - Fill `http.client_ip` in ServerInstrumenter
