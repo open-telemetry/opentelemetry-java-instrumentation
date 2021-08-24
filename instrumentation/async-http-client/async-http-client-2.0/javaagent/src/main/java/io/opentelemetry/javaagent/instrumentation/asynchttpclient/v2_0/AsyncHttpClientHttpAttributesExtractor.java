@@ -93,7 +93,7 @@ final class AsyncHttpClientHttpAttributesExtractor
   @Override
   @Nullable
   protected Long responseContentLength(RequestContext requestContext, Response response) {
-    String contentLength = response.getHeader("Content-Length");
+    String contentLength = response.getHeaders().get("Content-Length");
     if (contentLength != null) {
       try {
         return Long.valueOf(contentLength);
