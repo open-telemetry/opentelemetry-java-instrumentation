@@ -82,6 +82,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RememberNettyRequestAdvice {
 
     @Advice.OnMethodExit
