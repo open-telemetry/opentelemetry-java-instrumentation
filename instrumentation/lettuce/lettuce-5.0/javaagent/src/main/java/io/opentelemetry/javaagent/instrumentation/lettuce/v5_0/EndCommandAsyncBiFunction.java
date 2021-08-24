@@ -27,8 +27,7 @@ public class EndCommandAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.lettuce.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private final Context context;
   private final RedisCommand<?, ?, ?> command;
