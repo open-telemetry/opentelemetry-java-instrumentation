@@ -27,3 +27,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+}

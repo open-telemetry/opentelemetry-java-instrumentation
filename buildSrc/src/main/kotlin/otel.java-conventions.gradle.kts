@@ -193,9 +193,9 @@ tasks.withType<Test>().configureEach {
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")

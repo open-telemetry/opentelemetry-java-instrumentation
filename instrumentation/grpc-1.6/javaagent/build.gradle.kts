@@ -17,7 +17,7 @@ dependencies {
   implementation(project(":instrumentation:grpc-1.6:library"))
 
   library("io.grpc:grpc-core:${grpcVersion}")
-  
+
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   testLibrary("io.grpc:grpc-netty:${grpcVersion}")
@@ -34,4 +34,8 @@ tasks {
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
   }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 }
