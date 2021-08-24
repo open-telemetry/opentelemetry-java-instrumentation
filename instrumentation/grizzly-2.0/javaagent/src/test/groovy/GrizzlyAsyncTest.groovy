@@ -34,6 +34,7 @@ class GrizzlyAsyncTest extends GrizzlyTest {
   }
 
   def cleanup() {
+    // wait for async request threads to complete
     await()
       .atMost(15, TimeUnit.SECONDS)
       .until({ !isRequestRunning() })
