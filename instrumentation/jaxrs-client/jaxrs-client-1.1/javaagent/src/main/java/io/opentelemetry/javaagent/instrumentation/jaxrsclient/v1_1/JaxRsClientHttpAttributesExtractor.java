@@ -73,8 +73,7 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected String flavor(
-      ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
+  protected String flavor(ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
