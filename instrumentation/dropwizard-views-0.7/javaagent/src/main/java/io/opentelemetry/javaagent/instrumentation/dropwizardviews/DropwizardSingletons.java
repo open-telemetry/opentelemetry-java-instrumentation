@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import io.dropwizard.views.View;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public final class DropwizardSingletons {
@@ -15,8 +15,7 @@ public final class DropwizardSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.dropwizard-views-0.7";
 
   private static final boolean SUPPRESS_CONTROLLER_SPANS =
-      Config.get()
-          .getBoolean("otel.instrumentation.common.experimental.suppress-controller-spans", false);
+      ExperimentalConfig.suppressControllerSpans();
 
   private static final Instrumenter<View, Void> INSTRUMENTER =
       Instrumenter.<View, Void>newBuilder(
