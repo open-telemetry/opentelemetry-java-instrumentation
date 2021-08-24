@@ -132,6 +132,7 @@ tasks {
     archiveClassifier.set("")
 
     manifest {
+      attributes(jar.get().manifest.attributes)
       attributes(
         "Main-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
         "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
