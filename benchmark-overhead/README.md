@@ -2,7 +2,7 @@
 # Overhead tests
 
 * [Process](#process)
-* [What do we measure?](#what-do-we-measure-)
+* [What do we measure?](#what-do-we-measure)
 * [Config](#config)
   + [Agents](#agents)
 * [Automation](#automation)
