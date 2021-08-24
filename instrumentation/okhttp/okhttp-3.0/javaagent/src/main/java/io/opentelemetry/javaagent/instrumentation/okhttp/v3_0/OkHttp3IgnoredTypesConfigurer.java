@@ -19,5 +19,7 @@ public class OkHttp3IgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // similar to an event loop. The submitted tasks themselves should already be
     // instrumented to allow async propagation.
     builder.ignoreTaskClass("okhttp3.internal.concurrent.TaskRunner");
+    // ConnectionPool constructor creates an anonymous Runnable for cleanup
+    builder.ignoreTaskClass("okhttp3.ConnectionPool");
   }
 }
