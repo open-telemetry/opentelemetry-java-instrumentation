@@ -27,7 +27,9 @@ tasks {
   val testFieldInjectionDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("context.FieldInjectionDisabledTest")
+      isFailOnNoMatchingTests = false
     }
+    include("**/FieldInjectionDisabledTest.*")
     jvmArgs("-Dotel.javaagent.experimental.field-injection.enabled=false")
   }
 
@@ -35,6 +37,7 @@ tasks {
     dependsOn(testFieldInjectionDisabled)
     filter {
       excludeTestsMatching("context.FieldInjectionDisabledTest")
+      isFailOnNoMatchingTests = false
     }
     // this is needed for AgentInstrumentationSpecificationTest
     jvmArgs("-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
