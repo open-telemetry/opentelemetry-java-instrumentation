@@ -23,6 +23,9 @@ public class AppPerfResults {
   final long peakThreadCount;
   final long averageNetworkRead;
   final long averageNetworkWrite;
+  final float averageJvmUserCpu;
+  final float maxJvmUserCpu;
+
 
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
@@ -39,6 +42,8 @@ public class AppPerfResults {
     this.peakThreadCount = builder.peakThreadCount;
     this.averageNetworkRead = builder.averageNetworkRead;
     this.averageNetworkWrite = builder.averageNetworkWrite;
+    this.averageJvmUserCpu = builder.averageJvmUserCpu;
+    this.maxJvmUserCpu = builder.maxJvmUserCpu;
   }
 
   double getTotalAllocatedMB() {
@@ -67,6 +72,8 @@ public class AppPerfResults {
     private long peakThreadCount;
     public long averageNetworkRead;
     public long averageNetworkWrite;
+    public float averageJvmUserCpu;
+    public float maxJvmUserCpu;
 
     AppPerfResults build() {
       return new AppPerfResults(this);
@@ -141,7 +148,19 @@ public class AppPerfResults {
       this.averageNetworkWrite = averageNetworkWrite;
       return this;
     }
+
+    Builder averageJvmUserCpu(float averageJvmUserCpu){
+      this.averageJvmUserCpu = averageJvmUserCpu;
+      return this;
+    }
+
+    Builder maxJvmUserCpu(float maxJvmUserCpu){
+      this.maxJvmUserCpu = maxJvmUserCpu;
+      return this;
+    }
   }
+
+
 
   public static class MinMax {
     public final long min;
