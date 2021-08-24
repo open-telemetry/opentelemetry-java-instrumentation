@@ -21,6 +21,8 @@ public class AppPerfResults {
   final float maxThreadContextSwitchRate;
   final long startupDurationMs;
   final long peakThreadCount;
+  final long averageNetworkRead;
+  final long averageNetworkWrite;
 
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
@@ -35,6 +37,8 @@ public class AppPerfResults {
     this.maxThreadContextSwitchRate = builder.maxThreadContextSwitchRate;
     this.startupDurationMs = builder.startupDurationMs;
     this.peakThreadCount = builder.peakThreadCount;
+    this.averageNetworkRead = builder.averageNetworkRead;
+    this.averageNetworkWrite = builder.averageNetworkWrite;
   }
 
   double getTotalAllocatedMB() {
@@ -61,6 +65,8 @@ public class AppPerfResults {
     private MinMax heapUsed;
     private float maxThreadContextSwitchRate;
     private long peakThreadCount;
+    public long averageNetworkRead;
+    public long averageNetworkWrite;
 
     AppPerfResults build() {
       return new AppPerfResults(this);
@@ -123,6 +129,16 @@ public class AppPerfResults {
 
     Builder peakThreadCount(long peakThreadCount) {
       this.peakThreadCount = peakThreadCount;
+      return this;
+    }
+
+    Builder averageNetworkRead(long averageNetworkRead){
+      this.averageNetworkRead = averageNetworkRead;
+      return this;
+    }
+
+    Builder averageNetworkWrite(long averageNetworkWrite){
+      this.averageNetworkWrite = averageNetworkWrite;
       return this;
     }
   }

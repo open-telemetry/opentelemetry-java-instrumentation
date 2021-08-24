@@ -41,6 +41,8 @@ class PrintStreamPersister implements ResultsPersister {
     display(sorted, "Req. p95", res -> format(res.requestP95));
     display(sorted, "Iter. mean", res -> format(res.iterationAvg));
     display(sorted, "Iter. p95", res -> format(res.iterationP95));
+    display(sorted, "Net read avg (bps)", res -> format(res.averageNetworkRead));
+    display(sorted, "Net write avg (bps)", res -> format(res.averageNetworkWrite));
     display(sorted, "Peak threads", res -> String.valueOf(res.peakThreadCount));
   }
 

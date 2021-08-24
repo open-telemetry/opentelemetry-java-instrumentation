@@ -75,7 +75,17 @@ public class ResultsCollector {
         .totalAllocated(readTotalAllocated(jfrFile))
         .heapUsed(readHeapUsed(jfrFile))
         .maxThreadContextSwitchRate(readMaxThreadContextSwitchRate(jfrFile))
-        .peakThreadCount(readPeakThreadCount(jfrFile));
+        .peakThreadCount(readPeakThreadCount(jfrFile))
+        .averageNetworkRead(computeAverageNetworkRead(jfrFile))
+        .averageNetworkWrite(computeAverageNetworkWrite(jfrFile));
+  }
+
+  private long computeAverageNetworkRead(Path jfrFile) throws IOException {
+    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "readRate");
+  }
+
+  private long computeAverageNetworkWrite(Path jfrFile) throws IOException {
+    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "writeRate");
   }
 
   private long readPeakThreadCount(Path jfrFile) throws IOException {
