@@ -20,22 +20,22 @@ final class GoogleHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String url(HttpRequest httpRequest) {
+  protected String url(HttpRequest httpRequest) {
     return httpRequest.getUrl().build();
   }
 
   @Override
-  protected @Nullable String target(HttpRequest httpRequest) {
+  protected String target(HttpRequest httpRequest) {
     return httpRequest.getUrl().buildRelativeUrl();
   }
 
   @Override
-  protected @Nullable String host(HttpRequest httpRequest) {
+  protected String host(HttpRequest httpRequest) {
     return httpRequest.getUrl().getHost();
   }
 
   @Override
-  protected @Nullable String scheme(HttpRequest httpRequest) {
+  protected String scheme(HttpRequest httpRequest) {
     return httpRequest.getUrl().getScheme();
   }
 
