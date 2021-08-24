@@ -21,7 +21,3 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}
