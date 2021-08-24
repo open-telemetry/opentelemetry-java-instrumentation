@@ -37,12 +37,20 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
-      - name: Upload deadlock detector artifacts
+      - name: Upload deadlock detector artifacts if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: deadlock-detector-build
           path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-build
+          path: "**/javacore.*.txt"
           if-no-files-found: ignore
 
   test:
@@ -93,12 +101,20 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
-      - name: Upload deadlock detector artifacts
+      - name: Upload deadlock detector artifacts if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}
           path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-test-${{ matrix.test-java-version }}
+          path: "**/javacore.*.txt"
           if-no-files-found: ignore
 
   # testLatestDeps is intentionally not included in the PR workflow
