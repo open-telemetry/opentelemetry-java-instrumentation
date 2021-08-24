@@ -57,7 +57,7 @@ final class GoogleHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  protected String flavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
