@@ -33,7 +33,7 @@ public final class JaxrsSingletons {
         Instrumenter.<HandlerData, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(codeAttributesExtractor)
-            .setDisabled(ExperimentalConfig.suppressControllerSpans())
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

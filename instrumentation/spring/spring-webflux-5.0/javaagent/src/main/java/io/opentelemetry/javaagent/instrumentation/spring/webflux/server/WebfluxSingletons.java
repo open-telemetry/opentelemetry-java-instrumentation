@@ -26,7 +26,7 @@ public final class WebfluxSingletons {
     }
 
     INSTRUMENTER =
-        builder.setDisabled(ExperimentalConfig.suppressControllerSpans()).newInstrumenter();
+        builder.setDisabled(ExperimentalConfig.get().suppressControllerSpans()).newInstrumenter();
   }
 
   public static Instrumenter<Object, Void> instrumenter() {

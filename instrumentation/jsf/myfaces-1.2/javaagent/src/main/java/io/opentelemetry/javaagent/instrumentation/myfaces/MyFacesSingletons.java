@@ -20,7 +20,7 @@ public class MyFacesSingletons {
         Instrumenter.<JsfRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new MyFacesErrorCauseExtractor())
-            .setDisabled(ExperimentalConfig.suppressControllerSpans())
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

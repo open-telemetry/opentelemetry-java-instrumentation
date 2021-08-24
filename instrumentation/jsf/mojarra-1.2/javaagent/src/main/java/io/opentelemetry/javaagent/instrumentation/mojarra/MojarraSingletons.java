@@ -21,7 +21,7 @@ public class MojarraSingletons {
         Instrumenter.<JsfRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new JsfErrorCauseExtractor())
-            .setDisabled(ExperimentalConfig.suppressControllerSpans())
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

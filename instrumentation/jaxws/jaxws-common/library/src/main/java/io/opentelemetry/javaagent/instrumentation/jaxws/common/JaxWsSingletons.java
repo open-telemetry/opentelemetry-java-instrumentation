@@ -25,7 +25,7 @@ public class JaxWsSingletons {
         Instrumenter.<JaxWsRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JaxWsRequest::spanName)
             .addAttributesExtractor(codeAttributes)
-            .setDisabled(ExperimentalConfig.suppressControllerSpans())
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

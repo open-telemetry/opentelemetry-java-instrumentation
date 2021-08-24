@@ -14,13 +14,10 @@ public final class DropwizardSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.dropwizard-views-0.7";
 
-  private static final boolean SUPPRESS_CONTROLLER_SPANS =
-      ExperimentalConfig.suppressControllerSpans();
-
   private static final Instrumenter<View, Void> INSTRUMENTER =
       Instrumenter.<View, Void>newBuilder(
               GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DropwizardSingletons::spanName)
-          .setDisabled(SUPPRESS_CONTROLLER_SPANS)
+          .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
           .newInstrumenter();
 
   private static String spanName(View view) {
