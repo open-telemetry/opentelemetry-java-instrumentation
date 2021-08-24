@@ -8,11 +8,9 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static org.awaitility.Awaitility.await
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
@@ -31,23 +29,6 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     rc.register(SimpleExceptionMapper)
     rc.register(AsyncServiceResource)
     GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
-  }
-
-  def cleanup() {
-    // wait for async request threads to complete
-    await()
-      .atMost(15, TimeUnit.SECONDS)
-      .until({ !isRequestRunning() })
-  }
-
-  static boolean isRequestRunning() {
-    def result = Thread.getAllStackTraces().values().find {stackTrace ->
-      def element = stackTrace.find {
-        return ((it.className == "org.glassfish.grizzly.http.server.HttpHandler\$1" && it.methodName == "run"))
-      }
-      element != null
-    }
-    return result != null
   }
 
   @Override
