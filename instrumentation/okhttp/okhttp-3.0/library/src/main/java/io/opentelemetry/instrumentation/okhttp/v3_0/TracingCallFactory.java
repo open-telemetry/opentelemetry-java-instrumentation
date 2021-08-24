@@ -22,7 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 class TracingCallFactory implements Call.Factory {
   private static final Cache<Request, Context> contextsByRequest =
       Cache.newBuilder().setWeakKeys().build();
-
+  // We use old-school reflection here, rather than MethodHandles because Android doesn't support
+  // MethodHandles until API 26.
   @Nullable private static Method timeoutMethod;
   @Nullable private static Method cloneMethod;
 
