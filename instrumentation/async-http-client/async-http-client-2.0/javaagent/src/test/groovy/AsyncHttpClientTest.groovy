@@ -56,11 +56,10 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
     })
   }
 
-  //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347
-//  @Override
-//  String userAgent() {
-//    return "AHC"
-//  }
+  @Override
+  String userAgent() {
+    return "AHC"
+  }
 
   @Override
   boolean testRedirects() {

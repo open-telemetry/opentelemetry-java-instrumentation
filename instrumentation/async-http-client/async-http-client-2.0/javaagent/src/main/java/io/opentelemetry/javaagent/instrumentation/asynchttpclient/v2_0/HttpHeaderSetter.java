@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.asynchttpclient.Request;
 
-public class HttpHeaderSetter implements TextMapSetter<Request> {
+public class HttpHeaderSetter implements TextMapSetter<RequestContext> {
 
   @Override
-  public void set(Request carrier, String key, String value) {
-    carrier.getHeaders().set(key, value);
+  public void set(RequestContext carrier, String key, String value) {
+    carrier.getRequest().getHeaders().set(key, value);
   }
 }
