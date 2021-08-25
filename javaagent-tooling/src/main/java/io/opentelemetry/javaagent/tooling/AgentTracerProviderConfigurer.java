@@ -74,8 +74,13 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     installExportersFromJar(exporterJar, config, sdkTracerProviderBuilder);
   }
 
+  // TODO remove in 1.6
   private static synchronized void installExportersFromJar(
       String exporterJar, Config config, SdkTracerProviderBuilder builder) {
+    logger.warn(
+        "{} is deprecated and will be removed soon! Please use {}",
+        EXPORTER_JAR_CONFIG,
+        ExtensionClassLoader.EXTENSIONS_CONFIG);
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
