@@ -11,7 +11,6 @@ muzzle {
   }
 }
 
-
 dependencies {
   library("biz.paluch.redis:lettuce:4.0.Final")
 

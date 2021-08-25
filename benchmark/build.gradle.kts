@@ -54,7 +54,7 @@ tasks {
   }
 
   named("jmh") {
-    dependsOn(":javaagent:shadowJar")
+    dependsOn(":javaagent:fullJavaagentJar")
   }
 }
 
@@ -64,4 +64,3 @@ sed '/unknown/d' benchmark/build/reports/jmh/profiler.txt | sed '/^thread_start/
 (using https://github.com/brendangregg/FlameGraph)
 ./flamegraph.pl --color=java benchmark/build/reports/jmh/profiler-cleaned.txt > benchmark/build/reports/jmh/jmh-main.svg
  */
-

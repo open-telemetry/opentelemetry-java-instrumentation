@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -16,9 +16,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * the {@link Context}.
  */
 public final class ClientSpan {
-  // Keeps track of the client span in a subtree corresponding to a client request.
-  private static final ContextKey<Span> KEY =
-      ContextKey.named("opentelemetry-traces-client-span-key");
 
   /** Returns true when a {@link SpanKind#CLIENT} span is present in the passed {@code context}. */
   public static boolean exists(Context context) {
@@ -31,11 +28,11 @@ public final class ClientSpan {
    */
   @Nullable
   public static Span fromContextOrNull(Context context) {
-    return context.get(KEY);
+    return SpanKey.ALL_CLIENTS.fromContextOrNull(context);
   }
 
   public static Context with(Context context, Span clientSpan) {
-    return context.with(KEY, clientSpan);
+    return SpanKey.ALL_CLIENTS.storeInContext(context, clientSpan);
   }
 
   private ClientSpan() {}

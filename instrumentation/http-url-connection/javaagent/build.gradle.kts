@@ -7,7 +7,3 @@ muzzle {
     coreJdk()
   }
 }
-
-dependencies {
-  testImplementation("org.springframework:spring-web:4.3.7.RELEASE")
-}

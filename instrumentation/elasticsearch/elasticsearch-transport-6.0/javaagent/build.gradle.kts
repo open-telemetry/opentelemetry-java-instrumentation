@@ -35,6 +35,7 @@ dependencies {
 
   testLibrary("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
 
+  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
@@ -42,4 +43,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 }

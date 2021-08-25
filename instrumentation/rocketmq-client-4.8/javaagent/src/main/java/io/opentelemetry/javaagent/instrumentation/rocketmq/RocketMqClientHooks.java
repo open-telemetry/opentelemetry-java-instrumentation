@@ -15,11 +15,10 @@ public final class RocketMqClientHooks {
   private static final RocketMqTracing TRACING =
       RocketMqTracing.newBuilder(GlobalOpenTelemetry.get())
           .setPropagationEnabled(
-              Config.get()
-                  .getBooleanProperty("otel.instrumentation.rocketmq-client.propagation", true))
+              Config.get().getBoolean("otel.instrumentation.rocketmq-client.propagation", true))
           .setCaptureExperimentalSpanAttributes(
               Config.get()
-                  .getBooleanProperty(
+                  .getBoolean(
                       "otel.instrumentation.rocketmq-client.experimental-span-attributes", false))
           .build();
 

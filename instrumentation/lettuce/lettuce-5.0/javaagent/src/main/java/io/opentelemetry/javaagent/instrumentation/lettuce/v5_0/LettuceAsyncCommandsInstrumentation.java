@@ -47,7 +47,10 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context = instrumenter().start(currentContext(), command);
+      Context parentContext = currentContext();
+      context = instrumenter().start(parentContext, command);
+      // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
+      context = context.with(LettuceSingletons.COMMAND_CONTEXT_KEY, parentContext);
       scope = context.makeCurrent();
     }
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -43,7 +44,8 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
     backend.start();
 
     collector =
-        new GenericContainer<>(DockerImageName.parse("otel/opentelemetry-collector-dev:latest"))
+        new GenericContainer<>(
+                DockerImageName.parse("otel/opentelemetry-collector-contrib-dev:latest"))
             .dependsOn(backend)
             .withNetwork(network)
             .withNetworkAliases(COLLECTOR_ALIAS)
@@ -85,7 +87,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
-      Map<String, String> extraResources,
+      List<ResourceMapping> extraResources,
       TargetWaitStrategy waitStrategy) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
@@ -101,9 +103,10 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withEnv(getAgentEnvironment(jvmArgsEnvVarName))
             .withEnv(extraEnv);
 
-    extraResources.forEach(
-        (file, path) ->
-            target.withCopyFileToContainer(MountableFile.forClasspathResource(file), path));
+    for (ResourceMapping resource : extraResources) {
+      target.withCopyFileToContainer(
+          MountableFile.forClasspathResource(resource.resourcePath()), resource.containerPath());
+    }
 
     if (waitStrategy != null) {
       if (waitStrategy instanceof TargetWaitStrategy.Log) {

@@ -13,6 +13,8 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
 import java.net.URLClassLoader;
 import java.util.Collection;
@@ -176,6 +178,11 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         collector.collectReferencesFromAdvice(adviceClass);
       }
       for (String resource : instrumentationModule.helperResourceNames()) {
+        collector.collectReferencesFromResource(resource);
+      }
+      HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
+      instrumentationModule.registerHelperResources(helperResourceBuilder);
+      for (HelperResource resource : helperResourceBuilder.getResources()) {
         collector.collectReferencesFromResource(resource);
       }
       collector.prune();

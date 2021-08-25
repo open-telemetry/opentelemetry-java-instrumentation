@@ -26,8 +26,7 @@ public class KubernetesClientTracer
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
 
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 

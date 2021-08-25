@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.ExecutorService;
+import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -38,21 +38,33 @@ public final class OkHttpTracing {
 
   /**
    * Returns a new {@link Interceptor} that can be used with methods like {@link
-   * okhttp3.OkHttpClient.Builder#addInterceptor(Interceptor)}. Note that asynchronous calls using
-   * {@link okhttp3.Call.Factory#enqueue(Callback)} will not work correctly unless you also decorate
-   * the {@linkplain Dispatcher#executorService() dispatcher's executor service} with {@link
-   * io.opentelemetry.context.Context#taskWrapping(ExecutorService)}. For example, if using the
-   * default {@link Dispatcher}, you will need to configure {@link okhttp3.OkHttpClient.Builder}
-   * something like
+   * okhttp3.OkHttpClient.Builder#addInterceptor(Interceptor)}.
    *
-   * <pre>{@code
-   * new OkHttpClient.Builder()
-   *   .dispatcher(new Dispatcher(Context.taskWrapping(new Dispatcher().executorService())))
-   *   .addInterceptor(OkHttpTracing.create(openTelemetry).newInterceptor())
-   *   ...
-   * }</pre>
+   * <p>Important: asynchronous calls using {@link okhttp3.Call.Factory#enqueue(Callback)} will
+   * *not* work correctly using just this interceptor.
+   *
+   * <p>It is strongly recommended that you use the {@link #newCallFactory(OkHttpClient)} method to
+   * decorate your {@link OkHttpClient}, rather than using this method directly.
+   *
+   * @deprecated Please use the {@link #newCallFactory(OkHttpClient)} method instead.
    */
+  @Deprecated
   public Interceptor newInterceptor() {
     return new TracingInterceptor(instrumenter, propagators);
+  }
+
+  /**
+   * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
+   * {@link OkHttpClient} instance.
+   *
+   * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
+   * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
+   *
+   * @param baseClient An instance of OkHttpClient configured as desired.
+   * @return a {@link Call.Factory} for creating new {@link Call} instances.
+   */
+  public Call.Factory newCallFactory(OkHttpClient baseClient) {
+    OkHttpClient tracingClient = baseClient.newBuilder().addInterceptor(newInterceptor()).build();
+    return new TracingCallFactory(tracingClient);
   }
 }

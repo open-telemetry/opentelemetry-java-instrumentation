@@ -15,9 +15,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
-import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.ArrayList;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -76,6 +73,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
   @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  private final SpanSuppressionStrategy spanSuppressionStrategy;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -90,6 +88,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
+    this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
   }
 
   /**
@@ -99,21 +98,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * without calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
-    boolean suppressed = false;
     SpanKind spanKind = spanKindExtractor.extract(request);
-    switch (spanKind) {
-      case SERVER:
-        suppressed = ServerSpan.exists(parentContext);
-        break;
-      case CONSUMER:
-        suppressed = ConsumerSpan.exists(parentContext);
-        break;
-      case CLIENT:
-        suppressed = ClientSpan.exists(parentContext);
-        break;
-      default:
-        break;
-    }
+    boolean suppressed = spanSuppressionStrategy.shouldSuppress(parentContext, spanKind);
+
     if (suppressed) {
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
     }
@@ -158,16 +145,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.startSpan();
     context = context.with(span);
-    switch (spanKind) {
-      case SERVER:
-        return ServerSpan.with(context, span);
-      case CLIENT:
-        return ClientSpan.with(context, span);
-      case CONSUMER:
-        return ConsumerSpan.with(context, span);
-      default:
-        return context;
-    }
+
+    return spanSuppressionStrategy.storeInContext(context, spanKind, span);
   }
 
   /**

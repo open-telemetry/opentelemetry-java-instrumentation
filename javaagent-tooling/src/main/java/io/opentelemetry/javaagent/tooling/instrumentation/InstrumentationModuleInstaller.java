@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -19,6 +20,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
@@ -56,10 +58,15 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
+    HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
     List<String> helperResourceNames = instrumentationModule.helperResourceNames();
+    for (String helperResourceName : helperResourceNames) {
+      helperResourceBuilder.register(helperResourceName);
+    }
+    instrumentationModule.registerHelperResources(helperResourceBuilder);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
-      if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResourceBuilder.getResources().isEmpty()) {
         logger.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
             instrumentationModule.instrumentationName());
@@ -75,7 +82,7 @@ public final class InstrumentationModuleInstaller {
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
-            helperResourceNames,
+            helperResourceBuilder.getResources(),
             Utils.getExtensionsClassLoader(),
             instrumentation);
     InstrumentationContextProvider contextProvider =
@@ -113,9 +120,20 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule) {
     Map<String, String> contextStore = instrumentationModule.getMuzzleContextStoreClasses();
     if (!contextStore.isEmpty()) {
-      return new FieldBackedProvider(instrumentationModule.getClass(), contextStore);
+      return FieldBackedProviderFactory.get(instrumentationModule.getClass(), contextStore);
     } else {
       return NoopContextProvider.INSTANCE;
+    }
+  }
+
+  private static class FieldBackedProviderFactory {
+    static {
+      InstrumentationContext.internalSetContextStoreSupplier(
+          (keyClass, contextClass) -> FieldBackedProvider.getContextStore(keyClass, contextClass));
+    }
+
+    static FieldBackedProvider get(Class<?> instrumenterClass, Map<String, String> contextStore) {
+      return new FieldBackedProvider(instrumenterClass, contextStore);
     }
   }
 

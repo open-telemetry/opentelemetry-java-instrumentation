@@ -28,8 +28,7 @@ public final class GrpcSingletons {
 
   static {
     boolean experimentalSpanAttributes =
-        Config.get()
-            .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
+        Config.get().getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
     PeerServiceAttributesExtractor<GrpcRequest, Status> peerServiceAttributesExtractor =
         PeerServiceAttributesExtractor.create(new GrpcNetAttributesExtractor());
 

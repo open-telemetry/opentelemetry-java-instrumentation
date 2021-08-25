@@ -110,7 +110,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   private static Set<String> configureAdditionalTraceAnnotations(Config config) {
-    String configString = config.getProperty(TRACE_ANNOTATIONS_CONFIG);
+    String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
     } else if (configString.isEmpty()) {
@@ -141,7 +141,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            Config.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =

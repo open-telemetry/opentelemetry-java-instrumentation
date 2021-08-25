@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
@@ -16,10 +17,13 @@ import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
 public class SystemMetrics {
-  private static final String DEVICE_LABEL_KEY = "device";
-  private static final String DIRECTION_LABEL_KEY = "direction";
-  private static final Labels LABEL_STATE_USED = Labels.of("state", "used");
-  private static final Labels LABEL_STATE_FREE = Labels.of("state", "free");
+  private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
+  private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
+
+  private static final AttributeKey<String> STATE_KEY = AttributeKey.stringKey("state");
+
+  private static final Attributes ATTRIBUTES_USED = Attributes.of(STATE_KEY, "used");
+  private static final Attributes ATTRIBUTES_FREE = Attributes.of(STATE_KEY, "free");
 
   private SystemMetrics() {}
 
@@ -30,118 +34,111 @@ public class SystemMetrics {
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
     meter
-        .longUpDownSumObserverBuilder("system.memory.usage")
+        .gaugeBuilder("system.memory.usage")
+        .ofLongs()
         .setDescription("System memory usage")
         .setUnit("By")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               GlobalMemory mem = hal.getMemory();
-              r.observe(mem.getTotal() - mem.getAvailable(), LABEL_STATE_USED);
-              r.observe(mem.getAvailable(), LABEL_STATE_FREE);
-            })
-        .build();
+              r.observe(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
+              r.observe(mem.getAvailable(), ATTRIBUTES_FREE);
+            });
 
     meter
-        .doubleValueObserverBuilder("system.memory.utilization")
+        .gaugeBuilder("system.memory.utilization")
         .setDescription("System memory utilization")
         .setUnit("1")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               GlobalMemory mem = hal.getMemory();
               r.observe(
                   ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
-                  LABEL_STATE_USED);
-              r.observe(((double) mem.getAvailable()) / mem.getTotal(), LABEL_STATE_FREE);
-            })
-        .build();
+                  ATTRIBUTES_USED);
+              r.observe(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
+            });
 
     meter
-        .longSumObserverBuilder("system.network.io")
+        .gaugeBuilder("system.network.io")
+        .ofLongs()
         .setDescription("System network IO")
         .setUnit("By")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               for (NetworkIF networkIf : hal.getNetworkIFs()) {
                 networkIf.updateAttributes();
                 long recv = networkIf.getBytesRecv();
                 long sent = networkIf.getBytesSent();
                 String device = networkIf.getName();
-                r.observe(
-                    recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
-                r.observe(
-                    sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
+                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
-            })
-        .build();
+            });
 
     meter
-        .longSumObserverBuilder("system.network.packets")
+        .gaugeBuilder("system.network.packets")
+        .ofLongs()
         .setDescription("System network packets")
         .setUnit("packets")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               for (NetworkIF networkIf : hal.getNetworkIFs()) {
                 networkIf.updateAttributes();
                 long recv = networkIf.getPacketsRecv();
                 long sent = networkIf.getPacketsSent();
                 String device = networkIf.getName();
-                r.observe(
-                    recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
-                r.observe(
-                    sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
+                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
-            })
-        .build();
+            });
 
     meter
-        .longSumObserverBuilder("system.network.errors")
+        .gaugeBuilder("system.network.errors")
+        .ofLongs()
         .setDescription("System network errors")
         .setUnit("errors")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               for (NetworkIF networkIf : hal.getNetworkIFs()) {
                 networkIf.updateAttributes();
                 long recv = networkIf.getInErrors();
                 long sent = networkIf.getOutErrors();
                 String device = networkIf.getName();
-                r.observe(
-                    recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
-                r.observe(
-                    sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
+                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
-            })
-        .build();
+            });
 
     meter
-        .longSumObserverBuilder("system.disk.io")
+        .gaugeBuilder("system.disk.io")
+        .ofLongs()
         .setDescription("System disk IO")
         .setUnit("By")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               for (HWDiskStore diskStore : hal.getDiskStores()) {
                 long read = diskStore.getReadBytes();
                 long write = diskStore.getWriteBytes();
                 String device = diskStore.getName();
-                r.observe(read, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "read"));
-                r.observe(write, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "write"));
+                r.observe(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                r.observe(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
               }
-            })
-        .build();
+            });
 
     meter
-        .longSumObserverBuilder("system.disk.operations")
+        .gaugeBuilder("system.disk.operations")
+        .ofLongs()
         .setDescription("System disk operations")
         .setUnit("operations")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               for (HWDiskStore diskStore : hal.getDiskStores()) {
                 long read = diskStore.getReads();
                 long write = diskStore.getWrites();
                 String device = diskStore.getName();
-                r.observe(read, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "read"));
-                r.observe(write, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "write"));
+                r.observe(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                r.observe(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
               }
-            })
-        .build();
+            });
   }
 }

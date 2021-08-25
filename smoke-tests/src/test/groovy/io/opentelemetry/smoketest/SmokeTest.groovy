@@ -51,8 +51,8 @@ abstract class SmokeTest extends Specification {
   /**
    * Subclasses can override this method to provide additional files to copy to target container
    */
-  protected Map<String, String> getExtraResources() {
-    return [:]
+  protected List<ResourceMapping> getExtraResources() {
+    return []
   }
 
   def setupSpec() {

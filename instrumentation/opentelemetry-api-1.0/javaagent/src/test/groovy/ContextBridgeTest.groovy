@@ -140,6 +140,11 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
     ref.get().getEntryValue("cat") == "yes"
   }
 
+  def "test empty current context is root context"() {
+    expect:
+    Context.current() == Context.root()
+  }
+
   // TODO (trask)
   // more tests are needed here, not sure how to implement, probably need to write some test
   // instrumentation to help test, similar to :testing-common:integration-tests

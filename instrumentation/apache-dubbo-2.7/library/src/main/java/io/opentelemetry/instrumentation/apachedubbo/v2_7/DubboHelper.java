@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.apache.dubbo.rpc.Result;
 
 class DubboHelper {
 
@@ -21,9 +19,5 @@ class DubboHelper {
 
   static String getSpanName(String interfaceName, String methodName) {
     return interfaceName + "/" + methodName;
-  }
-
-  static StatusCode statusFromResult(Result result) {
-    return !result.hasException() ? StatusCode.UNSET : StatusCode.ERROR;
   }
 }

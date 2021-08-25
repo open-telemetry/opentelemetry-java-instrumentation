@@ -38,8 +38,8 @@ jobs:
           - 11
           - 15
         vm:
-         - hotspot
-         - openj9
+          - hotspot
+          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -129,6 +129,9 @@ jobs:
 
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-build-cache
+
+  # muzzle is intentionally not included in the nightly-no-cache build because
+  # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
 
   examples:
     runs-on: ubuntu-latest

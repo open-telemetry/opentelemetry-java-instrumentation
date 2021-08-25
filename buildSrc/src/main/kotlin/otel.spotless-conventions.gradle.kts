@@ -17,9 +17,11 @@ spotless {
     target("src/**/*.scala")
   }
   kotlin {
-    // ktfmt() // only supports 4 space indentation
     ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2"))
     licenseHeaderFile(rootProject.file("gradle/enforcement/spotless.license.java"), "(package|import|public)")
+  }
+  kotlinGradle {
+    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2"))
   }
   format("misc") {
     // not using "**/..." to help keep spotless fast

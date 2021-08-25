@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientSingletons.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -32,7 +32,7 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
  * proper scope handling.
  *
  * <p>This specific instrumentation will not conflict with {@link JaxRsClientInstrumentationModule},
- * because {@link JaxRsClientTracer} used by the latter checks against double client spans.
+ * because nested client spans are suppressed.
  */
 @AutoService(InstrumentationModule.class)
 public class ResteasyClientInstrumentationModule extends InstrumentationModule {
@@ -70,14 +70,15 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (tracer().shouldStartSpan(parentContext)) {
-        context = tracer().startSpan(parentContext, invocation, invocation);
+      if (instrumenter().shouldStart(parentContext, invocation)) {
+        context = instrumenter().start(parentContext, invocation);
         scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.This ClientInvocation invocation,
         @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -87,11 +88,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
       }
 
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context, response);
-      }
+      instrumenter().end(context, invocation, response, throwable);
     }
   }
 }

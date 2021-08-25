@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
+import net.bytebuddy.description.modifier.SyntheticState;
 import net.bytebuddy.description.modifier.TypeManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
@@ -107,7 +109,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private static final boolean FIELD_INJECTION_ENABLED =
-      Config.get().getBooleanProperty("otel.javaagent.experimental.field-injection.enabled", true);
+      Config.get().getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
 
   private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
@@ -137,6 +139,21 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     contextStoreImplementations = generateContextStoreImplementationClasses();
     contextStoreImplementationsInjector =
         bootstrapHelperInjector(contextStoreImplementations.values());
+  }
+
+  public static <Q extends K, K, C> ContextStore<Q, C> getContextStore(
+      Class<K> keyClass, Class<C> contextClass) {
+    try {
+      String contextStoreClassName =
+          getContextStoreImplementationClassName(keyClass.getName(), contextClass.getName());
+      Class<?> contextStoreClass = Class.forName(contextStoreClassName, false, null);
+      Method method = contextStoreClass.getMethod("getContextStore", Class.class, Class.class);
+      return (ContextStore<Q, C>) method.invoke(null, keyClass, contextClass);
+    } catch (ClassNotFoundException exception) {
+      throw new IllegalStateException("Context store not found", exception);
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
+      throw new IllegalStateException("Failed to get context store", exception);
+    }
   }
 
   @Override
@@ -512,7 +529,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             if (!foundField) {
               cv.visitField(
                   // Field should be transient to avoid being serialized with the object.
-                  Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT,
+                  Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC,
                   fieldName,
                   contextType.getDescriptor(),
                   null,
@@ -560,7 +577,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           private MethodVisitor getAccessorMethodVisitor(String methodName) {
             return cv.visitMethod(
-                Opcodes.ACC_PUBLIC,
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
                 methodName,
                 Utils.getMethodDefinition(interfaceType, methodName).getDescriptor(),
                 null,
@@ -606,7 +623,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       String keyClassName, String contextClassName) {
     return byteBuddy
         .rebase(ContextStoreImplementationTemplate.class)
-        .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL)
+        .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL, SyntheticState.SYNTHETIC)
         .name(getContextStoreImplementationClassName(keyClassName, contextClassName))
         .visit(getContextStoreImplementationVisitor(keyClassName, contextClassName))
         .make();
@@ -976,6 +993,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
     return byteBuddy
         .makeInterface()
+        .merge(SyntheticState.SYNTHETIC)
         .name(getContextAccessorInterfaceName(keyClassName, contextClassName))
         .defineMethod(getContextGetterName(keyClassName), contextType, Visibility.PUBLIC)
         .withoutCode()
@@ -989,10 +1007,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return (builder, typeDescription, classLoader, module) -> builder.visit(visitor);
   }
 
-  private String getContextStoreImplementationClassName(
+  private static String getContextStoreImplementationClassName(
       String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
-        + getClass().getSimpleName()
+        + FieldBackedProvider.class.getSimpleName()
         + "$ContextStore$"
         + Utils.convertToInnerClassName(keyClassName)
         + "$"

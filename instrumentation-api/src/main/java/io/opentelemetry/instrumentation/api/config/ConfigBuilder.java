@@ -14,6 +14,11 @@ public final class ConfigBuilder {
 
   private final Map<String, String> allProperties = new HashMap<>();
 
+  public ConfigBuilder addProperty(String name, String value) {
+    allProperties.put(NamingConvention.DOT.normalize(name), value);
+    return this;
+  }
+
   public ConfigBuilder readProperties(Properties properties) {
     for (String name : properties.stringPropertyNames()) {
       allProperties.put(NamingConvention.DOT.normalize(name), properties.getProperty(name));

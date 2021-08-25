@@ -24,6 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.OpenTelemetryHandlerMappingFilter;
 
 public class DispatcherServletInstrumentation implements TypeInstrumentation {
 
@@ -62,8 +63,8 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
-        HandlerMappingResourceNameFilter filter =
-            (HandlerMappingResourceNameFilter) springCtx.getBean("otelAutoDispatcherFilter");
+        OpenTelemetryHandlerMappingFilter filter =
+            (OpenTelemetryHandlerMappingFilter) springCtx.getBean("otelAutoDispatcherFilter");
         if (handlerMappings != null && filter != null) {
           filter.setHandlerMappings(handlerMappings);
         }

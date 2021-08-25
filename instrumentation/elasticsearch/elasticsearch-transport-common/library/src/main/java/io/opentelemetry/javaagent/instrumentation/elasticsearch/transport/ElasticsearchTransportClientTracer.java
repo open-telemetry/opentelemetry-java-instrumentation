@@ -16,8 +16,7 @@ public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Voi
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.elasticsearch.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes", false);
 
   private static final ElasticsearchTransportClientTracer TRACER =
       new ElasticsearchTransportClientTracer();

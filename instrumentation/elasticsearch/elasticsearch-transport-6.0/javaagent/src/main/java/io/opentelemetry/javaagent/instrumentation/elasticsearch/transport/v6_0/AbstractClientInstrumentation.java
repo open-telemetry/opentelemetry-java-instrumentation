@@ -58,10 +58,12 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      context = tracer().startSpan(currentContext(), null, action);
+      Context parentContext = currentContext();
+      context = tracer().startSpan(parentContext, null, action);
       scope = context.makeCurrent();
       tracer().onRequest(context, action.getClass(), actionRequest.getClass());
-      actionListener = new TransportActionListener<>(actionRequest, actionListener, context);
+      actionListener =
+          new TransportActionListener<>(actionRequest, actionListener, context, parentContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

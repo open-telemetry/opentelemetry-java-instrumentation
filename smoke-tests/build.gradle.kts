@@ -17,6 +17,9 @@ otelJava {
 
 val dockerJavaVersion = "3.2.5"
 dependencies {
+  testCompileOnly("com.google.auto.value:auto-value-annotations")
+  testAnnotationProcessor("com.google.auto.value:auto-value")
+
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
@@ -34,11 +37,13 @@ dependencies {
   testImplementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
   testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
+  // make IntelliJ see shaded Armeria
+  testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {
   test {
-    inputs.files(project(":javaagent").tasks.getByName("shadowJar").outputs.files)
+    inputs.files(project(":javaagent").tasks.getByName("fullJavaagentJar").outputs.files)
     maxParallelForks = 2
 
     testLogging.showStandardStreams = true
@@ -70,11 +75,11 @@ tasks {
           exclude(it)
         }
       } else {
-        throw GradleException("Unknown smoke test suite: ${smokeTestSuite}")
+        throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("fullJavaagentJar").get()
     inputs.files(layout.files(shadowTask))
 
     doFirst {

@@ -5,83 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
+import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.metrics.BoundDoubleUpDownCounter;
 import application.io.opentelemetry.api.metrics.DoubleUpDownCounter;
-import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
-import application.io.opentelemetry.api.metrics.common.Labels;
+import application.io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
 class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 
-  private final io.opentelemetry.api.metrics.DoubleUpDownCounter agentDoubleUpDownCounter;
+  private final io.opentelemetry.api.metrics.DoubleUpDownCounter agentCounter;
 
-  ApplicationDoubleUpDownCounter(
-      io.opentelemetry.api.metrics.DoubleUpDownCounter agentDoubleUpDownCounter) {
-    this.agentDoubleUpDownCounter = agentDoubleUpDownCounter;
-  }
-
-  io.opentelemetry.api.metrics.DoubleUpDownCounter getAgentDoubleUpDownCounter() {
-    return agentDoubleUpDownCounter;
+  ApplicationDoubleUpDownCounter(io.opentelemetry.api.metrics.DoubleUpDownCounter agentCounter) {
+    this.agentCounter = agentCounter;
   }
 
   @Override
-  public void add(double delta, Labels labels) {
-    agentDoubleUpDownCounter.add(delta, LabelBridging.toAgent(labels));
+  public void add(double value) {
+    agentCounter.add(value);
   }
 
   @Override
-  public void add(double v) {
-    agentDoubleUpDownCounter.add(v);
+  public void add(double value, Attributes applicationAttributes) {
+    agentCounter.add(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public BoundDoubleUpDownCounter bind(Labels labels) {
-    return new BoundInstrument(agentDoubleUpDownCounter.bind(LabelBridging.toAgent(labels)));
+  public void add(double value, Attributes applicationAttributes, Context applicationContext) {
+    agentCounter.add(
+        value,
+        Bridging.toAgent(applicationAttributes),
+        AgentContextStorage.getAgentContext(applicationContext));
   }
 
-  static class BoundInstrument implements BoundDoubleUpDownCounter {
-
-    private final io.opentelemetry.api.metrics.BoundDoubleUpDownCounter
-        agentBoundDoubleUpDownCounter;
-
-    BoundInstrument(
-        io.opentelemetry.api.metrics.BoundDoubleUpDownCounter agentBoundDoubleUpDownCounter) {
-      this.agentBoundDoubleUpDownCounter = agentBoundDoubleUpDownCounter;
-    }
-
-    @Override
-    public void add(double delta) {
-      agentBoundDoubleUpDownCounter.add(delta);
-    }
-
-    @Override
-    public void unbind() {
-      agentBoundDoubleUpDownCounter.unbind();
-    }
-  }
-
-  static class Builder implements DoubleUpDownCounterBuilder {
-
-    private final io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder;
-
-    Builder(io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder) {
-      this.agentBuilder = agentBuilder;
-    }
-
-    @Override
-    public Builder setDescription(String description) {
-      agentBuilder.setDescription(description);
-      return this;
-    }
-
-    @Override
-    public Builder setUnit(String unit) {
-      agentBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public DoubleUpDownCounter build() {
-      return new ApplicationDoubleUpDownCounter(agentBuilder.build());
-    }
+  @Override
+  public BoundDoubleUpDownCounter bind(Attributes attributes) {
+    return new ApplicationBoundDoubleUpDownCounter(agentCounter.bind(Bridging.toAgent(attributes)));
   }
 }

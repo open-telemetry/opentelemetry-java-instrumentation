@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientNetAttributesExtractor
-    extends NetAttributesExtractor<Request, Response> {
+    extends InetSocketAddressNetAttributesExtractor<Request, Response> {
 
   @Override
   public String transport(Request request) {
@@ -20,18 +21,10 @@ final class AsyncHttpClientNetAttributesExtractor
   }
 
   @Override
-  public String peerName(Request request, @Nullable Response response) {
-    return request.getUri().getHost();
-  }
-
-  @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
-    return request.getUri().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(Request request, @Nullable Response response) {
+  public @Nullable InetSocketAddress getAddress(Request request, @Nullable Response response) {
+    if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
+      return (InetSocketAddress) response.getRemoteAddress();
+    }
     return null;
   }
 }

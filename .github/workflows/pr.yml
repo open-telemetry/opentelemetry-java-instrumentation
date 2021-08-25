@@ -37,12 +37,20 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
-      - name: Upload deadlock detector artifacts
+      - name: Upload deadlock detector artifacts if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: deadlock-detector-build
           path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-build
+          path: "**/javacore.*.txt"
           if-no-files-found: ignore
 
   test:
@@ -54,8 +62,8 @@ jobs:
           - 11
           - 15
         vm:
-         - hotspot
-         - openj9
+          - hotspot
+          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -93,12 +101,20 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
-      - name: Upload deadlock detector artifacts
+      - name: Upload deadlock detector artifacts if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}
           path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-test-${{ matrix.test-java-version }}
+          path: "**/javacore.*.txt"
           if-no-files-found: ignore
 
   # testLatestDeps is intentionally not included in the PR workflow
@@ -233,12 +249,15 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Local publish
+        run: ./gradlew publishToMavenLocal
+
       - name: Build distro
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
   accept-pr:

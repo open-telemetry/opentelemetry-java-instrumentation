@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.extension.noopapi.NoopOpenTelemetry
 import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import spock.lang.Specification
 
 class OpenTelemetryInstallerTest extends Specification {

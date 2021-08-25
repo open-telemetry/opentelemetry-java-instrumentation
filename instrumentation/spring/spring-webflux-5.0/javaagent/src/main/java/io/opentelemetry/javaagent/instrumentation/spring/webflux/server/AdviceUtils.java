@@ -5,18 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.WebfluxSingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.ClassNames;
-import java.util.Map;
-import org.springframework.web.reactive.function.server.ServerRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 public class AdviceUtils {
 
-  public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
+  public static final String ON_SPAN_END = AdviceUtils.class.getName() + ".Context";
 
   public static String spanNameForHandler(Object handler) {
     String className = ClassNames.simpleName(handler.getClass());
@@ -28,38 +27,30 @@ public class AdviceUtils {
     return className + ".handle";
   }
 
-  public static <T> Mono<T> setPublisherSpan(Mono<T> mono, Context context) {
-    return mono.doOnError(t -> finishSpanIfPresent(context, t))
-        .doOnSuccess(x -> finishSpanIfPresent(context, null))
-        .doOnCancel(() -> finishSpanIfPresent(context, null));
+  public static void registerOnSpanEnd(
+      ServerWebExchange exchange, Context context, Object handler) {
+    exchange
+        .getAttributes()
+        .put(
+            AdviceUtils.ON_SPAN_END,
+            (AdviceUtils.OnSpanEnd) t -> instrumenter().end(context, handler, null, t));
   }
 
-  public static void finishSpanIfPresent(ServerWebExchange exchange, Throwable throwable) {
-    if (exchange != null) {
-      finishSpanIfPresentInAttributes(exchange.getAttributes(), throwable);
+  public static <T> Mono<T> end(Mono<T> mono, ServerWebExchange exchange) {
+    return mono.doOnError(throwable -> end(exchange, throwable))
+        .doOnSuccess(t -> end(exchange, null))
+        .doOnCancel(() -> end(exchange, null));
+  }
+
+  private static void end(ServerWebExchange exchange, @Nullable Throwable throwable) {
+    OnSpanEnd onSpanEnd = (OnSpanEnd) exchange.getAttributes().get(AdviceUtils.ON_SPAN_END);
+    if (onSpanEnd != null) {
+      onSpanEnd.end(throwable);
     }
   }
 
-  public static void finishSpanIfPresent(ServerRequest serverRequest, Throwable throwable) {
-    if (serverRequest != null) {
-      finishSpanIfPresentInAttributes(serverRequest.attributes(), throwable);
-    }
-  }
-
-  static void finishSpanIfPresent(Context context, Throwable throwable) {
-    if (context != null) {
-      Span span = Span.fromContext(context);
-      if (throwable != null) {
-        span.setStatus(StatusCode.ERROR);
-        span.recordException(throwable);
-      }
-      span.end();
-    }
-  }
-
-  private static void finishSpanIfPresentInAttributes(
-      Map<String, Object> attributes, Throwable throwable) {
-    Context context = (Context) attributes.remove(CONTEXT_ATTRIBUTE);
-    finishSpanIfPresent(context, throwable);
+  @FunctionalInterface
+  interface OnSpanEnd {
+    void end(Throwable throwable);
   }
 }

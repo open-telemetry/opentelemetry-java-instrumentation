@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -83,17 +84,23 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
     ResponseListener responseListener = new ResponseListener() {
       @Override
       void onSuccess(Response response) {
-        requestResponse = response
-        countDownLatch.countDown()
+        runWithSpan("callback") {
+          requestResponse = response
+          countDownLatch.countDown()
+        }
       }
 
       @Override
       void onFailure(Exception e) {
-        exception = e
-        countDownLatch.countDown()
+        runWithSpan("callback") {
+          exception = e
+          countDownLatch.countDown()
+        }
       }
     }
-    client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener)
+    runWithSpan("parent") {
+      client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener)
+    }
     countDownLatch.await()
 
     if (exception != null) {
@@ -105,17 +112,27 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
     result.status == "green"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET _cluster/health"
           kind CLIENT
-          hasNoParent()
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }

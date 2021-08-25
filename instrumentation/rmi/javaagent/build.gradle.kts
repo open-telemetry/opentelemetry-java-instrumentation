@@ -22,7 +22,7 @@ tasks {
       File(System.getProperty("java.home"), it).absoluteFile
     }.find { it.isFile() }?.let(File::toString) ?: "rmic"
 
-    commandLine(rmicBinaryPath, "-g", "-keep", "-classpath", sourceSets.test.get().output.classesDirs.asPath, "-d", "${buildDir}/classes/java/test", clazz)
+    commandLine(rmicBinaryPath, "-g", "-keep", "-classpath", sourceSets.test.get().output.classesDirs.asPath, "-d", "$buildDir/classes/java/test", clazz)
   }
 
   named<Test>("test") {

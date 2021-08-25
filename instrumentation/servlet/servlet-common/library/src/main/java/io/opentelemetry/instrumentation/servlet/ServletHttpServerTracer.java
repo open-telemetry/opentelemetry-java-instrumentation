@@ -38,8 +38,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       ServletHttpServerTracer.class.getName() + ".AsyncListenerResponse";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
