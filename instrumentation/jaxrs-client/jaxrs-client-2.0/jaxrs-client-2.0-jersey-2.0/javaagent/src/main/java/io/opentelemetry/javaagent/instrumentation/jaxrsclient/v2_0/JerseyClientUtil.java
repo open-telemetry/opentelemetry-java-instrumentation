@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import org.glassfish.jersey.client.ClientRequest;
@@ -15,7 +15,7 @@ public final class JerseyClientUtil {
   public static void handleException(ClientRequest context, Throwable exception) {
     Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
     if (prop instanceof Context) {
-      tracer().endExceptionally((Context) prop, exception);
+      instrumenter().end((Context) prop, context, null, exception);
     }
   }
 
