@@ -116,6 +116,8 @@ include(":instrumentation:internal:internal-class-loader:javaagent-integration-t
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
 include(":instrumentation:internal:internal-proxy:javaagent")
 include(":instrumentation:internal:internal-proxy:javaagent-unit-tests")
+include(":instrumentation:internal:internal-reflection:javaagent")
+include(":instrumentation:internal:internal-reflection:javaagent-integration-tests")
 include(":instrumentation:internal:internal-url-class-loader:javaagent")
 include(":instrumentation:internal:internal-url-class-loader:javaagent-integration-tests")
 include(":instrumentation:couchbase:couchbase-2.0:javaagent")

@@ -46,6 +46,7 @@ dependencies {
   javaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
+  javaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   // Many tests use OpenTelemetry API calls, e.g. via InstrumentationTestRunner.runWithSpan
