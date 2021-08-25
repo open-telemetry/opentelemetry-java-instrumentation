@@ -910,8 +910,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   }
                 }
               } else {
-                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
+                }
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                }
               }
 
               // Optional
