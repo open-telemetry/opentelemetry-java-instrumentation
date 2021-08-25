@@ -18,7 +18,7 @@ protobuf {
   }
   plugins {
     id("grpc") {
-      artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+      artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
   generateProtoTasks {
@@ -33,10 +33,10 @@ protobuf {
 dependencies {
   api(project(":testing-common"))
 
-  api("io.grpc:grpc-core:${grpcVersion}")
-  api("io.grpc:grpc-protobuf:${grpcVersion}")
-  api("io.grpc:grpc-services:${grpcVersion}")
-  api("io.grpc:grpc-stub:${grpcVersion}")
+  api("io.grpc:grpc-core:$grpcVersion")
+  api("io.grpc:grpc-protobuf:$grpcVersion")
+  api("io.grpc:grpc-services:$grpcVersion")
+  api("io.grpc:grpc-stub:$grpcVersion")
 
   implementation("javax.annotation:javax.annotation-api:1.3.2")
 

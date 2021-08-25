@@ -122,7 +122,7 @@ tasks {
     archiveFileName.set("exporterLibs-relocated.jar")
   }
 
-  //Includes instrumentations, but not exporters
+  // Includes instrumentations, but not exporters
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
@@ -143,7 +143,7 @@ tasks {
     }
   }
 
-  //Includes everything needed for OOTB experience
+  // Includes everything needed for OOTB experience
   val fullJavaagentJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
