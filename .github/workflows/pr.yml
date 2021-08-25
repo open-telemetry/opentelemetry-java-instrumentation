@@ -54,8 +54,8 @@ jobs:
           - 11
           - 15
         vm:
-         - hotspot
-         - openj9
+          - hotspot
+          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -233,12 +233,15 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Local publish
+        run: ./gradlew publishToMavenLocal
+
       - name: Build distro
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
   accept-pr:
