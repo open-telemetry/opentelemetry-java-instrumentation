@@ -61,7 +61,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void wrap(
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingIterable(iterable, consumerInstrumenter());
+        iterable = new TracingIterable(iterable);
       }
     }
   }
@@ -72,7 +72,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingList(iterable, consumerInstrumenter());
+        iterable = new TracingList(iterable);
       }
     }
   }
