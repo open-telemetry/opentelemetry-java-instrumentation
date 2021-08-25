@@ -16,14 +16,14 @@ val grpcVersion = "1.6.0"
 dependencies {
   implementation(project(":instrumentation:grpc-1.6:library"))
 
-  library("io.grpc:grpc-core:${grpcVersion}")
+  library("io.grpc:grpc-core:$grpcVersion")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  testLibrary("io.grpc:grpc-netty:${grpcVersion}")
-  testLibrary("io.grpc:grpc-protobuf:${grpcVersion}")
-  testLibrary("io.grpc:grpc-services:${grpcVersion}")
-  testLibrary("io.grpc:grpc-stub:${grpcVersion}")
+  testLibrary("io.grpc:grpc-netty:$grpcVersion")
+  testLibrary("io.grpc:grpc-protobuf:$grpcVersion")
+  testLibrary("io.grpc:grpc-services:$grpcVersion")
+  testLibrary("io.grpc:grpc-stub:$grpcVersion")
 
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }

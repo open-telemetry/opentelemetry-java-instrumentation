@@ -42,7 +42,7 @@ dependencies {
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
   javaagentLibs(project(":instrumentation:executors:javaagent"))
   // FIXME: we should enable this, but currently this fails tests for google http client
-  //testImplementation project(":instrumentation:http-url-connection:javaagent")
+  // testImplementation project(":instrumentation:http-url-connection:javaagent")
   javaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
