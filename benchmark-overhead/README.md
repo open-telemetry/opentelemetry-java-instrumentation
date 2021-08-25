@@ -41,21 +41,21 @@ After all the tests are complete, the results are collected and commited back to
 For each test pass, we record the following metrics in order to compare agents and determine
 relative overhead.
 
-| metric name              | description                                                     |
-|--------------------------|-----------------------------------------------------------------|
-| Startup time       | how long it takes for the spring app to report "healthy"
-| Total allocated MB | across the life of the application
-| Heap (min)         | smallest observed heap size
-| Heap (max)         | largest observed heap size
-| Thread switch rate | max observed thread context switch rate
-| GC time            | total amount of time spent paused for garbage collection
-| Request mean       | average time to handle a single web request (measured at the caller)
-| Request p95        | 95th percentile time to handle a single web requ4st (measured at the caller)
-| Iteration mean     | average time to do a single pass through the k6 test script
-| Iteration p95      | 95th percentile time to do a single pass through the k6 test script
-| Peak threads       | Highest number of running threads in the VM, including agent threads
-| Network read mean  | Average network read rate
-| Network write mean | Average network write rate
+| metric name              | units      | description                                                     |
+|--------------------------|------------|----------------------------------------------------------|
+| Startup time             | ms         | how long it takes for the spring app to report "healthy"
+| Total allocated mem      | bytes      | across the life of the application
+| Heap (min)               | bytes      | smallest observed heap size
+| Heap (max)               | bytes      | largest observed heap size
+| Thread switch rate       | # / s      | max observed thread context switch rate
+| GC time                  | ms         | total amount of time spent paused for garbage collection
+| Request mean             | ms         | average time to handle a single web request (measured at the caller)
+| Request p95              | ms         | 95th percentile time to handle a single web requ4st (measured at the caller)
+| Iteration mean           | ms         | average time to do a single pass through the k6 test script
+| Iteration p95            | ms         | 95th percentile time to do a single pass through the k6 test script
+| Peak threads             | #          | Highest number of running threads in the VM, including agent threads
+| Network read mean        | bits/s     | Average network read rate
+| Network write mean       | bits/s     | Average network write rate
 
 ## Config
 
