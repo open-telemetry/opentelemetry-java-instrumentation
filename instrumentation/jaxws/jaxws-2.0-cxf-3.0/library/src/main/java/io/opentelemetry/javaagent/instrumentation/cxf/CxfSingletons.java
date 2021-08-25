@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public class CxfSingletons {
@@ -17,6 +18,7 @@ public class CxfSingletons {
     INSTRUMENTER =
         Instrumenter.<CxfRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

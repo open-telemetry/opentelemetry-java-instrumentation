@@ -55,6 +55,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
   @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  boolean disabled = false;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
@@ -132,6 +133,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
     this.startTimeExtractor = requireNonNull(startTimeExtractor);
     this.endTimeExtractor = requireNonNull(endTimeExtractor);
+    return this;
+  }
+
+  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
+    this.disabled = disabled;
     return this;
   }
 

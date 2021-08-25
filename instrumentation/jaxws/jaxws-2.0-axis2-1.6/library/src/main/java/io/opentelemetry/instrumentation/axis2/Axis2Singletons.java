@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.axis2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public class Axis2Singletons {
@@ -17,6 +18,7 @@ public class Axis2Singletons {
     INSTRUMENTER =
         Instrumenter.<Axis2Request, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

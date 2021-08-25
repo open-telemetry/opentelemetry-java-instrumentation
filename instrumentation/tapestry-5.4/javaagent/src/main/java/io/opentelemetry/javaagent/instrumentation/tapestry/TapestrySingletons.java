@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.tapestry5.runtime.ComponentEventException;
@@ -26,6 +27,7 @@ public class TapestrySingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(error);
                 })
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

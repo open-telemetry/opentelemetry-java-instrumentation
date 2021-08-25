@@ -67,7 +67,7 @@ public abstract class Config {
     if (instance == null) {
       // this should only happen in library instrumentation
       //
-      // no need to synchronize because worst case is creating INSTANCE more than once
+      // no need to synchronize because worst case is creating instance more than once
       instance = newBuilder().readEnvironmentVariables().readSystemProperties().build();
     }
     return instance;
