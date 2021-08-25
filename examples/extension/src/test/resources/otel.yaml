@@ -9,7 +9,6 @@ receivers:
   otlp:
     protocols:
       grpc:
-  zipkin:
 
 processors:
   batch:
@@ -24,8 +23,8 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [otlp, zipkin]
-      processors: [batch]
-      exporters: [logging, otlp]
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ logging, otlp ]
 
-  extensions: [health_check, pprof, zpages]
+  extensions: [ health_check, pprof, zpages ]
