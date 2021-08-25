@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt

@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt
@@ -52,6 +52,29 @@ jobs:
           name: javacore-build
           path: "**/javacore.*.txt"
           if-no-files-found: ignore
+
+  build-gradle-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Build
+        run: ../gradlew build --stacktrace
+        working-directory: gradle-plugins
 
   test:
     runs-on: ubuntu-latest
@@ -237,7 +260,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt
