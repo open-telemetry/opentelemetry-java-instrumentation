@@ -30,6 +30,8 @@ class PrintStreamPersister implements ResultsPersister {
     out.println("----------------------------------------------------------");
 
     display(sorted, "Agent", appPerfResults -> appPerfResults.agent.getName());
+    display(sorted, "Avg. CPU (user)", res -> String.valueOf(res.averageJvmUserCpu));
+    display(sorted, "Max. CPU (user)", res -> String.valueOf(res.maxJvmUserCpu));
     display(sorted, "Startup time (ms)", res -> String.valueOf(res.startupDurationMs));
     display(sorted, "Total allocated MB", res -> format(res.getTotalAllocatedMB()));
     display(sorted, "Heap (min)", res -> String.valueOf(res.heapUsed.min));
