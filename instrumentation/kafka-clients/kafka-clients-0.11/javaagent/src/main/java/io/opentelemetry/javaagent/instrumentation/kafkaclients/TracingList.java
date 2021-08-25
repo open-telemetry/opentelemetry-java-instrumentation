@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -13,8 +14,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class TracingList extends TracingIterable implements List<ConsumerRecord<?, ?>> {
   private final List<ConsumerRecord<?, ?>> delegate;
 
-  public TracingList(List<ConsumerRecord<?, ?>> delegate, KafkaConsumerTracer tracer) {
-    super(delegate, tracer);
+  public TracingList(
+      List<ConsumerRecord<?, ?>> delegate, Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter) {
+    super(delegate, instrumenter);
     this.delegate = delegate;
   }
 

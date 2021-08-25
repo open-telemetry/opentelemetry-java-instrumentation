@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TracingIterable implements Iterable<ConsumerRecord<?, ?>> {
   private final Iterable<ConsumerRecord<?, ?>> delegate;
-  private final KafkaConsumerTracer tracer;
+  private final Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter;
   private boolean firstIterator = true;
 
-  public TracingIterable(Iterable<ConsumerRecord<?, ?>> delegate, KafkaConsumerTracer tracer) {
+  public TracingIterable(
+      Iterable<ConsumerRecord<?, ?>> delegate,
+      Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter) {
     this.delegate = delegate;
-    this.tracer = tracer;
+    this.instrumenter = instrumenter;
   }
 
   @Override
@@ -25,7 +28,7 @@ public class TracingIterable implements Iterable<ConsumerRecord<?, ?>> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // ConsumerRecords is performed in the same thread that called poll()
     if (firstIterator) {
-      it = new TracingIterator(delegate.iterator(), tracer);
+      it = new TracingIterator(delegate.iterator(), instrumenter);
       firstIterator = false;
     } else {
       it = delegate.iterator();
