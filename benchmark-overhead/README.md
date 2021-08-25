@@ -92,7 +92,7 @@ a csv file, which is committed back to the repo in the `/results` subdirectory.
 The tests require docker to be running. Simply run `OverheadTests` in your IDE. 
 
 Alternatively, you can run the tests from
-the commandline with gradle:
+the command line with gradle:
 
 ```
 cd benchmark-overhead
