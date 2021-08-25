@@ -12,4 +12,3 @@ dependencies {
   api(project(":instrumentation:spring:starters:spring-starter"))
   api("io.opentelemetry:opentelemetry-exporter-zipkin")
 }
-

@@ -77,7 +77,17 @@ public class ResultsCollector {
         .maxThreadContextSwitchRate(readMaxThreadContextSwitchRate(jfrFile))
         .peakThreadCount(readPeakThreadCount(jfrFile))
         .averageNetworkRead(computeAverageNetworkRead(jfrFile))
-        .averageNetworkWrite(computeAverageNetworkWrite(jfrFile));
+        .averageNetworkWrite(computeAverageNetworkWrite(jfrFile))
+        .averageJvmUserCpu(computeAverageJvmUserCpu(jfrFile))
+        .maxJvmUserCpu(computeMaxJvmUserCpu(jfrFile));
+  }
+
+  private float computeAverageJvmUserCpu(Path jfrFile) throws IOException {
+    return JFRUtils.computeAverageFloat(jfrFile, "jdk.CPULoad", "jvmUser");
+  }
+
+  private float computeMaxJvmUserCpu(Path jfrFile) throws IOException {
+    return JFRUtils.findMaxFloat(jfrFile, "jdk.CPULoad", "jvmUser");
   }
 
   private long computeAverageNetworkRead(Path jfrFile) throws IOException {

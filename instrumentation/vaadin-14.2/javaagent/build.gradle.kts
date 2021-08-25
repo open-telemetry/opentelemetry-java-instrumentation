@@ -26,7 +26,6 @@ muzzle {
   }
 }
 
-
 testSets {
   create("vaadin142Test")
   create("vaadin14LatestTest")

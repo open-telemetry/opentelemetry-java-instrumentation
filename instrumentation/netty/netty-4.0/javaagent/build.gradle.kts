@@ -54,7 +54,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
         eachDependency {
-          //specifying a fixed version for all libraries with io.netty' group
+          // specifying a fixed version for all libraries with io.netty' group
           if (requested.group == "io.netty" && requested.name != "netty-bom") {
             useVersion("4.0.0.Final")
           }

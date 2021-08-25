@@ -90,7 +90,7 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
-  # testLatestDeps is intentionally not included in the release workflow
+  # testLatestDeps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
@@ -142,7 +142,11 @@ jobs:
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
-  example-distro:
+  # muzzle is intentionally not included in the release workflows
+  # because any time a new library version is released to maven central it can fail,
+  # and this is not a reason to hold up the release
+
+  examples:
     runs-on: ubuntu-latest
     needs: prepare-release-branch
     steps:

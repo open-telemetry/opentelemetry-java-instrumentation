@@ -75,7 +75,7 @@ tasks {
           exclude(it)
         }
       } else {
-        throw GradleException("Unknown smoke test suite: ${smokeTestSuite}")
+        throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
     }
 

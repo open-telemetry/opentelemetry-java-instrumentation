@@ -40,6 +40,12 @@ public class JFRUtils {
         AverageSupport::add).average();
   }
 
+  public static float computeAverageFloat(Path jfrFile, String eventName, String valueKey) throws IOException {
+    return reduce(jfrFile, eventName, valueKey,
+        new AverageFloatSupport(),
+        AverageFloatSupport::add).average();
+  }
+
   private static <T, V> T reduce(Path jfrFile, String eventName,
       String valueKey, T initial, BiFunction<T,V,T> reducer) throws IOException {
     RecordingFile recordingFile = new RecordingFile(jfrFile);
@@ -63,6 +69,20 @@ public class JFRUtils {
       return this;
     }
     long average(){
+      if(count == 0) return -1;
+      return total/count;
+    }
+  }
+
+  static class AverageFloatSupport {
+    long count;
+    float total;
+    AverageFloatSupport add(float value){
+      count++;
+      total += value;
+      return this;
+    }
+    float average(){
       if(count == 0) return -1;
       return total/count;
     }
