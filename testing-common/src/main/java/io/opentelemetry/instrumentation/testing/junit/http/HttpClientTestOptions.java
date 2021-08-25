@@ -21,6 +21,8 @@ public final class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
+                  SemanticAttributes.NET_PEER_NAME,
+                  SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,
                   SemanticAttributes.HTTP_METHOD,
                   SemanticAttributes.HTTP_FLAVOR,

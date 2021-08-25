@@ -14,7 +14,7 @@ muzzle {
 sourceSets {
   create("testapp") {
     java {
-      destinationDirectory.set(file("${buildDir}/testapp/classes"))
+      destinationDirectory.set(file("$buildDir/testapp/classes"))
     }
     resources {
       srcDirs("src/webapp")

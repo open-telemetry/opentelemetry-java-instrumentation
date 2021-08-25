@@ -13,11 +13,13 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static org.awaitility.Awaitility.await
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import org.apache.catalina.Context
@@ -25,7 +27,6 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Unroll
-
 
 @Unroll
 class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
@@ -66,6 +67,23 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   void stopServer(Tomcat server) {
     server.stop()
     server.destroy()
+  }
+
+  def cleanup() {
+    // wait for async request threads to complete
+    await()
+      .atMost(15, TimeUnit.SECONDS)
+      .until({ !isRequestRunning() })
+  }
+
+  static boolean isRequestRunning() {
+    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+      def element = stackTrace.find {
+        return it.className == "org.apache.catalina.core.AsyncContextImpl\$RunnableWrapper" && it.methodName == "run"
+      }
+      element != null
+    }
+    return result != null
   }
 
   @Override

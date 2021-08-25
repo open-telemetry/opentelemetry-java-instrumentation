@@ -17,7 +17,7 @@ dependencies {
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dumb and are run with
   // core version provided by Eclipse implementation.
-  //testImplementation("org.osgi:org.osgi.core:4.0.0")
+  // testImplementation("org.osgi:org.osgi.core:4.0.0")
   testImplementation("org.eclipse.platform:org.eclipse.osgi:3.13.200")
   testImplementation("org.apache.felix:org.apache.felix.framework:6.0.2")
 }

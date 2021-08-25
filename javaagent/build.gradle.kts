@@ -100,11 +100,6 @@ tasks {
     }
   }
 
-  // lightShadow is the default classifier we publish so disable the default jar.
-  jar {
-    enabled = false
-  }
-
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
@@ -127,8 +122,8 @@ tasks {
     archiveFileName.set("exporterLibs-relocated.jar")
   }
 
-  //Includes instrumentations, but not exporters
-  val lightShadow by registering(ShadowJar::class) {
+  // Includes instrumentations, but not exporters
+  val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
     dependsOn(relocateJavaagentLibs)
@@ -137,6 +132,7 @@ tasks {
     archiveClassifier.set("")
 
     manifest {
+      attributes(jar.get().manifest.attributes)
       attributes(
         "Main-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
         "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
@@ -147,8 +143,8 @@ tasks {
     }
   }
 
-  //Includes everything needed for OOTB experience
-  val shadowJar by existing(ShadowJar::class) {
+  // Includes everything needed for OOTB experience
+  val fullJavaagentJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
     dependsOn(relocateJavaagentLibs, relocateExporterLibs)
@@ -160,23 +156,23 @@ tasks {
     archiveClassifier.set("all")
 
     manifest {
-      attributes(lightShadow.get().manifest.attributes)
+      attributes(shadowJar.get().manifest.attributes)
     }
   }
 
   assemble {
-    dependsOn(lightShadow, shadowJar)
+    dependsOn(shadowJar, fullJavaagentJar)
   }
 
   withType<Test>().configureEach {
-    dependsOn(shadowJar)
-    inputs.file(shadowJar.get().archiveFile)
+    dependsOn(fullJavaagentJar)
+    inputs.file(fullJavaagentJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
     doFirst {
       // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
+      jvmArgs("-javaagent:${fullJavaagentJar.get().archiveFile.get().asFile}")
     }
 
     testLogging {
@@ -195,7 +191,7 @@ tasks {
   publishing {
     publications {
       named<MavenPublication>("maven") {
-        artifact(lightShadow)
+        artifact(fullJavaagentJar)
       }
     }
   }

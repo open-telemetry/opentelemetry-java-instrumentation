@@ -39,7 +39,11 @@ class CsvPersister implements ResultsPersister {
       sb.append(",").append(result.iterationP95);
       sb.append(",").append(result.requestAvg);
       sb.append(",").append(result.requestP95);
+      sb.append(",").append(result.averageNetworkRead);
+      sb.append(",").append(result.averageNetworkWrite);
       sb.append(",").append(result.peakThreadCount);
+      sb.append(",").append(result.averageJvmUserCpu);
+      sb.append(",").append(result.maxJvmUserCpu);
     });
     sb.append("\n");
     try {
@@ -79,7 +83,11 @@ class CsvPersister implements ResultsPersister {
       sb.append(",").append(agent).append(":iterationP95");
       sb.append(",").append(agent).append(":requestAvg");
       sb.append(",").append(agent).append(":requestP95");
+      sb.append(",").append(agent).append(":netReadAvg");
+      sb.append(",").append(agent).append(":netWriteAvg");
       sb.append(",").append(agent).append(":peakThreadCount");
+      sb.append(",").append(agent).append(":averageCpuUser");
+      sb.append(",").append(agent).append(":maxCpuUser");
     });
     sb.append("\n");
     return sb.toString();

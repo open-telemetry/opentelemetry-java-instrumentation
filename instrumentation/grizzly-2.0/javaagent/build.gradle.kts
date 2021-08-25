@@ -26,11 +26,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.grizzly.enabled=true")
 }
 
-tasks.withType<Test>().configureEach {
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2640
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}
-
-
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")

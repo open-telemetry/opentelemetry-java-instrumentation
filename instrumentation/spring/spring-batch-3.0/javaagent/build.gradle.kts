@@ -28,7 +28,7 @@ tasks {
     include("**/*ChunkRootSpanTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
   }
-  
+
   val testItemLevelSpan by registering(Test::class) {
     filter {
       includeTestsMatching("*ItemLevelSpanTest")
@@ -38,7 +38,7 @@ tasks {
     include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
   }
-  
+
   named<Test>("test") {
     dependsOn(testChunkRootSpan)
     dependsOn(testItemLevelSpan)

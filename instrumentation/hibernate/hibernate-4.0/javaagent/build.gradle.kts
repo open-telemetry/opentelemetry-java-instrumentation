@@ -48,7 +48,7 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
   testImplementation("org.hsqldb:hsqldb:2.0.0")
-  //First version to work with Java 14
+  // First version to work with Java 14
   testImplementation("org.springframework.data:spring-data-jpa:1.8.0.RELEASE")
 
   testImplementation("org.hibernate:hibernate-core:4.0.0.Final")

@@ -43,7 +43,7 @@ dependencies {
 
 tasks {
   test {
-    inputs.files(project(":javaagent").tasks.getByName("shadowJar").outputs.files)
+    inputs.files(project(":javaagent").tasks.getByName("fullJavaagentJar").outputs.files)
     maxParallelForks = 2
 
     testLogging.showStandardStreams = true
@@ -75,11 +75,11 @@ tasks {
           exclude(it)
         }
       } else {
-        throw GradleException("Unknown smoke test suite: ${smokeTestSuite}")
+        throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("fullJavaagentJar").get()
     inputs.files(layout.files(shadowTask))
 
     doFirst {

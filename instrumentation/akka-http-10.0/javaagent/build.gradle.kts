@@ -32,7 +32,7 @@ muzzle {
     // later versions of akka-http expect streams to be provided
     extraDependency("com.typesafe.akka:akka-stream_2.12:2.5.11")
   }
-  //There is no akka-http 10.0.x series for scala 2.13
+  // There is no akka-http 10.0.x series for scala 2.13
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-http_2.13")
@@ -50,4 +50,8 @@ dependencies {
   // they are here to test for context leaks
   testInstrumentation(project(":instrumentation:akka-actor-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:akka-actor-fork-join-2.5:javaagent"))
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 }
