@@ -36,7 +36,8 @@ public final class JmsSingletons {
         Instrumenter.<MessageWithDestination, Void>newBuilder(
                 otel, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
-            .setTimeExtractors(MessageWithDestination::getStartTime, response -> Instant.now())
+            .setTimeExtractors(
+                MessageWithDestination::getStartTime, (request, response) -> Instant.now())
             .newInstrumenter(SpanKindExtractor.alwaysConsumer());
     LISTENER_INSTRUMENTER =
         Instrumenter.<MessageWithDestination, Void>newBuilder(

@@ -72,7 +72,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
   private final boolean disabled;
   private final SpanSuppressionStrategy spanSuppressionStrategy;
 
@@ -187,7 +187,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     if (endTimeExtractor != null) {
-      span.end(endTimeExtractor.extract(response));
+      span.end(endTimeExtractor.extract(request, response));
     } else {
       span.end();
     }

@@ -14,8 +14,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * must be comparable.
  */
 @FunctionalInterface
-public interface EndTimeExtractor<RESPONSE> {
+public interface EndTimeExtractor<REQUEST, RESPONSE> {
 
   /** Returns the timestamp marking the end of the response processing. */
-  Instant extract(@Nullable RESPONSE response);
+  Instant extract(REQUEST request, @Nullable RESPONSE response);
 }

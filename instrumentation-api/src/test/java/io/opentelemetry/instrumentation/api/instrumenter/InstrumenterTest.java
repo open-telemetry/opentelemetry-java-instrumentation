@@ -487,7 +487,7 @@ class InstrumenterTest {
     Instrumenter<Instant, Instant> instrumenter =
         Instrumenter.<Instant, Instant>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractors(request -> request, response -> response)
+            .setTimeExtractors(request -> request, (request, response) -> response)
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);
@@ -912,12 +912,12 @@ class InstrumenterTest {
   }
 
   private static Instrumenter<Map<String, String>, Map<String, String>> getInstrumenterWithType(
-      boolean enableInstrumenation, AttributesExtractor... attributeExtractors) {
+      boolean enableInstrumentation, AttributesExtractor... attributeExtractors) {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(attributeExtractors)
-            .enableInstrumentationTypeSuppression(enableInstrumenation);
+            .enableInstrumentationTypeSuppression(enableInstrumentation);
 
     return builder.newClientInstrumenter(Map::put);
   }
