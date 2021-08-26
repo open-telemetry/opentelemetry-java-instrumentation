@@ -2,7 +2,7 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-val grpcVersion = "1.6.0"
+val grpcVersion = "1.25.0"
 
 dependencies {
   library("io.grpc:grpc-core:$grpcVersion")
