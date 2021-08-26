@@ -100,7 +100,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
-  /** Adds a {@link SpanLinksExtractor} to extract span link from requests. */
+  /** Adds a {@link SpanLinksExtractor} to extract span links from requests. */
   public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
       SpanLinksExtractor<REQUEST> spanLinksExtractor) {
     spanLinksExtractors.add(spanLinksExtractor);
