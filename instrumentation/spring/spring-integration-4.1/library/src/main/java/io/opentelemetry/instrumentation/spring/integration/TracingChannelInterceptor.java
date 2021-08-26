@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.messaging.Message;
@@ -22,11 +22,9 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
-  // some messaging products (e.g. IBM MQ) require message keys to be valid Java identifiers
-  private static final String CONTEXT_AND_SCOPE_KEY =
-      ContextAndScope.class.getName().replace('.', '_');
-  private static final String SCOPE_KEY =
-      TracingChannelInterceptor.class.getName().replace('.', '_') + "_scope";
+
+  private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> LOCAL_CONTEXT_AND_SCOPE =
+      ThreadLocal.withInitial(IdentityHashMap::new);
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> instrumenter;
@@ -57,14 +55,16 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     //    instrumentation should not create another one
     if (shouldStart(parentContext, messageWithChannel)) {
       context = instrumenter.start(parentContext, messageWithChannel);
-      messageHeaderAccessor.setHeader(
-          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(context, context.makeCurrent()));
+      LOCAL_CONTEXT_AND_SCOPE
+          .get()
+          .put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
     } else {
       // in case there already was another span in the context: back off and just inject the current
       // context into the message
       context = parentContext;
-      messageHeaderAccessor.setHeader(
-          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(null, context.makeCurrent()));
+      LOCAL_CONTEXT_AND_SCOPE
+          .get()
+          .put(messageChannel, ContextAndScope.create(null, context.makeCurrent()));
     }
 
     propagators
@@ -84,11 +84,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    Object contextAndScope = message.getHeaders().get(CONTEXT_AND_SCOPE_KEY);
-    if (contextAndScope instanceof ContextAndScope) {
-      ContextAndScope cas = (ContextAndScope) contextAndScope;
-      cas.close();
-      Context context = cas.getContext();
+    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(messageChannel);
+    if (contextAndScope != null) {
+      contextAndScope.close();
+      Context context = contextAndScope.getContext();
 
       if (context != null) {
         MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
@@ -119,17 +118,18 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         propagators
             .getTextMapPropagator()
             .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
-    MessageHeaderAccessor messageHeaderAccessor = MessageHeaderAccessor.getMutableAccessor(message);
-    messageHeaderAccessor.setHeader(SCOPE_KEY, context.makeCurrent());
-    return createMessageWithHeaders(message, messageHeaderAccessor);
+    // beforeHandle()/afterMessageHandles() always execute in a different thread than send(), so
+    // there's no real risk of overwriting the send() context
+    LOCAL_CONTEXT_AND_SCOPE.get().put(channel, ContextAndScope.create(null, context.makeCurrent()));
+    return message;
   }
 
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    Object scope = message.getHeaders().get(SCOPE_KEY);
-    if (scope instanceof Scope) {
-      ((Scope) scope).close();
+    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(channel);
+    if (contextAndScope != null) {
+      contextAndScope.close();
     }
   }
 
