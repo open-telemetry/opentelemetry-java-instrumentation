@@ -151,7 +151,25 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
             "io.opentelemetry.api.baggage.BaggageContextKey",
             BaggageBridging::toApplication,
             BaggageBridging::toAgent),
+        bridgeSpanKey("SERVER_KEY"),
+        bridgeSpanKey("CONSUMER_KEY"),
+        bridgeSpanKey("HTTP_KEY"),
+        bridgeSpanKey("RPC_KEY"),
+        bridgeSpanKey("DB_KEY"),
+        bridgeSpanKey("MESSAGING_KEY"),
+        bridgeSpanKey("CLIENT_KEY"),
+        bridgeSpanKey("PRODUCER_KEY"),
       };
+
+  private static ContextKeyBridge<Span, io.opentelemetry.api.trace.Span> bridgeSpanKey(
+      String name) {
+    return new ContextKeyBridge<>(
+        "application.io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
+        "io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
+        name,
+        Bridging::toApplication,
+        Bridging::toAgentOrNull);
+  }
 
   @Override
   public Scope attach(Context toAttach) {
@@ -266,13 +284,22 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
         String agentKeyHolderClassName,
         Function<AGENT, APPLICATION> toApplication,
         Function<APPLICATION, AGENT> toAgent) {
+      this(applicationKeyHolderClassName, agentKeyHolderClassName, "KEY", toApplication, toAgent);
+    }
+
+    ContextKeyBridge(
+        String applicationKeyHolderClassName,
+        String agentKeyHolderClassName,
+        String fieldName,
+        Function<AGENT, APPLICATION> toApplication,
+        Function<APPLICATION, AGENT> toAgent) {
       this.toApplication = toApplication;
       this.toAgent = toAgent;
 
       ContextKey<APPLICATION> applicationContextKey;
       try {
         Class<?> applicationKeyHolderClass = Class.forName(applicationKeyHolderClassName);
-        Field applicationContextKeyField = applicationKeyHolderClass.getDeclaredField("KEY");
+        Field applicationContextKeyField = applicationKeyHolderClass.getDeclaredField(fieldName);
         applicationContextKeyField.setAccessible(true);
         applicationContextKey = (ContextKey<APPLICATION>) applicationContextKeyField.get(null);
       } catch (Throwable t) {
@@ -283,7 +310,7 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
       io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
       try {
         Class<?> agentKeyHolderClass = Class.forName(agentKeyHolderClassName);
-        Field agentContextKeyField = agentKeyHolderClass.getDeclaredField("KEY");
+        Field agentContextKeyField = agentKeyHolderClass.getDeclaredField(fieldName);
         agentContextKeyField.setAccessible(true);
         agentContextKey =
             (io.opentelemetry.context.ContextKey<AGENT>) agentContextKeyField.get(null);
