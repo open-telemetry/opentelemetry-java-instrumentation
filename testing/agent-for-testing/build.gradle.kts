@@ -1,6 +1,4 @@
 plugins {
-  id("io.opentelemetry.instrumentation.javaagent-shadowing")
-
   id("otel.java-conventions")
   id("otel.publish-conventions")
 }
@@ -19,7 +17,7 @@ val extensionLibs by configurations.creating {
 }
 
 dependencies {
-  extensionLibs(project(":testing:agent-exporter"))
+  extensionLibs(project(":testing:agent-exporter", "shadow"))
   agent(project(":javaagent", "baseJar"))
 
   testImplementation(project(":testing-common"))
@@ -36,31 +34,21 @@ tasks {
     into("$buildDir/tmp")
   }
 
-  shadowJar.configure {
-    //We use a configuration separate from "implementation" to make sure dependencies added to it
-    //do not leak to test's classpath
-    configurations = listOf(extensionLibs)
-  }
-
-  //Produces a copy of upstream javaagent with this extension jar included inside it
-  //The location of extension directory inside agent jar is hard-coded in the agent source code
-  val agentForTests by registering(Jar::class) {
+  jar {
     dependsOn(agentManifest)
-//    archiveFileName.set("agent-for-testing.jar")
     manifest.from("$buildDir/tmp/META-INF/MANIFEST.MF")
     from(zipTree(agent.singleFile))
-    from(shadowJar) {
+    from(extensionLibs) {
       into("extensions")
     }
   }
 
   afterEvaluate {
     withType<Test>().configureEach {
-      dependsOn(agentForTests)
-      inputs.file(agentForTests.get().archiveFile)
+      dependsOn(jar)
 
       jvmArgs("-Dotel.javaagent.debug=true")
-      jvmArgs("-javaagent:${agentForTests.get().archiveFile.get().asFile.absolutePath}")
+      jvmArgs("-javaagent:${jar.get().archiveFile.get().asFile.absolutePath}")
     }
   }
 }

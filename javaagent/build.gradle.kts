@@ -60,7 +60,10 @@ dependencies {
   baseJavaagentLibs(project(":javaagent-extension-api"))
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api-1.0:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
 
   exporterLibs(project(":javaagent-exporters"))
 
