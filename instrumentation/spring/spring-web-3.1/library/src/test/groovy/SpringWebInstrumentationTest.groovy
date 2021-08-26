@@ -63,12 +63,6 @@ class SpringWebInstrumentationTest extends HttpClientTest<HttpEntity<String>> im
     false
   }
 
-  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-  @Override
-  boolean testWithClientParent() {
-    false
-  }
-
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
