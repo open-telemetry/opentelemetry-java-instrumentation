@@ -56,11 +56,10 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
     })
   }
 
-  //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347
-//  @Override
-//  String userAgent() {
-//    return "AHC"
-//  }
+  @Override
+  String userAgent() {
+    return "AHC"
+  }
 
   @Override
   boolean testRedirects() {
@@ -73,6 +72,14 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
       SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_TARGET
     ]
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        break
+      default:
+        extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
+    }
+
     super.httpAttributes(uri) + extra
   }
 }
