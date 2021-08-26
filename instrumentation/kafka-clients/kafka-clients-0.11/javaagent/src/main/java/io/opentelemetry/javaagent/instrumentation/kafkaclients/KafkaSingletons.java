@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerAdditionalAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerAttributesExtractor;
@@ -39,7 +40,8 @@ public final class KafkaSingletons {
   }
 
   private static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerInstrumenter() {
-    KafkaConsumerAttributesExtractor attributesExtractor = new KafkaConsumerAttributesExtractor();
+    KafkaConsumerAttributesExtractor attributesExtractor =
+        new KafkaConsumerAttributesExtractor(MessageOperation.PROCESS);
     SpanNameExtractor<ConsumerRecord<?, ?>> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
