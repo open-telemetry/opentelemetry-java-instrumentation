@@ -18,7 +18,7 @@ jobs:
           path: gh-pages
       - name: copy results from gh-pages branch
         run: |
-          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
+          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/ && rm -rf gh-pages
       - name: run tests
         run: ./gradlew test
         working-directory: benchmark-overhead
