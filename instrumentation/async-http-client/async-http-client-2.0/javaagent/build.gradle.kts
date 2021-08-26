@@ -14,7 +14,6 @@ muzzle {
 dependencies {
   library("org.asynchttpclient:async-http-client:2.0.0")
 
-
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 }
 
