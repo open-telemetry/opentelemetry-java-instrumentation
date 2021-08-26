@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 import reactor.netty.http.client.HttpClient
 
@@ -112,12 +113,16 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     def afterRequestSpan = new AtomicReference<Span>()
     def onResponseSpan = new AtomicReference<Span>()
     def afterResponseSpan = new AtomicReference<Span>()
+    def latch = new CountDownLatch(1)
 
     def httpClient = createHttpClient()
       .doOnRequest({ rq, con -> onRequestSpan.set(Span.current()) })
       .doAfterRequest({ rq, con -> afterRequestSpan.set(Span.current()) })
       .doOnResponse({ rs, con -> onResponseSpan.set(Span.current()) })
-      .doAfterResponseSuccess({ rs, con -> afterResponseSpan.set(Span.current()) })
+      .doAfterResponseSuccess({ rs, con ->
+        afterResponseSpan.set(Span.current())
+        latch.countDown()
+      })
 
     when:
     runWithSpan("parent") {
@@ -130,6 +135,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         }
         .block()
     }
+    latch.await()
 
     then:
     assertTraces(1) {
