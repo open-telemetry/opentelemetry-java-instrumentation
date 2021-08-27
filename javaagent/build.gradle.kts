@@ -269,7 +269,7 @@ fun CopySpec.isolateClasses(jars: Iterable<File>) {
 }
 
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-fun ShadowJar.excludeBootstrapJars(){
+fun ShadowJar.excludeBootstrapJars() {
   dependencies {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-annotation-support"))
