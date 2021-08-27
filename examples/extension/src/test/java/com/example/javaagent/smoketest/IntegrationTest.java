@@ -69,7 +69,7 @@ abstract class IntegrationTest {
     backend.start();
 
     collector =
-        new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
+        new GenericContainer<>("otel/opentelemetry-collector-contrib-dev:latest")
             .dependsOn(backend)
             .withNetwork(network)
             .withNetworkAliases("collector")

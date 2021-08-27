@@ -8,7 +8,7 @@ on:
         description: The version to tag the release with, e.g., 1.2.1, 1.2.2
         required: true
       commits:
-        description: Comma separated list of commit shas to cherrypick
+        description: List of commit shas to cherrypick. Multiple shas should be separated by spaces.
         required: false
 
 jobs:
@@ -96,10 +96,7 @@ jobs:
         if: ${{ github.event.inputs.commits != '' }}
         run: |
           git fetch origin main
-          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
-              # Trim whitespaces and cherrypick
-              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
-          done
+          git cherry-pick ${{ github.event.inputs.commits }} 
 
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
@@ -162,10 +159,7 @@ jobs:
         if: ${{ github.event.inputs.commits != '' }}
         run: |
           git fetch origin main
-          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
-              # Trim whitespaces and cherrypick
-              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
-          done
+          git cherry-pick ${{ github.event.inputs.commits }}
 
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
@@ -204,10 +198,7 @@ jobs:
         if: ${{ github.event.inputs.commits != '' }}
         run: |
           git fetch origin main
-          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
-              # Trim whitespaces and cherrypick
-              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
-          done
+          git cherry-pick ${{ github.event.inputs.commits }}
 
       - name: Build
         run: ./gradlew build --stacktrace
@@ -237,10 +228,7 @@ jobs:
         if: ${{ github.event.inputs.commits != '' }}
         run: |
           git fetch origin main
-          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
-              # Trim whitespaces and cherrypick
-              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
-          done
+          git cherry-pick ${{ github.event.inputs.commits }}
 
       - name: Build and publish artifacts
         uses: burrunan/gradle-cache-action@v1.10
