@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -23,12 +24,18 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
       return;
     }
 
-    Context context = tracer().startSpan(runnable);
+    Context parentContext = currentContext();
+    if (!instrumenter().shouldStart(parentContext, runnable)) {
+      runnable.run();
+      return;
+    }
+
+    Context context = instrumenter().start(parentContext, runnable);
     try (Scope ignored = context.makeCurrent()) {
       runnable.run();
-      tracer().end(context);
+      instrumenter().end(context, runnable, null, null);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      instrumenter().end(context, runnable, null, throwable);
       throw throwable;
     }
   }
