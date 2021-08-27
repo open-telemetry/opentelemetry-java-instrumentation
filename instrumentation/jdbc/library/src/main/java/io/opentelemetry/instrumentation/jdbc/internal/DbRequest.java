@@ -19,7 +19,7 @@ public abstract class DbRequest {
 
   @Nullable
   public static DbRequest create(PreparedStatement statement) {
-    return create(statement, JdbcMaps.preparedStatements.get(statement));
+    return create(statement, JdbcData.preparedStatement.get(statement));
   }
 
   @Nullable
