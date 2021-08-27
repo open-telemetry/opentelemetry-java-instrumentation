@@ -187,7 +187,7 @@ tasks {
     }
   }
 
-  //Includes only the agent machinery and required instrumentations
+  // Includes only the agent machinery and required instrumentations
   val baseJavaagentJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 

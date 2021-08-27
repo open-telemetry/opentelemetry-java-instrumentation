@@ -25,7 +25,7 @@ dependencies {
 }
 
 tasks {
-  //Extracts manifest from OpenTelemetry Java agent to reuse it later
+  // Extracts manifest from OpenTelemetry Java agent to reuse it later
   val agentManifest by registering(Copy::class) {
     dependsOn(agent)
     from(zipTree(agent.singleFile).matching {
