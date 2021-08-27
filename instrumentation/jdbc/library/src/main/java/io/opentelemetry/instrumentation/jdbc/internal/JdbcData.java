@@ -8,78 +8,52 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Holds info associated with JDBC connections and prepared statements. */
-public class JdbcData {
+public final class JdbcData {
   private static final Logger logger = LoggerFactory.getLogger(JdbcData.class);
 
-  private static final DataStoreFactory dataStoreFactory = getDataStoreFactor();
+  private static final CacheFactory cacheFactory = getCacheFactory();
 
-  public static DataStore<Connection, DbInfo> connectionInfo =
-      dataStoreFactory.connectionInfoDataStore();
-  public static DataStore<PreparedStatement, String> preparedStatements =
-      dataStoreFactory.preparedStatementsDataStore();
+  public static Cache<Connection, DbInfo> connectionInfo = cacheFactory.connectionInfoCache();
+  public static Cache<PreparedStatement, String> preparedStatement =
+      cacheFactory.preparedStatementCache();
 
-  private static DataStoreFactory getDataStoreFactor() {
+  private JdbcData() {}
+
+  private static CacheFactory getCacheFactory() {
     try {
       // this class is provided by jdbc javaagent instrumentation
       Class<?> clazz =
-          Class.forName("io.opentelemetry.javaagent.instrumentation.jdbc.AgentDataStoreFactory");
-      return (DataStoreFactory) clazz.getConstructor().newInstance();
+          Class.forName("io.opentelemetry.javaagent.instrumentation.jdbc.AgentCacheFactory");
+      return (CacheFactory) clazz.getConstructor().newInstance();
     } catch (ClassNotFoundException ignored) {
       // ignored, this is expected when running as library instrumentation
     } catch (Exception exception) {
-      logger.error("Failed to instantiate AgentDataStoreFactory", exception);
+      logger.error("Failed to instantiate AgentCacheFactory", exception);
     }
 
-    return new DefaultDataStoreFactory();
+    return new DefaultCacheFactory();
   }
 
-  public interface DataStoreFactory {
-    DataStore<Connection, DbInfo> connectionInfoDataStore();
+  public interface CacheFactory {
+    Cache<Connection, DbInfo> connectionInfoCache();
 
-    DataStore<PreparedStatement, String> preparedStatementsDataStore();
+    Cache<PreparedStatement, String> preparedStatementCache();
   }
 
-  private static class DefaultDataStoreFactory implements DataStoreFactory {
+  private static class DefaultCacheFactory implements CacheFactory {
+
     @Override
-    public DataStore<Connection, DbInfo> connectionInfoDataStore() {
-      return new WeakMapDataStore<>();
+    public Cache<Connection, DbInfo> connectionInfoCache() {
+      return Cache.newBuilder().setWeakKeys().build();
     }
 
     @Override
-    public DataStore<PreparedStatement, String> preparedStatementsDataStore() {
-      return new WeakMapDataStore<>();
-    }
-  }
-
-  public interface DataStore<K, V> {
-    V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction);
-
-    V get(K key);
-
-    void put(K key, V value);
-  }
-
-  private static class WeakMapDataStore<K, V> implements DataStore<K, V> {
-    private final Cache<K, V> info = Cache.newBuilder().setWeakKeys().build();
-
-    @Override
-    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-      return info.computeIfAbsent(key, mappingFunction);
-    }
-
-    @Override
-    public V get(K key) {
-      return info.get(key);
-    }
-
-    @Override
-    public void put(K key, V value) {
-      info.put(key, value);
+    public Cache<PreparedStatement, String> preparedStatementCache() {
+      return Cache.newBuilder().setWeakKeys().build();
     }
   }
 }

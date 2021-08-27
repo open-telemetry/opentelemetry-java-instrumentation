@@ -25,6 +25,6 @@ public class JdbcInstrumentationModule extends InstrumentationModule {
         new DriverInstrumentation(),
         new PreparedStatementInstrumentation(),
         new StatementInstrumentation(),
-        new AgentDataStoreInstrumentation());
+        new AgentCacheInstrumentation());
   }
 }

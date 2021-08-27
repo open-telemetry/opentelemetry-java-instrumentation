@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.javaagent.instrumentation.jdbc.AgentDataStoreFactory
+import io.opentelemetry.javaagent.instrumentation.jdbc.AgentCacheFactory
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.lang.reflect.Field
 import java.sql.CallableStatement
@@ -805,12 +805,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   def "should use agent data store"() {
     setup:
     Class<?> clazz = Class.forName("io.opentelemetry.javaagent.shaded.instrumentation.jdbc.internal.JdbcData")
-    Field field = clazz.getDeclaredField("dataStoreFactory")
+    Field field = clazz.getDeclaredField("cacheFactory")
     field.setAccessible(true)
     def dataStoreFactory = field.get(null)
 
     expect:
-    dataStoreFactory.getClass() == AgentDataStoreFactory
+    dataStoreFactory.getClass() == AgentCacheFactory
   }
 
   class DbCallingConnection extends TestConnection {

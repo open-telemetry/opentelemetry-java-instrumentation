@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AgentDataStoreInstrumentation implements TypeInstrumentation {
+public class AgentCacheInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -22,7 +22,7 @@ public class AgentDataStoreInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        none(), AgentDataStoreInstrumentation.class.getName() + "$InitAdvice");
+        none(), AgentCacheInstrumentation.class.getName() + "$InitAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -30,7 +30,7 @@ public class AgentDataStoreInstrumentation implements TypeInstrumentation {
     public void init() {
       // the sole purpose of this advice is to ensure that AgentDataStoreFactory is recognized
       // as helper class and injected into class loader
-      AgentDataStoreFactory.class.getName();
+      AgentCacheFactory.class.getName();
     }
   }
 }
