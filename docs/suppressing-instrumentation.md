@@ -122,5 +122,5 @@ You can suppress all auto instrumentations but have support for manual instrumen
 
 ## Enable instrumentation suppression by type
 
-You can suppress duplicate instrumentation (e.g. multiple layers of HTTP clients) with `-Dotel.instrumentation.experimental.outgoing-span-suppression-by-type=true`. 
+You can suppress duplicate instrumentation (e.g. multiple layers of HTTP clients) with `-Dotel.instrumentation.experimental.outgoing-span-suppression-by-type=true`.
 With this flag set to `false` (default) all nested `CLIENT` spans are suppressed. With this flag set to `true`, you can have nested `CLIENT` spans of different types, e.g. HTTP `CLIENT` span nested under DB `CLIENT` span.
