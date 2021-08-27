@@ -54,7 +54,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  @Nullable EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor = null;
   boolean disabled = false;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
@@ -130,7 +130,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * determining start and end timestamps to the OpenTelemetry SDK.
    */
   public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
-      StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
+      StartTimeExtractor<REQUEST> startTimeExtractor,
+      EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor) {
     this.startTimeExtractor = requireNonNull(startTimeExtractor);
     this.endTimeExtractor = requireNonNull(endTimeExtractor);
     return this;
