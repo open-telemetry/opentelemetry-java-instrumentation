@@ -15,8 +15,15 @@ muzzle {
 
 val versions: Map<String, String> by project
 
+sourceSets {
+  main {
+    val shadedDep = project(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
+    output.dir(shadedDep.file("build/extracted/shadow"), "builtBy" to ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded:extractShadowJar")
+  }
+}
+
 dependencies {
-  implementation(project(path = ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded", configuration = "shadow"))
+  compileOnly(project(path = ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded", configuration = "shadow"))
 
   library("com.couchbase.client:core-io:2.1.6")
 
