@@ -123,6 +123,8 @@
 
 - Jetty 9 HTTP client instrumentation
   ([#3079](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3079))
+- Jdbc instrumentation
+  ([#3367](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3367))
 
 ### 📈 Enhancements
 
