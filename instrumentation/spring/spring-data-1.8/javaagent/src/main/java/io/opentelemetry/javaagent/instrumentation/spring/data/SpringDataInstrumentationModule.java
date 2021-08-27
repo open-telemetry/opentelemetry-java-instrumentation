@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataSingletons.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -92,23 +93,22 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-      Method invokedMethod = methodInvocation.getMethod();
-      Class<?> clazz = invokedMethod.getDeclaringClass();
-
-      boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
+      Context parentContext = currentContext();
+      Method method = methodInvocation.getMethod();
       // Since this interceptor is the outer most interceptor, non-Repository methods
       // including Object methods will also flow through here.  Don't create spans for those.
-      if (!isRepositoryOp) {
+      boolean isRepositoryOp = Repository.class.isAssignableFrom(method.getDeclaringClass());
+      if (!isRepositoryOp || !instrumenter().shouldStart(parentContext, method)) {
         return methodInvocation.proceed();
       }
 
-      Context context = tracer().startSpan(invokedMethod);
+      Context context = instrumenter().start(parentContext, method);
       try (Scope ignored = context.makeCurrent()) {
         Object result = methodInvocation.proceed();
-        tracer().end(context);
+        instrumenter().end(context, method, null, null);
         return result;
       } catch (Throwable t) {
-        tracer().endExceptionally(context, t);
+        instrumenter().end(context, method, null, t);
         throw t;
       }
     }
