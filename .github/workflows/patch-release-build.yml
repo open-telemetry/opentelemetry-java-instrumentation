@@ -87,6 +87,20 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Cherrypicks
+        if: ${{ github.event.inputs.commits != '' }}
+        run: |
+          git fetch origin main
+          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
+              # Trim whitespaces and cherrypick
+              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
+          done
+
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
@@ -139,6 +153,20 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Cherrypicks
+        if: ${{ github.event.inputs.commits != '' }}
+        run: |
+          git fetch origin main
+          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
+              # Trim whitespaces and cherrypick
+              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
+          done
+
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
@@ -167,13 +195,27 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Cherrypicks
+        if: ${{ github.event.inputs.commits != '' }}
+        run: |
+          git fetch origin main
+          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
+              # Trim whitespaces and cherrypick
+              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
+          done
+
       - name: Build
         run: ./gradlew build --stacktrace
         working-directory: examples/distro
 
   release:
     runs-on: ubuntu-latest
-    needs: [ prepare-release-branch, test, smoke-test, example-distro ]
+    needs: [ prepare-release-branch, test, smoke-test, examples ]
     steps:
       - uses: actions/checkout@v2.3.4
         with:

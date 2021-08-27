@@ -127,7 +127,7 @@ jobs:
         working-directory: examples/distro
 
   release:
-    needs: [ test, smoke-test, example-distro ]
+    needs: [ test, smoke-test, examples ]
     name: Build and release
     runs-on: ubuntu-latest
     steps:
