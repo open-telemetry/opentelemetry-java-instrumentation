@@ -64,6 +64,10 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   exporterLibs(project(":javaagent-exporters"))
 
@@ -118,13 +122,7 @@ tasks {
 
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
 
-    // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-    dependencies {
-      exclude(project(":instrumentation-api"))
-      exclude(project(":instrumentation-api-annotation-support"))
-      exclude(project(":javaagent-bootstrap"))
-      exclude(project(":javaagent-instrumentation-api"))
-    }
+    excludeBootstrapJars()
   }
 
   val relocateJavaagentLibs by registering(ShadowJar::class) {
@@ -134,13 +132,7 @@ tasks {
 
     archiveFileName.set("javaagentLibs-relocated.jar")
 
-    // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-    dependencies {
-      exclude(project(":instrumentation-api"))
-      exclude(project(":instrumentation-api-annotation-support"))
-      exclude(project(":javaagent-bootstrap"))
-      exclude(project(":javaagent-instrumentation-api"))
-    }
+    excludeBootstrapJars()
   }
 
   val relocateExporterLibs by registering(ShadowJar::class) {
@@ -273,5 +265,15 @@ fun CopySpec.isolateClasses(jars: Iterable<File>) {
       // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
       rename("""^LICENSE$""", "LICENSE.renamed")
     }
+  }
+}
+
+// exclude bootstrap projects from javaagent libs - they won't be added to inst/
+fun ShadowJar.excludeBootstrapJars(){
+  dependencies {
+    exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-annotation-support"))
+    exclude(project(":javaagent-bootstrap"))
+    exclude(project(":javaagent-instrumentation-api"))
   }
 }
