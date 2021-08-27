@@ -103,14 +103,17 @@ class InstrumenterTest {
     }
   }
 
-  static class LinkExtractor implements SpanLinkExtractor<Map<String, String>> {
+  static class LinksExtractor implements SpanLinksExtractor<Map<String, String>> {
+
     @Override
-    public SpanContext extract(Context parentContext, Map<String, String> request) {
-      return SpanContext.create(
-          request.get("linkTraceId"),
-          request.get("linkSpanId"),
-          TraceFlags.getSampled(),
-          TraceState.getDefault());
+    public void extract(
+        SpanLinksBuilder spanLinks, Context parentContext, Map<String, String> request) {
+      spanLinks.addLink(
+          SpanContext.create(
+              request.get("linkTraceId"),
+              request.get("linkSpanId"),
+              TraceFlags.getSampled(),
+              TraceState.getDefault()));
     }
   }
 
@@ -145,7 +148,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .addSpanLinkExtractor(new LinkExtractor())
+            .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
@@ -258,7 +261,7 @@ class InstrumenterTest {
                 mockNetAttributes,
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
-            .addSpanLinkExtractor(new LinkExtractor())
+            .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
 
     when(mockNetAttributes.peerIp(REQUEST, null)).thenReturn("2.2.2.2");
@@ -297,7 +300,7 @@ class InstrumenterTest {
                 mockNetAttributes,
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
-            .addSpanLinkExtractor(new LinkExtractor())
+            .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
 
     Map<String, String> request = new HashMap<>(REQUEST);
@@ -340,7 +343,7 @@ class InstrumenterTest {
                 mockNetAttributes,
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
-            .addSpanLinkExtractor(new LinkExtractor())
+            .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
 
     Map<String, String> request = new HashMap<>(REQUEST);
@@ -378,7 +381,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .addSpanLinkExtractor(new LinkExtractor())
+            .addSpanLinksExtractor(new LinksExtractor())
             .newClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
@@ -512,7 +515,8 @@ class InstrumenterTest {
     Instrumenter<String, String> instrumenter =
         Instrumenter.<String, String>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .addSpanLinkExtractor((parentContext, request) -> SpanContext.getInvalid())
+            .addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> spanLinks.addLink(SpanContext.getInvalid()))
             .newInstrumenter();
 
     // when

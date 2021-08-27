@@ -8,13 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
+public class TracingIterator<K, V>
+    implements Iterator<ConsumerRecord<K, V>>, KafkaConsumerIteratorWrapper<K, V> {
 
-  private final Iterator<ConsumerRecord<?, ?>> delegateIterator;
+  private final Iterator<ConsumerRecord<K, V>> delegateIterator;
   private final Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter;
   private final Context parentContext;
 
@@ -28,7 +30,7 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
   @Nullable private Scope currentScope;
 
   public TracingIterator(
-      Iterator<ConsumerRecord<?, ?>> delegateIterator,
+      Iterator<ConsumerRecord<K, V>> delegateIterator,
       Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter) {
     this.delegateIterator = delegateIterator;
     this.instrumenter = instrumenter;
@@ -42,11 +44,11 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
   }
 
   @Override
-  public ConsumerRecord<?, ?> next() {
+  public ConsumerRecord<K, V> next() {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    ConsumerRecord<?, ?> next = delegateIterator.next();
+    ConsumerRecord<K, V> next = delegateIterator.next();
     if (next != null && instrumenter.shouldStart(parentContext, next)) {
       currentRequest = next;
       currentContext = instrumenter.start(parentContext, currentRequest);
@@ -68,5 +70,10 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
   @Override
   public void remove() {
     delegateIterator.remove();
+  }
+
+  @Override
+  public Iterator<ConsumerRecord<K, V>> unwrap() {
+    return delegateIterator;
   }
 }

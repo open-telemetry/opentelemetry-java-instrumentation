@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -19,10 +19,16 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-class PropagatorBasedSpanLinkExtractorTest {
+@ExtendWith(MockitoExtension.class)
+class PropagatorBasedSpanLinksExtractorTest {
   private static final String TRACE_ID = TraceId.fromLongs(0, 123);
   private static final String SPAN_ID = SpanId.fromLong(456);
+
+  @Mock SpanLinksBuilder spanLinks;
 
   @Test
   void shouldExtractSpanLink() {
@@ -30,20 +36,20 @@ class PropagatorBasedSpanLinkExtractorTest {
     ContextPropagators propagators =
         ContextPropagators.create(W3CTraceContextPropagator.getInstance());
 
-    SpanLinkExtractor<Map<String, String>> underTest =
-        SpanLinkExtractor.fromUpstreamRequest(propagators, new MapGetter());
+    SpanLinksExtractor<Map<String, String>> underTest =
+        SpanLinksExtractor.fromUpstreamRequest(propagators, new MapGetter());
 
     Map<String, String> request =
         singletonMap("traceparent", String.format("00-%s-%s-01", TRACE_ID, SPAN_ID));
 
     // when
-    SpanContext link = underTest.extract(Context.root(), request);
+    underTest.extract(spanLinks, Context.root(), request);
 
     // then
-    assertEquals(
-        SpanContext.createFromRemoteParent(
-            TRACE_ID, SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()),
-        link);
+    verify(spanLinks)
+        .addLink(
+            SpanContext.createFromRemoteParent(
+                TRACE_ID, SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
   }
 
   static final class MapGetter implements TextMapGetter<Map<String, String>> {

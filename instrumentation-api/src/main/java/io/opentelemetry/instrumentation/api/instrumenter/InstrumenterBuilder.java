@@ -44,9 +44,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final String instrumentationName;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
+  final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -100,10 +100,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
-  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
-  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
-      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
-    spanLinkExtractors.add(spanLinkExtractor);
+  /** Adds a {@link SpanLinksExtractor} to extract span links from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
+      SpanLinksExtractor<REQUEST> spanLinksExtractor) {
+    spanLinksExtractors.add(spanLinksExtractor);
     return this;
   }
 
