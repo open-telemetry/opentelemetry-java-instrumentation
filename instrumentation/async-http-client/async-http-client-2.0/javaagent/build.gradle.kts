@@ -14,9 +14,6 @@ muzzle {
 dependencies {
   library("org.asynchttpclient:async-http-client:2.0.0")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 }
 
