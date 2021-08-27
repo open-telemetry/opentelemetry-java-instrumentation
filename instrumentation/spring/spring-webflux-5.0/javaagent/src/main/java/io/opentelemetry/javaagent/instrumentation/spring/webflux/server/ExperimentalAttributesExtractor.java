@@ -22,7 +22,11 @@ public class ExperimentalAttributesExtractor extends AttributesExtractor<Object,
   }
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, Object handler, @Nullable Void unused) {}
+  protected void onEnd(
+      AttributesBuilder attributes,
+      Object handler,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 
   private static String getHandlerType(Object handler) {
     if (handler instanceof HandlerMethod) {

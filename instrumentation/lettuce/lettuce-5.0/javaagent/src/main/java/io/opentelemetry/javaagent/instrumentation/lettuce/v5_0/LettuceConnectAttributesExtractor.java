@@ -9,6 +9,7 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class LettuceConnectAttributesExtractor extends AttributesExtractor<RedisURI, Void> {
 
@@ -23,5 +24,6 @@ final class LettuceConnectAttributesExtractor extends AttributesExtractor<RedisU
   }
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, RedisURI redisUri, Void unused) {}
+  protected void onEnd(
+      AttributesBuilder attributes, RedisURI redisUri, Void unused, @Nullable Throwable error) {}
 }

@@ -9,6 +9,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class CassandraKeyspaceExtractor
     extends AttributesExtractor<CassandraRequest, ExecutionInfo> {
@@ -21,5 +22,8 @@ final class CassandraKeyspaceExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, CassandraRequest request, ExecutionInfo executionInfo) {}
+      AttributesBuilder attributes,
+      CassandraRequest request,
+      ExecutionInfo executionInfo,
+      @Nullable Throwable error) {}
 }

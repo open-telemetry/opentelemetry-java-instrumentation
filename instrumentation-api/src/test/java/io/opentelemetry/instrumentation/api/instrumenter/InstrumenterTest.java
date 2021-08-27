@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -80,7 +81,10 @@ class InstrumenterTest {
 
     @Override
     protected void onEnd(
-        AttributesBuilder attributes, Map<String, String> request, Map<String, String> response) {
+        AttributesBuilder attributes,
+        Map<String, String> request,
+        Map<String, String> response,
+        @Nullable Throwable error) {
       attributes.put("resp1", response.get("resp1"));
       attributes.put("resp2", response.get("resp2"));
     }
@@ -97,7 +101,10 @@ class InstrumenterTest {
 
     @Override
     protected void onEnd(
-        AttributesBuilder attributes, Map<String, String> request, Map<String, String> response) {
+        AttributesBuilder attributes,
+        Map<String, String> request,
+        Map<String, String> response,
+        @Nullable Throwable error) {
       attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
     }
@@ -490,7 +497,7 @@ class InstrumenterTest {
     Instrumenter<Instant, Instant> instrumenter =
         Instrumenter.<Instant, Instant>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractors(request -> request, (request, response) -> response)
+            .setTimeExtractors(request -> request, (request, response, error) -> response)
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);
