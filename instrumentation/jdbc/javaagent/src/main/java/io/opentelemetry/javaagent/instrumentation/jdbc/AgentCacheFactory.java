@@ -25,9 +25,9 @@ public class AgentCacheFactory implements JdbcData.CacheFactory {
     ContextStore<Connection, DbInfo> connectionContextStore =
         InstrumentationContext.get(Connection.class, DbInfo.class);
     connectionCache = connectionContextStore.asCache();
-    ContextStore<PreparedStatement, String> preparedStatementsContextStore =
+    ContextStore<PreparedStatement, String> preparedStatementContextStore =
         InstrumentationContext.get(PreparedStatement.class, String.class);
-    preparedStatementCache = preparedStatementsContextStore.asCache();
+    preparedStatementCache = preparedStatementContextStore.asCache();
   }
 
   @Override
