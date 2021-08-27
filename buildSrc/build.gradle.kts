@@ -8,7 +8,7 @@ plugins {
 spotless {
   java {
     googleJavaFormat("1.10.0")
-    licenseHeaderFile(rootProject.file("../gradle/enforcement/spotless.license.java"), "(package|import|public)")
+    licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
 }
