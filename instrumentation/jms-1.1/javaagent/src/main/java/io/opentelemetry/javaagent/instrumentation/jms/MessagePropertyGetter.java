@@ -14,7 +14,7 @@ public final class MessagePropertyGetter implements TextMapGetter<MessageWithDes
   @Override
   public Iterable<String> keys(MessageWithDestination message) {
     try {
-      return Collections.list(message.getMessage().getPropertyNames());
+      return Collections.list(message.message().getPropertyNames());
     } catch (JMSException e) {
       return Collections.emptyList();
     }
@@ -25,7 +25,7 @@ public final class MessagePropertyGetter implements TextMapGetter<MessageWithDes
     String propName = key.replace("-", MessagePropertySetter.DASH);
     final Object value;
     try {
-      value = carrier.getMessage().getObjectProperty(propName);
+      value = carrier.message().getObjectProperty(propName);
     } catch (JMSException e) {
       throw new IllegalStateException(e);
     }
