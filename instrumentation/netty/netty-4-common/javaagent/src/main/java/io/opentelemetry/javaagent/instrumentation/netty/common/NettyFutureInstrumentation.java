@@ -61,7 +61,15 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<?>> listener) {
-      listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+      // wrapping our "end" listener leads to strict context leak failures since there will be an
+      // active scope when we call "end"
+      // wrapping internal netty listeners also leads to strict context leak failures since some of
+      // those are called after our "end" listener
+      String listenerClassName = listener.getClass().getName();
+      if (!listenerClassName.startsWith("io.opentelemetry.javaagent.")
+          && !listenerClassName.startsWith("io.netty.")) {
+        listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+      }
     }
   }
 
