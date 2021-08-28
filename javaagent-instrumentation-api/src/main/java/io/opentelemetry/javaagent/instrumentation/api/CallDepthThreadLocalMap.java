@@ -7,23 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.api;
 
 final class CallDepthThreadLocalMap {
 
-  private static final ClassValue<ThreadLocalDepth> TLS =
-      new ClassValue<ThreadLocalDepth>() {
+  private static final ClassValue<CallDepth> TLS =
+      new ClassValue<CallDepth>() {
         @Override
-        protected ThreadLocalDepth computeValue(Class<?> type) {
-          return new ThreadLocalDepth();
+        protected CallDepth computeValue(Class<?> type) {
+          return new CallDepth();
         }
       };
 
   static CallDepth getCallDepth(Class<?> k) {
-    return TLS.get(k).get();
-  }
-
-  private static final class ThreadLocalDepth extends ThreadLocal<CallDepth> {
-    @Override
-    protected CallDepth initialValue() {
-      return new CallDepth();
-    }
+    return TLS.get(k);
   }
 
   private CallDepthThreadLocalMap() {}
