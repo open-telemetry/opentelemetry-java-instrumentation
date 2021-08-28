@@ -191,7 +191,8 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+        # using --no-daemon because windows builds have been sporadically running out of virtual memory
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-daemon
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
