@@ -130,6 +130,8 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
+          } else if (uri.toString().equals("http://localhost:61/")) { // for windows
+            return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
           } else if (uri.getPath().equals("/read-timeout")) {
             return ReadTimeoutException.INSTANCE;
           }
