@@ -13,7 +13,9 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.javaagent.instrumentation.jdbc.AgentCacheFactory
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.lang.reflect.Field
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.DatabaseMetaData
@@ -798,6 +800,17 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "getMetaData() uses PreparedStatement, test Statement"         | true                             | { con, query -> con.createStatement().executeQuery(query) }
     "getMetaData() uses Statement, test PreparedStatement"         | false                            | { con, query -> con.prepareStatement(query).executeQuery() }
     "getMetaData() uses PreparedStatement, test PreparedStatement" | true                             | { con, query -> con.prepareStatement(query).executeQuery() }
+  }
+
+  def "should use agent data store"() {
+    setup:
+    Class<?> clazz = Class.forName("io.opentelemetry.javaagent.shaded.instrumentation.jdbc.internal.JdbcData")
+    Field field = clazz.getDeclaredField("cacheFactory")
+    field.setAccessible(true)
+    def dataStoreFactory = field.get(null)
+
+    expect:
+    dataStoreFactory.getClass() == AgentCacheFactory
   }
 
   class DbCallingConnection extends TestConnection {
