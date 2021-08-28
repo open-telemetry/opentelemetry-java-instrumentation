@@ -7,13 +7,153 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: jdk11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Start deadlock detector
+        run: .github/scripts/deadlock-detector.sh
+
+      - name: Build
+        run: ./gradlew build --stacktrace
+
+      - name: Upload deadlock detector artifacts if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: deadlock-detector-build
+          path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-build
+          path: "**/javacore.*.txt"
+          if-no-files-found: ignore
+
+  build-gradle-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Build
+        run: ../gradlew build --stacktrace
+        working-directory: gradle-plugins
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-java-version:
+          - 8
+          - 11
+          - 15
+        vm:
+          - hotspot
+          - openj9
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - id: setup-test-java
+        name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt-${{ matrix.vm }}
+          java-version: ${{ matrix.test-java-version }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: jdk${{ matrix.test-java-version }}
+          read-only: true
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Start deadlock detector
+        run: .github/scripts/deadlock-detector.sh
+
+      - name: Test
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+
+      - name: Upload deadlock detector artifacts if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: deadlock-detector-test-${{ matrix.test-java-version }}
+          path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload OpenJ9 javacore files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-test-${{ matrix.test-java-version }}
+          path: "**/javacore.*.txt"
+          if-no-files-found: ignore
+
+  # testLatestDeps is intentionally not included in the PR workflow
+  # because any time a new library version is released to maven central
+  # it can fail due to test code incompatibility with the new library version,
+  # or due to slight changes in emitted telemetry, which can be confusing for contributors
+  # (muzzle can also fail when a new library version is released to maven central
+  # but that happens much less often)
+
   smoke-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - windows-latest
-          #- ubuntu-latest
+          - ubuntu-latest
         smoke-test-suite:
           - glassfish
           - jetty
@@ -22,13 +162,6 @@ jobs:
           - tomee
           - wildfly
           - other
-        # THIS IS TEMPORARY TO FLUSH OUT SPORADIC FAILURES
-        count:
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -60,3 +193,106 @@ jobs:
       - name: Test
         # using --no-daemon because windows builds have been sporadically running out of virtual memory
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-daemon
+
+  setup-muzzle-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - id: set-matrix
+        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
+
+  muzzle:
+    needs: setup-muzzle-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.setup-muzzle-matrix.outputs.matrix)}}
+      fail-fast: false
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Run muzzle
+        # using retry because of sporadic gradle download failures
+        uses: nick-invision/retry@v2.4.1
+        with:
+          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
+          timeout_minutes: 15
+          max_attempts: 3
+          command: ./gradlew ${{ matrix.module }}:muzzle
+
+  examples:
+    runs-on: ubuntu-latest
+    # When we make PR against pre-release branch examples may point to yet-unpublished version
+    if: github.base_ref == 'main'
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Local publish
+        run: ./gradlew publishToMavenLocal
+
+      - name: Build distro
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/distro
+
+      - name: Build extension
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
+
+  accept-pr:
+    needs: [ build, test, smoke-test, muzzle, examples ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2.1.7
+
+      - name: Fail build
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        run: exit 1
