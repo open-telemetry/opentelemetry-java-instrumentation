@@ -5,18 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SpanNames {
 
-  private static final ClassValue<Cache<String, String>> spanNameCaches =
-      new ClassValue<Cache<String, String>>() {
+  private static final ClassValue<Map<String, String>> spanNameCaches =
+      new ClassValue<Map<String, String>>() {
         @Override
-        protected Cache<String, String> computeValue(Class<?> clazz) {
-          // should be naturally bounded, but setting a limit just in case
-          return Cache.newBuilder().setMaximumSize(100).build();
+        protected Map<String, String> computeValue(Class<?> clazz) {
+          // the cache is naturally bounded by the number of methods in a class
+          return new ConcurrentHashMap<>();
         }
       };
 
@@ -41,7 +42,7 @@ public final class SpanNames {
    * based on their parent.
    */
   public static String fromMethod(Class<?> clazz, String methodName) {
-    Cache<String, String> spanNameCache = spanNameCaches.get(clazz);
+    Map<String, String> spanNameCache = spanNameCaches.get(clazz);
     // not using computeIfAbsent, because it would require a capturing (allocating) lambda
     String spanName = spanNameCache.get(methodName);
     if (spanName != null) {
