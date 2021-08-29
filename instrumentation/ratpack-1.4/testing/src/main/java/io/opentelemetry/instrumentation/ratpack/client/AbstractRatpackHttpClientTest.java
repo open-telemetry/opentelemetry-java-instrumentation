@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.condition.OS;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -130,7 +131,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
-          } else if (uri.toString().equals("http://localhost:61/")) { // for windows
+          } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
             return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
           } else if (uri.getPath().equals("/read-timeout")) {
             return ReadTimeoutException.INSTANCE;
