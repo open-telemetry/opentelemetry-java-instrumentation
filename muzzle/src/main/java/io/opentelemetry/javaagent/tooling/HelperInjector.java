@@ -222,6 +222,10 @@ public class HelperInjector implements Transformer {
 
   private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
       throws IOException {
+    if (ClassInjector.UsingUnsafe.isAvailable()) {
+      return ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
+    }
+
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.
