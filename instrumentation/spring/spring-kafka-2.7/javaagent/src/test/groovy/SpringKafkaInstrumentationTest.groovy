@@ -23,8 +23,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.config.TopicBuilder
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.listener.ContainerProperties
-import org.springframework.kafka.support.Acknowledgment
+import org.springframework.kafka.listener.RecoveringBatchErrorHandler
+import org.springframework.util.backoff.FixedBackOff
 import org.testcontainers.containers.KafkaContainer
 import spock.lang.Shared
 
@@ -233,10 +233,8 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
-    void listener(List<ConsumerRecord<String, String>> records, Acknowledgment acknowledgment) {
+    void listener(List<ConsumerRecord<String, String>> records) {
       runInternalSpan("consumer")
-      acknowledgment.acknowledge()
-
       records.forEach({ record ->
         if (record.value() == "error") {
           throw new IllegalArgumentException("boom")
@@ -248,10 +246,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     ConcurrentKafkaListenerContainerFactory<String, String> batchFactory(
       ConsumerFactory<String, String> consumerFactory) {
       ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>()
-      // manual acks/commits should prevent retries in the error scenario
-      factory.containerProperties.setAckMode(ContainerProperties.AckMode.MANUAL)
       factory.setConsumerFactory(consumerFactory)
       factory.setBatchListener(true)
+      // recover immediately after failure
+      factory.setBatchErrorHandler(new RecoveringBatchErrorHandler(new FixedBackOff(0, 1)))
       factory.setAutoStartup(true)
       // setting interceptBeforeTx to true eliminates kafka-clients noise - otherwise spans would be created on every ConsumerRecords#iterator() call
       factory.setContainerCustomizer({ container ->
