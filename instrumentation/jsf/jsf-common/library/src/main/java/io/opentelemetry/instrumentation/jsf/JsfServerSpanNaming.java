@@ -21,8 +21,7 @@ public class JsfServerSpanNaming {
 
         // JSF spec 7.6.2
         // view id is a context relative path to the web application resource that produces the
-        // view,
-        // such as a JSP page or a Facelets page.
+        // view, such as a JSP page or a Facelets page.
         String viewId = uiViewRoot.getViewId();
         return ServletContextPath.prepend(context, viewId);
       };
