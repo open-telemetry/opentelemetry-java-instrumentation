@@ -30,7 +30,14 @@ public final class QuartzTracing {
 
   private final JobListener jobListener;
 
-  /** Configures the {@link Scheduler} to enable tracing of jobs. */
+  /**
+   * Configures the {@link Scheduler} to enable tracing of jobs.
+   *
+   * <p><strong>NOTE:</strong> If there are job listeners already registered on the Scheduler that
+   * may throw exceptions, tracing will be broken. It's important to call this as soon as possible
+   * to avoid being affected by other bad listeners, or otherwise ensure listeners you register do
+   * not throw exceptions.
+   */
   public void configure(Scheduler scheduler) {
     try {
       for (JobListener listener : scheduler.getListenerManager().getJobListeners()) {
