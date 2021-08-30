@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
@@ -23,8 +24,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.config.TopicBuilder
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.listener.RecoveringBatchErrorHandler
-import org.springframework.util.backoff.FixedBackOff
+import org.springframework.kafka.listener.ContainerProperties
+import org.springframework.kafka.support.Acknowledgment
 import org.testcontainers.containers.KafkaContainer
 import spock.lang.Shared
 
@@ -44,10 +45,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
       "spring.main.web-application-type"           : "none",
       "spring.kafka.bootstrap-servers"             : kafka.bootstrapServers,
       "spring.kafka.consumer.auto-offset-reset"    : "earliest",
-      "spring.kafka.consumer.enable-auto-commit"   : true,
       "spring.kafka.consumer.linger-ms"            : 10,
-      // wait a 1s between poll() calls
-      "spring.kafka.listener.idle-between-polls"   : 1000,
+      // wait 2s between poll() calls
+      "spring.kafka.listener.idle-between-polls"   : 2000,
       "spring.kafka.producer.transaction-id-prefix": "test-",
     ])
     applicationContext = app.run()
@@ -236,8 +236,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
-    void listener(List<ConsumerRecord<String, String>> records) {
+    void listener(List<ConsumerRecord<String, String>> records, Acknowledgment acknowledgment) {
       runInternalSpan("consumer")
+      acknowledgment.acknowledge()
       records.forEach({ record ->
         if (record.value() == "error") {
           throw new IllegalArgumentException("boom")
@@ -249,6 +250,8 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     ConcurrentKafkaListenerContainerFactory<String, String> batchFactory(
       ConsumerFactory<String, String> consumerFactory) {
       ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>()
+      // immediate manual acks/commits should prevent retries in the error scenario
+      factory.containerProperties.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE)
       factory.setConsumerFactory(consumerFactory)
       factory.setBatchListener(true)
       factory.setAutoStartup(true)
