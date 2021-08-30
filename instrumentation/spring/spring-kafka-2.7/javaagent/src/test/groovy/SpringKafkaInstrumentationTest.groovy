@@ -44,7 +44,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
       "spring.main.web-application-type"           : "none",
       "spring.kafka.bootstrap-servers"             : kafka.bootstrapServers,
       "spring.kafka.consumer.auto-offset-reset"    : "earliest",
+      "spring.kafka.consumer.enable-auto-commit"   : true,
       "spring.kafka.consumer.linger-ms"            : 10,
+      // wait a 1s between poll() calls
+      "spring.kafka.listener.idle-between-polls"   : 1000,
       "spring.kafka.producer.transaction-id-prefix": "test-",
     ])
     applicationContext = app.run()
@@ -248,8 +251,6 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
       ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>()
       factory.setConsumerFactory(consumerFactory)
       factory.setBatchListener(true)
-      // recover immediately after failure
-      factory.setBatchErrorHandler(new RecoveringBatchErrorHandler(new FixedBackOff(0, 1)))
       factory.setAutoStartup(true)
       // setting interceptBeforeTx to true eliminates kafka-clients noise - otherwise spans would be created on every ConsumerRecords#iterator() call
       factory.setContainerCustomizer({ container ->
