@@ -12,6 +12,9 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.List;
 
 public final class SpringBatchInstrumentationConfig {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-batch-3.0";
+
   private static final List<String> INSTRUMENTATION_NAMES =
       unmodifiableList(asList("spring-batch", "spring-batch-3.0"));
 
@@ -24,6 +27,10 @@ public final class SpringBatchInstrumentationConfig {
       Config.get()
           .isInstrumentationPropertyEnabled(
               instrumentationNames(), "experimental.chunk.new-trace", /* defaultEnabled= */ false);
+
+  public static String instrumentationName() {
+    return INSTRUMENTATION_NAME;
+  }
 
   public static List<String> instrumentationNames() {
     return INSTRUMENTATION_NAMES;
