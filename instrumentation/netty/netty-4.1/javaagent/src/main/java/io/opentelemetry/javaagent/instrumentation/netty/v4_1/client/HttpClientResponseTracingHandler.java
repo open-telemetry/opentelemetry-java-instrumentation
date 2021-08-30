@@ -36,7 +36,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     Context parentContext = parentContextAttr.get();
 
     if (msg instanceof FullHttpResponse) {
-      tracer().end(context, (HttpResponse) msg);
       clientContextAttr.remove();
       parentContextAttr.remove();
     } else if (msg instanceof HttpResponse) {
@@ -45,7 +44,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     } else if (msg instanceof LastHttpContent) {
       // Not a FullHttpResponse so this is content that has been received after headers. Finish the
       // span using what we stored in attrs.
-      tracer().end(context, ctx.channel().attr(HTTP_RESPONSE).getAndRemove());
       clientContextAttr.remove();
       parentContextAttr.remove();
     }
@@ -57,6 +55,12 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       }
     } else {
       ctx.fireChannelRead(msg);
+    }
+
+    if (msg instanceof FullHttpResponse) {
+      tracer().end(context, (HttpResponse) msg);
+    } else if (msg instanceof LastHttpContent) {
+      tracer().end(context, ctx.channel().attr(HTTP_RESPONSE).getAndRemove());
     }
   }
 }

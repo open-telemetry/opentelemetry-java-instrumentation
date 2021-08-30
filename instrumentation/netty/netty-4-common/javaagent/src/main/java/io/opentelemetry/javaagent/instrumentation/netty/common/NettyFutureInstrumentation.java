@@ -61,7 +61,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<?>> listener) {
-      listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+      if (FutureListenerWrappers.shouldWrap(listener)) {
+        listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+      }
     }
   }
 
@@ -78,7 +80,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
+        if (FutureListenerWrappers.shouldWrap(listeners[i])) {
+          wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
+        }
       }
       listeners = wrappedListeners;
     }

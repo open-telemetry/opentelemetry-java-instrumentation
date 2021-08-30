@@ -32,11 +32,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   CloseableHttpClient client = createClient()
 
   @Override
-  boolean testCausality() {
-    false
-  }
-
-  @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
     headers.entrySet().each {

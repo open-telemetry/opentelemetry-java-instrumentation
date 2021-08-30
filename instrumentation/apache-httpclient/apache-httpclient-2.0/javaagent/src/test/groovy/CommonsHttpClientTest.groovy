@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager
 import org.apache.commons.httpclient.methods.DeleteMethod
 import org.apache.commons.httpclient.methods.GetMethod
 import org.apache.commons.httpclient.methods.HeadMethod
@@ -20,15 +21,10 @@ import spock.lang.Shared
 
 class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentTestTrait {
   @Shared
-  HttpClient client = new HttpClient()
+  HttpClient client = new HttpClient(new MultiThreadedHttpConnectionManager())
 
   def setupSpec() {
     client.setConnectionTimeout(CONNECT_TIMEOUT_MS)
-  }
-
-  @Override
-  boolean testCausality() {
-    return false
   }
 
   @Override
@@ -74,8 +70,7 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   }
 
   @Override
-  boolean testRedirects() {
-    // Generates 4 spans
+  boolean testCircularRedirects() {
     false
   }
 
