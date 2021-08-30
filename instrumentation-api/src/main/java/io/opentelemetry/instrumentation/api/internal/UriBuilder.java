@@ -11,6 +11,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3700
 public class UriBuilder {
 
+  // TODO (trask) investigate and document implications of URI encoding, see
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4008#discussion_r698027851
+  //
   // note: currently path must be empty or start with "/" but that can be relaxed if needed
   public static String uri(
       String scheme, String host, int serverPort, String path, @Nullable String query) {
