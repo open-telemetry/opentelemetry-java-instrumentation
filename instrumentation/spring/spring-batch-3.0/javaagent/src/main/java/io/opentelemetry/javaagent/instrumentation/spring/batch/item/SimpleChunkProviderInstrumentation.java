@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.ITEM_OPERATION_READ;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.getChunkContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.itemInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -18,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.batch.core.scope.context.ChunkContext;
 
 // item read instrumentation *cannot* use ItemReadListener: sometimes afterRead() is not called
 // after beforeRead(), using listener here would cause unfinished spans/scopes
@@ -39,29 +43,36 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
-      if (!shouldTraceItems()) {
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      ChunkContext chunkContext = getChunkContext();
+      if (chunkContext == null || !shouldTraceItems()) {
         return;
       }
-      context = tracer().startReadSpan();
-      if (context != null) {
-        scope = context.makeCurrent();
+
+      Context parentContext = currentContext();
+      item = ItemInstrumenter.itemName(chunkContext, ITEM_OPERATION_READ);
+      if (!itemInstrumenter().shouldStart(parentContext, item)) {
+        return;
       }
+
+      context = itemInstrumenter().start(parentContext, item);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable thrown,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-        if (thrown == null) {
-          tracer().end(context);
-        } else {
-          tracer().endExceptionally(context, thrown);
-        }
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      itemInstrumenter().end(context, item, null, thrown);
     }
   }
 }

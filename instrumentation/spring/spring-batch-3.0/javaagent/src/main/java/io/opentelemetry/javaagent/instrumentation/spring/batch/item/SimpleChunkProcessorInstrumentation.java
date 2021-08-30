@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.ITEM_OPERATION_PROCESS;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.ITEM_OPERATION_WRITE;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.getChunkContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.itemInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -18,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 
@@ -44,32 +49,35 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     public static void onEnter(
         @Advice.FieldValue("itemProcessor") ItemProcessor<?, ?> itemProcessor,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (!shouldTraceItems()) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      ChunkContext chunkContext = getChunkContext();
+      if (chunkContext == null || !shouldTraceItems()) {
         return;
       }
-      if (itemProcessor == null) {
+
+      Context parentContext = currentContext();
+      item = ItemInstrumenter.itemName(chunkContext, ITEM_OPERATION_PROCESS);
+      if (!itemInstrumenter().shouldStart(parentContext, item)) {
         return;
       }
-      context = tracer().startProcessSpan();
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+
+      context = itemInstrumenter().start(parentContext, item);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable thrown,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-        if (thrown == null) {
-          tracer().end(context);
-        } else {
-          tracer().endExceptionally(context, thrown);
-        }
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      itemInstrumenter().end(context, item, null, thrown);
     }
   }
 
@@ -80,32 +88,35 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     public static void onEnter(
         @Advice.FieldValue("itemWriter") ItemWriter<?> itemWriter,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (!shouldTraceItems()) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      ChunkContext chunkContext = getChunkContext();
+      if (chunkContext == null || itemWriter == null || !shouldTraceItems()) {
         return;
       }
-      if (itemWriter == null) {
+
+      Context parentContext = currentContext();
+      item = ItemInstrumenter.itemName(chunkContext, ITEM_OPERATION_WRITE);
+      if (!itemInstrumenter().shouldStart(parentContext, item)) {
         return;
       }
-      context = tracer().startWriteSpan();
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+
+      context = itemInstrumenter().start(parentContext, item);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable thrown,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-        if (thrown == null) {
-          tracer().end(context);
-        } else {
-          tracer().endExceptionally(context, thrown);
-        }
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelItem") String item) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      itemInstrumenter().end(context, item, null, thrown);
     }
   }
 }
