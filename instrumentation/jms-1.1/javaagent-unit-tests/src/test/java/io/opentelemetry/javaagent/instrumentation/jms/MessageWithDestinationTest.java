@@ -20,6 +20,7 @@ import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,6 +39,12 @@ class MessageWithDestinationTest {
   @Mock Queue queue;
   @Mock TemporaryQueue temporaryQueue;
   @Mock Destination destination;
+  @Mock Timer timer;
+
+  @BeforeEach
+  void setUp() {
+    given(timer.startTime()).willReturn(START_TIME);
+  }
 
   @Test
   void shouldCreateMessageWithUnknownDestination() throws JMSException {
@@ -46,16 +53,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.SEND, null, START_TIME);
+        MessageWithDestination.create(message, MessageOperation.SEND, null, timer);
 
     // then
     assertMessage(
-        MessageOperation.SEND,
-        "unknown",
-        "unknown",
-        /* expectedTemporary= */ false,
-        START_TIME,
-        result);
+        MessageOperation.SEND, "unknown", "unknown", /* expectedTemporary= */ false, result);
   }
 
   @Test
@@ -65,16 +67,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.SEND, destination, START_TIME);
+        MessageWithDestination.create(message, MessageOperation.SEND, destination, timer);
 
     // then
     assertMessage(
-        MessageOperation.SEND,
-        "unknown",
-        "unknown",
-        /* expectedTemporary= */ false,
-        START_TIME,
-        result);
+        MessageOperation.SEND, "unknown", "unknown", /* expectedTemporary= */ false, result);
   }
 
   @ParameterizedTest
@@ -97,16 +94,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.RECEIVE, null);
+        MessageWithDestination.create(message, MessageOperation.RECEIVE, null, timer);
 
     // then
     assertMessage(
-        MessageOperation.RECEIVE,
-        "queue",
-        expectedDestinationName,
-        expectedTemporary,
-        null,
-        result);
+        MessageOperation.RECEIVE, "queue", expectedDestinationName, expectedTemporary, result);
   }
 
   @ParameterizedTest
@@ -129,16 +121,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.RECEIVE, null);
+        MessageWithDestination.create(message, MessageOperation.RECEIVE, null, timer);
 
     // then
     assertMessage(
-        MessageOperation.RECEIVE,
-        "topic",
-        expectedDestinationName,
-        expectedTemporary,
-        null,
-        result);
+        MessageOperation.RECEIVE, "topic", expectedDestinationName, expectedTemporary, result);
   }
 
   static Stream<Arguments> destinations() {
@@ -154,14 +141,13 @@ class MessageWithDestinationTest {
       String expectedDestinationKind,
       String expectedDestinationName,
       boolean expectedTemporary,
-      Instant expectedStartTime,
       MessageWithDestination actual) {
 
-    assertSame(message, actual.getMessage());
-    assertSame(expectedMessageOperation, actual.getMessageOperation());
-    assertEquals(expectedDestinationKind, actual.getDestinationKind());
-    assertEquals(expectedDestinationName, actual.getDestinationName());
+    assertSame(message, actual.message());
+    assertSame(expectedMessageOperation, actual.messageOperation());
+    assertEquals(expectedDestinationKind, actual.destinationKind());
+    assertEquals(expectedDestinationName, actual.destinationName());
     assertEquals(expectedTemporary, actual.isTemporaryDestination());
-    assertEquals(expectedStartTime, actual.getStartTime());
+    assertEquals(START_TIME, actual.startTime());
   }
 }
