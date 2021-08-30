@@ -64,7 +64,8 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       ServerSpanNaming.updateServerSpanName(
           parentContext,
           ServerSpanNaming.Source.CONTROLLER,
-          JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
+          JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+          handlerData);
 
       if (!instrumenter().shouldStart(parentContext, handlerData)) {
         return;

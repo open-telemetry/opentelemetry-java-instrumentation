@@ -10,12 +10,18 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.function.Supplier;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Helper container for tracking whether instrumentation should update server span name or not. */
 public final class ServerSpanNaming {
 
   private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-span-naming-key");
+
+  // this is just to support deprecated methods
+  @Deprecated
+  private static final ServerSpanNameSupplier<Supplier<String>> ZERO_ARG_ADAPTER =
+      (context, supplier) -> supplier.get();
 
   public static Context init(Context context, Source initialSource) {
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
@@ -39,16 +45,39 @@ public final class ServerSpanNaming {
   /**
    * If there is a server span in the context, and {@link #init(Context, Source)} has been called to
    * populate a {@code ServerSpanName} into the context, then this method will update the server
-   * span name using the provided {@link Supplier} if and only if the last {@link Source} to update
-   * the span name using this method has strictly lower priority than the provided {@link Source},
-   * and the value returned from the {@link Supplier} is non-null.
+   * span name using the provided {@link ServerSpanNameSupplier} if and only if the last {@link
+   * Source} to update the span name using this method has strictly lower priority than the provided
+   * {@link Source}, and the value returned from the {@link ServerSpanNameSupplier} is non-null.
    *
    * <p>If there is a server span in the context, and {@link #init(Context, Source)} has NOT been
    * called to populate a {@code ServerSpanName} into the context, then this method will update the
-   * server span name using the provided {@link Supplier} if the value returned from it is non-null.
+   * server span name using the provided {@link ServerSpanNameSupplier} if the value returned from
+   * it is non-null.
    */
-  public static void updateServerSpanName(
-      Context context, Source source, Supplier<String> serverSpanName) {
+  public static <T> void updateServerSpanName(
+      Context context, Source source, ServerSpanNameSupplier<T> serverSpanName, T arg1) {
+    updateServerSpanName(context, source, OneArgAdapter.getInstance(), arg1, serverSpanName);
+  }
+
+  /**
+   * If there is a server span in the context, and {@link #init(Context, Source)} has been called to
+   * populate a {@code ServerSpanName} into the context, then this method will update the server
+   * span name using the provided {@link ServerSpanNameTwoArgSupplier} if and only if the last
+   * {@link Source} to update the span name using this method has strictly lower priority than the
+   * provided {@link Source}, and the value returned from the {@link ServerSpanNameTwoArgSupplier}
+   * is non-null.
+   *
+   * <p>If there is a server span in the context, and {@link #init(Context, Source)} has NOT been
+   * called to populate a {@code ServerSpanName} into the context, then this method will update the
+   * server span name using the provided {@link ServerSpanNameTwoArgSupplier} if the value returned
+   * from it is non-null.
+   */
+  public static <T, U> void updateServerSpanName(
+      Context context,
+      Source source,
+      ServerSpanNameTwoArgSupplier<T, U> serverSpanName,
+      T arg1,
+      U arg2) {
     Span serverSpan = ServerSpan.fromContextOrNull(context);
     // checking isRecording() is a helpful optimization for more expensive suppliers
     // (e.g. Spring MVC instrumentation's HandlerAdapterInstrumentation)
@@ -57,7 +86,7 @@ public final class ServerSpanNaming {
     }
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
     if (serverSpanNaming == null) {
-      String name = serverSpanName.get();
+      String name = serverSpanName.get(context, arg1, arg2);
       if (name != null && !name.isEmpty()) {
         serverSpan.updateName(name);
       }
@@ -68,7 +97,7 @@ public final class ServerSpanNaming {
     boolean onlyIfBetterName =
         !source.useFirst && source.order == serverSpanNaming.updatedBySource.order;
     if (source.order > serverSpanNaming.updatedBySource.order || onlyIfBetterName) {
-      String name = serverSpanName.get();
+      String name = serverSpanName.get(context, arg1, arg2);
       if (name != null
           && !name.isEmpty()
           && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
@@ -79,8 +108,14 @@ public final class ServerSpanNaming {
     }
   }
 
-  private boolean isBetterName(String name) {
-    return name.length() > nameLength;
+  /**
+   * @deprecated in favor of {@link #updateServerSpanName(Context, Source, ServerSpanNameSupplier,
+   *     Object)}.
+   */
+  @Deprecated
+  public static void updateServerSpanName(
+      Context context, Source source, Supplier<String> serverSpanName) {
+    updateServerSpanName(context, source, ZERO_ARG_ADAPTER, serverSpanName);
   }
 
   // TODO (trask) migrate the one usage (ServletHttpServerTracer) to ServerSpanNaming.init() once we
@@ -94,6 +129,10 @@ public final class ServerSpanNaming {
     if (serverSpanNaming != null && source.order > serverSpanNaming.updatedBySource.order) {
       serverSpanNaming.updatedBySource = source;
     }
+  }
+
+  private boolean isBetterName(String name) {
+    return name.length() > nameLength;
   }
 
   public enum Source {
@@ -114,6 +153,23 @@ public final class ServerSpanNaming {
     Source(int order, boolean useFirst) {
       this.order = order;
       this.useFirst = useFirst;
+    }
+  }
+
+  private static class OneArgAdapter<T>
+      implements ServerSpanNameTwoArgSupplier<T, ServerSpanNameSupplier<T>> {
+
+    private static final OneArgAdapter<Object> INSTANCE = new OneArgAdapter<>();
+
+    @SuppressWarnings("unchecked")
+    static <T> OneArgAdapter<T> getInstance() {
+      return (OneArgAdapter<T>) INSTANCE;
+    }
+
+    @Override
+    public @Nullable String get(
+        Context context, T arg, ServerSpanNameSupplier<T> serverSpanNameSupplier) {
+      return serverSpanNameSupplier.get(context, arg);
     }
   }
 }

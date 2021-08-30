@@ -30,7 +30,8 @@ public final class RequestContextHelper {
     ServerSpanNaming.updateServerSpanName(
         parentContext,
         ServerSpanNaming.Source.CONTROLLER,
-        JaxrsServerSpanNaming.getServerSpanNameSupplier(parentContext, handlerData));
+        JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+        handlerData);
 
     if (currentSpan != null && currentSpan != serverSpan) {
       // there's already an active span, and it's not the same as the server (servlet) span,

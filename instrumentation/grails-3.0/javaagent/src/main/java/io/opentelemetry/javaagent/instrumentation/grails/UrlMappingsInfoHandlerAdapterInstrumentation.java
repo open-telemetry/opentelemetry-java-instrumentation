@@ -51,8 +51,8 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
         ServerSpanNaming.updateServerSpanName(
             parentContext,
             CONTROLLER,
-            GrailsServerSpanNaming.getServerSpanNameSupplier(
-                parentContext, (GrailsControllerUrlMappingInfo) handler));
+            GrailsServerSpanNaming.SERVER_SPAN_NAME,
+            (GrailsControllerUrlMappingInfo) handler);
       }
     }
   }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -19,6 +20,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -75,7 +77,8 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       request = new JaxWsRequest(target.getClass(), methodName);
-      JaxWsServerSpanNaming.updateServerSpanName(parentContext, request);
+      ServerSpanNaming.updateServerSpanName(
+          parentContext, CONTROLLER, JaxWsServerSpanNaming.SERVER_SPAN_NAME, request);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
