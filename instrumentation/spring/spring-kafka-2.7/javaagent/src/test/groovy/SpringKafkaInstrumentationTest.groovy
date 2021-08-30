@@ -38,11 +38,12 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     def app = new SpringApplication(ConsumerConfig)
     app.setDefaultProperties([
-      "spring.jmx.enabled"                     : false,
-      "spring.main.web-application-type"       : "none",
-      "spring.kafka.bootstrap-servers"         : kafka.bootstrapServers,
-      "spring.kafka.consumer.auto-offset-reset": "earliest",
-      "spring.kafka.consumer.linger-ms"        : 10,
+      "spring.jmx.enabled"                         : false,
+      "spring.main.web-application-type"           : "none",
+      "spring.kafka.bootstrap-servers"             : kafka.bootstrapServers,
+      "spring.kafka.consumer.auto-offset-reset"    : "earliest",
+      "spring.kafka.consumer.linger-ms"            : 10,
+      "spring.kafka.producer.transaction-id-prefix": "test-",
     ])
     applicationContext = app.run()
   }
@@ -58,9 +59,11 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     when:
     runWithSpan("producer") {
-      kafkaTemplate.send("testTopic", "10", "testSpan1")
-      kafkaTemplate.send("testTopic", "20", "testSpan2")
-      kafkaTemplate.flush()
+      // wrapping in a transaction is needed to remove the possibility of messages being picked up separately by the consumer
+      kafkaTemplate.executeInTransaction({ ops ->
+        ops.send("testTopic", "10", "testSpan1")
+        ops.send("testTopic", "20", "testSpan2")
+      })
     }
 
     then:
@@ -152,8 +155,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     when:
     runWithSpan("producer") {
-      kafkaTemplate.send("testTopic", "10", "error")
-      kafkaTemplate.flush()
+      kafkaTemplate.executeInTransaction({ ops ->
+        ops.send("testTopic", "10", "error")
+      })
     }
 
     then:
