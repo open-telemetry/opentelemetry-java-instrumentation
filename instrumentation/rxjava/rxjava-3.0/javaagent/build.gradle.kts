@@ -19,6 +19,8 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation:rxjava:rxjava-3.0:testing"))
+
+  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0")
 }
 
 tasks.withType<Test>().configureEach {
