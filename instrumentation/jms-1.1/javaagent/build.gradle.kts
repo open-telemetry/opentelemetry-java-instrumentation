@@ -38,6 +38,9 @@ tasks {
 val versions: Map<String, String> by project
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")

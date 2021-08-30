@@ -7,6 +7,8 @@ dependencies {
   implementation(project(":instrumentation-api-annotation-support"))
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3.0:testing"))
+
+  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0")
 }
 
 tasks.withType<Test>().configureEach {

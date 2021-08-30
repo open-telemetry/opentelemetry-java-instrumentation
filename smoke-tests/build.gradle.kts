@@ -44,7 +44,6 @@ dependencies {
 tasks {
   test {
     inputs.files(project(":javaagent").tasks.getByName("fullJavaagentJar").outputs.files)
-    maxParallelForks = 2
 
     testLogging.showStandardStreams = true
 

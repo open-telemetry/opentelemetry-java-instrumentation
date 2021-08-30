@@ -97,8 +97,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        # using --no-daemon because windows builds have been sporadically running out of virtual memory
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-daemon
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,

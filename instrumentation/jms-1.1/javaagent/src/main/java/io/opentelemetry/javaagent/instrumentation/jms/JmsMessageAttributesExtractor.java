@@ -25,13 +25,13 @@ public class JmsMessageAttributesExtractor
   @Nullable
   @Override
   protected String destinationKind(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getDestinationKind();
+    return messageWithDestination.destinationKind();
   }
 
   @Nullable
   @Override
   protected String destination(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getDestinationName();
+    return messageWithDestination.destinationName();
   }
 
   @Override
@@ -61,7 +61,7 @@ public class JmsMessageAttributesExtractor
   @Override
   protected String conversationId(MessageWithDestination messageWithDestination) {
     try {
-      return messageWithDestination.getMessage().getJMSCorrelationID();
+      return messageWithDestination.message().getJMSCorrelationID();
     } catch (JMSException e) {
       logger.debug("Failure getting JMS correlation id", e);
       return null;
@@ -82,14 +82,14 @@ public class JmsMessageAttributesExtractor
 
   @Override
   protected MessageOperation operation(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getMessageOperation();
+    return messageWithDestination.messageOperation();
   }
 
   @Nullable
   @Override
   protected String messageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
-      return messageWithDestination.getMessage().getJMSMessageID();
+      return messageWithDestination.message().getJMSMessageID();
     } catch (JMSException e) {
       logger.debug("Failure getting JMS message id", e);
       return null;

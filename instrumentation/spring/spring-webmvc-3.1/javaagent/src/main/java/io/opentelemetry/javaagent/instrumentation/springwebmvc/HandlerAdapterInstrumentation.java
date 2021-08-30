@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.IsGrailsHandler.isGrailsHandler;
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcSingletons.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -60,7 +61,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
-      if (handler.getClass().getName().startsWith("org.grails.")) {
+      if (isGrailsHandler(handler)) {
         // skip creating handler span for grails, grails instrumentation will take care of it
         return;
       }
