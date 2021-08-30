@@ -192,8 +192,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        # using --no-daemon because windows builds have been sporadically running out of virtual memory
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-daemon
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
