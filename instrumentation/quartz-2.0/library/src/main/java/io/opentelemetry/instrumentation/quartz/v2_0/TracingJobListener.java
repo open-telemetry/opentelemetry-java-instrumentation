@@ -44,7 +44,8 @@ final class TracingJobListener implements JobListener {
     // Listeners are executed synchronously on the same thread starting here.
     // https://github.com/quartz-scheduler/quartz/blob/quartz-2.0.x/quartz/src/main/java/org/quartz/core/JobRunShell.java#L180
     // However, if a listener before this one throws an exception in wasExecuted, we won't be
-    // executed.
+    // executed. Library instrumentation users need to make sure other listeners don't throw
+    // exceptions.
     Scope scope = context.makeCurrent();
     job.put(Scope.class, scope);
   }
