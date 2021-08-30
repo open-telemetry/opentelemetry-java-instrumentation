@@ -108,10 +108,6 @@ public final class ServerSpanNaming {
     }
   }
 
-  /**
-   * @deprecated in favor of {@link #updateServerSpanName(Context, Source, ServerSpanNameSupplier,
-   *     Object)}.
-   */
   @Deprecated
   public static void updateServerSpanName(
       Context context, Source source, Supplier<String> serverSpanName) {
