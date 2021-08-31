@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 // most of the parsing code copied from
 // https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/DefaultConfigProperties.java
+@SuppressWarnings("UnusedException")
 final class ConfigValueParsers {
 
   static boolean parseBoolean(@SuppressWarnings("unused") String propertyName, String value) {
