@@ -244,6 +244,9 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
+      - name: Push cherry-picked changes to the release branch
+        run: git push
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
