@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
@@ -60,10 +61,16 @@ class ConfigTest {
 
     assertEquals(12, config.getInt("prop.int"));
     assertEquals(12, config.getInt("prop.int", 1000));
-    assertNull(config.getInt("prop.wrong"));
     assertEquals(1000, config.getInt("prop.wrong", 1000));
     assertNull(config.getInt("prop.missing"));
     assertEquals(1000, config.getInt("prop.missing", 1000));
+  }
+
+  @Test
+  void shouldFailOnInvalidInt() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getInt("prop.wrong"));
   }
 
   @Test
@@ -76,10 +83,16 @@ class ConfigTest {
 
     assertEquals(12, config.getLong("prop.long"));
     assertEquals(12, config.getLong("prop.long", 1000));
-    assertNull(config.getLong("prop.wrong"));
     assertEquals(1000, config.getLong("prop.wrong", 1000));
     assertNull(config.getLong("prop.missing"));
     assertEquals(1000, config.getLong("prop.missing", 1000));
+  }
+
+  @Test
+  void shouldFailOnInvalidLong() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getLong("prop.wrong"));
   }
 
   @Test
@@ -92,10 +105,16 @@ class ConfigTest {
 
     assertEquals(12.345, config.getDouble("prop.double"));
     assertEquals(12.345, config.getDouble("prop.double", 99.99));
-    assertNull(config.getDouble("prop.wrong"));
     assertEquals(99.99, config.getDouble("prop.wrong", 99.99));
     assertNull(config.getDouble("prop.missing"));
     assertEquals(99.99, config.getDouble("prop.missing", 99.99));
+  }
+
+  @Test
+  void shouldFailOnInvalidDouble() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve point something").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getDouble("prop.wrong"));
   }
 
   @Test
@@ -108,10 +127,16 @@ class ConfigTest {
 
     assertEquals(Duration.ofMillis(5000), config.getDuration("prop.duration"));
     assertEquals(Duration.ofMillis(5000), config.getDuration("prop.duration", Duration.ZERO));
-    assertNull(config.getDuration("prop.wrong"));
     assertEquals(Duration.ZERO, config.getDuration("prop.wrong", Duration.ZERO));
     assertNull(config.getDuration("prop.missing"));
     assertEquals(Duration.ZERO, config.getDuration("prop.missing", Duration.ZERO));
+  }
+
+  @Test
+  void shouldFailOnInvalidDuration() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "hundred days").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getDuration("prop.wrong"));
   }
 
   @Test
@@ -156,13 +181,19 @@ class ConfigTest {
     assertThat(config.getMap("prop.map")).containsOnly(entry("one", "1"), entry("two", "2"));
     assertThat(config.getMap("prop.map", singletonMap("three", "3")))
         .containsOnly(entry("one", "1"), entry("two", "2"));
-    assertThat(config.getMap("prop.wrong")).isEmpty();
     assertThat(config.getMap("prop.wrong", singletonMap("three", "3")))
         .containsOnly(entry("three", "3"));
     assertThat(config.getMap("prop.missing")).isEmpty();
     assertThat(config.getMap("prop.missing", singletonMap("three", "3")))
         .containsOnly(entry("three", "3"));
     assertThat(config.getMap("prop.trailing")).containsOnly(entry("one", "1"));
+  }
+
+  @Test
+  void shouldFailOnInvalidMap() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "one=1, but not two!").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getMap("prop.wrong"));
   }
 
   @ParameterizedTest
