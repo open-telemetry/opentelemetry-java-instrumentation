@@ -15,20 +15,56 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+// most of the parsing code copied from
+// https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/DefaultConfigProperties.java
 final class ConfigValueParsers {
 
-  static List<String> parseList(String value) {
+  static boolean parseBoolean(@SuppressWarnings("unused") String propertyName, String value) {
+    return Boolean.parseBoolean(value);
+  }
+
+  static int parseInt(String propertyName, String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "integer");
+    }
+  }
+
+  static long parseLong(String propertyName, String value) {
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "long");
+    }
+  }
+
+  static double parseDouble(String propertyName, String value) {
+    try {
+      return Double.parseDouble(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "double");
+    }
+  }
+
+  private static ConfigParsingException newInvalidPropertyException(
+      String name, String value, String type) {
+    throw new ConfigParsingException(
+        "Invalid value for property " + name + "=" + value + ". Must be a " + type + ".");
+  }
+
+  static List<String> parseList(@SuppressWarnings("unused") String propertyName, String value) {
     return Collections.unmodifiableList(filterBlanksAndNulls(value.split(",")));
   }
 
-  static Map<String, String> parseMap(String value) {
-    return parseList(value).stream()
+  static Map<String, String> parseMap(String propertyName, String value) {
+    return parseList(propertyName, value).stream()
         .map(keyValuePair -> filterBlanksAndNulls(keyValuePair.split("=", 2)))
         .map(
             splitKeyValuePairs -> {
               if (splitKeyValuePairs.size() != 2) {
-                throw new IllegalArgumentException(
-                    "Invalid map property, should be formatted key1=value1,key2=value2: " + value);
+                throw new ConfigParsingException(
+                    "Invalid map property: " + propertyName + "=" + value);
               }
               return new AbstractMap.SimpleImmutableEntry<>(
                   splitKeyValuePairs.get(0), splitKeyValuePairs.get(1));
@@ -47,12 +83,25 @@ final class ConfigValueParsers {
         .collect(Collectors.toList());
   }
 
-  static Duration parseDuration(String value) {
+  static Duration parseDuration(String propertyName, String value) {
     String unitString = getUnitString(value);
     String numberString = value.substring(0, value.length() - unitString.length());
-    long rawNumber = Long.parseLong(numberString.trim());
-    TimeUnit unit = getDurationUnit(unitString.trim());
-    return Duration.ofMillis(TimeUnit.MILLISECONDS.convert(rawNumber, unit));
+    try {
+      long rawNumber = Long.parseLong(numberString.trim());
+      TimeUnit unit = getDurationUnit(unitString.trim());
+      return Duration.ofMillis(TimeUnit.MILLISECONDS.convert(rawNumber, unit));
+    } catch (NumberFormatException e) {
+      throw new ConfigParsingException(
+          "Invalid duration property "
+              + propertyName
+              + "="
+              + value
+              + ". Expected number, found: "
+              + numberString);
+    } catch (ConfigParsingException ex) {
+      throw new ConfigParsingException(
+          "Invalid duration property " + propertyName + "=" + value + ". " + ex.getMessage());
+    }
   }
 
   /** Returns the TimeUnit associated with a unit string. Defaults to milliseconds. */
@@ -70,7 +119,7 @@ final class ConfigValueParsers {
       case "d":
         return TimeUnit.DAYS;
       default:
-        throw new IllegalArgumentException("Invalid duration string, found: " + unitString);
+        throw new ConfigParsingException("Invalid duration string, found: " + unitString);
     }
   }
 
