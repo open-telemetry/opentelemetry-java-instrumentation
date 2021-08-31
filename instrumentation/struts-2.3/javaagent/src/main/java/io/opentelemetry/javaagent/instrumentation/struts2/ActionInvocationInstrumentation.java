@@ -56,8 +56,8 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       ServerSpanNaming.updateServerSpanName(
           parentContext,
           CONTROLLER,
-          StrutsServerSpanNaming.getServerSpanNameSupplier(
-              parentContext, actionInvocation.getProxy()));
+          StrutsServerSpanNaming.SERVER_SPAN_NAME,
+          actionInvocation.getProxy());
 
       if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
         return;

@@ -8,11 +8,13 @@ package org.springframework.web.servlet;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -21,11 +23,23 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.core.Ordered;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
-  private volatile List<HandlerMapping> handlerMappings;
+
+  private final ServerSpanNameSupplier<HttpServletRequest> serverSpanName =
+      (context, request) -> {
+        if (findMapping(request)) {
+          // Name the parent span based on the matching pattern
+          // Let the parent span resource name be set with the attribute set in findMapping.
+          return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
+        }
+        return null;
+      };
+
+  @Nullable private volatile List<HandlerMapping> handlerMappings;
 
   @Override
   public void init(FilterConfig filterConfig) {}
@@ -42,17 +56,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     if (handlerMappings != null) {
       Context context = Context.current();
       ServerSpanNaming.updateServerSpanName(
-          context,
-          CONTROLLER,
-          () -> {
-            if (findMapping((HttpServletRequest) request)) {
-              // Name the parent span based on the matching pattern
-              // Let the parent span resource name be set with the attribute set in findMapping.
-              return SpringWebMvcServerSpanNaming.getServerSpanName(
-                  context, (HttpServletRequest) request);
-            }
-            return null;
-          });
+          context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
     }
 
     filterChain.doFilter(request, response);
@@ -68,7 +72,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
    */
   private boolean findMapping(HttpServletRequest request) {
     try {
-      for (HandlerMapping mapping : handlerMappings) {
+      // handlerMapping already null-checked above
+      for (HandlerMapping mapping : Objects.requireNonNull(handlerMappings)) {
         HandlerExecutionChain handler = mapping.getHandler(request);
         if (handler != null) {
           return true;

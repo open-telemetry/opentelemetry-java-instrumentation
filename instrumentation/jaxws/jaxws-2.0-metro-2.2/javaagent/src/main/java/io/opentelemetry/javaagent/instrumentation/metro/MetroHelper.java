@@ -27,9 +27,7 @@ public final class MetroHelper {
 
     MetroRequest request = new MetroRequest(endpoint, packet);
     ServerSpanNaming.updateServerSpanName(
-        parentContext,
-        CONTROLLER,
-        MetroServerSpanNaming.getServerSpanNameSupplier(parentContext, request));
+        parentContext, CONTROLLER, MetroServerSpanNaming.SERVER_SPAN_NAME, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;

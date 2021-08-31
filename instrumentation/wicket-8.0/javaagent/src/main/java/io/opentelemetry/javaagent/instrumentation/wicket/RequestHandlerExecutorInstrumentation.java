@@ -50,7 +50,8 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         ServerSpanNaming.updateServerSpanName(
             context,
             CONTROLLER,
-            new ServerSpanNameSupplier(context, (IPageClassRequestHandler) handler));
+            WicketServerSpanNameing.SERVER_SPAN_NAME,
+            (IPageClassRequestHandler) handler);
       }
     }
   }

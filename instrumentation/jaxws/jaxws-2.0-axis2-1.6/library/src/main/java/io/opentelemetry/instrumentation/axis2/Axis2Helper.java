@@ -25,9 +25,7 @@ public final class Axis2Helper {
 
     Axis2Request request = new Axis2Request(message);
     ServerSpanNaming.updateServerSpanName(
-        parentContext,
-        CONTROLLER,
-        Axis2ServerSpanNaming.getServerSpanNameSupplier(parentContext, request));
+        parentContext, CONTROLLER, Axis2ServerSpanNaming.SERVER_SPAN_NAME, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;
