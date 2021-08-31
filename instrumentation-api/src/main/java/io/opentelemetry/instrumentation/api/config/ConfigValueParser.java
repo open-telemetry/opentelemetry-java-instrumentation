@@ -7,5 +7,5 @@ package io.opentelemetry.instrumentation.api.config;
 
 @FunctionalInterface
 interface ConfigValueParser<T> {
-  T parse(String propertyName, String rawValue) throws ConfigParsingException;
+  T parse(String propertyName, String rawValue);
 }
