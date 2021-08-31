@@ -117,7 +117,7 @@ public abstract class Config {
    * @throws ConfigParsingException if the property is not a valid integer.
    */
   @Nullable
-  public Integer getInt(String name) throws ConfigParsingException {
+  public Integer getInt(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseInt);
   }
 
@@ -157,7 +157,7 @@ public abstract class Config {
    * @throws ConfigParsingException if the property is not a valid long.
    */
   @Nullable
-  public Double getDouble(String name) throws ConfigParsingException {
+  public Double getDouble(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseDouble);
   }
 
@@ -189,7 +189,7 @@ public abstract class Config {
    * @throws ConfigParsingException if the property is not a valid long.
    */
   @Nullable
-  public Duration getDuration(String name) throws ConfigParsingException {
+  public Duration getDuration(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseDuration);
   }
 
@@ -241,7 +241,7 @@ public abstract class Config {
    *
    * @throws ConfigParsingException if the property is not a valid long.
    */
-  public Map<String, String> getMap(String name) throws ConfigParsingException {
+  public Map<String, String> getMap(String name) {
     Map<String, String> map = getTypedProperty(name, ConfigValueParsers::parseMap);
     return map == null ? emptyMap() : map;
   }
