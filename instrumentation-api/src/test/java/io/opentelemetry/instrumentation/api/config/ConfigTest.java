@@ -9,15 +9,15 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -150,17 +150,19 @@ class ConfigTest {
         Config.newBuilder()
             .addProperty("prop.map", "one=1, two=2")
             .addProperty("prop.wrong", "one=1, but not two!")
+            .addProperty("prop.trailing", "one=1,")
             .build();
 
-    assertEquals(map("one", "1", "two", "2"), config.getMap("prop.map"));
-    assertEquals(
-        map("one", "1", "two", "2"), config.getMap("prop.map", singletonMap("three", "3")));
-    assertTrue(config.getMap("prop.wrong").isEmpty());
-    assertEquals(
-        singletonMap("three", "3"), config.getMap("prop.wrong", singletonMap("three", "3")));
-    assertTrue(config.getMap("prop.missing").isEmpty());
-    assertEquals(
-        singletonMap("three", "3"), config.getMap("prop.missing", singletonMap("three", "3")));
+    assertThat(config.getMap("prop.map")).containsOnly(entry("one", "1"), entry("two", "2"));
+    assertThat(config.getMap("prop.map", singletonMap("three", "3")))
+        .containsOnly(entry("one", "1"), entry("two", "2"));
+    assertThat(config.getMap("prop.wrong")).isEmpty();
+    assertThat(config.getMap("prop.wrong", singletonMap("three", "3")))
+        .containsOnly(entry("three", "3"));
+    assertThat(config.getMap("prop.missing")).isEmpty();
+    assertThat(config.getMap("prop.missing", singletonMap("three", "3")))
+        .containsOnly(entry("three", "3"));
+    assertThat(config.getMap("prop.trailing")).containsOnly(entry("one", "1"));
   }
 
   @ParameterizedTest
@@ -215,12 +217,5 @@ class ConfigTest {
           Arguments.of(asList("test-prop", "disabled-prop"), true, false),
           Arguments.of(asList("disabled-env", "test-env"), true, false));
     }
-  }
-
-  public static Map<String, String> map(String k1, String v1, String k2, String v2) {
-    Map<String, String> map = new HashMap<>();
-    map.put(k1, v1);
-    map.put(k2, v2);
-    return map;
   }
 }
