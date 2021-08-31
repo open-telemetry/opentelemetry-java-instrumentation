@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.quartz.v1_7;
+package io.opentelemetry.javaagent.instrumentation.quartz.v2_0;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,7 +15,7 @@ import java.util.List;
 public class QuartzInstrumentationModule extends InstrumentationModule {
 
   public QuartzInstrumentationModule() {
-    super("quartz", "quartz-1.7");
+    super("quartz", "quartz-2.0");
   }
 
   @Override

@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
-import org.quartz.SchedulerException;
 
 final class TracingJobListener implements JobListener {
 
@@ -64,10 +63,6 @@ final class TracingJobListener implements JobListener {
       return;
     }
 
-    Throwable userError = error;
-    while (userError instanceof SchedulerException) {
-      userError = ((SchedulerException) userError).getUnderlyingException();
-    }
-    instrumenter.end(context, job, null, userError);
+    instrumenter.end(context, job, null, error);
   }
 }

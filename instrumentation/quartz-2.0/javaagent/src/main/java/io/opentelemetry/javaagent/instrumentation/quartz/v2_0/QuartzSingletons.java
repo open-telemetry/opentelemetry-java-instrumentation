@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.quartz.v1_7;
+package io.opentelemetry.javaagent.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTracing;

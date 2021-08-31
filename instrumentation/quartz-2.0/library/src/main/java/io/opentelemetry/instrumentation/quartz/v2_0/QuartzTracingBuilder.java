@@ -42,6 +42,7 @@ public final class QuartzTracingBuilder {
     InstrumenterBuilder<JobExecutionContext, Void> instrumenter =
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
 
+    instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
     instrumenter.addAttributesExtractors(additionalExtractors);
 
     return new QuartzTracing(new TracingJobListener(instrumenter.newInstrumenter()));
