@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 // Copied from
@@ -79,7 +78,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   @Test
-  @Disabled("Currently invalid values are not handled the same as the SDK")
   void invalidInt() {
     assertThatThrownBy(() -> createConfig(Collections.singletonMap("int", "bar")).getInt("int"))
         .isInstanceOf(ConfigurationException.class)
@@ -91,7 +89,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   @Test
-  @Disabled("Currently invalid values are not handled the same as the SDK")
   void invalidLong() {
     assertThatThrownBy(() -> createConfig(Collections.singletonMap("long", "bar")).getLong("long"))
         .isInstanceOf(ConfigurationException.class)
@@ -105,7 +102,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   @Test
-  @Disabled("Currently invalid values are not handled the same as the SDK")
   void invalidDouble() {
     assertThatThrownBy(
             () -> createConfig(Collections.singletonMap("double", "bar")).getDouble("double"))
@@ -134,7 +130,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   @Test
-  @Disabled("Currently invalid values are not handled the same as the SDK")
   void invalidMap() {
     assertThatThrownBy(
             () ->
@@ -154,7 +149,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   @Test
-  @Disabled("Currently invalid values are not handled the same as the SDK")
   void invalidDuration() {
     assertThatThrownBy(
             () ->

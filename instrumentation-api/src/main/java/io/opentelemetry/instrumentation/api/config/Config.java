@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoValue;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public abstract class Config {
    */
   @Nullable
   public Boolean getBoolean(String name) {
-    return getTypedProperty(name, Boolean::parseBoolean, null);
+    return getTypedProperty(name, ConfigValueParsers::parseBoolean);
   }
 
   /**
@@ -107,58 +107,67 @@ public abstract class Config {
    * {@code name} has not been configured.
    */
   public boolean getBoolean(String name, boolean defaultValue) {
-    return getTypedProperty(name, Boolean::parseBoolean, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseBoolean, defaultValue);
   }
 
   /**
    * Returns a integer-valued configuration property or {@code null} if a property with name {@code
    * name} has not been configured.
+   *
+   * @throws ConfigParsingException if the property is not a valid integer.
    */
   @Nullable
   public Integer getInt(String name) {
-    return getTypedProperty(name, Integer::parseInt, null);
+    return getTypedProperty(name, ConfigValueParsers::parseInt);
   }
 
   /**
    * Returns a integer-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured.
+   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
+   * {@link #getInt(String)}.
    */
   public int getInt(String name, int defaultValue) {
-    return getTypedProperty(name, Integer::parseInt, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseInt, defaultValue);
   }
 
   /**
    * Returns a long-valued configuration property or {@code null} if a property with name {@code
    * name} has not been configured.
+   *
+   * @throws ConfigParsingException if the property is not a valid long.
    */
   @Nullable
   public Long getLong(String name) {
-    return getTypedProperty(name, Long::parseLong, null);
+    return getTypedProperty(name, ConfigValueParsers::parseLong);
   }
 
   /**
    * Returns a long-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured.
+   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
+   * {@link #getLong(String)}.
    */
   public long getLong(String name, long defaultValue) {
-    return getTypedProperty(name, Long::parseLong, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseLong, defaultValue);
   }
 
   /**
    * Returns a double-valued configuration property or {@code null} if a property with name {@code
    * name} has not been configured.
+   *
+   * @throws ConfigParsingException if the property is not a valid long.
    */
   @Nullable
   public Double getDouble(String name) {
-    return getTypedProperty(name, Double::parseDouble, null);
+    return getTypedProperty(name, ConfigValueParsers::parseDouble);
   }
 
   /**
    * Returns a double-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured.
+   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
+   * {@link #getDouble(String)}.
    */
   public double getDouble(String name, double defaultValue) {
-    return getTypedProperty(name, Double::parseDouble, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseDouble, defaultValue);
   }
 
   /**
@@ -176,15 +185,18 @@ public abstract class Config {
    * </ul>
    *
    * <p>If no unit is specified, milliseconds is the assumed duration unit.
+   *
+   * @throws ConfigParsingException if the property is not a valid long.
    */
   @Nullable
   public Duration getDuration(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseDuration, null);
+    return getTypedProperty(name, ConfigValueParsers::parseDuration);
   }
 
   /**
    * Returns a duration-valued configuration property or {@code defaultValue} if a property with
-   * name {@code name} has not been configured.
+   * name {@code name} has not been configured or when parsing has failed. This is the safe variant
+   * of {@link #getDuration(String)}.
    *
    * <p>Durations can be of the form "{number}{unit}", where unit is one of:
    *
@@ -199,7 +211,7 @@ public abstract class Config {
    * <p>If no unit is specified, milliseconds is the assumed duration unit.
    */
   public Duration getDuration(String name, Duration defaultValue) {
-    return getTypedProperty(name, ConfigValueParsers::parseDuration, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseDuration, defaultValue);
   }
 
   /**
@@ -208,7 +220,8 @@ public abstract class Config {
    * {@code one,two,three}.
    */
   public List<String> getList(String name) {
-    return getList(name, Collections.emptyList());
+    List<String> list = getTypedProperty(name, ConfigValueParsers::parseList);
+    return list == null ? emptyList() : list;
   }
 
   /**
@@ -217,7 +230,7 @@ public abstract class Config {
    * e.g. {@code one,two,three}.
    */
   public List<String> getList(String name, List<String> defaultValue) {
-    return getTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
   }
 
   /**
@@ -225,32 +238,41 @@ public abstract class Config {
    * name} has not been configured. The format of the original value must be comma-separated for
    * each key, with an '=' separating the key and value, e.g. {@code
    * key=value,anotherKey=anotherValue}.
+   *
+   * @throws ConfigParsingException if the property is not a valid long.
    */
   public Map<String, String> getMap(String name) {
-    return getMap(name, Collections.emptyMap());
+    Map<String, String> map = getTypedProperty(name, ConfigValueParsers::parseMap);
+    return map == null ? emptyMap() : map;
   }
 
   /**
    * Returns a map-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured. The format of the original value must be comma-separated
-   * for each key, with an '=' separating the key and value, e.g. {@code
-   * key=value,anotherKey=anotherValue}.
+   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
+   * {@link #getMap(String)}. The format of the original value must be comma-separated for each key,
+   * with an '=' separating the key and value, e.g. {@code key=value,anotherKey=anotherValue}.
    */
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
-    return getTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);
+    return safeGetTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);
   }
 
-  private <T> T getTypedProperty(String name, Function<String, T> parser, T defaultValue) {
+  private <T> T safeGetTypedProperty(String name, ConfigValueParser<T> parser, T defaultValue) {
+    try {
+      T value = getTypedProperty(name, parser);
+      return value == null ? defaultValue : value;
+    } catch (RuntimeException t) {
+      logger.debug("Error occurred during parsing: {}", t.getMessage(), t);
+      return defaultValue;
+    }
+  }
+
+  @Nullable
+  private <T> T getTypedProperty(String name, ConfigValueParser<T> parser) {
     String value = getRawProperty(name, null);
     if (value == null || value.trim().isEmpty()) {
-      return defaultValue;
+      return null;
     }
-    try {
-      return parser.apply(value);
-    } catch (RuntimeException t) {
-      logger.debug("Cannot parse {}", value, t);
-      return defaultValue;
-    }
+    return parser.parse(name, value);
   }
 
   private String getRawProperty(String name, String defaultValue) {

@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.ConfigParsingException;
 import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.ConfigurationException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -34,25 +36,41 @@ public final class ConfigPropertiesAdapter implements ConfigProperties {
   @Nullable
   @Override
   public Integer getInt(String name) {
-    return config.getInt(name);
+    try {
+      return config.getInt(name);
+    } catch (ConfigParsingException e) {
+      throw new ConfigurationException(e.getMessage(), e);
+    }
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    return config.getLong(name);
+    try {
+      return config.getLong(name);
+    } catch (ConfigParsingException e) {
+      throw new ConfigurationException(e.getMessage(), e);
+    }
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return config.getDouble(name);
+    try {
+      return config.getDouble(name);
+    } catch (ConfigParsingException e) {
+      throw new ConfigurationException(e.getMessage(), e);
+    }
   }
 
   @Nullable
   @Override
   public Duration getDuration(String name) {
-    return config.getDuration(name);
+    try {
+      return config.getDuration(name);
+    } catch (ConfigParsingException e) {
+      throw new ConfigurationException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -62,6 +80,10 @@ public final class ConfigPropertiesAdapter implements ConfigProperties {
 
   @Override
   public Map<String, String> getCommaSeparatedMap(String name) {
-    return config.getMap(name);
+    try {
+      return config.getMap(name);
+    } catch (ConfigParsingException e) {
+      throw new ConfigurationException(e.getMessage(), e);
+    }
   }
 }
