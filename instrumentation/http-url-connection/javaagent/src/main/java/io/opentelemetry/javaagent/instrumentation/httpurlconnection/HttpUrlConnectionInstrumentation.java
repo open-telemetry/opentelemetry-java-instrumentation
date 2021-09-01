@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -76,7 +76,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         return;
       }
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, connection)) {
         return;
       }
 
@@ -94,7 +94,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context context = tracer().startSpan(parentContext, connection);
+      Context context = instrumenter().start(parentContext, connection);
       httpUrlState = new HttpUrlState(context);
       storage.put(connection, httpUrlState);
       scope = context.makeCurrent();
@@ -122,16 +122,26 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           // HttpURLConnection unnecessarily throws exception on error response.
           // None of the other http clients do this, so not recording the exception on the span
           // to be consistent with the telemetry for other http clients.
-          tracer().end(httpUrlState.context, new HttpUrlResponse(connection, responseCode));
+          instrumenter()
+              .end(
+                  httpUrlState.context,
+                  connection,
+                  new HttpUrlResponse(connection, responseCode),
+                  null);
         } else {
-          tracer().endExceptionally(httpUrlState.context, throwable);
+          instrumenter().end(httpUrlState.context, connection, null, throwable);
         }
         httpUrlState.finished = true;
       } else if (methodName.equals("getInputStream") && responseCode > 0) {
         // responseCode field is sometimes not populated.
         // We can't call getResponseCode() due to some unwanted side-effects
         // (e.g. breaks getOutputStream).
-        tracer().end(httpUrlState.context, new HttpUrlResponse(connection, responseCode));
+        instrumenter()
+            .end(
+                httpUrlState.context,
+                connection,
+                new HttpUrlResponse(connection, responseCode),
+                null);
         httpUrlState.finished = true;
       }
     }
