@@ -37,13 +37,11 @@ public class HooksInstrumentation implements TypeInstrumentation {
       Config config = Config.get();
       TracingOperator.newBuilder()
           .setCaptureExperimentalSpanAttributes(
-              config.getBoolean(
-                  "otel.instrumentation.reactor.experimental-span-attributes", false))
+              config.getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))
           .setEmitCheckpoints(
               config.getBoolean("otel.instrumentation.reactor.emit-checkpoints", false))
           .setTraceMultipleSubscribers(
-              config.getBoolean(
-                  "otel.instrumentation.reactor.trace-multiple-subscribers", false))
+              config.getBoolean("otel.instrumentation.reactor.trace-multiple-subscribers", false))
           .build()
           .registerOnEachOperator();
     }
