@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.ITEM_OPERATION_READ;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.getChunkContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.itemInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemSingletons.ITEM_OPERATION_READ;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemSingletons.getChunkContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemSingletons.itemInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -46,13 +46,13 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelItem") String item) {
-      ChunkContext chunkContext = getChunkContext();
+      ChunkContext chunkContext = getChunkContext(currentContext());
       if (chunkContext == null || !shouldTraceItems()) {
         return;
       }
 
       Context parentContext = currentContext();
-      item = ItemInstrumenter.itemName(chunkContext, ITEM_OPERATION_READ);
+      item = ItemSingletons.itemName(chunkContext, ITEM_OPERATION_READ);
       if (!itemInstrumenter().shouldStart(parentContext, item)) {
         return;
       }

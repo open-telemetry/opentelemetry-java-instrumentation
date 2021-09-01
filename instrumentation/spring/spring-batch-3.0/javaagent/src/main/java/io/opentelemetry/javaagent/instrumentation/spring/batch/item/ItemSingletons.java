@@ -13,7 +13,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
-public class ItemInstrumenter {
+public class ItemSingletons {
 
   static final String ITEM_OPERATION_READ = "ItemRead";
   static final String ITEM_OPERATION_WRITE = "ItemWrite";
@@ -43,13 +43,13 @@ public class ItemInstrumenter {
    * chunk always executes on one thread - in Spring Batch chunk is almost synonymous with a DB
    * transaction; this makes {@link ChunkContext} a good candidate to be stored in {@link Context}.
    */
-  public static Context startChunk(ChunkContext chunkContext) {
-    return Context.current().with(CHUNK_CONTEXT_KEY, chunkContext);
+  public static Context startChunk(Context currentContext, ChunkContext chunkContext) {
+    return currentContext.with(CHUNK_CONTEXT_KEY, chunkContext);
   }
 
-  public static ChunkContext getChunkContext() {
-    return Context.current().get(CHUNK_CONTEXT_KEY);
+  public static ChunkContext getChunkContext(Context currentContext) {
+    return currentContext.get(CHUNK_CONTEXT_KEY);
   }
 
-  private ItemInstrumenter() {}
+  private ItemSingletons() {}
 }

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.step;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepExecutionInstrumenter.stepExecutionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepSingletons.stepInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -28,11 +28,11 @@ public final class TracingStepExecutionListener implements StepExecutionListener
   @Override
   public void beforeStep(StepExecution stepExecution) {
     Context parentContext = currentContext();
-    if (!stepExecutionInstrumenter().shouldStart(parentContext, stepExecution)) {
+    if (!stepInstrumenter().shouldStart(parentContext, stepExecution)) {
       return;
     }
 
-    Context context = stepExecutionInstrumenter().start(parentContext, stepExecution);
+    Context context = stepInstrumenter().start(parentContext, stepExecution);
     // beforeStep & afterStep always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(stepExecution, new ContextAndScope(context, scope));
@@ -47,7 +47,7 @@ public final class TracingStepExecutionListener implements StepExecutionListener
 
     executionContextStore.put(stepExecution, null);
     contextAndScope.closeScope();
-    stepExecutionInstrumenter().end(contextAndScope.getContext(), stepExecution, null, null);
+    stepInstrumenter().end(contextAndScope.getContext(), stepExecution, null, null);
     return null;
   }
 

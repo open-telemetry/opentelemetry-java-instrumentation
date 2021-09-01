@@ -11,22 +11,20 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.springframework.batch.core.JobExecution;
 
-public class JobExecutionInstrumenter {
+public class JobSingletons {
 
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER =
       Instrumenter.<JobExecution, Void>newBuilder(
-              GlobalOpenTelemetry.get(),
-              instrumentationName(),
-              JobExecutionInstrumenter::extractSpanName)
+              GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName)
           .newInstrumenter();
 
   private static String extractSpanName(JobExecution jobExecution) {
     return "BatchJob " + jobExecution.getJobInstance().getJobName();
   }
 
-  public static Instrumenter<JobExecution, Void> jobExecutionInstrumenter() {
+  public static Instrumenter<JobExecution, Void> jobInstrumenter() {
     return INSTRUMENTER;
   }
 
-  private JobExecutionInstrumenter() {}
+  private JobSingletons() {}
 }

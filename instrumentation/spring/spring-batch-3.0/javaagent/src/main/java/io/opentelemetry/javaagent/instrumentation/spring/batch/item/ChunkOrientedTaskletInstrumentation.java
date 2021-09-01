@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemInstrumenter.startChunk;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemSingletons.startChunk;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -47,7 +48,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
     public static void onEnter(
         @Advice.Argument(1) ChunkContext chunkContext, @Advice.Local("otelScope") Scope scope) {
       if (shouldTraceItems()) {
-        Context context = startChunk(chunkContext);
+        Context context = startChunk(currentContext(), chunkContext);
         scope = context.makeCurrent();
       }
     }

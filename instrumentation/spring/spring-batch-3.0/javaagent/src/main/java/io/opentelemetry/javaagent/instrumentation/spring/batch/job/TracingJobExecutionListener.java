@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.job;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobExecutionInstrumenter.jobExecutionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobSingletons.jobInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -27,11 +27,11 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
   @Override
   public void beforeJob(JobExecution jobExecution) {
     Context parentContext = currentContext();
-    if (!jobExecutionInstrumenter().shouldStart(parentContext, jobExecution)) {
+    if (!jobInstrumenter().shouldStart(parentContext, jobExecution)) {
       return;
     }
 
-    Context context = jobExecutionInstrumenter().start(parentContext, jobExecution);
+    Context context = jobInstrumenter().start(parentContext, jobExecution);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(jobExecution, new ContextAndScope(context, scope));
@@ -45,7 +45,7 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
     }
     executionContextStore.put(jobExecution, null);
     contextAndScope.closeScope();
-    jobExecutionInstrumenter().end(contextAndScope.getContext(), jobExecution, null, null);
+    jobInstrumenter().end(contextAndScope.getContext(), jobExecution, null, null);
   }
 
   @Override

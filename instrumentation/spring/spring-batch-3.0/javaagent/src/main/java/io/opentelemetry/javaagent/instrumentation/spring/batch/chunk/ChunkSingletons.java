@@ -18,17 +18,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
-public class ChunkExecutionInstrumenter {
+public class ChunkSingletons {
 
   private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER =
       Instrumenter.<ChunkContextAndBuilder, Void>newBuilder(
-              GlobalOpenTelemetry.get(),
-              instrumentationName(),
-              ChunkExecutionInstrumenter::spanName)
-          .addSpanLinksExtractor(ChunkExecutionInstrumenter::extractSpanLinks)
+              GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName)
+          .addSpanLinksExtractor(ChunkSingletons::extractSpanLinks)
           .newInstrumenter();
 
-  public static Instrumenter<ChunkContextAndBuilder, Void> chunkExecutionInstrumenter() {
+  public static Instrumenter<ChunkContextAndBuilder, Void> chunkInstrumenter() {
     return INSTRUMENTER;
   }
 
@@ -55,5 +53,5 @@ public class ChunkExecutionInstrumenter {
     return "BatchJob " + jobName + "." + stepName + "." + type;
   }
 
-  private ChunkExecutionInstrumenter() {}
+  private ChunkSingletons() {}
 }

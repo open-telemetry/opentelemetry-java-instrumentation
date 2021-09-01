@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.rootContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.ChunkExecutionInstrumenter.chunkExecutionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.ChunkSingletons.chunkInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -31,13 +32,13 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
 
   @Override
   public void beforeChunk(ChunkContext chunkContext) {
-    Context parentContext = shouldCreateRootSpanForChunk() ? Context.root() : currentContext();
+    Context parentContext = shouldCreateRootSpanForChunk() ? rootContext() : currentContext();
     chunkContextAndBuilder = new ChunkContextAndBuilder(chunkContext, builderClass);
-    if (!chunkExecutionInstrumenter().shouldStart(parentContext, chunkContextAndBuilder)) {
+    if (!chunkInstrumenter().shouldStart(parentContext, chunkContextAndBuilder)) {
       return;
     }
 
-    Context context = chunkExecutionInstrumenter().start(parentContext, chunkContextAndBuilder);
+    Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(chunkContext, new ContextAndScope(context, scope));
@@ -63,8 +64,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
 
     executionContextStore.put(chunkContext, null);
     contextAndScope.closeScope();
-    chunkExecutionInstrumenter()
-        .end(contextAndScope.getContext(), chunkContextAndBuilder, null, throwable);
+    chunkInstrumenter().end(contextAndScope.getContext(), chunkContextAndBuilder, null, throwable);
   }
 
   @Override
