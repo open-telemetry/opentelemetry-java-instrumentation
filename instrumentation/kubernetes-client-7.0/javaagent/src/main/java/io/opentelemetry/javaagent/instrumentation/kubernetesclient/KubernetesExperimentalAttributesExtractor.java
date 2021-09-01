@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.captureExperimentalSpanAttributes;
-
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -17,9 +15,6 @@ class KubernetesExperimentalAttributesExtractor
     extends AttributesExtractor<Request, ApiResponse<?>> {
   @Override
   protected void onStart(AttributesBuilder attributes, Request request) {
-    if (!captureExperimentalSpanAttributes()) {
-      return;
-    }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     attributes
         .put("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())

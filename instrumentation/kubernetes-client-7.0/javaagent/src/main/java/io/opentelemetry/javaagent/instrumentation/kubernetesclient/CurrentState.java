@@ -35,9 +35,9 @@ public final class CurrentState {
 
   @Nullable
   public static CurrentState remove() {
-    CurrentState contextAndScope = CURRENT.get();
+    CurrentState currentState = CURRENT.get();
     CURRENT.remove();
-    return contextAndScope;
+    return currentState;
   }
 
   public Context getParentContext() {

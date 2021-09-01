@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import okhttp3.Request;
@@ -32,16 +33,22 @@ public class KubernetesClientSingletons {
     SpanNameExtractor<Request> spanNameExtractor =
         request -> KubernetesRequestDigest.parse(request).toString();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<Request, ApiResponse<?>> instrumenterBuilder =
         Instrumenter.<Request, ApiResponse<?>>newBuilder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new KubernetesNetAttributesExtractor())
-            .addAttributesExtractor(new KubernetesExperimentalAttributesExtractor())
-            .newInstrumenter(alwaysClient());
+            .addAttributesExtractor(new KubernetesNetAttributesExtractor());
+
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      instrumenterBuilder.addAttributesExtractor(new KubernetesExperimentalAttributesExtractor());
+    }
+
+    // Initialize with .newInstrumenter(alwaysClient()) instead of .newClientInstrumenter(..)
+    // because Request is immutable so context must be injected manually
+    INSTRUMENTER = instrumenterBuilder.newInstrumenter(alwaysClient());
 
     CONTEXT_PROPAGATORS = GlobalOpenTelemetry.getPropagators();
   }
@@ -52,10 +59,6 @@ public class KubernetesClientSingletons {
 
   public static void inject(Context context, Request.Builder requestBuilder) {
     CONTEXT_PROPAGATORS.getTextMapPropagator().inject(context, requestBuilder, SETTER);
-  }
-
-  public static boolean captureExperimentalSpanAttributes() {
-    return CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
   }
 
   private KubernetesClientSingletons() {}
