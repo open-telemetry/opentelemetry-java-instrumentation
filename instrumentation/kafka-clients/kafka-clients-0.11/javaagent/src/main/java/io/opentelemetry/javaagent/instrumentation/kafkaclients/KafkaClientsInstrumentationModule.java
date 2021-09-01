@@ -20,6 +20,9 @@ public class KafkaClientsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new KafkaConsumerInstrumentation(), new KafkaProducerInstrumentation());
+    return asList(
+        new KafkaProducerInstrumentation(),
+        new KafkaConsumerInstrumentation(),
+        new ConsumerRecordsInstrumentation());
   }
 }
