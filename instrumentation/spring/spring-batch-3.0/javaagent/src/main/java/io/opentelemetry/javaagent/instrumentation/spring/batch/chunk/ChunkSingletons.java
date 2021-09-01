@@ -14,17 +14,26 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
 public class ChunkSingletons {
 
-  private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER =
-      Instrumenter.<ChunkContextAndBuilder, Void>newBuilder(
-              GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName)
-          .addSpanLinksExtractor(ChunkSingletons::extractSpanLinks)
-          .newInstrumenter();
+  private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER;
+
+  static {
+    InstrumenterBuilder<ChunkContextAndBuilder, Void> instrumenterBuilder =
+        Instrumenter.newBuilder(
+            GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName);
+
+    if (shouldCreateRootSpanForChunk()) {
+      instrumenterBuilder.addSpanLinksExtractor(ChunkSingletons::extractSpanLinks);
+    }
+
+    INSTRUMENTER = instrumenterBuilder.newInstrumenter();
+  }
 
   public static Instrumenter<ChunkContextAndBuilder, Void> chunkInstrumenter() {
     return INSTRUMENTER;

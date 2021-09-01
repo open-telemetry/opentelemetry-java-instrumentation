@@ -51,12 +51,12 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelItem") String item) {
-      ChunkContext chunkContext = getChunkContext(currentContext());
+      Context parentContext = currentContext();
+      ChunkContext chunkContext = getChunkContext(parentContext);
       if (chunkContext == null || !shouldTraceItems()) {
         return;
       }
 
-      Context parentContext = currentContext();
       item = ItemSingletons.itemName(chunkContext, ITEM_OPERATION_PROCESS);
       if (!itemInstrumenter().shouldStart(parentContext, item)) {
         return;
@@ -90,12 +90,12 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelItem") String item) {
-      ChunkContext chunkContext = getChunkContext(currentContext());
+      Context parentContext = currentContext();
+      ChunkContext chunkContext = getChunkContext(parentContext);
       if (chunkContext == null || itemWriter == null || !shouldTraceItems()) {
         return;
       }
 
-      Context parentContext = currentContext();
       item = ItemSingletons.itemName(chunkContext, ITEM_OPERATION_WRITE);
       if (!itemInstrumenter().shouldStart(parentContext, item)) {
         return;
