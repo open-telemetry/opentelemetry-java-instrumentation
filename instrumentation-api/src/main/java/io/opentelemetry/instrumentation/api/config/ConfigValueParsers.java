@@ -55,15 +55,15 @@ final class ConfigValueParsers {
   }
 
   static List<String> parseList(@SuppressWarnings("unused") String propertyName, String value) {
-    return Collections.unmodifiableList(filterBlanksAndNulls(value.split(",")));
+    return Collections.unmodifiableList(filterBlanks(value.split(",")));
   }
 
   static Map<String, String> parseMap(String propertyName, String value) {
     return parseList(propertyName, value).stream()
-        .map(keyValuePair -> filterBlanksAndNulls(keyValuePair.split("=", 2)))
+        .map(keyValuePair -> trim(keyValuePair.split("=", 2)))
         .map(
             splitKeyValuePairs -> {
-              if (splitKeyValuePairs.size() != 2) {
+              if (splitKeyValuePairs.size() != 2 || splitKeyValuePairs.get(0).isEmpty()) {
                 throw new ConfigParsingException(
                     "Invalid map property: " + propertyName + "=" + value);
               }
@@ -77,11 +77,15 @@ final class ConfigValueParsers {
                 Map.Entry::getKey, Map.Entry::getValue, (first, next) -> next, LinkedHashMap::new));
   }
 
-  private static List<String> filterBlanksAndNulls(String[] values) {
+  private static List<String> filterBlanks(String[] values) {
     return Arrays.stream(values)
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .collect(Collectors.toList());
+  }
+
+  private static List<String> trim(String[] values) {
+    return Arrays.stream(values).map(String::trim).collect(Collectors.toList());
   }
 
   static Duration parseDuration(String propertyName, String value) {

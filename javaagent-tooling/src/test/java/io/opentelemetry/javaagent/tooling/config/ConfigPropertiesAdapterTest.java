@@ -31,6 +31,7 @@ class ConfigPropertiesAdapterTest {
     properties.put("double", "5.4");
     properties.put("list", "cat,dog,bear");
     properties.put("map", "cat=meow,dog=bark,bear=growl");
+    properties.put("mapWithEmptyValue", "cat=meow,dog=,bear=growl");
     properties.put("duration", "1s");
 
     ConfigProperties config = createConfig(properties);
@@ -41,6 +42,8 @@ class ConfigPropertiesAdapterTest {
     assertThat(config.getCommaSeparatedValues("list")).containsExactly("cat", "dog", "bear");
     assertThat(config.getCommaSeparatedMap("map"))
         .containsExactly(entry("cat", "meow"), entry("dog", "bark"), entry("bear", "growl"));
+    assertThat(config.getCommaSeparatedMap("mapWithEmptyValue"))
+        .containsExactly(entry("cat", "meow"), entry("dog", ""), entry("bear", "growl"));
     assertThat(config.getDuration("duration")).isEqualTo(Duration.ofSeconds(1));
   }
 
@@ -131,11 +134,6 @@ class ConfigPropertiesAdapterTest {
 
   @Test
   void invalidMap() {
-    assertThatThrownBy(
-            () ->
-                createConfig(Collections.singletonMap("map", "a=1,b=")).getCommaSeparatedMap("map"))
-        .isInstanceOf(ConfigurationException.class)
-        .hasMessage("Invalid map property: map=a=1,b=");
     assertThatThrownBy(
             () ->
                 createConfig(Collections.singletonMap("map", "a=1,b")).getCommaSeparatedMap("map"))
