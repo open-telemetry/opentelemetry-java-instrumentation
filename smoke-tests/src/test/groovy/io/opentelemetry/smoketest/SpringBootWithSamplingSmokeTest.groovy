@@ -22,7 +22,7 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_TRACES_SAMPLER": "parentbased_traceidratio",
+      "OTEL_TRACES_SAMPLER"    : "parentbased_traceidratio",
       "OTEL_TRACES_SAMPLER_ARG": String.valueOf(SAMPLER_PROBABILITY),
     ]
   }

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.test.asserts
 
-import static AttributesAssert.assertAttributes
-
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.sdk.trace.data.EventData
+
+import static AttributesAssert.assertAttributes
 
 class EventAssert {
   private final EventData event
@@ -49,7 +49,7 @@ class EventAssert {
 
   private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
-    attributes.forEach {key, value ->
+    attributes.forEach { key, value ->
       map.put(key.key, value)
     }
     return map

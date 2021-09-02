@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava2
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
-import static java.util.concurrent.TimeUnit.MILLISECONDS
-
 import com.google.common.collect.Lists
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
@@ -25,6 +22,9 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
+import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
  * <p>Tests in this class may seem not exhaustive due to the fact that some classes are converted

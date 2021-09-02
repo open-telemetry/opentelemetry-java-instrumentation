@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -23,9 +24,10 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import spock.lang.Shared
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import spock.lang.Shared
 
 class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
 

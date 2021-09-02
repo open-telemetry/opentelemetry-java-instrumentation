@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -13,6 +11,9 @@ import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 @Unroll
 class PutGetTest extends AgentInstrumentationSpecification {

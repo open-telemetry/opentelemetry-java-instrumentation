@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -24,6 +22,9 @@ import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
 import org.jsoup.Jsoup
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class BaseJsfTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 

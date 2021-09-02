@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import com.couchbase.client.java.AsyncCluster
 import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
@@ -10,10 +11,11 @@ import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
 import io.opentelemetry.api.trace.SpanKind
-import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
 import util.AbstractCouchbaseTest
+
+import java.util.concurrent.TimeUnit
 
 @Unroll
 abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {

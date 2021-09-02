@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
@@ -14,12 +13,15 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.time.Duration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
+
+import java.time.Duration
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 class CassandraClientTest extends AgentInstrumentationSpecification {
   private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest)

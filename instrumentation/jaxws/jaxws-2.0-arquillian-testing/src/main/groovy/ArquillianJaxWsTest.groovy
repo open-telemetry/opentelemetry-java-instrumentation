@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -25,6 +22,10 @@ import spock.lang.Unroll
 import test.EjbHelloServiceImpl
 import test.HelloService
 import test.HelloServiceImpl
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @RunWith(ArquillianSputnik)
 @RunAsClient

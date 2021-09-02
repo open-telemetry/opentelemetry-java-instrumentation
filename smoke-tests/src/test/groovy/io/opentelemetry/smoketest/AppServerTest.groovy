@@ -5,17 +5,18 @@
 
 package io.opentelemetry.smoketest
 
+import io.opentelemetry.proto.trace.v1.Span
+import org.junit.runner.RunWith
+import spock.lang.Shared
+import spock.lang.Unroll
+
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OS_TYPE
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.LINUX
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
 import static org.junit.Assume.assumeTrue
-
-import io.opentelemetry.proto.trace.v1.Span
-import java.util.jar.Attributes
-import java.util.jar.JarFile
-import org.junit.runner.RunWith
-import spock.lang.Shared
-import spock.lang.Unroll
 
 @RunWith(AppServerTestRunner)
 abstract class AppServerTest extends SmokeTest {

@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.dropwizard.testing.junit.ResourceTestRule
+import org.junit.ClassRule
+import spock.lang.Shared
+
+import javax.ws.rs.client.Entity
+import javax.ws.rs.core.Response
+
 import static Resource.Test1
 import static Resource.Test2
 import static Resource.Test3
-
-import io.dropwizard.testing.junit.ResourceTestRule
-import javax.ws.rs.client.Entity
-import javax.ws.rs.core.Response
-import org.junit.ClassRule
-import spock.lang.Shared
 
 class JerseyFilterTest extends JaxRsFilterTest {
   @Shared

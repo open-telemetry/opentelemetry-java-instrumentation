@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -16,6 +12,12 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
+
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
 

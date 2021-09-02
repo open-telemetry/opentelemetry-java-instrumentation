@@ -5,9 +5,9 @@
 
 package util
 
-import static org.awaitility.Awaitility.await
-
 import java.util.concurrent.TimeUnit
+
+import static org.awaitility.Awaitility.await
 
 class SpringWebfluxTestUtil {
 
@@ -22,7 +22,7 @@ class SpringWebfluxTestUtil {
   }
 
   static boolean isRequestRunning() {
-    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+    def result = Thread.getAllStackTraces().values().find { stackTrace ->
       def element = stackTrace.find {
         return ((it.className == "reactor.ipc.netty.http.server.HttpServerOperations" && it.methodName == "onHandlerStart")
           || (it.className == "io.netty.channel.nio.NioEventLoop" && it.methodName == "processSelectedKey"))

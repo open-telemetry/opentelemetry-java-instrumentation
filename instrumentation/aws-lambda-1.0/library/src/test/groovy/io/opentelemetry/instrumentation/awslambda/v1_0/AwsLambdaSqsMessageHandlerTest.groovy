@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class AwsLambdaSqsMessageHandlerTest extends LibraryInstrumentationSpecification {
 

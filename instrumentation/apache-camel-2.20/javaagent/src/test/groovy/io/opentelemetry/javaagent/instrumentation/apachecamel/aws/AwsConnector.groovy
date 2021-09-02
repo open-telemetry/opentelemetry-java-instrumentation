@@ -41,7 +41,7 @@ class AwsConnector {
     awsConnector.sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
 
     def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+sqsPort, "elasticmq")
+    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:" + sqsPort, "elasticmq")
     awsConnector.sqsClient = AmazonSQSAsyncClient.asyncBuilder().withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
 
     return awsConnector

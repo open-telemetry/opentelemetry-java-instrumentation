@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import com.mongodb.MongoClientSettings
 import com.mongodb.ServerAddress
 import com.mongodb.client.result.DeleteResult
@@ -13,8 +14,6 @@ import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -22,6 +21,9 @@ import org.junit.AssumptionViolatedException
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
+
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 
 class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait {
 

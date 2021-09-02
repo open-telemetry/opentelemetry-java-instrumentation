@@ -3,20 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.time.Duration
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.locks.ReentrantLock
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -27,6 +19,16 @@ import net.spy.memcached.ops.Operation
 import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import java.time.Duration
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 class SpymemcachedTest extends AgentInstrumentationSpecification {
 

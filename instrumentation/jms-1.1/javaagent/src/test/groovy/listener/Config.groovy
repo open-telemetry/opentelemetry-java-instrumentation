@@ -5,9 +5,6 @@
 
 package listener
 
-import java.time.Duration
-import javax.annotation.PreDestroy
-import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -17,6 +14,10 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
+
+import javax.annotation.PreDestroy
+import javax.jms.ConnectionFactory
+import java.time.Duration
 
 @Configuration
 @ComponentScan

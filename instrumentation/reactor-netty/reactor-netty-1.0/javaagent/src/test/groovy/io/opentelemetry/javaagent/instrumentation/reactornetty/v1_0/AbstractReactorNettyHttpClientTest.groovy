@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0
 
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-
 import io.netty.resolver.AddressResolver
 import io.netty.resolver.AddressResolverGroup
 import io.netty.resolver.InetNameResolver
@@ -20,8 +18,11 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.concurrent.atomic.AtomicReference
 import reactor.netty.http.client.HttpClient
+
+import java.util.concurrent.atomic.AtomicReference
+
+import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
 abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpClient.ResponseReceiver> implements AgentTestTrait {
 
@@ -47,7 +48,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
   @Override
   int sendRequest(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers) {
-    return request.responseSingle {resp, content ->
+    return request.responseSingle { resp, content ->
       // Make sure to consume content since that's when we close the span.
       content.map {
         resp
@@ -57,7 +58,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
   @Override
   void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    request.responseSingle {resp, content ->
+    request.responseSingle { resp, content ->
       // Make sure to consume content since that's when we close the span.
       content.map { resp }
     }.subscribe({
@@ -124,7 +125,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
-        .responseSingle {resp, content ->
+        .responseSingle { resp, content ->
           // Make sure to consume content since that's when we close the span.
           content.map { resp }
         }

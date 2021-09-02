@@ -5,13 +5,8 @@
 
 package springdata
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
@@ -29,6 +24,12 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
+
+import java.util.concurrent.atomic.AtomicLong
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecification {
   public static final long TIMEOUT = 10000 // 10 seconds

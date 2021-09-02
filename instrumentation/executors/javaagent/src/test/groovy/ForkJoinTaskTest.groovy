@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import java.util.stream.IntStream
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 class ForkJoinTaskTest extends AgentInstrumentationSpecification {
 

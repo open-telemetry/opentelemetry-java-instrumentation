@@ -6,7 +6,6 @@
 package springdata
 
 
-
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.env.CouchbaseEnvironment

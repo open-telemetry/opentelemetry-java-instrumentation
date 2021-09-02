@@ -5,18 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static org.junit.Assume.assumeTrue
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
@@ -32,9 +20,22 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
+import spock.lang.Unroll
+
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import spock.lang.Unroll
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
@@ -398,7 +399,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     when:
     count.times { index ->
       HttpRequestBuilder request = HttpRequest.builder()
-        // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+      // Force HTTP/1 via h1c so upgrade requests don't show up as traces
         .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
         .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
       runUnderTrace("client " + index) {

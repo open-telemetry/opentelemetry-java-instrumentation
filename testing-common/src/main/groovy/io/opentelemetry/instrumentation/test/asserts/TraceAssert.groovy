@@ -5,14 +5,15 @@
 
 package io.opentelemetry.instrumentation.test.asserts
 
-import static SpanAssert.assertSpan
-
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
+
+import static SpanAssert.assertSpan
 
 class TraceAssert {
   private final List<SpanData> spans

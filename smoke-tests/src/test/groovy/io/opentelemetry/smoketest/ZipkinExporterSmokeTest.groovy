@@ -18,8 +18,8 @@ class ZipkinExporterSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_TRACES_EXPORTER"          : "zipkin",
-      "OTEL_EXPORTER_ZIPKIN_ENDPOINT" : "http://collector:9411/api/v2/spans"
+      "OTEL_TRACES_EXPORTER"         : "zipkin",
+      "OTEL_EXPORTER_ZIPKIN_ENDPOINT": "http://collector:9411/api/v2/spans"
     ]
   }
 

@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import com.example.hello.HelloController
 import com.example.hello.TestFilter
@@ -22,6 +20,9 @@ import org.jboss.shrinkwrap.api.ShrinkWrap
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive
 import org.jboss.shrinkwrap.api.spec.WebArchive
 import org.junit.runner.RunWith
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 @RunWith(ArquillianSputnik)
 @RunAsClient

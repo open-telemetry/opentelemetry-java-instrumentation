@@ -11,13 +11,14 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CompletionStage
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
+
+import java.util.concurrent.CompletionStage
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.

@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
@@ -14,11 +12,15 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import org.testcontainers.containers.FixedHostPortGenericContainer
 import reactor.core.scheduler.Schedulers
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
+
+import java.util.function.Consumer
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   public static final String PEER_HOST = "localhost"

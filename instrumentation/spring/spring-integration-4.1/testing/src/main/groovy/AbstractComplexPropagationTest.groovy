@@ -3,14 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.stream.Collectors
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -24,6 +18,14 @@ import org.springframework.messaging.Message
 import org.springframework.messaging.SubscribableChannel
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
+
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.stream.Collectors
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 abstract class AbstractComplexPropagationTest extends InstrumentationSpecification {
 

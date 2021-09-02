@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.rxjava2.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -23,6 +21,9 @@ import io.reactivex.subscribers.TestSubscriber
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 

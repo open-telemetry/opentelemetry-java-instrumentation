@@ -5,12 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import com.amazonaws.AmazonClientException
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.SDKGlobalConfiguration
@@ -40,9 +34,16 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
-import java.time.Duration
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.time.Duration
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
 

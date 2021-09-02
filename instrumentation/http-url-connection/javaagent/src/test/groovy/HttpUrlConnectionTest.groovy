@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -14,6 +11,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Requires
 import spock.lang.Unroll
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements AgentTestTrait {
 

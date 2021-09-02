@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static org.junit.Assume.assumeTrue
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
@@ -33,10 +32,13 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
+
+import static org.junit.Assume.assumeTrue
 
 @Unroll
 class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {

@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.kubernetes.client.openapi.ApiCallback
 import io.kubernetes.client.openapi.ApiClient
@@ -20,9 +16,15 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
+import spock.lang.Shared
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
-import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class KubernetesClientTest extends AgentInstrumentationSpecification {
   private static final String TEST_USER_AGENT = "test-user-agent"

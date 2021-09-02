@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import org.jboss.resteasy.client.jaxrs.ResteasyClient
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+
+import javax.ws.rs.core.MediaType
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import javax.ws.rs.core.MediaType
-import org.jboss.resteasy.client.jaxrs.ResteasyClient
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 
 class ResteasySingleConnection implements SingleConnection {
   private final ResteasyClient client

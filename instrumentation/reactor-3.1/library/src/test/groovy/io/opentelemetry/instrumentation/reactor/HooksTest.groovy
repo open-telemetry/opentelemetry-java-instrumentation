@@ -6,9 +6,10 @@
 package io.opentelemetry.instrumentation.reactor
 
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
-import java.util.concurrent.atomic.AtomicReference
 import reactor.core.CoreSubscriber
 import reactor.core.publisher.Mono
+
+import java.util.concurrent.atomic.AtomicReference
 
 class HooksTest extends LibraryInstrumentationSpecification {
 

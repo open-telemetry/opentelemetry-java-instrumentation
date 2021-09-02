@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.classloading
 
-import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
-
 import io.opentelemetry.javaagent.util.GcUtils
 import io.opentelemetry.test.ClassToInstrument
 import io.opentelemetry.test.ClassToInstrumentChild
-import java.lang.ref.WeakReference
 import spock.lang.Specification
+
+import java.lang.ref.WeakReference
+
+import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
 
 class ClassLoadingTest extends Specification {
 

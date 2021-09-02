@@ -3,22 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static java.lang.String.valueOf
-import static java.nio.charset.Charset.defaultCharset
-import static java.util.concurrent.TimeUnit.MILLISECONDS
-import static org.glassfish.grizzly.memory.Buffers.wrap
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.util.concurrent.Executors
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
 import org.glassfish.grizzly.filterchain.FilterChainBuilder
@@ -36,6 +23,21 @@ import org.glassfish.grizzly.nio.transport.TCPNIOTransport
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder
 import org.glassfish.grizzly.utils.DelayedExecutor
 import org.glassfish.grizzly.utils.IdleTimeoutFilter
+
+import java.util.concurrent.Executors
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static java.lang.String.valueOf
+import static java.nio.charset.Charset.defaultCharset
+import static java.util.concurrent.TimeUnit.MILLISECONDS
+import static org.glassfish.grizzly.memory.Buffers.wrap
 
 class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static org.junit.Assume.assumeTrue
-
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -20,6 +18,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
@@ -45,22 +45,17 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * for example:
    *
    * @Override
-   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
-   *   HttpResponse response = client.execute(request)
+   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {*   HttpResponse response = client.execute(request)
    *   return response.statusCode()
-   * }
-   *
+   *}*
    * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
    * can be used to block on a result, for example:
    *
    * @Override
-   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
-   *   CompletableFuture<Integer> future = new CompletableFuture<>(
-   *   sendRequestWithCallback(request, method, uri, headers) {
-   *     future.complete(it.statusCode())
-   *   }
-   *   return future.get()
-   * }
+   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {*   CompletableFuture<Integer> future = new CompletableFuture<>(
+   *   sendRequestWithCallback(request, method, uri, headers) {*     future.complete(it.statusCode())
+   *}*   return future.get()
+   *}
    */
   abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
@@ -73,28 +68,19 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * the context is propagated correctly to such callbacks.
    *
    * @Override
-   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-   *   // Hypothetical client accepting a callback
-   *   client.executeAsync(request) {
-   *     void success(Response response) {
-   *       requestResult.complete(response.statusCode())
-   *     }
-   *     void failure(Throwable throwable) {
-   *       requestResult.complete(throwable)
-   *     }
-   *   }
-   *
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {*   // Hypothetical client accepting a callback
+   *   client.executeAsync(request) {*     void success(Response response) {*       requestResult.complete(response.statusCode())
+   *}*     void failure(Throwable throwable) {*       requestResult.complete(throwable)
+   *}*}*
    *   // Hypothetical client returning a CompletableFuture
    *   client.executeAsync(request).whenComplete { response, throwable ->
    *     requestResult.complete({ response.statusCode() }, throwable)
-   *   }
-   * }
-   *
+   *}*}*
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
   void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers,
-                               AbstractHttpClientTest.RequestResult  requestResult) {
+                               AbstractHttpClientTest.RequestResult requestResult) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }

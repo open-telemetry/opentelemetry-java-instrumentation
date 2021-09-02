@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.lettuce.core.RedisClient
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"

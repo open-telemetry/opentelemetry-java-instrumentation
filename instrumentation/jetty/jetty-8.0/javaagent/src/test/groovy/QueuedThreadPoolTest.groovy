@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jetty.JavaLambdaMaker
 import org.eclipse.jetty.util.thread.QueuedThreadPool
+
+import static org.junit.Assume.assumeTrue
 
 class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
 

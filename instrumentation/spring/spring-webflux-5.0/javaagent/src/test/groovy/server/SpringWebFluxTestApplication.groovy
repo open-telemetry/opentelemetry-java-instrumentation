@@ -5,13 +5,8 @@
 
 package server
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST
-import static org.springframework.web.reactive.function.server.RouterFunctions.route
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
-import java.time.Duration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -24,6 +19,12 @@ import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
+
+import java.time.Duration
+
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET
+import static org.springframework.web.reactive.function.server.RequestPredicates.POST
+import static org.springframework.web.reactive.function.server.RouterFunctions.route
 
 @SpringBootApplication
 @ComponentScan(basePackages = ["server"], excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "server.base.*"))

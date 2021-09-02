@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
+
+import java.util.concurrent.CountDownLatch
 
 abstract class AbstractSubscriptionTest extends InstrumentationSpecification {
 

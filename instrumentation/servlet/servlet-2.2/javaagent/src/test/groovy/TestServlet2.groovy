@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import groovy.servlet.AbstractHttpServlet
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 class TestServlet2 {
 

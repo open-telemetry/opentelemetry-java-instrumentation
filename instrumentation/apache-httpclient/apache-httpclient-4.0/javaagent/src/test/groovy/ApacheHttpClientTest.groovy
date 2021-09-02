@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
@@ -19,6 +19,8 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
+
+import java.util.function.Consumer
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared

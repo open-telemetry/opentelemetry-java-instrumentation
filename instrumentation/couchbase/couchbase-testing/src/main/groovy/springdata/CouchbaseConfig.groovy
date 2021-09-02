@@ -5,14 +5,14 @@
 
 package springdata
 
-import static java.util.Objects.requireNonNull
-
 import com.couchbase.client.java.cluster.BucketSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.couchbase.config.AbstractCouchbaseConfiguration
 import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepositories
+
+import static java.util.Objects.requireNonNull
 
 @Configuration
 @EnableCouchbaseRepositories(basePackages = "springdata")

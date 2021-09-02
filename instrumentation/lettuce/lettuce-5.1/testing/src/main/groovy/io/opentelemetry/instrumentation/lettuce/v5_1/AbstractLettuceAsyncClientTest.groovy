@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisFuture
@@ -20,15 +16,20 @@ import io.lettuce.core.codec.StringCodec
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.FixedHostPortGenericContainer
+import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
+
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import org.testcontainers.containers.FixedHostPortGenericContainer
-import spock.lang.Shared
-import spock.util.concurrent.AsyncConditions
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"

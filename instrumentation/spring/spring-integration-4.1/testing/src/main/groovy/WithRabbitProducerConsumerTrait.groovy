@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import java.time.Duration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
@@ -19,6 +16,11 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.messaging.support.MessageBuilder
 import org.testcontainers.containers.GenericContainer
+
+import java.time.Duration
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 trait WithRabbitProducerConsumerTrait {
 

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.sdk.trace.ReadWriteSpan
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Specification
 
 class AddThreadDetailsSpanProcessorTest extends Specification {

@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.jdbc.datasource
 
 import io.opentelemetry.instrumentation.jdbc.TestConnection
+
+import javax.sql.DataSource
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.SQLFeatureNotSupportedException
 import java.util.logging.Logger
-import javax.sql.DataSource
 
 class TestDataSource implements DataSource {
 

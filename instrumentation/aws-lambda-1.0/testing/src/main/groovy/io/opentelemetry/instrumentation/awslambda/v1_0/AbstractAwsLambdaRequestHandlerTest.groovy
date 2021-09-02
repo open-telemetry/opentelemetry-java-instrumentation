@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
 

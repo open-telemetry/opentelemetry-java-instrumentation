@@ -3,15 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.time.Duration
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.annotation.RabbitListener
@@ -22,6 +17,13 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import java.time.Duration
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 

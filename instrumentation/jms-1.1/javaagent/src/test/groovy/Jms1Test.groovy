@@ -3,20 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
-import javax.jms.Connection
-import javax.jms.Message
-import javax.jms.MessageListener
-import javax.jms.Session
-import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.command.ActiveMQTextMessage
 import org.slf4j.Logger
@@ -25,6 +16,17 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import javax.jms.Connection
+import javax.jms.Message
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 @Unroll
 class Jms1Test extends AgentInstrumentationSpecification {

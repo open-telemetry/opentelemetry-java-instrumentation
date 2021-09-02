@@ -5,9 +5,9 @@
 
 package jsr
 
+import javax.batch.api.chunk.ItemReader
 import java.util.stream.Collectors
 import java.util.stream.IntStream
-import javax.batch.api.chunk.ItemReader
 
 class TestItemReader implements ItemReader {
   private final List<String> items = IntStream.range(0, 13).mapToObj(String.&valueOf).collect(Collectors.toList())
