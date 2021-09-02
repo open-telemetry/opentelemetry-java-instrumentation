@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.metro;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public class MetroSingletons {
@@ -17,6 +18,7 @@ public class MetroSingletons {
     INSTRUMENTER =
         Instrumenter.<MetroRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, MetroRequest::spanName)
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

@@ -42,10 +42,11 @@ dependencies {
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
   javaagentLibs(project(":instrumentation:executors:javaagent"))
   // FIXME: we should enable this, but currently this fails tests for google http client
-  //testImplementation project(":instrumentation:http-url-connection:javaagent")
+  // testImplementation project(":instrumentation:http-url-connection:javaagent")
   javaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
+  javaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   javaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   // Many tests use OpenTelemetry API calls, e.g. via InstrumentationTestRunner.runWithSpan
@@ -70,10 +71,6 @@ project(":instrumentation").subprojects {
 }
 
 tasks {
-  jar {
-    enabled = false
-  }
-
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
@@ -114,15 +111,6 @@ tasks {
 
       jvmArgs("-Dotel.javaagent.debug=true")
       jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile.absolutePath}")
-    }
-  }
-
-  // Because shadow does not use default configurations
-  publishing {
-    publications {
-      named<MavenPublication>("maven") {
-        project.shadow.component(this)
-      }
     }
   }
 }

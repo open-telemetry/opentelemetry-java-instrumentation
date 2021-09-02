@@ -65,7 +65,7 @@ public final class JdbcUtils {
   }
 
   public static DbInfo extractDbInfo(Connection connection) {
-    return JdbcMaps.connectionInfo.computeIfAbsent(connection, JdbcUtils::computeDbInfo);
+    return JdbcData.connectionInfo.computeIfAbsent(connection, JdbcUtils::computeDbInfo);
   }
 
   public static DbInfo computeDbInfo(Connection connection) {

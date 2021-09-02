@@ -16,7 +16,7 @@ abstract class SpanSuppressionStrategy {
   private static final SpanSuppressionStrategy SERVER_STRATEGY =
       new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.SERVER));
   private static final SpanSuppressionStrategy CONSUMER_STRATEGY =
-      new StoreOnlyStrategy(singleton(SpanKey.CONSUMER));
+      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.CONSUMER));
   private static final SpanSuppressionStrategy ALL_CLIENTS_STRATEGY =
       new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_CLIENTS));
   private static final SpanSuppressionStrategy ALL_PRODUCERS_STRATEGY =

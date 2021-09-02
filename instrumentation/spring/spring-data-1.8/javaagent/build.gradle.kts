@@ -41,4 +41,3 @@ dependencies {
 
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
 }
-

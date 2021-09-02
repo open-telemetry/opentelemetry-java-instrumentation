@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.grails;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public final class GrailsSingletons {
@@ -17,6 +18,7 @@ public final class GrailsSingletons {
     INSTRUMENTER =
         Instrumenter.<HandlerData, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HandlerData::spanName)
+            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 

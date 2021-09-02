@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.glassfish.grizzly.http.server.HttpHandler
@@ -45,6 +44,23 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   @Override
   void stopServer(HttpServer server) {
     server.stop()
+  }
+
+  def cleanup() {
+    // wait for async request threads to complete
+    await()
+      .atMost(15, TimeUnit.SECONDS)
+      .until({ !isRequestRunning() })
+  }
+
+  static boolean isRequestRunning() {
+    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+      def element = stackTrace.find {
+        return ((it.className == "org.glassfish.grizzly.http.server.HttpHandler\$1" && it.methodName == "run"))
+      }
+      element != null
+    }
+    return result != null
   }
 
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {

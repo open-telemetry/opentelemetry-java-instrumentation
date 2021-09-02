@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -69,7 +72,7 @@ public final class HttpServerMetrics implements RequestListener {
   @Override
   public Context start(Context context, Attributes requestAttributes) {
     long startTimeNanos = System.nanoTime();
-    activeRequests.add(1, requestAttributes);
+    activeRequests.add(1, applyActiveRequestsView(requestAttributes));
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
@@ -84,9 +87,10 @@ public final class HttpServerMetrics implements RequestListener {
           "No state present when ending context {}. Cannot reset HTTP request metrics.", context);
       return;
     }
-    activeRequests.add(-1, state.startAttributes());
+    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS, state.startAttributes());
+        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS,
+        applyDurationView(state.startAttributes()));
   }
 
   @AutoValue

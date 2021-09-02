@@ -58,8 +58,9 @@ public class JakartaServletServiceAdvice {
               .get((Filter) servletOrFilter);
     }
 
+    Context currentContext = Java8BytecodeBridge.currentContext();
     Context attachedContext = tracer().getServerContext(httpServletRequest);
-    if (attachedContext != null && tracer().needsRescoping(attachedContext)) {
+    if (attachedContext != null && tracer().needsRescoping(currentContext, attachedContext)) {
       attachedContext =
           tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
       scope = attachedContext.makeCurrent();
@@ -67,7 +68,6 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    Context currentContext = Java8BytecodeBridge.currentContext();
     if (attachedContext != null || ServerSpan.fromContextOrNull(currentContext) != null) {
       // Update context with info from current request to ensure that server span gets the best
       // possible name.

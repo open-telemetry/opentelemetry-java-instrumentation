@@ -19,7 +19,9 @@ tasks {
     relocate("com.couchbase.client.tracing.opentelemetry", "com.couchbase.v3_1_6.client.tracing.opentelemetry")
   }
 
-  assemble {
+  val extractShadowJar by registering(Copy::class) {
     dependsOn(shadowJar)
+    from(zipTree(shadowJar.get().archiveFile))
+    into("build/extracted/shadow")
   }
 }

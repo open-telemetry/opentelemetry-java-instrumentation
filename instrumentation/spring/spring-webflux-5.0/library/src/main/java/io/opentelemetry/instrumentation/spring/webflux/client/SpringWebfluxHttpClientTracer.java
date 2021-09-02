@@ -27,8 +27,7 @@ class SpringWebfluxHttpClientTracer
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.spring-webflux.experimental-span-attributes", false);
 
   SpringWebfluxHttpClientTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry, new NetPeerAttributes());

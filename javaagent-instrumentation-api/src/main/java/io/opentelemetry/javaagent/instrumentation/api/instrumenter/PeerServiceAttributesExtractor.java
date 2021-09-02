@@ -24,7 +24,7 @@ import java.util.Map;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
-      Config.get().getMapProperty("otel.instrumentation.common.peer-service-mapping");
+      Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
   private final NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;

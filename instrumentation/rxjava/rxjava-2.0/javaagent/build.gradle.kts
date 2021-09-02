@@ -25,3 +25,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation:rxjava:rxjava-2.0:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+}

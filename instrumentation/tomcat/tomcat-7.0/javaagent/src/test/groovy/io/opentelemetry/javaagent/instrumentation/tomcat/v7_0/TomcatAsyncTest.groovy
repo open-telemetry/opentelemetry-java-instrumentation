@@ -68,6 +68,23 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
     server.destroy()
   }
 
+  def cleanup() {
+    // wait for async request threads to complete
+    await()
+      .atMost(15, TimeUnit.SECONDS)
+      .until({ !isRequestRunning() })
+  }
+
+  static boolean isRequestRunning() {
+    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+      def element = stackTrace.find {
+        return it.className == "org.apache.catalina.core.AsyncContextImpl\$RunnableWrapper" && it.methodName == "run"
+      }
+      element != null
+    }
+    return result != null
+  }
+
   @Override
   String getContextPath() {
     return "/tomcat-context"

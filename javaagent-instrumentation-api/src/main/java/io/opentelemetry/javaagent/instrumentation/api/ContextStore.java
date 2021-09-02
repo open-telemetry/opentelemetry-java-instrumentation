@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
+import java.util.function.Function;
+
 /**
  * Interface to represent context storage for instrumentations.
  *
@@ -62,4 +65,33 @@ public interface ContextStore<K, C> {
    * @return old instance if it was present, or new instance
    */
   C putIfAbsent(K key, Factory<C> contextFactory);
+
+  /**
+   * Adapt this context store instance to {@link Cache} interface.
+   *
+   * @return {@link Cache} backed by this context store instance
+   */
+  default Cache<K, C> asCache() {
+    return new Cache<K, C>() {
+      @Override
+      public C computeIfAbsent(K key, Function<? super K, ? extends C> mappingFunction) {
+        return ContextStore.this.putIfAbsent(key, () -> mappingFunction.apply(key));
+      }
+
+      @Override
+      public C get(K key) {
+        return ContextStore.this.get(key);
+      }
+
+      @Override
+      public void put(K key, C value) {
+        ContextStore.this.put(key, value);
+      }
+
+      @Override
+      public void remove(K key) {
+        throw new UnsupportedOperationException("remove not supported");
+      }
+    };
+  }
 }

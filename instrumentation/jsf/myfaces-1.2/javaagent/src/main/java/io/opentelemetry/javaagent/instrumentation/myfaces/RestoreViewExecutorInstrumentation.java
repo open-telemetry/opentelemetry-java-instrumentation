@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.myfaces;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.jsf.JsfServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,7 +38,8 @@ public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
-      JsfServerSpanNaming.updateServerSpanName(facesContext);
+      ServerSpanNaming.updateServerSpanName(
+          currentContext(), CONTROLLER, JsfServerSpanNaming.SERVER_SPAN_NAME, facesContext);
     }
   }
 }

@@ -46,9 +46,9 @@ public class OpenTelemetryInstaller implements AgentListener {
    */
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer(Config config) {
-    if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
 
-      if (config.getBooleanProperty(JAVAAGENT_NOOP_CONFIG, false)) {
+      if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
         GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
       } else {
         System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");

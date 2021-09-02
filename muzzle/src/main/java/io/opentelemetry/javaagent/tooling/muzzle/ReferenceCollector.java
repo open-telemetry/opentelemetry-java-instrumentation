@@ -74,14 +74,28 @@ public final class ReferenceCollector {
    *
    * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
    * @see InstrumentationClassPredicate
+   * @deprecated Use {@link #collectReferencesFromResource(HelperResource)} instead.
    */
+  @Deprecated
   public void collectReferencesFromResource(String resource) {
-    if (!isSpiFile(resource)) {
+    collectReferencesFromResource(HelperResource.create(resource, resource));
+  }
+
+  /**
+   * If passed {@code resource} path points to an SPI file (either Java {@link
+   * java.util.ServiceLoader} or AWS SDK {@code ExecutionInterceptor}) reads the file and adds every
+   * implementation as a reference, traversing the graph of classes until a non-instrumentation
+   * (external) class is encountered.
+   *
+   * @see InstrumentationClassPredicate
+   */
+  public void collectReferencesFromResource(HelperResource helperResource) {
+    if (!isSpiFile(helperResource.getApplicationPath())) {
       return;
     }
 
     List<String> spiImplementations = new ArrayList<>();
-    try (InputStream stream = getResourceStream(resource)) {
+    try (InputStream stream = getResourceStream(helperResource.getAgentPath())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
       while (reader.ready()) {
         String line = reader.readLine();
@@ -90,7 +104,7 @@ public final class ReferenceCollector {
         }
       }
     } catch (IOException e) {
-      throw new IllegalStateException("Error reading resource " + resource, e);
+      throw new IllegalStateException("Error reading resource " + helperResource.getAgentPath(), e);
     }
 
     visitClassesAndCollectReferences(spiImplementations, /* startsFromAdviceClass= */ false);

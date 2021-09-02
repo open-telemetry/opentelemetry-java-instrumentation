@@ -42,8 +42,7 @@ class BaseSpanDecorator implements SpanDecorator {
 
   static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.apache-camel.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.apache-camel.experimental-span-attributes", false);
 
   static final String DEFAULT_OPERATION_NAME = "CamelOperation";
 

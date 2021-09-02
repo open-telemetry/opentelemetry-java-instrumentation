@@ -18,7 +18,6 @@ public final class SpanKey {
   private static final ContextKey<Span> CONSUMER_KEY =
       ContextKey.named("opentelemetry-traces-span-key-consumer");
 
-  // TODO bridge these constants in AgentContextStorage
   private static final ContextKey<Span> HTTP_KEY =
       ContextKey.named("opentelemetry-traces-span-key-http");
   private static final ContextKey<Span> RPC_KEY =

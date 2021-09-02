@@ -21,10 +21,15 @@ import java.nio.charset.StandardCharsets
 
 class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> implements AgentTestTrait {
 
+  @Shared
+  @AutoCleanup
+  def client = new ResteasyClientBuilder()
+    .connectionPoolSize(4)
+    .build()
+
   @Override
   ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
-    return new ResteasyClientBuilder()
-      .build()
+    return client
       .target(new ResteasyUriBuilder().uri(resolveAddress("")))
       .proxy(ResteasyProxyResource)
   }
@@ -41,8 +46,9 @@ class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> impl
       .orElse(null)
 
     def isTestServer = headers.get("is-test-server")
+    def requestId = headers.get("test-request-id")
 
-    Response response = proxy."$proxyMethodName"(param, isTestServer)
+    Response response = proxy."$proxyMethodName"(param, isTestServer, requestId)
     response.close()
 
     return response.status
@@ -64,15 +70,9 @@ class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> impl
   }
 
   @Override
-  boolean testCausality() {
-    false
-  }
-
-  @Override
   boolean testCallback() {
     false
   }
-
 }
 
 @Path("")
@@ -80,20 +80,24 @@ interface ResteasyProxyResource {
   @GET
   @Path("success")
   Response get_success(@QueryParam("with") String param,
-                       @HeaderParam("is-test-server") String isTestServer)
+                       @HeaderParam("is-test-server") String isTestServer,
+                       @HeaderParam("test-request-id") String requestId)
 
   @POST
   @Path("success")
   Response post_success(@QueryParam("with") String param,
-                        @HeaderParam("is-test-server") String isTestServer)
+                        @HeaderParam("is-test-server") String isTestServer,
+                        @HeaderParam("test-request-id") String requestId)
 
   @PUT
   @Path("success")
   Response put_success(@QueryParam("with") String param,
-                       @HeaderParam("is-test-server") String isTestServer)
+                       @HeaderParam("is-test-server") String isTestServer,
+                       @HeaderParam("test-request-id") String requestId)
 
   @GET
   @Path("error")
   Response get_error(@QueryParam("with") String param,
-                     @HeaderParam("is-test-server") String isTestServer)
+                     @HeaderParam("is-test-server") String isTestServer,
+                     @HeaderParam("test-request-id") String requestId)
 }

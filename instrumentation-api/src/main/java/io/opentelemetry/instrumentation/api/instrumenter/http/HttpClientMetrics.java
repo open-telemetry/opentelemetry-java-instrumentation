@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -75,7 +77,8 @@ public final class HttpClientMetrics implements RequestListener {
       return;
     }
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS, state.startAttributes());
+        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS,
+        applyDurationView(state.startAttributes()));
   }
 
   @AutoValue

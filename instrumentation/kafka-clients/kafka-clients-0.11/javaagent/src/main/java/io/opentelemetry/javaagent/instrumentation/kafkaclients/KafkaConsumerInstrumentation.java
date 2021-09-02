@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaConsumerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -61,7 +61,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void wrap(
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingIterable(iterable, tracer());
+        iterable = new TracingIterable(iterable);
       }
     }
   }
@@ -72,7 +72,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingList(iterable, tracer());
+        iterable = new TracingList(iterable);
       }
     }
   }
@@ -84,7 +84,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void wrap(
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<?, ?>> iterator) {
       if (iterator != null) {
-        iterator = new TracingIterator(iterator, tracer());
+        iterator = new TracingIterator(iterator, consumerInstrumenter());
       }
     }
   }

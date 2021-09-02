@@ -22,7 +22,7 @@ public final class HystrixSingletons {
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HystrixRequest::spanName);
 
     if (Config.get()
-        .getBooleanProperty("otel.instrumentation.hystrix.experimental-span-attributes", false)) {
+        .getBoolean("otel.instrumentation.hystrix.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 

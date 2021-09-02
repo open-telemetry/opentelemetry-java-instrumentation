@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -29,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -257,11 +255,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
-  void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method) {
+  void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method)
+      throws Exception {
     assumeTrue(options.testWithClientParent);
 
     URI uri = resolveAddress("/success");
-    int responseCode = runUnderParentClientSpan(() -> doRequest(method, uri));
+    int responseCode =
+        testing.runWithClientSpan("parent-client-span", () -> doRequest(method, uri));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -910,8 +910,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   }
                 }
               } else {
-                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
+                }
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                }
               }
 
               // Optional
@@ -1132,16 +1136,5 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
     this.server = server;
-  }
-
-  // Must create span within agent using annotation until
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
-  @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
-  private static <T> T runUnderParentClientSpan(Callable<T> r) {
-    try {
-      return r.call();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
-    }
   }
 }

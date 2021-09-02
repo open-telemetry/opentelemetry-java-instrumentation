@@ -6,44 +6,107 @@
 package io.opentelemetry.instrumentation.api.config;
 
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+// most of the parsing code copied from
+// https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/DefaultConfigProperties.java
+@SuppressWarnings("UnusedException")
 final class ConfigValueParsers {
 
-  static List<String> parseList(String value) {
-    String[] tokens = value.split(",", -1);
-    // Remove whitespace from each item.
-    for (int i = 0; i < tokens.length; i++) {
-      tokens[i] = tokens[i].trim();
-    }
-    return Collections.unmodifiableList(Arrays.asList(tokens));
+  static boolean parseBoolean(@SuppressWarnings("unused") String propertyName, String value) {
+    return Boolean.parseBoolean(value);
   }
 
-  static Map<String, String> parseMap(String value) {
-    Map<String, String> result = new LinkedHashMap<>();
-    for (String token : value.split(",", -1)) {
-      token = token.trim();
-      String[] parts = token.split("=", -1);
-      if (parts.length != 2) {
-        throw new IllegalArgumentException(
-            "Invalid map config part, should be formatted key1=value1,key2=value2: " + value);
-      }
-      result.put(parts[0], parts[1]);
+  static int parseInt(String propertyName, String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "integer");
     }
-    return Collections.unmodifiableMap(result);
   }
 
-  static Duration parseDuration(String value) {
+  static long parseLong(String propertyName, String value) {
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "long");
+    }
+  }
+
+  static double parseDouble(String propertyName, String value) {
+    try {
+      return Double.parseDouble(value);
+    } catch (NumberFormatException e) {
+      throw newInvalidPropertyException(propertyName, value, "double");
+    }
+  }
+
+  private static ConfigParsingException newInvalidPropertyException(
+      String name, String value, String type) {
+    throw new ConfigParsingException(
+        "Invalid value for property " + name + "=" + value + ". Must be a " + type + ".");
+  }
+
+  static List<String> parseList(@SuppressWarnings("unused") String propertyName, String value) {
+    return Collections.unmodifiableList(filterBlanks(value.split(",")));
+  }
+
+  static Map<String, String> parseMap(String propertyName, String value) {
+    return parseList(propertyName, value).stream()
+        .map(keyValuePair -> trim(keyValuePair.split("=", 2)))
+        .map(
+            splitKeyValuePairs -> {
+              if (splitKeyValuePairs.size() != 2 || splitKeyValuePairs.get(0).isEmpty()) {
+                throw new ConfigParsingException(
+                    "Invalid map property: " + propertyName + "=" + value);
+              }
+              return new AbstractMap.SimpleImmutableEntry<>(
+                  splitKeyValuePairs.get(0), splitKeyValuePairs.get(1));
+            })
+        // If duplicate keys, prioritize later ones similar to duplicate system properties on a
+        // Java command line.
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey, Map.Entry::getValue, (first, next) -> next, LinkedHashMap::new));
+  }
+
+  private static List<String> filterBlanks(String[] values) {
+    return Arrays.stream(values)
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toList());
+  }
+
+  private static List<String> trim(String[] values) {
+    return Arrays.stream(values).map(String::trim).collect(Collectors.toList());
+  }
+
+  static Duration parseDuration(String propertyName, String value) {
     String unitString = getUnitString(value);
     String numberString = value.substring(0, value.length() - unitString.length());
-    long rawNumber = Long.parseLong(numberString.trim());
-    TimeUnit unit = getDurationUnit(unitString.trim());
-    return Duration.ofMillis(TimeUnit.MILLISECONDS.convert(rawNumber, unit));
+    try {
+      long rawNumber = Long.parseLong(numberString.trim());
+      TimeUnit unit = getDurationUnit(unitString.trim());
+      return Duration.ofMillis(TimeUnit.MILLISECONDS.convert(rawNumber, unit));
+    } catch (NumberFormatException e) {
+      throw new ConfigParsingException(
+          "Invalid duration property "
+              + propertyName
+              + "="
+              + value
+              + ". Expected number, found: "
+              + numberString);
+    } catch (ConfigParsingException ex) {
+      throw new ConfigParsingException(
+          "Invalid duration property " + propertyName + "=" + value + ". " + ex.getMessage());
+    }
   }
 
   /** Returns the TimeUnit associated with a unit string. Defaults to milliseconds. */
@@ -61,7 +124,7 @@ final class ConfigValueParsers {
       case "d":
         return TimeUnit.DAYS;
       default:
-        throw new IllegalArgumentException("Invalid duration string, found: " + unitString);
+        throw new ConfigParsingException("Invalid duration string, found: " + unitString);
     }
   }
 

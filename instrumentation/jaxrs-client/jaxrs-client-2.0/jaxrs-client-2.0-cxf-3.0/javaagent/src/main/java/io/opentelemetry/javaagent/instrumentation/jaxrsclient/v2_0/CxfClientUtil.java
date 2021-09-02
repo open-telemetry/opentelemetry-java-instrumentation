@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import javax.ws.rs.client.ClientRequestContext;
@@ -19,7 +19,7 @@ public final class CxfClientUtil {
         new ClientRequestContextImpl(message, /* responseContext= */ false);
     Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
     if (prop instanceof Context) {
-      tracer().endExceptionally((Context) prop, throwable);
+      instrumenter().end((Context) prop, context, null, throwable);
     }
   }
 

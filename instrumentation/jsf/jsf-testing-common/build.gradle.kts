@@ -15,8 +15,8 @@ dependencies {
   implementation("org.jsoup:jsoup:1.13.1")
 
   val jettyVersion = "9.4.35.v20201120"
-  api("org.eclipse.jetty:jetty-annotations:${jettyVersion}")
-  implementation("org.eclipse.jetty:apache-jsp:${jettyVersion}")
+  api("org.eclipse.jetty:jetty-annotations:$jettyVersion")
+  implementation("org.eclipse.jetty:apache-jsp:$jettyVersion")
   implementation("org.glassfish:jakarta.el:3.0.2")
   implementation("jakarta.websocket:jakarta.websocket-api:1.1.1")
 }

@@ -14,14 +14,11 @@ muzzle {
 dependencies {
   library("org.asynchttpclient:async-http-client:2.0.0")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 }
 
 otelJava {
-  //AHC uses Unsafe and so does not run on later java version
+  // AHC uses Unsafe and so does not run on later java version
   maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
@@ -32,7 +29,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
         eachDependency {
-          //specifying a fixed version for all libraries with io.netty' group
+          // specifying a fixed version for all libraries with io.netty' group
           if (requested.group == "io.netty" && requested.name != "netty-bom") {
             useVersion("4.0.34.Final")
           }

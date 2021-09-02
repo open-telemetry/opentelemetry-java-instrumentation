@@ -193,9 +193,9 @@ tasks.withType<Test>().configureEach {
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
@@ -261,12 +261,12 @@ afterEvaluate {
 }
 
 codenarc {
-  configFile = rootProject.file("gradle/enforcement/codenarc.groovy")
+  configFile = rootProject.file("buildscripts/codenarc.groovy")
   toolVersion = "2.0.0"
 }
 
 checkstyle {
-  configFile = rootProject.file("gradle/enforcement/checkstyle.xml")
+  configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
   toolVersion = "8.37"
   maxWarnings = 0

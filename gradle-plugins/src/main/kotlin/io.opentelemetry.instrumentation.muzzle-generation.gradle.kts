@@ -37,6 +37,7 @@ val codegen by configurations.creating {
 val sourceSet = sourceSets.main.get()
 val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) }
   ?: codegen)
+  .plus(sourceSet.output.dirs) // needed to support embedding shadowed modules into instrumentation
   .plus(configurations.runtimeClasspath.get())
 
 val languageTasks = LANGUAGES.map { language ->

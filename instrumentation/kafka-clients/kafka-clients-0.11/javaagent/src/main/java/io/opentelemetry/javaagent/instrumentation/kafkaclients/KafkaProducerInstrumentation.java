@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,42 +53,33 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-
-      context = tracer().startProducerSpan(parentContext, record);
-
-      callback = new ProducerCallback(callback, parentContext, context);
-
-      if (tracer().shouldPropagate(apiVersions)) {
-        try {
-          tracer().inject(context, record.headers(), SETTER);
-        } catch (IllegalStateException e) {
-          // headers must be read-only from reused record. try again with new one.
-          record =
-              new ProducerRecord<>(
-                  record.topic(),
-                  record.partition(),
-                  record.timestamp(),
-                  record.key(),
-                  record.value(),
-                  record.headers());
-
-          tracer().inject(context, record.headers(), SETTER);
-        }
+      if (!producerInstrumenter().shouldStart(parentContext, record)) {
+        return;
       }
 
+      context = producerInstrumenter().start(parentContext, record);
       scope = context.makeCurrent();
+
+      if (KafkaPropagation.shouldPropagate(apiVersions)) {
+        record = KafkaPropagation.propagateContext(context, record);
+      }
+
+      callback = new ProducerCallback(callback, parentContext, context, record);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(value = 0, readOnly = false) ProducerRecord<?, ?> record,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        producerInstrumenter().end(context, record, null, throwable);
       }
       // span finished by ProducerCallback
     }

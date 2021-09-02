@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements Ordered {
   private static final boolean DEFAULT_ENABLED =
-      Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
 

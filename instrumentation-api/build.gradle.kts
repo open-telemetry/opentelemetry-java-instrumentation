@@ -11,7 +11,7 @@ sourceSets {
     java {
       // gradle-jflex-plugin has a bug in that it always looks for the last srcDir in this source
       // set to generate into. By default it would be the src/main directory itself.
-      srcDir("${buildDir}/generated/sources/jflex")
+      srcDir("$buildDir/generated/sources/jflex")
     }
 
     val cachingShadedDeps = project(":instrumentation-api-caching")

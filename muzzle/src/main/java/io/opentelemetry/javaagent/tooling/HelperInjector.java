@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
@@ -63,7 +64,7 @@ public class HelperInjector implements Transformer {
   private final String requestingName;
 
   private final Set<String> helperClassNames;
-  private final Map<String, String> helperResourcePathMappings;
+  private final List<HelperResource> helperResources;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
@@ -87,14 +88,14 @@ public class HelperInjector implements Transformer {
   public HelperInjector(
       String requestingName,
       List<String> helperClassNames,
-      Map<String, String> helperResourcePathMappings,
+      List<HelperResource> helperResources,
       // TODO can this be replaced with the context classloader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
-    this.helperResourcePathMappings = helperResourcePathMappings;
+    this.helperResources = helperResources;
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -106,7 +107,7 @@ public class HelperInjector implements Transformer {
     this.helperClassNames = helperMap.keySet();
     this.dynamicTypeMap.putAll(helperMap);
 
-    this.helperResourcePathMappings = Collections.emptyMap();
+    this.helperResources = Collections.emptyList();
     this.helpersSource = null;
     this.instrumentation = instrumentation;
   }
@@ -149,19 +150,20 @@ public class HelperInjector implements Transformer {
       classLoader = injectHelperClasses(typeDescription, classLoader, module);
     }
 
-    if (helpersSource != null && !helperResourcePathMappings.isEmpty()) {
-      for (Map.Entry<String, String> entry : helperResourcePathMappings.entrySet()) {
-        String agentResourcePath = entry.getValue();
-        String applicationResourcePath = entry.getKey();
-        URL resource = helpersSource.getResource(agentResourcePath);
+    if (helpersSource != null && !helperResources.isEmpty()) {
+      for (HelperResource helperResource : helperResources) {
+        URL resource = helpersSource.getResource(helperResource.getAgentPath());
         if (resource == null) {
-          logger.debug("Helper resource {} requested but not found.", agentResourcePath);
+          logger.debug(
+              "Helper resource {} requested but not found.", helperResource.getAgentPath());
           continue;
         }
 
         logger.debug(
-            "Injecting resource onto classloader {} -> {}", classLoader, applicationResourcePath);
-        HelperResources.register(classLoader, applicationResourcePath, resource);
+            "Injecting resource onto classloader {} -> {}",
+            classLoader,
+            helperResource.getApplicationPath());
+        HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
       }
     }
 
@@ -220,6 +222,10 @@ public class HelperInjector implements Transformer {
 
   private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
       throws IOException {
+    if (ClassInjector.UsingUnsafe.isAvailable()) {
+      return ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
+    }
+
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.

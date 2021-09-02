@@ -10,6 +10,13 @@ subprojects {
     instrumentationProjectTest.configure {
       dependsOn(subProj.tasks.named("test"))
     }
+
+    // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+    // inclusion of this artifact inside :testing-common
+    dependencies {
+      compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+      testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+    }
   }
 }
 

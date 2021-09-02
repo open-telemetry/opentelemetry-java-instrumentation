@@ -16,7 +16,7 @@ dependencies {
     isTransitive = false
   }
   testImplementation("com.signalfx.public:signalfx-trace-api:0.48.0-sfx1")
-  //Old and new versions of kamon use different packages for Trace annotation
+  // Old and new versions of kamon use different packages for Trace annotation
   testImplementation("io.kamon:kamon-annotation_2.11:0.6.7") {
     isTransitive = false
   }

@@ -16,11 +16,4 @@ class OkHttp3Test extends AbstractOkHttp3Test implements LibraryTestTrait {
   Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
     return OkHttpTracing.create(getOpenTelemetry()).newCallFactory(clientBuilder.build())
   }
-
-  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-  @Override
-  boolean testWithClientParent() {
-    false
-  }
-
 }

@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
-
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
 
 public class JaxWsServerSpanNaming {
 
-  public static void updateServerSpanName(Context parentContext, JaxWsRequest request) {
-    ServerSpanNaming.updateServerSpanName(parentContext, CONTROLLER, () -> request.spanName());
-  }
+  public static final ServerSpanNameSupplier<JaxWsRequest> SERVER_SPAN_NAME =
+      (context, request) -> request.spanName();
+
+  private JaxWsServerSpanNaming() {}
 }

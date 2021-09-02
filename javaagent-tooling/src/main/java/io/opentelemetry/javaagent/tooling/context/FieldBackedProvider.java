@@ -39,6 +39,7 @@ import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
+import net.bytebuddy.description.modifier.SyntheticState;
 import net.bytebuddy.description.modifier.TypeManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
@@ -108,7 +109,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private static final boolean FIELD_INJECTION_ENABLED =
-      Config.get().getBooleanProperty("otel.javaagent.experimental.field-injection.enabled", true);
+      Config.get().getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
 
   private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
@@ -528,7 +529,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             if (!foundField) {
               cv.visitField(
                   // Field should be transient to avoid being serialized with the object.
-                  Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT,
+                  Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC,
                   fieldName,
                   contextType.getDescriptor(),
                   null,
@@ -576,7 +577,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           private MethodVisitor getAccessorMethodVisitor(String methodName) {
             return cv.visitMethod(
-                Opcodes.ACC_PUBLIC,
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
                 methodName,
                 Utils.getMethodDefinition(interfaceType, methodName).getDescriptor(),
                 null,
@@ -622,7 +623,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       String keyClassName, String contextClassName) {
     return byteBuddy
         .rebase(ContextStoreImplementationTemplate.class)
-        .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL)
+        .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL, SyntheticState.SYNTHETIC)
         .name(getContextStoreImplementationClassName(keyClassName, contextClassName))
         .visit(getContextStoreImplementationVisitor(keyClassName, contextClassName))
         .make();
@@ -992,6 +993,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
     return byteBuddy
         .makeInterface()
+        .merge(SyntheticState.SYNTHETIC)
         .name(getContextAccessorInterfaceName(keyClassName, contextClassName))
         .defineMethod(getContextGetterName(keyClassName), contextType, Visibility.PUBLIC)
         .withoutCode()

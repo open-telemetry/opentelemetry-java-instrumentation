@@ -23,8 +23,7 @@ public final class KafkaConsumerExperimentalAttributesExtractor
       longKey("kafka.record.queue_time_ms");
 
   private static final boolean ENABLED =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.kafka.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false);
 
   public static boolean isEnabled() {
     return ENABLED;

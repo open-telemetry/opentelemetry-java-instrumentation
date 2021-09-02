@@ -34,6 +34,8 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 // Used by AgentInitializer
 @SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
+  public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
+
   // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
   // configure the logging levels
@@ -47,12 +49,11 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
 
-    // TODO add support for old deprecated property otel.javaagent.experimental.exporter.jar
     extensions.addAll(
         parseLocation(
-            System.getProperty(
-                "otel.javaagent.extensions", System.getenv("OTEL_JAVAAGENT_EXTENSIONS")),
+            System.getProperty(EXTENSIONS_CONFIG, System.getenv("OTEL_JAVAAGENT_EXTENSIONS")),
             javaagentFile));
+
     extensions.addAll(
         parseLocation(
             System.getProperty(

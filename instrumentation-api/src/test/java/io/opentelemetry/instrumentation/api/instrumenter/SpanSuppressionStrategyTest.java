@@ -65,8 +65,7 @@ public class SpanSuppressionStrategyTest {
 
     Context context = SpanKey.CONSUMER.storeInContext(Context.root(), SPAN);
 
-    // never suppress CONSUMER
-    assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
+    assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isTrue();
 
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isSameAs(SPAN);
     allClientSpanKeys().forEach(spanKey -> assertThat(spanKey.fromContextOrNull(context)).isNull());
@@ -188,13 +187,13 @@ public class SpanSuppressionStrategyTest {
   }
 
   @Test
-  public void noKeys_consumerIsNeverSuppressed() {
+  public void noKeys_consumerIsSuppressed() {
 
     SpanSuppressionStrategy strategy = SpanSuppressionStrategy.from(new HashSet<>());
 
     Context context = strategy.storeInContext(Context.root(), SpanKind.CONSUMER, SPAN);
 
-    assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isFalse();
+    assertThat(strategy.shouldSuppress(context, SpanKind.CONSUMER)).isTrue();
     assertThat(SpanKey.CONSUMER.fromContextOrNull(context)).isSameAs(SPAN);
 
     allClientSpanKeys()

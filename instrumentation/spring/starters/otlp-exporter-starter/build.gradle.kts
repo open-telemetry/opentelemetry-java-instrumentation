@@ -13,4 +13,3 @@ dependencies {
   api("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.grpc:grpc-netty-shaded:1.30.2")
 }
-

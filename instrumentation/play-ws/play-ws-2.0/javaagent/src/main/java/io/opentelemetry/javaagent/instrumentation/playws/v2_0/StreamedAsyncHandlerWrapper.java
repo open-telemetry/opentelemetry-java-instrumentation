@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import org.reactivestreams.Publisher;
+import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
 public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
@@ -15,8 +16,8 @@ public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
   private final StreamedAsyncHandler streamedDelegate;
 
   public StreamedAsyncHandlerWrapper(
-      StreamedAsyncHandler delegate, Context context, Context parentContext) {
-    super(delegate, context, parentContext);
+      StreamedAsyncHandler delegate, Request request, Context context, Context parentContext) {
+    super(delegate, request, context, parentContext);
     streamedDelegate = delegate;
   }
 

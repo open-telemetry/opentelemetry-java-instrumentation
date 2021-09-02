@@ -6,30 +6,24 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HelperResourceBuilderImpl implements HelperResourceBuilder {
 
-  private final Map<String, String> resourcePathMappings = new HashMap<>();
+  private final List<HelperResource> resources = new ArrayList<>();
 
   @Override
   public void register(String resourcePath) {
-    resourcePathMappings.put(resourcePath, resourcePath);
+    resources.add(HelperResource.create(resourcePath, resourcePath));
   }
 
   @Override
   public void register(String applicationResourcePath, String agentResourcePath) {
-    resourcePathMappings.put(applicationResourcePath, agentResourcePath);
+    resources.add(HelperResource.create(applicationResourcePath, agentResourcePath));
   }
 
-  /**
-   * Returns the registered mappings, where the keys are the paths in the user's class loader at
-   * which to inject the resource ({@code applicationResourcePath}) and the values are the paths in
-   * the agent class loader from which to get the content for the resource ({@code
-   * agentResourcePath}).
-   */
-  public Map<String, String> getResourcePathMappings() {
-    return resourcePathMappings;
+  public List<HelperResource> getResources() {
+    return resources;
   }
 }

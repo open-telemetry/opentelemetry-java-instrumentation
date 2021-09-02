@@ -92,7 +92,7 @@ public class AgentInstaller {
   public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
     Config config = Config.get();
-    if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
       installBytebuddyAgent(inst, agentListeners);
     } else {
@@ -215,7 +215,7 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to classloader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        Config.get().getBooleanProperty(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     if (!shouldForceSynchronousAgentListenersCalls
         && isJavaBefore9()
         && isAppUsingCustomLogManager()) {

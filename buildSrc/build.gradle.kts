@@ -7,8 +7,8 @@ plugins {
 
 spotless {
   java {
-    googleJavaFormat("1.10.0")
-    licenseHeaderFile(rootProject.file("../gradle/enforcement/spotless.license.java"), "(package|import|public)")
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
 }
@@ -29,8 +29,8 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.5.0")
-  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:0.5.0")
+  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.7.0")
+  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:0.7.0")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")

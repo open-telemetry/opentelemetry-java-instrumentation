@@ -9,10 +9,10 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.internal.UriBuilder;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import java.net.URI;
 import java.util.Collections;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
@@ -88,19 +88,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
     String path = request.requestURI().toString();
     String query = request.queryString().toString();
 
-    try {
-      return new URI(scheme, null, host, serverPort, path, query, null).toString();
-    } catch (Exception e) {
-      logger.warn(
-          "Malformed url? scheme: {}, host: {}, port: {}, path: {}, query: {}",
-          scheme,
-          host,
-          serverPort,
-          path,
-          query,
-          e);
-    }
-    return null;
+    return UriBuilder.uri(scheme, host, serverPort, path, query);
   }
 
   @Override

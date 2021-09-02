@@ -2,7 +2,6 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-
 // context "leak" here is intentional: spring-integration instrumentation will always override
 // "local" span context with one extracted from the incoming message when it decides to start a
 // CONSUMER span

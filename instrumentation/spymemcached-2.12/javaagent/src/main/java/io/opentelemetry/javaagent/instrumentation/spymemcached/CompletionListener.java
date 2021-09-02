@@ -18,8 +18,7 @@ public abstract class CompletionListener<T> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.spymemcached.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes", false);
 
   private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";
   private static final String MEMCACHED_RESULT = "spymemcached.result";

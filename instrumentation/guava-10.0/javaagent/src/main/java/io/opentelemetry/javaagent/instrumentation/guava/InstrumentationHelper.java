@@ -15,8 +15,7 @@ public final class InstrumentationHelper {
         GuavaAsyncOperationEndStrategy.newBuilder()
             .setCaptureExperimentalSpanAttributes(
                 Config.get()
-                    .getBooleanProperty(
-                        "otel.instrumentation.guava.experimental-span-attributes", false))
+                    .getBoolean("otel.instrumentation.guava.experimental-span-attributes", false))
             .build();
 
     registerAsyncSpanEndStrategy();

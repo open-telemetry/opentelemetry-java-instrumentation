@@ -97,7 +97,6 @@ tasks {
 
   val testSqs by existing
 
-
   if (!(findProperty("testLatestDeps") as Boolean)) {
     named("check") {
       dependsOn(test_before_1_11_106)

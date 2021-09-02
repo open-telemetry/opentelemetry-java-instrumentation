@@ -38,8 +38,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       ServletHttpServerTracer.class.getName() + ".AsyncListenerResponse";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
@@ -267,8 +266,8 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   In this case we have to put the span from the request into current context before continuing.
   */
-  public boolean needsRescoping(Context attachedContext) {
-    return !sameTrace(Span.fromContext(Context.current()), Span.fromContext(attachedContext));
+  public boolean needsRescoping(Context currentContext, Context attachedContext) {
+    return !sameTrace(Span.fromContext(currentContext), Span.fromContext(attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {

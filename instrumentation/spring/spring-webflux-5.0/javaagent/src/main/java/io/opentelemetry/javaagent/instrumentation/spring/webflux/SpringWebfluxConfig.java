@@ -11,8 +11,7 @@ public class SpringWebfluxConfig {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.spring-webflux.experimental-span-attributes", false);
 
   public static boolean captureExperimentalSpanAttributes() {
     return CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;

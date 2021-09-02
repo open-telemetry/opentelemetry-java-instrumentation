@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcMaps;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
@@ -58,7 +58,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
         return;
       }
       DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, props);
-      JdbcMaps.connectionInfo.put(connection, dbInfo);
+      JdbcData.connectionInfo.put(connection, dbInfo);
     }
   }
 }

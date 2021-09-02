@@ -39,12 +39,12 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
 
   @Override
   public void configure(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
-    if (!Config.get().getBooleanProperty(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (!Config.get().getBoolean(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true)) {
       return;
     }
 
     // Register additional thread details logging span processor
-    if (Config.get().getBooleanProperty(ADD_THREAD_DETAILS, true)) {
+    if (Config.get().getBoolean(ADD_THREAD_DETAILS, true)) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
 
@@ -62,20 +62,25 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
   }
 
   private static boolean loggingExporterIsNotAlreadyConfigured() {
-    return !Config.get().getProperty("otel.traces.exporter", "").equalsIgnoreCase("logging");
+    return !Config.get().getString("otel.traces.exporter", "").equalsIgnoreCase("logging");
   }
 
   private static void maybeConfigureExporterJar(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
     Config config = Config.get();
-    String exporterJar = config.getProperty(EXPORTER_JAR_CONFIG);
+    String exporterJar = config.getString(EXPORTER_JAR_CONFIG);
     if (exporterJar == null) {
       return;
     }
     installExportersFromJar(exporterJar, config, sdkTracerProviderBuilder);
   }
 
+  // TODO remove in 1.6
   private static synchronized void installExportersFromJar(
       String exporterJar, Config config, SdkTracerProviderBuilder builder) {
+    logger.warn(
+        "{} is deprecated and will be removed soon! Please use {}",
+        EXPORTER_JAR_CONFIG,
+        ExtensionClassLoader.EXTENSIONS_CONFIG);
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();

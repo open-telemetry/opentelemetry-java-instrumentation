@@ -37,17 +37,16 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /** Instrumentation type suppression configuration property key. */
   private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
+          .getBoolean("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
+  final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -55,7 +54,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  @Nullable EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor = null;
+  boolean disabled = false;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
@@ -100,10 +100,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
-  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
-  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
-      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
-    spanLinkExtractors.add(spanLinkExtractor);
+  /** Adds a {@link SpanLinksExtractor} to extract span links from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
+      SpanLinksExtractor<REQUEST> spanLinksExtractor) {
+    spanLinksExtractors.add(spanLinksExtractor);
     return this;
   }
 
@@ -130,9 +130,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * determining start and end timestamps to the OpenTelemetry SDK.
    */
   public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
-      StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
+      StartTimeExtractor<REQUEST> startTimeExtractor,
+      EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor) {
     this.startTimeExtractor = requireNonNull(startTimeExtractor);
     this.endTimeExtractor = requireNonNull(endTimeExtractor);
+    return this;
+  }
+
+  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
+    this.disabled = disabled;
     return this;
   }
 

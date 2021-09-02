@@ -24,8 +24,7 @@ import java.util.concurrent.CancellationException;
 public final class InstrumentationPoints {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.lettuce.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 

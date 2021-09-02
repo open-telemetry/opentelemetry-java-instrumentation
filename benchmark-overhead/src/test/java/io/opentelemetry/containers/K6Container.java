@@ -7,6 +7,8 @@ package io.opentelemetry.containers;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import io.opentelemetry.util.NamingConventions;
+import java.nio.file.Path;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -15,8 +17,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
-import java.nio.file.Path;
-import java.time.Duration;
 
 public class K6Container {
   private static final Logger logger = LoggerFactory.getLogger(K6Container.class);
@@ -42,6 +42,7 @@ public class K6Container {
         .withCopyFileToContainer(
             MountableFile.forHostPath("./k6"), "/app")
         .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
+        .withCreateContainerCmdModifier(cmd -> cmd.withUser("root"))
         .withCommand(
             "run",
             "-u", String.valueOf(config.getConcurrentConnections()),
@@ -51,7 +52,7 @@ public class K6Container {
             "/app/basic.js"
         )
         .withStartupCheckStrategy(
-            new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5))
+            new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(15))
         );
   }
 }

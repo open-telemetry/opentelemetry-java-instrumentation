@@ -63,9 +63,7 @@ class HttpServerMetricsTest {
                                 .containsOnly(
                                     attributeEntry("http.host", "host"),
                                     attributeEntry("http.method", "GET"),
-                                    attributeEntry("http.scheme", "https"),
-                                    attributeEntry("net.host.name", "localhost"),
-                                    attributeEntry("net.host.port", 1234L))));
+                                    attributeEntry("http.scheme", "https"))));
 
     Context context2 = listener.start(Context.current(), requestAttributes);
 

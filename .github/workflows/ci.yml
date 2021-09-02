@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'benchmark-overhead/**'
   workflow_dispatch:
 
 jobs:
@@ -16,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt
@@ -39,6 +37,29 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         run: ./gradlew build --stacktrace
 
+  build-gradle-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Build
+        run: ../gradlew build --stacktrace
+        working-directory: gradle-plugins
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -48,8 +69,8 @@ jobs:
           - 11
           - 15
         vm:
-         - hotspot
-         - openj9
+          - hotspot
+          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -94,7 +115,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt
@@ -173,6 +194,64 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
+  setup-muzzle-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - id: set-matrix
+        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
+
+  muzzle:
+    needs: setup-muzzle-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.setup-muzzle-matrix.outputs.matrix)}}
+      fail-fast: false
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Run muzzle
+        # using retry because of sporadic gradle download failures
+        uses: nick-invision/retry@v2.4.1
+        with:
+          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
+          timeout_minutes: 15
+          max_attempts: 3
+          command: ./gradlew ${{ matrix.module }}:muzzle
+
   examples:
     runs-on: ubuntu-latest
     steps:
@@ -180,7 +259,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt
@@ -192,12 +271,15 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: Local publish
+        run: ./gradlew publishToMavenLocal
+
       - name: Build distro
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
   snapshot:
@@ -208,7 +290,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running checks
+      - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: adopt

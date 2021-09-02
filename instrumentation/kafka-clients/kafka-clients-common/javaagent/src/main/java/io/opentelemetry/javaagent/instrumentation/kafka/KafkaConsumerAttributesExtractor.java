@@ -13,6 +13,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerAttributesExtractor
     extends MessagingAttributesExtractor<ConsumerRecord<?, ?>, Void> {
+
+  private final MessageOperation messageOperation;
+
+  public KafkaConsumerAttributesExtractor(MessageOperation messageOperation) {
+    this.messageOperation = messageOperation;
+  }
+
   @Override
   protected String system(ConsumerRecord<?, ?> consumerRecord) {
     return "kafka";
@@ -65,7 +72,7 @@ public final class KafkaConsumerAttributesExtractor
 
   @Override
   protected MessageOperation operation(ConsumerRecord<?, ?> consumerRecord) {
-    return MessageOperation.PROCESS;
+    return messageOperation;
   }
 
   @Override

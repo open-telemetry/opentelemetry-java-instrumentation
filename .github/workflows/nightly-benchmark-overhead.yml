@@ -11,12 +11,26 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2.3.4
-      - name: run tests
-        run: ./gradlew test
-        working-directory: benchmark-overhead
-      - name: commit updated results
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - name: checkout
+        uses: actions/checkout@v2.3.4
         with:
-          branch: main
-          commit_message: update test result data
-          file_pattern: benchmark-overhead/results
+          ref: gh-pages
+          path: gh-pages
+      - name: copy results from gh-pages branch
+        run: |
+          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
+      - name: run tests
+        working-directory: benchmark-overhead
+        run: ./gradlew test
+      - name: inspect the results dir
+        working-directory: benchmark-overhead
+        run: ls -lR results
+      - name: copy results back to gh-pages branch
+        run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
+      - name: commit updated results
+        uses: EndBug/add-and-commit@v7
+        with:
+          add: 'benchmark-overhead/results'
+          cwd: './gh-pages'
+          branch: 'gh-pages'
+          message: 'update test result data'

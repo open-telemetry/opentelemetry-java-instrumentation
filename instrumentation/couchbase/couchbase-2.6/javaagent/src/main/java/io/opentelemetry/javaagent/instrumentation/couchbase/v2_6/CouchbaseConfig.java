@@ -10,8 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 public final class CouchbaseConfig {
 
   public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.couchbase.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.couchbase.experimental-span-attributes", false);
 
   private CouchbaseConfig() {}
 }

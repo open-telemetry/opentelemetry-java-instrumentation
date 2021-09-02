@@ -66,13 +66,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
+  private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
-  private final List<? extends SpanLinkExtractor<? super REQUEST>> spanLinkExtractors;
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
+  private final boolean disabled;
   private final SpanSuppressionStrategy spanSuppressionStrategy;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
@@ -82,12 +83,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
+    this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
-    this.spanLinkExtractors = new ArrayList<>(builder.spanLinkExtractors);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
+    this.disabled = builder.disabled;
     this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
   }
 
@@ -98,6 +100,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * without calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
+    if (disabled) {
+      return false;
+    }
     SpanKind spanKind = spanKindExtractor.extract(request);
     boolean suppressed = spanSuppressionStrategy.shouldSuppress(parentContext, spanKind);
 
@@ -126,8 +131,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
       spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
     }
 
-    for (SpanLinkExtractor<? super REQUEST> extractor : spanLinkExtractors) {
-      spanBuilder.addLink(extractor.extract(parentContext, request));
+    SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
+    for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
+      spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
     }
 
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
@@ -182,7 +188,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     if (endTimeExtractor != null) {
-      span.end(endTimeExtractor.extract(response));
+      span.end(endTimeExtractor.extract(request, response));
     } else {
       span.end();
     }

@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -29,8 +30,8 @@ public class TestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public List<String> helperResourceNames() {
-    return singletonList("test-resources/test-resource.txt");
+  public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
+    helperResourceBuilder.register("test-resources/test-resource.txt");
   }
 
   public static class TestTypeInstrumentation implements TypeInstrumentation {

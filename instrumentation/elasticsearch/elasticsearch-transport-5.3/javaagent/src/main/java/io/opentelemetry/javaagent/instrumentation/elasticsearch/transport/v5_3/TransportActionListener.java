@@ -30,8 +30,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.elasticsearch.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes", false);
 
   private final ActionListener<T> listener;
   private final Context context;

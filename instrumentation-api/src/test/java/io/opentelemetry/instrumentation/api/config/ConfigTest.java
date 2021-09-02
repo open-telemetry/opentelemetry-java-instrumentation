@@ -9,15 +9,16 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -60,10 +61,16 @@ class ConfigTest {
 
     assertEquals(12, config.getInt("prop.int"));
     assertEquals(12, config.getInt("prop.int", 1000));
-    assertNull(config.getInt("prop.wrong"));
     assertEquals(1000, config.getInt("prop.wrong", 1000));
     assertNull(config.getInt("prop.missing"));
     assertEquals(1000, config.getInt("prop.missing", 1000));
+  }
+
+  @Test
+  void shouldFailOnInvalidInt() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getInt("prop.wrong"));
   }
 
   @Test
@@ -76,10 +83,16 @@ class ConfigTest {
 
     assertEquals(12, config.getLong("prop.long"));
     assertEquals(12, config.getLong("prop.long", 1000));
-    assertNull(config.getLong("prop.wrong"));
     assertEquals(1000, config.getLong("prop.wrong", 1000));
     assertNull(config.getLong("prop.missing"));
     assertEquals(1000, config.getLong("prop.missing", 1000));
+  }
+
+  @Test
+  void shouldFailOnInvalidLong() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getLong("prop.wrong"));
   }
 
   @Test
@@ -92,10 +105,16 @@ class ConfigTest {
 
     assertEquals(12.345, config.getDouble("prop.double"));
     assertEquals(12.345, config.getDouble("prop.double", 99.99));
-    assertNull(config.getDouble("prop.wrong"));
     assertEquals(99.99, config.getDouble("prop.wrong", 99.99));
     assertNull(config.getDouble("prop.missing"));
     assertEquals(99.99, config.getDouble("prop.missing", 99.99));
+  }
+
+  @Test
+  void shouldFailOnInvalidDouble() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve point something").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getDouble("prop.wrong"));
   }
 
   @Test
@@ -108,10 +127,16 @@ class ConfigTest {
 
     assertEquals(Duration.ofMillis(5000), config.getDuration("prop.duration"));
     assertEquals(Duration.ofMillis(5000), config.getDuration("prop.duration", Duration.ZERO));
-    assertNull(config.getDuration("prop.wrong"));
     assertEquals(Duration.ZERO, config.getDuration("prop.wrong", Duration.ZERO));
     assertNull(config.getDuration("prop.missing"));
     assertEquals(Duration.ZERO, config.getDuration("prop.missing", Duration.ZERO));
+  }
+
+  @Test
+  void shouldFailOnInvalidDuration() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "hundred days").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getDuration("prop.wrong"));
   }
 
   @Test
@@ -150,17 +175,25 @@ class ConfigTest {
         Config.newBuilder()
             .addProperty("prop.map", "one=1, two=2")
             .addProperty("prop.wrong", "one=1, but not two!")
+            .addProperty("prop.trailing", "one=1,")
             .build();
 
-    assertEquals(map("one", "1", "two", "2"), config.getMap("prop.map"));
-    assertEquals(
-        map("one", "1", "two", "2"), config.getMap("prop.map", singletonMap("three", "3")));
-    assertTrue(config.getMap("prop.wrong").isEmpty());
-    assertEquals(
-        singletonMap("three", "3"), config.getMap("prop.wrong", singletonMap("three", "3")));
-    assertTrue(config.getMap("prop.missing").isEmpty());
-    assertEquals(
-        singletonMap("three", "3"), config.getMap("prop.missing", singletonMap("three", "3")));
+    assertThat(config.getMap("prop.map")).containsOnly(entry("one", "1"), entry("two", "2"));
+    assertThat(config.getMap("prop.map", singletonMap("three", "3")))
+        .containsOnly(entry("one", "1"), entry("two", "2"));
+    assertThat(config.getMap("prop.wrong", singletonMap("three", "3")))
+        .containsOnly(entry("three", "3"));
+    assertThat(config.getMap("prop.missing")).isEmpty();
+    assertThat(config.getMap("prop.missing", singletonMap("three", "3")))
+        .containsOnly(entry("three", "3"));
+    assertThat(config.getMap("prop.trailing")).containsOnly(entry("one", "1"));
+  }
+
+  @Test
+  void shouldFailOnInvalidMap() {
+    Config config = Config.newBuilder().addProperty("prop.wrong", "one=1, but not two!").build();
+
+    assertThrows(ConfigParsingException.class, () -> config.getMap("prop.wrong"));
   }
 
   @ParameterizedTest
@@ -215,12 +248,5 @@ class ConfigTest {
           Arguments.of(asList("test-prop", "disabled-prop"), true, false),
           Arguments.of(asList("disabled-env", "test-env"), true, false));
     }
-  }
-
-  public static Map<String, String> map(String k1, String v1, String k2, String v2) {
-    Map<String, String> map = new HashMap<>();
-    map.put(k1, v1);
-    map.put(k2, v2);
-    return map;
   }
 }

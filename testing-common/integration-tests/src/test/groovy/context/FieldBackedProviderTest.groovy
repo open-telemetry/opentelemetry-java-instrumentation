@@ -43,10 +43,12 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
     boolean hasField = false
     boolean isPrivate = false
     boolean isTransient = false
+    boolean isSynthetic = false
     for (Field field : keyClass.getDeclaredFields()) {
       if (field.getName().startsWith("__opentelemetry")) {
         isPrivate = Modifier.isPrivate(field.getModifiers())
         isTransient = Modifier.isTransient(field.getModifiers())
+        isSynthetic = field.isSynthetic()
         hasField = true
         break
       }
@@ -54,12 +56,14 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
 
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
+    boolean accessorInterfaceIsSynthetic = false
     for (Class inter : keyClass.getInterfaces()) {
       if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
       if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
+        accessorInterfaceIsSynthetic = inter.isSynthetic()
       }
     }
 
@@ -67,8 +71,10 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
     hasField == shouldModifyStructure
     isPrivate == shouldModifyStructure
     isTransient == shouldModifyStructure
+    isSynthetic == shouldModifyStructure
     hasMarkerInterface == shouldModifyStructure
     hasAccessorInterface == shouldModifyStructure
+    accessorInterfaceIsSynthetic == shouldModifyStructure
     keyClass.newInstance().isInstrumented() == shouldModifyStructure
 
     where:

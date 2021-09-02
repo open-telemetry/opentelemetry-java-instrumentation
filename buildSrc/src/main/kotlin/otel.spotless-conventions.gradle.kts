@@ -4,26 +4,42 @@ plugins {
 
 spotless {
   java {
-    googleJavaFormat("1.10.0")
-    licenseHeaderFile(rootProject.file("gradle/enforcement/spotless.license.java"), "(package|import|public|// Includes work from:)")
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|public|// Includes work from:)")
     target("src/**/*.java")
   }
-  groovy {
-    licenseHeaderFile(rootProject.file("gradle/enforcement/spotless.license.java"), "(package|import|class)")
+  plugins.withId("groovy") {
+    groovy {
+      licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|class)")
+    }
   }
-  scala {
-    scalafmt()
-    licenseHeaderFile(rootProject.file("gradle/enforcement/spotless.license.java"), "(package|import|public)")
-    target("src/**/*.scala")
+  plugins.withId("scala") {
+    scala {
+      scalafmt()
+      licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|public)")
+      target("src/**/*.scala")
+    }
   }
-  kotlin {
-    // ktfmt() // only supports 4 space indentation
-    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2"))
-    licenseHeaderFile(rootProject.file("gradle/enforcement/spotless.license.java"), "(package|import|public)")
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    kotlin {
+      ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
+      licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|class|// Includes work from:)")
+    }
+  }
+  kotlinGradle {
+    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
   }
   format("misc") {
     // not using "**/..." to help keep spotless fast
-    target(".gitignore", "*.md", "src/**/*.md", "*.sh", "src/**/*.properties")
+    target(
+      ".gitattributes",
+      ".gitconfig",
+      ".editorconfig",
+      "*.md",
+      "src/**/*.md",
+      "docs/**/*.md",
+      "*.sh",
+      "src/**/*.properties")
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()

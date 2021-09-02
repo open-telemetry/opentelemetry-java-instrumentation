@@ -5,30 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JedisNetAttributesExtractor extends NetAttributesExtractor<JedisRequest, Void> {
+final class JedisNetAttributesExtractor
+    extends InetSocketAddressNetAttributesExtractor<JedisRequest, Void> {
 
   @Override
-  @Nullable
-  public String transport(JedisRequest request) {
+  public @Nullable InetSocketAddress getAddress(JedisRequest jedisRequest, @Nullable Void unused) {
+    Socket socket = jedisRequest.getConnection().getSocket();
+    if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
+      return (InetSocketAddress) socket.getRemoteSocketAddress();
+    }
     return null;
   }
 
   @Override
-  public String peerName(JedisRequest request, @Nullable Void unused) {
-    return request.getConnection().getHost();
-  }
-
-  @Override
-  public Integer peerPort(JedisRequest request, @Nullable Void unused) {
-    return request.getConnection().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(JedisRequest request, @Nullable Void unused) {
-    return null;
+  public String transport(JedisRequest jedisRequest) {
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 }

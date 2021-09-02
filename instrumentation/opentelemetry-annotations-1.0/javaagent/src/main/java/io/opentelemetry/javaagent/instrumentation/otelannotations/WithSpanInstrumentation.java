@@ -93,7 +93,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            Config.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =

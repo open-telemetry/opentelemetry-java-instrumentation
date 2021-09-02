@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
 public class TwilioTracer extends BaseTracer {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.twilio.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.twilio.experimental-span-attributes", false);
 
   private static final Logger logger = LoggerFactory.getLogger(TwilioTracer.class);
 

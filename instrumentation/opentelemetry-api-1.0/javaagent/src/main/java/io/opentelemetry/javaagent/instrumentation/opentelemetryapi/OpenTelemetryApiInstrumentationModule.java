@@ -22,7 +22,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContextInstrumentation(),
-        new ContextStorageInstrumentation(),
+        new ContextStorageWrappersInstrumentation(),
         new OpenTelemetryInstrumentation(),
         new SpanInstrumentation());
   }
