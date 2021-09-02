@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import org.apache.camel.CamelContext
-import org.apache.camel.ProducerTemplate
-import org.testcontainers.containers.CassandraContainer
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.apache.camel.CamelContext
+import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
+import org.testcontainers.containers.CassandraContainer
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
@@ -97,7 +97,7 @@ class CassandraTest extends AgentInstrumentationSpecification implements RetryOn
             "apache-camel.uri" "direct://input"
           }
         }
-        span(1){
+        span(1) {
           kind CLIENT
           attributes {
             "apache-camel.uri" "cql://$host:$port/test"

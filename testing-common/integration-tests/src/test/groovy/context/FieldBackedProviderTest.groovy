@@ -9,18 +9,19 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.test.utils.GcUtils
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess
-import java.lang.instrument.ClassDefinition
-import java.lang.ref.WeakReference
-import java.lang.reflect.Field
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.util.concurrent.atomic.AtomicReference
 import library.KeyClass
 import library.UntransformableKeyClass
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
+
+import java.lang.instrument.ClassDefinition
+import java.lang.ref.WeakReference
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.lang.reflect.Modifier
+import java.util.concurrent.atomic.AtomicReference
 
 // this test is run using
 //   -Dotel.instrumentation.context-test-instrumentation.enabled=true

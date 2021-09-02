@@ -19,9 +19,10 @@ import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.HttpRequest
 import io.vertx.reactivex.ext.web.client.WebClient
+import spock.lang.Shared
+
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
-import spock.lang.Shared
 
 class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> implements AgentTestTrait {
 

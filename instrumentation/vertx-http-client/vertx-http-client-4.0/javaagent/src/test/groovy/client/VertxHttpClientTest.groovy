@@ -17,8 +17,9 @@ import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.RequestOptions
-import java.util.concurrent.CompletableFuture
 import spock.lang.Shared
+
+import java.util.concurrent.CompletableFuture
 
 class VertxHttpClientTest extends HttpClientTest<Future<HttpClientRequest>> implements AgentTestTrait {
 
@@ -41,13 +42,15 @@ class VertxHttpClientTest extends HttpClientTest<Future<HttpClientRequest>> impl
   CompletableFuture<Integer> sendRequest(Future<HttpClientRequest> request) {
     CompletableFuture<Integer> future = new CompletableFuture<>()
 
-    request.compose {req -> req.send().onComplete {asyncResult ->
-      if (asyncResult.succeeded()) {
-        future.complete(asyncResult.result().statusCode())
-      } else {
-        future.completeExceptionally(asyncResult.cause())
+    request.compose { req ->
+      req.send().onComplete { asyncResult ->
+        if (asyncResult.succeeded()) {
+          future.complete(asyncResult.result().statusCode())
+        } else {
+          future.completeExceptionally(asyncResult.cause())
+        }
       }
-    }}.onFailure {throwable ->
+    }.onFailure { throwable ->
       future.completeExceptionally(throwable)
     }
 

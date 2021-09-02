@@ -5,10 +5,10 @@
 
 package test
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-
 import grails.artefact.Controller
 import grails.web.Action
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 
 class ErrorController implements Controller {
 

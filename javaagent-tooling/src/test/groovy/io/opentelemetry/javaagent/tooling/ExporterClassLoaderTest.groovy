@@ -10,13 +10,14 @@ import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
+import spock.lang.Specification
+
 import java.nio.charset.StandardCharsets
 import java.util.jar.Attributes
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
-import spock.lang.Specification
 
 class ExporterClassLoaderTest extends Specification {
 

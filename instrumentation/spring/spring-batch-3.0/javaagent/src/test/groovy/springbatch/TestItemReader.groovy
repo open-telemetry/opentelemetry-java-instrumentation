@@ -5,9 +5,10 @@
 
 package springbatch
 
+import org.springframework.batch.item.support.ListItemReader
+
 import java.util.stream.Collectors
 import java.util.stream.IntStream
-import org.springframework.batch.item.support.ListItemReader
 
 class TestItemReader extends ListItemReader<String> {
   TestItemReader() {

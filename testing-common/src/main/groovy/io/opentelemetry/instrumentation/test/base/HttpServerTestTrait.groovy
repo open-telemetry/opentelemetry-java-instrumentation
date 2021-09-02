@@ -13,11 +13,13 @@ import io.opentelemetry.testing.internal.armeria.client.ClientFactory
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.client.logging.LoggingClient
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
-import java.time.Duration
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import java.time.Duration
+
 /**
  * A trait for testing requests against http server.
  */

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import akka.actor.ActorSystem
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -17,6 +16,8 @@ import scala.Option
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 class RediscalaClientTest extends AgentInstrumentationSpecification {
 

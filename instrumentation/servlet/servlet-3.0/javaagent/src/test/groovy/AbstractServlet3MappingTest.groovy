@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import spock.lang.Unroll
+
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 

@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
@@ -24,6 +20,11 @@ import org.elasticsearch.transport.TransportService
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportClientTest {
   public static final long TIMEOUT = 10000 // 10 seconds
@@ -180,8 +181,8 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
     indexType = "test-type"
     id = "1"
     callKind | call
-    "sync"   | { indexName, indexType, id -> prepareGetSync(indexName, indexType, id) }
-    "async"  | { indexName, indexType, id -> prepareGetAsync(indexName, indexType, id) }
+    "sync" | { indexName, indexType, id -> prepareGetSync(indexName, indexType, id) }
+    "async" | { indexName, indexType, id -> prepareGetAsync(indexName, indexType, id) }
   }
 
   def "test elasticsearch get"() {

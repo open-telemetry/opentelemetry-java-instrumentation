@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.jdbc
 
 import io.opentelemetry.instrumentation.api.InstrumentationVersion
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
+import spock.lang.Specification
+
 import java.sql.DriverManager
 import java.sql.SQLFeatureNotSupportedException
-import spock.lang.Specification
 
 class OpenTelemetryDriverTest extends Specification {
 

@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.javaagent.tooling.muzzle.AgentCachingPoolStrategy
-import java.lang.ref.WeakReference
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
 import spock.lang.Specification
+
+import java.lang.ref.WeakReference
 
 class CacheProviderTest extends Specification {
   def "key bootstrap equivalence"() {

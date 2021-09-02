@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static Resource.Test1
-import static Resource.Test2
-import static Resource.Test3
 
-import javax.ws.rs.core.MediaType
 import org.jboss.resteasy.mock.MockDispatcherFactory
 import org.jboss.resteasy.mock.MockHttpRequest
 import org.jboss.resteasy.mock.MockHttpResponse
 import spock.lang.Shared
+
+import javax.ws.rs.core.MediaType
+
+import static Resource.Test1
+import static Resource.Test2
+import static Resource.Test3
 
 class ResteasyFilterTest extends JaxRsFilterTest {
   @Shared

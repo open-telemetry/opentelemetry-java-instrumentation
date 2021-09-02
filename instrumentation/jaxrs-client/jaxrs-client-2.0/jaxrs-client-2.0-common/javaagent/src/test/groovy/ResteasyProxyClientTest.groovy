@@ -3,9 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.nio.charset.StandardCharsets
+import org.apache.http.client.utils.URLEncodedUtils
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import org.jboss.resteasy.specimpl.ResteasyUriBuilder
+
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -13,9 +17,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
-import org.apache.http.client.utils.URLEncodedUtils
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import org.jboss.resteasy.specimpl.ResteasyUriBuilder
+import java.nio.charset.StandardCharsets
 
 class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> implements AgentTestTrait {
 

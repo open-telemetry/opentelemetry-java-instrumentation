@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
@@ -17,8 +15,12 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import java.util.concurrent.TimeUnit
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
@@ -48,7 +50,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
 
   @Override
   void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    Http.get(system).singleRequest(request, materializer).whenComplete {response, throwable ->
+    Http.get(system).singleRequest(request, materializer).whenComplete { response, throwable ->
       if (throwable == null) {
         response.discardEntityBytes(materializer)
       }

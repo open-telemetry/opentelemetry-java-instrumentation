@@ -12,8 +12,10 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
+
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
+
 // TODO: convert all usages of this class to the Java TraceUtils one
 class TraceUtils {
 

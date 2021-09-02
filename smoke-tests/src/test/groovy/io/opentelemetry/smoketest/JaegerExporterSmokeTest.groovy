@@ -5,12 +5,13 @@
 
 package io.opentelemetry.smoketest
 
-import static java.util.stream.Collectors.toSet
-
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import spock.lang.IgnoreIf
+
 import java.util.jar.Attributes
 import java.util.jar.JarFile
-import spock.lang.IgnoreIf
+
+import static java.util.stream.Collectors.toSet
 
 @IgnoreIf({ os.windows })
 class JaegerExporterSmokeTest extends SmokeTest {
@@ -22,8 +23,8 @@ class JaegerExporterSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_TRACES_EXPORTER"          : "jaeger",
-      "OTEL_EXPORTER_JAEGER_ENDPOINT" : "http://collector:14250"
+      "OTEL_TRACES_EXPORTER"         : "jaeger",
+      "OTEL_EXPORTER_JAEGER_ENDPOINT": "http://collector:14250"
     ]
   }
 

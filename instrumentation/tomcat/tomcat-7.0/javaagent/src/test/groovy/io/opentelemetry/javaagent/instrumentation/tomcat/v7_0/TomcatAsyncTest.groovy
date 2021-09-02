@@ -5,6 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import org.apache.catalina.Context
+import org.apache.catalina.startup.Tomcat
+import org.apache.tomcat.JarScanFilter
+import org.apache.tomcat.JarScanType
+import spock.lang.Unroll
+
+import javax.servlet.Servlet
+import javax.servlet.ServletException
+import java.nio.file.Files
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -13,19 +26,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.nio.file.Files
-import javax.servlet.Servlet
-import javax.servlet.ServletException
-import org.apache.catalina.Context
-import org.apache.catalina.startup.Tomcat
-import org.apache.tomcat.JarScanFilter
-import org.apache.tomcat.JarScanType
-import spock.lang.Unroll
-
 
 @Unroll
 class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {

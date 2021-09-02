@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -21,6 +20,8 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
 import org.jsoup.Jsoup
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class TapestryTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
@@ -61,7 +62,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
         // https://github.com/line/armeria/issues/2489
         @Override
         HttpResponse execute(HttpClient delegate, ClientRequestContext ctx, HttpRequest req) throws Exception {
-          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply {resp ->
+          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply { resp ->
             if (resp.status().isRedirection()) {
               return delegate.execute(ctx, HttpRequest.of(req.method(), URI.create(resp.headers().get(HttpHeaderNames.LOCATION)).path))
             }

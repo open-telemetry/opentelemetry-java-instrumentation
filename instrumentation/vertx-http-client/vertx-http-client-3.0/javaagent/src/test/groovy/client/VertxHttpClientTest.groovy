@@ -14,8 +14,9 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpMethod
-import java.util.concurrent.CompletableFuture
 import spock.lang.Shared
+
+import java.util.concurrent.CompletableFuture
 
 class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements AgentTestTrait {
 
@@ -38,7 +39,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
 
     request.handler { response ->
       future.complete(response.statusCode())
-    }.exceptionHandler {throwable ->
+    }.exceptionHandler { throwable ->
       future.completeExceptionally(throwable)
     }
     request.end()

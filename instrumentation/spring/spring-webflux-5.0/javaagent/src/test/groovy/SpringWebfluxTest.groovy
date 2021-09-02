@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -28,6 +25,10 @@ import server.SpringWebFluxTestApplication
 import server.TestController
 import spock.lang.Unroll
 import util.SpringWebfluxTestUtil
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -53,7 +54,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         // https://github.com/line/armeria/issues/2489
         @Override
         HttpResponse execute(HttpClient delegate, ClientRequestContext ctx, HttpRequest req) throws Exception {
-          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply {resp ->
+          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply { resp ->
             if (resp.status().isRedirection()) {
               return delegate.execute(ctx, HttpRequest.of(req.method(), resp.headers().get(HttpHeaderNames.LOCATION)))
             }
@@ -214,6 +215,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   merely wraps handler call into Mono and thus actual invocation of handler function happens later,
   when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
    */
+
   def "Create span during handler function"() {
     when:
     def response = client.get(urlPath).aggregate().join()

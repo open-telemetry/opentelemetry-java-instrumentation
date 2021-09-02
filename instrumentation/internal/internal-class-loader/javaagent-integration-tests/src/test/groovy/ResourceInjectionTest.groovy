@@ -3,20 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import org.apache.commons.lang3.SystemUtils
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
-import org.apache.commons.lang3.SystemUtils
+
+import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 class ResourceInjectionTest extends AgentInstrumentationSpecification {
 
   def "resources injected to non-delegating classloader"() {
     setup:
     String resourceName = 'test-resources/test-resource.txt'
-    URL[] urls = [ SystemUtils.getProtectionDomain().getCodeSource().getLocation() ]
+    URL[] urls = [SystemUtils.getProtectionDomain().getCodeSource().getLocation()]
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(urls, (ClassLoader) null))
 
     when:

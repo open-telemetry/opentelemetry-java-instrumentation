@@ -3,18 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.forPath
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -43,6 +31,19 @@ import org.jboss.netty.logging.InternalLogLevel
 import org.jboss.netty.logging.InternalLoggerFactory
 import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.forPath
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
+import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements AgentTestTrait {
 

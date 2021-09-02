@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import jakarta.servlet.Servlet
-import java.nio.file.Files
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+
+import java.nio.file.Files
 
 class TomcatServlet5MappingTest extends AbstractServlet5MappingTest<Tomcat, Context> {
 

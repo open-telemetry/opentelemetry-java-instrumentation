@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
@@ -31,7 +32,7 @@ class CouchbaseSpanUtil {
         "${SemanticAttributes.DB_SYSTEM.key}" "couchbase"
         "${SemanticAttributes.DB_NAME.key}" bucketName
         "${SemanticAttributes.DB_STATEMENT.key}" statement
-        "${SemanticAttributes.DB_OPERATION.key}" (operation ?: spanName)
+        "${SemanticAttributes.DB_OPERATION.key}"(operation ?: spanName)
 
         // Because of caching, not all requests hit the server so these attributes may be absent
         "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" || it == null }

@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static java.util.regex.Pattern.compile
-import static java.util.regex.Pattern.quote
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -23,6 +20,10 @@ import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static java.util.regex.Pattern.compile
+import static java.util.regex.Pattern.quote
 
 class RedissonClientTest extends AgentInstrumentationSpecification {
 

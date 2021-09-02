@@ -3,17 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import spock.lang.Requires
+
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
-import spock.lang.Requires
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 @Requires({ javaVersion >= 1.8 })
 class CompletableFutureTest extends AgentInstrumentationSpecification {

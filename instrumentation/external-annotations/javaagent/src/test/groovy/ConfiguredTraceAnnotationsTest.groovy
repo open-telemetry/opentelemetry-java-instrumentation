@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.SayTracedHello
+
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentInstrumentationSpecification {

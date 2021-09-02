@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.concurrent.Executors
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -23,6 +21,10 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.Executors
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 @Unroll
 abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpecification {
@@ -57,8 +59,8 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel.subscribe(messageHandler)
 
     when:
-      channel.send(MessageBuilder.withPayload("test")
-        .build())
+    channel.send(MessageBuilder.withPayload("test")
+      .build())
 
     then:
     def capturedMessage = messageHandler.join()

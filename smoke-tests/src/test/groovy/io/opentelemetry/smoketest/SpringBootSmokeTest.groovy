@@ -5,14 +5,15 @@
 
 package io.opentelemetry.smoketest
 
-import static java.util.stream.Collectors.toSet
-
 import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import java.util.jar.Attributes
-import java.util.jar.JarFile
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
+
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+
+import static java.util.stream.Collectors.toSet
 
 @IgnoreIf({ os.windows })
 class SpringBootSmokeTest extends SmokeTest {

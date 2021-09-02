@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
-import spock.lang.Shared 
+import spock.lang.Shared
 
 class TracingRequestWrapperTestBase extends LibraryInstrumentationSpecification {
 

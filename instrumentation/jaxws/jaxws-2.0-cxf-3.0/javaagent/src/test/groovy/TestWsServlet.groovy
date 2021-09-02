@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import hello.HelloServiceImpl
-import javax.servlet.ServletConfig
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.transport.servlet.CXFNonSpringServlet
+
+import javax.servlet.ServletConfig
 
 class TestWsServlet extends CXFNonSpringServlet {
   @Override

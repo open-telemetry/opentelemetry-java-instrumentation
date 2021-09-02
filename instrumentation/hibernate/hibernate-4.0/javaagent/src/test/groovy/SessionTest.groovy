@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
@@ -15,6 +12,10 @@ import org.hibernate.Query
 import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class SessionTest extends AbstractHibernateTest {
 
