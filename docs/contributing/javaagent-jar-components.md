@@ -99,4 +99,4 @@ Available in the agent class loader:
 ![Agent initialization sequence](initialization-sequence.svg)
 [Image source](https://docs.google.com/drawings/d/1FyRd11emnHvNWzUXLdpMNyf2R-auZlJsicNg8FpU_Ys)
 ![Agent classloader state](classloader-state.svg)
-[Image source](https://docs.google.com/drawings/d/1WlJ_VHuo_t4RurQ6_qiQHdEBgRLc22l7L5f5dFRqgB8)
+[Image source](https://docs.google.com/drawings/d/1EMVPHIhqolwRFs6GXFNk9fzd1bIM7viIeGSk-JmcoOs)
