@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GenericFutureListener

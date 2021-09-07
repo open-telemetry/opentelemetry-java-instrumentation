@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.rabbitmq.client.ConnectionFactory
 import org.testcontainers.containers.GenericContainer
 

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation

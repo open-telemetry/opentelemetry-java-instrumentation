@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import org.jboss.resteasy.mock.MockDispatcherFactory
 import org.jboss.resteasy.mock.MockHttpRequest
 import org.jboss.resteasy.mock.MockHttpResponse

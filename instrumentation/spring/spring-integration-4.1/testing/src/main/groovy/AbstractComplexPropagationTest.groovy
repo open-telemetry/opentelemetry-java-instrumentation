@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration

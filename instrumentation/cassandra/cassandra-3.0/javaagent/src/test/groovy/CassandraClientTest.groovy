@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import io.opentelemetry.api.trace.SpanKind

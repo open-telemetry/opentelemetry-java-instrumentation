@@ -13,7 +13,7 @@ Suggested plugins and settings:
   * Default Import Layout should be used:
 
     ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
-  
+
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) plugin is
   suggested to be installed
   ![google format](https://user-images.githubusercontent.com/5099946/131758519-14d27c17-5fc2-4447-84b0-dbe7a7329022.png)

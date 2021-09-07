@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import org.jboss.resteasy.plugins.servlet.ResteasyServletInitializer
 import test.JaxRsApplicationPathTestApplication
 

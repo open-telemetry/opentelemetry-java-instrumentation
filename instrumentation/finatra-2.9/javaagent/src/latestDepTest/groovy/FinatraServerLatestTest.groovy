@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.twitter.app.lifecycle.Event
 import com.twitter.app.lifecycle.Observer
 import com.twitter.finatra.http.HttpServer

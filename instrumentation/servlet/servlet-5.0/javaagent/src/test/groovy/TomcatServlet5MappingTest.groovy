@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import jakarta.servlet.Servlet
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat

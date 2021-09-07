@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.example.hello.HelloController
 import com.example.hello.TestFilter
 import io.opentelemetry.api.trace.StatusCode

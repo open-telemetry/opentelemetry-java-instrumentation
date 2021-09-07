@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.kubernetes.client.openapi.ApiCallback
 import io.kubernetes.client.openapi.ApiClient
 import io.kubernetes.client.openapi.ApiException

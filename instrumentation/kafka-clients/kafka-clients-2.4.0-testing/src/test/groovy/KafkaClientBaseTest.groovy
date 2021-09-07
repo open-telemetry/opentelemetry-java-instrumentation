@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.Rule

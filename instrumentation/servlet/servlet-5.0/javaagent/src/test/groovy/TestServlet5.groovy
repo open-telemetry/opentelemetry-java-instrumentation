@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import jakarta.servlet.RequestDispatcher
 import jakarta.servlet.ServletException

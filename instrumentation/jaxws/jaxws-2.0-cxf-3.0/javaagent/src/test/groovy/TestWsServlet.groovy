@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import hello.HelloServiceImpl
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.transport.servlet.CXFNonSpringServlet

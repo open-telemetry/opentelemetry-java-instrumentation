@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.apache.catalina.AccessLog

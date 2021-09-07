@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.activemq.ActiveMQConnectionFactory

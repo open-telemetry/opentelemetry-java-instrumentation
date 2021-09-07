@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.kafka.clients.consumer.ConsumerConfig

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Query
 import org.hibernate.Session

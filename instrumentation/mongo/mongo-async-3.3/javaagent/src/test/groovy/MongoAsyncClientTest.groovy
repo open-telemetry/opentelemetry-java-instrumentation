@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.mongodb.ConnectionString
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoClient

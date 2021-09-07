@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.squareup.okhttp.Callback
 import com.squareup.okhttp.MediaType
 import com.squareup.okhttp.OkHttpClient
