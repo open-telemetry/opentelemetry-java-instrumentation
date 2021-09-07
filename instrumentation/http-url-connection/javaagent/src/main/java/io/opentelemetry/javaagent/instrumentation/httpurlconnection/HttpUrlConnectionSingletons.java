@@ -16,7 +16,7 @@ import java.net.HttpURLConnection;
 
 public class HttpUrlConnectionSingletons {
 
-  private static final Instrumenter<HttpURLConnection, HttpUrlResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpURLConnection, Integer> INSTRUMENTER;
 
   static {
     HttpUrlHttpAttributesExtractor httpAttributesExtractor = new HttpUrlHttpAttributesExtractor();
@@ -25,7 +25,7 @@ public class HttpUrlConnectionSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<HttpURLConnection, HttpUrlResponse>newBuilder(
+        Instrumenter.<HttpURLConnection, Integer>newBuilder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.http-url-connection",
                 spanNameExtractor)
@@ -35,7 +35,7 @@ public class HttpUrlConnectionSingletons {
             .newClientInstrumenter(SETTER);
   }
 
-  public static Instrumenter<HttpURLConnection, HttpUrlResponse> instrumenter() {
+  public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
     return INSTRUMENTER;
   }
 }

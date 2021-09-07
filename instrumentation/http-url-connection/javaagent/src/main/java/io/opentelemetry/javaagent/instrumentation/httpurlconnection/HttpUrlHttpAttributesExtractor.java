@@ -10,8 +10,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class HttpUrlHttpAttributesExtractor
-    extends HttpAttributesExtractor<HttpURLConnection, HttpUrlResponse> {
+class HttpUrlHttpAttributesExtractor extends HttpAttributesExtractor<HttpURLConnection, Integer> {
   @Override
   protected String method(HttpURLConnection connection) {
     return connection.getRequestMethod();
@@ -49,41 +48,40 @@ class HttpUrlHttpAttributesExtractor
 
   @Override
   protected @Nullable Long requestContentLength(
-      HttpURLConnection connection, @Nullable HttpUrlResponse response) {
+      HttpURLConnection connection, @Nullable Integer statusCode) {
     return null;
   }
 
   @Override
   protected @Nullable Long requestContentLengthUncompressed(
-      HttpURLConnection connection, @Nullable HttpUrlResponse response) {
+      HttpURLConnection connection, @Nullable Integer response) {
     return null;
   }
 
   @Override
-  protected String flavor(HttpURLConnection connection, @Nullable HttpUrlResponse response) {
+  protected String flavor(HttpURLConnection connection, @Nullable Integer statusCode) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
   protected @Nullable String serverName(
-      HttpURLConnection connection, @Nullable HttpUrlResponse response) {
+      HttpURLConnection connection, @Nullable Integer statusCode) {
     return null;
   }
 
   @Override
-  protected Integer statusCode(HttpURLConnection connection, HttpUrlResponse response) {
-    return response.status();
+  protected Integer statusCode(HttpURLConnection connection, Integer statusCode) {
+    return statusCode;
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpURLConnection connection, HttpUrlResponse response) {
+  protected @Nullable Long responseContentLength(HttpURLConnection connection, Integer statusCode) {
     return null;
   }
 
   @Override
   protected @Nullable Long responseContentLengthUncompressed(
-      HttpURLConnection connection, HttpUrlResponse response) {
+      HttpURLConnection connection, Integer statusCode) {
     return null;
   }
 }

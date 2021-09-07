@@ -122,12 +122,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           // HttpURLConnection unnecessarily throws exception on error response.
           // None of the other http clients do this, so not recording the exception on the span
           // to be consistent with the telemetry for other http clients.
-          instrumenter()
-              .end(
-                  httpUrlState.context,
-                  connection,
-                  new HttpUrlResponse(connection, responseCode),
-                  null);
+          instrumenter().end(httpUrlState.context, connection, responseCode, null);
         } else {
           instrumenter().end(httpUrlState.context, connection, null, throwable);
         }
@@ -136,12 +131,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         // responseCode field is sometimes not populated.
         // We can't call getResponseCode() due to some unwanted side-effects
         // (e.g. breaks getOutputStream).
-        instrumenter()
-            .end(
-                httpUrlState.context,
-                connection,
-                new HttpUrlResponse(connection, responseCode),
-                null);
+        instrumenter().end(httpUrlState.context, connection, responseCode, null);
         httpUrlState.finished = true;
       }
     }
