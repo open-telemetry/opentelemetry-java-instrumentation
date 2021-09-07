@@ -237,14 +237,6 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     return context;
   }
 
-  public void updateSpanName(REQUEST request) {
-    updateSpanName(getServerSpan(request), request);
-  }
-
-  private void updateSpanName(Span span, REQUEST request) {
-    span.updateName(getSpanName(request));
-  }
-
   public void onTimeout(Context context, long timeout) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
