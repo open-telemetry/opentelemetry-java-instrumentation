@@ -23,5 +23,8 @@ class KubernetesExperimentalAttributesExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, Request request, @Nullable ApiResponse<?> apiResponse) {}
+      AttributesBuilder attributes,
+      Request request,
+      @Nullable ApiResponse<?> apiResponse,
+      @Nullable Throwable error) {}
 }
