@@ -10,7 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,12 +37,9 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   private static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> addClientIpExtractor(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapGetter<REQUEST> getter) {
     HttpAttributesExtractor<REQUEST, RESPONSE> httpAttributesExtractor = null;
-    NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor = null;
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
         builder.attributesExtractors) {
-      if (extractor instanceof NetAttributesExtractor) {
-        netAttributesExtractor = (NetAttributesExtractor<REQUEST, RESPONSE>) extractor;
-      } else if (extractor instanceof HttpAttributesExtractor) {
+      if (extractor instanceof HttpAttributesExtractor) {
         httpAttributesExtractor = (HttpAttributesExtractor<REQUEST, RESPONSE>) extractor;
       }
     }
@@ -51,7 +47,7 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
       // Don't add HTTP_CLIENT_IP if there are no HTTP attributes registered.
       return builder;
     }
-    builder.addAttributesExtractor(new HttpClientIpExtractor(getter, netAttributesExtractor));
+    builder.addAttributesExtractor(new HttpClientIpExtractor<>(getter));
     return builder;
   }
 
@@ -59,13 +55,9 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
       extends AttributesExtractor<REQUEST, RESPONSE> {
 
     private final TextMapGetter<REQUEST> getter;
-    @Nullable private final NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
 
-    HttpClientIpExtractor(
-        TextMapGetter<REQUEST> getter,
-        @Nullable NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+    HttpClientIpExtractor(TextMapGetter<REQUEST> getter) {
       this.getter = getter;
-      this.netAttributesExtractor = netAttributesExtractor;
     }
 
     @Override
@@ -75,9 +67,6 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
     protected void onEnd(
         AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
       String clientIp = getForwardedClientIp(request);
-      if (clientIp == null && netAttributesExtractor != null) {
-        clientIp = netAttributesExtractor.peerIp(request, response);
-      }
       set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp);
     }
 
@@ -96,10 +85,7 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
       // try X-Forwarded-For
       forwarded = getter.get(request, "X-Forwarded-For");
       if (forwarded != null) {
-        forwarded = extractForwardedFor(forwarded);
-        if (forwarded != null) {
-          return forwarded;
-        }
+        return extractForwardedFor(forwarded);
       }
 
       return null;
