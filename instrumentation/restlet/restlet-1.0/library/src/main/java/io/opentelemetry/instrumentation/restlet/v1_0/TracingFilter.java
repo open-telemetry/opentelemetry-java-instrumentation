@@ -11,11 +11,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.restlet.v1_0.internal.RestletServerSpanNaming;
 import org.restlet.Filter;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-public final class TracingFilter extends Filter {
+final class TracingFilter extends Filter {
 
   private static final ThreadLocal<ContextAndScope> otelContextAndScope = new ThreadLocal<>();
   private final Instrumenter<Request, Response> instrumenter;
@@ -30,18 +31,16 @@ public final class TracingFilter extends Filter {
   protected int beforeHandle(Request request, Response response) {
 
     Context parentContext = Context.current();
+    Context context = parentContext;
 
     if (instrumenter.shouldStart(parentContext, request)) {
-      Context context = instrumenter.start(parentContext, request);
+      context = instrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
       otelContextAndScope.set(ContextAndScope.create(context, scope));
     }
 
     ServerSpanNaming.updateServerSpanName(
-        otelContextAndScope.get().getContext(),
-        CONTROLLER,
-        RestletServerSpanNaming.SERVER_SPAN_NAME,
-        path);
+        context, CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, path);
 
     return CONTINUE;
   }
@@ -51,9 +50,11 @@ public final class TracingFilter extends Filter {
 
     ContextAndScope contextAndScope = otelContextAndScope.get();
 
-    if (contextAndScope.getScope() == null) {
+    if (contextAndScope == null) {
       return;
     }
+
+    otelContextAndScope.remove();
 
     contextAndScope.getScope().close();
 

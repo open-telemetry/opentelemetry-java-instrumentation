@@ -10,8 +10,6 @@ import org.restlet.data.Request;
 
 final class RestletHeadersGetter implements TextMapGetter<Request> {
 
-  static final RestletHeadersGetter GETTER = new RestletHeadersGetter();
-
   @Override
   public Iterable<String> keys(Request carrier) {
     return HeadersAdapter.getHeaders(carrier).getNames();

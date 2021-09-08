@@ -19,6 +19,7 @@ import java.util.List;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
+/** A builder of {@link RestletTracing}. */
 public final class RestletTracingBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-1.0";
@@ -31,12 +32,19 @@ public final class RestletTracingBuilder {
     this.openTelemetry = openTelemetry;
   }
 
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   */
   public RestletTracingBuilder addAttributesExtractor(
       AttributesExtractor<Request, Response> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
 
+  /**
+   * Returns a new {@link RestletTracing} with the settings of this {@link RestletTracingBuilder}.
+   */
   public RestletTracing build() {
     HttpAttributesExtractor<Request, Response> httpAttributesExtractor =
         new RestletHttpAttributesExtractor();
@@ -54,7 +62,7 @@ public final class RestletTracingBuilder {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
-            .newServerInstrumenter(RestletHeadersGetter.GETTER);
+            .newServerInstrumenter(new RestletHeadersGetter());
 
     return new RestletTracing(instrumenter);
   }
