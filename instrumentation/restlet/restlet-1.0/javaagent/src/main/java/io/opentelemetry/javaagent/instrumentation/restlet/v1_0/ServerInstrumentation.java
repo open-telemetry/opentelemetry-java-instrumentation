@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v1_0;
 
-import static io.opentelemetry.instrumentation.restlet.v1_0.RestletSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.restlet.v1_0.RestletSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -70,10 +70,6 @@ public class ServerInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-
-      if (context == null) {
-        return;
-      }
 
       if (exception != null) {
         instrumenter().end(context, request, response, exception);

@@ -14,12 +14,12 @@ import org.restlet.data.Response;
 
 final class RestletHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
   @Override
-  protected @Nullable String method(Request request) {
+  protected String method(Request request) {
     return request.getMethod().toString();
   }
 
   @Override
-  protected @Nullable String url(Request request) {
+  protected String url(Request request) {
     return request.getOriginalRef().toString();
   }
 
@@ -83,7 +83,7 @@ final class RestletHttpAttributesExtractor extends HttpAttributesExtractor<Reque
   }
 
   @Override
-  protected @Nullable Integer statusCode(Request request, Response response) {
+  protected Integer statusCode(Request request, Response response) {
     return response.getStatus().getCode();
   }
 

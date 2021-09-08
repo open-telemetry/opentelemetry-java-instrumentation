@@ -5,23 +5,24 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
-import static io.opentelemetry.instrumentation.restlet.v1_0.RestletSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import org.restlet.Filter;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 public final class TracingFilter extends Filter {
 
-  private static final ThreadLocal<Scope> otelScope = new ThreadLocal<>();
-  private static final ThreadLocal<Context> otelContext = new ThreadLocal<>();
+  private static final ThreadLocal<ContextAndScope> otelContextAndScope = new ThreadLocal<>();
+  private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
-  public TracingFilter(String path) {
+  public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
+    this.instrumenter = instrumenter;
     this.path = path;
   }
 
@@ -30,18 +31,17 @@ public final class TracingFilter extends Filter {
 
     Context parentContext = Context.current();
 
-    if (!instrumenter().shouldStart(parentContext, request)) {
-      return CONTINUE;
+    if (instrumenter.shouldStart(parentContext, request)) {
+      Context context = instrumenter.start(parentContext, request);
+      Scope scope = context.makeCurrent();
+      otelContextAndScope.set(ContextAndScope.create(context, scope));
     }
 
-    otelContext.set(instrumenter().start(parentContext, request));
-
-    Span span = ServerSpan.fromContextOrNull(otelContext.get());
-
-    if (span != null) {
-      span.updateName(path);
-      otelScope.set(otelContext.get().makeCurrent());
-    }
+    ServerSpanNaming.updateServerSpanName(
+        otelContextAndScope.get().getContext(),
+        CONTROLLER,
+        RestletServerSpanNaming.SERVER_SPAN_NAME,
+        path);
 
     return CONTINUE;
   }
@@ -49,19 +49,17 @@ public final class TracingFilter extends Filter {
   @Override
   protected void afterHandle(Request request, Response response) {
 
-    if (otelScope.get() == null) {
+    ContextAndScope contextAndScope = otelContextAndScope.get();
+
+    if (contextAndScope.getScope() == null) {
       return;
     }
 
-    otelScope.get().close();
-
-    if (otelContext.get() == null) {
-      return;
-    }
+    contextAndScope.getScope().close();
 
     // Restlet suppresses exceptions and sets the throwable in status
     Throwable statusThrowable = response.getStatus().getThrowable();
 
-    instrumenter().end(otelContext.get(), request, response, statusThrowable);
+    instrumenter.end(contextAndScope.getContext(), request, response, statusThrowable);
   }
 }

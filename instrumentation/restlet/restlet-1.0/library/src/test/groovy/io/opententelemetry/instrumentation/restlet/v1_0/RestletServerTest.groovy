@@ -4,13 +4,17 @@
  */
 
 package io.opententelemetry.instrumentation.restlet.v1_0
+
+import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
+
 /*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import io.opentelemetry.instrumentation.restlet.v1_0.AbstractRestletServerTest
-import io.opentelemetry.instrumentation.restlet.v1_0.TracingFilter
+import io.opentelemetry.instrumentation.restlet.v1_0.RestletTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import org.restlet.Restlet
 
@@ -18,7 +22,8 @@ class RestletServerTest extends AbstractRestletServerTest implements LibraryTest
 
   @Override
   Restlet wrapRestlet(Restlet restlet, String path){
-    def filter = new TracingFilter(path)
+    RestletTracing tracing = RestletTracing.create(openTelemetry)
+    def filter = tracing.newFilter(path)
     filter.setNext(restlet)
     return filter
   }

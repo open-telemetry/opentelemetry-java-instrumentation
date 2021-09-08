@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v1_0;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.restlet.v1_0.RestletServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -43,19 +43,9 @@ public class RouteInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void getRouteInfo(@Advice.This Route route, @Advice.Argument(0) Request request) {
       String pattern = route.getTemplate().getPattern();
-      if (pattern == null || pattern.equals("")) {
-        return;
-      }
 
-      Context context = currentContext();
-
-      Span serverSpan = ServerSpan.fromContextOrNull(context);
-
-      if (serverSpan == null) {
-        return;
-      }
-
-      serverSpan.updateName(pattern);
+      ServerSpanNaming.updateServerSpanName(
+          currentContext(), CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, pattern);
     }
   }
 }
