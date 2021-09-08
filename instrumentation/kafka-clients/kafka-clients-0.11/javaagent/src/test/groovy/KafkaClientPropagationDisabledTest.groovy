@@ -54,7 +54,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
     // check that the message was received
     records.poll(5, TimeUnit.SECONDS) != null
 
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         span(0) {
           name SHARED_TOPIC + " send"
@@ -68,6 +68,19 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
         }
       }
       trace(1, 1) {
+        span(0) {
+          name SHARED_TOPIC + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
+        }
+      }
+      trace(2, 1) {
         span(0) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
@@ -84,7 +97,6 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
           }
         }
       }
-
     }
 
     cleanup:

@@ -10,73 +10,72 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class BatchConsumerAttributesExtractor
-    extends MessagingAttributesExtractor<BatchRecords<?, ?>, Void> {
+public final class KafkaBatchProcessAttributesExtractor
+    extends MessagingAttributesExtractor<ConsumerRecords<?, ?>, Void> {
   @Override
-  protected String system(BatchRecords<?, ?> batchRecords) {
+  protected String system(ConsumerRecords<?, ?> records) {
     return "kafka";
   }
 
   @Override
-  protected String destinationKind(BatchRecords<?, ?> batchRecords) {
+  protected String destinationKind(ConsumerRecords<?, ?> records) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  protected @Nullable String destination(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable String destination(ConsumerRecords<?, ?> records) {
     Set<String> topics =
-        batchRecords.records().partitions().stream()
-            .map(TopicPartition::topic)
-            .collect(Collectors.toSet());
+        records.partitions().stream().map(TopicPartition::topic).collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
     return topics.size() == 1 ? topics.iterator().next() : null;
   }
 
   @Override
-  protected boolean temporaryDestination(BatchRecords<?, ?> batchRecords) {
+  protected boolean temporaryDestination(ConsumerRecords<?, ?> records) {
     return false;
   }
 
   @Override
-  protected @Nullable String protocol(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable String protocol(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected @Nullable String protocolVersion(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable String protocolVersion(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected @Nullable String url(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable String url(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected @Nullable String conversationId(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable String conversationId(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadSize(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable Long messagePayloadSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(BatchRecords<?, ?> batchRecords) {
+  protected @Nullable Long messagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Override
-  protected MessageOperation operation(BatchRecords<?, ?> batchRecords) {
+  protected MessageOperation operation(ConsumerRecords<?, ?> records) {
     return MessageOperation.PROCESS;
   }
 
   @Override
-  protected @Nullable String messageId(BatchRecords<?, ?> batchRecords, @Nullable Void unused) {
+  protected @Nullable String messageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
     return null;
   }
 }

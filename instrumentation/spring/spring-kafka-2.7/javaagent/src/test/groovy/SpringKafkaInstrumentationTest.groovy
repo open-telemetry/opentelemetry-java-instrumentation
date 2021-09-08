@@ -69,10 +69,12 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    assertTraces(2) {
-      SpanData consumer1, consumer2
+    assertTraces(3) {
+      traces.sort(orderByRootSpanName("producer", "testTopic receive", "testTopic process"))
 
-      trace(0, 5) {
+      SpanData producer1, producer2
+
+      trace(0, 3) {
         span(0) {
           name "producer"
         }
@@ -87,21 +89,6 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "testTopic receive"
-          kind CONSUMER
-          childOf span(1)
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
-          }
-        }
-        span(3) {
           name "testTopic send"
           kind PRODUCER
           childOf span(0)
@@ -111,31 +98,29 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-        span(4) {
+
+        producer1 = span(1)
+        producer2 = span(2)
+      }
+      trace(1, 1) {
+        span(0) {
           name "testTopic receive"
           kind CONSUMER
-          childOf span(3)
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
           }
         }
-
-        consumer1 = span(2)
-        consumer2 = span(4)
       }
-      trace(1, 2) {
+      trace(2, 2) {
         span(0) {
           name "testTopic process"
           kind CONSUMER
-          hasLink consumer1
-          hasLink consumer2
+          hasLink producer1
+          hasLink producer2
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
@@ -163,10 +148,12 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    assertTraces(2) {
-      SpanData consumer
+    assertTraces(3) {
+      traces.sort(orderByRootSpanName("producer", "testTopic receive", "testTopic process"))
 
-      trace(0, 3) {
+      SpanData producer
+
+      trace(0, 2) {
         span(0) {
           name "producer"
         }
@@ -180,29 +167,27 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-        span(2) {
+
+        producer = span(1)
+      }
+      trace(1, 1) {
+        span(0) {
           name "testTopic receive"
           kind CONSUMER
-          childOf span(1)
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
           }
         }
-
-        consumer = span(2)
       }
-      trace(1, 2) {
+      trace(2, 2) {
         span(0) {
           name "testTopic process"
           kind CONSUMER
-          hasLink consumer
+          hasLink producer
           status ERROR
           errorEvent IllegalArgumentException, "boom"
           attributes {

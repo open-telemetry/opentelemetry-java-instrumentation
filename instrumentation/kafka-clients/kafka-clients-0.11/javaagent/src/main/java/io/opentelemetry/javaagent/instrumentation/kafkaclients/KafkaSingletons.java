@@ -24,8 +24,10 @@ public final class KafkaSingletons {
 
   private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER =
       buildProducerInstrumenter();
-  private static final Instrumenter<ConsumerRecord<?, ?>, Void> CONSUMER_INSTRUMENTER =
-      buildConsumerInstrumenter();
+  private static final Instrumenter<ReceivedRecords, Void> CONSUMER_RECEIVE_INSTRUMENTER =
+      buildConsumerReceiveInstrumenter();
+  private static final Instrumenter<ConsumerRecord<?, ?>, Void> CONSUMER_PROCESS_INSTRUMENTER =
+      buildConsumerProcessInstrumenter();
 
   private static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter() {
     KafkaProducerAttributesExtractor attributesExtractor = new KafkaProducerAttributesExtractor();
@@ -39,7 +41,19 @@ public final class KafkaSingletons {
         .newInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  private static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerInstrumenter() {
+  private static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter() {
+    KafkaReceiveAttributesExtractor attributesExtractor = new KafkaReceiveAttributesExtractor();
+    SpanNameExtractor<ReceivedRecords> spanNameExtractor =
+        MessagingSpanNameExtractor.create(attributesExtractor);
+
+    return Instrumenter.<ReceivedRecords, Void>newBuilder(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+        .addAttributesExtractor(attributesExtractor)
+        .setTimeExtractors(ReceivedRecords::startTime, (request, response) -> request.now())
+        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter() {
     KafkaConsumerAttributesExtractor attributesExtractor =
         new KafkaConsumerAttributesExtractor(MessageOperation.PROCESS);
     SpanNameExtractor<ConsumerRecord<?, ?>> spanNameExtractor =
@@ -62,8 +76,12 @@ public final class KafkaSingletons {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> consumerInstrumenter() {
-    return CONSUMER_INSTRUMENTER;
+  public static Instrumenter<ReceivedRecords, Void> consumerReceiveInstrumenter() {
+    return CONSUMER_RECEIVE_INSTRUMENTER;
+  }
+
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter() {
+    return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
   private KafkaSingletons() {}
