@@ -32,5 +32,8 @@ final class ExperimentalAttributesExtractor extends AttributesExtractor<HystrixR
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, HystrixRequest hystrixRequest, @Nullable Void unused) {}
+      AttributesBuilder attributes,
+      HystrixRequest hystrixRequest,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 }

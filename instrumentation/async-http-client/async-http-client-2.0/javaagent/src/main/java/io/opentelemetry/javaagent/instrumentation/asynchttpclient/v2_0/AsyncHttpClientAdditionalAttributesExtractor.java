@@ -20,7 +20,10 @@ public class AsyncHttpClientAdditionalAttributesExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, RequestContext requestContext, @Nullable Response response) {
+      AttributesBuilder attributes,
+      RequestContext requestContext,
+      @Nullable Response response,
+      @Nullable Throwable error) {
     NettyRequest nettyRequest = requestContext.getNettyRequest();
     if (nettyRequest != null) {
       set(

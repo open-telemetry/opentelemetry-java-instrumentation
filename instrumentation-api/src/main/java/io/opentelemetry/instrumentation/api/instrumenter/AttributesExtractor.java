@@ -15,10 +15,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Extractor of {@link io.opentelemetry.api.common.Attributes} for a given request and response.
  * Will be called {@linkplain #onStart(AttributesBuilder, Object) on start} with just the {@link
- * REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Object, Object) on end} with both {@link
- * REQUEST} and {@link RESPONSE} to allow populating attributes at each stage of a request's
- * lifecycle. It is best to populate as much as possible in {@link #onStart(AttributesBuilder,
- * Object)} to have it available during sampling.
+ * REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Object, Object, Throwable) on end} with
+ * both {@link REQUEST} and {@link RESPONSE} to allow populating attributes at each stage of a
+ * request's lifecycle. It is best to populate as much as possible in {@link
+ * #onStart(AttributesBuilder, Object)} to have it available during sampling.
  *
  * @see DbAttributesExtractor
  * @see HttpAttributesExtractor
@@ -32,11 +32,14 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
   protected abstract void onStart(AttributesBuilder attributes, REQUEST request);
 
   /**
-   * Extracts attributes from the {@link REQUEST} and {@link RESPONSE} into the {@link
-   * AttributesBuilder} at the end of a request.
+   * Extracts attributes from the {@link REQUEST} and either {@link RESPONSE} or {@code error} into
+   * the {@link AttributesBuilder} at the end of a request.
    */
   protected abstract void onEnd(
-      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response);
+      AttributesBuilder attributes,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error);
 
   /**
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code

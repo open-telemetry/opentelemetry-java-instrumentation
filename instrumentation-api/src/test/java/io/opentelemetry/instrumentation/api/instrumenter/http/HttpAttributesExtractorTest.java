@@ -127,7 +127,7 @@ class HttpAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"));
 
-    extractor.onEnd(attributes, request, response);
+    extractor.onEnd(attributes, request, response, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),

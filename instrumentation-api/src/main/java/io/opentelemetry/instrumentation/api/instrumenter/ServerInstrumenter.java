@@ -65,7 +65,10 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
 
     @Override
     protected void onEnd(
-        AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
+        AttributesBuilder attributes,
+        REQUEST request,
+        @Nullable RESPONSE response,
+        @Nullable Throwable error) {
       String clientIp = getForwardedClientIp(request);
       set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp);
     }

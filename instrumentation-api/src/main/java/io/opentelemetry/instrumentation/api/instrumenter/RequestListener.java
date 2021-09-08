@@ -21,8 +21,8 @@ public interface RequestListener {
    * the start and end of the request, e.g., an in-progress span, it should be added to the passed
    * in {@link Context} and returned.
    */
-  Context start(Context context, Attributes requestAttributes);
+  Context start(Context context, Attributes startAttributes);
 
   /** Listener method that is called at the end of a request. */
-  void end(Context context, Attributes responseAttributes);
+  void end(Context context, Attributes endAttributes);
 }

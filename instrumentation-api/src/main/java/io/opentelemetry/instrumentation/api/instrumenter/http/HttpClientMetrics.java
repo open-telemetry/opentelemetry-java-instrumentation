@@ -60,16 +60,16 @@ public final class HttpClientMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes requestAttributes) {
+  public Context start(Context context, Attributes startAttributes) {
     long startTimeNanos = System.nanoTime();
 
     return context.with(
         HTTP_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_HttpClientMetrics_State(requestAttributes, startTimeNanos));
+        new AutoValue_HttpClientMetrics_State(startAttributes, startTimeNanos));
   }
 
   @Override
-  public void end(Context context, Attributes responseAttributes) {
+  public void end(Context context, Attributes endAttributes) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
