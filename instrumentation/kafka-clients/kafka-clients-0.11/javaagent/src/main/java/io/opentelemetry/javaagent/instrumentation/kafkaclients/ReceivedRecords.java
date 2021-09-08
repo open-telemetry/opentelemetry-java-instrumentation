@@ -24,7 +24,7 @@ public abstract class ReceivedRecords {
     return timer().startTime();
   }
 
-  public Instant endTime() {
-    return timer().endTime();
+  public Instant now() {
+    return timer().now();
   }
 }
