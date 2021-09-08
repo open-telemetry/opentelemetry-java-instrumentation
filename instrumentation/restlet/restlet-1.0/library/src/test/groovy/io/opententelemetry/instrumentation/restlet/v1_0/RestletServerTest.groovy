@@ -5,9 +5,6 @@
 
 package io.opententelemetry.instrumentation.restlet.v1_0
 
-import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.OpenTelemetry
-
 /*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
