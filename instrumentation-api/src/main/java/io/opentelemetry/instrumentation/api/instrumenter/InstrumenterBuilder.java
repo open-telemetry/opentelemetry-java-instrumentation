@@ -16,13 +16,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -146,25 +141,26 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Enables suppression based on client instrumentation type.
    *
-   * <p><strong>When enabled, suppresses nested spans depending on their {@link SpanKind} and
-   * type</strong>.
+   * <p><strong>When enabled, suppresses nested spans depending on their {@link SpanKind} and {@link
+   * SpanKey}</strong>.
    *
    * <ul>
-   *   <li>CLIENT and PRODUCER nested spans are suppressed based on their type (HTTP, RPC, DB,
-   *       MESSAGING) i.e. if span with the same type is on the context, new span of this type will
-   *       not be started.
+   *   <li>CLIENT nested spans are suppressed based on their {@link SpanKey} (HTTP, RPC, DB) i.e. if
+   *       span marked with the same {@link SpanKey} is present in the parent context object, new
+   *       span of the same {@link SpanKey} will not be started.
    * </ul>
    *
    * <p><strong>When disabled:</strong>
    *
    * <ul>
-   *   <li>CLIENT and PRODUCER nested spans are always suppressed
+   *   <li>CLIENT nested spans are always suppressed
    * </ul>
    *
    * <p><strong>In both cases:</strong>
    *
    * <ul>
-   *   <li>SERVER and CONSUMER nested spans are always suppressed
+   *   <li>SERVER and PRODUCER nested spans are always suppressed
+   *   <li>CONSUMER spans are suppressed depending on their operation: receive or process
    *   <li>INTERNAL spans are never suppressed
    * </ul>
    */
@@ -244,31 +240,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
-    if (!enableSpanSuppressionByType) {
-      // if not enabled, preserve current behavior, not distinguishing types
-      return SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
+    Set<SpanKey> spanKeys = SpanKeyExtractor.determineSpanKeys(attributesExtractors);
+    if (enableSpanSuppressionByType) {
+      return SpanSuppressionStrategy.from(spanKeys);
     }
-
-    Set<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
-    return SpanSuppressionStrategy.from(spanKeys);
-  }
-
-  private static Set<SpanKey> spanKeysFromAttributeExtractor(
-      List<? extends AttributesExtractor<?, ?>> attributesExtractors) {
-
-    Set<SpanKey> spanKeys = new HashSet<>();
-    for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
-      if (attributeExtractor instanceof HttpAttributesExtractor) {
-        spanKeys.add(SpanKey.HTTP_CLIENT);
-      } else if (attributeExtractor instanceof RpcAttributesExtractor) {
-        spanKeys.add(SpanKey.RPC_CLIENT);
-      } else if (attributeExtractor instanceof DbAttributesExtractor) {
-        spanKeys.add(SpanKey.DB_CLIENT);
-      } else if (attributeExtractor instanceof MessagingAttributesExtractor) {
-        spanKeys.add(SpanKey.MESSAGING_PRODUCER);
-      }
-    }
-    return spanKeys;
+    // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
+    return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

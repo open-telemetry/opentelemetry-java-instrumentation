@@ -16,6 +16,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaBatchProcessAttributesExtractor
     extends MessagingAttributesExtractor<ConsumerRecords<?, ?>, Void> {
+
+  @Override
+  public MessageOperation operation() {
+    return MessageOperation.PROCESS;
+  }
+
   @Override
   protected String system(ConsumerRecords<?, ?> records) {
     return "kafka";
@@ -67,11 +73,6 @@ public final class KafkaBatchProcessAttributesExtractor
   @Override
   protected @Nullable Long messagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(ConsumerRecords<?, ?> records) {
-    return MessageOperation.PROCESS;
   }
 
   @Override

@@ -16,6 +16,17 @@ public class JmsMessageAttributesExtractor
     extends MessagingAttributesExtractor<MessageWithDestination, Void> {
   private static final Logger logger = LoggerFactory.getLogger(JmsMessageAttributesExtractor.class);
 
+  private final MessageOperation operation;
+
+  public JmsMessageAttributesExtractor(MessageOperation operation) {
+    this.operation = operation;
+  }
+
+  @Override
+  public MessageOperation operation() {
+    return operation;
+  }
+
   @Nullable
   @Override
   protected String system(MessageWithDestination messageWithDestination) {
@@ -78,11 +89,6 @@ public class JmsMessageAttributesExtractor
   @Override
   protected Long messagePayloadCompressedSize(MessageWithDestination messageWithDestination) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.messageOperation();
   }
 
   @Nullable

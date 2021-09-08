@@ -13,6 +13,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaProducerAttributesExtractor
     extends MessagingAttributesExtractor<ProducerRecord<?, ?>, Void> {
+
+  @Override
+  public MessageOperation operation() {
+    return MessageOperation.SEND;
+  }
+
   @Override
   protected String system(ProducerRecord<?, ?> producerRecord) {
     return "kafka";
@@ -61,11 +67,6 @@ public final class KafkaProducerAttributesExtractor
   @Override
   protected @Nullable Long messagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(ProducerRecord<?, ?> producerRecord) {
-    return MessageOperation.SEND;
   }
 
   @Override

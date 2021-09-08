@@ -17,6 +17,11 @@ public final class KafkaReceiveAttributesExtractor
     extends MessagingAttributesExtractor<ReceivedRecords, Void> {
 
   @Override
+  public MessageOperation operation() {
+    return MessageOperation.RECEIVE;
+  }
+
+  @Override
   protected String system(ReceivedRecords receivedRecords) {
     return "kafka";
   }
@@ -69,11 +74,6 @@ public final class KafkaReceiveAttributesExtractor
   @Override
   protected @Nullable Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(ReceivedRecords receivedRecords) {
-    return MessageOperation.RECEIVE;
   }
 
   @Override

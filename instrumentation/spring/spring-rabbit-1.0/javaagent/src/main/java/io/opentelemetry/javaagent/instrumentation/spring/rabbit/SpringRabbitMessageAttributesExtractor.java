@@ -12,6 +12,12 @@ import org.springframework.amqp.core.Message;
 
 final class SpringRabbitMessageAttributesExtractor
     extends MessagingAttributesExtractor<Message, Void> {
+
+  @Override
+  public MessageOperation operation() {
+    return MessageOperation.PROCESS;
+  }
+
   @Override
   protected String system(Message message) {
     return "rabbitmq";
@@ -60,11 +66,6 @@ final class SpringRabbitMessageAttributesExtractor
   @Override
   protected @Nullable Long messagePayloadCompressedSize(Message message) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(Message message) {
-    return MessageOperation.PROCESS;
   }
 
   @Override

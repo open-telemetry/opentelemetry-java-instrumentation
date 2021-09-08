@@ -30,11 +30,11 @@ public final class ConsumerSpan {
    */
   @Nullable
   public static Span fromContextOrNull(Context context) {
-    return SpanKey.CONSUMER.fromContextOrNull(context);
+    return SpanKey.CONSUMER_PROCESS.fromContextOrNull(context);
   }
 
   public static Context with(Context context, Span consumerSpan) {
-    return SpanKey.CONSUMER.storeInContext(context, consumerSpan);
+    return SpanKey.CONSUMER_PROCESS.storeInContext(context, consumerSpan);
   }
 
   private ConsumerSpan() {}

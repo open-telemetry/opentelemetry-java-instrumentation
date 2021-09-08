@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import java.time.Instant;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -24,8 +23,6 @@ public abstract class MessageWithDestination {
 
   public abstract Message message();
 
-  public abstract MessageOperation messageOperation();
-
   public abstract String destinationName();
 
   public abstract String destinationKind();
@@ -42,13 +39,12 @@ public abstract class MessageWithDestination {
     return timer().endTime();
   }
 
-  public static MessageWithDestination create(
-      Message message, MessageOperation operation, Destination fallbackDestination) {
-    return create(message, operation, fallbackDestination, Timer.start());
+  public static MessageWithDestination create(Message message, Destination fallbackDestination) {
+    return create(message, fallbackDestination, Timer.start());
   }
 
   public static MessageWithDestination create(
-      Message message, MessageOperation operation, Destination fallbackDestination, Timer timer) {
+      Message message, Destination fallbackDestination, Timer timer) {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
@@ -60,17 +56,17 @@ public abstract class MessageWithDestination {
     }
 
     if (jmsDestination instanceof Queue) {
-      return createMessageWithQueue(message, operation, (Queue) jmsDestination, timer);
+      return createMessageWithQueue(message, (Queue) jmsDestination, timer);
     }
     if (jmsDestination instanceof Topic) {
-      return createMessageWithTopic(message, operation, (Topic) jmsDestination, timer);
+      return createMessageWithTopic(message, (Topic) jmsDestination, timer);
     }
     return new AutoValue_MessageWithDestination(
-        message, operation, "unknown", "unknown", /* isTemporaryDestination= */ false, timer);
+        message, "unknown", "unknown", /* isTemporaryDestination= */ false, timer);
   }
 
   private static MessageWithDestination createMessageWithQueue(
-      Message message, MessageOperation operation, Queue destination, Timer timer) {
+      Message message, Queue destination, Timer timer) {
     String queueName;
     try {
       queueName = destination.getQueueName();
@@ -81,12 +77,11 @@ public abstract class MessageWithDestination {
     boolean temporary =
         destination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new AutoValue_MessageWithDestination(
-        message, operation, queueName, "queue", temporary, timer);
+    return new AutoValue_MessageWithDestination(message, queueName, "queue", temporary, timer);
   }
 
   private static MessageWithDestination createMessageWithTopic(
-      Message message, MessageOperation operation, Topic destination, Timer timer) {
+      Message message, Topic destination, Timer timer) {
     String topicName;
     try {
       topicName = destination.getTopicName();
@@ -97,7 +92,6 @@ public abstract class MessageWithDestination {
     boolean temporary =
         destination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new AutoValue_MessageWithDestination(
-        message, operation, topicName, "topic", temporary, timer);
+    return new AutoValue_MessageWithDestination(message, topicName, "topic", temporary, timer);
   }
 }
