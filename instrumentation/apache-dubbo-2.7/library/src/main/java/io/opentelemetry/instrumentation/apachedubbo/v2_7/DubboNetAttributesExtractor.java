@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import org.apache.dubbo.rpc.Result;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class DubboNetAttributesExtractor
+public final class DubboNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<DubboRequest, Result> {
 
   @Override
