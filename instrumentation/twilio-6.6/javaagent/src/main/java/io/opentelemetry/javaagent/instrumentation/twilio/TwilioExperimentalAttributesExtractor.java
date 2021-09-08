@@ -26,7 +26,8 @@ class TwilioExperimentalAttributesExtractor extends AttributesExtractor<String, 
   protected void onStart(AttributesBuilder attributes, String s) {}
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, String s, @Nullable Object result) {
+  protected void onEnd(
+      AttributesBuilder attributes, String s, @Nullable Object result, @Nullable Throwable error) {
     if (result == null) {
       return;
     }

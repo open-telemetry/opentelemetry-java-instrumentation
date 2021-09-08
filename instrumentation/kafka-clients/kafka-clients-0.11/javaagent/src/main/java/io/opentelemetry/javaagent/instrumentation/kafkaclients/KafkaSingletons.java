@@ -49,7 +49,7 @@ public final class KafkaSingletons {
     return Instrumenter.<ReceivedRecords, Void>newBuilder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
-        .setTimeExtractors(ReceivedRecords::startTime, (request, response) -> request.now())
+        .setTimeExtractors(ReceivedRecords::startTime, (request, response, error) -> request.now())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
