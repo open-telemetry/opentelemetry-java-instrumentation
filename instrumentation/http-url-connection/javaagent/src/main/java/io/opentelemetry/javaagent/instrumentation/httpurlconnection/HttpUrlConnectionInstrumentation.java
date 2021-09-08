@@ -124,7 +124,12 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           // to be consistent with the telemetry for other http clients.
           instrumenter().end(httpUrlState.context, connection, responseCode, null);
         } else {
-          instrumenter().end(httpUrlState.context, connection, null, throwable);
+          instrumenter()
+              .end(
+                  httpUrlState.context,
+                  connection,
+                  responseCode > 0 ? responseCode : null,
+                  throwable);
         }
         httpUrlState.finished = true;
       } else if (methodName.equals("getInputStream") && responseCode > 0) {
