@@ -80,10 +80,6 @@ Of course, still adhering to OpenTelemetry
 [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md).
 
 ## Additional instrumentations
-`RequestDispatcherInstrumentationModule` instruments `javax.servlet.RequestDispatcher.forward` and
-`javax.servlet.RequestDispatcher.include` methods to create new `INTERNAL` spans around their
-invocations.
-
-`HttpServletResponseInstrumentationModule` instruments `javax.servlet.http.HttpServletResponse.sendError`
+`HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.
