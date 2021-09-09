@@ -35,5 +35,8 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
       Context context = (Context) contextObj;
       instrumenter().end(context, requestContext, responseContext, null);
     }
+    // we are done with this request, remove context so it could be gcd immediately in case request
+    // context stays around for whatever reason
+    requestContext.removeProperty(CONTEXT_PROPERTY_NAME);
   }
 }
