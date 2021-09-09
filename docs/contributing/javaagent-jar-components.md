@@ -97,6 +97,6 @@ Available in the agent class loader:
   Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 
 ![Agent initialization sequence](initialization-sequence.svg)
-[Image source](https://docs.google.com/drawings/d/1FyRd11emnHvNWzUXLdpMNyf2R-auZlJsicNg8FpU_Ys)
+[Image source](https://docs.google.com/drawings/d/1v6mRzynLOZZ66Q_1T50S9V2j3Bc-kPbl-jJJcTt8uV4)
 ![Agent classloader state](classloader-state.svg)
-[Image source](https://docs.google.com/drawings/d/1WlJ_VHuo_t4RurQ6_qiQHdEBgRLc22l7L5f5dFRqgB8)
+[Image source](https://docs.google.com/drawings/d/1EMVPHIhqolwRFs6GXFNk9fzd1bIM7viIeGSk-JmcoOs)
