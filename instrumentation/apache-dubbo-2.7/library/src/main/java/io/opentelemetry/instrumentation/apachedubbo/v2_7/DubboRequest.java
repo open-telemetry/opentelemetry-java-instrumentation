@@ -10,7 +10,7 @@ import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
 
 @AutoValue
-abstract class DubboRequest {
+public abstract class DubboRequest {
 
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
     return new AutoValue_DubboRequest(invocation, context);
