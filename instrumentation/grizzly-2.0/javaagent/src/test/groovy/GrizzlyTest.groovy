@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.glassfish.grizzly.http.server.HttpHandler
@@ -17,12 +18,14 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static org.awaitility.Awaitility.await
 
 class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 
@@ -54,7 +57,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   }
 
   static boolean isRequestRunning() {
-    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+    def result = Thread.getAllStackTraces().values().find { stackTrace ->
       def element = stackTrace.find {
         return ((it.className == "org.glassfish.grizzly.http.server.HttpHandler\$1" && it.methodName == "run"))
       }
