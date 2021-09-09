@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.apachedubbo.v2_7;
+package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
 import java.net.InetSocketAddress;
 import org.apache.dubbo.rpc.Result;

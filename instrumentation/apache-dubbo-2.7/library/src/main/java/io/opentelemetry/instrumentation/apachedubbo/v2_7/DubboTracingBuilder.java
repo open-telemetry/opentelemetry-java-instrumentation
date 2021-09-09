@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -15,20 +16,31 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.dubbo.rpc.Result;
 
-public final class TracingFilterBuilder {
+/** A builder of {@link DubboTracing}. */
+public final class DubboTracingBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dubbo-2.7";
 
+  private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
 
-  public TracingFilterBuilder addAttributesExtractor(
+  DubboTracingBuilder(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   */
+  public DubboTracingBuilder addAttributesExtractor(
       AttributesExtractor<DubboRequest, Result> attributesExtractor) {
     attributesExtractors.add(attributesExtractor);
     return this;
   }
 
-  public TracingFilter build() {
+  /** Returns a new {@link DubboTracing} with the settings of this {@link DubboTracingBuilder}. */
+  public DubboTracing build() {
     DubboRpcAttributesExtractor rpcAttributesExtractor = new DubboRpcAttributesExtractor();
     DubboNetAttributesExtractor netAttributesExtractor = new DubboNetAttributesExtractor();
     SpanNameExtractor<DubboRequest> spanNameExtractor =
@@ -36,15 +48,12 @@ public final class TracingFilterBuilder {
 
     InstrumenterBuilder<DubboRequest, Result> builder =
         Instrumenter.<DubboRequest, Result>newBuilder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(rpcAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor);
+            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractors(attributesExtractors);
 
-    for (AttributesExtractor<DubboRequest, Result> attributesExtractor : attributesExtractors) {
-      builder.addAttributesExtractor(attributesExtractor);
-    }
-
-    return new TracingFilter(
+    return new DubboTracing(
         builder.newServerInstrumenter(new DubboHeadersGetter()),
         builder.newClientInstrumenter(new DubboHeadersSetter()));
   }

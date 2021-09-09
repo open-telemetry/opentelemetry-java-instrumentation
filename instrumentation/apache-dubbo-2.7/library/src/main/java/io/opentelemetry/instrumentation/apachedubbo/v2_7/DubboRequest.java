@@ -18,5 +18,5 @@ public abstract class DubboRequest {
 
   abstract RpcInvocation invocation();
 
-  abstract RpcContext context();
+  public abstract RpcContext context();
 }

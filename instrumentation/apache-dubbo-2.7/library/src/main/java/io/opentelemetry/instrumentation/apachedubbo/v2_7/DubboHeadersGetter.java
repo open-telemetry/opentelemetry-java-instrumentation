@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 
-class DubboHeadersGetter implements TextMapGetter<DubboRequest> {
+final class DubboHeadersGetter implements TextMapGetter<DubboRequest> {
 
   @Override
   public Iterable<String> keys(DubboRequest request) {

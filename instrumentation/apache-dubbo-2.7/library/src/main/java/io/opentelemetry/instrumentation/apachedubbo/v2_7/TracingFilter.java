@@ -16,12 +16,12 @@ import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-public final class TracingFilter implements Filter {
+final class TracingFilter implements Filter {
 
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
   private final Instrumenter<DubboRequest, Result> clientInstrumenter;
 
-  public TracingFilter(
+  TracingFilter(
       Instrumenter<DubboRequest, Result> serverInstrumenter,
       Instrumenter<DubboRequest, Result> clientInstrumenter) {
     this.serverInstrumenter = serverInstrumenter;

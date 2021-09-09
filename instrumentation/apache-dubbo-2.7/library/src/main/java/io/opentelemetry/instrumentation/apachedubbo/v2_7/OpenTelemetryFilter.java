@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
@@ -12,12 +13,12 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
 @Activate(group = {"consumer", "provider"})
-public class OpenTelemetryFilter implements Filter {
+public final class OpenTelemetryFilter implements Filter {
 
   private final Filter delegate;
 
   public OpenTelemetryFilter() {
-    delegate = new TracingFilterBuilder().build();
+    delegate = DubboTracing.create(GlobalOpenTelemetry.get()).newFilter();
   }
 
   @Override
