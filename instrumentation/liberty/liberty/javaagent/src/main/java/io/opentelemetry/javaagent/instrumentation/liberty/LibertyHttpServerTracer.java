@@ -23,6 +23,7 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
 
   @Override
   protected Context customizeContext(Context context, HttpServletRequest httpServletRequest) {
+    context = super.customizeContext(context, httpServletRequest);
     return AppServerBridge.init(context);
   }
 
