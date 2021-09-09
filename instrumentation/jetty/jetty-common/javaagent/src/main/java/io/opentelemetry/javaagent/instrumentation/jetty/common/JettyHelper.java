@@ -31,7 +31,6 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
 
   @Override
   protected Context customizeContext(Context context, REQUEST httpServletRequest) {
-    context = super.customizeContext(context, httpServletRequest);
     return AppServerBridge.init(context, /* shouldRecordException= */ false);
   }
 
