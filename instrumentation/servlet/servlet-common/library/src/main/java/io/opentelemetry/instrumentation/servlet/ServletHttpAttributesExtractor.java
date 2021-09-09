@@ -109,7 +109,6 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
     RESPONSE response = responseContext.response();
 
     if (!accessor.isResponseCommitted(response) && responseContext.error() != null) {
-      // XXX
       // if response is not committed and there is a throwable set status to 500 /
       // INTERNAL_SERVER_ERROR, due to servlet spec
       // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
