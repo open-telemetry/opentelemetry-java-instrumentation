@@ -21,6 +21,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import javax.sql.DataSource
+import java.lang.reflect.Field
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.DatabaseMetaData
