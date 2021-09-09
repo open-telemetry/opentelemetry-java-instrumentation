@@ -67,6 +67,11 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  public String getRequestRemoteHost(HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteHost();
+  }
+
+  @Override
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
   }
@@ -84,6 +89,11 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
+  }
+
+  @Override
+  public int getRequestContentLength(HttpServletRequest request) {
+    return request.getContentLength();
   }
 
   @Override

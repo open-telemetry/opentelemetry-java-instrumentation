@@ -50,10 +50,16 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   Integer getRequestRemotePort(REQUEST request);
 
+  String getRequestRemoteHost(REQUEST request);
+
+  int getRequestContentLength(REQUEST request);
+
   void addRequestAsyncListener(
       REQUEST request, ServletAsyncListener<RESPONSE> listener, Object response);
 
   int getResponseStatus(RESPONSE response);
+
+  String getResponseHeader(RESPONSE response, String name);
 
   boolean isResponseCommitted(RESPONSE response);
 

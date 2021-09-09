@@ -1,0 +1,85 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jetty.common;
+
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.ServletResponseContext;
+
+public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
+
+  protected JettyHelper(
+      Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
+      ServletAccessor<REQUEST, RESPONSE> accessor) {
+    super(instrumenter, accessor);
+  }
+
+  public Context startServerSpan(
+      Context parentContext, ServletRequestContext<REQUEST> requestContext) {
+    return startSpan(parentContext, requestContext, CONTAINER);
+  }
+
+  @Override
+  protected Context customizeContext(Context context, REQUEST httpServletRequest) {
+    context = super.customizeContext(context, httpServletRequest);
+    return AppServerBridge.init(context, /* shouldRecordException= */ false);
+  }
+
+  public void stopServerSpan(
+      ServletRequestContext<REQUEST> requestContext,
+      REQUEST request,
+      RESPONSE response,
+      Throwable throwable,
+      Context context,
+      Scope scope) {
+
+    if (scope != null) {
+      scope.close();
+    }
+
+    if (scope == null || context == null) {
+      return;
+    }
+
+    if (throwable == null) {
+      // on jetty versions before 9.4 exceptions from servlet don't propagate to this method
+      // check from request whether a throwable has been stored there
+      throwable = errorException(request);
+    }
+
+    ServletResponseContext<RESPONSE> responseContext =
+        new ServletResponseContext<>(response, throwable);
+    if (throwable != null) {
+      instrumenter.end(context, requestContext, responseContext, throwable);
+      return;
+    }
+
+    if (mustEndOnHandlerMethodExit(request)) {
+      instrumenter.end(context, requestContext, responseContext, null);
+    }
+  }
+
+  private Throwable errorException(REQUEST request) {
+    Object value = accessor.getRequestAttribute(request, errorExceptionAttributeName());
+
+    if (value instanceof Throwable) {
+      return (Throwable) value;
+    } else {
+      return null;
+    }
+  }
+
+  private static String errorExceptionAttributeName() {
+    return "javax.servlet.error.exception";
+  }
+}

@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract tracer for all Tomcat versions. This class must not access any methods of fields of
+ * Abstract tracer for all Tomcat versions. This class must not access any methods or fields of
  * Tomcat classes which have the <code>javax.servlet/jakarta.servlet</code> packages in their
  * signature - these must only be accessed by the version-specific subclasses.
  */

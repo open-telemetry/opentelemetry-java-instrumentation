@@ -101,6 +101,16 @@ public class JakartaServletAccessor
   }
 
   @Override
+  public String getRequestRemoteHost(HttpServletRequest request) {
+    return request.getRemoteHost();
+  }
+
+  @Override
+  public int getRequestContentLength(HttpServletRequest request) {
+    return request.getContentLength();
+  }
+
+  @Override
   public void addRequestAsyncListener(
       HttpServletRequest request,
       ServletAsyncListener<HttpServletResponse> listener,
@@ -115,6 +125,11 @@ public class JakartaServletAccessor
   @Override
   public int getResponseStatus(HttpServletResponse response) {
     return response.getStatus();
+  }
+
+  @Override
+  public String getResponseHeader(HttpServletResponse response, String name) {
+    return response.getHeader(name);
   }
 
   @Override

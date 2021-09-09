@@ -40,6 +40,11 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
+  public String getResponseHeader(HttpServletResponse response, String name) {
+    return response.getHeader(name);
+  }
+
+  @Override
   public boolean isResponseCommitted(HttpServletResponse response) {
     return response.isCommitted();
   }
