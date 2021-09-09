@@ -113,7 +113,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
-  private final Map<String, String> contextStore;
+  private final ContextStoreMappings contextStore;
 
   // fields-accessor-interface-name -> fields-accessor-interface-dynamic-type
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
@@ -127,7 +127,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final Instrumentation instrumentation;
 
-  public FieldBackedProvider(Class<?> instrumenterClass, Map<String, String> contextStore) {
+  public FieldBackedProvider(Class<?> instrumenterClass, ContextStoreMappings contextStore) {
     this.instrumenterClass = instrumenterClass;
     this.contextStore = contextStore;
     // This class is used only when running with javaagent, thus this calls is safe
@@ -239,13 +239,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                               "Incorrect Context Api Usage detected. Cannot find map holder class for %s context %s. Was that class defined in contextStore for instrumentation %s?",
                               keyClassName, contextClassName, instrumenterClass.getName()));
                     }
-                    if (!contextClassName.equals(contextStore.get(keyClassName))) {
+                    if (!contextStore.hasMapping(keyClassName, contextClassName)) {
                       throw new IllegalStateException(
                           String.format(
-                              "Incorrect Context Api Usage detected. Incorrect context class %s, expected %s for instrumentation %s",
-                              contextClassName,
-                              contextStore.get(keyClassName),
-                              instrumenterClass.getName()));
+                              "Incorrect Context Api Usage detected. Incorrect context class %s for instrumentation %s",
+                              contextClassName, instrumenterClass.getName()));
                     }
                     // stack: contextClass | keyClass
                     mv.visitMethodInsn(

@@ -43,8 +43,8 @@ These are the supported libraries and frameworks:
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
-| [Grails](https://grails.org/)                                                                                                         | 3.0+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
+| [Grails](https://grails.org/)                                                                                                         | 3.0+                           |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.6+                           |
 | [GWT](http://www.gwtproject.org/)                                                                                                     | 2.0+                           |
@@ -59,6 +59,7 @@ These are the supported libraries and frameworks:
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 8+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
 | [Jersey](https://eclipse-ee4j.github.io/jersey/)                                                                                      | 2.0+ (not including 3.x yet)   |
+| [Jetty HTTP Client](https://www.eclipse.org/jetty/javadoc/jetty-9/org/eclipse/jetty/client/HttpClient.html)                           | 9.2+ (not including 10+ yet)   |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
@@ -75,6 +76,7 @@ These are the supported libraries and frameworks:
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
 | [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
+| [Quartz](https://www.quartz-scheduler.org/)                                                                                           | 2.0+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
@@ -88,10 +90,13 @@ These are the supported libraries and frameworks:
 | [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
 | [Spring Batch](https://spring.io/projects/spring-batch)                                                                               | 3.0+                           |
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
+| [Spring Integration](https://spring.io/projects/spring-integration)                                                                   | 4.1+                           |
+| [Spring Kafka](https://spring.io/projects/spring-kafka)                                                                               | 2.7+                           |
+| [Spring Rabbit](https://spring.io/projects/spring-amqp)                                                                               | 1.0+                           |
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |
-| [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
 | [Spring Web Services](https://spring.io/projects/spring-ws)                                                                           | 2.0+                           |
+| [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Struts2](https://github.com/apache/struts)                                                                                           | 2.3+                           |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
