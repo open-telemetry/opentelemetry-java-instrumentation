@@ -26,7 +26,9 @@ public class DubboInstrumentationModule extends InstrumentationModule {
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
-    helperResourceBuilder.register("META-INF/services/org.apache.dubbo.rpc.Filter");
+    helperResourceBuilder.register(
+        "META-INF/services/org.apache.dubbo.rpc.Filter",
+        "spi-to-inject/org.apache.dubbo.rpc.Filter");
   }
 
   @Override
