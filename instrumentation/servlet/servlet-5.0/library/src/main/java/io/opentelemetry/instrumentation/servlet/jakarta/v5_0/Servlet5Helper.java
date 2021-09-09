@@ -19,6 +19,6 @@ public class Servlet5Helper extends ServletHelper<HttpServletRequest, HttpServle
   }
 
   private Servlet5Helper() {
-    super(instrumenter(), JakartaServletAccessor.INSTANCE);
+    super(instrumenter(), Servlet5Accessor.INSTANCE);
   }
 }

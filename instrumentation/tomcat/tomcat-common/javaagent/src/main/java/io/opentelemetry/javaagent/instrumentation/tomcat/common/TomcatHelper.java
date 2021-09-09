@@ -12,23 +12,22 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
+import io.opentelemetry.instrumentation.servlet.ServletHelper;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
 public class TomcatHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<Request, Response> instrumenter;
   protected final TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider;
-  private final ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer;
+  private final ServletHelper<REQUEST, RESPONSE> servletHelper;
 
   protected TomcatHelper(
       Instrumenter<Request, Response> instrumenter,
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
-      ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer) {
+      ServletHelper<REQUEST, RESPONSE> servletHelper) {
     this.instrumenter = instrumenter;
     this.servletEntityProvider = servletEntityProvider;
-    this.servletTracer = servletTracer;
+    this.servletHelper = servletHelper;
   }
 
   public Context startSpan(Context parentContext, Request request) {
@@ -58,8 +57,7 @@ public class TomcatHelper<REQUEST, RESPONSE> {
     }
 
     REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
-    if (servletRequest != null
-        && ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, servletRequest)) {
+    if (servletRequest != null && servletHelper.mustEndOnHandlerMethodExit(servletRequest)) {
       instrumenter.end(context, request, response, null);
     }
   }
@@ -69,7 +67,7 @@ public class TomcatHelper<REQUEST, RESPONSE> {
     RESPONSE servletResponse = servletEntityProvider.getServletResponse(response);
 
     if (servletRequest != null && servletResponse != null) {
-      servletTracer.setAsyncListenerResponse(servletRequest, servletResponse);
+      servletHelper.setAsyncListenerResponse(servletRequest, servletResponse);
     }
   }
 }

@@ -14,11 +14,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 
-public class JakartaServletAccessor
-    implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
-  public static final JakartaServletAccessor INSTANCE = new JakartaServletAccessor();
+public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
+  public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
 
-  private JakartaServletAccessor() {}
+  private Servlet5Accessor() {}
 
   @Override
   public String getRequestContextPath(HttpServletRequest request) {

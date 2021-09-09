@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.v11_0.Jetty11Singletons.instrumenter;
 
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletAccessor;
+import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +20,6 @@ public class Jetty11Helper extends JettyHelper<HttpServletRequest, HttpServletRe
   }
 
   private Jetty11Helper() {
-    super(instrumenter(), JakartaServletAccessor.INSTANCE);
+    super(instrumenter(), Servlet5Accessor.INSTANCE);
   }
 }

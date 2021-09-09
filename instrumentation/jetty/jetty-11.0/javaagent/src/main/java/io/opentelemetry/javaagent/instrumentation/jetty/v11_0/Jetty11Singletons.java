@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.ServletResponseContext;
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletAccessor;
+import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Accessor;
 import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5RequestGetter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,7 +21,7 @@ public final class Jetty11Singletons {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
           ServletInstrumenterBuilder.newInstrumenter(
-              INSTRUMENTATION_NAME, JakartaServletAccessor.INSTANCE, Servlet5RequestGetter.GETTER);
+              INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE, Servlet5RequestGetter.GETTER);
 
   public static Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>

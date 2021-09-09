@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Singletons.instrumenter;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
+import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Helper;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,6 +20,6 @@ public class Tomcat7Helper extends TomcatHelper<HttpServletRequest, HttpServletR
   }
 
   private Tomcat7Helper() {
-    super(instrumenter(), Tomcat7ServletEntityProvider.INSTANCE, Servlet3HttpServerTracer.tracer());
+    super(instrumenter(), Tomcat7ServletEntityProvider.INSTANCE, Servlet3Helper.helper());
   }
 }
