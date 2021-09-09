@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3RequestGetter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Jetty8Singletons {
+public final class Jetty8Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-8.0";
 
   private static final Instrumenter<

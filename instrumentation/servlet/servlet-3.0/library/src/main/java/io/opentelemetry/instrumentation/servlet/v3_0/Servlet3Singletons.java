@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.servlet.ServletResponseContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet3Singletons {
+public final class Servlet3Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-3.0";
 
   private static final Instrumenter<

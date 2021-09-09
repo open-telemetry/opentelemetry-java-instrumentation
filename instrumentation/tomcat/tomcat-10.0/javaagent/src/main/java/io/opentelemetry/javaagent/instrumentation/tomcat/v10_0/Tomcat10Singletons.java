@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrument
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-public class Tomcat10Singletons {
+public final class Tomcat10Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-10.0";
   private static final Instrumenter<Request, Response> INSTRUMENTER =
       TomcatInstrumenterBuilder.newInstrumenter(

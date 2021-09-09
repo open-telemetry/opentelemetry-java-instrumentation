@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5RequestGett
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class Jetty11Singletons {
+public final class Jetty11Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-11.0";
 
   private static final Instrumenter<
