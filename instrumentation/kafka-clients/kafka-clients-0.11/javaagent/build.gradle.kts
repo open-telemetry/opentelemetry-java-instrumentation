@@ -12,6 +12,9 @@ muzzle {
 }
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")

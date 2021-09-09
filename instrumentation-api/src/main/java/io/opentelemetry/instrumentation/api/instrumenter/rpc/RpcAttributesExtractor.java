@@ -31,7 +31,10 @@ public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   protected final void onEnd(
-      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
+      AttributesBuilder attributes,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
     // No response attributes
   }
 

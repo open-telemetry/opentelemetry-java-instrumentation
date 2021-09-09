@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -80,7 +81,10 @@ class InstrumenterTest {
 
     @Override
     protected void onEnd(
-        AttributesBuilder attributes, Map<String, String> request, Map<String, String> response) {
+        AttributesBuilder attributes,
+        Map<String, String> request,
+        Map<String, String> response,
+        @Nullable Throwable error) {
       attributes.put("resp1", response.get("resp1"));
       attributes.put("resp2", response.get("resp2"));
     }
@@ -97,7 +101,10 @@ class InstrumenterTest {
 
     @Override
     protected void onEnd(
-        AttributesBuilder attributes, Map<String, String> request, Map<String, String> response) {
+        AttributesBuilder attributes,
+        Map<String, String> request,
+        Map<String, String> response,
+        @Nullable Throwable error) {
       attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
     }
@@ -334,48 +341,6 @@ class InstrumenterTest {
   }
 
   @Test
-  void server_http_noForwarded() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
-                otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addAttributesExtractors(
-                mockHttpAttributes,
-                mockNetAttributes,
-                new AttributesExtractor1(),
-                new AttributesExtractor2())
-            .addSpanLinksExtractor(new LinksExtractor())
-            .newServerInstrumenter(new MapGetter());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-    request.remove("Forwarded");
-
-    when(mockNetAttributes.peerIp(request, null)).thenReturn("2.2.2.2");
-    when(mockNetAttributes.peerIp(request, RESPONSE)).thenReturn("2.2.2.2");
-
-    Context context = instrumenter.start(Context.root(), request);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
-
-    instrumenter.end(context, request, RESPONSE, null);
-
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsEntry(SemanticAttributes.NET_PEER_IP, "2.2.2.2")
-                                        .containsEntry(
-                                            SemanticAttributes.HTTP_CLIENT_IP, "2.2.2.2"))));
-  }
-
-  @Test
   void client() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
@@ -490,7 +455,7 @@ class InstrumenterTest {
     Instrumenter<Instant, Instant> instrumenter =
         Instrumenter.<Instant, Instant>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractors(request -> request, (request, response) -> response)
+            .setTimeExtractors(request -> request, (request, response, error) -> response)
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);

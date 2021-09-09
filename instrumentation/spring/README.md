@@ -861,7 +861,7 @@ Add the following configurations to overwrite the default exporter values listed
 #otel.traces.sampler.probability=1
 
 ## Default exporter configurations
-#otel.exporter.otlp.endpoint=localhost:55680
+#otel.exporter.otlp.endpoint=localhost:4317
 #otel.exporter.otlp.timeout=10s
 #otel.exporter.jaeger.endpoint=localhost:14250
 #otel.exporter.jaeger.timeout=10s

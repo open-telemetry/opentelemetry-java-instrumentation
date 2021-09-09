@@ -31,7 +31,8 @@ final class CassandraAttributesExtractor
   protected void onEnd(
       AttributesBuilder attributes,
       CassandraRequest request,
-      @Nullable ExecutionInfo executionInfo) {
+      @Nullable ExecutionInfo executionInfo,
+      @Nullable Throwable error) {
     if (executionInfo == null) {
       return;
     }

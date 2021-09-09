@@ -26,5 +26,8 @@ public final class KafkaProducerAdditionalAttributesExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {}
+      AttributesBuilder attributes,
+      ProducerRecord<?, ?> producerRecord,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 }

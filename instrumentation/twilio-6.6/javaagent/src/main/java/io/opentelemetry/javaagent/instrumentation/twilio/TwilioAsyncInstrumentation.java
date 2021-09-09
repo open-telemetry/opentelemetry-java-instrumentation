@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.spanName;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -76,13 +77,15 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
         @Advice.This Object that,
         @Advice.Origin("#m") String methodName,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelSpanName") String spanName) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      spanName = spanName(that, methodName);
+      if (!instrumenter().shouldStart(parentContext, spanName)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, that, methodName);
+      context = instrumenter().start(parentContext, spanName);
       scope = context.makeCurrent();
     }
 
@@ -92,7 +95,8 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return ListenableFuture<?> response,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelSpanName") String spanName) {
       if (scope == null) {
         return;
       }
@@ -101,12 +105,12 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         // There was an synchronous error,
         // which means we shouldn't wait for a callback to close the span.
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, spanName, null, throwable);
       } else {
         // We're calling an async operation, we still need to finish the span when it's
         // complete and report the results; set an appropriate callback
         Futures.addCallback(
-            response, new SpanFinishingCallback<>(context), Twilio.getExecutorService());
+            response, new SpanFinishingCallback<>(context, spanName), Twilio.getExecutorService());
       }
     }
   }
@@ -120,18 +124,21 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
     /** Span that we should finish and annotate when the future is complete. */
     private final Context context;
 
-    public SpanFinishingCallback(Context context) {
+    private final String spanName;
+
+    public SpanFinishingCallback(Context context, String spanName) {
       this.context = context;
+      this.spanName = spanName;
     }
 
     @Override
     public void onSuccess(Object result) {
-      tracer().end(context, result);
+      instrumenter().end(context, spanName, result, null);
     }
 
     @Override
     public void onFailure(Throwable t) {
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, spanName, null, t);
     }
   }
 }

@@ -57,7 +57,10 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {}
+      AttributesBuilder attributes,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {}
 
   /**
    * Creates a binding of the parameters of the traced method to span attributes.

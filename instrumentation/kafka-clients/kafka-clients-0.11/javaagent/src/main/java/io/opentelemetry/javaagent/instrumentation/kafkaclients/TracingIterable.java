@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerInstrumenter;
-
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -25,7 +23,7 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // ConsumerRecords is performed in the same thread that called poll()
     if (firstIterator) {
-      it = new TracingIterator<>(delegate.iterator(), consumerInstrumenter());
+      it = new TracingIterator<>(delegate.iterator());
       firstIterator = false;
     } else {
       it = delegate.iterator();

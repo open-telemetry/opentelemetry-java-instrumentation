@@ -26,5 +26,8 @@ public final class KafkaConsumerAdditionalAttributesExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {}
+      AttributesBuilder attributes,
+      ConsumerRecord<?, ?> consumerRecord,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 }

@@ -397,7 +397,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 | Feature         | Property                      | Default Value                      |
 |-----------------|-------------------------------|------------------------------------|
-| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:55680                    |
+| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:4317                    |
 |                 | otel.exporter.otlp.timeout    | 1s                                 |
 | Jaeger Exporter | otel.exporter.jaeger.endpoint | localhost:14250                    |
 |                 | otel.exporter.jaeger.timeout  | 1s                                 |
