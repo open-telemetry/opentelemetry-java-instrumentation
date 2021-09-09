@@ -6,19 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.processInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.receiveInstrumenter;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.kafka.listener.BatchInterceptor;
@@ -35,48 +27,18 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
   }
 
   @Override
-  public ConsumerRecords<K, V> intercept(
-      ConsumerRecords<K, V> consumerRecords, Consumer<K, V> consumer) {
+  public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
 
+    // TODO: use the receive spanContext that's linked to records
     Context parentContext = Context.current();
 
-    // create spans for all records received in a batch
-    List<SpanContext> receiveSpanContexts = traceReceivingRecords(parentContext, consumerRecords);
-
-    // then start a span for processing that links all those receive spans
-    BatchRecords<K, V> batchRecords = BatchRecords.create(consumerRecords, receiveSpanContexts);
-    if (processInstrumenter().shouldStart(parentContext, batchRecords)) {
-      Context context = processInstrumenter().start(parentContext, batchRecords);
+    if (processInstrumenter().shouldStart(parentContext, records)) {
+      Context context = processInstrumenter().start(parentContext, records);
       Scope scope = context.makeCurrent();
-      contextStore.put(consumerRecords, State.create(batchRecords, context, scope));
+      contextStore.put(records, State.create(records, context, scope));
     }
 
-    return decorated == null ? consumerRecords : decorated.intercept(consumerRecords, consumer);
-  }
-
-  private List<SpanContext> traceReceivingRecords(
-      Context parentContext, ConsumerRecords<K, V> records) {
-    List<SpanContext> receiveSpanContexts = new ArrayList<>();
-
-    Iterator<ConsumerRecord<K, V>> it = records.iterator();
-    // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though there's
-    // no current CONSUMER span
-    // this instrumentation will create CONSUMER receive spans for each record instead of
-    // kafka-clients
-    if (it instanceof KafkaConsumerIteratorWrapper) {
-      it = ((KafkaConsumerIteratorWrapper<K, V>) it).unwrap();
-    }
-
-    while (it.hasNext()) {
-      ConsumerRecord<K, V> record = it.next();
-      if (receiveInstrumenter().shouldStart(parentContext, record)) {
-        Context context = receiveInstrumenter().start(parentContext, record);
-        receiveSpanContexts.add(Span.fromContext(context).getSpanContext());
-        receiveInstrumenter().end(context, record, null, null);
-      }
-    }
-
-    return receiveSpanContexts;
+    return decorated == null ? records : decorated.intercept(records, consumer);
   }
 
   @Override

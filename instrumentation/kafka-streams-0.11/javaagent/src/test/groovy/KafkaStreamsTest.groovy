@@ -141,7 +141,12 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
-    assertTraces(1) {
+    assertTraces(3) {
+      traces.sort(orderByRootSpanName(
+        STREAM_PENDING + " send",
+        STREAM_PENDING + " receive",
+        STREAM_PROCESSED + " receive"))
+
       trace(0, 5) {
         // PRODUCER span 0
         span(0) {
@@ -214,6 +219,32 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
           }
         }
       }
+      trace(1, 1) {
+        span(0) {
+          name STREAM_PENDING + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
+        }
+      }
+      trace(2, 1) {
+        span(0) {
+          name STREAM_PROCESSED + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
+        }
+      }
     }
 
     def headers = received.headers()
@@ -234,7 +265,8 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    def streamSendSpan = traces[0][3]
+    def streamTrace = traces.find { it.size() == 5 }
+    def streamSendSpan = streamTrace[3]
     spanContext.traceId == streamSendSpan.traceId
     spanContext.spanId == streamSendSpan.spanId
 

@@ -17,5 +17,5 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface EndTimeExtractor<REQUEST, RESPONSE> {
 
   /** Returns the timestamp marking the end of the response processing. */
-  Instant extract(REQUEST request, @Nullable RESPONSE response);
+  Instant extract(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

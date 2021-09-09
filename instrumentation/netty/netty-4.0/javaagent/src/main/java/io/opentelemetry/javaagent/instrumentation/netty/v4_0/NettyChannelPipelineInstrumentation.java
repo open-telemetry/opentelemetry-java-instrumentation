@@ -39,7 +39,7 @@ public class NettyChannelPipelineInstrumentation
 
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(nameStartsWith("add"))
+            .and(nameStartsWith("add").or(named("replace")))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
   }

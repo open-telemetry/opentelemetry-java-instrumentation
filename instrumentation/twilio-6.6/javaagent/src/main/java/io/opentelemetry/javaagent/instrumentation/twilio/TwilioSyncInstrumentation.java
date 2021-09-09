@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -69,13 +69,15 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
         @Advice.This Object that,
         @Advice.Origin("#m") String methodName,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelSpanName") String spanName) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      spanName = TwilioSingletons.spanName(that, methodName);
+      if (!instrumenter().shouldStart(parentContext, spanName)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, that, methodName);
+      context = instrumenter().start(parentContext, spanName);
       scope = context.makeCurrent();
     }
 
@@ -85,17 +87,14 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return Object response,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelSpanName") String spanName) {
       if (scope == null) {
         return;
       }
 
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context, response);
-      }
+      instrumenter().end(context, spanName, response, throwable);
     }
   }
 }

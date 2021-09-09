@@ -70,17 +70,17 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes requestAttributes) {
+  public Context start(Context context, Attributes startAttributes) {
     long startTimeNanos = System.nanoTime();
-    activeRequests.add(1, applyActiveRequestsView(requestAttributes));
+    activeRequests.add(1, applyActiveRequestsView(startAttributes));
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
-        new AutoValue_HttpServerMetrics_State(requestAttributes, startTimeNanos));
+        new AutoValue_HttpServerMetrics_State(startAttributes, startTimeNanos));
   }
 
   @Override
-  public void end(Context context, Attributes responseAttributes) {
+  public void end(Context context, Attributes endAttributes) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(

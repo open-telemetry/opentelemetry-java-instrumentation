@@ -165,21 +165,20 @@ public class Instrumenter<REQUEST, RESPONSE> {
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributesBuilder, request, response);
-    }
-    Attributes attributes = attributesBuilder;
-
-    for (RequestListener requestListener : requestListeners) {
-      requestListener.end(context, attributes);
-    }
-
-    span.setAllAttributes(attributes);
-
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);
       span.recordException(error);
+    }
+
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
+      extractor.onEnd(attributesBuilder, request, response, error);
+    }
+    Attributes attributes = attributesBuilder;
+    span.setAllAttributes(attributes);
+
+    for (RequestListener requestListener : requestListeners) {
+      requestListener.end(context, attributes);
     }
 
     StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
@@ -188,7 +187,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     if (endTimeExtractor != null) {
-      span.end(endTimeExtractor.extract(request, response));
+      span.end(endTimeExtractor.extract(request, response, error));
     } else {
       span.end();
     }

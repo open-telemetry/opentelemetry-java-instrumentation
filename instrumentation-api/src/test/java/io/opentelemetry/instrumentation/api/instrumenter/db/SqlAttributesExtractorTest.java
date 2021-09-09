@@ -70,7 +70,7 @@ class SqlAttributesExtractorTest {
     underTest.onStart(startAttributes, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, null);
+    underTest.onEnd(endAttributes, request, null, null);
 
     // then
     assertThat(startAttributes.build())

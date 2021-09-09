@@ -120,7 +120,7 @@ class MessagingAttributesExtractorTest {
     underTest.onStart(startAttributes, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, "42");
+    underTest.onEnd(endAttributes, request, "42", null);
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
@@ -168,7 +168,7 @@ class MessagingAttributesExtractorTest {
     underTest.onStart(startAttributes, Collections.emptyMap());
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, Collections.emptyMap(), null);
+    underTest.onEnd(endAttributes, Collections.emptyMap(), null, null);
 
     // then
     assertThat(startAttributes.build().isEmpty()).isTrue();

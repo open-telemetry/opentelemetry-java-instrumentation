@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerProcessInstrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,23 +18,22 @@ public class TracingIterator<K, V>
     implements Iterator<ConsumerRecord<K, V>>, KafkaConsumerIteratorWrapper<K, V> {
 
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
-  private final Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter;
+  // TODO: use the context extracted from ConsumerRecords (receive context) as the parent span
+  // for that to work properly we'd have to modify the consumer span suppression strategy to
+  // differentiate between receive and process consumer spans - right now if we were to pass the
+  // receive context to this instrumentation it'd be suppressed
   private final Context parentContext;
 
-  /**
+  /*
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
   @Nullable private ConsumerRecord<?, ?> currentRequest;
-
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  public TracingIterator(
-      Iterator<ConsumerRecord<K, V>> delegateIterator,
-      Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter) {
+  public TracingIterator(Iterator<ConsumerRecord<K, V>> delegateIterator) {
     this.delegateIterator = delegateIterator;
-    this.instrumenter = instrumenter;
     parentContext = Context.current();
   }
 
@@ -49,9 +49,9 @@ public class TracingIterator<K, V>
     closeScopeAndEndSpan();
 
     ConsumerRecord<K, V> next = delegateIterator.next();
-    if (next != null && instrumenter.shouldStart(parentContext, next)) {
+    if (next != null && consumerProcessInstrumenter().shouldStart(parentContext, next)) {
       currentRequest = next;
-      currentContext = instrumenter.start(parentContext, currentRequest);
+      currentContext = consumerProcessInstrumenter().start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();
     }
     return next;
@@ -60,7 +60,7 @@ public class TracingIterator<K, V>
   private void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, null, null);
+      consumerProcessInstrumenter().end(currentContext, currentRequest, null, null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

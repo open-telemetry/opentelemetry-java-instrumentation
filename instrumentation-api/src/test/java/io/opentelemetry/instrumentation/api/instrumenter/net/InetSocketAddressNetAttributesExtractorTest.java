@@ -38,7 +38,7 @@ class InetSocketAddressNetAttributesExtractorTest {
   void noInetSocketAddress() {
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, null);
-    extractor.onEnd(attributes, null, null);
+    extractor.onEnd(attributes, null, null, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
@@ -55,7 +55,7 @@ class InetSocketAddressNetAttributesExtractorTest {
     extractor.onStart(startAttributes, address);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, null, address);
+    extractor.onEnd(endAttributes, null, address, null);
 
     // then
     assertThat(startAttributes.build())
@@ -83,7 +83,7 @@ class InetSocketAddressNetAttributesExtractorTest {
     extractor.onStart(startAttributes, address);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, null, address);
+    extractor.onEnd(endAttributes, null, address, null);
 
     // then
     assertThat(startAttributes.build())

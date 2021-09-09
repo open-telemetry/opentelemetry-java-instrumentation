@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -81,11 +82,13 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     received.value() == greeting
     received.key() == null
 
-    assertTraces(1) {
+    assertTraces(2) {
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
+
       trace(0, 4) {
         span(0) {
           name "parent"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
         }
         span(1) {
@@ -115,8 +118,21 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         }
         span(3) {
           name "producer callback"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           childOf span(0)
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          name SHARED_TOPIC + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
         }
       }
     }
@@ -177,11 +193,13 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     received.value() == greeting
     received.key() == null
 
-    assertTraces(1) {
+    assertTraces(2) {
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
+
       trace(0, 4) {
         span(0) {
           name "parent"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
         }
         span(1) {
@@ -211,8 +229,21 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         }
         span(3) {
           name "producer callback"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           childOf span(0)
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          name SHARED_TOPIC + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
         }
       }
     }
@@ -266,7 +297,9 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     received.value() == null
     received.key() == null
 
-    assertTraces(1) {
+    assertTraces(2) {
+      traces.sort(orderByRootSpanKind(PRODUCER, CONSUMER))
+
       trace(0, 2) {
         // PRODUCER span 0
         span(0) {
@@ -295,6 +328,19 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE.key}" true
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          name SHARED_TOPIC + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
       }
@@ -340,7 +386,9 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     first.value() == greeting
     first.key() == null
 
-    assertTraces(1) {
+    assertTraces(2) {
+      traces.sort(orderByRootSpanKind(PRODUCER, CONSUMER))
+
       trace(0, 2) {
         span(0) {
           name SHARED_TOPIC + " send"
@@ -366,6 +414,19 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          name SHARED_TOPIC + " receive"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
       }

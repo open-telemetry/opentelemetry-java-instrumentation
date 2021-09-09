@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.ChunkExecutionTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.rootContext;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.ChunkSingletons.chunkInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
+import javax.annotation.Nullable;
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
@@ -18,6 +22,7 @@ import org.springframework.core.Ordered;
 public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
   private final ContextStore<ChunkContext, ContextAndScope> executionContextStore;
   private final Class<?> builderClass;
+  private ChunkContextAndBuilder chunkContextAndBuilder;
 
   public TracingChunkExecutionListener(
       ContextStore<ChunkContext, ContextAndScope> executionContextStore, Class<?> builderClass) {
@@ -27,7 +32,13 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
 
   @Override
   public void beforeChunk(ChunkContext chunkContext) {
-    Context context = tracer().startSpan(chunkContext, builderClass);
+    Context parentContext = shouldCreateRootSpanForChunk() ? rootContext() : currentContext();
+    chunkContextAndBuilder = new ChunkContextAndBuilder(chunkContext, builderClass);
+    if (!chunkInstrumenter().shouldStart(parentContext, chunkContextAndBuilder)) {
+      return;
+    }
+
+    Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(chunkContext, new ContextAndScope(context, scope));
@@ -35,24 +46,25 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
 
   @Override
   public void afterChunk(ChunkContext chunkContext) {
-    ContextAndScope contextAndScope = executionContextStore.get(chunkContext);
-    if (contextAndScope != null) {
-      executionContextStore.put(chunkContext, null);
-      contextAndScope.closeScope();
-      tracer().end(contextAndScope.getContext());
-    }
+    end(chunkContext, null);
   }
 
   @Override
   public void afterChunkError(ChunkContext chunkContext) {
+    Throwable throwable =
+        (Throwable) chunkContext.getAttribute(ChunkListener.ROLLBACK_EXCEPTION_KEY);
+    end(chunkContext, throwable);
+  }
+
+  private void end(ChunkContext chunkContext, @Nullable Throwable throwable) {
     ContextAndScope contextAndScope = executionContextStore.get(chunkContext);
-    if (contextAndScope != null) {
-      executionContextStore.put(chunkContext, null);
-      contextAndScope.closeScope();
-      Throwable throwable =
-          (Throwable) chunkContext.getAttribute(ChunkListener.ROLLBACK_EXCEPTION_KEY);
-      tracer().endExceptionally(contextAndScope.getContext(), throwable);
+    if (contextAndScope == null) {
+      return;
     }
+
+    executionContextStore.put(chunkContext, null);
+    contextAndScope.closeScope();
+    chunkInstrumenter().end(contextAndScope.getContext(), chunkContextAndBuilder, null, throwable);
   }
 
   @Override

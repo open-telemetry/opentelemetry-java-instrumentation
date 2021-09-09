@@ -36,7 +36,7 @@ public final class JmsSingletons {
                 otel, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
             .setTimeExtractors(
-                MessageWithDestination::startTime, (request, response) -> request.endTime())
+                MessageWithDestination::startTime, (request, response, error) -> request.endTime())
             .newInstrumenter(SpanKindExtractor.alwaysConsumer());
     LISTENER_INSTRUMENTER =
         Instrumenter.<MessageWithDestination, Void>newBuilder(

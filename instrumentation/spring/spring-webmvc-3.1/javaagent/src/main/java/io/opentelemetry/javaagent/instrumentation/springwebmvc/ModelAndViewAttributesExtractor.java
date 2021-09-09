@@ -32,5 +32,8 @@ public class ModelAndViewAttributesExtractor extends AttributesExtractor<ModelAn
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, ModelAndView modelAndView, @Nullable Void unused) {}
+      AttributesBuilder attributes,
+      ModelAndView modelAndView,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 }

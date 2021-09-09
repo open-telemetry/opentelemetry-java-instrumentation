@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.instrumenter;
 
 import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiException;
@@ -14,21 +14,25 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.List;
 import java.util.Map;
+import okhttp3.Request;
 
 public class TracingApiCallback<T> implements ApiCallback<T> {
   private final ApiCallback<T> delegate;
   private final Context parentContext;
   private final Context context;
+  private final Request request;
 
-  public TracingApiCallback(ApiCallback<T> delegate, Context parentContext, Context context) {
+  public TracingApiCallback(
+      ApiCallback<T> delegate, Context parentContext, Context context, Request request) {
     this.delegate = delegate;
     this.parentContext = parentContext;
     this.context = context;
+    this.request = request;
   }
 
   @Override
   public void onFailure(ApiException e, int status, Map<String, List<String>> headers) {
-    tracer().endExceptionally(context, new ApiResponse<>(status, headers), e);
+    instrumenter().end(context, request, new ApiResponse<>(status, headers), e);
     if (delegate != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
         delegate.onFailure(e, status, headers);
@@ -38,7 +42,7 @@ public class TracingApiCallback<T> implements ApiCallback<T> {
 
   @Override
   public void onSuccess(T t, int status, Map<String, List<String>> headers) {
-    tracer().end(context, new ApiResponse<>(status, headers));
+    instrumenter().end(context, request, new ApiResponse<>(status, headers), null);
     if (delegate != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
         delegate.onSuccess(t, status, headers);
