@@ -31,6 +31,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   @Override
   public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object contextObj = requestContext.getProperty(CONTEXT_PROPERTY_NAME);
+    requestContext.removeProperty(CONTEXT_PROPERTY_NAME);
     if (contextObj instanceof Context) {
       Context context = (Context) contextObj;
       instrumenter().end(context, requestContext, responseContext, null);
