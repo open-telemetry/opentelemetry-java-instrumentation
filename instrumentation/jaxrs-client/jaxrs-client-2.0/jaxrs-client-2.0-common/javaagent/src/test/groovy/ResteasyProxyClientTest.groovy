@@ -8,6 +8,8 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.apache.http.client.utils.URLEncodedUtils
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder
+import spock.lang.AutoCleanup
+import spock.lang.Shared
 
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam

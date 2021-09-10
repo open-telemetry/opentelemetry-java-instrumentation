@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -55,7 +56,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   }
 
   static boolean isRequestRunning() {
-    def result = Thread.getAllStackTraces().values().find {stackTrace ->
+    def result = Thread.getAllStackTraces().values().find { stackTrace ->
       def element = stackTrace.find {
         return ((it.className == "org.apache.catalina.core.AsyncContextImpl\$RunnableWrapper" && it.methodName == "run")
           || ((it.className == "org.eclipse.jetty.server.AsyncContinuation\$1" && it.methodName == "run"))
