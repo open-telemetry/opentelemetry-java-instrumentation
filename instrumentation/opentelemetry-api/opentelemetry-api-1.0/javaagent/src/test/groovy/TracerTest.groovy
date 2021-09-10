@@ -333,6 +333,7 @@ class TracerTest extends AgentInstrumentationSpecification {
     Span.fromContext(context).getSpanContext().getSpanId() == span.getSpanContext().getSpanId()
   }
 
+  // this test uses opentelemetry-api-1.4 instrumentation
   def "test tracer builder"() {
     when:
     def tracer = GlobalOpenTelemetry.get().tracerBuilder("test").build()
