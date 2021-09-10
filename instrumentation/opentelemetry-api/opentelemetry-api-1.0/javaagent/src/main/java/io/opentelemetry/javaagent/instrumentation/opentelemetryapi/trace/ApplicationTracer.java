@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import application.io.opentelemetry.api.trace.SpanBuilder;
 import application.io.opentelemetry.api.trace.Tracer;
 
-class ApplicationTracer implements Tracer {
+public class ApplicationTracer implements Tracer {
 
   private final io.opentelemetry.api.trace.Tracer agentTracer;
 
-  ApplicationTracer(io.opentelemetry.api.trace.Tracer agentTracer) {
+  public ApplicationTracer(io.opentelemetry.api.trace.Tracer agentTracer) {
     this.agentTracer = agentTracer;
   }
 

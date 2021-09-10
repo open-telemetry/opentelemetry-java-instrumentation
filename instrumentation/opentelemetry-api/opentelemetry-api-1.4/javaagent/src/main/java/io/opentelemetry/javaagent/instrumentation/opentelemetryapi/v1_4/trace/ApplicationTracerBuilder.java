@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace;
 
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerBuilder;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
 
-public class ApplicationTracerBuilder implements TracerBuilder {
+class ApplicationTracerBuilder implements TracerBuilder {
 
   private final io.opentelemetry.api.trace.TracerBuilder agentTracerBuilder;
 
