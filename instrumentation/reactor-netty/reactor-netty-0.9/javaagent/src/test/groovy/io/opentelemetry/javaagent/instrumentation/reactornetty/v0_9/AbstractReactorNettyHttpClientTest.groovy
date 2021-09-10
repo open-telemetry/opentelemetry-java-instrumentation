@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.sdk.trace.data.SpanData
 import reactor.netty.http.client.HttpClient
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
