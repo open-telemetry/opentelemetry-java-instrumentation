@@ -332,4 +332,24 @@ class TracerTest extends AgentInstrumentationSpecification {
     then:
     Span.fromContext(context).getSpanContext().getSpanId() == span.getSpanContext().getSpanId()
   }
+
+  def "test tracer builder"() {
+    when:
+    def tracer = GlobalOpenTelemetry.get().tracerBuilder("test").build()
+    def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
+    testSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "test"
+          kind PRODUCER
+          hasNoParent()
+          attributes {
+          }
+        }
+      }
+    }
+  }
 }
