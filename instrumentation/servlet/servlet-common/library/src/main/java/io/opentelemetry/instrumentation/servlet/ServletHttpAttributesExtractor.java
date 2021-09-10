@@ -145,29 +145,6 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   protected @Nullable String route(ServletRequestContext<REQUEST> requestContext) {
-    /*
-    MappingResolver mappingResolver = requestContext.mappingResolver();
-    if (mappingResolver == null) {
-      return null;
-    }
-
-    REQUEST request = requestContext.request();
-    String servletPath = accessor.getRequestServletPath(request);
-    String pathInfo = accessor.getRequestPathInfo(request);
-    String contextPath = accessor.getRequestContextPath(request);
-    boolean hasContextPath =
-        contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/");
-
-    String route = requestContext.mappingResolver().resolve(servletPath, pathInfo);
-    if (route == null) {
-      if (hasContextPath) {
-        return contextPath + "/*";
-      }
-      return null;
-    }
-    // prepend context path
-    return contextPath + route;
-     */
     return null;
   }
 

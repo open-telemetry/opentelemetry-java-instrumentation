@@ -55,8 +55,6 @@ public final class ServletInstrumenterBuilder {
           newInstrumenter(String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
     HttpAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesExtractor = new ServletHttpAttributesExtractor<>(accessor);
-    // TODO: if we were filling http.route we could use
-    // HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         new ServletSpanNameExtractor<>(accessor);
 
