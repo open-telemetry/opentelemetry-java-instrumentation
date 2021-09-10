@@ -353,7 +353,11 @@ public final class ReferenceCollector {
     return contextStoreMappingsBuilder.build();
   }
 
-  /** @deprecated Use {@link #getContextStoreMappings()} instead. */
+  /**
+   * Returns a map of {@link io.opentelemetry.javaagent.instrumentation.api.ContextStore} mappings.
+   *
+   * @deprecated Use {@link #getContextStoreMappings()} instead.
+   */
   @Deprecated
   public Map<String, String> getContextStoreClasses() {
     return getContextStoreMappings().entrySet().stream()
