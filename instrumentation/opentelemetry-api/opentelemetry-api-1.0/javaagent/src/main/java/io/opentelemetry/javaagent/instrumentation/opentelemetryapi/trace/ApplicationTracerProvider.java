@@ -34,7 +34,8 @@ public class ApplicationTracerProvider implements TracerProvider {
     }
   }
 
-  public static TracerProvider create(io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
+  public static TracerProvider create(
+      io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
     if (TRACE_PROVIDER_14 != null) {
       try {
         return (TracerProvider) TRACE_PROVIDER_14.newInstance(agentTracerProvider);

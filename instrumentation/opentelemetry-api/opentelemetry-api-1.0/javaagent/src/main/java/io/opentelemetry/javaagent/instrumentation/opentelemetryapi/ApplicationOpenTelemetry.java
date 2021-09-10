@@ -25,7 +25,7 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
     io.opentelemetry.api.OpenTelemetry agentOpenTelemetry =
         io.opentelemetry.api.GlobalOpenTelemetry.get();
     applicationTracerProvider =
-        ApplicationTracerProvider.make(agentOpenTelemetry.getTracerProvider());
+        ApplicationTracerProvider.create(agentOpenTelemetry.getTracerProvider());
     applicationContextPropagators =
         new ApplicationContextPropagators(agentOpenTelemetry.getPropagators());
   }
