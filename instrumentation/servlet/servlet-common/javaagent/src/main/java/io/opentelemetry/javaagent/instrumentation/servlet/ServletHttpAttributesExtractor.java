@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.UriBuilder;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>

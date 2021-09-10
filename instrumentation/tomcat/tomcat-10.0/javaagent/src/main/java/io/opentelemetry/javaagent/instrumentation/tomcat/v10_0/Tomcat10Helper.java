@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Singletons.instrumenter;
 
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Helper;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Helper;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

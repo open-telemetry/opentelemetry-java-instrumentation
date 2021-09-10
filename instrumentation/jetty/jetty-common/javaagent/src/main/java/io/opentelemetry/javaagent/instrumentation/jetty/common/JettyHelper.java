@@ -12,9 +12,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.ServletHelper;
-import io.opentelemetry.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.ServletResponseContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 
 public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 

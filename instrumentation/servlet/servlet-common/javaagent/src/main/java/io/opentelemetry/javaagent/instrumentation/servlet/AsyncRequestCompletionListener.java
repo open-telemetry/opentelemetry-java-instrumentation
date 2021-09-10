@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AsyncRequestCompletionListener<REQUEST, RESPONSE>

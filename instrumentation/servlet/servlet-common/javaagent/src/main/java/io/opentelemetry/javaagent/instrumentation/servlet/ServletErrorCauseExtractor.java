@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 
 public class ServletErrorCauseExtractor<REQUEST, RESPONSE> implements ErrorCauseExtractor {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;

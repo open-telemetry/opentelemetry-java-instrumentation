@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 
 public class ServletRequestGetter<REQUEST>
     implements TextMapGetter<ServletRequestContext<REQUEST>> {

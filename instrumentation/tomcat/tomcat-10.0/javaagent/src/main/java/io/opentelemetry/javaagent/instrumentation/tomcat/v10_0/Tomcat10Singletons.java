@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrumenterBuilder;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;

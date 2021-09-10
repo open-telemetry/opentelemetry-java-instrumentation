@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
 
-import static io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Helper.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Helper.helper;
 
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import jakarta.servlet.AsyncContext;

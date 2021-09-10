@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.instrumenter;
 
-import io.opentelemetry.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

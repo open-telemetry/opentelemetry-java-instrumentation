@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.security.Principal;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -41,7 +43,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     if (!ServletHttpServerTracer.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return;
     }
-    if (responseContext != null && responseContext.hasTimeout())  {
+    if (responseContext != null && responseContext.hasTimeout()) {
       set(attributes, SERVLET_TIMEOUT, responseContext.getTimeout());
     }
   }

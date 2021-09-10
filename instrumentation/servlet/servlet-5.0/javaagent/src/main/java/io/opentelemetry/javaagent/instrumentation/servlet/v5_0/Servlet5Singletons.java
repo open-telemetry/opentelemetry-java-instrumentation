@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.jakarta.v5_0;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.ServletInstrumenterBuilder;
-import io.opentelemetry.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.ServletResponseContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

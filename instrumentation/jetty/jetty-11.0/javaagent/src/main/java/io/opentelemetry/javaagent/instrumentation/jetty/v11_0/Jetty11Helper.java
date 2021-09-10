@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.v11_0.Jetty11Singletons.instrumenter;
 
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

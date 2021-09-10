@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletSpanNameExtractor<REQUEST, RESPONSE>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {

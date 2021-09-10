@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
@@ -12,6 +12,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 
 public abstract class ServletHelper<REQUEST, RESPONSE>
     extends BaseServletHelper<REQUEST, RESPONSE> {
@@ -95,8 +97,9 @@ public abstract class ServletHelper<REQUEST, RESPONSE>
   }
 
   public RESPONSE getAsyncListenerResponse(REQUEST request) {
-    return (RESPONSE) accessor.getRequestAttribute(
-        request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+    return (RESPONSE)
+        accessor.getRequestAttribute(
+            request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
   }
 
   public void attachAsyncListener(REQUEST request) {
