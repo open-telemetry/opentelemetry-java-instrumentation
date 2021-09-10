@@ -48,15 +48,14 @@ public class TomcatHelper<REQUEST, RESPONSE> {
       throwable = AppServerBridge.getException(context);
     }
 
-    if (throwable != null) {
+    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
       instrumenter.end(context, request, response, throwable);
-      return;
     }
+  }
 
+  private boolean mustEndOnHandlerMethodExit(Request request) {
     REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
-    if (servletRequest != null && servletHelper.mustEndOnHandlerMethodExit(servletRequest)) {
-      instrumenter.end(context, request, response, null);
-    }
+    return servletRequest != null && servletHelper.mustEndOnHandlerMethodExit(servletRequest);
   }
 
   public void attachResponseToRequest(Request request, Response response) {
