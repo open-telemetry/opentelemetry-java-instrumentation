@@ -16,7 +16,7 @@ import java.util.Set;
 final class SpanKeyExtractor {
 
   /**
-   * Automatically determines {@link SpanKey}s that should be ashould be should be applied to the
+   * Automatically determines {@link SpanKey}s that should be applied to the
    * newly constructed {@link Instrumenter} based on the {@link AttributesExtractor}s configured.
    */
   static Set<SpanKey> determineSpanKeys(
