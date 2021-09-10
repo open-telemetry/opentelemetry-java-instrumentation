@@ -78,7 +78,7 @@ public final class InstrumentationModuleInstaller {
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, helperClassNames);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
@@ -148,14 +148,11 @@ public final class InstrumentationModuleInstaller {
    */
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
-    private final List<String> helperClassNames;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private volatile ReferenceMatcher referenceMatcher;
 
-    private MuzzleMatcher(
-        InstrumentationModule instrumentationModule, List<String> helperClassNames) {
+    private MuzzleMatcher(InstrumentationModule instrumentationModule) {
       this.instrumentationModule = instrumentationModule;
-      this.helperClassNames = helperClassNames;
     }
 
     @Override
@@ -202,11 +199,7 @@ public final class InstrumentationModuleInstaller {
     // during the agent setup
     private ReferenceMatcher getReferenceMatcher() {
       if (initialized.compareAndSet(false, true)) {
-        referenceMatcher =
-            new ReferenceMatcher(
-                helperClassNames,
-                instrumentationModule.getMuzzleReferences(),
-                instrumentationModule::isHelperClass);
+        referenceMatcher = ReferenceMatcher.of(instrumentationModule);
       }
       return referenceMatcher;
     }
