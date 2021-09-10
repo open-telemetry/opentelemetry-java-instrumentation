@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -25,6 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
