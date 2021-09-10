@@ -21,23 +21,23 @@ import java.util.Map;
  * io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
  */
 class MuzzleReferencesAccessor {
-  private static final MethodHandle getMuzzleReferences;
-
-  static {
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-    MethodHandle handle;
-    try {
-      // This method is generated automatically during compilation by
-      // the io.opentelemetry.instrumentation.javaagent-codegen Gradle plugin.
-      //noinspection JavaLangInvokeHandleSignature
-      handle =
-          lookup.findVirtual(
-              InstrumentationModule.class, "getMuzzleReferences", MethodType.methodType(Map.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      handle = null;
-    }
-    getMuzzleReferences = handle;
-  }
+  private static final ClassValue<MethodHandle> getMuzzleReferences =
+      new ClassValue<MethodHandle>() {
+        @Override
+        protected MethodHandle computeValue(Class<?> type) {
+          MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+          MethodHandle handle;
+          try {
+            // This method is generated automatically during compilation by
+            // the io.opentelemetry.instrumentation.javaagent-codegen Gradle plugin.
+            handle =
+                lookup.findVirtual(type, "getMuzzleReferences", MethodType.methodType(Map.class));
+          } catch (NoSuchMethodException | IllegalAccessException e) {
+            handle = null;
+          }
+          return handle;
+        }
+      };
 
   /**
    * Returns references to helper and library classes used in the given module's type
@@ -45,13 +45,13 @@ class MuzzleReferencesAccessor {
    */
   static Map<String, ClassRef> getFor(InstrumentationModule instrumentationModule) {
     Map<String, ClassRef> muzzleReferences = emptyMap();
-    if (getMuzzleReferences != null) {
+    MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
+    if (methodHandle != null) {
       try {
         //noinspection unchecked
-        muzzleReferences =
-            (Map<String, ClassRef>) getMuzzleReferences.invoke(instrumentationModule);
+        muzzleReferences = (Map<String, ClassRef>) methodHandle.invoke(instrumentationModule);
       } catch (Throwable ignored) {
-        //silence error prone
+        // silence error prone
       }
     }
     return muzzleReferences;
