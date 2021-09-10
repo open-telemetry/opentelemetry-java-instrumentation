@@ -62,13 +62,13 @@ public class AgentSpanTestingTracer extends BaseTracer {
     public static SpanKey[] getSpanKeys() {
       return new SpanKey[] {
         SpanKey.SERVER,
-        SpanKey.CONSUMER,
         getSpanKeyByName("HTTP_CLIENT"),
         getSpanKeyByName("RPC_CLIENT"),
         getSpanKeyByName("DB_CLIENT"),
-        getSpanKeyByName("MESSAGING_PRODUCER"),
         SpanKey.ALL_CLIENTS,
-        SpanKey.ALL_PRODUCERS
+        getSpanKeyByName("PRODUCER"),
+        getSpanKeyByName("CONSUMER_RECEIVE"),
+        getSpanKeyByName("CONSUMER_PROCESS")
       };
     }
 

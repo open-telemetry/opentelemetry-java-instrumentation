@@ -152,13 +152,13 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
             BaggageBridging::toApplication,
             BaggageBridging::toAgent),
         bridgeSpanKey("SERVER_KEY"),
-        bridgeSpanKey("CONSUMER_KEY"),
-        bridgeSpanKey("HTTP_KEY"),
-        bridgeSpanKey("RPC_KEY"),
-        bridgeSpanKey("DB_KEY"),
-        bridgeSpanKey("MESSAGING_KEY"),
+        bridgeSpanKey("HTTP_CLIENT_KEY"),
+        bridgeSpanKey("RPC_CLIENT_KEY"),
+        bridgeSpanKey("DB_CLIENT_KEY"),
         bridgeSpanKey("CLIENT_KEY"),
         bridgeSpanKey("PRODUCER_KEY"),
+        bridgeSpanKey("CONSUMER_RECEIVE_KEY"),
+        bridgeSpanKey("CONSUMER_PROCESS_KEY"),
       };
 
   private static ContextKeyBridge<Span, io.opentelemetry.api.trace.Span> bridgeSpanKey(

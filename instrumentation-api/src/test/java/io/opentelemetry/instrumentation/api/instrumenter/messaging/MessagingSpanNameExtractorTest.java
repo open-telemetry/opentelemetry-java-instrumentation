@@ -36,7 +36,7 @@ class MessagingSpanNameExtractorTest {
     } else {
       given(attributesExtractor.destination(message)).willReturn(destinationName);
     }
-    given(attributesExtractor.operation(message)).willReturn(operation);
+    given(attributesExtractor.operation()).willReturn(operation);
 
     SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(attributesExtractor);
 
@@ -51,8 +51,7 @@ class MessagingSpanNameExtractorTest {
     return Stream.of(
         Arguments.of(false, "destination", MessageOperation.SEND, "destination send"),
         Arguments.of(true, null, MessageOperation.PROCESS, "(temporary) process"),
-        Arguments.of(false, null, MessageOperation.RECEIVE, "unknown receive"),
-        Arguments.of(false, "destination", null, "destination"));
+        Arguments.of(false, null, MessageOperation.RECEIVE, "unknown receive"));
   }
 
   static class Message {}

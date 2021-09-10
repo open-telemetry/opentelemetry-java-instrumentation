@@ -16,7 +16,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    *
    * @see MessagingAttributesExtractor#destination(Object) used to extract {@code <destination
    *     name>}.
-   * @see MessagingAttributesExtractor#operation(Object) used to extract {@code <operation name>}.
+   * @see MessagingAttributesExtractor#operation() used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesExtractor<REQUEST, ?> attributesExtractor) {
@@ -39,7 +39,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
       destinationName = "unknown";
     }
 
-    MessageOperation operation = attributesExtractor.operation(request);
-    return operation == null ? destinationName : destinationName + " " + operation.operationName();
+    MessageOperation operation = attributesExtractor.operation();
+    return destinationName + " " + operation.operationName();
   }
 }
