@@ -7,12 +7,12 @@ can greatly reduce build time.
 Suggested plugins and settings:
 
 * Editor > Code Style > Java/Groovy > Imports
+  ![code style](https://user-images.githubusercontent.com/5099946/132923944-5737a731-351a-46a3-8fc4-5fe64e5a630c.png)
   * Class count to use import with '*': `9999` (some number sufficiently large that is unlikely to
     matter)
   * Names count to use static import with '*': `9999`
   * Default Import Layout should be used:
-
-    ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
+    ![import layout](https://user-images.githubusercontent.com/5099946/132924187-daf2df16-3e46-48db-9cf6-348252268a86.png)
 
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) plugin is
   suggested to be installed
