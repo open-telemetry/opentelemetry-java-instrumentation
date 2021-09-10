@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.servlet;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -13,6 +16,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
+  private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
+
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
   public ServletAdditionalAttributesExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
@@ -27,11 +32,17 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
   protected void onEnd(
       AttributesBuilder attributes,
       ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseServletResponseContext,
+      @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
     Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
     if (principal != null) {
       set(attributes, SemanticAttributes.ENDUSER_ID, principal.getName());
+    }
+    if (!ServletHttpServerTracer.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      return;
+    }
+    if (responseContext != null && responseContext.hasTimeout())  {
+      set(attributes, SERVLET_TIMEOUT, responseContext.getTimeout());
     }
   }
 }

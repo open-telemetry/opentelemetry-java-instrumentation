@@ -94,6 +94,11 @@ public abstract class ServletHelper<REQUEST, RESPONSE>
         request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
   }
 
+  public RESPONSE getAsyncListenerResponse(REQUEST request) {
+    return (RESPONSE) accessor.getRequestAttribute(
+        request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+  }
+
   public void attachAsyncListener(REQUEST request) {
     ServletRequestContext<REQUEST> requestContext = new ServletRequestContext<>(request, null);
     attachAsyncListener(requestContext);
@@ -104,13 +109,11 @@ public abstract class ServletHelper<REQUEST, RESPONSE>
     Context context = getServerContext(request);
 
     if (context != null) {
-      Object response =
-          accessor.getRequestAttribute(
-              request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+      Object response = getAsyncListenerResponse(request);
 
       accessor.addRequestAsyncListener(
           request,
-          new AsyncRequestCompletionListener<>(instrumenter, requestContext, context),
+          new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),
           response);
       accessor.setRequestAttribute(request, ServletHttpServerTracer.ASYNC_LISTENER_ATTRIBUTE, true);
     }

@@ -10,6 +10,7 @@ public class ServletResponseContext<T> {
   private final Throwable error;
   // used for servlet 2.2 where request status can't be extracted from HttpServletResponse
   private Integer status;
+  private Long timeout;
 
   public ServletResponseContext(T response, Throwable error) {
     this.response = response;
@@ -34,5 +35,17 @@ public class ServletResponseContext<T> {
 
   public boolean hasStatus() {
     return status != null;
+  }
+
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public boolean hasTimeout() {
+    return timeout != null;
   }
 }

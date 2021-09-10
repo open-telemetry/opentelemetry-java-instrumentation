@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.servlet;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
     implements ServletAsyncListener<RESPONSE> {
+  private final ServletHelper<REQUEST, RESPONSE> servletHelper;
   private final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   private final ServletRequestContext<REQUEST> requestContext;
@@ -20,9 +19,11 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   private final AtomicBoolean responseHandled = new AtomicBoolean();
 
   public AsyncRequestCompletionListener(
+      ServletHelper<REQUEST, RESPONSE> servletHelper,
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletRequestContext<REQUEST> requestContext,
       Context context) {
+    this.servletHelper = servletHelper;
     this.instrumenter = instrumenter;
     this.requestContext = requestContext;
     this.context = context;
@@ -40,12 +41,11 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   @Override
   public void onTimeout(long timeout) {
     if (responseHandled.compareAndSet(false, true)) {
-      Span span = Span.fromContext(context);
-      span.setStatus(StatusCode.ERROR);
-      if (ServletHttpServerTracer.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-        span.setAttribute("servlet.timeout", timeout);
-      }
-      span.end();
+      RESPONSE response = servletHelper.getAsyncListenerResponse(requestContext.request());
+      ServletResponseContext<RESPONSE> responseContext =
+          new ServletResponseContext<>(response, null);
+      responseContext.setTimeout(timeout);
+      instrumenter.end(context, requestContext, responseContext, null);
     }
   }
 
