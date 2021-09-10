@@ -51,6 +51,7 @@ class MuzzleReferencesAccessor {
         muzzleReferences =
             (Map<String, ClassRef>) getMuzzleReferences.invoke(instrumentationModule);
       } catch (Throwable ignored) {
+        //silence error prone
       }
     }
     return muzzleReferences;
