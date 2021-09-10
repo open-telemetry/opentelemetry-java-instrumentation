@@ -34,6 +34,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -49,7 +50,8 @@ public final class ReferenceCollector {
 
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
-  private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
+  private final InstrumentationContextBuilderImpl contextStoreMappingsBuilder =
+      new InstrumentationContextBuilderImpl();
   private final Set<String> visitedClasses = new HashSet<>();
   private final InstrumentationClassPredicate instrumentationClassPredicate;
   private final ClassLoader resourceLoader;
@@ -168,7 +170,7 @@ public final class ReferenceCollector {
         collectHelperClasses(
             isAdviceClass, visitedClassName, cv.getHelperClasses(), cv.getHelperSuperClasses());
 
-        contextStoreClasses.putAll(cv.getContextStoreClasses());
+        contextStoreMappingsBuilder.registerAll(cv.getContextStoreMappings());
       } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + visitedClassName, e);
       }
@@ -347,7 +349,14 @@ public final class ReferenceCollector {
     return helpersWithNoDeps;
   }
 
+  public ContextStoreMappings getContextStoreMappings() {
+    return contextStoreMappingsBuilder.build();
+  }
+
+  /** @deprecated Use {@link #getContextStoreMappings()} instead. */
+  @Deprecated
   public Map<String, String> getContextStoreClasses() {
-    return contextStoreClasses;
+    return getContextStoreMappings().entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }
