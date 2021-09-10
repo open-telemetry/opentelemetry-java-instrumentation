@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -76,7 +75,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = MessageWithDestination.create(message, MessageOperation.SEND, defaultDestination);
+      request = MessageWithDestination.create(message, defaultDestination);
       if (!producerInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -120,7 +119,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = MessageWithDestination.create(message, MessageOperation.SEND, destination);
+      request = MessageWithDestination.create(message, destination);
       if (!producerInstrumenter().shouldStart(parentContext, request)) {
         return;
       }

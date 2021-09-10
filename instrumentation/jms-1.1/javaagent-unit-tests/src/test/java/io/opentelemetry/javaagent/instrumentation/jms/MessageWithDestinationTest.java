@@ -52,8 +52,7 @@ class MessageWithDestinationTest {
     given(message.getJMSDestination()).willReturn(destination);
 
     // when
-    MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.SEND, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
 
     // then
     assertMessage(
@@ -66,8 +65,7 @@ class MessageWithDestinationTest {
     given(message.getJMSDestination()).willThrow(JMSException.class);
 
     // when
-    MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.SEND, destination, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, destination, timer);
 
     // then
     assertMessage(
@@ -93,8 +91,7 @@ class MessageWithDestinationTest {
     }
 
     // when
-    MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.RECEIVE, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
 
     // then
     assertMessage(
@@ -120,8 +117,7 @@ class MessageWithDestinationTest {
     }
 
     // when
-    MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.RECEIVE, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
 
     // then
     assertMessage(
@@ -144,7 +140,6 @@ class MessageWithDestinationTest {
       MessageWithDestination actual) {
 
     assertSame(message, actual.message());
-    assertSame(expectedMessageOperation, actual.messageOperation());
     assertEquals(expectedDestinationKind, actual.destinationKind());
     assertEquals(expectedDestinationName, actual.destinationName());
     assertEquals(expectedTemporary, actual.isTemporaryDestination());

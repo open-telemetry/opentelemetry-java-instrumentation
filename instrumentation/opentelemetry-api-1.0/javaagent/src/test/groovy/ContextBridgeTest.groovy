@@ -189,13 +189,13 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
       assert Span.current() != null
       def spanKeys = [
         SpanKey.SERVER,
-        SpanKey.CONSUMER,
         SpanKey.HTTP_CLIENT,
         SpanKey.RPC_CLIENT,
         SpanKey.DB_CLIENT,
-        SpanKey.MESSAGING_PRODUCER,
         SpanKey.ALL_CLIENTS,
-        SpanKey.ALL_PRODUCERS
+        SpanKey.PRODUCER,
+        SpanKey.CONSUMER_RECEIVE,
+        SpanKey.CONSUMER_PROCESS,
       ]
       spanKeys.each { spanKey ->
         assert spanKey.fromContextOrNull(Context.current()) != null

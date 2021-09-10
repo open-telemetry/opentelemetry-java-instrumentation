@@ -42,6 +42,7 @@ public final class SpringIntegrationTracingBuilder {
         Instrumenter.<MessageWithChannel, Void>newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, new MessageChannelSpanNameExtractor())
             .addAttributesExtractors(additionalAttributeExtractors)
+            .addAttributesExtractor(new SpringMessagingAttributesExtractor())
             .newConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
     return new SpringIntegrationTracing(openTelemetry.getPropagators(), instrumenter);
   }

@@ -23,6 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
@@ -787,7 +788,7 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(true);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, new AttributesExtractor[] {null});
+        getInstrumenterWithType(true, null, null);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -829,18 +830,22 @@ class InstrumenterTest {
   }
 
   @Test
-  void instrumentationTypeDetected_messaging() {
+  void instrumentationTypeDetected_producer() {
+    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockMessagingAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING_PRODUCER, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
   }
 
   @Test
   void instrumentationTypeDetected_mix() {
+    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(
             true,
@@ -852,7 +857,7 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
 
     Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.MESSAGING_PRODUCER, context);
+    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
   }
 
   @Test
@@ -870,7 +875,7 @@ class InstrumenterTest {
     assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isNull();
     assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
     assertThat(SpanKey.RPC_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.MESSAGING_PRODUCER.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.PRODUCER.fromContextOrNull(context)).isNull();
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {
@@ -880,8 +885,10 @@ class InstrumenterTest {
     assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
   }
 
+  @SafeVarargs
   private static Instrumenter<Map<String, String>, Map<String, String>> getInstrumenterWithType(
-      boolean enableInstrumentation, AttributesExtractor... attributeExtractors) {
+      boolean enableInstrumentation,
+      AttributesExtractor<Map<String, String>, Map<String, String>>... attributeExtractors) {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
