@@ -39,13 +39,10 @@ public class TomcatHelper<REQUEST, RESPONSE> {
 
   public void stopSpan(
       Request request, Response response, Throwable throwable, Context context, Scope scope) {
-    if (scope != null) {
-      scope.close();
+    if (scope == null) {
+      return
     }
-
-    if (context == null) {
-      return;
-    }
+    scope.close();
 
     if (throwable == null) {
       throwable = AppServerBridge.getException(context);

@@ -42,13 +42,10 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       Context context,
       Scope scope) {
 
-    if (scope != null) {
-      scope.close();
-    }
-
-    if (scope == null || context == null) {
+    if (scope == null) {
       return;
     }
+    scope.close();
 
     if (throwable == null) {
       // on jetty versions before 9.4 exceptions from servlet don't propagate to this method
@@ -58,13 +55,8 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
 
     ServletResponseContext<RESPONSE> responseContext =
         new ServletResponseContext<>(response, throwable);
-    if (throwable != null) {
+    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
       instrumenter.end(context, requestContext, responseContext, throwable);
-      return;
-    }
-
-    if (mustEndOnHandlerMethodExit(request)) {
-      instrumenter.end(context, requestContext, responseContext, null);
     }
   }
 

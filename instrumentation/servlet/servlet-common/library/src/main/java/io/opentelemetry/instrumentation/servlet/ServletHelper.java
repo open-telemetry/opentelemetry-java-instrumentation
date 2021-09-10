@@ -46,7 +46,6 @@ public abstract class ServletHelper<REQUEST, RESPONSE>
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
       if (throwable != null) {
-        // tracer.addUnwrappedThrowable(currentContext, throwable);
         recordException(currentContext, throwable);
       }
     }

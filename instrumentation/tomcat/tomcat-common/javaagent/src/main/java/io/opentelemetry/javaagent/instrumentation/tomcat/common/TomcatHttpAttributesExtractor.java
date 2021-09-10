@@ -15,12 +15,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class TomcatHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
 
   @Override
-  protected @Nullable String method(Request request) {
+  protected String method(Request request) {
     return request.method().toString();
   }
 
   @Override
-  protected @Nullable String url(Request request) {
+  protected String url(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     String scheme = schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
     String host = request.serverName().toString();

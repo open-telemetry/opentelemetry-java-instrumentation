@@ -75,7 +75,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return context instanceof Context ? (Context) context : null;
   }
 
-  protected void attachServerContext(Context context, REQUEST request) {
+  private void attachServerContext(Context context, REQUEST request) {
     accessor.setRequestAttribute(request, HttpServerTracer.CONTEXT_ATTRIBUTE, context);
   }
 
