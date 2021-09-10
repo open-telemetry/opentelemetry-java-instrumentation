@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
@@ -22,8 +20,8 @@ public final class ServletInstrumenterBuilder {
   private ServletInstrumenterBuilder() {}
 
   public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          newBuilder(
+      Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          newInstrumenter(
               String instrumentationName,
               ServletAccessor<REQUEST, RESPONSE> accessor,
               SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor,
@@ -48,15 +46,13 @@ public final class ServletInstrumenterBuilder {
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
         .addAttributesExtractor(additionalAttributesExtractor)
-        .addRequestMetrics(HttpServerMetrics.get());
+        .addRequestMetrics(HttpServerMetrics.get())
+        .newServerInstrumenter(new ServletRequestGetter<>(accessor));
   }
 
   public static <REQUEST, RESPONSE>
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          newInstrumenter(
-              String instrumentationName,
-              ServletAccessor<REQUEST, RESPONSE> accessor,
-              TextMapGetter<ServletRequestContext<REQUEST>> requestGetter) {
+          newInstrumenter(String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
     HttpAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesExtractor = new ServletHttpAttributesExtractor<>(accessor);
     // TODO: if we were filling http.route we could use
@@ -64,7 +60,7 @@ public final class ServletInstrumenterBuilder {
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         new ServletSpanNameExtractor<>(accessor);
 
-    return newBuilder(instrumentationName, accessor, spanNameExtractor, httpAttributesExtractor)
-        .newServerInstrumenter(requestGetter);
+    return newInstrumenter(
+        instrumentationName, accessor, spanNameExtractor, httpAttributesExtractor);
   }
 }

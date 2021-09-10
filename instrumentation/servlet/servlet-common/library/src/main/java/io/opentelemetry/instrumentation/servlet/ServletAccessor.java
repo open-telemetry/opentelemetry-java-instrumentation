@@ -42,6 +42,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestHeader(REQUEST request, String name);
 
+  Iterable<String> getRequestHeaderNames(REQUEST request);
+
   String getRequestServletPath(REQUEST request);
 
   String getRequestPathInfo(REQUEST request);

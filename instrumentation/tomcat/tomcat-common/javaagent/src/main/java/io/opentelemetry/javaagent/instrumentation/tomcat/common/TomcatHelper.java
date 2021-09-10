@@ -40,7 +40,7 @@ public class TomcatHelper<REQUEST, RESPONSE> {
   public void stopSpan(
       Request request, Response response, Throwable throwable, Context context, Scope scope) {
     if (scope == null) {
-      return
+      return;
     }
     scope.close();
 

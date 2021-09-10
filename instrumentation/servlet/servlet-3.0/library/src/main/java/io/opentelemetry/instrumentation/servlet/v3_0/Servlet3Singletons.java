@@ -19,7 +19,7 @@ public final class Servlet3Singletons {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
           ServletInstrumenterBuilder.newInstrumenter(
-              INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE, Servlet3RequestGetter.GETTER);
+              INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
   public static Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>

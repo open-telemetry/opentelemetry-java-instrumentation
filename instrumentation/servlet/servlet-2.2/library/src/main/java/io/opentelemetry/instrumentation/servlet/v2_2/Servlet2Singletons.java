@@ -29,12 +29,11 @@ public final class Servlet2Singletons {
         new Servlet2SpanNameExtractor<>(Servlet2Accessor.INSTANCE);
 
     INSTRUMENTER =
-        ServletInstrumenterBuilder.newBuilder(
-                INSTRUMENTATION_NAME,
-                Servlet2Accessor.INSTANCE,
-                spanNameExtractor,
-                httpAttributesExtractor)
-            .newServerInstrumenter(Servlet2RequestGetter.GETTER);
+        ServletInstrumenterBuilder.newInstrumenter(
+            INSTRUMENTATION_NAME,
+            Servlet2Accessor.INSTANCE,
+            spanNameExtractor,
+            httpAttributesExtractor);
   }
 
   public static Instrumenter<

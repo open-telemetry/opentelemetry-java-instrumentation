@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.javax;
 
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.security.Principal;
+import java.util.Collections;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -74,6 +75,11 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
+  }
+
+  @Override
+  public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
+    return Collections.list(httpServletRequest.getHeaderNames());
   }
 
   @Override

@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
+import java.util.Collections;
 
 public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
   public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
@@ -77,6 +78,11 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
+  }
+
+  @Override
+  public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
+    return Collections.list(httpServletRequest.getHeaderNames());
   }
 
   @Override
