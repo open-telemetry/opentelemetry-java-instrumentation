@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
@@ -16,6 +13,9 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   public static final String HOST = "localhost"

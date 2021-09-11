@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
@@ -13,6 +10,9 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class TracerTest extends AgentInstrumentationSpecification {
 

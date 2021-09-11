@@ -3,15 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static Jms2Test.consumerSpan
-import static Jms2Test.producerSpan
-
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.jms.Session
-import javax.jms.TextMessage
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -25,6 +18,14 @@ import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
+
+import javax.jms.Session
+import javax.jms.TextMessage
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+
+import static Jms2Test.consumerSpan
+import static Jms2Test.producerSpan
 
 class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
   @Shared

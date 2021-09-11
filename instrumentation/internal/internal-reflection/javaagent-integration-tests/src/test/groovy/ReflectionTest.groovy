@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 

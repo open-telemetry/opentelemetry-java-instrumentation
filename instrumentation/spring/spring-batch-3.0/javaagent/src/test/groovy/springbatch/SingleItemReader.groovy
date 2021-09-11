@@ -5,8 +5,9 @@
 
 package springbatch
 
-import java.util.concurrent.atomic.AtomicReference
 import org.springframework.batch.item.ItemReader
+
+import java.util.concurrent.atomic.AtomicReference
 
 class SingleItemReader implements ItemReader<String> {
   final AtomicReference<String> item = new AtomicReference<>("42")

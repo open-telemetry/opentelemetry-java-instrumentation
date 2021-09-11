@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -20,6 +16,10 @@ import org.apache.camel.impl.DefaultCamelContext
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 

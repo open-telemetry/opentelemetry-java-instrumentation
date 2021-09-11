@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Query
 import org.hibernate.Session
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class QueryTest extends AbstractHibernateTest {
 
@@ -104,26 +104,26 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName       | expectedSpanName            | requiresTransaction | queryInteraction
-    "Query.list"          | "SELECT Value"              | false               | { sess ->
+    queryMethodName       | expectedSpanName | requiresTransaction | queryInteraction
+    "Query.list"          | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "Query.executeUpdate" | "UPDATE Value"              | true                | { sess ->
+    "Query.executeUpdate" | "UPDATE Value"   | true                | { sess ->
       Query q = sess.createQuery("update Value set name = ?")
       q.setParameter(0, "alyx")
       q.executeUpdate()
     }
-    "Query.uniqueResult"  | "SELECT Value"              | false               | { sess ->
+    "Query.uniqueResult"  | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value where id = ?")
       q.setParameter(0, 1L)
       q.uniqueResult()
     }
-    "Query.iterate"       | "SELECT Value"              | false               | { sess ->
+    "Query.iterate"       | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "Query.scroll"        | "SELECT Value"              | false               | { sess ->
+    "Query.scroll"        | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }

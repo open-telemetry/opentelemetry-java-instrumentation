@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.rxjava3
 
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.functions.Consumer
+
 import java.util.concurrent.CountDownLatch
 
 abstract class AbstractRxJava3SubscriptionTest extends InstrumentationSpecification {

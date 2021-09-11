@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.tracer.ClientSpan
 import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference

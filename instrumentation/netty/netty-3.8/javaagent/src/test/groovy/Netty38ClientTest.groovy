@@ -13,9 +13,10 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
-import java.nio.channels.ClosedChannelException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+
+import java.nio.channels.ClosedChannelException
 
 class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 

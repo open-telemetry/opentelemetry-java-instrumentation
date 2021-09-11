@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -20,10 +17,14 @@ import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Unroll
+
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 @Unroll
 abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {

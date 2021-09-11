@@ -3,16 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.Statement
-import javax.persistence.ParameterMode
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -20,6 +12,15 @@ import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
 import org.junit.Assume
 import spock.lang.Shared
+
+import javax.persistence.ParameterMode
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.Statement
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class ProcedureCallTest extends AgentInstrumentationSpecification {
 

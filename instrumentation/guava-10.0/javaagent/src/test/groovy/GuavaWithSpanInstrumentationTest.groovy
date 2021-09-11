@@ -53,7 +53,7 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
 
   def "should capture span for eventually done ListenableFuture"() {
     setup:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     new TracedWithSpan().listenableFuture(future)
 
     expect:
@@ -78,7 +78,7 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
   def "should capture span for eventually failed ListenableFuture"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     new TracedWithSpan().listenableFuture(future)
 
     expect:
@@ -104,7 +104,7 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
 
   def "should capture span for canceled ListenableFuture"() {
     setup:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     new TracedWithSpan().listenableFuture(future)
 
     expect:

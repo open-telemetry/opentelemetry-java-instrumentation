@@ -5,15 +5,6 @@
 
 package server
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
-import java.util.function.Supplier
 import play.BuiltInComponents
 import play.Mode
 import play.libs.concurrent.HttpExecution
@@ -21,6 +12,16 @@ import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
 import spock.lang.Shared
+
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
+import java.util.function.Supplier
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class PlayAsyncServerTest extends PlayServerTest {
   @Shared

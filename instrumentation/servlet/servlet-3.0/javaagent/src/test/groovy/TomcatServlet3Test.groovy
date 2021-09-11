@@ -3,22 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static org.junit.Assume.assumeTrue
-
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
-import java.nio.file.Files
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
-import javax.servlet.Servlet
-import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
@@ -31,6 +17,21 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import javax.servlet.Servlet
+import javax.servlet.ServletException
+import java.nio.file.Files
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {

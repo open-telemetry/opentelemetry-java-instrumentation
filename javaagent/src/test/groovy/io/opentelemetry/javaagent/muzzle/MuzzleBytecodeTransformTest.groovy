@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.muzzle
 
 import io.opentelemetry.javaagent.IntegrationTestUtils
+import spock.lang.Specification
+
 import java.lang.reflect.Field
 import java.lang.reflect.Method
-import spock.lang.Specification
 
 class MuzzleBytecodeTransformTest extends Specification {
 

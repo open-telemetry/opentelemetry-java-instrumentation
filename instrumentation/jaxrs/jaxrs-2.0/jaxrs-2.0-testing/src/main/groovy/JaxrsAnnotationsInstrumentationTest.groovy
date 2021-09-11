@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Unroll
+
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -16,7 +14,10 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 abstract class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
 

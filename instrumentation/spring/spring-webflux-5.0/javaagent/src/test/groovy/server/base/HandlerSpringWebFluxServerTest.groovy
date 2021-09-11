@@ -5,15 +5,15 @@
 
 package server.base
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.web.server.ResponseStatusException
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 
 abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
   @Override

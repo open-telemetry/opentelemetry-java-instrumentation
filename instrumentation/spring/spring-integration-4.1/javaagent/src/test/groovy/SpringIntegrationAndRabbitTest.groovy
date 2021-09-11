@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.ServerTraceUtils.runUnderServerTrace
-
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {

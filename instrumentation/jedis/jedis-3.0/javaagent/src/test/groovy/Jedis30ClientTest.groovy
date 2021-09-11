@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import redis.clients.jedis.Jedis
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 class Jedis30ClientTest extends AgentInstrumentationSpecification {
 

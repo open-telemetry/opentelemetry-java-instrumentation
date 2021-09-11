@@ -5,6 +5,8 @@
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import spock.lang.Shared
+
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
@@ -21,7 +23,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 

@@ -3,12 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE
-import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -20,9 +14,16 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import io.vertx.reactivex.core.Vertx
+import spock.lang.Shared
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import spock.lang.Shared
+
+import static VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE
+import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   @Shared

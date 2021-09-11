@@ -7,8 +7,9 @@ package context
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess
-import java.lang.reflect.Field
 import library.DisabledKeyClass
+
+import java.lang.reflect.Field
 
 // this test is run using:
 //   -Dotel.javaagent.experimental.field-injection.enabled=false

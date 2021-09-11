@@ -7,8 +7,9 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import io.opentelemetry.instrumentation.test.base.AbstractPromiseTest
-import java.util.concurrent.Executors
 import spock.lang.Shared
+
+import java.util.concurrent.Executors
 
 class ListenableFutureTest extends AbstractPromiseTest<SettableFuture<Boolean>, ListenableFuture<String>> {
   @Shared

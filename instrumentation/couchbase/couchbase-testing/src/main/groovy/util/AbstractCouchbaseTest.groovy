@@ -5,8 +5,6 @@
 
 package util
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig
 import com.couchbase.client.java.bucket.BucketType
@@ -22,8 +20,11 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
 
@@ -122,7 +123,7 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
         "${SemanticAttributes.DB_SYSTEM.key}" "couchbase"
         "${SemanticAttributes.DB_NAME.key}" bucketName
         "${SemanticAttributes.DB_STATEMENT.key}" statement
-        "${SemanticAttributes.DB_OPERATION.key}" (operation ?: spanName)
+        "${SemanticAttributes.DB_OPERATION.key}"(operation ?: spanName)
       }
     }
   }

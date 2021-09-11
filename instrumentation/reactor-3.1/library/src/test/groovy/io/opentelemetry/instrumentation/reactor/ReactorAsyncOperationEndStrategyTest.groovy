@@ -17,7 +17,7 @@ import spock.lang.Specification
 class ReactorAsyncOperationEndStrategyTest extends Specification {
   String request = "request"
   String response = "response"
-  
+
   Instrumenter<String, String> instrumenter
 
   Context context
@@ -71,7 +71,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       when:
       def result = (Mono<?>) underTest.end(instrumenter, context, request, Mono.error(exception), String)
       StepVerifier.create(result)
-        .verifyErrorMatches({  it == exception })
+        .verifyErrorMatches({ it == exception })
 
       then:
       1 * instrumenter.end(context, request, null, exception)
@@ -79,7 +79,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when completed"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def mono = source.singleOrEmpty()
 
       when:
@@ -102,7 +102,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when empty"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def mono = source.singleOrEmpty()
 
       when:
@@ -124,7 +124,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
     def "ends span when errored"() {
       given:
       def exception = new IllegalStateException()
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def mono = source.singleOrEmpty()
 
       when:
@@ -145,7 +145,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when cancelled"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def mono = source.singleOrEmpty()
       def context = span.storeInContext(Context.root())
 
@@ -167,7 +167,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when cancelled and capturing experimental span attributes"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def mono = source.singleOrEmpty()
       def context = span.storeInContext(Context.root())
 
@@ -240,7 +240,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
       when:
       def result = (Flux<?>) underTest.end(instrumenter, context, request, Flux.error(exception), String)
       StepVerifier.create(result)
-        .verifyErrorMatches({  it == exception })
+        .verifyErrorMatches({ it == exception })
 
       then:
       1 * instrumenter.end(context, request, null, exception)
@@ -248,7 +248,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when completed"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
 
       when:
       def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
@@ -270,7 +270,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when empty"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
 
       when:
       def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
@@ -291,7 +291,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
     def "ends span when errored"() {
       given:
       def exception = new IllegalStateException()
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
 
       when:
       def result = (Flux<?>) underTest.end(instrumenter, context, request, source, String)
@@ -311,7 +311,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when cancelled"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def context = span.storeInContext(Context.root())
 
       when:
@@ -333,7 +333,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
     def "ends span when cancelled and capturing experimental span attributes"() {
       given:
-      def source = UnicastProcessor.<String>create()
+      def source = UnicastProcessor.<String> create()
       def context = span.storeInContext(Context.root())
 
       when:

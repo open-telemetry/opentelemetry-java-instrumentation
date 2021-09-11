@@ -3,12 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelInitializer
@@ -27,9 +21,16 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Shared
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Netty40ConnectionSpanTest extends InstrumentationSpecification implements AgentTestTrait {
 

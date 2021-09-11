@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Query
 import org.hibernate.Session
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class QueryTest extends AbstractHibernateTest {
 
@@ -104,26 +104,26 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName       | expectedSpanName            | requiresTransaction | queryInteraction
-    "query/list"          | "SELECT Value"              | false               | { sess ->
+    queryMethodName       | expectedSpanName | requiresTransaction | queryInteraction
+    "query/list"          | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "query/executeUpdate" | "UPDATE Value"              | true                | { sess ->
+    "query/executeUpdate" | "UPDATE Value"   | true                | { sess ->
       Query q = sess.createQuery("update Value set name = :name")
       q.setParameter("name", "alyx")
       q.executeUpdate()
     }
-    "query/uniqueResult"  | "SELECT Value"              | false               | { sess ->
+    "query/uniqueResult"  | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value where id = :id")
       q.setParameter("id", 1L)
       q.uniqueResult()
     }
-    "iterate"             | "SELECT Value"              | false               | { sess ->
+    "iterate"             | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "query/scroll"        | "SELECT Value"              | false               | { sess ->
+    "query/scroll"        | "SELECT Value"   | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }

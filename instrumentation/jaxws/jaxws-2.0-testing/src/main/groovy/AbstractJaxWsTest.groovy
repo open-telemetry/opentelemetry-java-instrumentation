@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
@@ -23,6 +19,10 @@ import org.springframework.ws.client.core.WebServiceTemplate
 import org.springframework.ws.soap.client.SoapFaultClientException
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 

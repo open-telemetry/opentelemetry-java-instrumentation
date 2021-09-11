@@ -3,21 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import groovy.servlet.AbstractHttpServlet
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+
+import javax.servlet.RequestDispatcher
+import javax.servlet.ServletException
+import javax.servlet.annotation.WebServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.CountDownLatch
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.util.concurrent.CountDownLatch
-import javax.servlet.RequestDispatcher
-import javax.servlet.ServletException
-import javax.servlet.annotation.WebServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 class TestServlet3 {
 

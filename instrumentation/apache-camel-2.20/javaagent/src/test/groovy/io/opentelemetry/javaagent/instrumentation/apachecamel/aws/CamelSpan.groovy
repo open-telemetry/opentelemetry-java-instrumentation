@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class CamelSpan {
 
@@ -22,7 +22,7 @@ class CamelSpan {
     }
   }
 
-  static sqsProduce(TraceAssert traceAssert, int index, queueName, parentSpan=null) {
+  static sqsProduce(TraceAssert traceAssert, int index, queueName, parentSpan = null) {
     return traceAssert.span(index) {
       name queueName
       kind INTERNAL
@@ -38,7 +38,7 @@ class CamelSpan {
     }
   }
 
-  static sqsConsume(TraceAssert traceAssert, int index, queueName, parentSpan=null) {
+  static sqsConsume(TraceAssert traceAssert, int index, queueName, parentSpan = null) {
     return traceAssert.span(index) {
       name queueName
       kind INTERNAL
@@ -55,7 +55,7 @@ class CamelSpan {
     }
   }
 
-  static snsPublish(TraceAssert traceAssert, int index, topicName, parentSpan=null) {
+  static snsPublish(TraceAssert traceAssert, int index, topicName, parentSpan = null) {
     return traceAssert.span(index) {
       name topicName
       kind INTERNAL
@@ -67,7 +67,7 @@ class CamelSpan {
     }
   }
 
-  static s3(TraceAssert traceAssert, int index, parentSpan=null) {
+  static s3(TraceAssert traceAssert, int index, parentSpan = null) {
     return traceAssert.span(index) {
       name "aws-s3"
       kind INTERNAL

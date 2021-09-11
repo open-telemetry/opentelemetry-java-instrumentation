@@ -3,19 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static java.util.Collections.emptyEnumeration
-
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import spock.lang.Subject
+
 import javax.servlet.ServletOutputStream
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import spock.lang.Subject
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static java.util.Collections.emptyEnumeration
 
 class HttpServletResponseTest extends AgentInstrumentationSpecification {
 

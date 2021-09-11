@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.api.ContentResponse
 import org.eclipse.jetty.client.api.Request
@@ -19,6 +18,8 @@ import org.eclipse.jetty.http.HttpMethod
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.TimeUnit
 
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 

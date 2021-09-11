@@ -5,19 +5,20 @@
 
 package io.opentelemetry.smoketest
 
-import static java.util.stream.Collectors.toSet
-
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager
 import io.opentelemetry.testing.internal.armeria.client.WebClient
-import java.util.regex.Pattern
-import java.util.stream.Stream
 import org.testcontainers.containers.output.ToStringConsumer
 import spock.lang.Shared
 import spock.lang.Specification
+
+import java.util.regex.Pattern
+import java.util.stream.Stream
+
+import static java.util.stream.Collectors.toSet
 
 abstract class SmokeTest extends Specification {
   private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*")

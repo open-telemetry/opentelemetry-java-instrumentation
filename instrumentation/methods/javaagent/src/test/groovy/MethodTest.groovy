@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import java.util.concurrent.Callable
 
 class MethodTest extends AgentInstrumentationSpecification {

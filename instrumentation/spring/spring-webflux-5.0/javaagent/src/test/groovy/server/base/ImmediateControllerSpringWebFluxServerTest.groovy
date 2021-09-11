@@ -6,13 +6,14 @@
 package server.base
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.util.concurrent.Callable
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
+
+import java.util.concurrent.Callable
 
 /**
  * Tests the case where "controller" span is created within the controller method scope, and the

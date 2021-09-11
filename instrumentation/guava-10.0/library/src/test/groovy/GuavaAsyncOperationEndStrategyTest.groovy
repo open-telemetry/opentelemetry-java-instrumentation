@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy
 import spock.lang.Specification
 
-class GuavaAsyncOperationEndStrategyTest extends Specification  {
+class GuavaAsyncOperationEndStrategyTest extends Specification {
   String request = "request"
   String response = "response"
 
@@ -66,7 +66,7 @@ class GuavaAsyncOperationEndStrategyTest extends Specification  {
 
   def "ends span on eventually done future"() {
     given:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
 
     when:
     underTest.end(instrumenter, context, request, future, String)
@@ -83,7 +83,7 @@ class GuavaAsyncOperationEndStrategyTest extends Specification  {
 
   def "ends span on eventually failed future"() {
     given:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     def exception = new IllegalStateException()
 
     when:
@@ -101,7 +101,7 @@ class GuavaAsyncOperationEndStrategyTest extends Specification  {
 
   def "ends span on eventually canceled future"() {
     given:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     def context = span.storeInContext(Context.root())
 
     when:
@@ -120,7 +120,7 @@ class GuavaAsyncOperationEndStrategyTest extends Specification  {
 
   def "ends span on eventually canceled future and capturing experimental span attributes"() {
     given:
-    def future = SettableFuture.<String>create()
+    def future = SettableFuture.<String> create()
     def context = span.storeInContext(Context.root())
 
     when:

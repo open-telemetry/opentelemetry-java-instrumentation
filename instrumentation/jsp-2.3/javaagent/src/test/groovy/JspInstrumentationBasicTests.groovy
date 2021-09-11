@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -14,12 +11,16 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
-import java.nio.file.Files
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.nio.file.Files
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 //TODO should this be HttpServerTest?
 class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {

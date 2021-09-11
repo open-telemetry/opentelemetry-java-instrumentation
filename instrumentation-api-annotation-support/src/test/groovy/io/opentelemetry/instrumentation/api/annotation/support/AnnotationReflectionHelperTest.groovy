@@ -56,5 +56,5 @@ class AnnotationReflectionHelperTest extends Specification {
   }
 
   @CustomAnnotation(value = "Value")
-  class Annotated { }
+  class Annotated {}
 }

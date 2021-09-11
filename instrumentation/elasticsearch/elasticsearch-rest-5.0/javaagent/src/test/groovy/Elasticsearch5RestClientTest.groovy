@@ -3,13 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import groovy.json.JsonSlurper
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CountDownLatch
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
@@ -19,6 +15,11 @@ import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.testcontainers.elasticsearch.ElasticsearchContainer
 import spock.lang.Shared
+
+import java.util.concurrent.CountDownLatch
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
   @Shared

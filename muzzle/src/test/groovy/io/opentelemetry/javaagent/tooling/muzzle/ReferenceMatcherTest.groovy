@@ -5,15 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle
 
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.ABSTRACT
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.INTERFACE
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.NON_INTERFACE
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PRIVATE_OR_HIGHER
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag.NON_STATIC
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag.STATIC
-
 import external.LibraryBaseClass
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
@@ -25,6 +16,15 @@ import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.ABSTRACT
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.INTERFACE
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag.NON_INTERFACE
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PRIVATE_OR_HIGHER
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag.NON_STATIC
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag.STATIC
 
 @Unroll
 class ReferenceMatcherTest extends Specification {

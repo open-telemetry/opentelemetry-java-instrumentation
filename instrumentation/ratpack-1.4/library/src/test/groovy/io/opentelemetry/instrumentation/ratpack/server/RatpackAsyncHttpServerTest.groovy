@@ -19,6 +19,7 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest impl
       tracing.configureServerRegistry(it)
     }
   }
+
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false

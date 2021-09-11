@@ -8,7 +8,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CancellationException
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
@@ -17,6 +16,8 @@ import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+
+import java.util.concurrent.CancellationException
 
 abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
 

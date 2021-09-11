@@ -5,6 +5,17 @@
 
 package server
 
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.sdk.trace.data.SpanData
+import play.mvc.Results
+import play.routing.RoutingDsl
+import play.server.Server
+
+import java.util.function.Supplier
+
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -13,16 +24,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static play.mvc.Http.Context.Implicit.request
-
-import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.function.Supplier
-import play.mvc.Results
-import play.routing.RoutingDsl
-import play.server.Server
 
 class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override

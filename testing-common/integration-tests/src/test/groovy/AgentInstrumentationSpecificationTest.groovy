@@ -7,8 +7,9 @@ import com.google.common.reflect.ClassPath
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.Constants
-import java.util.concurrent.TimeoutException
 import org.slf4j.LoggerFactory
+
+import java.util.concurrent.TimeoutException
 
 // this test is run using
 //   -Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass

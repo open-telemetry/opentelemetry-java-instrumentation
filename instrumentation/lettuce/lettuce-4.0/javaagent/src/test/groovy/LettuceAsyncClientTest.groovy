@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
@@ -20,15 +16,20 @@ import com.lambdaworks.redis.protocol.AsyncCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.FixedHostPortGenericContainer
+import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
+
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import org.testcontainers.containers.FixedHostPortGenericContainer
-import spock.lang.Shared
-import spock.util.concurrent.AsyncConditions
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   public static final String HOST = "localhost"

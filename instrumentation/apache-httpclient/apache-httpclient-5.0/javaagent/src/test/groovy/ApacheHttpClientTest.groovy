@@ -8,8 +8,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
@@ -24,6 +22,9 @@ import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared

@@ -5,8 +5,8 @@
 
 package jsr
 
-import java.util.concurrent.atomic.AtomicReference
 import javax.batch.api.chunk.ItemReader
+import java.util.concurrent.atomic.AtomicReference
 
 class SingleItemReader implements ItemReader {
   final AtomicReference<String> item = new AtomicReference<>("42")

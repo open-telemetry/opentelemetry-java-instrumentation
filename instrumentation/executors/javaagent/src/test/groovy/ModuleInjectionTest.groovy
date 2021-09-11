@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import javax.swing.*
 
 /**
