@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
-        run: ../gradlew build --stacktrace --no-build-cache
+        run: ./gradlew build --stacktrace --no-build-cache
         working-directory: gradle-plugins
 
   test:

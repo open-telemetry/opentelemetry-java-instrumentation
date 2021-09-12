@@ -35,5 +35,5 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ../gradlew build publishToSonatype
+        run: ./gradlew build publishToSonatype
         working-directory: gradle-plugins
