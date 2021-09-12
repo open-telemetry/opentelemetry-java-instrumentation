@@ -35,7 +35,7 @@ public class LatestAgentSnapshotResolver {
     String latestFilename = fetchLatestFilename(version);
     String url = BASE_URL +  "/" + version + "/" + latestFilename;
     byte[] jarBytes = fetchBodyBytesFrom(url);
-    Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT-all.jar");
+    Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT.jar");
     Files.write(path, jarBytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     return Optional.of(path);
   }
@@ -49,11 +49,12 @@ public class LatestAgentSnapshotResolver {
         .filter(elem -> {
           String classifier = $(elem).child("classifier").content();
           String extension = $(elem).child("extension").content();
+          // TODO (trask) this needs to be updated now that no more "all" artifact
           return "all".equals(classifier) && "jar".equals(extension);
         })
         .map(e -> $(e).child("value").content())
         .findFirst()
-        .map(value -> "opentelemetry-javaagent-" + value + "-all.jar")
+        .map(value -> "opentelemetry-javaagent-" + value + ".jar")
         .orElseThrow();
   }
 

@@ -43,7 +43,7 @@ public class AgentResolver {
     OkHttpClient client = new OkHttpClient();
     Response response = client.newCall(request).execute();
     byte[] raw = response.body().bytes();
-    Path path = Paths.get(".", "opentelemetry-javaagent-all.jar");
+    Path path = Paths.get(".", "opentelemetry-javaagent.jar");
     Files.write(path, raw, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
     return path;
   }
