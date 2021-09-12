@@ -79,9 +79,9 @@ public class AgentBenchmark {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withNetworkAliases("app")
             .withCopyFileToContainer(
-                MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
+                MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
             .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:4317")
-            .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
+            .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent.jar")
             .withExposedPorts(8080);
     containers.add(app);
 
