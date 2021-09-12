@@ -41,17 +41,17 @@ class HttpClientMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context context1 = listener.start(Context.current(), requestAttributes);
+    Context context1 = listener.start(Context.current(), requestAttributes, null);
 
     Collection<MetricData> metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).isEmpty();
 
-    Context context2 = listener.start(Context.current(), requestAttributes);
+    Context context2 = listener.start(Context.current(), requestAttributes, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).isEmpty();
 
-    listener.end(context1, responseAttributes);
+    listener.end(context1, responseAttributes, null, null, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
@@ -75,7 +75,7 @@ class HttpClientMetricsTest {
                                   attributeEntry("net.host.port", 1234L));
                         }));
 
-    listener.end(context2, responseAttributes);
+    listener.end(context2, responseAttributes, null, null, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);

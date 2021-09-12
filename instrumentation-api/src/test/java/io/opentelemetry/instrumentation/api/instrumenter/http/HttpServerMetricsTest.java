@@ -41,7 +41,7 @@ class HttpServerMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context context1 = listener.start(Context.current(), requestAttributes);
+    Context context1 = listener.start(Context.current(), requestAttributes, null);
 
     Collection<MetricData> metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
@@ -65,7 +65,7 @@ class HttpServerMetricsTest {
                                     attributeEntry("http.method", "GET"),
                                     attributeEntry("http.scheme", "https"))));
 
-    Context context2 = listener.start(Context.current(), requestAttributes);
+    Context context2 = listener.start(Context.current(), requestAttributes, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
@@ -78,7 +78,7 @@ class HttpServerMetricsTest {
                     .points()
                     .satisfiesExactly(point -> assertThat(point).hasValue(2)));
 
-    listener.end(context1, responseAttributes);
+    listener.end(context1, responseAttributes, null, null, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(2);
@@ -110,7 +110,7 @@ class HttpServerMetricsTest {
                                   attributeEntry("net.host.port", 1234L));
                         }));
 
-    listener.end(context2, responseAttributes);
+    listener.end(context2, responseAttributes, null, null, null);
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(2);
