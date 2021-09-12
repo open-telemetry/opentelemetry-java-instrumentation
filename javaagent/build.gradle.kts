@@ -142,13 +142,13 @@ tasks {
   }
 
   // Includes instrumentations, but not exporters
-  val shadowJar by existing(ShadowJar::class) {
+  val slimShadowJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
     dependsOn(relocateJavaagentLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
 
-    archiveClassifier.set("")
+    archiveClassifier.set("slim")
 
     manifest {
       attributes(jar.get().manifest.attributes)
@@ -163,7 +163,7 @@ tasks {
   }
 
   // Includes everything needed for OOTB experience
-  val fullJavaagentJar by registering(ShadowJar::class) {
+  val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
     dependsOn(relocateJavaagentLibs, relocateExporterLibs)
@@ -172,10 +172,10 @@ tasks {
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    archiveClassifier.set("all")
+    archiveClassifier.set("")
 
     manifest {
-      attributes(shadowJar.get().manifest.attributes)
+      attributes(slimShadowJar.get().manifest.attributes)
     }
   }
 
@@ -191,7 +191,7 @@ tasks {
     archiveClassifier.set("base")
 
     manifest {
-      attributes(shadowJar.get().manifest.attributes)
+      attributes(slimShadowJar.get().manifest.attributes)
     }
   }
 
@@ -205,18 +205,18 @@ tasks {
   }
 
   assemble {
-    dependsOn(shadowJar, fullJavaagentJar, baseJavaagentJar)
+    dependsOn(slimShadowJar, shadowJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
-    dependsOn(fullJavaagentJar)
-    inputs.file(fullJavaagentJar.get().archiveFile)
+    dependsOn(shadowJar)
+    inputs.file(shadowJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
     doFirst {
       // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${fullJavaagentJar.get().archiveFile.get().asFile}")
+      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
     }
 
     testLogging {
@@ -235,7 +235,7 @@ tasks {
   publishing {
     publications {
       named<MavenPublication>("maven") {
-        artifact(fullJavaagentJar)
+        artifact(slimShadowJar)
       }
     }
   }
