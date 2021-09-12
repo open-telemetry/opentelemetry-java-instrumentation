@@ -40,9 +40,10 @@ def linuxTargets = [
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.5.60", "9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
-    [version: ["10.0.4"], vm: ["hotspot"], jdk: ["11", "16"], war: "servlet-5.0"],
-    // there is no tomcat image for openj9 beyond java 15
-    [version: ["10.0.4"], vm: ["openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
+    // TODO (trask) bump 15 to 16 (well, 17 very shortly)
+    //  note: this requires some work since there is no tomcat image for 16-openj9
+    //  and the hotspot image tag has changed naming convention
+    [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
   ],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot"], jdk: ["8"]],
@@ -61,8 +62,8 @@ def linuxTargets = [
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
-    [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"]]
+    // running configure.sh is failing while building the image with Java 17
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]]
   ]
 ]
 
