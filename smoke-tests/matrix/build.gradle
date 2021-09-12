@@ -37,9 +37,9 @@ def linuxTargets = [
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.5.60", "9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
-    // TODO (trask) bump 15 to 16 (well, 17 very shortly)
-    //  note: this requires some work since there is no tomcat image for 16-openj9
-    [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
+    [version: ["10.0.4"], vm: ["hotspot"], jdk: ["11", "16"], war: "servlet-5.0"],
+    // there is no tomcat image for openj9 beyond java 15
+    [version: ["10.0.4"], vm: ["openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
   ],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot"], jdk: ["8"]],

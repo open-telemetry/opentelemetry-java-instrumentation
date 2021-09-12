@@ -49,12 +49,12 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/matrix/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build Linux Docker Images
+      - name: Build Linux docker images
         working-directory: smoke-tests/matrix
         run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os != 'windows-latest'
 
-      - name: Build Windows Docker Images
+      - name: Build Windows docker images
         working-directory: smoke-tests/matrix
         run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os == 'windows-latest'
