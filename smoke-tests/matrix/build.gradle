@@ -30,9 +30,12 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Dockerfile name, args key passes raw arguments to docker build
 def linuxTargets = [
   "jetty"  : [
-    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]],
-    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "16"]],
-    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
+    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"]],
+    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"]],
+    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"]],
+    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], war: "servlet-5.0"],
+    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
   ],
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -54,10 +57,12 @@ def linuxTargets = [
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]]
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]]
+    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ]
 ]
 
