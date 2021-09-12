@@ -42,7 +42,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<RequestListener> requestListeners = new ArrayList<>();
+  final List<RequestListener<REQUEST, RESPONSE>> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =

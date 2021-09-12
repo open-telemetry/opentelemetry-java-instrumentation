@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,8 @@ import org.slf4j.LoggerFactory;
  * dependencies.
  */
 @UnstableApi
-public final class HttpServerMetrics implements RequestListener {
+public final class HttpServerMetrics<REQUEST, RESPONSE>
+    implements RequestListener<REQUEST, RESPONSE> {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
@@ -70,7 +72,7 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes) {
+  public Context start(Context context, Attributes startAttributes, REQUEST request) {
     long startTimeNanos = System.nanoTime();
     activeRequests.add(1, applyActiveRequestsView(startAttributes));
 
@@ -80,7 +82,12 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes) {
+  public void end(
+      Context context,
+      Attributes endAttributes,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(

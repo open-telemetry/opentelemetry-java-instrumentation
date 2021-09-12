@@ -69,7 +69,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
-  private final List<? extends RequestListener> requestListeners;
+  private final List<? extends RequestListener<REQUEST, RESPONSE>> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
   @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
@@ -144,8 +144,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    for (RequestListener requestListener : requestListeners) {
-      context = requestListener.start(context, attributes);
+    for (RequestListener<REQUEST, RESPONSE> requestListener : requestListeners) {
+      context = requestListener.start(context, attributes, request);
     }
 
     spanBuilder.setAllAttributes(attributes);
@@ -177,8 +177,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Attributes attributes = attributesBuilder;
     span.setAllAttributes(attributes);
 
-    for (RequestListener requestListener : requestListeners) {
-      requestListener.end(context, attributes);
+    for (RequestListener<REQUEST, RESPONSE> requestListener : requestListeners) {
+      requestListener.end(context, attributes, request, response, error);
     }
 
     StatusCode statusCode = spanStatusExtractor.extract(request, response, error);

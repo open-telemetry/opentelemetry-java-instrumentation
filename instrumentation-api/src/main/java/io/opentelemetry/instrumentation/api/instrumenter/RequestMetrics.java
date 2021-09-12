@@ -13,5 +13,5 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 @UnstableApi
 public interface RequestMetrics {
   /** Returns a {@link RequestListener} for recording metrics using the given {@link Meter}. */
-  RequestListener create(Meter meter);
+  <REQUEST, RESPONSE> RequestListener<REQUEST, RESPONSE> create(Meter meter);
 }
