@@ -12,8 +12,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * A listener of the start and end of a request. Instrumented libraries will call {@link
  * #start(Context, Attributes, Object)} as early as possible in the processing of a request and
- * {@link #end(Context, Attributes, Object, Throwable)} as late as possible when finishing the
- * request. These correspond to the start and end of a span when tracing.
+ * {@link #end(Context, Attributes, Object, Object, Throwable)} as late as possible when finishing
+ * the request. These correspond to the start and end of a span when tracing.
  */
 public interface RequestListener<REQUEST, RESPONSE> {
 
