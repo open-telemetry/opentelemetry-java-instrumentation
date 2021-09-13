@@ -3,15 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.javax;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import java.util.Collections;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
-public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpServletRequest, R> {
+public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
+  public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
+
+  private Servlet5Accessor() {}
+
   @Override
   public String getRequestContextPath(HttpServletRequest request) {
     return request.getContextPath();
@@ -68,11 +76,6 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
-  public String getRequestRemoteHost(HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRemoteHost();
-  }
-
-  @Override
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
   }
@@ -98,12 +101,77 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  public Integer getRequestRemotePort(HttpServletRequest request) {
+    return request.getRemotePort();
+  }
+
+  @Override
+  public String getRequestRemoteHost(HttpServletRequest request) {
+    return request.getRemoteHost();
+  }
+
+  @Override
   public int getRequestContentLength(HttpServletRequest request) {
     return request.getContentLength();
   }
 
   @Override
+  public void addRequestAsyncListener(
+      HttpServletRequest request,
+      ServletAsyncListener<HttpServletResponse> listener,
+      Object response) {
+    if (response instanceof HttpServletResponse) {
+      request
+          .getAsyncContext()
+          .addListener(new Listener(listener), request, (HttpServletResponse) response);
+    }
+  }
+
+  @Override
+  public int getResponseStatus(HttpServletResponse response) {
+    return response.getStatus();
+  }
+
+  @Override
+  public String getResponseHeader(HttpServletResponse response, String name) {
+    return response.getHeader(name);
+  }
+
+  @Override
+  public boolean isResponseCommitted(HttpServletResponse response) {
+    return response.isCommitted();
+  }
+
+  @Override
   public boolean isServletException(Throwable throwable) {
     return throwable instanceof ServletException;
+  }
+
+  private static class Listener implements AsyncListener {
+    private final ServletAsyncListener<HttpServletResponse> listener;
+
+    private Listener(ServletAsyncListener<HttpServletResponse> listener) {
+      this.listener = listener;
+    }
+
+    @Override
+    public void onComplete(AsyncEvent event) {
+      listener.onComplete((HttpServletResponse) event.getSuppliedResponse());
+    }
+
+    @Override
+    public void onTimeout(AsyncEvent event) {
+      listener.onTimeout(event.getAsyncContext().getTimeout());
+    }
+
+    @Override
+    public void onError(AsyncEvent event) {
+      listener.onError(event.getThrowable(), (HttpServletResponse) event.getSuppliedResponse());
+    }
+
+    @Override
+    public void onStartAsync(AsyncEvent event) {
+      event.getAsyncContext().addListener(this);
+    }
   }
 }

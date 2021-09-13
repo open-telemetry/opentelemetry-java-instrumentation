@@ -74,6 +74,10 @@ public class UndertowHttpServerTracer
   }
 
   private static void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
+    if (throwable == null) {
+      throwable = AppServerBridge.getException(context);
+    }
+
     if (throwable != null) {
       tracer().endExceptionally(context, throwable, exchange);
     } else {

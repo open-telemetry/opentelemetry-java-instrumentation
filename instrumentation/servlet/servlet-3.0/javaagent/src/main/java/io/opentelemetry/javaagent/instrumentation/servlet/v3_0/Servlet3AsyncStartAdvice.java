@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import javax.servlet.AsyncContext;
@@ -36,8 +36,8 @@ public class Servlet3AsyncStartAdvice {
     if (servletRequest instanceof HttpServletRequest) {
       HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-      if (!tracer().isAsyncListenerAttached(request)) {
-        tracer().attachAsyncListener(request);
+      if (!helper().isAsyncListenerAttached(request)) {
+        helper().attachAsyncListener(request);
       }
     }
   }

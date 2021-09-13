@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import static io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
@@ -34,6 +34,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -59,10 +60,10 @@ public class JakartaServletServiceAdvice {
     }
 
     Context currentContext = Java8BytecodeBridge.currentContext();
-    Context attachedContext = tracer().getServerContext(httpServletRequest);
-    if (attachedContext != null && tracer().needsRescoping(currentContext, attachedContext)) {
+    Context attachedContext = helper().getServerContext(httpServletRequest);
+    if (attachedContext != null && helper().needsRescoping(currentContext, attachedContext)) {
       attachedContext =
-          tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
+          helper().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
       scope = attachedContext.makeCurrent();
       // We are inside nested servlet/filter/app-server span, don't create new span
       return;
@@ -75,7 +76,7 @@ public class JakartaServletServiceAdvice {
       // returns a new context that contains servlet context path that is used in other
       // instrumentations for naming server span.
       Context updatedContext =
-          tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
+          helper().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
       if (currentContext != updatedContext) {
         // updateContext updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -84,10 +85,16 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    context = tracer().startSpan(httpServletRequest, mappingResolver, servlet);
+    requestContext = new ServletRequestContext<>(httpServletRequest, mappingResolver);
+
+    if (!helper().shouldStart(currentContext, requestContext)) {
+      return;
+    }
+
+    context = helper().start(currentContext, requestContext, servlet);
     scope = context.makeCurrent();
 
-    tracer().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
+    helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -96,6 +103,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -105,13 +113,14 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    ServletAndFilterAdviceHelper.stopSpan(
-        tracer(),
-        (HttpServletRequest) request,
-        (HttpServletResponse) response,
-        throwable,
-        topLevel,
-        context,
-        scope);
+    helper()
+        .end(
+            requestContext,
+            (HttpServletRequest) request,
+            (HttpServletResponse) response,
+            throwable,
+            topLevel,
+            context,
+            scope);
   }
 }
