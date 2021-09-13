@@ -128,7 +128,7 @@ For example spans produced by Reactor Netty instrumentation will have children s
 Or Dynamo DB spans produced by AWS SDK instrumentation will have children spans produced by http protocol library instrumentation.
 
 Although OpenTelemetry specification allows such situation, such nested spans often produce duplicate data without any added benefit.
-For this reason this agent by default suppresses nested `CLIENT` spans and emits only top-level one.
+For this reason this agent by default suppresses nested `CLIENT` spans and emits only the top-level one.
 
 By setting `-Dotel.instrumentation.experimental.outgoing-span-suppression-by-type=true` you can enable a more sophisticated suppression strategy: only `CLIENT` spans of the same semantic convention type (e.g. DB, HTTP, RPC) will be suppressed.
 For example, if we have a database client which uses Reactor Netty http client which uses Netty networking library, then without any suppression we would have 3 nested spans:
