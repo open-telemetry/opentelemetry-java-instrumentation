@@ -34,14 +34,14 @@ public class TomcatHelper<REQUEST, RESPONSE> {
     return instrumenter.shouldStart(parentContext, request);
   }
 
-  public Context startSpan(Context parentContext, Request request) {
+  public Context start(Context parentContext, Request request) {
     Context context = instrumenter.start(parentContext, request);
 
     context = ServerSpanNaming.init(context, CONTAINER);
     return AppServerBridge.init(context);
   }
 
-  public void stopSpan(
+  public void end(
       Request request, Response response, Throwable throwable, Context context, Scope scope) {
     if (scope == null) {
       return;

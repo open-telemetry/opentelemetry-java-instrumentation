@@ -91,7 +91,7 @@ public class Servlet3Advice {
       return;
     }
 
-    context = helper().startServletSpan(currentContext, requestContext, servlet);
+    context = helper().start(currentContext, requestContext, servlet);
     scope = context.makeCurrent();
 
     helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
@@ -113,7 +113,7 @@ public class Servlet3Advice {
 
     boolean topLevel = callDepth.decrementAndGet() == 0;
     helper()
-        .stopSpan(
+        .end(
             requestContext,
             (HttpServletRequest) request,
             (HttpServletResponse) response,

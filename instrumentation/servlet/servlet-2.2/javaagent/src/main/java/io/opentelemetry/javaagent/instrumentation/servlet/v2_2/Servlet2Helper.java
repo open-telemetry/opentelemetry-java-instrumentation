@@ -27,7 +27,7 @@ public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpSe
 
   public Context startSpan(
       Context parentContext, ServletRequestContext<HttpServletRequest> requestContext) {
-    return startSpan(parentContext, requestContext, SERVLET);
+    return start(parentContext, requestContext, SERVLET);
   }
 
   public void stopSpan(

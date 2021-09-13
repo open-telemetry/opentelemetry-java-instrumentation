@@ -40,7 +40,7 @@ public class Jetty8HandlerAdvice {
       return;
     }
 
-    context = helper().startServerSpan(parentContext, requestContext);
+    context = helper().start(parentContext, requestContext);
     scope = context.makeCurrent();
 
     // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
@@ -56,6 +56,6 @@ public class Jetty8HandlerAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    helper().stopServerSpan(requestContext, request, response, throwable, context, scope);
+    helper().end(requestContext, request, response, throwable, context, scope);
   }
 }

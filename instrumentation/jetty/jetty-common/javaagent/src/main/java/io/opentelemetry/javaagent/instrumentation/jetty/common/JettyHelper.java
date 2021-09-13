@@ -24,9 +24,8 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
     super(instrumenter, accessor);
   }
 
-  public Context startServerSpan(
-      Context parentContext, ServletRequestContext<REQUEST> requestContext) {
-    return startSpan(parentContext, requestContext, CONTAINER);
+  public Context start(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
+    return start(parentContext, requestContext, CONTAINER);
   }
 
   @Override
@@ -34,7 +33,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
     return AppServerBridge.init(context, /* shouldRecordException= */ false);
   }
 
-  public void stopServerSpan(
+  public void end(
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,

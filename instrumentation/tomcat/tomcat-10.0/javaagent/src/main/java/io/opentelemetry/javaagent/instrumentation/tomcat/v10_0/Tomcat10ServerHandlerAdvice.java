@@ -29,7 +29,7 @@ public class Tomcat10ServerHandlerAdvice {
       return;
     }
 
-    context = helper().startSpan(parentContext, request);
+    context = helper().start(parentContext, request);
 
     scope = context.makeCurrent();
   }
@@ -42,6 +42,6 @@ public class Tomcat10ServerHandlerAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    helper().stopSpan(request, response, throwable, context, scope);
+    helper().end(request, response, throwable, context, scope);
   }
 }

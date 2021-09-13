@@ -91,7 +91,7 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    context = helper().startServletSpan(currentContext, requestContext, servlet);
+    context = helper().start(currentContext, requestContext, servlet);
     scope = context.makeCurrent();
 
     helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
@@ -114,7 +114,7 @@ public class JakartaServletServiceAdvice {
     }
 
     helper()
-        .stopSpan(
+        .end(
             requestContext,
             (HttpServletRequest) request,
             (HttpServletResponse) response,

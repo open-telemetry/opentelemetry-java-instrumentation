@@ -38,7 +38,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return instrumenter.shouldStart(parentContext, requestContext);
   }
 
-  protected Context startSpan(
+  protected Context start(
       Context parentContext,
       ServletRequestContext<REQUEST> requestContext,
       ServerSpanNaming.Source namingSource) {

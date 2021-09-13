@@ -23,13 +23,13 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
     super(instrumenter, accessor);
   }
 
-  public Context startServletSpan(
+  public Context start(
       Context parentContext, ServletRequestContext<REQUEST> requestContext, boolean servlet) {
     ServerSpanNaming.Source namingSource = servlet ? SERVLET : FILTER;
-    return startSpan(parentContext, requestContext, namingSource);
+    return start(parentContext, requestContext, namingSource);
   }
 
-  public void stopSpan(
+  public void end(
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
