@@ -5,14 +5,14 @@
 
 package io.opentelemetry.smoketest.matrix;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class AsyncGreetingServlet extends GreetingServlet {
   private static final BlockingQueue<AsyncContext> jobQueue = new LinkedBlockingQueue<>();
@@ -20,20 +20,20 @@ public class AsyncGreetingServlet extends GreetingServlet {
 
   @Override
   public void init() throws ServletException {
-    executor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          while (true) {
-            AsyncContext ac = jobQueue.take();
-            executor.submit(() -> handleRequest(ac));
-         }
-        }
-        catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
-    });
+    executor.submit(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              while (true) {
+                AsyncContext ac = jobQueue.take();
+                executor.submit(() -> handleRequest(ac));
+              }
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+          }
+        });
   }
 
   @Override
@@ -50,5 +50,4 @@ public class AsyncGreetingServlet extends GreetingServlet {
   private void handleRequest(AsyncContext ac) {
     ac.dispatch("/greeting");
   }
-
 }

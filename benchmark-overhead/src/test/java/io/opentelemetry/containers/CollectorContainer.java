@@ -23,7 +23,7 @@ public class CollectorContainer {
   public static GenericContainer<?> build(Network network) {
 
     return new GenericContainer<>(
-        DockerImageName.parse("otel/opentelemetry-collector-contrib:latest"))
+            DockerImageName.parse("otel/opentelemetry-collector-contrib:latest"))
         .withNetwork(network)
         .withNetworkAliases("collector")
         .withLogConsumer(new Slf4jLogConsumer(logger))
