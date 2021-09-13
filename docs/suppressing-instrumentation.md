@@ -122,5 +122,26 @@ You can suppress all auto instrumentations but have support for manual instrumen
 
 ## Enable instrumentation suppression by type
 
-By default the agent suppresses all nested `CLIENT` instrumentations, without discerning their actual type (e.g. a database `CLIENT` using an HTTP client that generates `CLIENT` spans too).
-By setting `-Dotel.instrumentation.experimental.outgoing-span-suppression-by-type=true` you can enable a more sophisticated suppression strategy: only `CLIENT` spans of the same types (e.g. DB, HTTP, RPC) will be suppressed.
+Some of the libraries that this agent instruments in turn use lower-level libraries, that are also instrumented.
+This results in nested `CLIENT` spans (a span with the kind `CLIENT` has a child span with the same kind `CLIENT`).
+For example spans produced by Reactor Netty instrumentation will have children spans produced by Netty instrumentation.
+Or Dynamo DB spans produced by AWS SDK instrumentation will have children spans produced by http protocol library instrumentation.
+
+Although OpenTelemetry specification allows such situation, such nested spans often produce duplicate data without any added benefit.
+For this reason this agent by default suppresses nested `CLIENT` spans and emits only top-level one.
+
+By setting `-Dotel.instrumentation.experimental.outgoing-span-suppression-by-type=true` you can enable a more sophisticated suppression strategy: only `CLIENT` spans of the same semantic convention type (e.g. DB, HTTP, RPC) will be suppressed.
+For example, if we have a database client which uses Reactor Netty http client which uses Netty networking library, then without any suppression we would have 3 nested spans:
+
+- `CLIENT` span with database semantic attributes from the database client instrumentation
+- `CLIENT` span with http semantic attributes from Reactor Netty instrumentation
+- `CLIENT` span with http semantic attributes from Netty instrumentation
+
+With default suppresion, we would have 1 span:
+
+- `CLIENT` span with database semantic attributes from the database client instrumentation
+
+With suppresion by type, we would have 2 nested spans:
+
+- `CLIENT` span with database semantic attributes from the database client instrumentation
+- `CLIENT` span with http semantic attributes from Reactor Netty instrumentation
