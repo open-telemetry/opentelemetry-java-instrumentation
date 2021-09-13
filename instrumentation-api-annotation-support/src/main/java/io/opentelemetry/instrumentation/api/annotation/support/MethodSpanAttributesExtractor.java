@@ -22,6 +22,13 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   private final Cache<Method, AttributeBindings> cache;
   private final ParameterAttributeNamesExtractor parameterAttributeNamesExtractor;
 
+  public static <REQUEST extends MethodRequest, RESPONSE>
+      MethodSpanAttributesExtractor<REQUEST, RESPONSE> newInstance(
+          ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
+    return newInstance(
+        MethodRequest::method, parameterAttributeNamesExtractor, MethodRequest::args);
+  }
+
   public static <REQUEST, RESPONSE> MethodSpanAttributesExtractor<REQUEST, RESPONSE> newInstance(
       MethodExtractor<REQUEST> methodExtractor,
       ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,

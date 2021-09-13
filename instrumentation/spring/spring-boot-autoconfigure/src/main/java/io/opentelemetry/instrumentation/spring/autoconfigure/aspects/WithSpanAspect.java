@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
@@ -14,7 +13,6 @@ import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttribu
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -43,26 +41,10 @@ public class WithSpanAspect {
         new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
 
     instrumenter =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
+        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::name)
             .addAttributesExtractor(
-                MethodSpanAttributesExtractor.newInstance(
-                    JoinPointRequest::method,
-                    parameterAttributeNamesExtractor,
-                    JoinPointRequest::args))
-            .newInstrumenter(WithSpanAspect::spanKind);
-  }
-
-  private static String spanName(JoinPointRequest request) {
-    WithSpan annotation = request.annotation();
-    String spanName = annotation.value();
-    if (spanName.isEmpty()) {
-      return SpanNames.fromMethod(request.method());
-    }
-    return spanName;
-  }
-
-  private static SpanKind spanKind(JoinPointRequest request) {
-    return request.annotation().kind();
+                MethodSpanAttributesExtractor.newInstance(parameterAttributeNamesExtractor))
+            .newInstrumenter(JoinPointRequest::kind);
   }
 
   @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
@@ -74,7 +56,7 @@ public class WithSpanAspect {
       return pjp.proceed();
     }
 
-    Context context = instrumenter.start(parentContext, request);
+    Context context = request.storeInContext(instrumenter.start(parentContext, request));
     AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
         AsyncOperationEndSupport.create(
             instrumenter, Object.class, request.method().getReturnType());

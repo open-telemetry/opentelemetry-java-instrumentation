@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.reactor;
 
 public final class ReactorAsyncOperationEndStrategyBuilder {
   private boolean captureExperimentalSpanAttributes;
+  private boolean emitCheckpoints;
 
   ReactorAsyncOperationEndStrategyBuilder() {}
 
@@ -16,7 +17,12 @@ public final class ReactorAsyncOperationEndStrategyBuilder {
     return this;
   }
 
+  public ReactorAsyncOperationEndStrategyBuilder setEmitCheckpoints(boolean emitCheckpoints) {
+    this.emitCheckpoints = emitCheckpoints;
+    return this;
+  }
+
   public ReactorAsyncOperationEndStrategy build() {
-    return new ReactorAsyncOperationEndStrategy(captureExperimentalSpanAttributes);
+    return new ReactorAsyncOperationEndStrategy(captureExperimentalSpanAttributes, emitCheckpoints);
   }
 }

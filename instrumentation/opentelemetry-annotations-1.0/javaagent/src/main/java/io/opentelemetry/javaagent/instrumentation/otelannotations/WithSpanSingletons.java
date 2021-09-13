@@ -5,84 +5,39 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import java.lang.reflect.Method;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class WithSpanSingletons {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-annotations-1.0";
 
-  private static final Logger logger = LoggerFactory.getLogger(WithSpanSingletons.class);
-  private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
-  private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
+  private static final Instrumenter<WithSpanMethodRequest, Object> INSTRUMENTER =
+      createInstrumenter();
+  private static final Instrumenter<WithSpanMethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
 
-  public static Instrumenter<Method, Object> instrumenter() {
+  public static Instrumenter<WithSpanMethodRequest, Object> instrumenter() {
     return INSTRUMENTER;
   }
 
-  public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {
+  public static Instrumenter<WithSpanMethodRequest, Object> instrumenterWithAttributes() {
     return INSTRUMENTER_WITH_ATTRIBUTES;
   }
 
-  private static Instrumenter<Method, Object> createInstrumenter() {
+  private static Instrumenter<WithSpanMethodRequest, Object> createInstrumenter() {
     return Instrumenter.newBuilder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
-        .newInstrumenter(WithSpanSingletons::spanKindFromMethod);
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanMethodRequest::name)
+        .newInstrumenter(WithSpanMethodRequest::kind);
   }
 
-  private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
+  private static Instrumenter<WithSpanMethodRequest, Object> createInstrumenterWithAttributes() {
     return Instrumenter.newBuilder(
-            GlobalOpenTelemetry.get(),
-            INSTRUMENTATION_NAME,
-            WithSpanSingletons::spanNameFromMethodRequest)
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanMethodRequest::name)
         .addAttributesExtractor(
             MethodSpanAttributesExtractor.newInstance(
-                MethodRequest::method,
-                WithSpanParameterAttributeNamesExtractor.INSTANCE,
-                MethodRequest::args))
-        .newInstrumenter(WithSpanSingletons::spanKindFromMethodRequest);
-  }
-
-  private static SpanKind spanKindFromMethodRequest(MethodRequest request) {
-    return spanKindFromMethod(request.method());
-  }
-
-  private static SpanKind spanKindFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
-    if (annotation == null) {
-      return SpanKind.INTERNAL;
-    }
-    return toAgentOrNull(annotation.kind());
-  }
-
-  private static SpanKind toAgentOrNull(
-      application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
-    try {
-      return SpanKind.valueOf(applicationSpanKind.name());
-    } catch (IllegalArgumentException e) {
-      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
-      return SpanKind.INTERNAL;
-    }
-  }
-
-  private static String spanNameFromMethodRequest(MethodRequest request) {
-    return spanNameFromMethod(request.method());
-  }
-
-  private static String spanNameFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
-    String spanName = annotation.value();
-    if (spanName.isEmpty()) {
-      spanName = SpanNames.fromMethod(method);
-    }
-    return spanName;
+                WithSpanParameterAttributeNamesExtractor.INSTANCE))
+        .newInstrumenter(WithSpanMethodRequest::kind);
   }
 }

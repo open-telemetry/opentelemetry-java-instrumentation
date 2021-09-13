@@ -24,7 +24,9 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
   Span span
 
-  def underTest = ReactorAsyncOperationEndStrategy.create()
+  def underTest = ReactorAsyncOperationEndStrategy.newBuilder()
+    .setEmitCheckpoints(true)
+    .build()
 
   def underTestWithExperimentalAttributes = ReactorAsyncOperationEndStrategy.newBuilder()
     .setCaptureExperimentalSpanAttributes(true)

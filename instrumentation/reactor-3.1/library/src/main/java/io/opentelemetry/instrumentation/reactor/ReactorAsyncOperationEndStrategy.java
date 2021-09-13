@@ -10,10 +10,13 @@ import static io.opentelemetry.instrumentation.api.annotation.support.async.Asyn
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.MethodRequest;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,9 +34,12 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
   }
 
   private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitCheckpoints;
 
-  ReactorAsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
+  ReactorAsyncOperationEndStrategy(
+      boolean captureExperimentalSpanAttributes, boolean emitCheckpoints) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.emitCheckpoints = emitCheckpoints;
   }
 
   @Override
@@ -59,15 +65,30 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
 
     if (asyncValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) asyncValue;
-      return mono.doOnError(notificationConsumer)
+      return mono.transform(withCheckpoint(context, Mono::checkpoint))
+          .doOnError(notificationConsumer)
           .doOnSuccess(notificationConsumer::onSuccess)
           .doOnCancel(notificationConsumer::onCancel);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) asyncValue);
-      return flux.doOnError(notificationConsumer)
+      return flux.transform(withCheckpoint(context, Flux::checkpoint))
+          .doOnError(notificationConsumer)
           .doOnComplete(notificationConsumer)
           .doOnCancel(notificationConsumer::onCancel);
     }
+  }
+
+  private <T, P extends Publisher<T>> Function<P, P> withCheckpoint(
+      Context context, BiFunction<P, String, P> checkpoint) {
+    return publisher -> {
+      if (emitCheckpoints) {
+        MethodRequest methodRequest = MethodRequest.fromContextOrNull(context);
+        if (methodRequest != null) {
+          return checkpoint.apply(publisher, "OpenTelemetry Span: " + methodRequest.name());
+        }
+      }
+      return publisher;
+    };
   }
 
   /**

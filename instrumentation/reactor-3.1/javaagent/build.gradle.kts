@@ -13,7 +13,7 @@ muzzle {
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.reactor.experimental-span-attributes=true")
+  jvmArgs("-Dotel.instrumentation.reactor.experimental-span-attributes=true", "-Dotel.instrumentation.reactor.emit-checkpoints=true")
 }
 
 dependencies {
