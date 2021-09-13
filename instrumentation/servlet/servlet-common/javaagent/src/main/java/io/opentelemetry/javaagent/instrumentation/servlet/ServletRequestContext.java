@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletRequestContext<T> {
   private final T request;
