@@ -26,7 +26,6 @@ public class AppPerfResults {
   final float averageJvmUserCpu;
   final float maxJvmUserCpu;
 
-
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
     this.config = builder.config;
@@ -53,6 +52,7 @@ public class AppPerfResults {
   String getAgentName() {
     return agent.getName();
   }
+
   static Builder builder() {
     return new Builder();
   }
@@ -139,47 +139,45 @@ public class AppPerfResults {
       return this;
     }
 
-    Builder averageNetworkRead(long averageNetworkRead){
+    Builder averageNetworkRead(long averageNetworkRead) {
       this.averageNetworkRead = averageNetworkRead;
       return this;
     }
 
-    Builder averageNetworkWrite(long averageNetworkWrite){
+    Builder averageNetworkWrite(long averageNetworkWrite) {
       this.averageNetworkWrite = averageNetworkWrite;
       return this;
     }
 
-    Builder averageJvmUserCpu(float averageJvmUserCpu){
+    Builder averageJvmUserCpu(float averageJvmUserCpu) {
       this.averageJvmUserCpu = averageJvmUserCpu;
       return this;
     }
 
-    Builder maxJvmUserCpu(float maxJvmUserCpu){
+    Builder maxJvmUserCpu(float maxJvmUserCpu) {
       this.maxJvmUserCpu = maxJvmUserCpu;
       return this;
     }
   }
 
-
-
   public static class MinMax {
     public final long min;
     public final long max;
 
-    public MinMax(){
+    public MinMax() {
       this(Long.MAX_VALUE, Long.MIN_VALUE);
     }
 
-    public MinMax(long min, long max){
+    public MinMax(long min, long max) {
       this.min = min;
       this.max = max;
     }
 
-    public MinMax withMin(long min){
+    public MinMax withMin(long min) {
       return new MinMax(min, max);
     }
 
-    public MinMax withMax(long max){
+    public MinMax withMax(long max) {
       return new MinMax(min, max);
     }
   }

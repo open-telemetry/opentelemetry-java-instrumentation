@@ -9,11 +9,14 @@ import java.util.List;
 
 public class Agent {
 
-  final static String OTEL_LATEST = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar";
+  static final String OTEL_LATEST =
+      "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar";
 
-  public final static Agent NONE = new Agent("none", "no agent at all");
-  public final static Agent LATEST_RELEASE = new Agent("latest", "latest mainstream release", OTEL_LATEST);
-  public final static Agent LATEST_SNAPSHOT = new Agent("snapshot", "latest available snapshot version from main");
+  public static final Agent NONE = new Agent("none", "no agent at all");
+  public static final Agent LATEST_RELEASE =
+      new Agent("latest", "latest mainstream release", OTEL_LATEST);
+  public static final Agent LATEST_SNAPSHOT =
+      new Agent("snapshot", "latest available snapshot version from main");
 
   private final String name;
   private final String description;
@@ -25,7 +28,7 @@ public class Agent {
   }
 
   public Agent(String name, String description, String url) {
-      this(name, description, url, Collections.emptyList());
+    this(name, description, url, Collections.emptyList());
   }
 
   public Agent(String name, String description, String url, List<String> additionalJvmArgs) {
@@ -43,7 +46,7 @@ public class Agent {
     return description;
   }
 
-  public boolean hasUrl(){
+  public boolean hasUrl() {
     return url != null;
   }
 
@@ -57,7 +60,9 @@ public class Agent {
 
   private static URL makeUrl(String url) {
     try {
-      if(url == null) return null;
+      if (url == null) {
+        return null;
+      }
       return URI.create(url).toURL();
     } catch (MalformedURLException e) {
       throw new RuntimeException("Error parsing url", e);

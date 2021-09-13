@@ -10,14 +10,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Defines a test config.
- */
+/** Defines a test config. */
 public class TestConfig {
 
-  private final static int DEFAULT_MAX_REQUEST_RATE = 0;  // none
-  private final static int DEFAULT_CONCURRENT_CONNECTIONS = 5;
-  private final static int DEFAULT_TOTAL_ITERATIONS = 5000;
+  private static final int DEFAULT_MAX_REQUEST_RATE = 0; // none
+  private static final int DEFAULT_CONCURRENT_CONNECTIONS = 5;
+  private static final int DEFAULT_TOTAL_ITERATIONS = 5000;
 
   private final String name;
   private final String description;
@@ -88,7 +86,7 @@ public class TestConfig {
       return this;
     }
 
-    Builder withAgents(Agent ...agents) {
+    Builder withAgents(Agent... agents) {
       this.agents.addAll(Arrays.asList(agents));
       return this;
     }
@@ -108,12 +106,12 @@ public class TestConfig {
       return this;
     }
 
-    Builder warmupSeconds(int warmupSeconds){
+    Builder warmupSeconds(int warmupSeconds) {
       this.warmupSeconds = warmupSeconds;
       return this;
     }
 
-    TestConfig build(){
+    TestConfig build() {
       return new TestConfig(this);
     }
   }
