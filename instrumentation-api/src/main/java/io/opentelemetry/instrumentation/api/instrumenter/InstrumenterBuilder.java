@@ -163,7 +163,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * <p>For all other {@linkplain SpanKind span kinds} the suppression rules are as follows:
    *
    * <ul>
-   *   <li>SERVER nested spans are always suppressed. If a SERVER span with is present in the parent
+   *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
    *       context object, new SERVER span will not be started.
    *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
    *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
