@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
-import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Helper.helper;
-import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -26,7 +25,7 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Local("otelScope") Scope scope) {
 
     Context parentContext = Java8BytecodeBridge.currentContext();
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!helper().shouldStart(parentContext, request)) {
       return;
     }
 

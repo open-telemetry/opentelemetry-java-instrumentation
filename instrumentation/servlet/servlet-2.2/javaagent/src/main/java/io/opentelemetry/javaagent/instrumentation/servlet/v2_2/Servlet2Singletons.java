@@ -17,9 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 public final class Servlet2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-2.2";
 
-  private static final Instrumenter<
-          ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER;
+  private static final Servlet2Helper HELPER;
 
   static {
     HttpAttributesExtractor<
@@ -28,18 +26,19 @@ public final class Servlet2Singletons {
     SpanNameExtractor<ServletRequestContext<HttpServletRequest>> spanNameExtractor =
         new Servlet2SpanNameExtractor<>(Servlet2Accessor.INSTANCE);
 
-    INSTRUMENTER =
-        ServletInstrumenterBuilder.newInstrumenter(
-            INSTRUMENTATION_NAME,
-            Servlet2Accessor.INSTANCE,
-            spanNameExtractor,
-            httpAttributesExtractor);
+    Instrumenter<
+            ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
+        instrumenter =
+            ServletInstrumenterBuilder.newInstrumenter(
+                INSTRUMENTATION_NAME,
+                Servlet2Accessor.INSTANCE,
+                spanNameExtractor,
+                httpAttributesExtractor);
+    HELPER = new Servlet2Helper(instrumenter);
   }
 
-  public static Instrumenter<
-          ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      instrumenter() {
-    return INSTRUMENTER;
+  public static Servlet2Helper helper() {
+    return HELPER;
   }
 
   private Servlet2Singletons() {}

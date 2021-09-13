@@ -18,7 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext
 
 public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
-  protected JettyHelper(
+  public JettyHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);

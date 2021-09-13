@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Helper.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -51,9 +51,14 @@ public class Servlet2Advice {
       return;
     }
 
-    Context currentContext = Java8BytecodeBridge.currentContext();
-    requestContext = new ServletRequestContext<>(httpServletRequest, null);
-    context = helper().startSpan(currentContext, requestContext);
+    Context parentContext = Java8BytecodeBridge.currentContext();
+    requestContext = new ServletRequestContext<>(httpServletRequest);
+
+    if (!helper().shouldStart(parentContext, requestContext)) {
+      return;
+    }
+
+    context = helper().startSpan(parentContext, requestContext);
     scope = context.makeCurrent();
     // reset response status from previous request
     // (some servlet containers reuse response objects to reduce memory allocations)

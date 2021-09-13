@@ -34,6 +34,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
   }
 
+  public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
+    return instrumenter.shouldStart(parentContext, requestContext);
+  }
+
   protected Context startSpan(
       Context parentContext,
       ServletRequestContext<REQUEST> requestContext,

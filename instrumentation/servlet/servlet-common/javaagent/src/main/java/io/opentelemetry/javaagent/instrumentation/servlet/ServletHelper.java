@@ -15,10 +15,9 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 
-public abstract class ServletHelper<REQUEST, RESPONSE>
-    extends BaseServletHelper<REQUEST, RESPONSE> {
+public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
 
-  protected ServletHelper(
+  public ServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);

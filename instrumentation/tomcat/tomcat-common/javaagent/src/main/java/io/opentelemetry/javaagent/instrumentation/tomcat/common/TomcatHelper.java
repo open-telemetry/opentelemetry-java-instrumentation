@@ -21,13 +21,17 @@ public class TomcatHelper<REQUEST, RESPONSE> {
   protected final TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider;
   private final ServletHelper<REQUEST, RESPONSE> servletHelper;
 
-  protected TomcatHelper(
+  public TomcatHelper(
       Instrumenter<Request, Response> instrumenter,
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
       ServletHelper<REQUEST, RESPONSE> servletHelper) {
     this.instrumenter = instrumenter;
     this.servletEntityProvider = servletEntityProvider;
     this.servletHelper = servletHelper;
+  }
+
+  public boolean shouldStart(Context parentContext, Request request) {
+    return instrumenter.shouldStart(parentContext, request);
   }
 
   public Context startSpan(Context parentContext, Request request) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Helper.helper;
+import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -34,7 +34,12 @@ public class Jetty8HandlerAdvice {
     }
 
     Context parentContext = Java8BytecodeBridge.currentContext();
-    requestContext = new ServletRequestContext<>(request, null);
+    requestContext = new ServletRequestContext<>(request);
+
+    if (!helper().shouldStart(parentContext, requestContext)) {
+      return;
+    }
+
     context = helper().startServerSpan(parentContext, requestContext);
     scope = context.makeCurrent();
 

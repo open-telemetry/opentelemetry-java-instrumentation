@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Helper.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -86,6 +86,10 @@ public class Servlet3Advice {
     }
 
     requestContext = new ServletRequestContext<>(httpServletRequest, mappingResolver);
+
+    if (!helper().shouldStart(currentContext, requestContext)) {
+      return;
+    }
 
     context = helper().startServletSpan(currentContext, requestContext, servlet);
     scope = context.makeCurrent();

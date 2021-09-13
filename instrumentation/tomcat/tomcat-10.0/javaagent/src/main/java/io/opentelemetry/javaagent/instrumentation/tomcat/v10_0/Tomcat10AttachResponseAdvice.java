@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Helper.helper;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Singletons.helper;
 
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
