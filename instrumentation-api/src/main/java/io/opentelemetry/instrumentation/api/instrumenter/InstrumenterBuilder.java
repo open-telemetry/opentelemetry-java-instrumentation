@@ -16,6 +16,10 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -139,29 +143,33 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   // visible for tests
   /**
-   * Enables suppression based on client instrumentation type.
+   * Enables CLIENT nested span suppression based on the instrumentation type.
    *
-   * <p><strong>When enabled, suppresses nested spans depending on their {@link SpanKind} and {@link
-   * SpanKey}</strong>.
+   * <p><strong>When enabled:</strong>.
    *
    * <ul>
-   *   <li>CLIENT nested spans are suppressed based on their {@link SpanKey} (HTTP, RPC, DB) i.e. if
-   *       span marked with the same {@link SpanKey} is present in the parent context object, new
-   *       span of the same {@link SpanKey} will not be started.
+   *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
+   *       HttpAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or {@linkplain
+   *       DbAttributesExtractor database} clients. If a span with the same type is present in the
+   *       parent context object, new span of the same type will not be started.
    * </ul>
    *
    * <p><strong>When disabled:</strong>
    *
    * <ul>
-   *   <li>CLIENT nested spans are always suppressed
+   *   <li>CLIENT nested spans are always suppressed.
    * </ul>
    *
-   * <p><strong>In both cases:</strong>
+   * <p>For all other {@linkplain SpanKind span kinds} the suppression rules are as follows:
    *
    * <ul>
-   *   <li>SERVER and PRODUCER nested spans are always suppressed
-   *   <li>CONSUMER spans are suppressed depending on their operation: receive or process
-   *   <li>INTERNAL spans are never suppressed
+   *   <li>SERVER nested spans are always suppressed. If a SERVER span with is present in the parent
+   *       context object, new SERVER span will not be started.
+   *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
+   *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
+   *       operation is present in the parent context object, new span with the same operation will
+   *       not be started.
+   *   <li>INTERNAL spans are never suppressed.
    * </ul>
    */
   InstrumenterBuilder<REQUEST, RESPONSE> enableInstrumentationTypeSuppression(
