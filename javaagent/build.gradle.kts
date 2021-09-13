@@ -141,27 +141,6 @@ tasks {
     archiveFileName.set("exporterLibs-relocated.jar")
   }
 
-  // Includes instrumentations, but not exporters
-  val slimShadowJar by registering(ShadowJar::class) {
-    configurations = listOf(bootstrapLibs)
-
-    dependsOn(relocateJavaagentLibs)
-    isolateClasses(relocateJavaagentLibs.get().outputs.files)
-
-    archiveClassifier.set("slim")
-
-    manifest {
-      attributes(jar.get().manifest.attributes)
-      attributes(
-        "Main-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
-        "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
-        "Premain-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
-        "Can-Redefine-Classes" to true,
-        "Can-Retransform-Classes" to true
-      )
-    }
-  }
-
   // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
@@ -175,7 +154,28 @@ tasks {
     archiveClassifier.set("")
 
     manifest {
-      attributes(slimShadowJar.get().manifest.attributes)
+      attributes(jar.get().manifest.attributes)
+      attributes(
+        "Main-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Premain-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
+        "Can-Redefine-Classes" to true,
+        "Can-Retransform-Classes" to true
+      )
+    }
+  }
+
+  // Includes instrumentations, but not exporters
+  val slimShadowJar by registering(ShadowJar::class) {
+    configurations = listOf(bootstrapLibs)
+
+    dependsOn(relocateJavaagentLibs)
+    isolateClasses(relocateJavaagentLibs.get().outputs.files)
+
+    archiveClassifier.set("slim")
+
+    manifest {
+      attributes(shadowJar.get().manifest.attributes)
     }
   }
 
@@ -191,7 +191,7 @@ tasks {
     archiveClassifier.set("base")
 
     manifest {
-      attributes(slimShadowJar.get().manifest.attributes)
+      attributes(shadowJar.get().manifest.attributes)
     }
   }
 
@@ -205,7 +205,7 @@ tasks {
   }
 
   assemble {
-    dependsOn(slimShadowJar, shadowJar, baseJavaagentJar)
+    dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
