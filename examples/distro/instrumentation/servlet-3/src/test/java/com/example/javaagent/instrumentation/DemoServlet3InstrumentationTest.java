@@ -23,12 +23,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
- * This is a demo instrumentation test that verifies that the custom servlet instrumentation was applied.
+ * This is a demo instrumentation test that verifies that the custom servlet instrumentation was
+ * applied.
  */
 class DemoServlet3InstrumentationTest {
   @RegisterExtension
-  static final AgentInstrumentationExtension instrumentation = AgentInstrumentationExtension
-      .create();
+  static final AgentInstrumentationExtension instrumentation =
+      AgentInstrumentationExtension.create();
 
   static final OkHttpClient httpClient = new OkHttpClient();
 
@@ -75,14 +76,19 @@ class DemoServlet3InstrumentationTest {
 
     assertThat(instrumentation.waitForTraces(1))
         .hasSize(1)
-        .hasTracesSatisfyingExactly(trace -> trace.hasSize(1)
-            .hasSpansSatisfyingExactly(span -> span.hasName("/servlet").hasKind(SpanKind.SERVER)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace
+                    .hasSize(1)
+                    .hasSpansSatisfyingExactly(
+                        span -> span.hasName("/servlet").hasKind(SpanKind.SERVER)));
 
     var traceId = instrumentation.spans().get(0).getTraceId();
     assertEquals(traceId, response.header("X-server-id"));
   }
 
   public static class TestServlet extends HttpServlet {
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
       try (Writer writer = response.getWriter()) {

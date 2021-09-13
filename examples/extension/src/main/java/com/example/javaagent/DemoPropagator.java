@@ -9,14 +9,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * See <a href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md">
+ * See <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md">
  * OpenTelemetry Specification</a> for more information about Propagators.
  *
  * @see DemoPropagatorProvider
  */
 public class DemoPropagator implements TextMapPropagator {
   private static final String FIELD = "X-demo-field";
-  private static final ContextKey<Long> PROPAGATION_START_KEY = ContextKey.named("propagation.start");
+  private static final ContextKey<Long> PROPAGATION_START_KEY =
+      ContextKey.named("propagation.start");
 
   @Override
   public List<String> fields() {

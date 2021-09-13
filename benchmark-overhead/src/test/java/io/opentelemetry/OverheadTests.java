@@ -53,19 +53,20 @@ public class OverheadTests {
 
   @TestFactory
   Stream<DynamicTest> runAllTestConfigurations() {
-    return Configs.all().map(config ->
-        dynamicTest(config.getName(), () -> runTestConfig(config))
-    );
+    return Configs.all().map(config -> dynamicTest(config.getName(), () -> runTestConfig(config)));
   }
 
   void runTestConfig(TestConfig config) {
-    config.getAgents().forEach(agent -> {
-      try {
-        runAppOnce(config, agent);
-      } catch (Exception e) {
-        fail("Unhandled exception in " + config.getName(), e);
-      }
-    });
+    config
+        .getAgents()
+        .forEach(
+            agent -> {
+              try {
+                runAppOnce(config, agent);
+              } catch (Exception e) {
+                fail("Unhandled exception in " + config.getName(), e);
+              }
+            });
     List<AppPerfResults> results = new ResultsCollector(namingConventions.local).collect(config);
     new MainResultsPersister(config).write(results);
   }
@@ -74,12 +75,13 @@ public class OverheadTests {
     GenericContainer<?> postgres = new PostgresContainer(NETWORK).build();
     postgres.start();
 
-    GenericContainer<?> petclinic = new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build();
+    GenericContainer<?> petclinic =
+        new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build();
     long start = System.currentTimeMillis();
     petclinic.start();
     writeStartupTimeFile(agent, start);
 
-    if(config.getWarmupSeconds() > 0){
+    if (config.getWarmupSeconds() > 0) {
       doWarmupPhase(config);
     }
 
@@ -99,21 +101,30 @@ public class OverheadTests {
 
   private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
     Path outFile = namingConventions.container.jfrFile(agent);
-    String[] command = {"jcmd", "1", "JFR.start", "settings=profile", "dumponexit=true", "name=petclinic", "filename=" + outFile};
+    String[] command = {
+      "jcmd",
+      "1",
+      "JFR.start",
+      "settings=profile",
+      "dumponexit=true",
+      "name=petclinic",
+      "filename=" + outFile
+    };
     petclinic.execInContainer(command);
   }
 
   private void doWarmupPhase(TestConfig testConfig) {
     long start = System.currentTimeMillis();
-    System.out.println("Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
-    while(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start) < testConfig.getWarmupSeconds()){
-      GenericContainer<?> k6 = new GenericContainer<>(
-          DockerImageName.parse("loadimpact/k6"))
-          .withNetwork(NETWORK)
-          .withCopyFileToContainer(
-              MountableFile.forHostPath("./k6"), "/app")
-          .withCommand("run", "-u", "5", "-i", "25", "/app/basic.js")
-          .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+    System.out.println(
+        "Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
+    while (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)
+        < testConfig.getWarmupSeconds()) {
+      GenericContainer<?> k6 =
+          new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
+              .withNetwork(NETWORK)
+              .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
+              .withCommand("run", "-u", "5", "-i", "25", "/app/basic.js")
+              .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
       k6.start();
     }
     System.out.println("Warmup complete.");

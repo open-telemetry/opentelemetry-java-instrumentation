@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.muzzle;
+package io.opentelemetry.javaagent.tooling.muzzle.references;
 
-import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeFields;
-import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeFlags;
-import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeMethods;
-import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeSet;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeFields;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeFlags;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeMethods;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeSet;
 
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
