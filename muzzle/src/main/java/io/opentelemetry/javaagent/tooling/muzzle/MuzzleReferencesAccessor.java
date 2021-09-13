@@ -43,12 +43,12 @@ class MuzzleReferencesAccessor {
    * Returns references to helper and library classes used in the given module's type
    * instrumentation advices, grouped by {@link ClassRef#getClassName()}.
    */
+  @SuppressWarnings("unchecked")
   static Map<String, ClassRef> getFor(InstrumentationModule instrumentationModule) {
     Map<String, ClassRef> muzzleReferences = emptyMap();
     MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
     if (methodHandle != null) {
       try {
-        //noinspection unchecked
         muzzleReferences = (Map<String, ClassRef>) methodHandle.invoke(instrumentationModule);
       } catch (Throwable ignored) {
         // silence error prone
