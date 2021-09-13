@@ -46,7 +46,8 @@ final class TracingClientInterceptor implements ClientInterceptor {
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
     GrpcRequest request = new GrpcRequest(method, null, null);
-    Context context = instrumenter.start(Context.current(), request);
+    Context parentContext = Context.current();
+    Context context = instrumenter.start(parentContext, request);
     final ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
       try {
@@ -61,18 +62,23 @@ final class TracingClientInterceptor implements ClientInterceptor {
     SocketAddress address = result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     request.setRemoteAddress(address);
 
-    return new TracingClientCall<>(result, context, request);
+    return new TracingClientCall<>(result, parentContext, context, request);
   }
 
   final class TracingClientCall<REQUEST, RESPONSE>
       extends ForwardingClientCall.SimpleForwardingClientCall<REQUEST, RESPONSE> {
 
+    private final Context parentContext;
     private final Context context;
     private final GrpcRequest request;
 
     TracingClientCall(
-        ClientCall<REQUEST, RESPONSE> delegate, Context context, GrpcRequest request) {
+        ClientCall<REQUEST, RESPONSE> delegate,
+        Context parentContext,
+        Context context,
+        GrpcRequest request) {
       super(delegate);
+      this.parentContext = parentContext;
       this.context = context;
       this.request = request;
     }
@@ -81,7 +87,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       propagators.getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = context.makeCurrent()) {
-        super.start(new TracingClientCallListener<>(responseListener, context, request), headers);
+        super.start(
+            new TracingClientCallListener<>(responseListener, parentContext, context, request),
+            headers);
       } catch (Throwable e) {
         instrumenter.end(context, request, null, e);
         throw e;
@@ -102,6 +110,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
   final class TracingClientCallListener<RESPONSE>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
 
+    private final Context parentContext;
     private final Context context;
     private final GrpcRequest request;
 
@@ -109,8 +118,10 @@ final class TracingClientInterceptor implements ClientInterceptor {
     @SuppressWarnings("UnusedVariable")
     volatile long messageId;
 
-    TracingClientCallListener(Listener<RESPONSE> delegate, Context context, GrpcRequest request) {
+    TracingClientCallListener(
+        Listener<RESPONSE> delegate, Context parentContext, Context context, GrpcRequest request) {
       super(delegate);
+      this.parentContext = parentContext;
       this.context = context;
       this.request = request;
     }
@@ -135,13 +146,10 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onClose(Status status, Metadata trailers) {
-      try (Scope ignored = context.makeCurrent()) {
-        delegate().onClose(status, trailers);
-      } catch (Throwable e) {
-        instrumenter.end(context, request, status, e);
-        throw e;
-      }
       instrumenter.end(context, request, status, status.getCause());
+      try (Scope ignored = parentContext.makeCurrent()) {
+        delegate().onClose(status, trailers);
+      }
     }
 
     @Override
