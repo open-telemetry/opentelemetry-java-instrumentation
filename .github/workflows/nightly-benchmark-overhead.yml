@@ -1,4 +1,4 @@
-name: benchmark-overhead tests
+name: Nightly overhead benchmark
 on:
   schedule:
     # 5am GMT

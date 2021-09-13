@@ -1,4 +1,4 @@
-name: "Code Scanning - Action"
+name: Nightly CodeQL analysis
 
 on:
   workflow_dispatch:
