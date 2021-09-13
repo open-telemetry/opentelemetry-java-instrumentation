@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.restlet.v1_0.internal.RestletServerSpanN
 import org.restlet.Filter;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
+import org.restlet.data.Status;
 
 final class TracingFilter extends Filter {
 
@@ -25,6 +26,16 @@ final class TracingFilter extends Filter {
   public TracingFilter(Instrumenter<Request, Response> instrumenter, String path) {
     this.instrumenter = instrumenter;
     this.path = path;
+  }
+
+  @Override
+  public int doHandle(Request request, Response response) {
+    try {
+      super.doHandle(request, response);
+    } catch (Throwable t) {
+      response.setStatus(new Status(Status.SERVER_ERROR_INTERNAL, t));
+    }
+    return CONTINUE;
   }
 
   @Override
@@ -59,7 +70,10 @@ final class TracingFilter extends Filter {
     contextAndScope.getScope().close();
 
     // Restlet suppresses exceptions and sets the throwable in status
-    Throwable statusThrowable = response.getStatus().getThrowable();
+    Throwable statusThrowable = null;
+    if (response.getStatus() != null && response.getStatus().isError()) {
+      statusThrowable = response.getStatus().getThrowable();
+    }
 
     instrumenter.end(contextAndScope.getContext(), request, response, statusThrowable);
   }
