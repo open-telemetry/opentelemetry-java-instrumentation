@@ -16,7 +16,7 @@ To add the extension to the instrumentation agent:
 2. Modify the startup command to add the full path to the extension file. For example:
 
      ```bash
-     java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+     java -javaagent:path/to/opentelemetry-javaagent.jar \
           -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
           -jar myapp.jar
      ```

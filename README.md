@@ -62,7 +62,7 @@ if you are looking for documentation on using those.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
@@ -70,7 +70,7 @@ The package provides a completely automatic, out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
 ```
-java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 By default, the OpenTelemetry Java agent uses
@@ -83,7 +83,7 @@ Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See [the configuration documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/agent-config.md)
 for the full list of configuration items. For example:
 ```
-java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent.jar \
      -Dotel.resource.attributes=service.name=your-service-name \
      -Dotel.traces.exporter=zipkin \
      -jar myapp.jar
