@@ -103,6 +103,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -120,6 +127,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -209,6 +223,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -226,6 +247,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -328,6 +356,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -345,6 +380,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -410,6 +452,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           status ERROR
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -501,6 +550,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           status ERROR
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           attributes {
@@ -671,6 +727,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -688,6 +751,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -787,7 +857,14 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
-          errorEvent(IllegalStateException, "illegal", 1)
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
+          errorEvent(IllegalStateException, "illegal", 2)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -804,6 +881,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -887,6 +971,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
@@ -904,6 +995,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -981,6 +1079,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -998,6 +1103,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {

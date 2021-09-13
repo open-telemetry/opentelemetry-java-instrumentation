@@ -117,12 +117,12 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
-          (1..(clientMessageCount * serverMessageCount)).each {
+          (1..(clientMessageCount * serverMessageCount + clientMessageCount)).each {
             def messageId = it
             event(it - 1) {
               eventName "message"
               attributes {
-                "message.type" "SENT"
+                "message.type" { it == "SENT" || it == "RECEIVED" }
                 "message.id" messageId
               }
             }
@@ -143,12 +143,12 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
-          clientRange.each {
+          (1..(clientMessageCount * serverMessageCount + clientMessageCount)).each {
             def messageId = it
             event(it - 1) {
               eventName "message"
               attributes {
-                "message.type" "RECEIVED"
+                "message.type" { it == "RECEIVED" || it == "SENT" }
                 "message.id" messageId
               }
             }
