@@ -18,11 +18,6 @@ or they might want to manually create spans for their own custom code.
 
 # Dependencies
 
-> :warning: prior to version 1.0.0, the Java agent
-only supports manual instrumentation using the `opentelemetry-api` version with the same version
-number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
-multiple (1.0.0+) versions of `opentelemetry-api`.
-
 You'll need to add a dependency on the `opentelemetry-api` library to get started; if you intend to
 use the `@WithSpan` annotation, also include the `opentelemetry-extension-annotations` dependency.
 
