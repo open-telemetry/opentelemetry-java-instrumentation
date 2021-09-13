@@ -24,6 +24,7 @@ public class ServletRequestContext<T> {
     return request;
   }
 
+  @Nullable
   public MappingResolver mappingResolver() {
     return mappingResolver;
   }
