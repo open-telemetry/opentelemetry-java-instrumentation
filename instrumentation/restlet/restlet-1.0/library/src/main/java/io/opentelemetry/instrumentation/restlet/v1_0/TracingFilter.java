@@ -15,11 +15,9 @@ import io.opentelemetry.instrumentation.restlet.v1_0.internal.RestletServerSpanN
 import org.restlet.Filter;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
-import org.restlet.data.Status;
 
 final class TracingFilter extends Filter {
 
-  private static final ThreadLocal<ContextAndScope> otelContextAndScope = new ThreadLocal<>();
   private final Instrumenter<Request, Response> instrumenter;
   private final String path;
 
@@ -30,51 +28,39 @@ final class TracingFilter extends Filter {
 
   @Override
   public int doHandle(Request request, Response response) {
-    try {
-      super.doHandle(request, response);
-    } catch (Throwable t) {
-      response.setStatus(new Status(Status.SERVER_ERROR_INTERNAL, t));
-    }
-    return CONTINUE;
-  }
-
-  @Override
-  protected int beforeHandle(Request request, Response response) {
 
     Context parentContext = Context.current();
     Context context = parentContext;
 
+    Scope scope = null;
+
     if (instrumenter.shouldStart(parentContext, request)) {
       context = instrumenter.start(parentContext, request);
-      Scope scope = context.makeCurrent();
-      otelContextAndScope.set(ContextAndScope.create(context, scope));
+      scope = context.makeCurrent();
     }
 
     ServerSpanNaming.updateServerSpanName(
         context, CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, path);
 
-    return CONTINUE;
-  }
-
-  @Override
-  protected void afterHandle(Request request, Response response) {
-
-    ContextAndScope contextAndScope = otelContextAndScope.get();
-
-    if (contextAndScope == null) {
-      return;
+    Throwable statusThrowable = null;
+    try {
+      super.doHandle(request, response);
+    } catch (Throwable t) {
+      statusThrowable = t;
     }
 
-    otelContextAndScope.remove();
+    if (scope == null) {
+      return CONTINUE;
+    }
 
-    contextAndScope.getScope().close();
+    scope.close();
 
-    // Restlet suppresses exceptions and sets the throwable in status
-    Throwable statusThrowable = null;
     if (response.getStatus() != null && response.getStatus().isError()) {
       statusThrowable = response.getStatus().getThrowable();
     }
 
-    instrumenter.end(contextAndScope.getContext(), request, response, statusThrowable);
+    instrumenter.end(context, request, response, statusThrowable);
+
+    return CONTINUE;
   }
 }

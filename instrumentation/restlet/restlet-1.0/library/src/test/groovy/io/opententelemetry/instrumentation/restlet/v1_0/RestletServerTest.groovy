@@ -5,6 +5,7 @@
 
 package io.opententelemetry.instrumentation.restlet.v1_0
 
+import com.noelios.restlet.StatusFilter
 import io.opentelemetry.instrumentation.restlet.v1_0.AbstractRestletServerTest
 import io.opentelemetry.instrumentation.restlet.v1_0.RestletTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
@@ -14,10 +15,16 @@ class RestletServerTest extends AbstractRestletServerTest implements LibraryTest
 
   @Override
   Restlet wrapRestlet(Restlet restlet, String path){
+
     RestletTracing tracing = RestletTracing.create(openTelemetry)
-    def filter = tracing.newFilter(path)
-    filter.setNext(restlet)
-    return filter
+
+    def tracingFilter = tracing.newFilter(path)
+    def statusFilter = new StatusFilter(component.getContext(), false, null, null)
+
+    tracingFilter.setNext(statusFilter)
+    statusFilter.setNext(restlet)
+
+    return tracingFilter
   }
 
 }
