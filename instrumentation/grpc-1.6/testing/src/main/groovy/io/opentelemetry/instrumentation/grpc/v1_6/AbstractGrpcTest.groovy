@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6
 
+import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.MoreExecutors
 import example.GreeterGrpc
 import example.Helloworld
@@ -171,21 +172,20 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     when:
     AtomicReference<Helloworld.Response> response = new AtomicReference<>()
     AtomicReference<Throwable> error = new AtomicReference<>()
-    CountDownLatch latch = new CountDownLatch(1)
     runWithSpan("parent") {
-      def future = client.sayHello(Helloworld.Request.newBuilder().setName("test").build())
-      future.addListener({
-        try {
-          response.set(future.get())
-        } catch (Exception e) {
-          error.set(e);
-        }
-        runWithSpan("child") {}
-        latch.countDown()
-      }, MoreExecutors.directExecutor())
+      def future = Futures.transform(
+        client.sayHello(Helloworld.Request.newBuilder().setName("test").build()),
+        {
+          runWithSpan("child") {}
+          return it
+        },
+        MoreExecutors.directExecutor())
+      try {
+        response.set(future.get())
+      } catch (Exception e) {
+        error.set(e)
+      }
     }
-
-    latch.await(10, TimeUnit.SECONDS)
 
     then:
     error.get() == null
