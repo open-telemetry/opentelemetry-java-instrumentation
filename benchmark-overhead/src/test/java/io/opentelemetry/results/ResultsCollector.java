@@ -20,7 +20,9 @@ public class ResultsCollector {
 
   private final NamingConvention namingConvention;
 
-  public ResultsCollector(NamingConvention namingConvention) {this.namingConvention = namingConvention; }
+  public ResultsCollector(NamingConvention namingConvention) {
+    this.namingConvention = namingConvention;
+  }
 
   public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
@@ -30,9 +32,7 @@ public class ResultsCollector {
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
     try {
-      AppPerfResults.Builder builder = AppPerfResults.builder()
-          .agent(agent)
-          .config(config);
+      AppPerfResults.Builder builder = AppPerfResults.builder().agent(agent).config(config);
 
       builder = addStartupTime(builder, agent);
       builder = addK6Results(builder, agent);
@@ -44,15 +44,14 @@ public class ResultsCollector {
     }
   }
 
-  private AppPerfResults.Builder addStartupTime(
-      AppPerfResults.Builder builder, Agent agent) throws IOException {
+  private AppPerfResults.Builder addStartupTime(AppPerfResults.Builder builder, Agent agent)
+      throws IOException {
     Path file = namingConvention.startupDurationFile(agent);
     long startupDuration = Long.parseLong(new String(Files.readAllBytes(file)).trim());
     return builder.startupDurationMs(startupDuration);
   }
 
-  private AppPerfResults.Builder addK6Results(
-      AppPerfResults.Builder builder, Agent agent)
+  private AppPerfResults.Builder addK6Results(AppPerfResults.Builder builder, Agent agent)
       throws IOException {
     Path k6File = namingConvention.k6Results(agent);
     String json = new String(Files.readAllBytes(k6File));
@@ -67,8 +66,8 @@ public class ResultsCollector {
         .requestP95(requestP95);
   }
 
-  private AppPerfResults.Builder addJfrResults(
-      AppPerfResults.Builder builder, Agent agent) throws IOException {
+  private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)
+      throws IOException {
     Path jfrFile = namingConvention.jfrFile(agent);
     return builder
         .totalGCTime(readTotalGCTime(jfrFile))
@@ -118,5 +117,4 @@ public class ResultsCollector {
   private float readMaxThreadContextSwitchRate(Path jfrFile) throws IOException {
     return JFRUtils.findMaxFloat(jfrFile, "jdk.ThreadContextSwitchRate", "switchRate");
   }
-
 }

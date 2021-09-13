@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@Deprecated
 public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpServletResponse> {
   private static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
   private static final ServletSpanNameProvider<HttpServletRequest> SPAN_NAME_PROVIDER =

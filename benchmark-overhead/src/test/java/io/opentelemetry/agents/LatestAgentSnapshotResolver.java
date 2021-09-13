@@ -6,7 +6,6 @@ package io.opentelemetry.agents;
 
 import static org.joox.JOOX.$;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,17 +25,23 @@ public class LatestAgentSnapshotResolver {
 
   private static final Logger logger = LoggerFactory.getLogger(LatestAgentSnapshotResolver.class);
 
-  final static String BASE_URL = "https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent";
-  final static String LATEST_SNAPSHOT_META = BASE_URL + "/maven-metadata.xml";
+  static final String BASE_URL =
+      "https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent";
+  static final String LATEST_SNAPSHOT_META = BASE_URL + "/maven-metadata.xml";
 
   Optional<Path> resolve() throws IOException {
     String version = fetchLatestSnapshotVersion();
     logger.info("Latest snapshot version is {}", version);
     String latestFilename = fetchLatestFilename(version);
-    String url = BASE_URL +  "/" + version + "/" + latestFilename;
+    String url = BASE_URL + "/" + version + "/" + latestFilename;
     byte[] jarBytes = fetchBodyBytesFrom(url);
     Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT.jar");
-    Files.write(path, jarBytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+    Files.write(
+        path,
+        jarBytes,
+        StandardOpenOption.CREATE,
+        StandardOpenOption.WRITE,
+        StandardOpenOption.TRUNCATE_EXISTING);
     return Optional.of(path);
   }
 
@@ -46,12 +51,13 @@ public class LatestAgentSnapshotResolver {
     Document document = $(body).document();
     Match match = $(document).xpath("/metadata/versioning/snapshotVersions/snapshotVersion");
     return match.get().stream()
-        .filter(elem -> {
-          String classifier = $(elem).child("classifier").content();
-          String extension = $(elem).child("extension").content();
-          // TODO (trask) this needs to be updated now that no more "all" artifact
-          return "all".equals(classifier) && "jar".equals(extension);
-        })
+        .filter(
+            elem -> {
+              String classifier = $(elem).child("classifier").content();
+              String extension = $(elem).child("extension").content();
+              // TODO (trask) this needs to be updated now that no more "all" artifact
+              return "all".equals(classifier) && "jar".equals(extension);
+            })
         .map(e -> $(e).child("value").content())
         .findFirst()
         .map(value -> "opentelemetry-javaagent-" + value + ".jar")
@@ -65,7 +71,6 @@ public class LatestAgentSnapshotResolver {
     Match match = $(document).xpath("/metadata/versioning/latest");
     return match.get(0).getTextContent();
   }
-
 
   private String fetchBodyStringFrom(String url) throws IOException {
     return fetchBodyFrom(url).string();

@@ -1,4 +1,4 @@
-### Understanding the javaagent components
+# Understanding the javaagent components
 
 The javaagent jar can logically be divided into 3 parts:
 
@@ -6,9 +6,9 @@ The javaagent jar can logically be divided into 3 parts:
 * Modules that live in the bootstrap class loader
 * Modules that live in the agent class loader
 
-### Modules that live in the system class loader
+## Modules that live in the system class loader
 
-#### `javaagent` module
+### `javaagent` module
 
 This module consists of single class
 `io.opentelemetry.javaagent.OpenTelemetryAgent` which implements [Java
@@ -20,14 +20,14 @@ classloader and immediately delegate to
 `io.opentelemetry.javaagent.bootstrap.AgentInitializer` (now in the bootstrap class loader)
 class from there.
 
-### Modules that live in the bootstrap class loader
+## Modules that live in the bootstrap class loader
 
-#### `javaagent-bootstrap` module
+### `javaagent-bootstrap` module
 
 `io.opentelemetry.javaagent.bootstrap.AgentInitializer` and a few other classes that live in the bootstrap class
 loader but are not used directly by auto-instrumentation
 
-#### `instrumentation-api` and `javaagent-instrumentation-api` modules
+### `instrumentation-api` and `javaagent-instrumentation-api` modules
 
 These modules contain support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
@@ -40,9 +40,9 @@ the actual application.
 `instrumentation-api` contains classes that are needed for both library and auto-instrumentation,
 while `javaagent-instrumentation-api` contains classes that are only needed for auto-instrumentation.
 
-### Modules that live in the agent class loader
+## Modules that live in the agent class loader
 
-#### `javaagent-tooling`, `javaagent-extension-api` modules and `instrumentation` submodules
+### `javaagent-tooling`, `javaagent-extension-api` modules and `instrumentation` submodules
 
 Contains everything necessary to make instrumentation machinery work,
 including integration with [ByteBuddy](https://bytebuddy.net/) and actual
@@ -69,7 +69,7 @@ auto-instrumentation agent's classes are totally isolated from application
 classes, and an instrumented class from arbitrary classloader in JVM can
 still access helper classes from bootstrap classloader.
 
-#### Agent jar structure
+### Agent jar structure
 
 If you now look inside
 `javaagent/build/libs/opentelemetry-javaagent-<version>.jar`, you will see the

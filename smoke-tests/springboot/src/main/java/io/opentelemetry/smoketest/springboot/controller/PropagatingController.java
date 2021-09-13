@@ -26,11 +26,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * This controller demonstrates that context propagation works across http calls.
- * Calling <code>/front</code> should return a string which contains two traceId separated by ";".
- * First traceId was reported by <code>/front</code> handler, the second one was returned by
- * <code>/back</code> handler which was called by <code>/front</code>. If context propagation
- * works correctly, then both values should be the same.
+ * This controller demonstrates that context propagation works across http calls. Calling <code>
+ * /front</code> should return a string which contains two traceId separated by ";". First traceId
+ * was reported by <code>/front</code> handler, the second one was returned by <code>/back</code>
+ * handler which was called by <code>/front</code>. If context propagation works correctly, then
+ * both values should be the same.
  */
 @RestController
 public class PropagatingController {
@@ -44,12 +44,12 @@ public class PropagatingController {
 
   @RequestMapping("/front")
   public String front() {
-    URI backend = ServletUriComponentsBuilder
-        .fromCurrentContextPath()
-        .port(environment.getProperty("local.server.port"))
-        .path("/back")
-        .build()
-        .toUri();
+    URI backend =
+        ServletUriComponentsBuilder.fromCurrentContextPath()
+            .port(environment.getProperty("local.server.port"))
+            .path("/back")
+            .build()
+            .toUri();
     String backendTraceId = restTemplate.getForObject(backend, String.class);
     String frontendTraceId = Span.current().getSpanContext().getTraceId();
     return String.format("%s;%s", frontendTraceId, backendTraceId);

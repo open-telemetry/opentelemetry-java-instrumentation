@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mer
 import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeMethods;
 import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeSet;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -18,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents a reference to a class used in the instrumentation advice or helper class code (or the
  * helper class itself).
  *
- * <p>This class is used in the auto-generated {@link InstrumentationModule#getMuzzleReferences()}
+ * <p>This class is used in the auto-generated {@code InstrumentationModule#getMuzzleReferences()}
  * method, it is not meant to be used directly by agent extension developers.
  */
 public final class ClassRef {

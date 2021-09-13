@@ -8,7 +8,8 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
- * See <a href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#span-processor">
+ * See <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#span-processor">
  * OpenTelemetry Specification</a> for more information about {@link SpanProcessor}.
  *
  * @see DemoSdkTracerProviderConfigurer
@@ -31,9 +32,7 @@ public class DemoSpanProcessor implements SpanProcessor {
   }
 
   @Override
-  public void onEnd(ReadableSpan span) {
-
-  }
+  public void onEnd(ReadableSpan span) {}
 
   @Override
   public boolean isEndRequired() {

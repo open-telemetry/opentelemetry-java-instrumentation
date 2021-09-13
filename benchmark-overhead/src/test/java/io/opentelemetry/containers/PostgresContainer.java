@@ -33,10 +33,11 @@ public class PostgresContainer {
         .withPassword(PASSWORD)
         .withDatabaseName(DATABASE_NAME)
         .withCopyFileToContainer(
-            MountableFile.forClasspathResource("initDB.sql"), "/docker-entrypoint-initdb.d/initDB.sql")
+            MountableFile.forClasspathResource("initDB.sql"),
+            "/docker-entrypoint-initdb.d/initDB.sql")
         .withCopyFileToContainer(
-            MountableFile.forClasspathResource("populateDB.sql"), "/docker-entrypoint-initdb.d/populateDB.sql")
+            MountableFile.forClasspathResource("populateDB.sql"),
+            "/docker-entrypoint-initdb.d/populateDB.sql")
         .withReuse(false);
   }
-
 }

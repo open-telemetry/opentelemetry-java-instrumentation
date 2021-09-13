@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
@@ -36,7 +37,14 @@ public final class ReferenceMatcher {
   private final Set<String> helperClassNames;
   private final InstrumentationClassPredicate instrumentationClassPredicate;
 
-  public ReferenceMatcher(
+  public static ReferenceMatcher of(InstrumentationModule instrumentationModule) {
+    return new ReferenceMatcher(
+        instrumentationModule.getMuzzleHelperClassNames(),
+        MuzzleReferencesAccessor.getFor(instrumentationModule),
+        instrumentationModule::isHelperClass);
+  }
+
+  ReferenceMatcher(
       List<String> helperClassNames,
       Map<String, ClassRef> references,
       Predicate<String> libraryInstrumentationPredicate) {

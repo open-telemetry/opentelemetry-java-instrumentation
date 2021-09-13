@@ -1,8 +1,8 @@
-## Style guideline
+# Style guideline
 
 We follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 
-### Auto-formatting
+## Auto-formatting
 
 The build will fail if the source code is not formatted according to the google java style.
 
@@ -25,7 +25,7 @@ Running
 
 runs formatting verify task only.
 
-#### Pre-commit hook
+### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
 there is a pre-commit hook setup to verify formatting before committing.
@@ -35,14 +35,14 @@ It can be activated with this command:
 git config core.hooksPath .githooks
 ```
 
-#### Editorconfig
+### Editorconfig
 
 As additional convenience for IntelliJ users, we provide `.editorconfig`
 file. IntelliJ will automatically use it to adjust its code formatting settings.
 It does not support all required rules, so you still have to run
 `spotlessApply` from time to time.
 
-### Additional checks
+## Additional checks
 
 The build uses checkstyle to verify some parts of the Google Java Style Guide that cannot be handled
 by auto-formatting.
@@ -53,7 +53,7 @@ To run these checks locally:
 ./gradlew checkstyleMain checkstyleTest
 ```
 
-### Static imports
+## Static imports
 
 We leverage static imports for many common types of operations. However, not all static methods or
 constants are necessarily good candidates for a static import. The following list is a very
@@ -67,7 +67,7 @@ rough guideline of what are commonly accepted static imports:
 * Singleton instances (especially where clearly named an hopefully immutable)
 * `tracer()` methods that expose tracer singleton instances
 
-### Ordering of class contents
+## Ordering of class contents
 
 The following order is preferred:
 
@@ -84,7 +84,7 @@ the non-private methods that use it.
 In static utility classes (where all members are static), the private constructor
 (used to prevent construction) should be ordered after methods instead of before methods.
 
-### `final` keyword usage
+## `final` keyword usage
 
 Public classes should be declared `final` where possible.
 
@@ -97,7 +97,7 @@ Method parameters should never be declared `final`.
 Local variables should only be declared `final` if they are not initialized inline
 (declaring these vars `final` can help prevent accidental double-initialization).
 
-### `@Nullable` annotation usage
+## `@Nullable` annotation usage
 
 [Note: this section is aspirational, as opposed to a reflection of the current codebase]
 

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerAdviceHelper;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Singletons.helper;
+
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -20,11 +20,7 @@ public class Tomcat10AttachResponseAdvice {
       @Advice.Return boolean success) {
 
     if (success) {
-      TomcatServerHandlerAdviceHelper.attachResponseToRequest(
-          Tomcat10ServletEntityProvider.INSTANCE,
-          JakartaServletHttpServerTracer.tracer(),
-          request,
-          response);
+      helper().attachResponseToRequest(request, response);
     }
   }
 }

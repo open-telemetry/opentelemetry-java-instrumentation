@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
@@ -91,8 +92,13 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
       tracer().setPrincipal(context, request);
 
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable, response);
+      Throwable error = throwable;
+      if (error == null) {
+        error = AppServerBridge.getException(context);
+      }
+
+      if (error != null) {
+        tracer().endExceptionally(context, error, response);
         return;
       }
 
