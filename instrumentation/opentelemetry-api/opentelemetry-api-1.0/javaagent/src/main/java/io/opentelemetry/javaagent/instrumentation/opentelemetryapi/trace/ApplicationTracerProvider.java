@@ -8,12 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 
 public class ApplicationTracerProvider implements TracerProvider {
 
-  private static final Constructor<?> TRACE_PROVIDER_14 = getApplicationTracerProvider14();
+  private static final MethodHandle TRACE_PROVIDER_14 = getApplicationTracerProvider14();
 
   protected final io.opentelemetry.api.trace.TracerProvider agentTracerProvider;
 
@@ -22,14 +23,17 @@ public class ApplicationTracerProvider implements TracerProvider {
     this.agentTracerProvider = agentTracerProvider;
   }
 
-  private static Constructor getApplicationTracerProvider14() {
+  private static MethodHandle getApplicationTracerProvider14() {
     try {
       // this class is defined in opentelemetry-api-1.4
-      Class clazz =
+      Class<?> clazz =
           Class.forName(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14");
-      return clazz.getDeclaredConstructor(io.opentelemetry.api.trace.TracerProvider.class);
-    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+      return MethodHandles.lookup()
+          .findConstructor(
+              clazz,
+              MethodType.methodType(void.class, io.opentelemetry.api.trace.TracerProvider.class));
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException exception) {
       return null;
     }
   }
@@ -38,11 +42,9 @@ public class ApplicationTracerProvider implements TracerProvider {
       io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
     if (TRACE_PROVIDER_14 != null) {
       try {
-        return (TracerProvider) TRACE_PROVIDER_14.newInstance(agentTracerProvider);
-      } catch (InstantiationException
-          | IllegalAccessException
-          | InvocationTargetException exception) {
-        throw new IllegalStateException("Failed to create ApplicationTracerProvider", exception);
+        return (TracerProvider) TRACE_PROVIDER_14.invoke(agentTracerProvider);
+      } catch (Throwable throwable) {
+        throw new IllegalStateException("Failed to create ApplicationTracerProvider", throwable);
       }
     }
 
