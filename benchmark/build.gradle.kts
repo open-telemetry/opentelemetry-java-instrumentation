@@ -54,7 +54,7 @@ tasks {
   }
 
   named("jmh") {
-    dependsOn(":javaagent:fullJavaagentJar")
+    dependsOn(":javaagent:shadowJar")
   }
 }
 
