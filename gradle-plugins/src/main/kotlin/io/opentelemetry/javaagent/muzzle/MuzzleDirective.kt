@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.muzzle
 
+import java.util.stream.Collectors
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
-import java.util.stream.Collectors
 
 abstract class MuzzleDirective {
 

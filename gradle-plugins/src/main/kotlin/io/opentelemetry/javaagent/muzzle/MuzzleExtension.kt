@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.muzzle
 
+import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
-import javax.inject.Inject
 
 abstract class MuzzleExtension @Inject constructor(private val objectFactory: ObjectFactory) {
 

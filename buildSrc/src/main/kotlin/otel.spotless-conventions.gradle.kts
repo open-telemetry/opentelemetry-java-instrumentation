@@ -24,6 +24,10 @@ spotless {
     kotlin {
       ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
       licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|class|// Includes work from:)")
+      targetExclude(
+        "src/main/kotlin/io.opentelemetry.instrumentation.muzzle-check.gradle.kts",
+        "src/main/kotlin/io.opentelemetry.instrumentation.muzzle-generation.gradle.kts",
+        "build/**")
     }
   }
   kotlinGradle {

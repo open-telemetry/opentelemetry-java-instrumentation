@@ -69,6 +69,7 @@ include(":instrumentation-api-annotation-support")
 
 // misc
 include(":dependencyManagement")
+include(":gradle-plugins")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")

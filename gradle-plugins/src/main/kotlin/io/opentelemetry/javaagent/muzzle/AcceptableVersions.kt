@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.muzzle
 
-import org.eclipse.aether.version.Version
 import java.util.Locale
 import java.util.function.Predicate
+import org.eclipse.aether.version.Version
 
 class AcceptableVersions(private val skipVersions: Collection<String>) :
   Predicate<Version?> {
@@ -20,19 +20,19 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
     if (skipVersions.contains(versionString)) {
       return false
     }
-    val draftVersion = versionString.contains("rc")
-      || versionString.contains(".cr")
-      || versionString.contains("alpha")
-      || versionString.contains("beta")
-      || versionString.contains("-b")
-      || versionString.contains(".m")
-      || versionString.contains("-m")
-      || versionString.contains("-dev")
-      || versionString.contains("-ea")
-      || versionString.contains("-atlassian-")
-      || versionString.contains("public_draft")
-      || versionString.contains("snapshot")
-      || GIT_SHA_PATTERN.matches(versionString)
+    val draftVersion = versionString.contains("rc") ||
+      versionString.contains(".cr") ||
+      versionString.contains("alpha") ||
+      versionString.contains("beta") ||
+      versionString.contains("-b") ||
+      versionString.contains(".m") ||
+      versionString.contains("-m") ||
+      versionString.contains("-dev") ||
+      versionString.contains("-ea") ||
+      versionString.contains("-atlassian-") ||
+      versionString.contains("public_draft") ||
+      versionString.contains("snapshot") ||
+      GIT_SHA_PATTERN.matches(versionString)
     return !draftVersion
   }
 
