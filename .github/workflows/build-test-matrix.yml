@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash # this is needed for TAG construction below on Windows
     strategy:
       matrix:
         os:
