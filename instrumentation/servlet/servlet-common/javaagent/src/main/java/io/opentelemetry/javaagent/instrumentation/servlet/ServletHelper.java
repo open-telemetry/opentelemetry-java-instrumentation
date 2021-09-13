@@ -107,7 +107,7 @@ public abstract class ServletHelper<REQUEST, RESPONSE>
     attachAsyncListener(requestContext);
   }
 
-  public void attachAsyncListener(ServletRequestContext<REQUEST> requestContext) {
+  private void attachAsyncListener(ServletRequestContext<REQUEST> requestContext) {
     REQUEST request = requestContext.request();
     Context context = getServerContext(request);
 
