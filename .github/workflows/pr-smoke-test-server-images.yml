@@ -1,12 +1,10 @@
-name: Build test matrix images
+name: PR build for smoke test server images
 
 on:
-  push:
+  pull_request:
     paths:
       - 'smoke-tests/matrix/**'
-      - '.github/workflows/build-test-matrix.yml'
-    branches: [ 'main' ]
-  workflow_dispatch:
+      - '.github/workflows/pr-smoke-test-server-images.yml'
 
 jobs:
   build:
@@ -51,25 +49,12 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/matrix/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Login to GitHub Package Registry
-        uses: docker/login-action@v1.10.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build Linux docker images
         working-directory: smoke-tests/matrix
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew buildLinuxTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os != 'windows-latest'
 
       - name: Build Windows docker images
         working-directory: smoke-tests/matrix
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew buildWindowsTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os == 'windows-latest'

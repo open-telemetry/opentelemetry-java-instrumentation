@@ -1,10 +1,10 @@
-ARG version
+ARG jdkImage
 ARG jdk
-ARG vm
+ARG version
 
 FROM tomee:${jdk}-jre-${version}-webprofile as default
 
-FROM adoptopenjdk:${jdk}-jdk-${vm}
+FROM ${jdkImage}
 
 ENV SERVER_BASE=/usr/local/tomee
 COPY --from=default $SERVER_BASE $SERVER_BASE
