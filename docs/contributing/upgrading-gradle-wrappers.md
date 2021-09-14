@@ -11,7 +11,6 @@ for dir in . \
            benchmark-overhead \
            examples/distro \
            examples/extension \
-           gradle-plugins \
            smoke-tests/fake-backend \
            smoke-tests/grpc \
            smoke-tests/matrix \
