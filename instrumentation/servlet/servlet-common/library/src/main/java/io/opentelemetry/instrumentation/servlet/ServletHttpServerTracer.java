@@ -70,12 +70,8 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     return addServletContextPath(context, request);
   }
 
-  private Context addServletContextPath(Context context, REQUEST request) {
-    String contextPath = accessor.getRequestContextPath(request);
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
-    }
-    return context;
+  protected Context addServletContextPath(Context context, REQUEST request) {
+    return ServletContextPath.init(context, () -> accessor.getRequestContextPath(request));
   }
 
   @Override
@@ -222,20 +218,6 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       return servletPath;
     }
     return contextPath + servletPath;
-  }
-
-  /**
-   * When server spans are managed by app server instrumentation we need to add context path of
-   * current request to context if it isn't already added. Servlet instrumentation adds it when it
-   * starts server span.
-   */
-  public Context updateContext(Context context, REQUEST request) {
-    String contextPath = context.get(ServletContextPath.CONTEXT_KEY);
-    if (contextPath == null) {
-      context = addServletContextPath(context, request);
-    }
-
-    return context;
   }
 
   public void onTimeout(Context context, long timeout) {
