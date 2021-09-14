@@ -334,8 +334,7 @@ class MeterTest {
                       .hasUnit("u")
                       .hasInstrumentationLibrary(
                           InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
-                      // TODO(anuraaga): Switch to histogram in future version?
-                      .hasDoubleSummary()
+                      .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
                           point -> {
@@ -372,8 +371,7 @@ class MeterTest {
                       .hasUnit("u")
                       .hasInstrumentationLibrary(
                           InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
-                      // TODO(anuraaga): Switch to histogram in future version?
-                      .hasDoubleSummary()
+                      .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
                           point -> {
@@ -403,8 +401,7 @@ class MeterTest {
                       .hasUnit("u")
                       .hasInstrumentationLibrary(
                           InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
-                      // TODO(anuraaga): Switch to histogram in future version?
-                      .hasDoubleSummary()
+                      .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
                           point -> {
@@ -439,8 +436,7 @@ class MeterTest {
                       .hasUnit("u")
                       .hasInstrumentationLibrary(
                           InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
-                      // TODO(anuraaga): Switch to histogram in future version?
-                      .hasDoubleSummary()
+                      .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
                           point -> {

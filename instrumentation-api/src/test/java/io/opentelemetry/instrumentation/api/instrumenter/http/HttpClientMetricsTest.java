@@ -60,11 +60,11 @@ class HttpClientMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
-                    .hasDoubleSummary()
+                    .hasDoubleHistogram()
                     .points()
                     .satisfiesExactly(
                         point -> {
-                          assertThat(point.getPercentileValues()).isNotEmpty();
+                          assertThat(point.getSum()).isPositive();
                           assertThat(point)
                               .attributes()
                               .containsOnly(
@@ -84,9 +84,8 @@ class HttpClientMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
-                    .hasDoubleSummary()
+                    .hasDoubleHistogram()
                     .points()
-                    .satisfiesExactly(
-                        point -> assertThat(point.getPercentileValues()).isNotEmpty()));
+                    .satisfiesExactly(point -> assertThat(point.getSum()).isPositive()));
   }
 }

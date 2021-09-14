@@ -70,7 +70,8 @@ class JavaagentTestArgumentsProvider(
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
     // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
     // in smoke tests instead.
-    "-Dotel.javaagent.add-thread-details=false"
+    "-Dotel.javaagent.add-thread-details=false",
+    "-Dotel.metrics.exporter=otlp"
   )
 }
 

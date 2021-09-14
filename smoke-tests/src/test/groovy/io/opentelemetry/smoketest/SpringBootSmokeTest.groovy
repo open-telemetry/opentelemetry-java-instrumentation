@@ -22,6 +22,11 @@ class SpringBootSmokeTest extends SmokeTest {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return Collections.singletonMap("OTEL_METRICS_EXPORTER", "otlp")
+  }
+
   @Unroll
   def "spring boot smoke test on JDK #jdk"(int jdk) {
     setup:

@@ -49,6 +49,7 @@ tasks {
 
       jvmArgs("-Dotel.javaagent.debug=true")
       jvmArgs("-javaagent:${jar.get().archiveFile.get().asFile.absolutePath}")
+      jvmArgs("-Dotel.metrics.exporter=otlp")
     }
   }
 }

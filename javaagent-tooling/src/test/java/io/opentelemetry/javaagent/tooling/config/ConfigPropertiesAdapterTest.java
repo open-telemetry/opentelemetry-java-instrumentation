@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.ConfigurationException;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,10 +39,10 @@ class ConfigPropertiesAdapterTest {
     assertThat(config.getInt("int")).isEqualTo(10);
     assertThat(config.getLong("long")).isEqualTo(20);
     assertThat(config.getDouble("double")).isEqualTo(5.4);
-    assertThat(config.getCommaSeparatedValues("list")).containsExactly("cat", "dog", "bear");
-    assertThat(config.getCommaSeparatedMap("map"))
+    assertThat(config.getList("list")).containsExactly("cat", "dog", "bear");
+    assertThat(config.getMap("map"))
         .containsExactly(entry("cat", "meow"), entry("dog", "bark"), entry("bear", "growl"));
-    assertThat(config.getCommaSeparatedMap("mapWithEmptyValue"))
+    assertThat(config.getMap("mapWithEmptyValue"))
         .containsExactly(entry("cat", "meow"), entry("dog", ""), entry("bear", "growl"));
     assertThat(config.getDuration("duration")).isEqualTo(Duration.ofSeconds(1));
   }
@@ -54,8 +54,8 @@ class ConfigPropertiesAdapterTest {
     assertThat(config.getInt("int")).isNull();
     assertThat(config.getLong("long")).isNull();
     assertThat(config.getDouble("double")).isNull();
-    assertThat(config.getCommaSeparatedValues("list")).isEmpty();
-    assertThat(config.getCommaSeparatedMap("map")).isEmpty();
+    assertThat(config.getList("list")).isEmpty();
+    assertThat(config.getMap("map")).isEmpty();
     assertThat(config.getDuration("duration")).isNull();
   }
 
@@ -75,8 +75,8 @@ class ConfigPropertiesAdapterTest {
     assertThat(config.getInt("int")).isNull();
     assertThat(config.getLong("long")).isNull();
     assertThat(config.getDouble("double")).isNull();
-    assertThat(config.getCommaSeparatedValues("list")).isEmpty();
-    assertThat(config.getCommaSeparatedMap("map")).isEmpty();
+    assertThat(config.getList("list")).isEmpty();
+    assertThat(config.getMap("map")).isEmpty();
     assertThat(config.getDuration("duration")).isNull();
   }
 
@@ -119,8 +119,7 @@ class ConfigPropertiesAdapterTest {
   @Test
   void uncleanList() {
     assertThat(
-            createConfig(Collections.singletonMap("list", "  a  ,b,c  ,  d,,   ,"))
-                .getCommaSeparatedValues("list"))
+            createConfig(Collections.singletonMap("list", "  a  ,b,c  ,  d,,   ,")).getList("list"))
         .containsExactly("a", "b", "c", "d");
   }
 
@@ -128,20 +127,16 @@ class ConfigPropertiesAdapterTest {
   void uncleanMap() {
     assertThat(
             createConfig(Collections.singletonMap("map", "  a=1  ,b=2,c = 3  ,  d=  4,,  ,"))
-                .getCommaSeparatedMap("map"))
+                .getMap("map"))
         .containsExactly(entry("a", "1"), entry("b", "2"), entry("c", "3"), entry("d", "4"));
   }
 
   @Test
   void invalidMap() {
-    assertThatThrownBy(
-            () ->
-                createConfig(Collections.singletonMap("map", "a=1,b")).getCommaSeparatedMap("map"))
+    assertThatThrownBy(() -> createConfig(Collections.singletonMap("map", "a=1,b")).getMap("map"))
         .isInstanceOf(ConfigurationException.class)
         .hasMessage("Invalid map property: map=a=1,b");
-    assertThatThrownBy(
-            () ->
-                createConfig(Collections.singletonMap("map", "a=1,=b")).getCommaSeparatedMap("map"))
+    assertThatThrownBy(() -> createConfig(Collections.singletonMap("map", "a=1,=b")).getMap("map"))
         .isInstanceOf(ConfigurationException.class)
         .hasMessage("Invalid map property: map=a=1,=b");
   }
