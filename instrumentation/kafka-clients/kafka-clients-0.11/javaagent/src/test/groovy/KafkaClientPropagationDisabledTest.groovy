@@ -3,7 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -11,12 +16,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
-
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
 
@@ -55,7 +54,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
     // check that the message was received
     records.poll(5, TimeUnit.SECONDS) != null
 
-    assertTraces(3) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           name SHARED_TOPIC + " send"
@@ -68,7 +67,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
           }
         }
       }
-      trace(1, 1) {
+      trace(1, 2) {
         span(0) {
           name SHARED_TOPIC + " receive"
           kind CONSUMER
@@ -80,12 +79,11 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
-      }
-      trace(2, 1) {
-        span(0) {
+        span(1) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          hasNoParent()
+          childOf span(0)
+          hasNoLinks()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
