@@ -48,10 +48,11 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         isMethod().and(named("remove").or(named("replace"))).and(takesArgument(0, Class.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByClassAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("removeFirst").or(named("removeLast")))
-            .and(returns(named("io.netty.channel.ChannelHandler"))),
-        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveFirstLastAdvice");
+        isMethod().and(named("removeFirst")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveFirstAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("removeLast")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -114,7 +115,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   }
 
   @SuppressWarnings("unused")
-  public static class RemoveFirstLastAdvice {
+  public static class RemoveFirstAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeHandler(
@@ -125,6 +126,27 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
         contextStore.put(handler, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RemoveLastAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
+      if (ourHandler != null) {
+        pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
+      } else if (handler
+          .getClass()
+          .getName()
+          .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
+        pipeline.removeLast();
       }
     }
   }
