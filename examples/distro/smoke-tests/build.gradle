@@ -19,6 +19,7 @@ tasks.test {
   testLogging.showStandardStreams = true
 
   def shadowTask = project(":agent").tasks.shadowJar
+  dependsOn(shadowTask)
   inputs.files(layout.files(shadowTask))
 
   doFirst {
