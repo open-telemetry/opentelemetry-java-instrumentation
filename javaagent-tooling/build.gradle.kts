@@ -9,6 +9,7 @@ dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-instrumentation-api"))
+  implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-annotation-support"))
   implementation(project(":muzzle"))
