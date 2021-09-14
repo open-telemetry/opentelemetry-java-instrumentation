@@ -67,7 +67,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return context;
   }
 
-  private Context addServletContextPath(Context context, REQUEST request) {
+  protected Context addServletContextPath(Context context, REQUEST request) {
     return ServletContextPath.init(context, () -> accessor.getRequestContextPath(request));
   }
 

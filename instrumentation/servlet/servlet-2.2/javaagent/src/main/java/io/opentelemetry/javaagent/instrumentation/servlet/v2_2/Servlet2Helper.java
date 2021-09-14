@@ -43,4 +43,8 @@ public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpSe
 
     instrumenter.end(context, requestContext, responseContext, throwable);
   }
+
+  public Context updateContext(Context context, HttpServletRequest request) {
+    return addServletContextPath(context, request);
+  }
 }
