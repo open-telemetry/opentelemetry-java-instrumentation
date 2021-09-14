@@ -17,4 +17,7 @@ dependencies {
   library("com.noelios.restlet:com.noelios.restlet:1.1.5")
 
   testImplementation(project(":instrumentation:restlet:restlet-1.0:testing"))
+
+  latestDepTestLibrary("org.restlet:org.restlet:1.1.+")
+  latestDepTestLibrary("com.noelios.restlet:com.noelios.restlet:1.1.+")
 }
