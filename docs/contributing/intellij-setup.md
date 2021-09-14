@@ -1,4 +1,4 @@
-# IntelliJ setup
+# IntelliJ setup and troubleshooting
 
 **NB!** Please ensure that Intellij uses the same java installation as you do for building this
 project from command line. This ensures that Gradle task avoidance and build cache work properly and
@@ -26,3 +26,22 @@ Installation:
 Configuration:
 
 ![Recommended Settings](save-actions.png)
+
+## Troubleshooting
+
+Occassionally, Intellij gets confused, maybe due to the number of modules in this project,
+maybe due ot other reasons. In any case, here's some things that might help:
+
+### Invalidate Caches > "Just restart"
+
+* Go to File > Invalidate Caches...
+* Unselect all the options
+* Click the "Just restart" link
+
+This seems to fix more issues than just closing and re-opening Intellij :shrug:.
+
+### Delete your `.idea` directory
+
+* Close Intellij
+* Delete the `.idea` directory in the root directory of your local repository
+* Open Intellij
