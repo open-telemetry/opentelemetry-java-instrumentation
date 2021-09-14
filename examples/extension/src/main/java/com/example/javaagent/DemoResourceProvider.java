@@ -2,7 +2,7 @@ package com.example.javaagent;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
