@@ -24,7 +24,7 @@ dependencies {
   compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
   compileOnly("io.opentelemetry:opentelemetry-api-metrics")
 
-  implementation(project(":instrumentation:opentelemetry-api-1.0:javaagent"))
+  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
 
   testImplementation("com.google.guava:guava")
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")

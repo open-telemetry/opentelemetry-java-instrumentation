@@ -31,7 +31,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:1.5.0-alpha")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:1.6.0-alpha-SNAPSHOT")
 }
 
 tasks.withType<Test>().configureEach {

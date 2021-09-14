@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Deprecated
 public class TagSettingAsyncListener<REQUEST, RESPONSE> implements ServletAsyncListener<RESPONSE> {
   private final ServletHttpServerTracer<REQUEST, RESPONSE> tracer;
   private final AtomicBoolean responseHandled;

@@ -18,7 +18,7 @@ muzzle {
 dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
   api(project(":instrumentation:servlet:servlet-3.0:library"))
-  implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
+  api(project(":instrumentation:servlet:servlet-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
