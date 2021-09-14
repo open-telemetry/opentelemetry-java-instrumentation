@@ -16,6 +16,7 @@ dependencies {
   compileOnly(project(":javaagent-tooling"))
 
   implementation("io.grpc:grpc-core:1.33.1")
+  implementation("io.grpc:grpc-protobuf:1.33.1")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
   implementation("io.opentelemetry:opentelemetry-proto")

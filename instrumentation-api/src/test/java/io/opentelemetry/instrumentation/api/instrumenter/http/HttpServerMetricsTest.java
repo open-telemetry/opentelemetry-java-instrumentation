@@ -95,11 +95,11 @@ class HttpServerMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
-                    .hasDoubleSummary()
+                    .hasDoubleHistogram()
                     .points()
                     .satisfiesExactly(
                         point -> {
-                          assertThat(point.getPercentileValues()).isNotEmpty();
+                          assertThat(point.getSum()).isPositive();
                           assertThat(point)
                               .attributes()
                               .containsOnly(
@@ -127,9 +127,8 @@ class HttpServerMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
-                    .hasDoubleSummary()
+                    .hasDoubleHistogram()
                     .points()
-                    .satisfiesExactly(
-                        point -> assertThat(point.getPercentileValues()).isNotEmpty()));
+                    .satisfiesExactly(point -> assertThat(point.getSum()).isPositive()));
   }
 }

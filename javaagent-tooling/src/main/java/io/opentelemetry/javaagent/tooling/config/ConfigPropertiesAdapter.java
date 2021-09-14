@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.ConfigParsingException;
-import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.ConfigurationException;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -74,12 +74,12 @@ public final class ConfigPropertiesAdapter implements ConfigProperties {
   }
 
   @Override
-  public List<String> getCommaSeparatedValues(String name) {
+  public List<String> getList(String name) {
     return config.getList(name);
   }
 
   @Override
-  public Map<String, String> getCommaSeparatedMap(String name) {
+  public Map<String, String> getMap(String name) {
     try {
       return config.getMap(name);
     } catch (ConfigParsingException e) {
