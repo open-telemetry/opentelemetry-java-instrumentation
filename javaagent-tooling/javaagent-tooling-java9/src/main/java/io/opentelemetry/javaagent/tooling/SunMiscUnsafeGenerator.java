@@ -26,7 +26,6 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -197,7 +196,6 @@ class SunMiscUnsafeGenerator {
     addMethod("pageSize", int.class);
     addMethod("defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     addMethod("getLoadAverage", int.class, double[].class, int.class);
-    addMethod("invokeCleaner", void.class, ByteBuffer.class);
   }
 
   private static List<String> getNameCandidates(String name) {
