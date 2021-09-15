@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * The context key here is used to propagate the servlet context path throughout the request, so
@@ -26,12 +26,13 @@ public final class ServletContextPath {
   private static final ContextKey<ServletContextPath> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-context-path-key");
 
-  public static Context init(Context context, Supplier<String> contextPathSupplier) {
+  public static <REQUEST> Context init(
+      Context context, Function<REQUEST, String> contextPathExtractor, REQUEST request) {
     ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
     if (servletContextPath != null) {
       return context;
     }
-    String contextPath = contextPathSupplier.get();
+    String contextPath = contextPathExtractor.apply(request);
     if (contextPath == null) {
       // context path isn't know yet
       return context;

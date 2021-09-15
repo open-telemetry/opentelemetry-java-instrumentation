@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +43,11 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       Config.get().getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private final Function<REQUEST, String> contextPathExtractor;
 
   protected ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
+    this.contextPathExtractor = (request) -> accessor.getRequestContextPath(request);
   }
 
   public Context startSpan(REQUEST request, String spanName, boolean servlet) {
@@ -71,7 +74,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   }
 
   protected Context addServletContextPath(Context context, REQUEST request) {
-    return ServletContextPath.init(context, () -> accessor.getRequestContextPath(request));
+    return ServletContextPath.init(context, contextPathExtractor, request);
   }
 
   @Override

@@ -19,12 +19,14 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
+import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
+  private final Function<REQUEST, String> contextPathExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -32,6 +34,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.instrumenter = instrumenter;
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
+    this.contextPathExtractor = (request) -> accessor.getRequestContextPath(request);
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -68,7 +71,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   protected Context addServletContextPath(Context context, REQUEST request) {
-    return ServletContextPath.init(context, () -> accessor.getRequestContextPath(request));
+    return ServletContextPath.init(context, contextPathExtractor, request);
   }
 
   public Context getServerContext(REQUEST request) {
