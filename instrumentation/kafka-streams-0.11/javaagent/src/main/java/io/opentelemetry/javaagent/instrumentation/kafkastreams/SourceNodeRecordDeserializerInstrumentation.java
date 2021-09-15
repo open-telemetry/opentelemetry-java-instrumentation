@@ -11,8 +11,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -20,8 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
-public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
-    implements TypeInstrumentation {
+public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,8 +38,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
             .and(named("deserialize"))
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-        KafkaStreamsSourceNodeRecordDeserializerInstrumentation.class.getName()
-            + "$SaveHeadersAdvice");
+        SourceNodeRecordDeserializerInstrumentation.class.getName() + "$SaveHeadersAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -47,6 +48,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
     public static void saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
         @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
+
       result =
           new ConsumerRecord<>(
               result.topic(),
@@ -60,6 +62,11 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
               result.key(),
               result.value(),
               incoming.headers());
+
+      // copy the receive CONSUMER span association
+      ContextStore<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
+          InstrumentationContext.get(ConsumerRecord.class, SpanContext.class);
+      singleRecordReceiveSpan.put(result, singleRecordReceiveSpan.get(incoming));
     }
   }
 }

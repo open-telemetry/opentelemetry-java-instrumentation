@@ -21,8 +21,10 @@ public class KafkaStreamsInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new KafkaStreamsSourceNodeRecordDeserializerInstrumentation(),
-        new StreamTaskStartInstrumentation(),
-        new StreamTaskStopInstrumentation());
+        new PartitionGroupInstrumentation(),
+        new RecordDeserializerInstrumentation(),
+        new SourceNodeRecordDeserializerInstrumentation(),
+        new StreamTaskInstrumentation(),
+        new StreamThreadInstrumentation());
   }
 }

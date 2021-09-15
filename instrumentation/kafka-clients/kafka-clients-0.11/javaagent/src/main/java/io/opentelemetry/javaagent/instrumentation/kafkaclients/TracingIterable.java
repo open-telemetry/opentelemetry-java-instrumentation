@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIterableWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
+public class TracingIterable<K, V>
+    implements Iterable<ConsumerRecord<K, V>>, KafkaConsumerIterableWrapper<K, V> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
   @Nullable private final SpanContext receiveSpanContext;
   private boolean firstIterator = true;
@@ -35,5 +37,10 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
     }
 
     return it;
+  }
+
+  @Override
+  public Iterable<ConsumerRecord<K, V>> unwrap() {
+    return delegate;
   }
 }

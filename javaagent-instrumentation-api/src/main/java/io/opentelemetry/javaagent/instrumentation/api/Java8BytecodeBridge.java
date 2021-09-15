@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.api;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 
 /**
@@ -35,6 +36,11 @@ public final class Java8BytecodeBridge {
   /** Calls {@link Span#fromContext(Context)}. */
   public static Span spanFromContext(Context context) {
     return Span.fromContext(context);
+  }
+
+  /** Calls {@link Span#wrap(SpanContext)}. */
+  public static Span wrapSpan(SpanContext spanContext) {
+    return Span.wrap(spanContext);
   }
 
   private Java8BytecodeBridge() {}
