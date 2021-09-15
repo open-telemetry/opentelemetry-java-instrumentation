@@ -147,9 +147,6 @@ final class TracingClientInterceptor implements ClientInterceptor {
         span.addEvent("message", attributes);
         try (Scope ignored = context.makeCurrent()) {
           delegate().onMessage(message);
-        } catch (Throwable e) {
-          instrumenter.end(context, request, null, e);
-          throw e;
         }
       }
 
@@ -165,9 +162,6 @@ final class TracingClientInterceptor implements ClientInterceptor {
       public void onReady() {
         try (Scope ignored = context.makeCurrent()) {
           delegate().onReady();
-        } catch (Throwable e) {
-          instrumenter.end(context, request, null, e);
-          throw e;
         }
       }
     }
