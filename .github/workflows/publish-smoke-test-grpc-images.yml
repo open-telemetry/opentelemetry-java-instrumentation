@@ -1,10 +1,10 @@
-name: Build Play smoke test distribution
+name: Publish gRPC images for smoke tests
 
 on:
   push:
     paths:
-      - 'smoke-tests/play/**'
-      - '.github/workflows/build-play-smoke-dist.yml'
+      - 'smoke-tests/grpc/**'
+      - '.github/workflows/publish-smoke-test-grpc-images.yml'
     branches:
       - main
   workflow_dispatch:
@@ -26,14 +26,14 @@ jobs:
       - name: Cache gradle dependencies
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          job-id: play-smoke
+          job-id: grpc-smoke
           read-only: true
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/play/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/grpc/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
@@ -46,9 +46,9 @@ jobs:
         run: |
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Pushing to tag $TAG"
-          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
           # TODO (trask) drop JDK 15 after JDK 16 is passing
-          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
-        working-directory: smoke-tests/play
+          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+        working-directory: smoke-tests/grpc
