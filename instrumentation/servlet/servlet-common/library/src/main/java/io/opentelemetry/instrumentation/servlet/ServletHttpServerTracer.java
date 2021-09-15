@@ -47,7 +47,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   protected ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
-    this.contextPathExtractor = (request) -> accessor.getRequestContextPath(request);
+    this.contextPathExtractor = accessor::getRequestContextPath;
   }
 
   public Context startSpan(REQUEST request, String spanName, boolean servlet) {
