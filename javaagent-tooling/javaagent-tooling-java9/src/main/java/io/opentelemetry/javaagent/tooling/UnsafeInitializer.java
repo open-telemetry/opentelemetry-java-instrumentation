@@ -37,33 +37,27 @@ public class UnsafeInitializer {
     exports.put(
         unsafeClass.getPackage().getName(),
         Collections.singleton(UnsafeInitializer.class.getModule()));
-    Map<String, Set<Module>> opens = new HashMap<>();
-    // allow reflection in java.nio so that grpc/netty can access
-    // java.nio.DirectByteBuffer.<init>(long, int)
-    opens.put("java.nio", Collections.singleton(UnsafeInitializer.class.getModule()));
     instrumentation.redefineModule(
         unsafeClass.getModule(),
         Collections.emptySet(),
         exports,
-        opens,
+        Collections.emptyMap(),
         Collections.emptySet(),
         Collections.emptyMap());
 
-    if (!testUnsafePresent || !hasSunMiscUnsafe()) {
-      if (!(classLoader instanceof AgentClassLoader)) {
-        // some tests don't pass AgentClassLoader, ignore them
-        return;
-      }
-      try {
-        SunMiscUnsafeGenerator.generateUnsafe(unsafeClass, (AgentClassLoader) classLoader);
-      } catch (Throwable throwable) {
-        logger.warn("Unsafe generation failed", throwable);
-        return;
-      }
+    if (testUnsafePresent && hasSunMiscUnsafe()) {
+      return;
+    }
+    if (!(classLoader instanceof AgentClassLoader)) {
+      // some tests don't pass AgentClassLoader, ignore them
+      return;
     }
 
-    // tell grpc/netty that it is ok to use setAccessible(true) so it can access DirectByteBuffer
-    System.setProperty("io.grpc.netty.shaded.io.netty.tryReflectionSetAccessible", "true");
+    try {
+      SunMiscUnsafeGenerator.generateUnsafe(unsafeClass, (AgentClassLoader) classLoader);
+    } catch (Throwable throwable) {
+      logger.warn("Unsafe generation failed", throwable);
+    }
   }
 
   private static boolean hasSunMiscUnsafe() {
