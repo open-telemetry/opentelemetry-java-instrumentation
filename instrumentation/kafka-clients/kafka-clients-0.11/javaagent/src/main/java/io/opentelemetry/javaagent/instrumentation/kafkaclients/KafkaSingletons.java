@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
@@ -67,9 +68,12 @@ public final class KafkaSingletons {
     if (KafkaConsumerExperimentalAttributesExtractor.isEnabled()) {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
-    return KafkaPropagation.isPropagationEnabled()
-        ? builder.newConsumerInstrumenter(new KafkaHeadersGetter())
-        : builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+    if (KafkaPropagation.isPropagationEnabled()) {
+      builder.addSpanLinksExtractor(
+          SpanLinksExtractor.fromUpstreamRequest(
+              GlobalOpenTelemetry.getPropagators(), new KafkaHeadersGetter()));
+    }
+    return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter() {
