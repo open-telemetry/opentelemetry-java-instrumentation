@@ -1,11 +1,12 @@
-name: Build smoke test fake backend
+name: Publish fake backend images for smoke tests
 
 on:
   push:
     paths:
       - 'smoke-tests/fake-backend/**'
-      - '.github/workflows/build-smoke-dist-fakebackend.yml'
-    branches: [ 'main' ]
+      - '.github/workflows/publish-smoke-test-fake-backend-images.yml'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:

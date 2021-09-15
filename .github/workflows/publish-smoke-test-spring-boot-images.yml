@@ -1,10 +1,10 @@
-name: Build Spring Boot smoke test distribution
+name: Publish Spring Boot images for smoke tests
 
 on:
   push:
     paths:
       - 'smoke-tests/springboot/**'
-      - '.github/workflows/build-springboot-smoke-dist.yml'
+      - '.github/workflows/publish-smoke-test-spring-boot-images.yml'
     branches:
       - main
   workflow_dispatch:
