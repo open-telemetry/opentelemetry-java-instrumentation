@@ -69,7 +69,12 @@ task windowsCollectorBinaryDownload(type: Download) {
     collectorDockerBuildDir.mkdirs()
   }
 
-  src("https://github.com/open-telemetry/opentelemetry-collector/releases/latest/download/otelcol_windows_amd64.exe")
+  // TODO (trask) update this to point to new opentelemetry-collector-releases repo
+  //   this involves making two further changes:
+  //     * all the artifacts in the new repo now have version in their name (so no single url for "latest")
+  //     * the artifacts are now tar.gz format, so need to extract the exe
+  //   note: version is hardcoded below because that is last version in the collector repo that has the releases attached
+  src("https://github.com/open-telemetry/opentelemetry-collector/releases/download/v0.33.0/otelcol_windows_amd64.exe")
   dest(collectorDockerBuildDir)
 }
 
