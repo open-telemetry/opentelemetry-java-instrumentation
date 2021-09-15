@@ -11,8 +11,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper class to inject span context into request headers.
- *
- * @author Pavol Loffay
  */
 // TODO(anuraaga): Figure out a way to avoid copying this from okhttp instrumentation.
 final class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builder> {

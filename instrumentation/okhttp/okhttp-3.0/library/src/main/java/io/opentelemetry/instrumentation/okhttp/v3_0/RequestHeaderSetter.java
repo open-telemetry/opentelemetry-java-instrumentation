@@ -11,8 +11,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper class to inject span context into request headers.
- *
- * @author Pavol Loffay
  */
 final class RequestHeaderSetter implements TextMapSetter<Request.Builder> {
 
