@@ -9,11 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import okhttp3.Request;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Helper class to inject span context into request headers.
- *
- * @author Pavol Loffay
- */
+/** Helper class to inject span context into request headers. */
 final class RequestHeaderSetter implements TextMapSetter<Request.Builder> {
 
   static final RequestHeaderSetter SETTER = new RequestHeaderSetter();
