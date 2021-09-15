@@ -34,7 +34,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.instrumenter = instrumenter;
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
-    this.contextPathExtractor = (request) -> accessor.getRequestContextPath(request);
+    this.contextPathExtractor = accessor::getRequestContextPath;
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
