@@ -870,6 +870,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.CANCELLED.code.value()
           }
         }
         span(2) {
