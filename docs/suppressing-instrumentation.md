@@ -6,7 +6,9 @@ You can disable the agent using `-Dotel.javaagent.enabled=false`
 ## Suppressing specific agent instrumentation
 
 You can suppress agent instrumentation of specific libraries by using
-`-Dotel.instrumentation.[name].enabled=false` where `name` is the corresponding instrumentation `name`:
+`-Dotel.instrumentation.[name].enabled=false` (or using the equivalent environment
+variable `OTEL_INSTRUMENTATION_[NAME]_ENABLED`) where `name` (`NAME`) is the
+corresponding instrumentation `name`:
 
 | Library/Framework | Instrumentation name |
 |-------------------|----------------------|
