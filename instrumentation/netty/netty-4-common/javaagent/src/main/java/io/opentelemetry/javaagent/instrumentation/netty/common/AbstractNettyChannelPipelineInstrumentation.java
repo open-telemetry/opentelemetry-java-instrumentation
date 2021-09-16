@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
@@ -53,6 +54,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     transformer.applyAdviceToMethod(
         isMethod().and(named("removeLast")).and(returns(named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("addAfter")).and(takesArguments(3)),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("addAfter")).and(takesArguments(4)),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterWithGroupAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -147,6 +154,44 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           .getName()
           .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
         pipeline.removeLast();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddAfterAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void addAfterHandler(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(value = 0, readOnly = false) String name) {
+      ChannelHandler handler = pipeline.get(name);
+      if (handler != null) {
+        ContextStore<ChannelHandler, ChannelHandler> contextStore =
+            InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+        ChannelHandler ourHandler = contextStore.get(handler);
+        if (ourHandler != null) {
+          name = ourHandler.getClass().getName();
+        }
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddAfterWithGroupAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void addAfterHandler(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(value = 1, readOnly = false) String name) {
+      ChannelHandler handler = pipeline.get(name);
+      if (handler != null) {
+        ContextStore<ChannelHandler, ChannelHandler> contextStore =
+            InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+        ChannelHandler ourHandler = contextStore.get(handler);
+        if (ourHandler != null) {
+          name = ourHandler.getClass().getName();
+        }
       }
     }
   }
