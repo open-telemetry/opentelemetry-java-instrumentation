@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import java.util.function.Function;
 
 /**
  * The context key here is used to propagate the servlet context path throughout the request, so
@@ -22,18 +23,42 @@ public final class ServletContextPath {
 
   // Keeps track of the servlet context path that needs to be prepended to the route when updating
   // the span name
-  public static final ContextKey<String> CONTEXT_KEY =
+  private static final ContextKey<ServletContextPath> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-context-path-key");
 
-  public static String prepend(Context context, String spanName) {
-    String value = context.get(CONTEXT_KEY);
-    // checking isEmpty just to avoid unnecessary string concat / allocation
-    if (value != null && !value.isEmpty()) {
-      return value + spanName;
-    } else {
-      return spanName;
+  public static <REQUEST> Context init(
+      Context context, Function<REQUEST, String> contextPathExtractor, REQUEST request) {
+    ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
+    if (servletContextPath != null) {
+      return context;
     }
+    String contextPath = contextPathExtractor.apply(request);
+    if (contextPath == null) {
+      // context path isn't know yet
+      return context;
+    }
+    if (contextPath.isEmpty() || contextPath.equals("/")) {
+      // normalize empty context path to null
+      contextPath = null;
+    }
+    return context.with(CONTEXT_KEY, new ServletContextPath(contextPath));
   }
 
-  private ServletContextPath() {}
+  private final String contextPath;
+
+  private ServletContextPath(String contextPath) {
+    this.contextPath = contextPath;
+  }
+
+  public static String prepend(Context context, String spanName) {
+    ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
+    if (servletContextPath != null) {
+      String value = servletContextPath.contextPath;
+      if (value != null) {
+        return value + spanName;
+      }
+    }
+
+    return spanName;
+  }
 }
