@@ -99,6 +99,10 @@ corresponding instrumentation `name`:
 | Vaadin | vaadin|
 | Vert.x RxJava2 | vertx |
 
+**Note:** When using environment variables, dashes (`-`) should be converted to
+underscores (`_`). For example, to suppress traces from `akka-actor` library, set
+`OTEL_INSTRUMENTATION_AKKA_ACTOR_ENABLED` to `false`.
+
 ### Even more fine-grained control
 
 You can also exclude specific classes from being instrumented.
