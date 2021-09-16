@@ -121,6 +121,13 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
 
     when:
     channelPipeline.removeLast()
+
+    then: "http and instrumentation handlers will be remained"
+    channelPipeline.size() == 2
+    channelPipeline.first() == httpHandler
+    channelPipeline.last().getClass() == HttpClientTracingHandler
+
+    when:
     channelPipeline.removeLast()
 
     then: "there is no handler in pipeline"

@@ -57,8 +57,8 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("addAfter"))
-            .and(takesArguments(4))
-            .and(takesArgument(1, String.class)),
+            .and(takesArgument(1, String.class))
+            .and(takesArguments(4)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
   }
 
