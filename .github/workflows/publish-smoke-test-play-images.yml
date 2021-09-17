@@ -48,9 +48,9 @@ jobs:
           echo "Pushing to tag $TAG"
           ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
           ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
-          # TODO (trask) drop JDK 15 after JDK 16 is passing
+          # Play doesn't support Java 16 (or 17) yet
+          # https://github.com/playframework/playframework/pull/10819
           ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
         working-directory: smoke-tests/play
 
   issue:

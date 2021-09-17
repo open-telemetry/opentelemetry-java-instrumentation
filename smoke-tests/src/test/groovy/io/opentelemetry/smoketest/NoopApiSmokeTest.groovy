@@ -16,7 +16,7 @@ import java.util.jar.JarFile
 class NoopApiSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
   }
 
   @Override
@@ -52,7 +52,7 @@ class NoopApiSmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 15]
+    jdk << [8, 11, 16]
   }
 }
 
