@@ -39,6 +39,6 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
       classLoader = classLoader.getParent();
     }
 
-    return new ClassFileLocator.Compound(locators.toArray(new ClassFileLocator[0]));
+    return new ClassFileLocator.Compound(locators);
   }
 }
