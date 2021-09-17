@@ -32,7 +32,8 @@ class PlaySmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 16]
+    // Play doesn't support Java 16 (or 17) yet
+    // https://github.com/playframework/playframework/pull/10819
+    jdk << [8, 11, 15]
   }
-
 }
