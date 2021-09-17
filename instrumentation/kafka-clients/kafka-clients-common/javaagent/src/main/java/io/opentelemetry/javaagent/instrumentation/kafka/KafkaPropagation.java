@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kafkaclients;
+package io.opentelemetry.javaagent.instrumentation.kafka;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -56,9 +56,7 @@ public final class KafkaPropagation {
   }
 
   private static <K, V> void inject(Context context, ProducerRecord<K, V> record) {
-    GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .inject(context, record.headers(), SETTER);
+    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, record, SETTER);
   }
 
   private KafkaPropagation() {}

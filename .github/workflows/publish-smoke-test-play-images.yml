@@ -52,3 +52,24 @@ jobs:
           # https://github.com/playframework/playframework/pull/10819
           ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
         working-directory: smoke-tests/play
+
+  issue:
+    name: Open issue on failure
+    needs: publish
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2.2
+
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - uses: JasonEtco/create-an-issue@v2.5.0
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/template/smoke-test-image-publishing-failed.md

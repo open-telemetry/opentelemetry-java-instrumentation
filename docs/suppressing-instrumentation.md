@@ -6,7 +6,9 @@ You can disable the agent using `-Dotel.javaagent.enabled=false`
 ## Suppressing specific agent instrumentation
 
 You can suppress agent instrumentation of specific libraries by using
-`-Dotel.instrumentation.[name].enabled=false` where `name` is the corresponding instrumentation `name`:
+`-Dotel.instrumentation.[name].enabled=false` (or using the equivalent environment
+variable `OTEL_INSTRUMENTATION_[NAME]_ENABLED`) where `name` (`NAME`) is the
+corresponding instrumentation `name`:
 
 | Library/Framework | Instrumentation name |
 |-------------------|----------------------|
@@ -96,6 +98,10 @@ You can suppress agent instrumentation of specific libraries by using
 | Undertow | undertow|
 | Vaadin | vaadin|
 | Vert.x RxJava2 | vertx |
+
+**Note:** When using environment variables, dashes (`-`) should be converted to
+underscores (`_`). For example, to suppress traces from `akka-actor` library, set
+`OTEL_INSTRUMENTATION_AKKA_ACTOR_ENABLED` to `false`.
 
 ### Even more fine-grained control
 
