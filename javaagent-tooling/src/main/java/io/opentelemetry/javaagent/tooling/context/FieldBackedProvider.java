@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -898,7 +899,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public Object putIfAbsent(Object key, Factory<Object> contextFactory) {
+    public Object putIfAbsent(Object key, Supplier<Object> contextFactory) {
       Object existingContext = realGet(key);
       if (null != existingContext) {
         return existingContext;
@@ -908,7 +909,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         if (null != existingContext) {
           return existingContext;
         }
-        Object context = contextFactory.create();
+        Object context = contextFactory.get();
         realPut(key, context);
         return context;
       }

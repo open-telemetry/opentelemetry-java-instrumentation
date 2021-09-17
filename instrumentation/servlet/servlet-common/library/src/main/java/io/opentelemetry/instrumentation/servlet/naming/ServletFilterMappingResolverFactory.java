@@ -11,8 +11,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
-public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
+public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
+    implements Supplier<MappingResolver> {
 
   protected abstract FILTERREGISTRATION getFilterRegistration();
 
@@ -58,7 +60,8 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
     return mappingsList;
   }
 
-  public final MappingResolver create() {
+  @Override
+  public final MappingResolver get() {
     Collection<String> mappings = getMappings();
     if (mappings == null) {
       return null;
