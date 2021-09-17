@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.naming.ServletFilterMappingResolverFactory;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;
@@ -15,8 +13,7 @@ import jakarta.servlet.ServletRegistration;
 import java.util.Collection;
 
 public class JakartaServletFilterMappingResolverFactory
-    extends ServletFilterMappingResolverFactory<FilterRegistration>
-    implements ContextStore.Factory<MappingResolver> {
+    extends ServletFilterMappingResolverFactory<FilterRegistration> {
   private final FilterConfig filterConfig;
 
   public JakartaServletFilterMappingResolverFactory(FilterConfig filterConfig) {

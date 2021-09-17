@@ -55,9 +55,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
-        if (contextStore
-                .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
-                .getConnectionContext()
+        if (contextStore.putIfAbsent(channel, ChannelTraceContext.FACTORY).getConnectionContext()
             == null) {
           contextStore.get(channel).setConnectionContext(context);
         }
