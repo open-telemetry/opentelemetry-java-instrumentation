@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -51,6 +52,39 @@ public final class TracingOperator {
         ReactorAsyncOperationEndStrategy.newBuilder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
+  }
+
+  private static final ContextKey<Context> TRACE_CONTEXT_KEY =
+      ContextKey.named("otel-trace-context");
+
+  /**
+   * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
+   * reactor.util.context.Context}
+   *
+   * @param context Reactor's context to store trace context in.
+   * @param traceContext Trace context to be stored.
+   */
+  public static reactor.util.context.Context storeInContext(
+      reactor.util.context.Context context, Context traceContext) {
+    return context.put(TRACE_CONTEXT_KEY, traceContext);
+  }
+
+  /**
+   * Gets Trace {@link io.opentelemetry.context.Context} from Reactor {@link
+   * reactor.util.context.Context}
+   *
+   * @param context Reactor's context to get trace context from.
+   * @param traceContext Default value to be returned if no trace context is found on Reactor
+   *     context.
+   * @return Trace context or null.
+   */
+  public static Context fromContextOrDefault(
+      reactor.util.context.Context context, Context traceContext) {
+    if (context == null) {
+      return traceContext;
+    }
+
+    return context.getOrDefault(TRACE_CONTEXT_KEY, traceContext);
   }
 
   /**
