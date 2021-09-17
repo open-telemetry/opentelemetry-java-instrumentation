@@ -99,9 +99,6 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
 
     when:
     channelPipeline.addLast("http", httpHandler)
-    channelPipeline.first() == httpHandler
-    // our handler was also added
-    channelPipeline.last().getClass() == HttpClientTracingHandler
 
     then: "add http and instrumentation handlers"
     channelPipeline.size() == 2
