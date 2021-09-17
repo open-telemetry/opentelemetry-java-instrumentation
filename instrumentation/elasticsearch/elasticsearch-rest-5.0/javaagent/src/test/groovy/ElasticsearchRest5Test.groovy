@@ -75,6 +75,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
@@ -132,6 +133,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }

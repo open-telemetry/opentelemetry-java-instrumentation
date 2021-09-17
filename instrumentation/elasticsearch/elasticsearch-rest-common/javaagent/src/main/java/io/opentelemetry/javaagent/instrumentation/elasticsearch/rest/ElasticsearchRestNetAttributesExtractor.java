@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetAttributesExtractor
     extends NetAttributesExtractor<String, Response> {
   @Override
-  public @Nullable String transport(String s) {
-    return null;
+  public String transport(String s) {
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
