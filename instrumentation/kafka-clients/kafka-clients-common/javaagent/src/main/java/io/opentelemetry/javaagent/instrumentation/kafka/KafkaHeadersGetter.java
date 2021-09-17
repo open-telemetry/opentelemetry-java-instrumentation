@@ -14,6 +14,7 @@ import org.apache.kafka.common.header.Header;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaHeadersGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
+
   @Override
   public Iterable<String> keys(ConsumerRecord<?, ?> carrier) {
     return StreamSupport.stream(carrier.headers().spliterator(), false)

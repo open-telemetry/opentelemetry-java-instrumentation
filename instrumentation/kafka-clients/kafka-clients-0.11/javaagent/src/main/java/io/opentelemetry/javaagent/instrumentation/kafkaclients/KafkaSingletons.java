@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerAdditionalA
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerExperimentalAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaHeadersGetter;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaPropagation;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 

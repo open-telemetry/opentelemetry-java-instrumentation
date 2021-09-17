@@ -172,8 +172,10 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
             "kafka.offset" 0
+            "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
           }
         }
