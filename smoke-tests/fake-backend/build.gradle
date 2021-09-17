@@ -88,7 +88,7 @@ task windowsCollectorImageBuild(type: DockerBuildImage) {
   dependsOn(windowsCollectorImagePrepare)
   inputDir = collectorDockerBuildDir
 
-  it.images.add "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"
+  it.images.add "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/collector-windows:$extraTag"
   it.dockerFile = new File(collectorDockerBuildDir, "windows.dockerfile")
 }
 
@@ -96,6 +96,6 @@ tasks.create("dockerPush", DockerPushImage) {
   group = "publishing"
   description = "Push all Docker images for the test backend"
   dependsOn(windowsBackendImageBuild, windowsCollectorImageBuild)
-  images.set(["ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-windows-$extraTag",
-              "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"])
+  images.set(["ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag",
+              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/collector-windows:$extraTag"])
 }
