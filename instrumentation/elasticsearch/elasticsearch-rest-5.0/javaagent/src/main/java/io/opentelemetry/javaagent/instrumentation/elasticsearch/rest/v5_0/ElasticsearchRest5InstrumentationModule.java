@@ -13,8 +13,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch5RestClientInstrumentationModule extends InstrumentationModule {
-  public Elasticsearch5RestClientInstrumentationModule() {
+public class ElasticsearchRest5InstrumentationModule extends InstrumentationModule {
+  public ElasticsearchRest5InstrumentationModule() {
     super("elasticsearch-rest", "elasticsearch-rest-5.0", "elasticsearch");
   }
 

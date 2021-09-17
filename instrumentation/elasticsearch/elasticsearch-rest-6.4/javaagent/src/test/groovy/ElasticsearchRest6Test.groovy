@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
+class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
   @Shared
   ElasticsearchContainer elasticsearch
 
@@ -29,16 +29,10 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
   HttpHost httpHost
 
   @Shared
-  static RestClient client
+  RestClient client
 
   def setupSpec() {
-    if (!Boolean.getBoolean("testLatestDeps")) {
-      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
-        .withEnv("xpack.ml.enabled", "false")
-        .withEnv("xpack.security.enabled", "false")
-    } else {
-      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16")
-    }
+    elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16")
     elasticsearch.start()
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
@@ -51,6 +45,7 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
         }
       })
       .build()
+
   }
 
   def cleanupSpec() {
@@ -75,6 +70,7 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
@@ -132,6 +128,7 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }

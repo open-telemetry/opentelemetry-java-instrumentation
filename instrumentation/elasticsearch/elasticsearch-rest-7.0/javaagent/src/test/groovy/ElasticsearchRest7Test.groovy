@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
+class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
   @Shared
   ElasticsearchContainer elasticsearch
 
@@ -69,6 +69,7 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
@@ -126,6 +127,7 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
             "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }

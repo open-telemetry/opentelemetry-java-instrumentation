@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v7_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,15 +16,15 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Elasticsearch7RestClientInstrumentationModule extends InstrumentationModule {
-  public Elasticsearch7RestClientInstrumentationModule() {
-    super("elasticsearch-rest", "elasticsearch-rest-7.0", "elasticsearch");
+public class ElasticsearchRest6InstrumentationModule extends InstrumentationModule {
+  public ElasticsearchRest6InstrumentationModule() {
+    super("elasticsearch-rest", "elasticsearch-rest-6.0", "elasticsearch");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // class introduced in 7.0.0
-    return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest");
+    return not(hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest"));
   }
 
   @Override
