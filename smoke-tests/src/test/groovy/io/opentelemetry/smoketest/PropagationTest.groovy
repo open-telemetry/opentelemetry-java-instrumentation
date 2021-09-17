@@ -13,32 +13,32 @@ import static java.util.stream.Collectors.toSet
 
 abstract class PropagationTest extends SmokeTest {
 
-    @Override
-    protected String getTargetImage(String jdk) {
-        "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
-    }
+  @Override
+  protected String getTargetImage(String jdk) {
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
+  }
 
-    def "Should propagate test"() {
-        setup:
-        startTarget(11)
-        when:
-        def response = client().get("/front").aggregate().join()
-        Collection<ExportTraceServiceRequest> traces = waitForTraces()
-        def traceIds = getSpanStream(traces)
-                .map({ TraceId.fromBytes(it.getTraceId().toByteArray()) })
-                .collect(toSet())
+  def "Should propagate test"() {
+    setup:
+    startTarget(11)
+    when:
+    def response = client().get("/front").aggregate().join()
+    Collection<ExportTraceServiceRequest> traces = waitForTraces()
+    def traceIds = getSpanStream(traces)
+      .map({ TraceId.fromBytes(it.getTraceId().toByteArray()) })
+      .collect(toSet())
 
-        then:
-        traceIds.size() == 1
+    then:
+    traceIds.size() == 1
 
-        def traceId = traceIds.first()
+    def traceId = traceIds.first()
 
-        response.contentUtf8() == "${traceId};${traceId}"
+    response.contentUtf8() == "${traceId};${traceId}"
 
-        cleanup:
-        stopTarget()
+    cleanup:
+    stopTarget()
 
-    }
+  }
 
 }
 
@@ -48,76 +48,76 @@ class DefaultPropagationTest extends PropagationTest {
 
 @IgnoreIf({ os.windows })
 class W3CPropagationTest extends PropagationTest {
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "tracecontext"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "tracecontext"]
+  }
 }
 
 @IgnoreIf({ os.windows })
 class B3PropagationTest extends PropagationTest {
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "b3"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "b3"]
+  }
 }
 
 @IgnoreIf({ os.windows })
 class B3MultiPropagationTest extends PropagationTest {
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "b3multi"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "b3multi"]
+  }
 }
 
 @IgnoreIf({ os.windows })
 class JaegerPropagationTest extends PropagationTest {
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "jaeger"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "jaeger"]
+  }
 }
 
 @IgnoreIf({ os.windows })
 class OtTracePropagationTest extends SmokeTest {
-    @Override
-    protected String getTargetImage(String jdk) {
-        "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
-    }
+  @Override
+  protected String getTargetImage(String jdk) {
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
+  }
 
-    // OtTracer only propagates lower half of trace ID so we have to mangle the trace IDs similar to
-    // the Lightstep backend.
-    def "Should propagate test"() {
-        setup:
-        startTarget(11)
-        when:
-        def response = client().get("/front").aggregate().join()
-        Collection<ExportTraceServiceRequest> traces = waitForTraces()
-        def traceIds = getSpanStream(traces)
-                .map({ TraceId.fromBytes(it.getTraceId().toByteArray()).substring(16) })
-                .collect(toSet())
+  // OtTracer only propagates lower half of trace ID so we have to mangle the trace IDs similar to
+  // the Lightstep backend.
+  def "Should propagate test"() {
+    setup:
+    startTarget(11)
+    when:
+    def response = client().get("/front").aggregate().join()
+    Collection<ExportTraceServiceRequest> traces = waitForTraces()
+    def traceIds = getSpanStream(traces)
+      .map({ TraceId.fromBytes(it.getTraceId().toByteArray()).substring(16) })
+      .collect(toSet())
 
-        then:
-        traceIds.size() == 1
+    then:
+    traceIds.size() == 1
 
-        def traceId = traceIds.first()
+    def traceId = traceIds.first()
 
-        response.contentUtf8().matches(/[0-9a-f]{16}${traceId};[0]{16}${traceId}/)
+    response.contentUtf8().matches(/[0-9a-f]{16}${traceId};[0]{16}${traceId}/)
 
-        cleanup:
-        stopTarget()
-    }
+    cleanup:
+    stopTarget()
+  }
 
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "ottrace"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "ottrace"]
+  }
 }
 
 @IgnoreIf({ os.windows })
 class XRayPropagationTest extends PropagationTest {
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return ["otel.propagators": "xray"]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["otel.propagators": "xray"]
+  }
 }
