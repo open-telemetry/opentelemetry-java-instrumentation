@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -196,6 +197,8 @@ class SunMiscUnsafeGenerator {
     addMethod("pageSize", int.class);
     addMethod("defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     addMethod("getLoadAverage", int.class, double[].class, int.class);
+    // this method is missing from internal unsafe in some jdk11 versions
+    addOptionalMethod("invokeCleaner", void.class, ByteBuffer.class);
   }
 
   private static List<String> getNameCandidates(String name) {
@@ -212,12 +215,17 @@ class SunMiscUnsafeGenerator {
     return Collections.singletonList(name);
   }
 
+  private void addOptionalMethod(String name, Class<?> returnType, Class<?>... parameterTypes) {
+    addMethod(name, true, getNameCandidates(name), returnType, parameterTypes);
+  }
+
   private void addMethod(String name, Class<?> returnType, Class<?>... parameterTypes) {
-    addMethod(name, getNameCandidates(name), returnType, parameterTypes);
+    addMethod(name, false, getNameCandidates(name), returnType, parameterTypes);
   }
 
   private void addMethod(
       String name,
+      boolean optional,
       List<String> targetNameCandidates,
       Class<?> returnType,
       Class<?>... parameterTypes) {
@@ -229,6 +237,9 @@ class SunMiscUnsafeGenerator {
       }
     }
     if (targetName == null) {
+      if (optional) {
+        return;
+      }
       throw new IllegalStateException(
           "Could not find suitable method for "
               + name
