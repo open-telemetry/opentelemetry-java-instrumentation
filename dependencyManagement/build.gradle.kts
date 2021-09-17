@@ -17,6 +17,9 @@ rootProject.extra["otelVersion"] = otelVersion
 // Need both BOM and -all
 val groovyVersion = "2.5.11"
 
+rootProject.extra["caffeine2Version"] = "2.9.2"
+rootProject.extra["caffeine3Version"] = "3.0.3"
+
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
 // but we do try to force those libraries' transitive dependencies to new versions where possible
@@ -85,7 +88,6 @@ val DEPENDENCY_SETS = listOf(
 val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.3",
   "com.blogspot.mydailyjava:weak-lock-free:0.18",
-  "com.github.ben-manes.caffeine:caffeine:2.9.0",
   "com.github.stefanbirkner:system-lambda:1.2.0",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "com.google.auto.service:auto-service:1.0",
