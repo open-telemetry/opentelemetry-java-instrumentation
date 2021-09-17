@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
+class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
   @Shared
   ElasticsearchContainer elasticsearch
 

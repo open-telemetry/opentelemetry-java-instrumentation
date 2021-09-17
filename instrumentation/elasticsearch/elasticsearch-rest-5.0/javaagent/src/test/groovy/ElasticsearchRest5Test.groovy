@@ -9,7 +9,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
-import org.elasticsearch.client.Request
 import org.elasticsearch.client.Response
 import org.elasticsearch.client.ResponseListener
 import org.elasticsearch.client.RestClient
@@ -22,7 +21,7 @@ import java.util.concurrent.CountDownLatch
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
+class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
   @Shared
   ElasticsearchContainer elasticsearch
 
@@ -30,14 +29,21 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
   HttpHost httpHost
 
   @Shared
-  RestClient client
+  static RestClient client
 
   def setupSpec() {
-    elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2")
+    if (!Boolean.getBoolean("testLatestDeps")) {
+      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
+        .withEnv("xpack.ml.enabled", "false")
+        .withEnv("xpack.security.enabled", "false")
+    } else {
+      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16")
+    }
     elasticsearch.start()
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
     client = RestClient.builder(httpHost)
+      .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
         @Override
         RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
@@ -53,7 +59,7 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
 
   def "test elasticsearch status"() {
     setup:
-    Response response = client.performRequest(new Request("GET", "_cluster/health"))
+    Response response = client.performRequest("GET", "_cluster/health")
 
     Map result = new JsonSlurper().parseText(EntityUtils.toString(response.entity))
 
@@ -100,7 +106,7 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
       }
     }
     runWithSpan("parent") {
-      client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener)
+      client.performRequestAsync("GET", "_cluster/health", responseListener)
     }
     countDownLatch.await()
 
