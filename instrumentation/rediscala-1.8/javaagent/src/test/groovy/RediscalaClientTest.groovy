@@ -66,11 +66,11 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "Set"
+          name "SET"
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "Set"
+            "${SemanticAttributes.DB_OPERATION.key}" "SET"
           }
         }
       }
@@ -79,36 +79,42 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
 
   def "get command"() {
     when:
-    def write = redisClient.set("bar",
-      "baz",
-      Option.apply(null),
-      Option.apply(null),
-      false,
-      false,
-      new ByteStringSerializerLowPriority.String$())
-    def value = redisClient.get("bar", new ByteStringDeserializerDefault.String$())
+    def (write, value) = runWithSpan("parent") {
+      def w = redisClient.set("bar",
+        "baz",
+        Option.apply(null),
+        Option.apply(null),
+        false,
+        false,
+        new ByteStringSerializerLowPriority.String$())
+      def v = redisClient.get("bar", new ByteStringDeserializerDefault.String$())
+      return new Tuple(w, v)
+    }
 
     then:
     Await.result(write, Duration.apply("3 second")) == true
     Await.result(value, Duration.apply("3 second")) == Option.apply("baz")
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 3) {
         span(0) {
-          name "Set"
+          name "parent"
+        }
+        span(1) {
+          name "SET"
           kind CLIENT
+          childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "Set"
+            "${SemanticAttributes.DB_OPERATION.key}" "SET"
           }
         }
-      }
-      trace(1, 1) {
-        span(0) {
-          name "Get"
+        span(2) {
+          name "GET"
           kind CLIENT
+          childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "Get"
+            "${SemanticAttributes.DB_OPERATION.key}" "GET"
           }
         }
       }
