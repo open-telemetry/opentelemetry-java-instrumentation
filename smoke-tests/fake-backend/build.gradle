@@ -38,7 +38,7 @@ ext {
 
 jib {
   from.image = "gcr.io/distroless/java-debian10:11"
-  to.image = "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-$extraTag"
+  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:$extraTag"
 }
 
 
@@ -58,7 +58,7 @@ task windowsBackendImageBuild(type: DockerBuildImage) {
   dependsOn(windowsBackendImagePrepare)
   inputDir = backendDockerBuildDir
 
-  it.images.add "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-windows-$extraTag"
+  it.images.add "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag"
   it.dockerFile = new File(backendDockerBuildDir, "windows.dockerfile")
 }
 
