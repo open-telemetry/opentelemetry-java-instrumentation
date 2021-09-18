@@ -81,7 +81,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     String backendSuffix = "-windows-20210611.927888723";
 
     String backendImageName =
-        "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20210918.1248928123";
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
@@ -106,7 +106,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             backendLogger);
 
     String collectorImageName =
-        "ghcr.io/open-telemetry/java-test-containers:collector" + backendSuffix;
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-collector-windows:20210918.1248928123";
     if (!imageExists(collectorImageName)) {
       pullImage(collectorImageName);
     }
