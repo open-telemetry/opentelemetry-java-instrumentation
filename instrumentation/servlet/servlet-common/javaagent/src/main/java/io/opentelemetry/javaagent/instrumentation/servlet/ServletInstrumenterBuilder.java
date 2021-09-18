@@ -15,20 +15,32 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private ServletInstrumenterBuilder() {}
+
+  @Nullable
+  private Function<ServletRequestContext<REQUEST>, MappingResolver> mappingResolverFunction;
 
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new ServletInstrumenterBuilder<>();
+  }
+
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setMappingResolverFunction(
+      Function<ServletRequestContext<REQUEST>, MappingResolver> mappingResolverFunction) {
+    this.mappingResolverFunction = mappingResolverFunction;
+    return this;
   }
 
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
@@ -74,7 +86,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     HttpAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesExtractor = new ServletHttpAttributesExtractor<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
-        new ServletSpanNameExtractor<>(accessor);
+        new ServletSpanNameExtractor<>(accessor, mappingResolverFunction);
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesExtractor);
   }

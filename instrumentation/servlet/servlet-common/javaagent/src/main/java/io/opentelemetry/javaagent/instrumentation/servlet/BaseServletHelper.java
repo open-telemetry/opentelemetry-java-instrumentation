@@ -41,10 +41,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return instrumenter.shouldStart(parentContext, requestContext);
   }
 
-  protected Context start(
-      Context parentContext,
-      ServletRequestContext<REQUEST> requestContext,
-      ServerSpanNaming.Source namingSource) {
+  public Context start(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
     Context context = instrumenter.start(parentContext, requestContext);
 
     REQUEST request = requestContext.request();
@@ -56,7 +53,6 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
-    context = ServerSpanNaming.init(context, namingSource);
     context = addServletContextPath(context, request);
 
     attachServerContext(context, request);

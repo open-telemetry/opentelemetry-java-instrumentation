@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.servlet.BaseServletHelper;
@@ -23,11 +21,6 @@ public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpSe
               ServletResponseContext<HttpServletResponse>>
           instrumenter) {
     super(instrumenter, Servlet2Accessor.INSTANCE);
-  }
-
-  public Context startSpan(
-      Context parentContext, ServletRequestContext<HttpServletRequest> requestContext) {
-    return start(parentContext, requestContext, SERVLET);
   }
 
   public void stopSpan(

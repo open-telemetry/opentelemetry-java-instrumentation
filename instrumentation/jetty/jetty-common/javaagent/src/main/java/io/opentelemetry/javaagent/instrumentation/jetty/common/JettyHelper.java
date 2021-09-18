@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.common;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -21,10 +19,6 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);
-  }
-
-  public Context start(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
-    return start(parentContext, requestContext, CONTAINER);
   }
 
   public void end(

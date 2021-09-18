@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
@@ -23,8 +26,10 @@ public final class Jetty11Singletons {
       INSTRUMENTER =
           ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
-                  (context, request, attributes) ->
-                      AppServerBridge.init(context, /* shouldRecordException= */ false))
+                  (context, request, attributes) -> {
+                    context = ServerSpanNaming.init(context, CONTAINER);
+                    return AppServerBridge.init(context, /* shouldRecordException= */ false);
+                  })
               .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
 
   private static final JettyHelper<HttpServletRequest, HttpServletResponse> HELPER =

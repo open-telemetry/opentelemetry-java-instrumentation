@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
@@ -30,6 +33,8 @@ public final class Servlet2Singletons {
             ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
         instrumenter =
             ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+                .addContextCustomizer(
+                    (context, request, attributes) -> ServerSpanNaming.init(context, SERVLET))
                 .build(
                     INSTRUMENTATION_NAME,
                     Servlet2Accessor.INSTANCE,
