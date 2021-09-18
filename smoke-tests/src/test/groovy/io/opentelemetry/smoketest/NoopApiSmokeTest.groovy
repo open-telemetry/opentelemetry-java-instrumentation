@@ -15,44 +15,44 @@ import java.util.jar.JarFile
 @IgnoreIf({ os.windows })
 class NoopApiSmokeTest extends SmokeTest {
 
-  protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
-  }
+    protected String getTargetImage(String jdk) {
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
+    }
 
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return [
-      "OTEL_JAVAAGENT_EXPERIMENTAL_USE_NOOP_API": "true"
-    ]
-  }
+    @Override
+    protected Map<String, String> getExtraEnv() {
+        return [
+                "OTEL_JAVAAGENT_EXPERIMENTAL_USE_NOOP_API": "true"
+        ]
+    }
 
-  @Unroll
-  def "noop sdk smoke test on JDK #jdk"(int jdk) {
-    setup:
-    def output = startTarget(jdk)
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION).toString()
+    @Unroll
+    def "noop sdk smoke test on JDK #jdk"(int jdk) {
+        setup:
+        def output = startTarget(jdk)
+        def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION).toString()
 
-    when:
-    def response = client().get("/greeting").aggregate().join()
-    Collection<ExportTraceServiceRequest> traces = waitForTraces()
+        when:
+        def response = client().get("/greeting").aggregate().join()
+        Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
-    then: "no spans are exported"
-    response.contentUtf8() == "Hi!"
-    traces.isEmpty()
+        then: "no spans are exported"
+        response.contentUtf8() == "Hi!"
+        traces.isEmpty()
 
-    then: "javaagent logs its version on startup"
-    isVersionLogged(output, currentAgentVersion)
+        then: "javaagent logs its version on startup"
+        isVersionLogged(output, currentAgentVersion)
 
 
-    then: "no metrics are exported"
-    def metrics = new MetricsInspector(waitForMetrics())
-    metrics.requests.isEmpty()
+        then: "no metrics are exported"
+        def metrics = new MetricsInspector(waitForMetrics())
+        metrics.requests.isEmpty()
 
-    cleanup:
-    stopTarget()
+        cleanup:
+        stopTarget()
 
-    where:
-    jdk << [8, 11, 16]
+        where:
+        jdk << [8, 11, 16]
   }
 }
 

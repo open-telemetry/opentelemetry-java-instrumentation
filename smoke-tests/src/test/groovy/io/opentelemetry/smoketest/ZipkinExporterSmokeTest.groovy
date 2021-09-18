@@ -12,7 +12,7 @@ import spock.lang.IgnoreIf
 class ZipkinExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210915.1238472439"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
   }
 
   @Override
