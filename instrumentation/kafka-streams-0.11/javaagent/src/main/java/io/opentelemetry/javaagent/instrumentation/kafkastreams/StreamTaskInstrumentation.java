@@ -7,18 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.StateHolder.HOLDER;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIterableWrapper;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public class StreamTaskStopInstrumentation implements TypeInstrumentation {
+public class StreamTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,12 +30,17 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("process")),
-        StreamTaskStopInstrumentation.class.getName() + "$StopSpanAdvice");
+        named("process").and(isPublic()),
+        StreamTaskInstrumentation.class.getName() + "$ProcessAdvice");
+    transformer.applyAdviceToMethod(
+        named("addRecords").and(isPublic()).and(takesArgument(1, Iterable.class)),
+        StreamTaskInstrumentation.class.getName() + "$AddRecordsAdvice");
   }
 
+  // the method decorated by this advice calls PartitionGroup.nextRecord(), which triggers
+  // PartitionGroupInstrumentation that actually starts the span
   @SuppressWarnings("unused")
-  public static class StopSpanAdvice {
+  public static class ProcessAdvice {
 
     @Advice.OnMethodEnter
     public static StateHolder onEnter() {
@@ -51,6 +58,23 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
       if (context != null) {
         holder.closeScope();
         instrumenter().end(context, holder.getRecord(), null, throwable);
+      }
+    }
+  }
+
+  // this advice removes the CONSUMER spans created by the kafka-clients instrumentation
+  @SuppressWarnings("unused")
+  public static class AddRecordsAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(value = 1, readOnly = false)
+            Iterable<? extends ConsumerRecord<?, ?>> records) {
+
+      // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though
+      // there's no current CONSUMER span
+      if (records instanceof KafkaConsumerIterableWrapper) {
+        records = ((KafkaConsumerIterableWrapper<?, ?>) records).unwrap();
       }
     }
   }

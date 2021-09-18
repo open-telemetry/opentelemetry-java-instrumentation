@@ -150,7 +150,7 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
 
       SpanData producerPending, producerProcessed
 
-      trace(0, 3) {
+      trace(0, 1) {
         // kafka-clients PRODUCER
         span(0) {
           name STREAM_PENDING + " send"
@@ -162,39 +162,10 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-        // kafka-stream CONSUMER
-        span(1) {
-          name STREAM_PENDING + " process"
-          kind CONSUMER
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka.offset" 0
-            "kafka.record.queue_time_ms" { it >= 0 }
-            "asdf" "testing"
-          }
-        }
-        // kafka-stream PRODUCER
-        span(2) {
-          name STREAM_PROCESSED + " send"
-          kind PRODUCER
-          childOf span(1)
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-          }
-        }
 
         producerPending = span(0)
-        producerProcessed = span(2)
       }
-      trace(1, 2) {
+      trace(1, 3) {
         // kafka-clients CONSUMER receive
         span(0) {
           name STREAM_PENDING + " receive"
@@ -207,7 +178,7 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
-        // kafka-clients CONSUMER process
+        // kafka-stream CONSUMER
         span(1) {
           name STREAM_PENDING + " process"
           kind CONSUMER
@@ -222,8 +193,22 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
+            "asdf" "testing"
           }
         }
+        // kafka-clients PRODUCER
+        span(2) {
+          name STREAM_PROCESSED + " send"
+          kind PRODUCER
+          childOf span(1)
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+          }
+        }
+
+        producerProcessed = span(2)
       }
       trace(2, 2) {
         // kafka-clients CONSUMER receive

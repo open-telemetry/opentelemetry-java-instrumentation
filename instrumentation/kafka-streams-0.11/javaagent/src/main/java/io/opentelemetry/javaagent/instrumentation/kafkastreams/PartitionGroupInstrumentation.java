@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.wrapSpan;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.StateHolder.HOLDER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,16 +14,19 @@ import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
-public class StreamTaskStartInstrumentation implements TypeInstrumentation {
+// the advice applied by this instrumentation actually starts the span
+public class PartitionGroupInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,11 +40,11 @@ public class StreamTaskStartInstrumentation implements TypeInstrumentation {
             .and(isPackagePrivate())
             .and(named("nextRecord"))
             .and(returns(named("org.apache.kafka.streams.processor.internals.StampedRecord"))),
-        StreamTaskStartInstrumentation.class.getName() + "$StartSpanAdvice");
+        PartitionGroupInstrumentation.class.getName() + "$NextRecordAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class StartSpanAdvice {
+  public static class NextRecordAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return StampedRecord record) {
@@ -53,7 +58,14 @@ public class StreamTaskStartInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      // use the receive CONSUMER span as parent if it's available
+      Context parentContext = currentContext();
+      SpanContext receiveSpanContext =
+          InstrumentationContext.get(ConsumerRecord.class, SpanContext.class).get(record.value);
+      if (receiveSpanContext != null) {
+        parentContext = parentContext.with(wrapSpan(receiveSpanContext));
+      }
+
       if (!instrumenter().shouldStart(parentContext, record.value)) {
         return;
       }
