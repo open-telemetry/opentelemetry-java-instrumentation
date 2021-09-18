@@ -58,15 +58,9 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     context = ServerSpanNaming.init(context, namingSource);
     context = addServletContextPath(context, request);
-    context = customizeContext(context, request);
 
     attachServerContext(context, request);
 
-    return context;
-  }
-
-  /** Override in subclass to customize context that is returned by {@code startSpan}. */
-  protected Context customizeContext(Context context, REQUEST request) {
     return context;
   }
 

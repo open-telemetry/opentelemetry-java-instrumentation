@@ -20,8 +20,8 @@ public final class Servlet3Singletons {
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
-          ServletInstrumenterBuilder.newInstrumenter(
-              INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
+          ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+              .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new ServletHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
 

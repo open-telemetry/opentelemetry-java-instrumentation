@@ -29,11 +29,13 @@ public final class Servlet2Singletons {
     Instrumenter<
             ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
         instrumenter =
-            ServletInstrumenterBuilder.newInstrumenter(
-                INSTRUMENTATION_NAME,
-                Servlet2Accessor.INSTANCE,
-                spanNameExtractor,
-                httpAttributesExtractor);
+            ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+                .build(
+                    INSTRUMENTATION_NAME,
+                    Servlet2Accessor.INSTANCE,
+                    spanNameExtractor,
+                    httpAttributesExtractor);
+
     HELPER = new Servlet2Helper(instrumenter);
   }
 

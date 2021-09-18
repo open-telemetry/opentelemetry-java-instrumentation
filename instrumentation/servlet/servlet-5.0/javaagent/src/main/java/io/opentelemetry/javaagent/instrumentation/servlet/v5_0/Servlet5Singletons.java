@@ -19,8 +19,9 @@ public final class Servlet5Singletons {
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
-          ServletInstrumenterBuilder.newInstrumenter(
-              INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
+          ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+              .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
+
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new ServletHelper<>(INSTRUMENTER, Servlet5Accessor.INSTANCE);
 
