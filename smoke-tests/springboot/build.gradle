@@ -37,6 +37,6 @@ def tag = findProperty("tag") ?: new Date().format("yyyyMMdd.HHmmSS")
 
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-springboot:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = ["8080"]
 }
