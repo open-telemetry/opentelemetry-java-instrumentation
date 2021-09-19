@@ -1,21 +1,21 @@
 ----------------------------------------------------------
- Run at Sat Sep 18 05:22:13 UTC 2021
+ Run at Sun Sep 19 05:21:30 UTC 2021
  snapshot-regression : compares the latest snapshot to the latest stable release
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :            latest         snapshot
-Avg. CPU (user)     :         0.5551046          0.54738
-Max. CPU (user)     :         0.6683417              0.7
-Startup time (ms)   :             17211            17289
-Total allocated MB  :          15176.10         13855.34
-Heap (min)          :          65906680         61220864
-Heap (max)          :         324490744        326107136
-Thread switch rate  :         38142.227        36189.414
-GC time             :        2495935530       2186075421
-Req. mean           :             10.39            10.12
-Req. p95            :             33.10            31.88
-Iter. mean          :            140.49           137.14
-Iter. p95           :            218.53           213.84
-Net read avg (bps)  :        5878370.00       6028841.00
-Net write avg (bps) :       30859437.00      31409877.00
-Peak threads        :                48               47
+Avg. CPU (user)     :         0.5451737       0.54247916
+Max. CPU (user)     :        0.65829146        0.6467662
+Startup time (ms)   :             16159            16451
+Total allocated MB  :          14358.66         13835.50
+Heap (min)          :          65536000         67278336
+Heap (max)          :         332323328        337117184
+Thread switch rate  :          35603.66        36273.363
+GC time             :        2162323211       1854292446
+Req. mean           :              9.51             9.40
+Req. p95            :             29.87            29.46
+Iter. mean          :            129.21           128.19
+Iter. p95           :            208.10           198.36
+Net read avg (bps)  :        6413779.00       6454823.00
+Net write avg (bps) :       33348919.00      33648572.00
+Peak threads        :                46               45
