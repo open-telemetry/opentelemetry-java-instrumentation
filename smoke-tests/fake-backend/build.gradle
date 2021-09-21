@@ -62,40 +62,9 @@ task windowsBackendImageBuild(type: DockerBuildImage) {
   it.dockerFile = new File(backendDockerBuildDir, "windows.dockerfile")
 }
 
-def collectorDockerBuildDir = new File(project.buildDir, "docker-collector")
-
-task windowsCollectorBinaryDownload(type: Download) {
-  doFirst {
-    collectorDockerBuildDir.mkdirs()
-  }
-
-  // TODO (trask) update this to point to new opentelemetry-collector-releases repo
-  //   this involves making two further changes:
-  //     * all the artifacts in the new repo now have version in their name (so no single url for "latest")
-  //     * the artifacts are now tar.gz format, so need to extract the exe
-  //   note: version is hardcoded below because that is last version in the collector repo that has the releases attached
-  src("https://github.com/open-telemetry/opentelemetry-collector/releases/download/v0.33.0/otelcol_windows_amd64.exe")
-  dest(collectorDockerBuildDir)
-}
-
-task windowsCollectorImagePrepare(type: Copy) {
-  dependsOn(windowsCollectorBinaryDownload)
-  into(collectorDockerBuildDir)
-  from("src/docker/collector")
-}
-
-task windowsCollectorImageBuild(type: DockerBuildImage) {
-  dependsOn(windowsCollectorImagePrepare)
-  inputDir = collectorDockerBuildDir
-
-  it.images.add "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-collector-windows:$extraTag"
-  it.dockerFile = new File(collectorDockerBuildDir, "windows.dockerfile")
-}
-
 tasks.create("dockerPush", DockerPushImage) {
   group = "publishing"
   description = "Push all Docker images for the test backend"
-  dependsOn(windowsBackendImageBuild, windowsCollectorImageBuild)
-  images.set(["ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag",
-              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-collector-windows:$extraTag"])
+  dependsOn(windowsBackendImageBuild)
+  images.set(["ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag"])
 }

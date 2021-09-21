@@ -1,8 +1,7 @@
-rootProject.name = 'opentelemetry-java-instrumentation-demo'
+rootProject.name = 'opentelemetry-java-instrumentation-distro-demo'
 
 include "agent"
 include "custom"
 include "instrumentation"
 include "instrumentation:servlet-3"
 include "smoke-tests"
-
