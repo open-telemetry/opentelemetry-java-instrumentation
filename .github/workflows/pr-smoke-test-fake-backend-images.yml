@@ -67,5 +67,5 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
-        run: ./gradlew windowsBackendImageBuild windowsCollectorImageBuild
+        run: ./gradlew windowsBackendImageBuild
         working-directory: smoke-tests/fake-backend

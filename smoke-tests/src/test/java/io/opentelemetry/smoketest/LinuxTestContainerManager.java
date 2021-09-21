@@ -22,12 +22,10 @@ import org.testcontainers.utility.MountableFile;
 
 public class LinuxTestContainerManager extends AbstractTestContainerManager {
   private static final Logger logger = LoggerFactory.getLogger(LinuxTestContainerManager.class);
-  private static final Logger collectorLogger = LoggerFactory.getLogger("Collector");
   private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
 
   private final Network network = Network.newNetwork();
   private GenericContainer<?> backend = null;
-  private GenericContainer<?> collector = null;
   private GenericContainer<?> target = null;
 
   @Override
@@ -42,17 +40,6 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withNetworkAliases(BACKEND_ALIAS)
             .withLogConsumer(new Slf4jLogConsumer(backendLogger));
     backend.start();
-
-    collector =
-        new GenericContainer<>(DockerImageName.parse("otel/opentelemetry-collector-contrib:latest"))
-            .dependsOn(backend)
-            .withNetwork(network)
-            .withNetworkAliases(COLLECTOR_ALIAS)
-            .withLogConsumer(new Slf4jLogConsumer(collectorLogger))
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource(COLLECTOR_CONFIG_RESOURCE), "/etc/otel.yaml")
-            .withCommand("--config /etc/otel.yaml");
-    collector.start();
   }
 
   @Override
@@ -60,11 +47,6 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
     if (backend != null) {
       backend.stop();
       backend = null;
-    }
-
-    if (collector != null) {
-      collector.stop();
-      collector = null;
     }
 
     network.close();
