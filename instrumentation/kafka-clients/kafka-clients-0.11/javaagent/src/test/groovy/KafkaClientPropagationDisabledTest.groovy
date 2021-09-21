@@ -4,16 +4,9 @@
  */
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory
-import org.springframework.kafka.core.DefaultKafkaProducerFactory
-import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.listener.KafkaMessageListenerContainer
-import org.springframework.kafka.listener.MessageListener
+import org.apache.kafka.clients.producer.ProducerRecord
 
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -21,14 +14,9 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
 
   def "should not read remote context when consuming messages if propagation is disabled"() {
-    setup:
-    def senderProps = senderProps()
-    def producerFactory = new DefaultKafkaProducerFactory<String, String>(senderProps)
-    def kafkaTemplate = new KafkaTemplate<String, String>(producerFactory)
-
     when: "send message"
     String message = "Testing without headers"
-    kafkaTemplate.send(SHARED_TOPIC, message)
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, message))
 
     then: "producer span is created"
     assertTraces(1) {
@@ -47,14 +35,12 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
     }
 
     when: "read message without context propagation"
-    // create a thread safe queue to store the received message
-    def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
-    KafkaMessageListenerContainer<Object, Object> container = startConsumer("consumer-without-propagation", records)
+    def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    for (record in records) {
+      runWithSpan("processing") {}
+    }
 
-    then: "independent consumer span is created"
-    // check that the message was received
-    records.poll(5, TimeUnit.SECONDS) != null
-
+    then:
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
@@ -68,7 +54,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
           }
         }
       }
-      trace(1, 2) {
+      trace(1, 3) {
         span(0) {
           name SHARED_TOPIC + " receive"
           kind CONSUMER
@@ -92,55 +78,15 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka.offset" 0
+            "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
+          }
+          span(2) {
+            name "processing"
+            childOf span(1)
           }
         }
       }
-    }
-
-    cleanup:
-    stopProducerFactory(producerFactory)
-    container?.stop()
-  }
-
-  protected KafkaMessageListenerContainer<Object, Object> startConsumer(String groupId, records) {
-    // set up the Kafka consumer properties
-    Map<String, Object> consumerProperties = consumerProps(groupId, "false")
-    consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-
-    // create a Kafka consumer factory
-    def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
-
-    // set the topic that needs to be consumed
-    def containerProperties = containerProperties()
-
-    // create a Kafka MessageListenerContainer
-    def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
-
-    // setup a Kafka message listener
-    container.setupMessageListener(new MessageListener<String, String>() {
-      @Override
-      void onMessage(ConsumerRecord<String, String> record) {
-        records.add(record)
-      }
-    })
-
-    // start the container and underlying message listener
-    container.start()
-
-    // wait until the container has the required number of assigned partitions
-    waitForAssignment(container)
-    container
-  }
-
-  @Override
-  def containerProperties() {
-    try {
-      // Different class names for test and latestDepTest.
-      return Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
-    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-      return Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)
     }
   }
 }
