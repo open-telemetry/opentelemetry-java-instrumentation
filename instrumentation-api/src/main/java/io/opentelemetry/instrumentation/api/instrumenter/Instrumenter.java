@@ -15,8 +15,10 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
@@ -129,8 +131,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setSpanKind(spanKind)
             .setParent(parentContext);
 
+    Instant startTime = null;
     if (startTimeExtractor != null) {
-      spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
+      startTime = startTimeExtractor.extract(request);
+      spanBuilder.setStartTimestamp(startTime);
     }
 
     SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
@@ -150,8 +154,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = contextCustomizer.start(context, request, attributes);
     }
 
-    for (RequestListener requestListener : requestListeners) {
-      context = requestListener.start(context, attributes);
+    if (!requestListeners.isEmpty()) {
+      long startNanos = getNanos(startTime);
+      for (RequestListener requestListener : requestListeners) {
+        context = requestListener.start(context, attributes, startNanos);
+      }
     }
 
     spanBuilder.setAllAttributes(attributes);
@@ -183,8 +190,16 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Attributes attributes = attributesBuilder;
     span.setAllAttributes(attributes);
 
-    for (RequestListener requestListener : requestListeners) {
-      requestListener.end(context, attributes);
+    Instant endTime = null;
+    if (endTimeExtractor != null) {
+      endTime = endTimeExtractor.extract(request, response, error);
+    }
+
+    if (!requestListeners.isEmpty()) {
+      long endNanos = getNanos(endTime);
+      for (RequestListener requestListener : requestListeners) {
+        requestListener.end(context, attributes, endNanos);
+      }
     }
 
     StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
@@ -192,10 +207,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.setStatus(statusCode);
     }
 
-    if (endTimeExtractor != null) {
-      span.end(endTimeExtractor.extract(request, response, error));
+    if (endTime != null) {
+      span.end(endTime);
     } else {
       span.end();
     }
+  }
+
+  private static long getNanos(@Nullable Instant time) {
+    if (time == null) {
+      return System.nanoTime();
+    }
+    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 }
