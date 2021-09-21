@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.tooling.Constants
 import org.slf4j.LoggerFactory
 
 import java.util.concurrent.TimeoutException
+import spock.util.environment.Jvm
 
 // this test is run using
 //   -Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass
@@ -21,6 +22,10 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
+      if (info.getName().toLowerCase().contains("caffeine3") && !Jvm.getCurrent().isJava11Compatible()) {
+        // caffeine 3 classes are compiled for java 11
+        continue
+      }
       for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
         if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
