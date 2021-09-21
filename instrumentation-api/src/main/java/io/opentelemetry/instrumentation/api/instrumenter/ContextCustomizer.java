@@ -17,9 +17,7 @@ public interface ContextCustomizer<REQUEST> {
 
   /**
    * Context customizer method that is called during {@link Instrumenter#start(Context, Object)},
-   * allowing customization * of the {@link Context} that is returned from that method.
+   * allowing customization of the {@link Context} that is returned from that method.
    */
-  // TODO (trask) should we pass startNanos
-  //  similar to https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4155?
   Context start(Context context, REQUEST request, Attributes startAttributes);
 }
