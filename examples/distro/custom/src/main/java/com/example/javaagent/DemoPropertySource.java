@@ -14,7 +14,7 @@ public class DemoPropertySource implements ConfigPropertySource {
   @Override
   public Map<String, String> getProperties() {
     return Map.of(
-        "otel.exporter.otlp.endpoint", "http://collector:4317",
+        "otel.exporter.otlp.endpoint", "http://backend:8080",
         "otel.exporter.otlp.insecure", "true",
         "otel.config.max.attrs", "16");
   }
