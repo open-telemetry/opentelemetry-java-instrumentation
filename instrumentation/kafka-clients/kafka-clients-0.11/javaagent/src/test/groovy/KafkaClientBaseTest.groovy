@@ -4,19 +4,23 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.junit.Rule
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory
-import org.springframework.kafka.core.DefaultKafkaProducerFactory
-import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.listener.KafkaMessageListenerContainer
-import org.springframework.kafka.listener.MessageListener
-import org.springframework.kafka.test.rule.KafkaEmbedded
-import org.springframework.kafka.test.utils.ContainerTestUtils
-import org.springframework.kafka.test.utils.KafkaTestUtils
+import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.Producer
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.serialization.IntegerDeserializer
+import org.apache.kafka.common.serialization.IntegerSerializer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
+import org.testcontainers.containers.KafkaContainer
+import spock.lang.Shared
 import spock.lang.Unroll
 
-import java.util.concurrent.LinkedBlockingQueue
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
@@ -26,75 +30,67 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
   private static final boolean propagationEnabled = Boolean.parseBoolean(
     System.getProperty("otel.instrumentation.kafka.client-propagation.enabled", "true"))
 
-  @Rule
-  KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)
+  @Shared
+  static KafkaContainer kafka
+  @Shared
+  static Producer<Integer, String> producer
+  @Shared
+  static Consumer<Integer, String> consumer
 
-  abstract containerProperties()
+  def setupSpec() {
+    kafka = new KafkaContainer()
+    kafka.start()
 
-  Map<String, Object> senderProps() {
-    return KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    // create test topic
+    AdminClient.create(["bootstrap.servers": kafka.bootstrapServers]).withCloseable { admin ->
+      admin.createTopics([new NewTopic(SHARED_TOPIC, 1, (short) 1)]).all().get(10, TimeUnit.SECONDS)
+    }
+
+    // values copied from spring's KafkaTestUtils
+    def producerProps = [
+      "bootstrap.servers": kafka.bootstrapServers,
+      "retries"          : 0,
+      "batch.size"       : "16384",
+      "linger.ms"        : 1,
+      "buffer.memory"    : "33554432",
+      "key.serializer"   : IntegerSerializer.class,
+      "value.serializer" : StringSerializer.class
+    ]
+    producer = new KafkaProducer<>(producerProps)
+
+    // values copied from spring's KafkaTestUtils
+    def consumerProps = [
+      "bootstrap.servers"      : kafka.bootstrapServers,
+      "group.id"               : "test",
+      "enable.auto.commit"     : "false",
+      "auto.commit.interval.ms": "10",
+      "session.timeout.ms"     : "60000",
+      "key.deserializer"       : IntegerDeserializer.class,
+      "value.deserializer"     : StringDeserializer.class
+    ]
+    consumer = new KafkaConsumer<>(consumerProps)
+
+    // assign only existing topic partition
+    consumer.assign([new TopicPartition(SHARED_TOPIC, 0)])
   }
 
-  Map<String, Object> consumerProps(String group, String autoCommit) {
-    return KafkaTestUtils.consumerProps(group, autoCommit, embeddedKafka)
-  }
-
-  void waitForAssignment(Object container) {
-    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
-  }
-
-  def stopProducerFactory(DefaultKafkaProducerFactory producerFactory) {
-    producerFactory.stop()
+  def cleanupSpec() {
+    consumer?.close()
+    producer?.close()
+    kafka.stop()
   }
 
   @Unroll
   def "test kafka client header propagation manual config"() {
-    setup:
-    def senderProps = senderProps()
-    def producerFactory = new DefaultKafkaProducerFactory<String, String>(senderProps)
-    def kafkaTemplate = new KafkaTemplate<String, String>(producerFactory)
-
-    // set up the Kafka consumer properties
-    def consumerProperties = consumerProps("sender", "false")
-
-    // create a Kafka consumer factory
-    def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
-
-    // set the topic that needs to be consumed
-    def containerProperties = containerProperties()
-
-    // create a Kafka MessageListenerContainer
-    def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
-
-    // create a thread safe queue to store the received message
-    def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
-
-    // setup a Kafka message listener
-    container.setupMessageListener(new MessageListener<String, String>() {
-      @Override
-      void onMessage(ConsumerRecord<String, String> record) {
-        records.add(record)
-      }
-    })
-
-    // start the container and underlying message listener
-    container.start()
-
-    // wait until the container has the required number of assigned partitions
-    waitForAssignment(container)
-
     when:
     String message = "Testing without headers"
-    kafkaTemplate.send(SHARED_TOPIC, message)
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, message))
 
     then:
     // check that the message was received
-    def received = records.poll(5, TimeUnit.SECONDS)
-
-    received.headers().iterator().hasNext() == propagationEnabled
-
-    cleanup:
-    stopProducerFactory(producerFactory)
-    container?.stop()
+    def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    for (record in records) {
+      assert record.headers().iterator().hasNext() == propagationEnabled
+    }
   }
 }
