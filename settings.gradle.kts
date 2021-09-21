@@ -1,4 +1,12 @@
 pluginManagement {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+    maven {
+      url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
+  }
+
   plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
@@ -9,6 +17,7 @@ pluginManagement {
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
     id("nebula.release") version "15.3.1"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
   }
 }
 
@@ -49,6 +58,8 @@ buildCache {
 }
 
 rootProject.name = "opentelemetry-java-instrumentation"
+
+includeBuild("conventions")
 
 include(":muzzle")
 
