@@ -52,7 +52,6 @@ abstract class IntegrationTest {
   }
 
   private static GenericContainer backend;
-  private static GenericContainer collector;
 
   @BeforeAll
   static void setupSpec() {
@@ -65,17 +64,6 @@ abstract class IntegrationTest {
             .withNetworkAliases("backend")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     backend.start();
-
-    collector =
-        new GenericContainer<>("otel/opentelemetry-collector-contrib-dev:latest")
-            .dependsOn(backend)
-            .withNetwork(network)
-            .withNetworkAliases("collector")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-            .withCommand("--config /etc/otel.yaml");
-    collector.start();
   }
 
   protected GenericContainer<?> target;
@@ -136,7 +124,6 @@ abstract class IntegrationTest {
   @AfterAll
   static void cleanupSpec() {
     backend.stop();
-    collector.stop();
   }
 
   protected static int countResourcesByValue(
