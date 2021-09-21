@@ -16,6 +16,7 @@ import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.bootstrap.BootstrapPackagesConfigurer;
@@ -142,9 +143,6 @@ public class AgentInstaller {
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
             .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
-    // FIXME: we cannot enable it yet due to BB/JVM bug, see
-    // https://github.com/raphw/byte-buddy/issues/558
-    // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
@@ -177,6 +175,7 @@ public class AgentInstaller {
     logger.debug("Installed {} extension(s)", numberOfLoadedExtensions);
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
+    ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
     runAfterAgentListeners(agentListeners, config);
     return resettableClassFileTransformer;
   }

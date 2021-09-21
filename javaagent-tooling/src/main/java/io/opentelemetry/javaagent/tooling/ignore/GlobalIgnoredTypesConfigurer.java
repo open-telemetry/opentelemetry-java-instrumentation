@@ -56,12 +56,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // clojure
     builder.ignoreClass("clojure.").ignoreClass("$fn__");
 
-    builder
-        .ignoreClass("io.opentelemetry.javaagent.")
-        // FIXME: We should remove this once
-        // https://github.com/raphw/byte-buddy/issues/558 is fixed
-        .allowClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper")
-        .allowClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper");
+    builder.ignoreClass("io.opentelemetry.javaagent.");
 
     builder
         .ignoreClass("java.")
@@ -72,6 +67,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("java.util.concurrent.")
         .allowClass("java.lang.reflect.Proxy")
         .allowClass("java.lang.ClassLoader")
+        .allowClass("java.lang.invoke.InnerClassLambdaMetafactory")
         // Concurrent instrumentation modifies the structure of
         // Cleaner class incompatibly with java9+ modules.
         // Working around until a long-term fix for modules can be
