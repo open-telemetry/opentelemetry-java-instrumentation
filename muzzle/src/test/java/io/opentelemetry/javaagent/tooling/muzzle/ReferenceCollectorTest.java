@@ -14,6 +14,7 @@ import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextTestClasses.State;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
@@ -21,7 +22,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFl
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextTestClasses.State;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
