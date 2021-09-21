@@ -16,40 +16,40 @@ import static java.util.stream.Collectors.toSet
 @IgnoreIf({ os.windows })
 class JaegerExporterSmokeTest extends SmokeTest {
 
-    protected String getTargetImage(String jdk) {
-        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
-    }
+  protected String getTargetImage(String jdk) {
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
+  }
 
-    @Override
-    protected Map<String, String> getExtraEnv() {
-        return [
-                "OTEL_TRACES_EXPORTER"         : "jaeger",
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": "http://collector:14250"
-        ]
-    }
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return [
+      "OTEL_TRACES_EXPORTER"         : "jaeger",
+      "OTEL_EXPORTER_JAEGER_ENDPOINT": "http://collector:14250"
+    ]
+  }
 
-    def "spring boot smoke test with jaeger grpc"() {
-        setup:
-        startTarget(11)
+  def "spring boot smoke test with jaeger grpc"() {
+    setup:
+    startTarget(11)
 
-        def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
-        when:
-        def response = client().get("/greeting").aggregate().join()
-        Collection<ExportTraceServiceRequest> traces = waitForTraces()
+    when:
+    def response = client().get("/greeting").aggregate().join()
+    Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
-        then:
-        response.contentUtf8() == "Hi!"
-        countSpansByName(traces, '/greeting') == 1
-        countSpansByName(traces, 'WebController.greeting') == 1
-        countSpansByName(traces, 'WebController.withSpan') == 1
+    then:
+    response.contentUtf8() == "Hi!"
+    countSpansByName(traces, '/greeting') == 1
+    countSpansByName(traces, 'WebController.greeting') == 1
+    countSpansByName(traces, 'WebController.withSpan') == 1
 
-        [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
-                .map { it.stringValue }
-                .collect(toSet())
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+      .map { it.stringValue }
+      .collect(toSet())
 
-        cleanup:
-        stopTarget()
+    cleanup:
+    stopTarget()
 
   }
 
