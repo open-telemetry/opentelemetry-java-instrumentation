@@ -7,7 +7,7 @@ muzzle {
   pass {
     group.set("org.apache.kafka")
     module.set("kafka-streams")
-    versions.set("[0.11.0.0,)")
+    versions.set("[0.11.0.0,3)")
   }
 }
 
@@ -30,9 +30,9 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("org.assertj:assertj-core")
 
-  add("latestDepTestImplementation", "org.apache.kafka:kafka_2.13:+")
-  add("latestDepTestImplementation", "org.apache.kafka:kafka-clients:+")
-  add("latestDepTestImplementation", "org.apache.kafka:kafka-streams:+")
+  add("latestDepTestImplementation", "org.apache.kafka:kafka_2.13:2.+")
+  add("latestDepTestImplementation", "org.apache.kafka:kafka-clients:2.+")
+  add("latestDepTestImplementation", "org.apache.kafka:kafka-streams:2.+")
   add("latestDepTestImplementation", "org.springframework.kafka:spring-kafka:+")
   add("latestDepTestImplementation", "org.springframework.kafka:spring-kafka-test:+")
 }
