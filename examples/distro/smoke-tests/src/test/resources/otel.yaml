@@ -18,7 +18,6 @@ exporters:
     loglevel: debug
   otlp:
     endpoint: backend:8080
-    insecure: true
 
 service:
   pipelines:
