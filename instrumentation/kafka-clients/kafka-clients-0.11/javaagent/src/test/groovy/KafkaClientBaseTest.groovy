@@ -53,8 +53,8 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
       "batch.size"       : "16384",
       "linger.ms"        : 1,
       "buffer.memory"    : "33554432",
-      "key.serializer"   : IntegerSerializer.class,
-      "value.serializer" : StringSerializer.class
+      "key.serializer"   : IntegerSerializer,
+      "value.serializer" : StringSerializer
     ]
     producer = new KafkaProducer<>(producerProps)
 
@@ -65,8 +65,8 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
       "enable.auto.commit"     : "false",
       "auto.commit.interval.ms": "10",
       "session.timeout.ms"     : "60000",
-      "key.deserializer"       : IntegerDeserializer.class,
-      "value.deserializer"     : StringDeserializer.class
+      "key.deserializer"       : IntegerDeserializer,
+      "value.deserializer"     : StringDeserializer
     ]
     consumer = new KafkaConsumer<>(consumerProps)
 
