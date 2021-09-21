@@ -12,7 +12,8 @@ dependencies {
   testLibrary("org.springframework:spring-core:5.2.9.RELEASE")
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
 
-  latestDepTestLibrary("org.apache.kafka:kafka_2.13:+")
+  latestDepTestLibrary("org.apache.kafka:kafka-clients:2.+")
+  latestDepTestLibrary("org.apache.kafka:kafka_2.13:2.+")
 }
 
 tasks {
