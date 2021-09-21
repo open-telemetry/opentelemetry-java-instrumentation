@@ -64,18 +64,33 @@ task windowsBackendImageBuild(type: DockerBuildImage) {
 
 def collectorDockerBuildDir = new File(project.buildDir, "docker-collector")
 
-task windowsCollectorBinaryDownload(type: Download) {
-  doFirst {
-    collectorDockerBuildDir.mkdirs()
-  }
+task windowsCollectorBinaryDownload(){
 
-  // TODO (trask) update this to point to new opentelemetry-collector-releases repo
-  //   this involves making two further changes:
-  //     * all the artifacts in the new repo now have version in their name (so no single url for "latest")
-  //     * the artifacts are now tar.gz format, so need to extract the exe
-  //   note: version is hardcoded below because that is last version in the collector repo that has the releases attached
-  src("https://github.com/open-telemetry/opentelemetry-collector/releases/download/v0.33.0/otelcol_windows_amd64.exe")
-  dest(collectorDockerBuildDir)
+  def latestDownloadUrl = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/latest/download"
+  def conn = new URL(latestDownloadUrl).openConnection()
+  conn.followRedirects = false
+  def latestVersion = conn.headerFields["Location"][0].replaceFirst(/^.*\/v/, '')
+  def versionedTarFile = new File("${collectorDockerBuildDir}/otelcol_${latestVersion}_windows_amd64.tar.gz")
+
+  outputs.files(versionedTarFile, "${collectorDockerBuildDir}/otelcol_windows_amd64.exe")
+
+  doLast {
+    collectorDockerBuildDir.mkdirs()
+    println("Latest version is: ${latestVersion}")
+    def latestUrlTgz = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${latestVersion}/otelcol_${latestVersion}_windows_amd64.tar.gz"
+    println("Full URL: ${latestUrlTgz}")
+    if(versionedTarFile.exists()){
+      println("File already exists, skipping download")
+    }
+    else {
+      conn = new URL( latestUrlTgz ).openConnection()
+      conn.followRedirects = false
+      def actualUrl = conn.headerFields["Location"][0]
+      versionedTarFile << new URL(actualUrl).openConnection().content
+      "tar -xvzf ${versionedTarFile} otelcol.exe".execute()
+      "mv otelcol.exe ${collectorDockerBuildDir}/otelcol_windows_amd64.exe".execute()
+    }
+  }
 }
 
 task windowsCollectorImagePrepare(type: Copy) {
