@@ -10,10 +10,10 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
-import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
-import io.opentelemetry.javaagent.extension.muzzle.Flag;
-import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;

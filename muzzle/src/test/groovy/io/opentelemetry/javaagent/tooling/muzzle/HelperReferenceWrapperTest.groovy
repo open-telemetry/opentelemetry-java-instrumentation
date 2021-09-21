@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle
 
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef
-import io.opentelemetry.javaagent.extension.muzzle.Flag
-import io.opentelemetry.javaagent.extension.muzzle.Source
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
+import io.opentelemetry.javaagent.tooling.muzzle.references.Source
 import muzzle.HelperReferenceWrapperTestClasses
 import net.bytebuddy.jar.asm.Type
 import net.bytebuddy.pool.TypePool
 import spock.lang.Shared
 import spock.lang.Specification
 
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag
 import static java.util.stream.Collectors.toList
 
 class HelperReferenceWrapperTest extends Specification {

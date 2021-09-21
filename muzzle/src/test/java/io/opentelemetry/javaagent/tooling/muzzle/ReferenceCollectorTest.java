@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
-import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
+import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -14,13 +14,13 @@ import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
-import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
-import io.opentelemetry.javaagent.extension.muzzle.Flag;
-import io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
-import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextTestClasses.State;
 import java.util.Arrays;
 import java.util.List;
