@@ -46,8 +46,6 @@ configurations {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-aws")
 
@@ -73,7 +71,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
 
   // needed for SNS
-  testImplementation("org.testcontainers:localstack:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:localstack")
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")

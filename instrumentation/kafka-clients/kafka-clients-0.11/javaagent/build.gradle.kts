@@ -11,8 +11,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -21,7 +19,7 @@ dependencies {
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  testImplementation("org.testcontainers:kafka:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:kafka")
 }
 
 tasks {
