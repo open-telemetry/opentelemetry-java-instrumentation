@@ -18,8 +18,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   compileOnly("org.elasticsearch.client:rest:5.0.0")
 
@@ -31,7 +29,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 
-  testImplementation("org.testcontainers:elasticsearch:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:elasticsearch")
   testLibrary("org.elasticsearch.client:rest:5.0.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+")

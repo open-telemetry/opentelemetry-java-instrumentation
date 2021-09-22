@@ -11,8 +11,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
 
@@ -21,7 +19,7 @@ dependencies {
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("org.testcontainers:kafka:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:kafka")
 
   latestDepTestLibrary("org.apache.kafka:kafka-streams:2.+")
 }

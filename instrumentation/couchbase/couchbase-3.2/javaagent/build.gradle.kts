@@ -13,8 +13,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 sourceSets {
   main {
     val shadedDep = project(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
@@ -29,7 +27,7 @@ dependencies {
 
   testLibrary("com.couchbase.client:java-client:3.2.0")
 
-  testImplementation("org.testcontainers:couchbase:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:couchbase")
 }
 
 tasks {
