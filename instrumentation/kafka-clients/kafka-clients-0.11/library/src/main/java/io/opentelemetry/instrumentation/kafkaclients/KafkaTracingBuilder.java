@@ -7,9 +7,8 @@ package io.opentelemetry.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.kafka.KafkaSingletons;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.kafka.KafkaUtils;
-import io.opentelemetry.instrumentation.kafka.ReceivedRecords;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,8 +18,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public class KafkaTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<ProducerRecord<?, ?>, Void>> producerExtractors =
-      new ArrayList<>();
-  private final List<AttributesExtractor<ReceivedRecords, Void>> consumerReceiveExtractors =
       new ArrayList<>();
   private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerProcessExtractors =
       new ArrayList<>();
@@ -33,10 +30,6 @@ public class KafkaTracingBuilder {
     producerExtractors.add(extractor);
   }
 
-  public void addConsumerReceiveExtractors(AttributesExtractor<ReceivedRecords, Void> extractor) {
-    consumerReceiveExtractors.add(extractor);
-  }
-
   public void addConsumerProcessExtractors(
       AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
     consumerProcessExtractors.add(extractor);
@@ -44,22 +37,15 @@ public class KafkaTracingBuilder {
 
   @SuppressWarnings("unchecked")
   public KafkaTracing build() {
-    KafkaTracing tracing = new KafkaTracing();
-    tracing.setProducerInstrumenter(
+    return new KafkaTracing(
         KafkaUtils.buildProducerInstrumenter(
-            KafkaSingletons.INSTRUMENTATION_NAME,
+            KafkaTracing.INSTRUMENTATION_NAME,
             openTelemetry,
-            producerExtractors.toArray(new AttributesExtractor[0])));
-    tracing.setConsumerReceiveInstrumenter(
-        KafkaUtils.buildConsumerReceiveInstrumenter(
-            KafkaSingletons.INSTRUMENTATION_NAME,
+            producerExtractors.toArray(new AttributesExtractor[0])),
+        KafkaUtils.buildConsumerOperationInstrumenter(
+            KafkaTracing.INSTRUMENTATION_NAME,
             openTelemetry,
-            consumerReceiveExtractors.toArray(new AttributesExtractor[0])));
-    tracing.setConsumerProcessInstrumenter(
-        KafkaUtils.buildConsumerProcessInstrumenter(
-            KafkaSingletons.INSTRUMENTATION_NAME,
-            openTelemetry,
+            MessageOperation.RECEIVE,
             consumerProcessExtractors.toArray(new AttributesExtractor[0])));
-    return tracing;
   }
 }

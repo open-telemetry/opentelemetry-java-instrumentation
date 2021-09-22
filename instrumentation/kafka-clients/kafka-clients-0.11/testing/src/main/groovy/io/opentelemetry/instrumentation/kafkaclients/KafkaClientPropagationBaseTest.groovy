@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.apache.kafka.clients.producer.ProducerRecord
 import spock.lang.Unroll
 
+import java.time.Duration
+
 abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest implements AgentTestTrait {
 
   private static final boolean propagationEnabled = Boolean.parseBoolean(
@@ -21,8 +23,9 @@ abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest implem
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message))
 
     then:
+    awaitUntilConsumerIsReady()
     // check that the message was received
-    def records = records(1)
+    def records = consumer.poll(Duration.ofSeconds(5).toMillis())
     for (record in records) {
       assert record.headers().iterator().hasNext() == propagationEnabled
     }

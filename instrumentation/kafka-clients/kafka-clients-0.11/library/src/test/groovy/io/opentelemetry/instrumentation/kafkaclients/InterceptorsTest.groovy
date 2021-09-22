@@ -83,7 +83,7 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
           hasNoParent()
         }
       }
-      trace(2, 2) {
+      trace(2, 1) {
         span(0) {
           name SHARED_TOPIC + " receive"
           kind CONSUMER
@@ -93,17 +93,6 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-          }
-        }
-        span(1) {
-          name SHARED_TOPIC + " process"
-          kind CONSUMER
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
             "kafka.offset" Long

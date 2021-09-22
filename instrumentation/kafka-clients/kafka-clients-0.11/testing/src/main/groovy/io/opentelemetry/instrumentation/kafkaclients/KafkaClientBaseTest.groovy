@@ -13,7 +13,6 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
@@ -21,9 +20,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.testcontainers.containers.KafkaContainer
 import spock.lang.Shared
-import spock.lang.Unroll
 
-import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -39,6 +36,8 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
   static Consumer<Integer, String> consumer
   @Shared
   static CountDownLatch consumerReady = new CountDownLatch(1)
+
+  static TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, 0)
 
   def setupSpec() {
     kafka = new KafkaContainer()
@@ -95,23 +94,6 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
     consumer?.close()
     producer?.close()
     kafka.stop()
-  }
-
-  @Unroll
-  def "test kafka client header propagation manual config"() {
-    when:
-    String message = "Testing without headers"
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, message))
-      .get(5, TimeUnit.SECONDS)
-
-    then:
-    awaitUntilConsumerIsReady()
-
-    def records = consumer.poll(Duration.ofSeconds(1).toMillis())
-    records.count() == 1
-    for (record in records) {
-      assert record.headers().iterator().hasNext() == propagationEnabled
-    }
   }
 
   // Kafka's eventual consistency behavior forces us to do a couple of empty poll() calls until it gets properly assigned a topic partition

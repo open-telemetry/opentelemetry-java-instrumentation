@@ -22,7 +22,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 @SuppressWarnings("unchecked")
 public final class KafkaUtils {
 
-  static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
+  public static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
       String instrumentationName) {
     return buildProducerInstrumenter(instrumentationName, GlobalOpenTelemetry.get());
   }
@@ -43,7 +43,7 @@ public final class KafkaUtils {
         .newInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
+  public static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
       String instrumentationName) {
     return buildConsumerReceiveInstrumenter(instrumentationName, GlobalOpenTelemetry.get());
   }
@@ -65,17 +65,19 @@ public final class KafkaUtils {
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter(
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter(
       String instrumentationName) {
-    return buildConsumerProcessInstrumenter(instrumentationName, GlobalOpenTelemetry.get());
+    return buildConsumerOperationInstrumenter(
+        instrumentationName, GlobalOpenTelemetry.get(), MessageOperation.PROCESS);
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter(
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerOperationInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
+      MessageOperation operation,
       AttributesExtractor<ConsumerRecord<?, ?>, Void>... extractors) {
     KafkaConsumerAttributesExtractor attributesExtractor =
-        new KafkaConsumerAttributesExtractor(MessageOperation.PROCESS);
+        new KafkaConsumerAttributesExtractor(operation);
     SpanNameExtractor<ConsumerRecord<?, ?>> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 

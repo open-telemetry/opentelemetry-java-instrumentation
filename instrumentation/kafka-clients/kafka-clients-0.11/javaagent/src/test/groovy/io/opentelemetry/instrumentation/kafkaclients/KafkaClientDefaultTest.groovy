@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.TopicPartition
 
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -192,7 +191,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     when: "receive messages"
     awaitUntilConsumerIsReady()
     def consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis())
-    def recordsInPartition = consumerRecords.records(new TopicPartition(SHARED_TOPIC, partition))
+    def recordsInPartition = consumerRecords.records(topicPartition)
     recordsInPartition.size() == 1
 
     // iterate over records to generate spans

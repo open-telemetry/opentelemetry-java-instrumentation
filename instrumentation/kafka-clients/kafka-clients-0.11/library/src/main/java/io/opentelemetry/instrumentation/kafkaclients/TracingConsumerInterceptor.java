@@ -5,19 +5,18 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
-public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
+public class TracingConsumerInterceptor<K, V> extends KafkaTracingHolder
+    implements ConsumerInterceptor<K, V> {
 
   @Override
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    KafkaTracing tracing = KafkaTracing.newBuilder(GlobalOpenTelemetry.get()).build();
-    tracing.buildAndFinishSpan(records);
+    getTracing().buildAndFinishSpan(records);
     return records;
   }
 
