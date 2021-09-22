@@ -72,16 +72,14 @@ public final class KafkaSingletons {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
 
-    if (KafkaPropagation.isPropagationEnabled()) {
-      if (ExperimentalConfig.get().suppressMessagingReceiveSpans()) {
-        return builder.newConsumerInstrumenter(new KafkaHeadersGetter());
-      } else {
-        builder.addSpanLinksExtractor(
-            SpanLinksExtractor.fromUpstreamRequest(
-                GlobalOpenTelemetry.getPropagators(), new KafkaHeadersGetter()));
-        return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
-      }
+    if (!KafkaPropagation.isPropagationEnabled()) {
+      return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+    } else if (ExperimentalConfig.get().suppressMessagingReceiveSpans()) {
+      return builder.newConsumerInstrumenter(new KafkaHeadersGetter());
     } else {
+      builder.addSpanLinksExtractor(
+          SpanLinksExtractor.fromUpstreamRequest(
+              GlobalOpenTelemetry.getPropagators(), new KafkaHeadersGetter()));
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
   }
