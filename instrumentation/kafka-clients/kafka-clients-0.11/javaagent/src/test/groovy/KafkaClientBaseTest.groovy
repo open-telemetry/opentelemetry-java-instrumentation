@@ -7,6 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
@@ -21,6 +22,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
@@ -36,6 +38,8 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
   static Producer<Integer, String> producer
   @Shared
   static Consumer<Integer, String> consumer
+  @Shared
+  static CountDownLatch consumerReady = new CountDownLatch(1)
 
   def setupSpec() {
     kafka = new KafkaContainer()
@@ -58,20 +62,27 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
     ]
     producer = new KafkaProducer<>(producerProps)
 
-    // values copied from spring's KafkaTestUtils
     def consumerProps = [
       "bootstrap.servers"      : kafka.bootstrapServers,
       "group.id"               : "test",
-      "enable.auto.commit"     : "false",
+      "enable.auto.commit"     : "true",
       "auto.commit.interval.ms": "10",
-      "session.timeout.ms"     : "60000",
+      "session.timeout.ms"     : "30000",
       "key.deserializer"       : IntegerDeserializer,
       "value.deserializer"     : StringDeserializer
     ]
     consumer = new KafkaConsumer<>(consumerProps)
 
-    // assign only existing topic partition
-    consumer.assign([new TopicPartition(SHARED_TOPIC, 0)])
+    consumer.subscribe([SHARED_TOPIC], new ConsumerRebalanceListener() {
+      @Override
+      void onPartitionsRevoked(Collection<TopicPartition> collection) {
+      }
+
+      @Override
+      void onPartitionsAssigned(Collection<TopicPartition> collection) {
+        consumerReady.countDown()
+      }
+    })
   }
 
   def cleanupSpec() {
@@ -85,12 +96,32 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
     when:
     String message = "Testing without headers"
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message))
+      .get(5, TimeUnit.SECONDS)
 
     then:
-    // check that the message was received
-    def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    awaitUntilConsumerIsReady()
+
+    def records = consumer.poll(Duration.ofSeconds(1).toMillis())
+    records.count() == 1
     for (record in records) {
       assert record.headers().iterator().hasNext() == propagationEnabled
     }
+  }
+
+  // Kafka's eventual consistency behavior forces us to do a couple of empty poll() calls until it gets properly assigned a topic partition
+  static void awaitUntilConsumerIsReady() {
+    if (consumerReady.await(0, TimeUnit.SECONDS)) {
+      return
+    }
+    for (i in 0..<10) {
+      consumer.poll(0)
+      if (consumerReady.await(1, TimeUnit.SECONDS)) {
+        break
+      }
+    }
+    if (consumerReady.getCount() != 0) {
+      throw new AssertionError("Consumer wasn't assigned any partitions!")
+    }
+    consumer.seekToBeginning([])
   }
 }

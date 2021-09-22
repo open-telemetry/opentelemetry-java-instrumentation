@@ -35,7 +35,11 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
     }
 
     when: "read message without context propagation"
+    awaitUntilConsumerIsReady()
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    records.count() == 1
+
+    // iterate over records to generate spans
     for (record in records) {
       runWithSpan("processing") {}
     }

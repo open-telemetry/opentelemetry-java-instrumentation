@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
 
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -26,12 +27,15 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         } else {
           runWithSpan("producer exception: " + ex) {}
         }
-      }
+      }.get(5, TimeUnit.SECONDS)
     }
 
     then:
-    // check that the message was received
+    awaitUntilConsumerIsReady()
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    records.count() == 1
+
+    // iterate over records to generate spans
     for (record in records) {
       runWithSpan("processing") {
         assert record.value() == greeting
@@ -106,11 +110,14 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
   def "test pass through tombstone"() {
     when:
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, null))
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS)
 
     then:
-    // check that the message was received
+    awaitUntilConsumerIsReady()
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    records.count() == 1
+
+    // iterate over records to generate spans
     for (record in records) {
       assert record.value() == null
       assert record.key() == null
@@ -175,14 +182,18 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
 
     when: "send message"
     def greeting = "Hello from MockConsumer!"
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting))
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, TimeUnit.SECONDS)
 
     then: "wait for PRODUCER span"
     waitForTraces(1)
 
     when: "receive messages"
+    awaitUntilConsumerIsReady()
     def consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis())
     def recordsInPartition = consumerRecords.records(new TopicPartition(SHARED_TOPIC, partition))
+    recordsInPartition.size() == 1
+
+    // iterate over records to generate spans
     for (record in recordsInPartition) {
       assert record.value() == greeting
       assert record.key() == null
