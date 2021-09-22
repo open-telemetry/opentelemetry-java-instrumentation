@@ -40,17 +40,6 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientBaseTest {
 
     assertTraces(1) {
       trace(0, 5) {
-        // sort spans with a ranking function
-        spans.sort({
-          // job span is first
-          if (it.name == "BatchJob parallelItemsJob") {
-            return 0
-          }
-          // step span is second
-          if (it.name == "BatchJob parallelItemsJob.parallelItemsStep") {
-            return 1
-          }
-        })
         span(0) {
           name "parent"
           kind INTERNAL
