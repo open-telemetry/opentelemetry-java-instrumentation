@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.common;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
@@ -22,15 +19,6 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);
-  }
-
-  public Context start(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
-    return start(parentContext, requestContext, CONTAINER);
-  }
-
-  @Override
-  protected Context customizeContext(Context context, REQUEST httpServletRequest) {
-    return AppServerBridge.init(context, /* shouldRecordException= */ false);
   }
 
   public void end(

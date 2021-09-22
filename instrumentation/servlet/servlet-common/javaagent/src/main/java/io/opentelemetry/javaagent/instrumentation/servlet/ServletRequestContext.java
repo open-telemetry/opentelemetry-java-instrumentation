@@ -5,20 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletRequestContext<T> {
   private final T request;
-  private final MappingResolver mappingResolver;
+  private final Object servletOrFilter;
 
   public ServletRequestContext(T request) {
     this(request, null);
   }
 
-  public ServletRequestContext(T request, MappingResolver mappingResolver) {
+  public ServletRequestContext(T request, Object servletOrFilter) {
     this.request = request;
-    this.mappingResolver = mappingResolver;
+    this.servletOrFilter = servletOrFilter;
   }
 
   public T request() {
@@ -26,7 +25,7 @@ public class ServletRequestContext<T> {
   }
 
   @Nullable
-  public MappingResolver mappingResolver() {
-    return mappingResolver;
+  public Object servletOrFilter() {
+    return servletOrFilter;
   }
 }
