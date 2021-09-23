@@ -1,12 +1,4 @@
 pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    maven {
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots")
-    }
-  }
-
   plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
