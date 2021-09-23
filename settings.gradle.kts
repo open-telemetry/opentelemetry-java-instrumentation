@@ -59,6 +59,7 @@ include(":javaagent-bootstrap")
 include(":javaagent-exporters")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
+include(":javaagent-tooling:javaagent-tooling-java9")
 include(":javaagent")
 
 include(":bom-alpha")

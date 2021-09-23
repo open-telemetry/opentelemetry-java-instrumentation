@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
@@ -496,6 +497,24 @@ class InstrumenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test span").hasTotalRecordedLinks(0)));
+  }
+
+  @Test
+  void shouldUseContextCustomizer() {
+    // given
+    ContextKey<String> testKey = ContextKey.named("test");
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>newBuilder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .addContextCustomizer(
+                (context, request, attributes) -> context.with(testKey, "testVal"))
+            .newInstrumenter();
+
+    // when
+    Context context = instrumenter.start(Context.root(), "request");
+
+    // then
+    assertThat(context.get(testKey)).isEqualTo("testVal");
   }
 
   @Test

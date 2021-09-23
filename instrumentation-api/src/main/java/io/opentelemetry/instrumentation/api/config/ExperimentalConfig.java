@@ -28,4 +28,9 @@ public final class ExperimentalConfig {
   public boolean suppressViewSpans() {
     return config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
   }
+
+  public boolean suppressMessagingReceiveSpans() {
+    return config.getBoolean(
+        "otel.instrumentation.common.experimental.suppress-messaging-receive-spans", false);
+  }
 }
