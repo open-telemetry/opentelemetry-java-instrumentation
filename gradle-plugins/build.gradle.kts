@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.18")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:1.6.0-alpha-SNAPSHOT")
   implementation("io.opentelemetry.javaagent:opentelemetry-muzzle:1.6.0-alpha-SNAPSHOT")
