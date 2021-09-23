@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.naming.MappingResolverFactory;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;
@@ -20,7 +20,7 @@ public class JakartaServletInitAdvice {
     if (servletConfig == null) {
       return;
     }
-    InstrumentationContext.get(Servlet.class, MappingResolver.class)
+    InstrumentationContext.get(Servlet.class, MappingResolverFactory.class)
         .putIfAbsent(servlet, new JakartaServletMappingResolverFactory(servletConfig));
   }
 }

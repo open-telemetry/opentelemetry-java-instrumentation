@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.servlet.naming.MappingResolverFactory;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
@@ -48,12 +49,20 @@ public final class Servlet5Singletons {
   }
 
   public static MappingResolver getMappingResolver(Object servletOrFilter) {
+    MappingResolverFactory factory = getMappingResolverFactory(servletOrFilter);
+    if (factory != null) {
+      return factory.get();
+    }
+    return null;
+  }
+
+  private static MappingResolverFactory getMappingResolverFactory(Object servletOrFilter) {
     boolean servlet = servletOrFilter instanceof Servlet;
     if (servlet) {
-      return InstrumentationContext.get(Servlet.class, MappingResolver.class)
+      return InstrumentationContext.get(Servlet.class, MappingResolverFactory.class)
           .get((Servlet) servletOrFilter);
     } else {
-      return InstrumentationContext.get(Filter.class, MappingResolver.class)
+      return InstrumentationContext.get(Filter.class, MappingResolverFactory.class)
           .get((Filter) servletOrFilter);
     }
   }
