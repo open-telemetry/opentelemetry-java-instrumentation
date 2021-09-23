@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.instrumentation.servlet.v2_2.Servlet2HttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.servlet.v2_2.ResponseWithStatus;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +29,7 @@ public class Servlet2Advice {
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
@@ -40,9 +41,9 @@ public class Servlet2Advice {
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    Context serverContext = tracer().getServerContext(httpServletRequest);
+    Context serverContext = helper().getServerContext(httpServletRequest);
     if (serverContext != null) {
-      Context updatedContext = tracer().updateContext(serverContext, httpServletRequest);
+      Context updatedContext = helper().updateContext(serverContext, httpServletRequest);
       if (updatedContext != serverContext) {
         // updateContext updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -50,7 +51,14 @@ public class Servlet2Advice {
       return;
     }
 
-    context = tracer().startSpan(httpServletRequest);
+    Context parentContext = Java8BytecodeBridge.currentContext();
+    requestContext = new ServletRequestContext<>(httpServletRequest);
+
+    if (!helper().shouldStart(parentContext, requestContext)) {
+      return;
+    }
+
+    context = helper().start(parentContext, requestContext);
     scope = context.makeCurrent();
     // reset response status from previous request
     // (some servlet containers reuse response objects to reduce memory allocations)
@@ -59,10 +67,10 @@ public class Servlet2Advice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -77,16 +85,13 @@ public class Servlet2Advice {
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
       if (throwable != null) {
-        tracer().addUnwrappedThrowable(currentContext, throwable);
+        helper().recordException(currentContext, throwable);
       }
-      tracer().setPrincipal(currentContext, (HttpServletRequest) request);
     }
 
     if (scope == null || context == null) {
       return;
     }
-
-    tracer().setPrincipal(context, (HttpServletRequest) request);
 
     int responseStatusCode = HttpServletResponse.SC_OK;
     Integer responseStatus =
@@ -95,12 +100,8 @@ public class Servlet2Advice {
       responseStatusCode = responseStatus;
     }
 
-    ResponseWithStatus responseWithStatus =
-        new ResponseWithStatus((HttpServletResponse) response, responseStatusCode);
-    if (throwable == null) {
-      tracer().end(context, responseWithStatus);
-    } else {
-      tracer().endExceptionally(context, throwable, responseWithStatus);
-    }
+    helper()
+        .stopSpan(
+            context, requestContext, (HttpServletResponse) response, responseStatusCode, throwable);
   }
 }

@@ -18,10 +18,17 @@ val bootstrapLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
+// this configuration collects only required instrumentations and agent machinery
+val baseJavaagentLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
 val javaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
+  extendsFrom(baseJavaagentLibs)
 }
 // this configuration collects just exporter libs (also placed in the agent classloader & isolated from the instrumented application)
 val exporterLibs by configurations.creating {
@@ -50,9 +57,18 @@ dependencies {
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")
 
-  javaagentLibs(project(":javaagent-extension-api"))
-  javaagentLibs(project(":javaagent-tooling"))
-  javaagentLibs(project(":muzzle"))
+  baseJavaagentLibs(project(":javaagent-extension-api"))
+  baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":muzzle"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   exporterLibs(project(":javaagent-exporters"))
 
@@ -63,7 +79,7 @@ dependencies {
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free")
   // TODO ideally this would be :instrumentation instead of :javaagent-tooling
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
-  //  but I couldn"t get that to work
+  //  but I couldn't get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
   licenseReportDependencies(project(":javaagent-extension-api"))
 
@@ -100,6 +116,16 @@ tasks {
     }
   }
 
+  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+    configurations = listOf(baseJavaagentLibs)
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
+    archiveFileName.set("baseJavaagentLibs-relocated.jar")
+
+    excludeBootstrapJars()
+  }
+
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
@@ -107,13 +133,7 @@ tasks {
 
     archiveFileName.set("javaagentLibs-relocated.jar")
 
-    // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-    dependencies {
-      exclude(project(":instrumentation-api"))
-      exclude(project(":instrumentation-api-annotation-support"))
-      exclude(project(":javaagent-bootstrap"))
-      exclude(project(":javaagent-instrumentation-api"))
-    }
+    excludeBootstrapJars()
   }
 
   val relocateExporterLibs by registering(ShadowJar::class) {
@@ -160,8 +180,33 @@ tasks {
     }
   }
 
+  // Includes only the agent machinery and required instrumentations
+  val baseJavaagentJar by registering(ShadowJar::class) {
+    configurations = listOf(bootstrapLibs)
+
+    dependsOn(relocateBaseJavaagentLibs)
+    isolateClasses(relocateBaseJavaagentLibs.get().outputs.files)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    archiveClassifier.set("base")
+
+    manifest {
+      attributes(shadowJar.get().manifest.attributes)
+    }
+  }
+
+  val baseJar by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+  }
+
+  artifacts {
+    add("baseJar", baseJavaagentJar)
+  }
+
   assemble {
-    dependsOn(shadowJar, fullJavaagentJar)
+    dependsOn(shadowJar, fullJavaagentJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
@@ -221,5 +266,15 @@ fun CopySpec.isolateClasses(jars: Iterable<File>) {
       // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
       rename("""^LICENSE$""", "LICENSE.renamed")
     }
+  }
+}
+
+// exclude bootstrap projects from javaagent libs - they won't be added to inst/
+fun ShadowJar.excludeBootstrapJars() {
+  dependencies {
+    exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-annotation-support"))
+    exclude(project(":javaagent-bootstrap"))
+    exclude(project(":javaagent-instrumentation-api"))
   }
 }

@@ -6,19 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class ChannelTraceContext {
 
-  public static class Factory implements ContextStore.Factory<ChannelTraceContext> {
-    public static final Factory INSTANCE = new Factory();
-
-    @Override
-    public ChannelTraceContext create() {
-      return new ChannelTraceContext();
-    }
-  }
+  public static final Supplier<ChannelTraceContext> FACTORY = ChannelTraceContext::new;
 
   private Context connectionContext;
   private Context clientParentContext;

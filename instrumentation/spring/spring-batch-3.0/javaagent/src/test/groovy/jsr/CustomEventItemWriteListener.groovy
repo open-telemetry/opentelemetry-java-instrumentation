@@ -6,6 +6,7 @@
 package jsr
 
 import io.opentelemetry.api.trace.Span
+
 import javax.batch.api.chunk.listener.ItemWriteListener
 
 class CustomEventItemWriteListener implements ItemWriteListener {

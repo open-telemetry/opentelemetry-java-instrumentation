@@ -5,11 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static java.nio.charset.StandardCharsets.UTF_8
-
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.RedisException
@@ -21,6 +16,11 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static java.nio.charset.StandardCharsets.UTF_8
 
 abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"

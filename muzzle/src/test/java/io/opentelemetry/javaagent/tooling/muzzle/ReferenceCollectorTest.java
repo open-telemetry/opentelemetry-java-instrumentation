@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
@@ -20,6 +21,7 @@ import io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextTestClasses.State;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -319,13 +321,25 @@ class ReferenceCollectorTest {
         InstrumentationContextTestClasses.ValidAdvice.class.getName());
     collector.prune();
 
-    Map<String, String> contextStore = collector.getContextStoreClasses();
-    assertThat(contextStore)
-        .hasSize(2)
-        .containsEntry(
-            InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName())
-        .containsEntry(
-            InstrumentationContextTestClasses.Key2.class.getName(), Context.class.getName());
+    ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
+    assertThat(contextStoreMappings.entrySet())
+        .containsExactlyInAnyOrder(
+            entry(InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName()),
+            entry(InstrumentationContextTestClasses.Key2.class.getName(), Context.class.getName()));
+  }
+
+  @Test
+  public void shouldCollectMultipleContextClassesForSingleKey() {
+    ReferenceCollector collector = new ReferenceCollector(s -> false);
+    collector.collectReferencesFromAdvice(
+        InstrumentationContextTestClasses.TwoContextStoresAdvice.class.getName());
+    collector.prune();
+
+    ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
+    assertThat(contextStoreMappings.entrySet())
+        .containsExactlyInAnyOrder(
+            entry(InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName()),
+            entry(InstrumentationContextTestClasses.Key1.class.getName(), State.class.getName()));
   }
 
   @ParameterizedTest(name = "{0}")

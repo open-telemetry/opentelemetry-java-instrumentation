@@ -5,10 +5,11 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.elasticsearch.action.ActionListener
 import org.elasticsearch.transport.RemoteTransportException
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 abstract class AbstractElasticsearchClientTest extends AgentInstrumentationSpecification {
 

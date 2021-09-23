@@ -5,9 +5,6 @@
 
 package server
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
@@ -15,15 +12,19 @@ import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
 abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()
-    // Useful for debugging:
-    // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
+      // Useful for debugging:
+      // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
     )
     CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),

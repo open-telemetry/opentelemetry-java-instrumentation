@@ -29,6 +29,11 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
           }
 
           @Override
+          public String getResponseHeader(Void unused, String name) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
           public boolean isResponseCommitted(Void unused) {
             throw new UnsupportedOperationException();
           }

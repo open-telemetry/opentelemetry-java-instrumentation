@@ -79,7 +79,7 @@ class ConfigurationFileTest extends Specification {
     !properties.propertyNames().hasMoreElements()
   }
 
-  def createFile(String name, String contents){
+  def createFile(String name, String contents) {
     def file = tmpFolder.newFile(name)
     file.write(contents)
     return file.getAbsolutePath()

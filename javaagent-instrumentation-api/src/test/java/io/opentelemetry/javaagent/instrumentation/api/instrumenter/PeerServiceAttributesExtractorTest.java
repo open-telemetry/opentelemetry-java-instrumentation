@@ -38,7 +38,7 @@ class PeerServiceAttributesExtractorTest {
     // when
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, "request");
-    underTest.onEnd(attributes, "request", "response");
+    underTest.onEnd(attributes, "request", "response", null);
 
     // then
     assertTrue(attributes.build().isEmpty());
@@ -58,7 +58,7 @@ class PeerServiceAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, "request");
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, "request", "response");
+    underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
     assertTrue(startAttributes.build().isEmpty());
@@ -79,7 +79,7 @@ class PeerServiceAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, "request");
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, "request", "response");
+    underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
     assertTrue(startAttributes.build().isEmpty());
@@ -102,7 +102,7 @@ class PeerServiceAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, "request");
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, "request", "response");
+    underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
     assertThat(startAttributes.build())
@@ -128,7 +128,7 @@ class PeerServiceAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, "request");
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, "request", "response");
+    underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
     assertThat(startAttributes.build())

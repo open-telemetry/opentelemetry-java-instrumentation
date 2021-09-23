@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Tracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -24,11 +23,13 @@ public class Tomcat10ServerHandlerAdvice {
       @Advice.Argument(1) Response response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    if (!tracer().shouldStartSpan(request)) {
+
+    Context parentContext = Java8BytecodeBridge.currentContext();
+    if (!helper().shouldStart(parentContext, request)) {
       return;
     }
 
-    context = tracer().startServerSpan(request);
+    context = helper().start(parentContext, request);
 
     scope = context.makeCurrent();
   }
@@ -41,14 +42,6 @@ public class Tomcat10ServerHandlerAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    TomcatServerHandlerAdviceHelper.stopSpan(
-        tracer(),
-        Tomcat10ServletEntityProvider.INSTANCE,
-        JakartaServletHttpServerTracer.tracer(),
-        request,
-        response,
-        throwable,
-        context,
-        scope);
+    helper().end(request, response, throwable, context, scope);
   }
 }

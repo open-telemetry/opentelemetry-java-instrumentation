@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
+import ratpack.error.ServerErrorHandler
+import ratpack.exec.Promise
+import ratpack.server.RatpackServer
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -12,10 +16,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import ratpack.error.ServerErrorHandler
-import ratpack.exec.Promise
-import ratpack.server.RatpackServer
 
 abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpServerTest {
 
@@ -31,7 +31,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           it.add(ServerErrorHandler, new TestErrorHandler())
         }
         it.prefix(SUCCESS.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               SUCCESS
             } then { endpoint ->
@@ -42,7 +42,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           }
         }
         it.prefix(INDEXED_CHILD.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               INDEXED_CHILD
             } then {
@@ -65,7 +65,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           }
         }
         it.prefix(REDIRECT.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               REDIRECT
             } then { endpoint ->
@@ -76,7 +76,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           }
         }
         it.prefix(ERROR.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               ERROR
             } then { endpoint ->
@@ -98,7 +98,7 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
           }
         }
         it.prefix("path/:id/param") {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               PATH_PARAM
             } then { endpoint ->

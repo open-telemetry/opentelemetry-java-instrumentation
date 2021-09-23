@@ -8,6 +8,7 @@ import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
 import java.nio.charset.StandardCharsets
 
 class ViewRenderTest extends AgentInstrumentationSpecification {

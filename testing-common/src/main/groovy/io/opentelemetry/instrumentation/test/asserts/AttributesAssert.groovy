@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+
 import java.util.regex.Pattern
 
 class AttributesAssert {

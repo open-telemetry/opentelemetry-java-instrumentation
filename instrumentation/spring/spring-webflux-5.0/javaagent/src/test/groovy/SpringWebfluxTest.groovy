@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.client.ClientRequestContext
@@ -28,6 +24,10 @@ import server.SpringWebFluxTestApplication
 import server.TestController
 import spock.lang.Unroll
 import util.SpringWebfluxTestUtil
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -53,7 +53,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         // https://github.com/line/armeria/issues/2489
         @Override
         HttpResponse execute(HttpClient delegate, ClientRequestContext ctx, HttpRequest req) throws Exception {
-          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply {resp ->
+          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply { resp ->
             if (resp.status().isRedirection()) {
               return delegate.execute(ctx, HttpRequest.of(req.method(), resp.headers().get(HttpHeaderNames.LOCATION)))
             }
@@ -90,7 +90,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -153,7 +152,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -214,6 +212,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   merely wraps handler call into Mono and thus actual invocation of handler function happens later,
   when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
    */
+
   def "Create span during handler function"() {
     when:
     def response = client.get(urlPath).aggregate().join()
@@ -235,7 +234,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -296,7 +294,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 404
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -336,7 +333,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 202
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -381,7 +377,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -444,7 +439,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 307
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -472,7 +466,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -515,7 +508,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
               "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
               "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-              "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
             }
           }
           span(1) {

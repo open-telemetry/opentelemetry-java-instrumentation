@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -47,6 +47,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -107,6 +108,16 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /**
+   * Adds a {@link ContextCustomizer} to customize the context during {@link
+   * Instrumenter#start(Context, Object)}.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
+      ContextCustomizer<? super REQUEST> contextCustomizer) {
+    contextCustomizers.add(contextCustomizer);
+    return this;
+  }
+
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
   @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
@@ -144,28 +155,33 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   // visible for tests
   /**
-   * Enables suppression based on client instrumentation type.
+   * Enables CLIENT nested span suppression based on the instrumentation type.
    *
-   * <p><strong>When enabled, suppresses nested spans depending on their {@link SpanKind} and
-   * type</strong>.
+   * <p><strong>When enabled:</strong>.
    *
    * <ul>
-   *   <li>CLIENT and PRODUCER nested spans are suppressed based on their type (HTTP, RPC, DB,
-   *       MESSAGING) i.e. if span with the same type is on the context, new span of this type will
-   *       not be started.
+   *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
+   *       HttpAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or {@linkplain
+   *       DbAttributesExtractor database} clients. If a span with the same type is present in the
+   *       parent context object, new span of the same type will not be started.
    * </ul>
    *
    * <p><strong>When disabled:</strong>
    *
    * <ul>
-   *   <li>CLIENT and PRODUCER nested spans are always suppressed
+   *   <li>CLIENT nested spans are always suppressed.
    * </ul>
    *
-   * <p><strong>In both cases:</strong>
+   * <p>For all other {@linkplain SpanKind span kinds} the suppression rules are as follows:
    *
    * <ul>
-   *   <li>SERVER and CONSUMER nested spans are always suppressed
-   *   <li>INTERNAL spans are never suppressed
+   *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
+   *       context object, new SERVER span will not be started.
+   *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
+   *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
+   *       operation is present in the parent context object, new span with the same operation will
+   *       not be started.
+   *   <li>INTERNAL spans are never suppressed.
    * </ul>
    */
   InstrumenterBuilder<REQUEST, RESPONSE> enableInstrumentationTypeSuppression(
@@ -244,31 +260,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
-    if (!enableSpanSuppressionByType) {
-      // if not enabled, preserve current behavior, not distinguishing types
-      return SpanSuppressionStrategy.SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY;
+    Set<SpanKey> spanKeys = SpanKeyExtractor.determineSpanKeys(attributesExtractors);
+    if (enableSpanSuppressionByType) {
+      return SpanSuppressionStrategy.from(spanKeys);
     }
-
-    Set<SpanKey> spanKeys = spanKeysFromAttributeExtractor(this.attributesExtractors);
-    return SpanSuppressionStrategy.from(spanKeys);
-  }
-
-  private static Set<SpanKey> spanKeysFromAttributeExtractor(
-      List<? extends AttributesExtractor<?, ?>> attributesExtractors) {
-
-    Set<SpanKey> spanKeys = new HashSet<>();
-    for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
-      if (attributeExtractor instanceof HttpAttributesExtractor) {
-        spanKeys.add(SpanKey.HTTP_CLIENT);
-      } else if (attributeExtractor instanceof RpcAttributesExtractor) {
-        spanKeys.add(SpanKey.RPC_CLIENT);
-      } else if (attributeExtractor instanceof DbAttributesExtractor) {
-        spanKeys.add(SpanKey.DB_CLIENT);
-      } else if (attributeExtractor instanceof MessagingAttributesExtractor) {
-        spanKeys.add(SpanKey.MESSAGING_PRODUCER);
-      }
-    }
-    return spanKeys;
+    // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
+    return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

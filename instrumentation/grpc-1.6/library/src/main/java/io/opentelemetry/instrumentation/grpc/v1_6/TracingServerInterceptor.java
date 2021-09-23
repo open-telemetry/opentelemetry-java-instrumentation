@@ -11,7 +11,6 @@ import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
-import io.grpc.ServerCall.Listener;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
@@ -25,8 +24,8 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 final class TracingServerInterceptor implements ServerInterceptor {
 
   @SuppressWarnings("rawtypes")
-  private static final AtomicLongFieldUpdater<TracingServerCallListener> MESSAGE_ID_UPDATER =
-      AtomicLongFieldUpdater.newUpdater(TracingServerCallListener.class, "messageId");
+  private static final AtomicLongFieldUpdater<TracingServerCall> MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "messageId");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
@@ -50,14 +49,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
     Context context = instrumenter.start(Context.current(), request);
 
     try (Scope ignored = context.makeCurrent()) {
-      return new TracingServerCallListener<>(
-          Contexts.interceptCall(
-              io.grpc.Context.current(),
-              new TracingServerCall<>(call, context, request),
-              headers,
-              next),
-          context,
-          request);
+      return new TracingServerCall<>(call, context, request).start(headers, next);
     } catch (Throwable e) {
       instrumenter.end(context, request, null, e);
       throw e;
@@ -69,11 +61,35 @@ final class TracingServerInterceptor implements ServerInterceptor {
     private final Context context;
     private final GrpcRequest request;
 
+    // Used by MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long messageId;
+
     TracingServerCall(
         ServerCall<REQUEST, RESPONSE> delegate, Context context, GrpcRequest request) {
       super(delegate);
       this.context = context;
       this.request = request;
+    }
+
+    TracingServerCallListener start(Metadata headers, ServerCallHandler<REQUEST, RESPONSE> next) {
+      return new TracingServerCallListener(
+          Contexts.interceptCall(io.grpc.Context.current(), this, headers, next), context, request);
+    }
+
+    @Override
+    public void sendMessage(RESPONSE message) {
+      try (Scope ignored = context.makeCurrent()) {
+        super.sendMessage(message);
+      }
+      Span span = Span.fromContext(context);
+      Attributes attributes =
+          Attributes.of(
+              GrpcHelper.MESSAGE_TYPE,
+              "SENT",
+              GrpcHelper.MESSAGE_ID,
+              MESSAGE_ID_UPDATER.incrementAndGet(this));
+      span.addEvent("message", attributes);
     }
 
     @Override
@@ -86,77 +102,73 @@ final class TracingServerInterceptor implements ServerInterceptor {
       }
       instrumenter.end(context, request, status, status.getCause());
     }
-  }
 
-  final class TracingServerCallListener<REQUEST>
-      extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
-    private final Context context;
-    private final GrpcRequest request;
+    final class TracingServerCallListener
+        extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
+      private final Context context;
+      private final GrpcRequest request;
 
-    // Used by MESSAGE_ID_UPDATER
-    @SuppressWarnings("UnusedVariable")
-    volatile long messageId;
-
-    TracingServerCallListener(Listener<REQUEST> delegate, Context context, GrpcRequest request) {
-      super(delegate);
-      this.context = context;
-      this.request = request;
-    }
-
-    @Override
-    public void onMessage(REQUEST message) {
-      // TODO(anuraaga): Restore
-      Attributes attributes =
-          Attributes.of(
-              GrpcHelper.MESSAGE_TYPE,
-              "RECEIVED",
-              GrpcHelper.MESSAGE_ID,
-              MESSAGE_ID_UPDATER.incrementAndGet(this));
-      Span.fromContext(context).addEvent("message", attributes);
-      delegate().onMessage(message);
-    }
-
-    @Override
-    public void onHalfClose() {
-      try {
-        delegate().onHalfClose();
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
+      TracingServerCallListener(Listener<REQUEST> delegate, Context context, GrpcRequest request) {
+        super(delegate);
+        this.context = context;
+        this.request = request;
       }
-    }
 
-    @Override
-    public void onCancel() {
-      try {
-        delegate().onCancel();
-        if (captureExperimentalSpanAttributes) {
-          Span.fromContext(context).setAttribute("grpc.canceled", true);
+      @Override
+      public void onMessage(REQUEST message) {
+        // TODO(anuraaga): Restore
+        Attributes attributes =
+            Attributes.of(
+                GrpcHelper.MESSAGE_TYPE,
+                "RECEIVED",
+                GrpcHelper.MESSAGE_ID,
+                MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this));
+        Span.fromContext(context).addEvent("message", attributes);
+        delegate().onMessage(message);
+      }
+
+      @Override
+      public void onHalfClose() {
+        try {
+          delegate().onHalfClose();
+        } catch (Throwable e) {
+          instrumenter.end(context, request, null, e);
+          throw e;
         }
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
       }
-      instrumenter.end(context, request, null, null);
-    }
 
-    @Override
-    public void onComplete() {
-      try {
-        delegate().onComplete();
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
+      @Override
+      public void onCancel() {
+        try {
+          delegate().onCancel();
+          if (captureExperimentalSpanAttributes) {
+            Span.fromContext(context).setAttribute("grpc.canceled", true);
+          }
+        } catch (Throwable e) {
+          instrumenter.end(context, request, null, e);
+          throw e;
+        }
+        instrumenter.end(context, request, null, null);
       }
-    }
 
-    @Override
-    public void onReady() {
-      try {
-        delegate().onReady();
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
+      @Override
+      public void onComplete() {
+        try {
+          delegate().onComplete();
+        } catch (Throwable e) {
+          instrumenter.end(context, request, null, e);
+          throw e;
+        }
+      }
+
+      @Override
+      public void onReady() {
+        try {
+          delegate().onReady();
+        } catch (Throwable e) {
+          instrumenter.end(context, request, null, e);
+          throw e;
+        }
       }
     }
   }

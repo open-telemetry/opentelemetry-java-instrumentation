@@ -43,8 +43,8 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
-  testImplementation("org.testcontainers:localstack:${versions["org.testcontainers"]}")
-  testImplementation("org.testcontainers:cassandra:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:localstack")
+  testImplementation("org.testcontainers:cassandra")
 
   latestDepTestLibrary("org.apache.camel:camel-core:2.+")
   latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+")

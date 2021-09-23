@@ -70,17 +70,16 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes requestAttributes) {
-    long startTimeNanos = System.nanoTime();
-    activeRequests.add(1, applyActiveRequestsView(requestAttributes));
+  public Context start(Context context, Attributes startAttributes, long startNanos) {
+    activeRequests.add(1, applyActiveRequestsView(startAttributes));
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
-        new AutoValue_HttpServerMetrics_State(requestAttributes, startTimeNanos));
+        new AutoValue_HttpServerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
-  public void end(Context context, Attributes responseAttributes) {
+  public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
@@ -89,7 +88,7 @@ public final class HttpServerMetrics implements RequestListener {
     }
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS,
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
         applyDurationView(state.startAttributes()));
   }
 

@@ -13,9 +13,11 @@ import org.junit.jupiter.api.Test;
 
 class SpringBootSmokeTest extends SmokeTest {
 
+  @Override
   protected String getTargetImage(int jdk) {
-    return "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk" + jdk
-        + "-20210218.577304949";
+    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
+        + jdk
+        + "-20210918.1248928124";
   }
 
   @Test
@@ -25,10 +27,11 @@ class SpringBootSmokeTest extends SmokeTest {
     Request request = new Request.Builder().url(url).get().build();
 
     String currentAgentVersion =
-        (String) new JarFile(agentPath)
-            .getManifest()
-            .getMainAttributes()
-            .get(Attributes.Name.IMPLEMENTATION_VERSION);
+        (String)
+            new JarFile(agentPath)
+                .getManifest()
+                .getMainAttributes()
+                .get(Attributes.Name.IMPLEMENTATION_VERSION);
 
     Response response = client.newCall(request).execute();
     System.out.println(response.headers().toString());
@@ -43,8 +46,8 @@ class SpringBootSmokeTest extends SmokeTest {
     Assertions.assertEquals(0, countSpansByName(traces, "WebController.greeting"));
     Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
     Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
-    Assertions.assertNotEquals(0,
-        countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
+    Assertions.assertNotEquals(
+        0, countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
     Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
 
     stopTarget();

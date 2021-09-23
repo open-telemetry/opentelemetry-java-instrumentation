@@ -71,7 +71,7 @@ class NetAttributesExtractorTest {
     extractor.onStart(startAttributes, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, request, response);
+    extractor.onEnd(endAttributes, request, response, null);
 
     // then
     assertThat(startAttributes.build())

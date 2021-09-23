@@ -194,7 +194,7 @@ jobs:
     steps:
       # run this action to get workflow conclusion
       # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v2.1.7
+      - uses: technote-space/workflow-conclusion-action@v2.2
 
       - uses: actions/checkout@v2.3.4
         with:
@@ -205,4 +205,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: .github/workflows/nightly-failed.md
+          filename: .github/templates/nightly-failed.md

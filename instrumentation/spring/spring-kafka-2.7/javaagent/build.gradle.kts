@@ -11,8 +11,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -23,7 +21,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("org.testcontainers:kafka:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:kafka")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")

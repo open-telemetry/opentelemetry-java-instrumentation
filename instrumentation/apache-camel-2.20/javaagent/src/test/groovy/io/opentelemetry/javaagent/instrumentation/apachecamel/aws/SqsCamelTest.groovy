@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class SqsCamelTest extends AgentInstrumentationSpecification {
 

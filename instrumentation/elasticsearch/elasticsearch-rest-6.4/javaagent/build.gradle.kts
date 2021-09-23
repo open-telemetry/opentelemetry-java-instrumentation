@@ -17,12 +17,10 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   library("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:library"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
@@ -33,7 +31,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 
-  testImplementation("org.testcontainers:elasticsearch:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:elasticsearch")
   testLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+")

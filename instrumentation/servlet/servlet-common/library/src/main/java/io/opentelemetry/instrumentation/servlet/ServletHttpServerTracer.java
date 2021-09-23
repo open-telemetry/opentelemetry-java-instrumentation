@@ -24,9 +24,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
 
@@ -37,13 +39,15 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   public static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
       ServletHttpServerTracer.class.getName() + ".AsyncListenerResponse";
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+  public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get().getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private final Function<REQUEST, String> contextPathExtractor;
 
   protected ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
+    this.contextPathExtractor = accessor::getRequestContextPath;
   }
 
   public Context startSpan(REQUEST request, String spanName, boolean servlet) {
@@ -69,12 +73,8 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     return addServletContextPath(context, request);
   }
 
-  private Context addServletContextPath(Context context, REQUEST request) {
-    String contextPath = accessor.getRequestContextPath(request);
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
-    }
-    return context;
+  protected Context addServletContextPath(Context context, REQUEST request) {
+    return ServletContextPath.init(context, contextPathExtractor, request);
   }
 
   @Override
@@ -221,28 +221,6 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       return servletPath;
     }
     return contextPath + servletPath;
-  }
-
-  /**
-   * When server spans are managed by app server instrumentation we need to add context path of
-   * current request to context if it isn't already added. Servlet instrumentation adds it when it
-   * starts server span.
-   */
-  public Context updateContext(Context context, REQUEST request) {
-    String contextPath = context.get(ServletContextPath.CONTEXT_KEY);
-    if (contextPath == null) {
-      context = addServletContextPath(context, request);
-    }
-
-    return context;
-  }
-
-  public void updateSpanName(REQUEST request) {
-    updateSpanName(getServerSpan(request), request);
-  }
-
-  private void updateSpanName(Span span, REQUEST request) {
-    span.updateName(getSpanName(request));
   }
 
   public void onTimeout(Context context, long timeout) {

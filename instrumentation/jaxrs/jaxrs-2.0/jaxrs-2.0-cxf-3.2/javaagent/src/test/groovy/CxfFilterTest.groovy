@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static Resource.Test1
-import static Resource.Test2
-import static Resource.Test3
-
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.apache.cxf.endpoint.Server
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
+
+import static Resource.Test1
+import static Resource.Test2
+import static Resource.Test3
 
 class CxfFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Server> {
 

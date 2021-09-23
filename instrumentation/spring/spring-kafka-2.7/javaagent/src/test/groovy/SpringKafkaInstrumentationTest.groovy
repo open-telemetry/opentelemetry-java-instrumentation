@@ -3,11 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -25,6 +20,11 @@ import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.testcontainers.containers.KafkaContainer
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
   @Shared
@@ -70,9 +70,11 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      SpanData consumer1, consumer2
+      traces.sort(orderByRootSpanName("producer", "testTopic receive", "testTopic process"))
 
-      trace(0, 5) {
+      SpanData producer1, producer2
+
+      trace(0, 3) {
         span(0) {
           name "producer"
         }
@@ -87,21 +89,6 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "testTopic receive"
-          kind CONSUMER
-          childOf span(1)
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
-          }
-        }
-        span(3) {
           name "testTopic send"
           kind PRODUCER
           childOf span(0)
@@ -111,31 +98,28 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-        span(4) {
+
+        producer1 = span(1)
+        producer2 = span(2)
+      }
+      trace(1, 3) {
+        span(0) {
           name "testTopic receive"
           kind CONSUMER
-          childOf span(3)
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
           }
         }
-
-        consumer1 = span(2)
-        consumer2 = span(4)
-      }
-      trace(1, 2) {
-        span(0) {
+        span(1) {
           name "testTopic process"
           kind CONSUMER
-          hasLink consumer1
-          hasLink consumer2
+          childOf span(0)
+          hasLink producer1
+          hasLink producer2
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
@@ -143,9 +127,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
         }
-        span(1) {
+        span(2) {
           name "consumer"
-          childOf span(0)
+          childOf span(1)
         }
       }
     }
@@ -164,9 +148,11 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      SpanData consumer
+      traces.sort(orderByRootSpanName("producer", "testTopic receive"))
 
-      trace(0, 3) {
+      SpanData producer
+
+      trace(0, 2) {
         span(0) {
           name "producer"
         }
@@ -180,29 +166,26 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-        span(2) {
+
+        producer = span(1)
+      }
+      trace(1, 3) {
+        span(0) {
           name "testTopic receive"
           kind CONSUMER
-          childOf span(1)
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" 0
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" Long
           }
         }
-
-        consumer = span(2)
-      }
-      trace(1, 2) {
-        span(0) {
+        span(1) {
           name "testTopic process"
           kind CONSUMER
-          hasLink consumer
+          childOf span(0)
+          hasLink producer
           status ERROR
           errorEvent IllegalArgumentException, "boom"
           attributes {
@@ -212,9 +195,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
         }
-        span(1) {
+        span(2) {
           name "consumer"
-          childOf span(0)
+          childOf span(1)
         }
       }
     }

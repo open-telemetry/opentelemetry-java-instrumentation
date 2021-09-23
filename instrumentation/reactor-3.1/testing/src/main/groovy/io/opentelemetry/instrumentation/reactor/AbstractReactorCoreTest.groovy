@@ -5,16 +5,12 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.time.Duration
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -22,6 +18,11 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.time.Duration
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 @Unroll
 abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
@@ -315,10 +316,10 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
   def "Nested delayed mono with high concurrency"() {
     setup:
     def iterations = 100
-    def remainingIterations = new HashSet<>((0L ..< iterations).toList())
+    def remainingIterations = new HashSet<>((0L..<iterations).toList())
 
     when:
-    (0L ..< iterations).forEach { iteration ->
+    (0L..<iterations).forEach { iteration ->
       def outer = Mono.just("")
         .map({ it })
         .delayElement(Duration.ofMillis(10))
@@ -377,10 +378,10 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
   def "Nested delayed flux with high concurrency"() {
     setup:
     def iterations = 100
-    def remainingIterations = new HashSet<>((0L ..< iterations).toList())
+    def remainingIterations = new HashSet<>((0L..<iterations).toList())
 
     when:
-    (0L ..< iterations).forEach { iteration ->
+    (0L..<iterations).forEach { iteration ->
       def outer = Flux.just("a", "b")
         .map({ it })
         .delayElements(Duration.ofMillis(10))

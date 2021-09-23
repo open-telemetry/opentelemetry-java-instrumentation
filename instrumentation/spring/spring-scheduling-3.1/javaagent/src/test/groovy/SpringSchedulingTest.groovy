@@ -4,8 +4,9 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import java.util.concurrent.TimeUnit
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+
+import java.util.concurrent.TimeUnit
 
 class SpringSchedulingTest extends AgentInstrumentationSpecification {
 

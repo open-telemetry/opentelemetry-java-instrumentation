@@ -41,38 +41,24 @@ abstract class SmokeTest {
 
   protected abstract String getTargetImage(int jdk);
 
-  /**
-   * Subclasses can override this method to customise target application's environment
-   */
+  /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap();
   }
 
   private static GenericContainer backend;
-  private static GenericContainer collector;
 
   @BeforeAll
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-            "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210324.684269693")
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20210918.1248928123")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
             .withNetworkAliases("backend")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     backend.start();
-
-    collector =
-        new GenericContainer<>("otel/opentelemetry-collector-contrib-dev:latest")
-            .dependsOn(backend)
-            .withNetwork(network)
-            .withNetworkAliases("collector")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-            .withCommand("--config /etc/otel.yaml");
-    collector.start();
   }
 
   protected GenericContainer target;
@@ -98,9 +84,7 @@ abstract class SmokeTest {
     client
         .newCall(
             new Request.Builder()
-                .url(
-                    String.format(
-                        "http://localhost:%d/clear", backend.getMappedPort(8080)))
+                .url(String.format("http://localhost:%d/clear", backend.getMappedPort(8080)))
                 .build())
         .execute()
         .close();
@@ -113,15 +97,19 @@ abstract class SmokeTest {
   @AfterAll
   static void cleanupSpec() {
     backend.stop();
-    collector.stop();
   }
 
-  protected static int countResourcesByValue(Collection<ExportTraceServiceRequest> traces, String resourceName, String value) {
-    return (int) traces.stream()
-        .flatMap(it -> it.getResourceSpansList().stream())
-        .flatMap(it -> it.getResource().getAttributesList().stream())
-        .filter(kv -> kv.getKey().equals(resourceName) && kv.getValue().getStringValue().equals(value))
-        .count();
+  protected static int countResourcesByValue(
+      Collection<ExportTraceServiceRequest> traces, String resourceName, String value) {
+    return (int)
+        traces.stream()
+            .flatMap(it -> it.getResourceSpansList().stream())
+            .flatMap(it -> it.getResource().getAttributesList().stream())
+            .filter(
+                kv ->
+                    kv.getKey().equals(resourceName)
+                        && kv.getValue().getStringValue().equals(value))
+            .count();
   }
 
   protected static int countSpansByName(
@@ -131,10 +119,14 @@ abstract class SmokeTest {
 
   protected static int countSpansByAttributeValue(
       Collection<ExportTraceServiceRequest> traces, String attributeName, String attributeValue) {
-    return (int) getSpanStream(traces)
-        .flatMap(it -> it.getAttributesList().stream())
-        .filter(kv -> kv.getKey().equals(attributeName) && kv.getValue().getStringValue().equals(attributeValue))
-        .count();
+    return (int)
+        getSpanStream(traces)
+            .flatMap(it -> it.getAttributesList().stream())
+            .filter(
+                kv ->
+                    kv.getKey().equals(attributeName)
+                        && kv.getValue().getStringValue().equals(attributeValue))
+            .count();
   }
 
   protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {

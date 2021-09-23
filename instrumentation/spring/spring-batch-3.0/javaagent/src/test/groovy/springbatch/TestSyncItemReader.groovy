@@ -5,9 +5,10 @@
 
 package springbatch
 
+import org.springframework.batch.item.ItemReader
+
 import java.util.stream.Collectors
 import java.util.stream.IntStream
-import org.springframework.batch.item.ItemReader
 
 class TestSyncItemReader implements ItemReader<String> {
   private final Iterator<String> items

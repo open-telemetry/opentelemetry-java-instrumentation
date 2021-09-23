@@ -19,6 +19,13 @@ public class InstrumentationContextTestClasses {
     }
   }
 
+  public static class TwoContextStoresAdvice {
+    public static void advice() {
+      InstrumentationContext.get(Key1.class, Context.class);
+      InstrumentationContext.get(Key1.class, State.class);
+    }
+  }
+
   public static class NotUsingClassRefAdvice {
     public static void advice(Class<?> key, Class<?> context) {
       Key2.class.getName();
@@ -37,4 +44,6 @@ public class InstrumentationContextTestClasses {
   public static class Key1 {}
 
   public static class Key2 {}
+
+  public static class State {}
 }

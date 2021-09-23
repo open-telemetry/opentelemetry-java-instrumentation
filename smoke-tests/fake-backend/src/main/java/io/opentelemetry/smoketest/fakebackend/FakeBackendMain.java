@@ -91,11 +91,12 @@ public class FakeBackendMain {
     var server =
         Server.builder()
             .http(8080)
-            .service(GrpcService.builder()
-                .addService(traceCollector)
-                .addService(metricsCollector)
-                .addService(logsCollector)
-                .build())
+            .service(
+                GrpcService.builder()
+                    .addService(traceCollector)
+                    .addService(metricsCollector)
+                    .addService(logsCollector)
+                    .build())
             .service(
                 "/clear",
                 (ctx, req) -> {

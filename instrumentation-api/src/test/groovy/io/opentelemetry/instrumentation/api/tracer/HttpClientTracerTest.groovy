@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.propagation.TextMapSetter
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class HttpClientTracerTest extends BaseTracerTest {
 

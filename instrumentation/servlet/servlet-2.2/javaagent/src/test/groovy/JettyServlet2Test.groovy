@@ -3,6 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.sdk.trace.data.SpanData
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.ErrorHandler
+import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.http.HttpServletRequest
+
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -10,15 +20,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.data.SpanData
-import javax.servlet.http.HttpServletRequest
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.ErrorHandler
-import org.eclipse.jetty.servlet.ServletContextHandler
 
 class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait {
 

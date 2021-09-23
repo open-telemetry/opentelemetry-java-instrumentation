@@ -5,86 +5,76 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Iterator;
-import java.util.List;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import java.time.Duration;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.kafka.clients.consumer.ConsumerRecords");
+    return named("org.apache.kafka.clients.consumer.KafkaConsumer");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
+        named("poll")
             .and(isPublic())
-            .and(named("records"))
-            .and(takesArgument(0, String.class))
-            .and(returns(Iterable.class)),
-        KafkaConsumerInstrumentation.class.getName() + "$IterableAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("records"))
-            .and(takesArgument(0, named("org.apache.kafka.common.TopicPartition")))
-            .and(returns(List.class)),
-        KafkaConsumerInstrumentation.class.getName() + "$ListAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("iterator"))
-            .and(takesArguments(0))
-            .and(returns(Iterator.class)),
-        KafkaConsumerInstrumentation.class.getName() + "$IteratorAdvice");
+            .and(takesArguments(1))
+            .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
+            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        this.getClass().getName() + "$PollAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class IterableAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(
-        @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
-      if (iterable != null) {
-        iterable = new TracingIterable(iterable);
-      }
+  public static class PollAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Timer onEnter() {
+      return Timer.start();
     }
-  }
 
-  @SuppressWarnings("unused")
-  public static class ListAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.Enter Timer timer,
+        @Advice.Return ConsumerRecords<?, ?> records,
+        @Advice.Thrown Throwable error) {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> iterable) {
-      if (iterable != null) {
-        iterable = new TracingList(iterable);
+      // don't create spans when no records were received
+      if (records == null || records.isEmpty()) {
+        return;
       }
-    }
-  }
 
-  @SuppressWarnings("unused")
-  public static class IteratorAdvice {
+      Context parentContext = currentContext();
+      ReceivedRecords receivedRecords = ReceivedRecords.create(records, timer);
+      if (consumerReceiveInstrumenter().shouldStart(parentContext, receivedRecords)) {
+        Context context = consumerReceiveInstrumenter().start(parentContext, receivedRecords);
+        consumerReceiveInstrumenter().end(context, receivedRecords, null, error);
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(
-        @Advice.Return(readOnly = false) Iterator<ConsumerRecord<?, ?>> iterator) {
-      if (iterator != null) {
-        iterator = new TracingIterator(iterator, consumerInstrumenter());
+        // we're storing the context of the receive span so that process spans can use it as parent
+        // context even though the span has ended
+        // this is the suggested behavior according to the spec batch receive scenario:
+        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+        ContextStore<ConsumerRecords, SpanContext> consumerRecordsSpan =
+            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class);
+        consumerRecordsSpan.put(records, spanFromContext(context).getSpanContext());
       }
     }
   }

@@ -12,29 +12,20 @@ muzzle {
 }
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  testLibrary("org.springframework.kafka:spring-kafka:1.3.3.RELEASE")
-  testLibrary("org.springframework.kafka:spring-kafka-test:1.3.3.RELEASE")
-  testImplementation("javax.xml.bind:jaxb-api:2.2.3")
-  testLibrary("org.assertj:assertj-core")
-
-  // Include latest version of kafka itself along with latest version of client libs.
-  // This seems to help with jar compatibility hell.
-  latestDepTestLibrary("org.apache.kafka:kafka_2.11:2.3.+")
-  // (Pinning to 2.3.x: 2.4.0 introduces an error when executing compileLatestDepTestGroovy)
-  //  Caused by: java.lang.NoClassDefFoundError: org.I0Itec.zkclient.ZkClient
-  latestDepTestLibrary("org.apache.kafka:kafka-clients:2.3.+")
-  latestDepTestLibrary("org.springframework.kafka:spring-kafka:2.2.+")
-  latestDepTestLibrary("org.springframework.kafka:spring-kafka-test:2.2.+")
-  // assertj-core:3.20.0 is incompatible with spring-kafka-test:2.7.2
-  latestDepTestLibrary("org.assertj:assertj-core:3.19.0")
+  testImplementation("org.testcontainers:kafka")
 }
 
 tasks {
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
@@ -48,16 +39,22 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
   }
 
-  named<Test>("test") {
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/KafkaClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
+  }
+
+  test {
     dependsOn(testPropagationDisabled)
+    dependsOn(testReceiveSpansDisabled)
     filter {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
       isFailOnNoMatchingTests = false
     }
   }
-}
-
-// Requires old version of AssertJ for baseline
-if (!(findProperty("testLatestDeps") as Boolean)) {
-  configurations.testRuntimeClasspath.resolutionStrategy.force("org.assertj:assertj-core:2.9.1")
 }

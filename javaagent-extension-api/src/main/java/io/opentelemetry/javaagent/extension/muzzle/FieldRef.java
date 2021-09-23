@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.muzzle;
 import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeFlags;
 import static io.opentelemetry.javaagent.extension.muzzle.ReferenceMergeUtil.mergeSet;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.bytebuddy.jar.asm.Type;
@@ -17,7 +16,7 @@ import net.bytebuddy.jar.asm.Type;
  * Represents a reference to a field used in the instrumentation advice or helper class code. Part
  * of a {@link ClassRef}.
  *
- * <p>This class is used in the auto-generated {@link InstrumentationModule#getMuzzleReferences()}
+ * <p>This class is used in the auto-generated {@code InstrumentationModule#getMuzzleReferences()}
  * method, it is not meant to be used directly by agent extension developers.
  */
 public final class FieldRef {

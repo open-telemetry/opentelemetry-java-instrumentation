@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static org.eclipse.jetty.util.resource.Resource.newResource
-
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
+
+import static org.eclipse.jetty.util.resource.Resource.newResource
 
 class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Server> {
 

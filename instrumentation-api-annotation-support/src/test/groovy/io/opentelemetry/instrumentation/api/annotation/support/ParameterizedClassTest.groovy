@@ -5,17 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support
 
-import spock.lang.Shared
-import spock.lang.Specification
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
-
-import static spock.util.matcher.HamcrestSupport.*
-import static org.hamcrest.Matchers.*
+import spock.lang.Shared
+import spock.lang.Specification
 
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
+
+import static org.hamcrest.Matchers.arrayContainingInAnyOrder
+import static spock.util.matcher.HamcrestSupport.expect
 
 class ParameterizedClassTest extends Specification {
   @Shared
@@ -39,7 +39,7 @@ class ParameterizedClassTest extends Specification {
 
     then:
     underTest.getRawClass() == ArrayList
-    underTest.getActualTypeArguments() == [ String ] as Type[]
+    underTest.getActualTypeArguments() == [String] as Type[]
   }
 
   def "gets parameterized superclass with mapped type arguments"() {
@@ -48,7 +48,7 @@ class ParameterizedClassTest extends Specification {
 
     then:
     underTest.getRawClass() == AbstractList
-    underTest.getActualTypeArguments() == [ String ] as Type[]
+    underTest.getActualTypeArguments() == [String] as Type[]
   }
 
   def "gets parameterized interfaces with mapped type arguments"() {
@@ -57,10 +57,10 @@ class ParameterizedClassTest extends Specification {
 
     then:
     expect underTest, arrayContainingInAnyOrder(
-      matchesParameterizedClass(List, [ String ] as Type[]),
-      matchesParameterizedClass(Cloneable, [ ] as Type[]),
-      matchesParameterizedClass(RandomAccess, [ ] as Type[]),
-      matchesParameterizedClass(Serializable, [ ] as Type[]),
+      matchesParameterizedClass(List, [String] as Type[]),
+      matchesParameterizedClass(Cloneable, [] as Type[]),
+      matchesParameterizedClass(RandomAccess, [] as Type[]),
+      matchesParameterizedClass(Serializable, [] as Type[]),
     )
   }
 
@@ -71,7 +71,7 @@ class ParameterizedClassTest extends Specification {
     then:
     underTest.isPresent()
     underTest.get().getRawClass() == List
-    underTest.get().getActualTypeArguments() == [ String ] as Type[]
+    underTest.get().getActualTypeArguments() == [String] as Type[]
   }
 
   def "finds parameterized interface of superclass with mapped type arguments"() {
@@ -81,7 +81,7 @@ class ParameterizedClassTest extends Specification {
     then:
     underTest.isPresent()
     underTest.get().getRawClass() == Collection
-    underTest.get().getActualTypeArguments() == [ String ] as Type[]
+    underTest.get().getActualTypeArguments() == [String] as Type[]
   }
 
   def "does not find parameterized superclass that type does not extend"() {
@@ -100,8 +100,9 @@ class ParameterizedClassTest extends Specification {
     !underTest.isPresent()
   }
 
-  interface I { }
-  abstract class C { }
+  interface I {}
+
+  abstract class C {}
 
   static class TestFields {
     public static List<String> stringListField

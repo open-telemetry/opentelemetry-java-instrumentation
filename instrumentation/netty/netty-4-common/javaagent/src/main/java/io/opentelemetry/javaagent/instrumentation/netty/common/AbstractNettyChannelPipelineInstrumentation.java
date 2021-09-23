@@ -9,7 +9,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
@@ -37,22 +39,31 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(named("remove"))
+            .and(named("remove").or(named("replace")))
             .and(takesArgument(0, named("io.netty.channel.ChannelHandler"))),
-        AbstractNettyChannelPipelineInstrumentation.class.getName()
-            + "$ChannelPipelineRemoveAdvice");
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("remove")).and(takesArgument(0, String.class)),
-        AbstractNettyChannelPipelineInstrumentation.class.getName()
-            + "$ChannelPipelineRemoveByNameAdvice");
+        isMethod().and(named("remove").or(named("replace"))).and(takesArgument(0, String.class)),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByNameAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("remove")).and(takesArgument(0, Class.class)),
-        AbstractNettyChannelPipelineInstrumentation.class.getName()
-            + "$ChannelPipelineRemoveByClassAdvice");
+        isMethod().and(named("remove").or(named("replace"))).and(takesArgument(0, Class.class)),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByClassAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("removeFirst")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveFirstAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("removeLast")).and(returns(named("io.netty.channel.ChannelHandler"))),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("addAfter"))
+            .and(takesArgument(1, String.class))
+            .and(takesArguments(4)),
+        AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ChannelPipelineRemoveAdvice {
+  public static class RemoveAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
@@ -68,7 +79,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   }
 
   @SuppressWarnings("unused")
-  public static class ChannelPipelineRemoveByNameAdvice {
+  public static class RemoveByNameAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
@@ -89,7 +100,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   }
 
   @SuppressWarnings("unused")
-  public static class ChannelPipelineRemoveByClassAdvice {
+  public static class RemoveByClassAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
@@ -106,6 +117,62 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
         contextStore.put(handler, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RemoveFirstAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
+      if (ourHandler != null) {
+        pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RemoveLastAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
+      if (ourHandler != null) {
+        pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
+      } else if (handler
+          .getClass()
+          .getName()
+          .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
+        pipeline.removeLast();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddAfterAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void addAfterHandler(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(value = 1, readOnly = false) String name) {
+      ChannelHandler handler = pipeline.get(name);
+      if (handler != null) {
+        ContextStore<ChannelHandler, ChannelHandler> contextStore =
+            InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+        ChannelHandler ourHandler = contextStore.get(handler);
+        if (ourHandler != null) {
+          name = ourHandler.getClass().getName();
+        }
       }
     }
   }

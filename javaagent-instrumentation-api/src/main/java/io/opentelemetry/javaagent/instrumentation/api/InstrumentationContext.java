@@ -18,12 +18,8 @@ public class InstrumentationContext {
    * <p>In reality, the <em>calls</em> to this method are re-written to something more performant
    * while injecting advice into a method.
    *
-   * <p>When this method is called from outside of an Advice class it can only access {@link
-   * ContextStore} when it is already created. For this {@link ContextStore} either needs to be
-   * added to {@code
-   * io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule#getMuzzleContextStoreClasses()}
-   * or be used in an Advice or Helper class which automatically adds it to {@code
-   * InstrumentationModule#getMuzzleContextStoreClasses()}
+   * <p>When using this method outside of Advice method, the {@link ContextStore} should be looked
+   * up once and stored in a field to avoid repeatedly calling this method.
    *
    * @param keyClass The key class context is attached to.
    * @param contextClass The context class attached to the user class.

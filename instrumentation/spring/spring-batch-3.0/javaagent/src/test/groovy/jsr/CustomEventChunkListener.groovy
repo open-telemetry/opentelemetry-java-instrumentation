@@ -6,6 +6,7 @@
 package jsr
 
 import io.opentelemetry.api.trace.Span
+
 import javax.batch.api.chunk.listener.ChunkListener
 
 class CustomEventChunkListener implements ChunkListener {

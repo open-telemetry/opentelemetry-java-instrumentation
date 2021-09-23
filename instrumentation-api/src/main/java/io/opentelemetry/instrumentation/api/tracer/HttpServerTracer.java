@@ -199,10 +199,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       }
       spanBuilder.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
     }
-    spanBuilder.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIp(connection, request));
+    spanBuilder.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
-  private String clientIp(CONNECTION connection, REQUEST request) {
+  private String clientIp(REQUEST request) {
     // try Forwarded
     String forwarded = requestHeader(request, "Forwarded");
     if (forwarded != null) {
@@ -221,8 +221,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       }
     }
 
-    // fallback to peer IP if there are no proxy headers
-    return peerHostIp(connection);
+    return null;
   }
 
   // VisibleForTesting

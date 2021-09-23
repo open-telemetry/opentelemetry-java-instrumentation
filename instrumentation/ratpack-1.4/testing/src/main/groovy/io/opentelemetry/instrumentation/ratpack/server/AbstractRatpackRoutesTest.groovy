@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -19,6 +15,10 @@ import ratpack.server.RatpackServer
 import ratpack.server.RatpackServerSpec
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 @Unroll
 abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
@@ -109,7 +109,6 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == "127.0.0.1" }
 
             if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
               "${SemanticAttributes.HTTP_HOST}" "localhost:${app.bindPort}"

@@ -26,8 +26,8 @@ class MethodSpanAttributesExtractorTest extends Specification {
 
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
-      { m, p -> [ "x", "y", "z" ] as String[] },
-      { r -> [ "a", "b", "c" ] as String[] },
+      { m, p -> ["x", "y", "z"] as String[] },
+      { r -> ["a", "b", "c"] as String[] },
       cache
     )
 
@@ -53,7 +53,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
       { m, p -> new String[0] },
-      { r -> [ "a", "b", "c" ] as String[] },
+      { r -> ["a", "b", "c"] as String[] },
       cache
     )
 
@@ -76,8 +76,8 @@ class MethodSpanAttributesExtractorTest extends Specification {
 
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
-      { m, p -> [ "x", "y" ] as String[] },
-      { r -> [ "a", "b", "c" ] as String[] },
+      { m, p -> ["x", "y"] as String[] },
+      { r -> ["a", "b", "c"] as String[] },
       cache
     )
 
@@ -100,8 +100,8 @@ class MethodSpanAttributesExtractorTest extends Specification {
 
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
-      { m, p -> [ "x", null, "z" ] as String[] },
-      { r -> [ "a", "b", "c" ] as String[] },
+      { m, p -> ["x", null, "z"] as String[] },
+      { r -> ["a", "b", "c"] as String[] },
       cache
     )
 
@@ -126,8 +126,8 @@ class MethodSpanAttributesExtractorTest extends Specification {
 
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
-      { m, p -> [ "x", "y", "z" ] as String[] },
-      { r -> [ "a", "b", null ] as String[] },
+      { m, p -> ["x", "y", "z"] as String[] },
+      { r -> ["a", "b", null] as String[] },
       cache
     )
 
@@ -156,7 +156,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     def extractor = new MethodSpanAttributesExtractor<Object, Object>(
       { r -> method },
       { m, p -> throw new Exception() },
-      { r -> [ "a", "b", "c" ] as String[] },
+      { r -> ["a", "b", "c"] as String[] },
       cache
     )
 
@@ -164,7 +164,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     extractor.onStart(builder, request)
 
     then:
-    1 * bindings.apply(_, [ "a", "b", "c" ])
+    1 * bindings.apply(_, ["a", "b", "c"])
   }
 
   def "does not apply cached empty bindings"() {
@@ -195,6 +195,6 @@ class MethodSpanAttributesExtractorTest extends Specification {
   }
 
   class TestClass {
-    void method(String x, String y, String z) { }
+    void method(String x, String y, String z) {}
   }
 }

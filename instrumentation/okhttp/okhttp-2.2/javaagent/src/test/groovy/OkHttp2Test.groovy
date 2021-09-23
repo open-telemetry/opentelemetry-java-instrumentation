@@ -15,8 +15,9 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
 
 class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   @Shared

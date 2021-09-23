@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import java.util.concurrent.TimeUnit
 import org.openqa.selenium.firefox.FirefoxOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,6 +21,8 @@ import org.testcontainers.Testcontainers
 import org.testcontainers.containers.BrowserWebDriverContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
 
 abstract class AbstractVaadinTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<ConfigurableApplicationContext> {
   private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest)
@@ -35,9 +36,9 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
     static ConfigurableApplicationContext start(int port, String contextPath) {
       def app = new SpringApplication(TestApplication)
       app.setDefaultProperties([
-        "server.port"                  : port,
-        "server.servlet.contextPath"   : contextPath,
-        "server.error.include-message" : "always"])
+        "server.port"                 : port,
+        "server.servlet.contextPath"  : contextPath,
+        "server.error.include-message": "always"])
       def context = app.run()
       return context
     }

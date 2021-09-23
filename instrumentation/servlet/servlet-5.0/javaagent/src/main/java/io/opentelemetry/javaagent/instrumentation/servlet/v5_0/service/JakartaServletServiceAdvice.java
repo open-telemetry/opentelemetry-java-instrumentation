@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import static io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -13,10 +13,9 @@ import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
-import jakarta.servlet.Filter;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -34,6 +33,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -46,23 +46,13 @@ public class JakartaServletServiceAdvice {
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    boolean servlet = servletOrFilter instanceof Servlet;
-    MappingResolver mappingResolver;
-    if (servlet) {
-      mappingResolver =
-          InstrumentationContext.get(Servlet.class, MappingResolver.class)
-              .get((Servlet) servletOrFilter);
-    } else {
-      mappingResolver =
-          InstrumentationContext.get(Filter.class, MappingResolver.class)
-              .get((Filter) servletOrFilter);
-    }
-
     Context currentContext = Java8BytecodeBridge.currentContext();
-    Context attachedContext = tracer().getServerContext(httpServletRequest);
-    if (attachedContext != null && tracer().needsRescoping(currentContext, attachedContext)) {
+    Context attachedContext = helper().getServerContext(httpServletRequest);
+    if (attachedContext != null && helper().needsRescoping(currentContext, attachedContext)) {
+      MappingResolver mappingResolver = Servlet5Singletons.getMappingResolver(servletOrFilter);
+      boolean servlet = servletOrFilter instanceof Servlet;
       attachedContext =
-          tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
+          helper().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
       scope = attachedContext.makeCurrent();
       // We are inside nested servlet/filter/app-server span, don't create new span
       return;
@@ -74,8 +64,10 @@ public class JakartaServletServiceAdvice {
       // In case server span was created by app server instrumentations calling updateContext
       // returns a new context that contains servlet context path that is used in other
       // instrumentations for naming server span.
+      MappingResolver mappingResolver = Servlet5Singletons.getMappingResolver(servletOrFilter);
+      boolean servlet = servletOrFilter instanceof Servlet;
       Context updatedContext =
-          tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
+          helper().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
       if (currentContext != updatedContext) {
         // updateContext updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -84,10 +76,16 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    context = tracer().startSpan(httpServletRequest, mappingResolver, servlet);
+    requestContext = new ServletRequestContext<>(httpServletRequest, servletOrFilter);
+
+    if (!helper().shouldStart(currentContext, requestContext)) {
+      return;
+    }
+
+    context = helper().start(currentContext, requestContext);
     scope = context.makeCurrent();
 
-    tracer().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
+    helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -96,6 +94,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
+      @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -105,13 +104,14 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    ServletAndFilterAdviceHelper.stopSpan(
-        tracer(),
-        (HttpServletRequest) request,
-        (HttpServletResponse) response,
-        throwable,
-        topLevel,
-        context,
-        scope);
+    helper()
+        .end(
+            requestContext,
+            (HttpServletRequest) request,
+            (HttpServletResponse) response,
+            throwable,
+            topLevel,
+            context,
+            scope);
   }
 }

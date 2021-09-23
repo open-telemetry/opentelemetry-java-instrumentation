@@ -29,7 +29,7 @@ public class AgentBenchmark {
       System.getenv()
           .getOrDefault(
               "APP_IMAGE",
-              "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
+              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk8-20210918.1248928124");
 
   private List<GenericContainer<?>> containers;
   private static final Logger logger = LoggerFactory.getLogger(AgentBenchmark.class);
@@ -64,7 +64,7 @@ public class AgentBenchmark {
             .withNetwork(Network.SHARED)
             .withNetworkAliases("collector")
             .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withExposedPorts(55680, 13133)
+            .withExposedPorts(4317, 13133)
             .waitingFor(Wait.forHttp("/").forPort(13133))
             .withCopyFileToContainer(
                 MountableFile.forClasspathResource("collector-config.yml"),
@@ -80,7 +80,7 @@ public class AgentBenchmark {
             .withNetworkAliases("app")
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
-            .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
+            .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:4317")
             .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
             .withExposedPorts(8080);
     containers.add(app);

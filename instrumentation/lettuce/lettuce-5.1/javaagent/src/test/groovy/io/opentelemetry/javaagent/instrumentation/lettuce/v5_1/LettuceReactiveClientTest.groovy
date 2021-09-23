@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.lettuce.core.RedisClient
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import reactor.core.scheduler.Schedulers
+
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implements AgentTestTrait {
   @Override

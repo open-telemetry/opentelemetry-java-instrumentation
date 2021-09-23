@@ -21,6 +21,11 @@ public final class KafkaConsumerAttributesExtractor
   }
 
   @Override
+  public MessageOperation operation() {
+    return messageOperation;
+  }
+
+  @Override
   protected String system(ConsumerRecord<?, ?> consumerRecord) {
     return "kafka";
   }
@@ -68,11 +73,6 @@ public final class KafkaConsumerAttributesExtractor
   @Override
   protected @Nullable Long messagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
     return null;
-  }
-
-  @Override
-  protected MessageOperation operation(ConsumerRecord<?, ?> consumerRecord) {
-    return messageOperation;
   }
 
   @Override

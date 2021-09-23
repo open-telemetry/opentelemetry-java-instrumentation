@@ -15,33 +15,41 @@ import java.util.Set;
 abstract class SpanSuppressionStrategy {
   private static final SpanSuppressionStrategy SERVER_STRATEGY =
       new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.SERVER));
-  private static final SpanSuppressionStrategy CONSUMER_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.CONSUMER));
   private static final SpanSuppressionStrategy ALL_CLIENTS_STRATEGY =
       new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_CLIENTS));
-  private static final SpanSuppressionStrategy ALL_PRODUCERS_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_PRODUCERS));
 
-  public static final SpanSuppressionStrategy SUPPRESS_ALL_NESTED_OUTGOING_STRATEGY =
+  private static final SpanSuppressionStrategy SUPPRESS_GENERIC_CLIENTS_AND_SERVERS =
       new CompositeSuppressionStrategy(
-          ALL_CLIENTS_STRATEGY, ALL_PRODUCERS_STRATEGY, SERVER_STRATEGY, CONSUMER_STRATEGY);
+          ALL_CLIENTS_STRATEGY,
+          NoopSuppressionStrategy.INSTANCE,
+          SERVER_STRATEGY,
+          NoopSuppressionStrategy.INSTANCE);
 
-  private static final SpanSuppressionStrategy NO_CLIENT_SUPPRESSION_STRATEGY =
+  private static final SpanSuppressionStrategy SUPPRESS_ONLY_SERVERS =
       new CompositeSuppressionStrategy(
           NoopSuppressionStrategy.INSTANCE,
           NoopSuppressionStrategy.INSTANCE,
           SERVER_STRATEGY,
-          CONSUMER_STRATEGY);
+          NoopSuppressionStrategy.INSTANCE);
 
-  static SpanSuppressionStrategy from(Set<SpanKey> clientSpanKeys) {
-    if (clientSpanKeys.isEmpty()) {
-      return NO_CLIENT_SUPPRESSION_STRATEGY;
+  static SpanSuppressionStrategy suppressNestedClients(Set<SpanKey> spanKeys) {
+    if (spanKeys.isEmpty()) {
+      return SUPPRESS_GENERIC_CLIENTS_AND_SERVERS;
     }
 
-    SpanSuppressionStrategy clientOrProducerStrategy =
-        new SuppressIfSameSpanKeyStrategy(clientSpanKeys);
+    SpanSuppressionStrategy spanKeyStrategy = new SuppressIfSameSpanKeyStrategy(spanKeys);
     return new CompositeSuppressionStrategy(
-        clientOrProducerStrategy, clientOrProducerStrategy, SERVER_STRATEGY, CONSUMER_STRATEGY);
+        ALL_CLIENTS_STRATEGY, spanKeyStrategy, SERVER_STRATEGY, spanKeyStrategy);
+  }
+
+  static SpanSuppressionStrategy from(Set<SpanKey> spanKeys) {
+    if (spanKeys.isEmpty()) {
+      return SUPPRESS_ONLY_SERVERS;
+    }
+
+    SpanSuppressionStrategy spanKeyStrategy = new SuppressIfSameSpanKeyStrategy(spanKeys);
+    return new CompositeSuppressionStrategy(
+        spanKeyStrategy, spanKeyStrategy, SERVER_STRATEGY, spanKeyStrategy);
   }
 
   abstract Context storeInContext(Context context, SpanKind spanKind, Span span);

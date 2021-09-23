@@ -20,13 +20,14 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
@@ -77,7 +78,7 @@ public final class InstrumentationModuleInstaller {
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, helperClassNames);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
@@ -95,11 +96,12 @@ public final class InstrumentationModuleInstaller {
               .type(
                   new LoggingFailSafeMatcher<>(
                       typeInstrumentation.typeMatcher(),
-                      "Instrumentation type matcher unexpected exception: " + getClass().getName()),
+                      "Instrumentation type matcher unexpected exception: "
+                          + typeInstrumentation.typeMatcher()),
                   new LoggingFailSafeMatcher<>(
                       moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()),
                       "Instrumentation class loader matcher unexpected exception: "
-                          + getClass().getName()))
+                          + typeInstrumentation.classLoaderOptimization()))
               .and(NOT_DECORATOR_MATCHER)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
@@ -118,9 +120,11 @@ public final class InstrumentationModuleInstaller {
 
   private static InstrumentationContextProvider createInstrumentationContextProvider(
       InstrumentationModule instrumentationModule) {
-    Map<String, String> contextStore = instrumentationModule.getMuzzleContextStoreClasses();
-    if (!contextStore.isEmpty()) {
-      return FieldBackedProviderFactory.get(instrumentationModule.getClass(), contextStore);
+    InstrumentationContextBuilderImpl builder = new InstrumentationContextBuilderImpl();
+    instrumentationModule.registerMuzzleContextStoreClasses(builder);
+    ContextStoreMappings mappings = builder.build();
+    if (!mappings.isEmpty()) {
+      return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
     } else {
       return NoopContextProvider.INSTANCE;
     }
@@ -132,8 +136,9 @@ public final class InstrumentationModuleInstaller {
           (keyClass, contextClass) -> FieldBackedProvider.getContextStore(keyClass, contextClass));
     }
 
-    static FieldBackedProvider get(Class<?> instrumenterClass, Map<String, String> contextStore) {
-      return new FieldBackedProvider(instrumenterClass, contextStore);
+    static FieldBackedProvider get(
+        Class<?> instrumenterClass, ContextStoreMappings contextStoreMappings) {
+      return new FieldBackedProvider(instrumenterClass, contextStoreMappings);
     }
   }
 
@@ -144,14 +149,11 @@ public final class InstrumentationModuleInstaller {
    */
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
-    private final List<String> helperClassNames;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private volatile ReferenceMatcher referenceMatcher;
 
-    private MuzzleMatcher(
-        InstrumentationModule instrumentationModule, List<String> helperClassNames) {
+    private MuzzleMatcher(InstrumentationModule instrumentationModule) {
       this.instrumentationModule = instrumentationModule;
-      this.helperClassNames = helperClassNames;
     }
 
     @Override
@@ -198,11 +200,7 @@ public final class InstrumentationModuleInstaller {
     // during the agent setup
     private ReferenceMatcher getReferenceMatcher() {
       if (initialized.compareAndSet(false, true)) {
-        referenceMatcher =
-            new ReferenceMatcher(
-                helperClassNames,
-                instrumentationModule.getMuzzleReferences(),
-                instrumentationModule::isHelperClass);
+        referenceMatcher = ReferenceMatcher.of(instrumentationModule);
       }
       return referenceMatcher;
     }

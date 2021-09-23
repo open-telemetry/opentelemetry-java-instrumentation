@@ -37,7 +37,7 @@ final class LettuceDbAttributesExtractor
 
   @Override
   protected String statement(RedisCommand<?, ?, ?> request) {
-    return request.getType().name();
+    return null;
   }
 
   @Override

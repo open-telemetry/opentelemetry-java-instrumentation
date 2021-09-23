@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 
+@Deprecated
 public class ServletAndFilterAdviceHelper {
   public static <REQUEST, RESPONSE> void stopSpan(
       ServletHttpServerTracer<REQUEST, RESPONSE> tracer,

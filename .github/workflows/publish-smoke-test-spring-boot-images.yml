@@ -1,0 +1,73 @@
+name: Publish Spring Boot images for smoke tests
+
+on:
+  push:
+    paths:
+      - 'smoke-tests/springboot/**'
+      - '.github/workflows/publish-smoke-test-spring-boot-images.yml'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache gradle dependencies
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: springboot-smoke
+          read-only: true
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/springboot/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v1.10.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
+          echo "Pushing to tag $TAG"
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+        working-directory: smoke-tests/springboot
+
+  issue:
+    name: Open issue on failure
+    needs: publish
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2.2
+
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - uses: JasonEtco/create-an-issue@v2.5.0
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/templates/smoke-test-image-publishing-failed.md

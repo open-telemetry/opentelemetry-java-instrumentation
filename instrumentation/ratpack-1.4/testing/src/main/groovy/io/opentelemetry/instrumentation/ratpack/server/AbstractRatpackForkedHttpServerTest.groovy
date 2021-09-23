@@ -5,14 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
@@ -23,6 +15,14 @@ import ratpack.exec.Promise
 import ratpack.exec.Result
 import ratpack.exec.util.ParallelBatch
 import ratpack.server.RatpackServer
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpServerTest {
 
@@ -39,7 +39,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           it.add(ServerErrorHandler, new TestErrorHandler())
         }
         it.prefix(SUCCESS.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               SUCCESS
             }.fork().then { endpoint ->
@@ -50,7 +50,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           }
         }
         it.prefix(INDEXED_CHILD.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               INDEXED_CHILD
             }.fork().then {
@@ -73,7 +73,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           }
         }
         it.prefix(REDIRECT.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               REDIRECT
             }.fork().then { endpoint ->
@@ -84,7 +84,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           }
         }
         it.prefix(ERROR.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               ERROR
             }.fork().then { endpoint ->
@@ -106,7 +106,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           }
         }
         it.prefix("path/:id/param") {
-          it.all {context ->
+          it.all { context ->
             Promise.sync {
               PATH_PARAM
             }.fork().then { endpoint ->
@@ -117,7 +117,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
           }
         }
         it.prefix("fork_and_yieldAll") {
-          it.all {context ->
+          it.all { context ->
             def promise = Promise.async { upstream ->
               Execution.fork().start({
                 upstream.accept(Result.success(SUCCESS))
@@ -143,7 +143,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
 
   def "test fork and yieldAll"() {
     setup:
-    def url =  address.resolve("fork_and_yieldAll").toString()
+    def url = address.resolve("fork_and_yieldAll").toString()
     url = url.replace("http://", "h1c://")
     def request = AggregatedHttpRequest.of(HttpMethod.GET, url)
     AggregatedHttpResponse response = client.execute(request).aggregate().join()

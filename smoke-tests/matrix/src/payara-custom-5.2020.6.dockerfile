@@ -1,11 +1,9 @@
+ARG jdkImage
 ARG version
-ARG jdk
-ARG vm
 
 FROM payara/server-full:${version} as default
-ENV HOME_DIR=$HOME_DIR
 
-FROM adoptopenjdk:${jdk}-jdk-${vm}
+FROM ${jdkImage}
 
 # These environment variables have been confirmed to work with 5.2020.6 only
 ENV HOME_DIR=/opt/payara

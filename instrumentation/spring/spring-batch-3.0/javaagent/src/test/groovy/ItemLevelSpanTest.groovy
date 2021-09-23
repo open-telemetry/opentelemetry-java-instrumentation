@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static java.util.Collections.emptyMap
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static java.util.Collections.emptyMap
 
 abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
   abstract runJob(String jobName, Map<String, JobParameter> params = emptyMap())
@@ -143,7 +143,7 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
         def childCount = new HashMap<SpanData, Number>()
         spans.forEach { span ->
           if (span.name == "BatchJob parallelItemsJob.parallelItemsStep.Chunk") {
-            childCount.put(span, spans.count {it.parentSpanId == span.spanId })
+            childCount.put(span, spans.count { it.parentSpanId == span.spanId })
           }
         }
         // sort spans with a ranking function
@@ -160,7 +160,7 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
           // find the chunk this span belongs to
           def chunkSpan = it
           while (chunkSpan != null && chunkSpan.name != "BatchJob parallelItemsJob.parallelItemsStep.Chunk") {
-            chunkSpan = spans.find {it.spanId == chunkSpan.parentSpanId }
+            chunkSpan = spans.find { it.spanId == chunkSpan.parentSpanId }
           }
           if (chunkSpan != null) {
             // sort larger chunks first

@@ -7,9 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
 
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import reactor.netty.http.client.HttpClient
+
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
-import reactor.netty.http.client.HttpClient
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
 
@@ -40,7 +41,7 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
           .headers({ h -> headers.each { k, v -> h.add(k, v) } })
           .get()
           .uri(path)
-          .responseSingle {resp, content ->
+          .responseSingle { resp, content ->
             // Make sure to consume content since that's when we close the span.
             content.map { resp }
           }

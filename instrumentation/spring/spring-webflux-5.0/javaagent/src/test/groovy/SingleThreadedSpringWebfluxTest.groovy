@@ -9,6 +9,7 @@ import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.web.embedded.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean
 import server.SpringWebFluxTestApplication
+
 /**
  * Run all Webflux tests under netty event loop having only 1 thread.
  * Some of the bugs are better visible in this setup because same thread is reused

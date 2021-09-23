@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class MulticastDirectCamelTest extends AgentInstrumentationSpecification {
 

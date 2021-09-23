@@ -1,17 +1,16 @@
-ARG jdk
-ARG vm
-ARG majorVersion
-ARG version
+ARG jdkImage
 
 # Unzip in a separate container so that zip file layer is not part of final image
 FROM mcr.microsoft.com/windows/servercore:1809 as builder
 ARG majorVersion
 ARG version
+
 ADD https://archive.apache.org/dist/tomcat/tomcat-${majorVersion}/v${version}/bin/apache-tomcat-${version}-windows-x64.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
-FROM adoptopenjdk:${jdk}-jdk-${vm}-windowsservercore-1809
+FROM ${jdkImage}-windowsservercore-1809
 ARG version
+
 # Make /server the base directory to simplify all further paths
 COPY --from=builder /server/apache-tomcat-${version} /server
 # Delete default webapps to match the behavior of the official Linux Tomcat image

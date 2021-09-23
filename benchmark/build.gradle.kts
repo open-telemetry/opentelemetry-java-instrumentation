@@ -8,6 +8,8 @@ plugins {
   id("otel.jmh-conventions")
 }
 
+val caffeine2Version: String by project
+
 dependencies {
   jmh(platform(project(":dependencyManagement")))
 
@@ -19,7 +21,7 @@ dependencies {
   jmh(project(":javaagent-tooling"))
   jmh(project(":javaagent-extension-api"))
 
-  jmh("com.github.ben-manes.caffeine:caffeine")
+  jmh("com.github.ben-manes.caffeine:caffeine:$caffeine2Version")
 
   jmh("javax.servlet:javax.servlet-api:4.0.1")
   jmh("com.google.http-client:google-http-client:1.19.0")

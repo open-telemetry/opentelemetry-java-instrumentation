@@ -31,7 +31,7 @@ public class RemappingUrlConnection extends URLConnection {
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.context"),
           rule(
               "#io.opentelemetry.instrumentation",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.instrumentation"),
+              "#io.opentelemetry.javaagent.shaded.instrumentation"),
           rule(
               "#io.opentelemetry.semconv",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv"),

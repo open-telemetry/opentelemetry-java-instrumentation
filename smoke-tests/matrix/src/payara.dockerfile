@@ -1,5 +1,5 @@
 ARG version
-ARG jdk
+ARG tagSuffix
 
 FROM payara/server-full:${version}${tagSuffix}
 

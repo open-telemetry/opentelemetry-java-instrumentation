@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
-
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.MoreExecutors
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -39,10 +36,15 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Unroll
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @Unroll
 abstract class AbstractGrpcTest extends InstrumentationSpecification {
@@ -101,6 +103,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -118,6 +127,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -141,6 +157,261 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     where:
     paramName << ["some name", "some other name"]
+  }
+
+  def "test ListenableFuture callback"() {
+    setup:
+    BindableService greeter = new GreeterGrpc.GreeterImplBase() {
+      @Override
+      void sayHello(
+        final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
+        final Helloworld.Response reply = Helloworld.Response.newBuilder().setMessage("Hello $req.name").build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+      }
+    }
+    def port = PortUtils.findOpenPort()
+    Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
+    ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
+    GreeterGrpc.GreeterFutureStub client = GreeterGrpc.newFutureStub(channel)
+
+    when:
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>()
+    AtomicReference<Throwable> error = new AtomicReference<>()
+    runWithSpan("parent") {
+      def future = Futures.transform(
+        client.sayHello(Helloworld.Request.newBuilder().setName("test").build()),
+        {
+          runWithSpan("child") {}
+          return it
+        },
+        MoreExecutors.directExecutor())
+      try {
+        response.set(future.get())
+      } catch (Exception e) {
+        error.set(e)
+      }
+    }
+
+    then:
+    error.get() == null
+    response.get().message == "Hello test"
+
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          childOf span(0)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" Status.Code.OK.value()
+          }
+        }
+        span(2) {
+          name "example.Greeter/SayHello"
+          kind SERVER
+          childOf span(1)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()
+          }
+        }
+        span(3) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
+  }
+
+
+  def "test onCompleted callback"() {
+    setup:
+    BindableService greeter = new GreeterGrpc.GreeterImplBase() {
+      @Override
+      void sayHello(
+        final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
+        final Helloworld.Response reply = Helloworld.Response.newBuilder().setMessage("Hello $req.name").build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+      }
+    }
+    def port = PortUtils.findOpenPort()
+    Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
+    ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
+    GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel)
+
+    when:
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>()
+    AtomicReference<Throwable> error = new AtomicReference<>()
+    CountDownLatch latch = new CountDownLatch(1)
+    runWithSpan("parent") {
+      client.sayHello(Helloworld.Request.newBuilder().setName("test").build(),
+        new StreamObserver<Helloworld.Response>() {
+          @Override
+          void onNext(Helloworld.Response r) {
+            response.set(r)
+          }
+
+          @Override
+          void onError(Throwable throwable) {
+            error.set(throwable)
+          }
+
+          @Override
+          void onCompleted() {
+            runWithSpan("child") {}
+            latch.countDown()
+          }
+        }
+      )
+    }
+
+    latch.await(10, TimeUnit.SECONDS)
+
+    then:
+    error.get() == null
+    response.get().message == "Hello test"
+
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          childOf span(0)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" Status.Code.OK.value()
+          }
+        }
+        span(2) {
+          name "example.Greeter/SayHello"
+          kind SERVER
+          childOf span(1)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()
+          }
+        }
+        span(3) {
+          name "child"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
   }
 
   def "test error - #paramName"() {
@@ -181,6 +452,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           status ERROR
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -272,6 +550,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           status ERROR
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           attributes {
@@ -442,6 +727,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -459,6 +751,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -558,12 +857,20 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
-          errorEvent(IllegalStateException, "illegal", 1)
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
+          errorEvent(IllegalStateException, "illegal", 2)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.CANCELLED.code.value()
           }
         }
         span(2) {
@@ -575,6 +882,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -658,6 +972,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
@@ -675,6 +996,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             attributes {
               "message.type" "RECEIVED"
               "message.id" 1
+            }
+          }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
             }
           }
           attributes {
@@ -752,6 +1080,13 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -771,12 +1106,19 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
+          event(1) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 2
+            }
+          }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()

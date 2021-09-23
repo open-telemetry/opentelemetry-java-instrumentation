@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Ignore
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 @Ignore("Does not work with localstack - X-Ray features needed")
 class S3CamelTest extends AgentInstrumentationSpecification {

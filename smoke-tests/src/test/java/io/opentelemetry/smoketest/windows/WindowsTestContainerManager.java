@@ -52,11 +52,9 @@ import org.testcontainers.containers.output.OutputFrame;
 
 public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private static final Logger logger = LoggerFactory.getLogger(WindowsTestContainerManager.class);
-  private static final Logger collectorLogger = LoggerFactory.getLogger("Collector");
   private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
 
   private static final String NPIPE_URI = "npipe:////./pipe/docker_engine";
-  private static final String COLLECTOR_CONFIG_FILE_PATH = "/collector-config.yml";
 
   private final DockerClient client =
       DockerClientImpl.getInstance(
@@ -65,7 +63,6 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
 
   @Nullable private String natNetworkId = null;
   @Nullable private Container backend;
-  @Nullable private Container collector;
   @Nullable private Container target;
 
   @Override
@@ -81,7 +78,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     String backendSuffix = "-windows-20210611.927888723";
 
     String backendImageName =
-        "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20210918.1248928123";
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
@@ -104,43 +101,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             /* inspect= */ true,
             backendLogger);
-
-    String collectorImageName =
-        "ghcr.io/open-telemetry/java-test-containers:collector" + backendSuffix;
-    if (!imageExists(collectorImageName)) {
-      pullImage(collectorImageName);
-    }
-    collector =
-        startContainer(
-            collectorImageName,
-            command ->
-                command
-                    .withAliases(COLLECTOR_ALIAS)
-                    .withHostConfig(
-                        HostConfig.newHostConfig()
-                            .withAutoRemove(true)
-                            .withNetworkMode(natNetworkId))
-                    .withCmd("--config", COLLECTOR_CONFIG_FILE_PATH),
-            containerId -> {
-              try (InputStream configFileStream =
-                  this.getClass().getResourceAsStream(COLLECTOR_CONFIG_RESOURCE)) {
-                copyFileToContainer(
-                    containerId, IOUtils.toByteArray(configFileStream), COLLECTOR_CONFIG_FILE_PATH);
-              } catch (IOException e) {
-                throw new IllegalStateException(e);
-              }
-            },
-            new NoOpWaiter(),
-            /* inspect= */ false,
-            collectorLogger);
   }
 
   @Override
   protected void stopEnvironment() {
     stopTarget();
-
-    killContainer(collector);
-    collector = null;
 
     killContainer(backend);
     backend = null;

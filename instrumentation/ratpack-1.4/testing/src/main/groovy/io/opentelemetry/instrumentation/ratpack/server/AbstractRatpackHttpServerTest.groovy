@@ -5,15 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -22,6 +13,15 @@ import ratpack.error.ServerErrorHandler
 import ratpack.handling.Context
 import ratpack.server.RatpackServer
 import ratpack.server.RatpackServerSpec
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServer> {
 
@@ -39,14 +39,14 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
           it.add(ServerErrorHandler, new TestErrorHandler())
         }
         it.prefix(SUCCESS.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             controller(SUCCESS) {
               context.response.status(SUCCESS.status).send(SUCCESS.body)
             }
           }
         }
         it.prefix(INDEXED_CHILD.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             controller(INDEXED_CHILD) {
               INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
               context.response.status(INDEXED_CHILD.status).send()
@@ -61,14 +61,14 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
           }
         }
         it.prefix(REDIRECT.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             controller(REDIRECT) {
               context.redirect(REDIRECT.body)
             }
           }
         }
         it.prefix(ERROR.rawPath()) {
-          it.all {context ->
+          it.all { context ->
             controller(ERROR) {
               context.response.status(ERROR.status).send(ERROR.body)
             }
@@ -82,7 +82,7 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
           }
         }
         it.prefix("path/:id/param") {
-          it.all {context ->
+          it.all { context ->
             controller(PATH_PARAM) {
               context.response.status(PATH_PARAM.status).send(context.pathTokens.id)
             }

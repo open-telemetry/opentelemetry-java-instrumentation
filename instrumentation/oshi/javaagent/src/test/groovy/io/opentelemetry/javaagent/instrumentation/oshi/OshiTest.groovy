@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi
 
-import static java.util.concurrent.TimeUnit.SECONDS
-
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
+import static java.util.concurrent.TimeUnit.SECONDS
 
 class OshiTest extends AgentInstrumentationSpecification {
 

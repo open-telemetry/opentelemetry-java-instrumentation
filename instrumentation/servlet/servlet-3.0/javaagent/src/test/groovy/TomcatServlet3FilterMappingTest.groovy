@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import org.apache.catalina.Context
+import org.apache.catalina.startup.Tomcat
+import org.apache.tomcat.util.descriptor.web.FilterDef
+import org.apache.tomcat.util.descriptor.web.FilterMap
+
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.FilterConfig
@@ -12,10 +17,6 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import org.apache.catalina.Context
-import org.apache.catalina.startup.Tomcat
-import org.apache.tomcat.util.descriptor.web.FilterDef
-import org.apache.tomcat.util.descriptor.web.FilterMap
 
 abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest {
 

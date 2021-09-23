@@ -56,11 +56,7 @@ public class ClassLoaderMatcher {
 
   private static List<Mismatch> checkReferenceMatcher(
       InstrumentationModule instrumentationModule, ClassLoader classLoader) {
-    ReferenceMatcher muzzle =
-        new ReferenceMatcher(
-            instrumentationModule.getMuzzleHelperClassNames(),
-            instrumentationModule.getMuzzleReferences(),
-            instrumentationModule::isHelperClass);
+    ReferenceMatcher muzzle = ReferenceMatcher.of(instrumentationModule);
     return muzzle.getMismatchedReferenceSources(classLoader);
   }
 

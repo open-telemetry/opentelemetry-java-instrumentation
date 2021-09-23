@@ -4,8 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.TimeUnit
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
@@ -18,6 +16,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
 import spock.lang.Shared
+
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.TimeUnit
 
 class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequest> {
   @Shared

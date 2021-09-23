@@ -9,13 +9,14 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
-import javax.servlet.DispatcherType
 import org.apache.wicket.protocol.http.WicketFilter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
 import org.jsoup.Jsoup
+
+import javax.servlet.DispatcherType
 
 class WicketTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 

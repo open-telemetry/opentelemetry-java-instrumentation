@@ -16,7 +16,9 @@ class CsvPersister implements ResultsPersister {
 
   private final Path resultsFile;
 
-  public CsvPersister(Path resultsFile) {this.resultsFile = resultsFile;}
+  public CsvPersister(Path resultsFile) {
+    this.resultsFile = resultsFile;
+  }
 
   @Override
   public void write(List<AppPerfResults> results) {
@@ -28,23 +30,25 @@ class CsvPersister implements ResultsPersister {
     // Each result is for a given agent run, and we want all the fields for all agents on the same
     // line so that we can create a columnar structure that allows us to more easily compare agent
     // to agent for a given run.
-    doSorted(results, result -> {
-      sb.append(",").append(result.startupDurationMs);
-      sb.append(",").append(result.heapUsed.min);
-      sb.append(",").append(result.heapUsed.max);
-      sb.append(",").append(result.getTotalAllocatedMB());
-      sb.append(",").append(result.totalGCTime);
-      sb.append(",").append(result.maxThreadContextSwitchRate);
-      sb.append(",").append(result.iterationAvg);
-      sb.append(",").append(result.iterationP95);
-      sb.append(",").append(result.requestAvg);
-      sb.append(",").append(result.requestP95);
-      sb.append(",").append(result.averageNetworkRead);
-      sb.append(",").append(result.averageNetworkWrite);
-      sb.append(",").append(result.peakThreadCount);
-      sb.append(",").append(result.averageJvmUserCpu);
-      sb.append(",").append(result.maxJvmUserCpu);
-    });
+    doSorted(
+        results,
+        result -> {
+          sb.append(",").append(result.startupDurationMs);
+          sb.append(",").append(result.heapUsed.min);
+          sb.append(",").append(result.heapUsed.max);
+          sb.append(",").append(result.getTotalAllocatedMB());
+          sb.append(",").append(result.totalGCTime);
+          sb.append(",").append(result.maxThreadContextSwitchRate);
+          sb.append(",").append(result.iterationAvg);
+          sb.append(",").append(result.iterationP95);
+          sb.append(",").append(result.requestAvg);
+          sb.append(",").append(result.requestP95);
+          sb.append(",").append(result.averageNetworkRead);
+          sb.append(",").append(result.averageNetworkWrite);
+          sb.append(",").append(result.peakThreadCount);
+          sb.append(",").append(result.averageJvmUserCpu);
+          sb.append(",").append(result.maxJvmUserCpu);
+        });
     sb.append("\n");
     try {
       Files.writeString(resultsFile, sb.toString(), StandardOpenOption.APPEND);
@@ -71,31 +75,31 @@ class CsvPersister implements ResultsPersister {
     // Each result is for a given agent run, and we want all the fields for all agents on the same
     // line so that we can create a columnar structure that allows us to more easily compare agent
     // to agent for a given run.
-    doSorted(results, result -> {
-      String agent = result.getAgentName();
-      sb.append(",").append(agent).append(":startupTimeMs");
-      sb.append(",").append(agent).append(":minHeapUsed");
-      sb.append(",").append(agent).append(":maxHeapUsed");
-      sb.append(",").append(agent).append(":totalAllocatedMB");
-      sb.append(",").append(agent).append(":totalGCTime");
-      sb.append(",").append(agent).append(":maxThreadContextSwitchRate");
-      sb.append(",").append(agent).append(":iterationAvg");
-      sb.append(",").append(agent).append(":iterationP95");
-      sb.append(",").append(agent).append(":requestAvg");
-      sb.append(",").append(agent).append(":requestP95");
-      sb.append(",").append(agent).append(":netReadAvg");
-      sb.append(",").append(agent).append(":netWriteAvg");
-      sb.append(",").append(agent).append(":peakThreadCount");
-      sb.append(",").append(agent).append(":averageCpuUser");
-      sb.append(",").append(agent).append(":maxCpuUser");
-    });
+    doSorted(
+        results,
+        result -> {
+          String agent = result.getAgentName();
+          sb.append(",").append(agent).append(":startupTimeMs");
+          sb.append(",").append(agent).append(":minHeapUsed");
+          sb.append(",").append(agent).append(":maxHeapUsed");
+          sb.append(",").append(agent).append(":totalAllocatedMB");
+          sb.append(",").append(agent).append(":totalGCTime");
+          sb.append(",").append(agent).append(":maxThreadContextSwitchRate");
+          sb.append(",").append(agent).append(":iterationAvg");
+          sb.append(",").append(agent).append(":iterationP95");
+          sb.append(",").append(agent).append(":requestAvg");
+          sb.append(",").append(agent).append(":requestP95");
+          sb.append(",").append(agent).append(":netReadAvg");
+          sb.append(",").append(agent).append(":netWriteAvg");
+          sb.append(",").append(agent).append(":peakThreadCount");
+          sb.append(",").append(agent).append(":averageCpuUser");
+          sb.append(",").append(agent).append(":maxCpuUser");
+        });
     sb.append("\n");
     return sb.toString();
   }
 
   private void doSorted(List<AppPerfResults> results, Consumer<AppPerfResults> consumer) {
-    results.stream()
-        .sorted(Comparator.comparing(AppPerfResults::getAgentName))
-        .forEach(consumer);
+    results.stream().sorted(Comparator.comparing(AppPerfResults::getAgentName)).forEach(consumer);
   }
 }

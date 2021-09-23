@@ -5,22 +5,23 @@
 
 package io.opentelemetry.smoketest
 
-import static java.util.stream.Collectors.toSet
-
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc
-import java.util.jar.Attributes
-import java.util.jar.JarFile
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
+
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+
+import static java.util.stream.Collectors.toSet
 
 @IgnoreIf({ os.windows })
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210225.598590600"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20210917.1246635135"
   }
 
   @Unroll
@@ -59,6 +60,6 @@ class GrpcSmokeTest extends SmokeTest {
     channel.shutdown()
 
     where:
-    jdk << [8, 11, 15]
+    jdk << [8, 11, 16]
   }
 }

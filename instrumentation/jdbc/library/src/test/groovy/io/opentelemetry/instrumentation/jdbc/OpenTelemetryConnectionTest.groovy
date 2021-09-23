@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryCallableStatement
@@ -16,6 +14,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 class OpenTelemetryConnectionTest extends InstrumentationSpecification implements LibraryTestTrait {
 
@@ -180,15 +180,15 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   private DbInfo getDbInfo() {
     DbInfo.builder()
-        .system("my_system")
-        .subtype("my_sub_type")
-        .shortUrl("my_connection_string")
-        .user("my_user")
-        .name("my_name")
-        .db("my_db")
-        .host("my_host")
-        .port(1234)
-        .build()
+      .system("my_system")
+      .subtype("my_sub_type")
+      .shortUrl("my_connection_string")
+      .user("my_user")
+      .name("my_name")
+      .db("my_db")
+      .host("my_host")
+      .port(1234)
+      .build()
   }
 
 }

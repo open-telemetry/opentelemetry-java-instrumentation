@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.extension.muzzle;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.Objects;
 
 /**
  * Represents the source (file name, line number) of a reference.
  *
- * <p>This class is used in the auto-generated {@link InstrumentationModule#getMuzzleReferences()}
+ * <p>This class is used in the auto-generated {@code InstrumentationModule#getMuzzleReferences()}
  * method, it is not meant to be used directly by agent extension developers.
  */
 public final class Source {

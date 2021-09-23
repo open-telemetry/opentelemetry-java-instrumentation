@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -149,26 +148,11 @@ public abstract class InstrumentationModule implements Ordered {
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**
-   * Returns references to helper and library classes used in this module's type instrumentation
-   * advices, grouped by {@link ClassRef#getClassName()}.
-   *
-   * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
-   *
-   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
-   * will not generate a new implementation, it will leave the existing one.
-   */
-  public Map<String, ClassRef> getMuzzleReferences() {
-    return Collections.emptyMap();
-  }
-
-  /**
    * Returns a list of instrumentation helper classes, automatically detected by muzzle during
    * compilation. Those helpers will be injected into the application classloader.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
+   * the {@code io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
@@ -182,13 +166,31 @@ public abstract class InstrumentationModule implements Ordered {
    * associated with a context class stored in the value.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.muzzle.generation.collector.MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
+   * the {@code io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
+   *
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
+   *
+   * @deprecated Use {@link #registerMuzzleContextStoreClasses(InstrumentationContextBuilder)}
+   *     instead.
+   */
+  @Deprecated
+  public Map<String, String> getMuzzleContextStoreClasses() {
+    return Collections.emptyMap();
+  }
+
+  /**
+   * Builds the associations between instrumented library classes and instrumentation context
+   * classes. Keys (and their subclasses) will be associated with a context class stored in the
+   * value.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@code io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
    */
-  public Map<String, String> getMuzzleContextStoreClasses() {
-    return Collections.emptyMap();
+  public void registerMuzzleContextStoreClasses(InstrumentationContextBuilder builder) {
+    getMuzzleContextStoreClasses().forEach(builder::register);
   }
 }

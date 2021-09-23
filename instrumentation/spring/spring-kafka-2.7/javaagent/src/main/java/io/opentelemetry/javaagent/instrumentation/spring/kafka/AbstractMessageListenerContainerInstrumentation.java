@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -43,8 +44,11 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) BatchInterceptor<?, ?> interceptor) {
       if (!(interceptor instanceof InstrumentedBatchInterceptor)) {
-        ContextStore contextStore = InstrumentationContext.get(ConsumerRecords.class, State.class);
-        interceptor = new InstrumentedBatchInterceptor<>(contextStore, interceptor);
+        ContextStore receiveSpanContextStore =
+            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class);
+        ContextStore stateStore = InstrumentationContext.get(ConsumerRecords.class, State.class);
+        interceptor =
+            new InstrumentedBatchInterceptor<>(receiveSpanContextStore, stateStore, interceptor);
       }
     }
   }

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper container for Context attributes for transferring certain information between servlet
@@ -42,6 +43,7 @@ public class AppServerBridge {
   }
 
   private final boolean servletShouldRecordException;
+  private Throwable exception;
 
   private AppServerBridge(boolean shouldRecordException) {
     servletShouldRecordException = shouldRecordException;
@@ -53,16 +55,45 @@ public class AppServerBridge {
    * during servlet invocation are propagated to the method where server span is closed and can be
    * added to server span there and <code>true</code> otherwise.
    *
-   * @param ctx server context
+   * @param context server context
    * @return <code>true</code>, if servlet integration should record exception thrown during servlet
    *     invocation in server span, or <code>false</code> otherwise.
    */
-  public static boolean shouldRecordException(Context ctx) {
-    AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
+  public static boolean shouldRecordException(Context context) {
+    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
     if (appServerBridge != null) {
       return appServerBridge.servletShouldRecordException;
     }
     return true;
+  }
+
+  /**
+   * Record exception that happened during servlet invocation so that app server instrumentation can
+   * add it to server span.
+   *
+   * @param context server context
+   * @param exception exception that happened during servlet invocation
+   */
+  public static void recordException(Context context, Throwable exception) {
+    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+    if (appServerBridge != null && appServerBridge.servletShouldRecordException) {
+      appServerBridge.exception = exception;
+    }
+  }
+
+  /**
+   * Get exception that happened during servlet invocation.
+   *
+   * @param context server context
+   * @return exception that happened during servlet invocation
+   */
+  @Nullable
+  public static Throwable getException(Context context) {
+    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+    if (appServerBridge != null) {
+      return appServerBridge.exception;
+    }
+    return null;
   }
 
   /**

@@ -5,16 +5,17 @@
 
 package springdata
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import spock.lang.Shared
+
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecification {
   // Setting up appContext & repo with @Shared doesn't allow

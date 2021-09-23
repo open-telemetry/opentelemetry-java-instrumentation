@@ -29,62 +29,75 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
 def linuxTargets = [
-  "jetty": [
-    // TODO (trask) drop JDK 15 (everywhere below) after JDK 16 is passing
-    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"]],
-    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15", "16"]],
-    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "15", "16"], war: "servlet-5.0"]
+  "jetty"  : [
+    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"]],
+    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"]],
+    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"]],
+    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], war: "servlet-5.0"],
+    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
   ],
-  "tomcat": [
+  "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.5.60", "9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
+    // TODO (trask) bump 15 to 16 (well, 17 very shortly)
+    //  note: this requires some work since there is no tomcat image for 16-openj9
+    //  and the hotspot image tag has changed naming convention
     [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
   ],
-  "tomee": [
+  "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot"], jdk: ["8"]],
     [version: ["7.0.0"], vm: ["openj9"], jdk: ["8"], dockerfile: "tomee-custom"],
     [version: ["8.0.6"], vm: ["hotspot"], jdk: ["8", "11"]],
     [version: ["8.0.6"], vm: ["openj9"], jdk: ["8", "11"], dockerfile: "tomee-custom"]
   ],
-  "payara": [
+  "payara" : [
     [version: ["5.2020.6"], vm: ["hotspot"], jdk: ["8"], args: [tagSuffix: ""]],
     [version: ["5.2020.6"], vm: ["hotspot"], jdk: ["11"], args: [tagSuffix: "-jdk11"]],
     [version: ["5.2020.6"], vm: ["openj9"], jdk: ["8", "11"], dockerfile: "payara-custom-5.2020.6"]
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"]]
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"]]
+    // running configure.sh is failing while building the image with Java 17
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]]
   ]
 ]
 
 def windowsTargets = [
-  "jetty" : [
-    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15", "16"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
-    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "15", "16"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
+  "jetty"  : [
+    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
+    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
+    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"],
+    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
   ],
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
     [version: ["8.5.60"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
     [version: ["9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
-    [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], args: [majorVersion: "10"], war: "servlet-5.0"]
+    [version: ["10.0.4"], vm: ["hotspot"], jdk: ["11", "16", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
+    [version: ["10.0.4"], vm: ["openj9"], jdk: ["11", "16"], args: [majorVersion: "10"], war: "servlet-5.0"]
   ],
-  "tomee" : [
+  "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
   ],
-  "payara": [
+  "payara" : [
     [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
   ],
-  "wildfly" : [
+  "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"]]
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
-  "liberty" : [
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15", "16"], args: [release: "2020-11-11_0736"]]
+  "liberty": [
+    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [release: "2020-11-11_0736"]],
+    [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
   ]
 ]
 
@@ -112,6 +125,19 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
   def vmSuffix = vm == "hotspot" ? "" : "-$vm"
   def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
+  def jdkImage
+  if (vm == "hotspot") {
+    if (jdk == "17") {
+      jdkImage = "openjdk:${jdk}"
+    } else {
+      jdkImage = "eclipse-temurin:${jdk}"
+    }
+  } else if (vm == "openj9") {
+    jdkImage = "adoptopenjdk:${jdk}-openj9"
+  } else {
+    throw new GradleException("Unexpected vm: $vm")
+  }
+
   def buildTask = tasks.register("${server}Image-$version-jdk$jdk$vmSuffix$platformSuffix", DockerBuildImage) {
     it.dependsOn(prepareTask)
     group = "build"
@@ -120,7 +146,7 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
     it.inputDir.set(dockerWorkingDir)
     it.images.add(image)
     it.dockerFile.set(new File(dockerWorkingDir, dockerFileName))
-    it.buildArgs.set(extraArgs + [jdk: jdk, vm: vm, version: version])
+    it.buildArgs.set(extraArgs + [jdk: jdk, vm: vm, version: version, jdkImage: jdkImage])
     it.doLast {
       project.ext.matrix.add(image)
     }
@@ -133,6 +159,10 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 def createDockerTasks(Task parentTask, targets, isWindows) {
   Set<String> resultImages = []
   targets.each { server, matrices ->
+    def smokeTestServer = findProperty('smokeTestServer')
+    if (smokeTestServer != null && server != smokeTestServer) {
+      return
+    }
     matrices.forEach { entry ->
       def dockerfile = entry["dockerfile"]?.toString() ?: server
       def extraArgs = (entry["args"] ?: [:]) as Map<String, String>

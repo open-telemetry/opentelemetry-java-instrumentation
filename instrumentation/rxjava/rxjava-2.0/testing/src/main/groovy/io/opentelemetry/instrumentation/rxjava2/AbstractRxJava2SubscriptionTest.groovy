@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.rxjava2
 
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
+
 import java.util.concurrent.CountDownLatch
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecification {
 

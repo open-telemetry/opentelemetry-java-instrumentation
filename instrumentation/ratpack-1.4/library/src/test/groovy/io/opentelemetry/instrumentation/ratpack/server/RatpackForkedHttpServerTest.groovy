@@ -19,6 +19,7 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
       tracing.configureServerRegistry(it)
     }
   }
+
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false

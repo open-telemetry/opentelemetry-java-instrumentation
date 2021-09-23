@@ -25,34 +25,35 @@ public class K6Container {
   private final TestConfig config;
   private final NamingConventions namingConventions;
 
-  public K6Container(Network network, Agent agent, TestConfig config, NamingConventions namingConvention) {
+  public K6Container(
+      Network network, Agent agent, TestConfig config, NamingConventions namingConvention) {
     this.network = network;
     this.agent = agent;
     this.config = config;
     this.namingConventions = namingConvention;
   }
 
-  public GenericContainer<?> build(){
+  public GenericContainer<?> build() {
     Path k6OutputFile = namingConventions.container.k6Results(agent);
-    return new GenericContainer<>(
-        DockerImageName.parse("loadimpact/k6"))
+    return new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
         .withNetwork(network)
         .withNetworkAliases("k6")
         .withLogConsumer(new Slf4jLogConsumer(logger))
-        .withCopyFileToContainer(
-            MountableFile.forHostPath("./k6"), "/app")
+        .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
         .withFileSystemBind(namingConventions.localResults(), namingConventions.containerResults())
         .withCreateContainerCmdModifier(cmd -> cmd.withUser("root"))
         .withCommand(
             "run",
-            "-u", String.valueOf(config.getConcurrentConnections()),
-            "-i", String.valueOf(config.getTotalIterations()),
-            "--rps", String.valueOf(config.getMaxRequestRate()),
-            "--summary-export", k6OutputFile.toString(),
-            "/app/basic.js"
-        )
+            "-u",
+            String.valueOf(config.getConcurrentConnections()),
+            "-i",
+            String.valueOf(config.getTotalIterations()),
+            "--rps",
+            String.valueOf(config.getMaxRequestRate()),
+            "--summary-export",
+            k6OutputFile.toString(),
+            "/app/basic.js")
         .withStartupCheckStrategy(
-            new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(15))
-        );
+            new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(15)));
   }
 }
