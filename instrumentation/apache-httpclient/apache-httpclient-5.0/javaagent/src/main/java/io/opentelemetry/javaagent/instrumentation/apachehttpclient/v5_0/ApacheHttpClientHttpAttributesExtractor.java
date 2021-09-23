@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class ApacheHttpClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<ClassicHttpRequest, HttpResponse> {
+    extends HttpClientAttributesExtractor<ClassicHttpRequest, HttpResponse> {
 
   private static final Logger logger =
       LoggerFactory.getLogger(ApacheHttpClientHttpAttributesExtractor.class);
@@ -142,18 +142,6 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(
       ClassicHttpRequest request, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String serverName(ClassicHttpRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String route(ClassicHttpRequest request) {
     return null;
   }
 }

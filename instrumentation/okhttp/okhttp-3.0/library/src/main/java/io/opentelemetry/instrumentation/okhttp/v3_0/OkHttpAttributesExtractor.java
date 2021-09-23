@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Request, Response> {
   @Override
   protected String method(Request request) {
     return request.method();
@@ -30,11 +30,6 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   @Override
   protected String host(Request request) {
     return request.url().host();
-  }
-
-  @Override
-  protected @Nullable String route(Request request) {
-    return null;
   }
 
   @Override
@@ -78,11 +73,6 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
       default:
         return null;
     }
-  }
-
-  @Override
-  protected @Nullable String serverName(Request request, @Nullable Response response) {
-    return null;
   }
 
   @Override

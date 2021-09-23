@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
@@ -23,7 +23,7 @@ public final class Servlet2Singletons {
   private static final Servlet2Helper HELPER;
 
   static {
-    HttpAttributesExtractor<
+    HttpServerAttributesExtractor<
             ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
         httpAttributesExtractor = new Servlet2HttpAttributesExtractor(Servlet2Accessor.INSTANCE);
     SpanNameExtractor<ServletRequestContext<HttpServletRequest>> spanNameExtractor =

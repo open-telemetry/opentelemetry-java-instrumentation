@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.web;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.io.IOException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpRequest;
@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
 final class SpringWebHttpAttributesExtractor
-    extends HttpAttributesExtractor<HttpRequest, ClientHttpResponse> {
+    extends HttpClientAttributesExtractor<HttpRequest, ClientHttpResponse> {
   @Override
   protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
@@ -32,11 +32,6 @@ final class SpringWebHttpAttributesExtractor
   @Override
   protected @Nullable String host(HttpRequest httpRequest) {
     return httpRequest.getHeaders().getFirst("host");
-  }
-
-  @Override
-  protected @Nullable String route(HttpRequest httpRequest) {
-    return null;
   }
 
   @Override
@@ -64,12 +59,6 @@ final class SpringWebHttpAttributesExtractor
 
   @Override
   protected @Nullable String flavor(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String serverName(
       HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }

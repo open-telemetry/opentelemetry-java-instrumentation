@@ -9,7 +9,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpF
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -19,7 +19,8 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class JettyClientHttpAttributesExtractor
+    extends HttpClientAttributesExtractor<Request, Response> {
   private static final Logger logger =
       LoggerFactory.getLogger(JettyClientHttpAttributesExtractor.class);
 
@@ -46,12 +47,6 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   @Nullable
   protected String host(Request request) {
     return request.getHost();
-  }
-
-  @Override
-  @Nullable
-  protected String route(Request request) {
-    return null;
   }
 
   @Override
@@ -103,12 +98,6 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
 
         return HTTP_1_1;
     }
-  }
-
-  @Override
-  @Nullable
-  protected String serverName(Request request, @Nullable Response response) {
-    return null;
   }
 
   @Override

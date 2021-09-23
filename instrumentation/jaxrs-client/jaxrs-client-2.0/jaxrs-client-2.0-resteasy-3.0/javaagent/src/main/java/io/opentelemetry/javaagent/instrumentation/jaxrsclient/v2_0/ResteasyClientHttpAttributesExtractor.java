@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.ws.rs.core.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<ClientInvocation, Response> {
+    extends HttpClientAttributesExtractor<ClientInvocation, Response> {
 
   @Override
   protected @Nullable String method(ClientInvocation httpRequest) {
@@ -91,17 +91,6 @@ final class ResteasyClientHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(
       ClientInvocation httpRequest, Response httpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(ClientInvocation httpRequest) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String serverName(
-      ClientInvocation httpRequest, @Nullable Response httpResponse) {
     return null;
   }
 }

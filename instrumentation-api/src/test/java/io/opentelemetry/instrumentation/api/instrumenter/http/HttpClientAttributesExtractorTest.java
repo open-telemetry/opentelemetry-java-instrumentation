@@ -15,10 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class HttpAttributesExtractorTest {
+class HttpClientAttributesExtractorTest {
 
-  static class TestHttpAttributesExtractor
-      extends HttpAttributesExtractor<Map<String, String>, Map<String, String>> {
+  static class TestHttpClientAttributesExtractor
+      extends HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
     protected String method(Map<String, String> request) {
@@ -38,11 +38,6 @@ class HttpAttributesExtractorTest {
     @Override
     protected String host(Map<String, String> request) {
       return request.get("host");
-    }
-
-    @Override
-    protected String route(Map<String, String> request) {
-      return request.get("route");
     }
 
     @Override
@@ -87,11 +82,6 @@ class HttpAttributesExtractorTest {
         Map<String, String> request, Map<String, String> response) {
       return Long.parseLong(response.get("responseContentLengthUncompressed"));
     }
-
-    @Override
-    protected String serverName(Map<String, String> request, Map<String, String> response) {
-      return request.get("serverName");
-    }
   }
 
   @Test
@@ -101,20 +91,18 @@ class HttpAttributesExtractorTest {
     request.put("url", "http://github.com");
     request.put("target", "github.com");
     request.put("host", "github.com:80");
-    request.put("route", "/repositories/{id}");
     request.put("scheme", "https");
     request.put("userAgent", "okhttp 3.x");
     request.put("requestContentLength", "10");
     request.put("requestContentLengthUncompressed", "11");
     request.put("flavor", "http/2");
-    request.put("serverName", "server");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
     response.put("responseContentLength", "20");
     response.put("responseContentLengthUncompressed", "21");
 
-    TestHttpAttributesExtractor extractor = new TestHttpAttributesExtractor();
+    TestHttpClientAttributesExtractor extractor = new TestHttpClientAttributesExtractor();
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, request);
     assertThat(attributes.build())
@@ -123,7 +111,6 @@ class HttpAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "github.com"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"));
 
@@ -134,13 +121,11 @@ class HttpAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "github.com"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, 11L),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
-            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, 21L));

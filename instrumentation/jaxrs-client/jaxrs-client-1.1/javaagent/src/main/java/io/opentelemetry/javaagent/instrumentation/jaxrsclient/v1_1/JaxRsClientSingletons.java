@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -23,7 +23,7 @@ public class JaxRsClientSingletons {
   private static final Instrumenter<ClientRequest, ClientResponse> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<ClientRequest, ClientResponse> httpAttributesExtractor =
+    HttpClientAttributesExtractor<ClientRequest, ClientResponse> httpAttributesExtractor =
         new JaxRsClientHttpAttributesExtractor();
     SpanNameExtractor<? super ClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);

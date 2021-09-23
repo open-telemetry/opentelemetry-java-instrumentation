@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import com.ning.http.client.uri.Uri;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<Request, Response> {
+    extends HttpClientAttributesExtractor<Request, Response> {
 
   @Override
   protected String method(Request request) {
@@ -85,18 +85,6 @@ final class AsyncHttpClientHttpAttributesExtractor
   @Override
   @Nullable
   protected Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String serverName(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String route(Request request) {
     return null;
   }
 }

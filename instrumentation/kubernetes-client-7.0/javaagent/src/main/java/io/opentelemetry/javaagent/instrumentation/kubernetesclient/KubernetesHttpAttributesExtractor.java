@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import io.kubernetes.client.openapi.ApiResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import okhttp3.Request;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class KubernetesHttpAttributesExtractor extends HttpAttributesExtractor<Request, ApiResponse<?>> {
+class KubernetesHttpAttributesExtractor
+    extends HttpClientAttributesExtractor<Request, ApiResponse<?>> {
   @Override
   protected String method(Request request) {
     return request.method();
@@ -29,11 +30,6 @@ class KubernetesHttpAttributesExtractor extends HttpAttributesExtractor<Request,
 
   @Override
   protected @Nullable String host(Request request) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(Request request) {
     return null;
   }
 
@@ -62,11 +58,6 @@ class KubernetesHttpAttributesExtractor extends HttpAttributesExtractor<Request,
   @Override
   protected String flavor(Request request, @Nullable ApiResponse<?> apiResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-  }
-
-  @Override
-  protected @Nullable String serverName(Request request, @Nullable ApiResponse<?> apiResponse) {
-    return null;
   }
 
   @Override

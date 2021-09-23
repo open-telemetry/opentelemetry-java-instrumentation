@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class GoogleHttpClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<HttpRequest, HttpResponse> {
+    extends HttpClientAttributesExtractor<HttpRequest, HttpResponse> {
 
   @Override
   protected @Nullable String method(HttpRequest httpRequest) {
@@ -75,17 +75,6 @@ final class GoogleHttpClientHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(
       HttpRequest httpRequest, HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(HttpRequest httpRequest) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String serverName(
-      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
 }

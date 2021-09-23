@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,11 +36,11 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
 
   private static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> addClientIpExtractor(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapGetter<REQUEST> getter) {
-    HttpAttributesExtractor<REQUEST, RESPONSE> httpAttributesExtractor = null;
+    HttpServerAttributesExtractor<REQUEST, RESPONSE> httpAttributesExtractor = null;
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
         builder.attributesExtractors) {
-      if (extractor instanceof HttpAttributesExtractor) {
-        httpAttributesExtractor = (HttpAttributesExtractor<REQUEST, RESPONSE>) extractor;
+      if (extractor instanceof HttpServerAttributesExtractor) {
+        httpAttributesExtractor = (HttpServerAttributesExtractor<REQUEST, RESPONSE>) extractor;
       }
     }
     if (httpAttributesExtractor == null) {

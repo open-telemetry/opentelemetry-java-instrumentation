@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.uri.Uri;
 
-final class PlayWsClientHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class PlayWsClientHttpAttributesExtractor
+    extends HttpClientAttributesExtractor<Request, Response> {
 
   @Override
   protected String method(Request request) {
@@ -84,18 +85,6 @@ final class PlayWsClientHttpAttributesExtractor extends HttpAttributesExtractor<
   @Override
   @Nullable
   protected Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String serverName(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String route(Request request) {
     return null;
   }
 }
