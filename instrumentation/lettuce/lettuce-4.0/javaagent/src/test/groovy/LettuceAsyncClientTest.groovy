@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
@@ -19,15 +16,20 @@ import com.lambdaworks.redis.protocol.AsyncCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.FixedHostPortGenericContainer
+import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
+
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import org.testcontainers.containers.FixedHostPortGenericContainer
-import spock.lang.Shared
-import spock.util.concurrent.AsyncConditions
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   public static final String HOST = "localhost"
@@ -167,7 +169,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "SET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SET"
           }
         }
       }
@@ -180,28 +181,42 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     Consumer<String> consumer = new Consumer<String>() {
       @Override
       void accept(String res) {
-        conds.evaluate {
-          assert res == "TESTVAL"
+        runWithSpan("callback") {
+          conds.evaluate {
+            assert res == "TESTVAL"
+          }
         }
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.get("TESTKEY")
-    redisFuture.thenAccept(consumer)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.get("TESTKEY")
+      redisFuture.thenAccept(consumer)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "GET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
@@ -216,9 +231,11 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
       String apply(String res, Throwable throwable) {
-        conds.evaluate {
-          assert res == null
-          assert throwable == null
+        runWithSpan("callback1") {
+          conds.evaluate {
+            assert res == null
+            assert throwable == null
+          }
         }
         return (res == null ? successStr : res)
       }
@@ -226,29 +243,48 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     Function<String, Object> secondStage = new Function<String, Object>() {
       @Override
       Object apply(String input) {
-        conds.evaluate {
-          assert input == successStr
+        runWithSpan("callback2") {
+          conds.evaluate {
+            assert input == successStr
+          }
         }
         return null
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.get("NON_EXISTENT_KEY")
-    redisFuture.handleAsync(firstStage).thenApply(secondStage)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.get("NON_EXISTENT_KEY")
+      redisFuture.handle(firstStage).thenApply(secondStage)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 4) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "GET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
+        }
+        span(2) {
+          name "callback1"
+          kind INTERNAL
+          childOf(span(0))
+        }
+        span(3) {
+          name "callback2"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
@@ -260,28 +296,42 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
       void accept(String keyRetrieved, Throwable throwable) {
-        conds.evaluate {
-          assert keyRetrieved != null
+        runWithSpan("callback") {
+          conds.evaluate {
+            assert keyRetrieved != null
+          }
         }
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.randomkey()
-    redisFuture.whenCompleteAsync(biConsumer)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.randomkey()
+      redisFuture.whenCompleteAsync(biConsumer)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "RANDOMKEY"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "RANDOMKEY"
-            "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
@@ -332,7 +382,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "HMSET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HMSET"
           }
         }
       }
@@ -343,7 +392,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "HGETALL"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL"
           }
         }
       }
@@ -386,7 +434,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "DEL"
-            "${SemanticAttributes.DB_STATEMENT.key}" "DEL"
           }
         }
       }
@@ -397,12 +444,16 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     setup:
     asyncCommands.setAutoFlushCommands(false)
     def conds = new AsyncConditions()
-    RedisFuture redisFuture = asyncCommands.sadd("SKEY", "1", "2")
+    RedisFuture redisFuture = runWithSpan("parent") {
+      asyncCommands.sadd("SKEY", "1", "2")
+    }
     redisFuture.whenCompleteAsync({
       res, throwable ->
-        conds.evaluate {
-          assert throwable != null
-          assert throwable instanceof CancellationException
+        runWithSpan("callback") {
+          conds.evaluate {
+            assert throwable != null
+            assert throwable instanceof CancellationException
+          }
         }
     })
 
@@ -414,16 +465,26 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     conds.await()
     cancelSuccess == true
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "SADD"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "SADD"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SADD"
             "lettuce.command.cancelled" true
           }
+        }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
         }
       }
     }
@@ -442,7 +503,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "DEBUG"
-            "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG"
           }
         }
       }
@@ -463,7 +523,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "SHUTDOWN"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN"
           }
         }
       }

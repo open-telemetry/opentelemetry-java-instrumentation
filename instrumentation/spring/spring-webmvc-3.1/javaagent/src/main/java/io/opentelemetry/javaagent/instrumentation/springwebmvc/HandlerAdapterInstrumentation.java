@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.IsGrailsHandler.isGrailsHandler;
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcSingletons.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,11 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -62,25 +61,29 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
-      if (handler.getClass().getName().startsWith("org.grails.")) {
+      if (isGrailsHandler(handler)) {
         // skip creating handler span for grails, grails instrumentation will take care of it
         return;
       }
+
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
-      // TODO (trask) is it important to check serverSpan != null here?
-      if (serverSpan != null) {
-        // Name the parent span based on the matching pattern
-        ServerSpanNaming.updateServerSpanName(
-            parentContext,
-            CONTROLLER,
-            SpringWebMvcServerSpanNaming.getServerSpanNameSupplier(parentContext, request));
-        // Now create a span for handler/controller execution.
-        context = handlerInstrumenter().start(parentContext, handler);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
+
+      // don't start a new top-level span
+      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
+        return;
       }
+
+      // Name the parent span based on the matching pattern
+      ServerSpanNaming.updateServerSpanName(
+          parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+
+      if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
+        return;
+      }
+
+      // Now create a span for handler/controller execution.
+      context = handlerInstrumenter().start(parentContext, handler);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

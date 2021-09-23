@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,15 +55,15 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler<?>, Contexts> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, Contexts.class);
-      Contexts contexts = contextStore.get(handler);
-      if (contexts == null) {
+      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
+          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
+      AsyncHandlerData data = contextStore.get(handler);
+      if (data == null) {
         return null;
       }
       contextStore.put(handler, null);
-      AsyncHttpClientTracer.tracer().end(contexts.getContext(), response);
-      return contexts.getParentContext().makeCurrent();
+      instrumenter().end(data.getContext(), data.getRequest(), response, null);
+      return data.getParentContext().makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -80,15 +81,15 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncHandler<?>, Contexts> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, Contexts.class);
-      Contexts contexts = contextStore.get(handler);
-      if (contexts == null) {
+      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
+          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
+      AsyncHandlerData data = contextStore.get(handler);
+      if (data == null) {
         return null;
       }
       contextStore.put(handler, null);
-      AsyncHttpClientTracer.tracer().endExceptionally(contexts.getContext(), throwable);
-      return contexts.getParentContext().makeCurrent();
+      instrumenter().end(data.getContext(), data.getRequest(), null, throwable);
+      return data.getParentContext().makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

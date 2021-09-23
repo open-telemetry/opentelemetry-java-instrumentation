@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.caching;
 
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A cache from keys to values. */
 public interface Cache<K, V> {
@@ -25,6 +26,7 @@ public interface Cache<K, V> {
    * Returns the cached value associated with the provided {@code key} if present, or {@code null}
    * otherwise.
    */
+  @Nullable
   V get(K key);
 
   /** Puts the {@code value} into the cache for the {@code key}. */

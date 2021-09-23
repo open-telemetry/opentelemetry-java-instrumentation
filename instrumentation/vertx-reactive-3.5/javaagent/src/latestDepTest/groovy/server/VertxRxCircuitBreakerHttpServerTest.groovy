@@ -5,6 +5,13 @@
 
 package server
 
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.vertx.circuitbreaker.CircuitBreakerOptions
+import io.vertx.core.Promise
+import io.vertx.reactivex.circuitbreaker.CircuitBreaker
+import io.vertx.reactivex.core.AbstractVerticle
+import io.vertx.reactivex.ext.web.Router
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -12,13 +19,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.vertx.circuitbreaker.CircuitBreakerOptions
-import io.vertx.core.Promise
-import io.vertx.reactivex.circuitbreaker.CircuitBreaker
-import io.vertx.reactivex.core.AbstractVerticle
-import io.vertx.reactivex.ext.web.Router
 
 class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
 

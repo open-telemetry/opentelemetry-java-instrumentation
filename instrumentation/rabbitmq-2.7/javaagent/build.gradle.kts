@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("com.rabbitmq:amqp-client:2.7.0")
 
-  testLibrary ("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
+  testLibrary("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
     exclude("com.rabbitmq", "amqp-client")
   }
 

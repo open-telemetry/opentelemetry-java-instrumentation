@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
-import static io.opentelemetry.javaagent.instrumentation.cxf.CxfJaxWsTracer.tracer;
-
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
@@ -19,6 +17,6 @@ public class TracingStartInInterceptor extends AbstractPhaseInterceptor<Message>
 
   @Override
   public void handleMessage(Message message) {
-    tracer().startSpan(message);
+    CxfHelper.start(message);
   }
 }

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -67,15 +67,16 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         return;
       }
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      context = tracer().startSpan(parentContext, request);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.This HttpRequest request,
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -85,7 +86,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      tracer().endMaybeExceptionally(context, response, throwable);
+      instrumenter().end(context, request, response, throwable);
     }
   }
 
@@ -98,11 +99,10 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-
-      context = tracer().startSpan(parentContext, request);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
       InstrumentationContext.get(HttpRequest.class, Context.class).put(request, context);
@@ -110,6 +110,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -119,7 +120,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
   }

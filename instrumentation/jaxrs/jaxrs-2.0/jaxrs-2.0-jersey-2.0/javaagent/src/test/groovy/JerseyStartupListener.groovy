@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import javax.servlet.ServletContextEvent
-import javax.servlet.ServletContextListener
 import org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer
 import test.JaxRsApplicationPathTestApplication
+
+import javax.servlet.ServletContextEvent
+import javax.servlet.ServletContextListener
 
 // ServletContainerInitializer isn't automatically called due to the way this test is set up
 // so we call it ourself

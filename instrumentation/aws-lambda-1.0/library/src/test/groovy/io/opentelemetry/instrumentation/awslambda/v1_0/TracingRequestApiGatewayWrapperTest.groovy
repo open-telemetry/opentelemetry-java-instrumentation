@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
@@ -14,6 +12,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.common.collect.ImmutableMap
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase {
 

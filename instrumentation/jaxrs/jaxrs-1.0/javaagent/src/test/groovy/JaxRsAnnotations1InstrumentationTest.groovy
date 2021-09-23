@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Unroll
+
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -16,33 +14,12 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecification {
-
-  def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
-    setup:
-    def jax = new Jax() {
-      @POST
-      @Path("/a")
-      void call() {
-      }
-    }
-    jax.call()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "/a"
-          attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" jax.getClass().getName()
-            "${SemanticAttributes.CODE_FUNCTION.key}" "call"
-          }
-        }
-      }
-    }
-  }
 
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
@@ -24,7 +25,7 @@ import java.util.Map;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
-      Config.get().getMapProperty("otel.instrumentation.common.peer-service-mapping");
+      Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
   private final NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
@@ -49,11 +50,15 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
-    onEnd(attributes, request, null);
+    onEnd(attributes, request, null, null);
   }
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected void onEnd(
+      AttributesBuilder attributes,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
     String peerName = netAttributesExtractor.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {

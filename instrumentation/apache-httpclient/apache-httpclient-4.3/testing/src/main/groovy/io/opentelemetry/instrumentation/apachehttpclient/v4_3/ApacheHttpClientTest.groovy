@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
@@ -18,6 +17,8 @@ import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicHttpRequest
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
+
+import java.util.function.Consumer
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> {
 
@@ -30,11 +31,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   @Shared
   CloseableHttpClient client = createClient()
-
-  @Override
-  boolean testCausality() {
-    false
-  }
 
   @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {

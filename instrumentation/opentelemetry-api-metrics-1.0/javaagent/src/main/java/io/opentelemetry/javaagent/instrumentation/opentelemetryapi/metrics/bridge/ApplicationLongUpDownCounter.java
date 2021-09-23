@@ -5,82 +5,42 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
+import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.metrics.BoundLongUpDownCounter;
 import application.io.opentelemetry.api.metrics.LongUpDownCounter;
-import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
-import application.io.opentelemetry.api.metrics.common.Labels;
+import application.io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
 class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
-  private final io.opentelemetry.api.metrics.LongUpDownCounter agentLongUpDownCounter;
+  private final io.opentelemetry.api.metrics.LongUpDownCounter agentCounter;
 
-  ApplicationLongUpDownCounter(
-      io.opentelemetry.api.metrics.LongUpDownCounter agentLongUpDownCounter) {
-    this.agentLongUpDownCounter = agentLongUpDownCounter;
-  }
-
-  io.opentelemetry.api.metrics.LongUpDownCounter getAgentLongUpDownCounter() {
-    return agentLongUpDownCounter;
+  ApplicationLongUpDownCounter(io.opentelemetry.api.metrics.LongUpDownCounter agentCounter) {
+    this.agentCounter = agentCounter;
   }
 
   @Override
-  public void add(long delta, Labels labels) {
-    agentLongUpDownCounter.add(delta, LabelBridging.toAgent(labels));
+  public void add(long value) {
+    agentCounter.add(value);
   }
 
   @Override
-  public void add(long l) {
-    agentLongUpDownCounter.add(l);
+  public void add(long value, Attributes applicationAttributes) {
+    agentCounter.add(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public BoundLongUpDownCounter bind(Labels labels) {
-    return new BoundInstrument(agentLongUpDownCounter.bind(LabelBridging.toAgent(labels)));
+  public void add(long value, Attributes applicationAttributes, Context applicationContext) {
+    agentCounter.add(
+        value,
+        Bridging.toAgent(applicationAttributes),
+        AgentContextStorage.getAgentContext(applicationContext));
   }
 
-  static class BoundInstrument implements BoundLongUpDownCounter {
-
-    private final io.opentelemetry.api.metrics.BoundLongUpDownCounter agentBoundLongUpDownCounter;
-
-    BoundInstrument(
-        io.opentelemetry.api.metrics.BoundLongUpDownCounter agentBoundLongUpDownCounter) {
-      this.agentBoundLongUpDownCounter = agentBoundLongUpDownCounter;
-    }
-
-    @Override
-    public void add(long delta) {
-      agentBoundLongUpDownCounter.add(delta);
-    }
-
-    @Override
-    public void unbind() {
-      agentBoundLongUpDownCounter.unbind();
-    }
-  }
-
-  static class Builder implements LongUpDownCounterBuilder {
-
-    private final io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder;
-
-    Builder(io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder) {
-      this.agentBuilder = agentBuilder;
-    }
-
-    @Override
-    public Builder setDescription(String description) {
-      agentBuilder.setDescription(description);
-      return this;
-    }
-
-    @Override
-    public Builder setUnit(String unit) {
-      agentBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public LongUpDownCounter build() {
-      return new ApplicationLongUpDownCounter(agentBuilder.build());
-    }
+  @Override
+  public BoundLongUpDownCounter bind(Attributes applicationAttributes) {
+    return new ApplicationBoundLongUpDownCounter(
+        agentCounter.bind(Bridging.toAgent(applicationAttributes)));
   }
 }

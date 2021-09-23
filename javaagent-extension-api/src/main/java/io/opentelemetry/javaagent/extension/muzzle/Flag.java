@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.extension.muzzle;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.jar.asm.Opcodes;
 
 /**
  * Expected flag (or lack of flag) on a class, method or field reference.
  *
- * <p>This class is used in the auto-generated {@link InstrumentationModule#getMuzzleReferences()}
+ * <p>This class is used in the auto-generated {@code InstrumentationModule#getMuzzleReferences()}
  * method, it is not meant to be used directly by agent extension developers.
  */
 public interface Flag {

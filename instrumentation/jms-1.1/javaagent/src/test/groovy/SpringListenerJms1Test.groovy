@@ -3,16 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import listener.Config
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.jms.core.JmsTemplate
+
+import javax.jms.ConnectionFactory
+
 import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import javax.jms.ConnectionFactory
-import listener.Config
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import org.springframework.jms.core.JmsTemplate
 
 class SpringListenerJms1Test extends AgentInstrumentationSpecification {
 

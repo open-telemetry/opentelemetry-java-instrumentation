@@ -209,7 +209,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       if (handler != null) {
         ContextStore<HttpClientRequest, Contexts> contextStore =
             InstrumentationContext.get(HttpClientRequest.class, Contexts.class);
-        handler = new ExceptionHandlerWrapper(tracer(), request, contextStore, handler);
+        handler = ExceptionHandlerWrapper.wrap(tracer(), request, contextStore, handler);
       }
     }
   }

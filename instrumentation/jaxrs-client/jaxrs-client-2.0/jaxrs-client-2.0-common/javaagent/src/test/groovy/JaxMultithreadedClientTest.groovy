@@ -9,10 +9,11 @@ import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.server.ServerBuilder
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension
-import javax.ws.rs.client.Client
 import org.glassfish.jersey.client.JerseyClientBuilder
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
+
+import javax.ws.rs.client.Client
 
 class JaxMultithreadedClientTest extends AgentInstrumentationSpecification {
 
@@ -20,7 +21,7 @@ class JaxMultithreadedClientTest extends AgentInstrumentationSpecification {
   def server = new ServerExtension() {
     @Override
     protected void configure(ServerBuilder sb) throws Exception {
-      sb.service("/success") {ctx, req ->
+      sb.service("/success") { ctx, req ->
         HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT, "Hello.")
       }
     }

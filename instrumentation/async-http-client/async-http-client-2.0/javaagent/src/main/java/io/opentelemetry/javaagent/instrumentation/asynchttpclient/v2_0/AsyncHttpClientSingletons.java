@@ -13,37 +13,38 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtr
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-2.0";
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
+  private static final Instrumenter<RequestContext, Response> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<Request, Response> httpAttributesExtractor =
+    HttpAttributesExtractor<RequestContext, Response> httpAttributesExtractor =
         new AsyncHttpClientHttpAttributesExtractor();
-    SpanNameExtractor<? super Request> spanNameExtractor =
+    SpanNameExtractor<RequestContext> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
+    SpanStatusExtractor<RequestContext, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    AsyncHttpClientNetAttributesExtractor netAttributesExtractor =
+    NetAttributesExtractor<RequestContext, Response> netAttributesExtractor =
         new AsyncHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<Request, Response>newBuilder(
+        Instrumenter.<RequestContext, Response>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(new AsyncHttpClientAdditionalAttributesExtractor())
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(new HttpHeaderSetter());
   }
 
-  public static Instrumenter<Request, Response> instrumenter() {
+  public static Instrumenter<RequestContext, Response> instrumenter() {
     return INSTRUMENTER;
   }
 

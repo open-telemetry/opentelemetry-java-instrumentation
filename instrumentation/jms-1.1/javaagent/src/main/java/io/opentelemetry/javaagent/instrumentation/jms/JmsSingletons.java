@@ -6,43 +6,59 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
-import java.time.Instant;
 
 public final class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
 
-  private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> LISTENER_INSTRUMENTER;
+  private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER =
+      buildProducerInstrumenter();
+  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_INSTRUMENTER =
+      buildConsumerInstrumenter();
+  private static final Instrumenter<MessageWithDestination, Void> LISTENER_INSTRUMENTER =
+      buildListenerInstrumenter();
 
-  static {
-    JmsMessageAttributesExtractor attributesExtractor = new JmsMessageAttributesExtractor();
+  private static Instrumenter<MessageWithDestination, Void> buildProducerInstrumenter() {
+    JmsMessageAttributesExtractor attributesExtractor =
+        new JmsMessageAttributesExtractor(MessageOperation.SEND);
     SpanNameExtractor<MessageWithDestination> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    OpenTelemetry otel = GlobalOpenTelemetry.get();
-    PRODUCER_INSTRUMENTER =
-        Instrumenter.<MessageWithDestination, Void>newBuilder(
-                otel, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
-            .newProducerInstrumenter(new MessagePropertySetter());
+    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+        .addAttributesExtractor(attributesExtractor)
+        .newProducerInstrumenter(new MessagePropertySetter());
+  }
+
+  private static Instrumenter<MessageWithDestination, Void> buildConsumerInstrumenter() {
+    JmsMessageAttributesExtractor attributesExtractor =
+        new JmsMessageAttributesExtractor(MessageOperation.RECEIVE);
+    SpanNameExtractor<MessageWithDestination> spanNameExtractor =
+        MessagingSpanNameExtractor.create(attributesExtractor);
+
     // MessageConsumer does not do context propagation
-    CONSUMER_INSTRUMENTER =
-        Instrumenter.<MessageWithDestination, Void>newBuilder(
-                otel, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
-            .setTimeExtractors(MessageWithDestination::getStartTime, response -> Instant.now())
-            .newInstrumenter(SpanKindExtractor.alwaysConsumer());
-    LISTENER_INSTRUMENTER =
-        Instrumenter.<MessageWithDestination, Void>newBuilder(
-                otel, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
-            .newConsumerInstrumenter(new MessagePropertyGetter());
+    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+        .addAttributesExtractor(attributesExtractor)
+        .setTimeExtractors(
+            MessageWithDestination::startTime, (request, response, error) -> request.endTime())
+        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static Instrumenter<MessageWithDestination, Void> buildListenerInstrumenter() {
+    JmsMessageAttributesExtractor attributesExtractor =
+        new JmsMessageAttributesExtractor(MessageOperation.PROCESS);
+    SpanNameExtractor<MessageWithDestination> spanNameExtractor =
+        MessagingSpanNameExtractor.create(attributesExtractor);
+
+    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+        .addAttributesExtractor(attributesExtractor)
+        .newConsumerInstrumenter(new MessagePropertyGetter());
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

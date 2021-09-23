@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import spark.Spark
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class SparkJavaBasedTest extends AgentInstrumentationSpecification {
 
@@ -53,7 +53,6 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
       }

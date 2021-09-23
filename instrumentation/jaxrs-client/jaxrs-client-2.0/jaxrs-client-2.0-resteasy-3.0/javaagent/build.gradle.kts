@@ -11,23 +11,7 @@ muzzle {
 }
 
 dependencies {
-  // compiling against a version prior to 3.0.10.Final will bind the call in ResteasyInjectAdapter:
-  //   carrier.getHeaders().getHeaders().putSingle(key, value)
-  // to:
-  //   org.jboss.resteasy.util.CaseInsensitiveMap#putSingle(Ljava/lang/String;Ljava/lang/Object;)V
-  // which will be incompatible with 3.0.10.Final and later, where that API was changed to:
-  //   org.jboss.resteasy.util.CaseInsensitiveMap#putSingle(Ljava/lang/Object;Ljava/lang/Object;)V
-  //
-  // conversely, however:
-  // compiling against 3.0.10.Final will bind the call in ResteasyInjectAdapter:
-  //   carrier.getHeaders().getHeaders().putSingle(key, value)
-  // to:
-  //   org.jboss.resteasy.util.CaseInsensitiveMap#putSingle(Ljava/lang/Object;Ljava/lang/Object;)V
-  // which WILL be compatible with versions prior to 3.0.10.Final, because in those versions
-  // putSingle(String, Object) is a generic implementation(for)
-  // javax.ws.rs.core.MultivaluedMap.putSingle(K, V), and so there's also a synthetic bridge method
-  // putSingle(Object, Object) in those versions
-  library("org.jboss.resteasy:resteasy-client:3.0.10.Final")
+  library("org.jboss.resteasy:resteasy-client:3.0.0.Final")
 
   implementation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent"))
 }

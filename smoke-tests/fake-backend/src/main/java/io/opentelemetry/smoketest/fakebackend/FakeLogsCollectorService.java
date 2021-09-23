@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBase{
+public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBase {
 
-  private final BlockingQueue<ExportLogsServiceRequest> exportRequests = new LinkedBlockingDeque<>();
+  private final BlockingQueue<ExportLogsServiceRequest> exportRequests =
+      new LinkedBlockingDeque<>();
 
   List<ExportLogsServiceRequest> getRequests() {
     return ImmutableList.copyOf(exportRequests);
@@ -22,7 +23,8 @@ public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBas
   }
 
   @Override
-  public void export(ExportLogsServiceRequest request,
+  public void export(
+      ExportLogsServiceRequest request,
       StreamObserver<ExportLogsServiceResponse> responseObserver) {
     exportRequests.add(request);
     responseObserver.onNext(ExportLogsServiceResponse.getDefaultInstance());

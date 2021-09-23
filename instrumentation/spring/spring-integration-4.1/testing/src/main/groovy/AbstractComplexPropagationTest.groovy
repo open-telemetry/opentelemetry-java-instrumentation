@@ -3,14 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.stream.Collectors
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -24,6 +17,14 @@ import org.springframework.messaging.Message
 import org.springframework.messaging.SubscribableChannel
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
+
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.stream.Collectors
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 abstract class AbstractComplexPropagationTest extends InstrumentationSpecification {
 
@@ -58,36 +59,30 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
     receiveChannel.subscribe(messageHandler)
 
     when:
-    runWithSpan("parent") {
-      sendChannel.send(MessageBuilder.withPayload("test")
-        .setHeader("theAnswer", "42")
-        .build())
-    }
+    sendChannel.send(MessageBuilder.withPayload("test")
+      .setHeader("theAnswer", "42")
+      .build())
 
     then:
     messageHandler.join()
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
+        // there's no span in the context, so spring-integration adds a CONSUMER one
         span(0) {
-          name "parent"
-        }
-        // there's no top-level SERVER or CONSUMER span, so spring-integration adds a CONSUMER one
-        span(1) {
           name "application.sendChannel process"
-          childOf span(0)
           kind CONSUMER
         }
         // message is received in a separate thread without any context, so a CONSUMER span with parent
         // extracted from the incoming message is created
-        span(2) {
+        span(1) {
           name "application.receiveChannel process"
-          childOf span(1)
+          childOf span(0)
           kind CONSUMER
         }
-        span(3) {
+        span(2) {
           name "handler"
-          childOf span(2)
+          childOf span(1)
         }
       }
     }

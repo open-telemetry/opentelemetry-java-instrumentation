@@ -29,10 +29,10 @@ class ConfigInitializerTest extends Specification {
     def config = ConfigInitializer.create(spiConfiguration, new Properties())
 
     then:
-    config.getProperty("property1") == "spi-1"
-    config.getProperty("property2") == "spi-2"
-    config.getProperty("property3") == "spi-3"
-    config.getProperty("property4") == "spi-4"
+    config.getString("property1") == "spi-1"
+    config.getString("property2") == "spi-2"
+    config.getString("property3") == "spi-3"
+    config.getString("property4") == "spi-4"
   }
 
   def "should use configuration file properties (takes precedence over SPI)"() {
@@ -52,10 +52,10 @@ class ConfigInitializerTest extends Specification {
     def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("property1") == "cf-1"
-    config.getProperty("property2") == "cf-2"
-    config.getProperty("property3") == "cf-3"
-    config.getProperty("property4") == "spi-4"
+    config.getString("property1") == "cf-1"
+    config.getString("property2") == "cf-2"
+    config.getString("property3") == "cf-3"
+    config.getString("property4") == "spi-4"
   }
 
   def "should use environment variables (takes precedence over configuration file)"() {
@@ -78,10 +78,10 @@ class ConfigInitializerTest extends Specification {
     def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("property1") == "env-1"
-    config.getProperty("property2") == "env-2"
-    config.getProperty("property3") == "cf-3"
-    config.getProperty("property4") == "spi-4"
+    config.getString("property1") == "env-1"
+    config.getString("property2") == "env-2"
+    config.getString("property3") == "cf-3"
+    config.getString("property4") == "spi-4"
   }
 
   def "should use system properties (takes precedence over environment variables)"() {
@@ -106,10 +106,10 @@ class ConfigInitializerTest extends Specification {
     def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("property1") == "sp-1"
-    config.getProperty("property2") == "env-2"
-    config.getProperty("property3") == "cf-3"
-    config.getProperty("property4") == "spi-4"
+    config.getString("property1") == "sp-1"
+    config.getString("property2") == "env-2"
+    config.getString("property3") == "cf-3"
+    config.getString("property4") == "spi-4"
   }
 
   def "should normalize property names"() {
@@ -128,9 +128,9 @@ class ConfigInitializerTest extends Specification {
     def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("otel.some-property.from-spi") == "value"
-    config.getProperty("otel.some-property.from-file") == "value"
-    config.getProperty("otel.some-env-var") == "value"
-    config.getProperty("otel.some-system-property") == "value"
+    config.getString("otel.some-property.from-spi") == "value"
+    config.getString("otel.some-property.from-file") == "value"
+    config.getString("otel.some-env-var") == "value"
+    config.getString("otel.some-system-property") == "value"
   }
 }

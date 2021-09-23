@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
 import rx.Observable
 import rx.schedulers.Schedulers
+
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class HystrixObservableTest extends AgentInstrumentationSpecification {
 
@@ -63,7 +64,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -156,7 +157,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -165,7 +166,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
       }
@@ -251,7 +252,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -262,7 +263,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
       }

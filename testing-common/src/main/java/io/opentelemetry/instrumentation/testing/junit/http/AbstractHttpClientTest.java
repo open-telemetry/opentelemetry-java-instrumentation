@@ -11,12 +11,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
-import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -31,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -42,12 +38,15 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> {
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
@@ -112,14 +111,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    * dedicated API for invoking synchronously, such as OkHttp's execute method.
    */
   protected abstract int sendRequest(
-      REQUEST request, String method, URI uri, Map<String, String> headers);
+      REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
 
   protected void sendRequestWithCallback(
       REQUEST request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      RequestResult requestResult)
+      throws Exception {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException();
   }
@@ -136,6 +136,65 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   private InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
+  private final HttpClientTestOptions options = new HttpClientTestOptions();
+
+  @BeforeAll
+  void setupOptions() {
+    // TODO(anuraaga): Have subclasses configure options directly and remove mapping of legacy
+    // protected methods.
+    options.setHttpAttributes(this::httpAttributes);
+    options.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
+    Integer responseCodeOnError = responseCodeOnRedirectError();
+    if (responseCodeOnError != null) {
+      options.setResponseCodeOnRedirectError(responseCodeOnError);
+    }
+    options.setUserAgent(userAgent());
+    options.setClientSpanErrorMapper(this::clientSpanError);
+    options.setSingleConnectionFactory(this::createSingleConnection);
+    if (!testWithClientParent()) {
+      options.disableTestWithClientParent();
+    }
+    if (!testRedirects()) {
+      options.disableTestRedirects();
+    }
+    if (!testCircularRedirects()) {
+      options.disableTestCircularRedirects();
+    }
+    options.setMaxRedirects(maxRedirects());
+    if (!testReusedRequest()) {
+      options.disableTestReusedRequest();
+    }
+    if (!testConnectionFailure()) {
+      options.disableTestConnectionFailure();
+    }
+    if (testReadTimeout()) {
+      options.enableTestReadTimeout();
+    }
+    if (!testRemoteConnection()) {
+      options.disableTestRemoteConnection();
+    }
+    if (!testHttps()) {
+      options.disableTestHttps();
+    }
+    if (!testCausality()) {
+      options.disableTestCausality();
+    }
+    if (!testCausalityWithCallback()) {
+      options.disableTestCausalityWithCallback();
+    }
+    if (!testCallback()) {
+      options.disableTestCallback();
+    }
+    if (!testCallbackWithParent()) {
+      options.disableTestCallbackWithParent();
+    }
+    if (!testErrorWithCallback()) {
+      options.disableTestErrorWithCallback();
+    }
+
+    configure(options);
+  }
+
   @BeforeEach
   void verifyExtension() {
     if (testing == null) {
@@ -148,7 +207,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @ParameterizedTest
   @ValueSource(strings = {"/success", "/success?with=params"})
-  void successfulGetRequest(String path) {
+  void successfulGetRequest(String path) throws Exception {
     URI uri = resolveAddress(path);
     String method = "GET";
     int responseCode = doRequest(method, uri);
@@ -157,21 +216,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
-  void successfulRequestWithParent(String method) {
+  void successfulRequestWithParent(String method) throws Exception {
     URI uri = resolveAddress("/success");
     int responseCode = testing.runWithSpan("parent", () -> doRequest(method, uri));
 
@@ -179,39 +232,43 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(1).getSpanId()));
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
+  }
+
+  @Test
+  void successfulRequestWithNotSampledParent() throws Exception {
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+    int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    // sleep to ensure no spans are emitted
+    Thread.sleep(200);
+
+    assertThat(testing.traces()).isEmpty();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
-  void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method) {
-    assumeTrue(testWithClientParent());
+  void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method)
+      throws Exception {
+    assumeTrue(options.testWithClientParent);
 
     URI uri = resolveAddress("/success");
-    int responseCode = runUnderParentClientSpan(() -> doRequest(method, uri));
+    int responseCode =
+        testing.runWithClientSpan("parent-client-span", () -> doRequest(method, uri));
 
     assertThat(responseCode).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent-client-span")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParentSpanId(SpanId.getInvalid())),
+                span -> span.hasName("parent-client-span").hasKind(SpanKind.CLIENT).hasNoParent()),
         trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
   }
 
@@ -219,8 +276,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void requestWithCallbackAndParent() throws Throwable {
-    assumeTrue(testCallback());
-    assumeTrue(testCallbackWithParent());
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testCallbackWithParent);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -234,29 +291,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span ->
-                  assertClientSpan(span, uri, method, 200)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(1).getSpanId()),
-              span ->
-                  span.hasName("child")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
+              span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
   }
 
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
-    assumeTrue(testCallback());
+    assumeTrue(options.testCallback);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -268,28 +313,22 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
           List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(SpanId.getInvalid())));
+                span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
-  void basicRequestWith1Redirect() {
+  void basicRequestWith1Redirect() throws Exception {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
-    assumeTrue(testRedirects());
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/redirect");
@@ -300,25 +339,19 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
   @Test
-  void basicRequestWith2Redirects() {
+  void basicRequestWith2Redirects() throws Exception {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
 
-    assumeTrue(testRedirects());
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/another-redirect");
@@ -329,24 +362,18 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
   @Test
   void circularRedirects() {
-    assumeTrue(testRedirects());
-    assumeTrue(testCircularRedirects());
+    assumeTrue(options.testRedirects);
+    assumeTrue(options.testCircularRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/circular-redirect");
@@ -358,31 +385,26 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
           assertions.add(
               span ->
-                  assertClientSpan(span, uri, method, responseCodeOnRedirectError())
-                      .hasParentSpanId(SpanId.getInvalid())
-                      .hasEventsSatisfyingExactly(hasException(clientError)));
-          for (int i = 0; i < maxRedirects(); i++) {
-            assertions.add(
-                span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+                  assertClientSpan(span, uri, method, options.responseCodeOnRedirectError)
+                      .hasNoParent()
+                      .hasException(clientError));
+          for (int i = 0; i < options.maxRedirects; i++) {
+            assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           }
           trace.hasSpansSatisfyingExactly(assertions.toArray(new Consumer[0]));
         });
   }
 
   @Test
-  void redirectToSecuredCopiesAuthHeader() {
-    assumeTrue(testRedirects());
+  void redirectToSecuredCopiesAuthHeader() throws Exception {
+    assumeTrue(options.testRedirects);
 
     String method = "GET";
     URI uri = resolveAddress("/to-secured");
@@ -394,14 +416,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
@@ -421,25 +439,16 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span ->
-                  assertClientSpan(span, uri, method, 500)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(1).getSpanId()));
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, 500).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
 
   @Test
-  void reuseRequest() {
-    assumeTrue(testReusedRequest());
+  void reuseRequest() throws Exception {
+    assumeTrue(options.testReusedRequest);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -450,26 +459,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         },
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(1).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
@@ -480,7 +477,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   //   (so that it propagates the same trace id / span id that it reports to the backend
   //   and the trace is not broken)
   @Test
-  void requestWithExistingTracingHeaders() {
+  void requestWithExistingTracingHeaders() throws Exception {
     String method = "GET";
     URI uri = resolveAddress("/success");
 
@@ -490,21 +487,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
   @Test
   void connectionErrorUnopenedPort() {
-    assumeTrue(testConnectionFailure());
+    assumeTrue(options.testConnectionFailure);
 
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
@@ -517,36 +508,29 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
               span ->
                   span.hasName("parent")
                       .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid())
+                      .hasNoParent()
                       .hasStatus(StatusData.error())
-                      // Workaround until release of
-                      // https://github.com/open-telemetry/opentelemetry-java/pull/3409
-                      // in 1.5
-                      .hasEventsSatisfyingExactly(hasException(ex)),
+                      .hasException(ex),
               span ->
                   assertClientSpan(span, uri, method, null)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(hasException(clientError)));
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError));
         });
   }
 
   @Test
-  void connectionErrorUnopenedPortWithCallback() {
-    assumeTrue(testConnectionFailure());
-    assumeTrue(testCallback());
-    assumeTrue(testErrorWithCallback());
+  void connectionErrorUnopenedPortWithCallback() throws Exception {
+    assumeTrue(options.testConnectionFailure);
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testErrorWithCallback);
 
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
@@ -565,33 +549,24 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid()),
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
                   assertClientSpan(span, uri, method, null)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(hasException(clientError)),
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError),
               span ->
-                  span.hasName("callback")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId()));
+                  span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
   }
 
   @Test
   void connectionErrorNonRoutableAddress() {
-    assumeTrue(testRemoteConnection());
+    assumeTrue(options.testRemoteConnection);
 
     String method = "HEAD";
     URI uri = URI.create("https://192.0.2.1/");
@@ -604,31 +579,27 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
               span ->
                   span.hasName("parent")
                       .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid())
+                      .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasEventsSatisfyingExactly(hasException(ex)),
+                      .hasException(ex),
               span ->
                   assertClientSpan(span, uri, method, null)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(hasException(clientError)));
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError));
         });
   }
 
   @Test
   void readTimedOut() {
-    assumeTrue(testReadTimeout());
+    assumeTrue(options.testReadTimeout);
 
     String method = "GET";
     URI uri = resolveAddress("/read-timeout");
@@ -641,26 +612,22 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     } else {
       ex = thrown;
     }
-    Throwable clientError = clientSpanError(uri, ex);
+    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
               span ->
                   span.hasName("parent")
                       .hasKind(SpanKind.INTERNAL)
-                      .hasParentSpanId(SpanId.getInvalid())
+                      .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasEventsSatisfyingExactly(hasException(ex)),
+                      .hasException(ex),
               span ->
                   assertClientSpan(span, uri, method, null)
-                      .hasParentSpanId(traces.get(0).get(0).getSpanId())
-                      .hasEventsSatisfyingExactly(hasException(clientError)),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(1).getSpanId()));
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
 
@@ -669,9 +636,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
       matches = ".*IBM J9 VM.*",
       disabledReason = "IBM JVM has different protocol support for TLS")
   @Test
-  void httpsRequest() {
-    assumeTrue(testRemoteConnection());
-    assumeTrue(testHttps());
+  void httpsRequest() throws Exception {
+    assumeTrue(options.testRemoteConnection);
+    assumeTrue(options.testHttps);
 
     String method = "GET";
     URI uri = URI.create("https://localhost:" + server.httpsPort() + "/success");
@@ -682,15 +649,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          // Workaroud until release of
-          // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-          // in 1.5
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
-              span ->
-                  assertClientSpan(span, uri, method, responseCode)
-                      .hasParentSpanId(SpanId.getInvalid()),
-              span -> assertServerSpan(span).hasParentSpanId(traces.get(0).get(0).getSpanId()));
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
 
@@ -702,7 +663,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrency() {
-    assumeTrue(testCausality());
+    assumeTrue(options.testCausality);
 
     int count = 50;
     String method = "GET";
@@ -720,15 +681,19 @@ public abstract class AbstractHttpClientTest<REQUEST> {
             } catch (InterruptedException e) {
               throw new AssertionError(e);
             }
-            testing.runWithSpan(
-                "Parent span " + index,
-                () -> {
-                  Span.current().setAttribute("test.request.id", index);
-                  doRequest(
-                      method,
-                      uri,
-                      Collections.singletonMap("test-request-id", String.valueOf(index)));
-                });
+            try {
+              testing.runWithSpan(
+                  "Parent span " + index,
+                  () -> {
+                    Span.current().setAttribute("test.request.id", index);
+                    doRequest(
+                        method,
+                        uri,
+                        Collections.singletonMap("test-request-id", String.valueOf(index)));
+                  });
+            } catch (Exception e) {
+              throw new AssertionError(e);
+            }
           };
       pool.submit(job);
     }
@@ -736,14 +701,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      int idx = i;
       assertions.add(
           trace -> {
-            // Workaroud until release of
-            // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-            // in 1.5
-            List<List<SpanData>> traces = testing.traces();
-            SpanData rootSpan = traces.get(idx).get(0);
+            SpanData rootSpan = trace.getSpan(0);
             // Traces can be in arbitrary order, let us find out the request id of the current one
             int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
 
@@ -751,14 +711,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 span ->
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(SpanId.getInvalid())
+                        .hasNoParent()
                         .hasAttributesSatisfying(
                             attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span ->
-                    assertClientSpan(span, uri, method, 200).hasParentSpanId(rootSpan.getSpanId()),
+                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
-                        .hasParentSpanId(traces.get(idx).get(1).getSpanId())
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             attrs ->
                                 assertThat(attrs).containsEntry("test.request.id", requestId)));
@@ -772,10 +731,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void highConcurrencyWithCallback() {
-    assumeTrue(testCausality());
-    assumeTrue(testCausalityWithCallback());
-    assumeTrue(testCallback());
-    assumeTrue(testCallbackWithParent());
+    assumeTrue(options.testCausality);
+    assumeTrue(options.testCausalityWithCallback);
+    assumeTrue(options.testCallback);
+    assumeTrue(options.testCallbackWithParent);
 
     int count = 50;
     String method = "GET";
@@ -794,16 +753,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     } catch (InterruptedException e) {
                       throw new AssertionError(e);
                     }
-                    testing.runWithSpan(
-                        "Parent span " + index,
-                        () -> {
-                          Span.current().setAttribute("test.request.id", index);
-                          doRequestWithCallback(
-                              method,
-                              uri,
-                              Collections.singletonMap("test-request-id", String.valueOf(index)),
-                              () -> testing.runWithSpan("child", () -> {}));
-                        });
+                    try {
+                      testing.runWithSpan(
+                          "Parent span " + index,
+                          () -> {
+                            Span.current().setAttribute("test.request.id", index);
+                            doRequestWithCallback(
+                                method,
+                                uri,
+                                Collections.singletonMap("test-request-id", String.valueOf(index)),
+                                () -> testing.runWithSpan("child", () -> {}));
+                          });
+                    } catch (Exception e) {
+                      throw new AssertionError(e);
+                    }
                   };
               pool.submit(job);
             });
@@ -811,14 +774,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      int idx = i;
       assertions.add(
           trace -> {
-            // Workaroud until release of
-            // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-            // in 1.5
-            List<List<SpanData>> traces = testing.traces();
-            SpanData rootSpan = traces.get(idx).get(0);
+            SpanData rootSpan = trace.getSpan(0);
             // Traces can be in arbitrary order, let us find out the request id of the current one
             int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
 
@@ -826,20 +784,16 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 span ->
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(SpanId.getInvalid())
+                        .hasNoParent()
                         .hasAttributesSatisfying(
                             attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span ->
-                    assertClientSpan(span, uri, method, 200).hasParentSpanId(rootSpan.getSpanId()),
+                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
-                        .hasParentSpanId(traces.get(idx).get(1).getSpanId())
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span ->
-                    span.hasName("child")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(rootSpan.getSpanId()));
+                span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
           });
     }
 
@@ -854,7 +808,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrencyOnSingleConnection() {
-    SingleConnection singleConnection = createSingleConnection("localhost", server.httpPort());
+    SingleConnection singleConnection =
+        options.singleConnectionFactory.apply("localhost", server.httpPort());
     assumeTrue(singleConnection != null);
 
     int count = 50;
@@ -893,14 +848,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      int idx = i;
       assertions.add(
           trace -> {
-            // Workaroud until release of
-            // https://github.com/open-telemetry/opentelemetry-java/pull/3386
-            // in 1.5
-            List<List<SpanData>> traces = testing.traces();
-            SpanData rootSpan = traces.get(idx).get(0);
+            SpanData rootSpan = trace.getSpan(0);
             // Traces can be in arbitrary order, let us find out the request id of the current one
             int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
 
@@ -908,14 +858,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 span ->
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(SpanId.getInvalid())
+                        .hasNoParent()
                         .hasAttributesSatisfying(
                             attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span ->
-                    assertClientSpan(span, uri, method, 200).hasParentSpanId(rootSpan.getSpanId()),
+                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
-                        .hasParentSpanId(traces.get(idx).get(1).getSpanId())
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             attrs ->
                                 assertThat(attrs).containsEntry("test.request.id", requestId)));
@@ -930,8 +879,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
-    Set<AttributeKey<?>> httpClientAttributes = httpAttributes(uri);
-    return span.hasName(expectedClientSpanName(uri, method))
+    Set<AttributeKey<?>> httpClientAttributes = options.httpAttributes.apply(uri);
+    return span.hasName(options.expectedClientSpanNameMapper.apply(uri, method))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
@@ -961,11 +910,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   }
                 }
               } else {
-                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                // TODO(anuraaga): Remove cast after
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3412
-                assertThat(attrs)
-                    .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
+                }
+                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                }
               }
 
               // Optional
@@ -995,12 +945,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                         SemanticAttributes.HttpFlavorValues.HTTP_1_1);
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
-                String userAgent = userAgent();
+                String userAgent = options.userAgent;
                 if (userAgent != null) {
-                  // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                  // hasEntrySatisfying.
-                  // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                  assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_USER_AGENT);
                   assertThat(attrs)
                       .hasEntrySatisfying(
                           SemanticAttributes.HTTP_USER_AGENT,
@@ -1008,10 +954,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_HOST)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap()).containsKey(SemanticAttributes.HTTP_HOST);
                 // TODO(anuraaga): It's not well defined when instrumentation records with and
                 // without port. We should make this more uniform
                 assertThat(attrs)
@@ -1020,22 +962,12 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                         host -> assertThat(host).startsWith(uri.getHost()));
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap())
-                    .containsKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                         length -> assertThat(length).isNotNegative());
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-                // TODO(anuraaga): Remove after updating to SDK 1.5.0 which adds this into
-                // hasEntrySatisfying.
-                // https://github.com/open-telemetry/opentelemetry-java/pull/3433
-                assertThat(attrs.asMap())
-                    .containsKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
@@ -1157,41 +1089,24 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return true;
   }
 
-  // Workaround until release of
-  // https://github.com/open-telemetry/opentelemetry-java/pull/3409
-  // in 1.5
-  private static Consumer<EventDataAssert>[] hasException(Throwable exception) {
-    return Collections.<Consumer<EventDataAssert>>singletonList(
-            event ->
-                event
-                    .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-                    .hasAttributesSatisfying(
-                        attrs ->
-                            assertThat(attrs)
-                                .containsEntry(
-                                    SemanticAttributes.EXCEPTION_TYPE,
-                                    exception.getClass().getCanonicalName())
-                                .containsEntry(
-                                    SemanticAttributes.EXCEPTION_MESSAGE, exception.getMessage())))
-        .toArray(new Consumer[0]);
-  }
+  protected void configure(HttpClientTestOptions options) {}
 
-  private int doRequest(String method, URI uri) {
+  private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 
-  private int doRequest(String method, URI uri, Map<String, String> headers) {
+  private int doRequest(String method, URI uri, Map<String, String> headers) throws Exception {
     REQUEST request = buildRequest(method, uri, headers);
     return sendRequest(request, method, uri, headers);
   }
 
-  private int doReusedRequest(String method, URI uri) {
+  private int doReusedRequest(String method, URI uri) throws Exception {
     REQUEST request = buildRequest(method, uri, Collections.emptyMap());
     sendRequest(request, method, uri, Collections.emptyMap());
     return sendRequest(request, method, uri, Collections.emptyMap());
   }
 
-  private int doRequestWithExistingTracingHeaders(String method, URI uri) {
+  private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
     Map<String, String> headers = new HashMap();
     for (String field :
         testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
@@ -1201,36 +1116,25 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return sendRequest(request, method, uri, headers);
   }
 
-  private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback) {
+  private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback)
+      throws Exception {
     return doRequestWithCallback(method, uri, Collections.emptyMap(), callback);
   }
 
   private RequestResult doRequestWithCallback(
-      String method, URI uri, Map<String, String> headers, Runnable callback) {
+      String method, URI uri, Map<String, String> headers, Runnable callback) throws Exception {
     REQUEST request = buildRequest(method, uri, headers);
     RequestResult requestResult = new RequestResult(callback);
     sendRequestWithCallback(request, method, uri, headers, requestResult);
     return requestResult;
   }
 
-  // Visible for spock bridge.
-  URI resolveAddress(String path) {
+  protected URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
 
   final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
     this.server = server;
-  }
-
-  // Must create span within agent using annotation until
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1726
-  @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
-  private static <T> T runUnderParentClientSpan(Callable<T> r) {
-    try {
-      return r.call();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
-    }
   }
 }

@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-class JerseyAnnotationInstrumentationTest extends JaxRsAnnotationsInstrumentationTest {
+class JerseyAnnotationInstrumentationTest extends JaxrsAnnotationsInstrumentationTest {
 }

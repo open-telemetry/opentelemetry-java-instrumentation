@@ -5,36 +5,30 @@
 
 package io.opentelemetry.javaagent.muzzle.matcher;
 
-import static java.lang.System.lineSeparator;
-
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
-import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
-import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
-import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 /**
  * Entry point for the muzzle gradle plugin.
- * <p>
- * In order to understand this class and its weirdness, one has to remember that there are three
+ *
+ * <p>In order to understand this class and its weirdness, one has to remember that there are three
  * different independent class loaders at play here.
- * <p>
- * First, Gradle class loader that has loaded the muzzle-check plugin that calls this class. This
- * one has a lot of Gradle specific stuff and we don't want that it to be available during muzzle checks.
- * <p>
- * Second, there is agent or instrumentation class loader, which contains all InstrumentationModules
- * and helper classes. The actual muzzle check process happens "inside" that class loader. This means
- * that we load {@link io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher} from it and we
- * allow it to find all InstrumentationModules from agent class loader.
- * <p>
- * Finally, there is user class loader. It contains the specific version of the instrumented library
- * that we want to muzzle-check: "does this version provide all the expected hooks and classes and
- * methods that our instrumentations expect".
+ *
+ * <p>First, Gradle class loader that has loaded the muzzle-check plugin that calls this class. This
+ * one has a lot of Gradle specific stuff and we don't want it to be available during muzzle checks.
+ *
+ * <p>Second, there is agent or instrumentation class loader, which contains all
+ * InstrumentationModules and helper classes. The actual muzzle check process happens "inside" that
+ * class loader. This means that we load {@link
+ * io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher} from it and we allow it to find all
+ * InstrumentationModules from agent class loader.
+ *
+ * <p>Finally, there is user class loader. It contains the specific version of the instrumented
+ * library that we want to muzzle-check: "does this version provide all the expected hooks and
+ * classes and methods that our instrumentations expect".
  */
 
 // TODO the next line is not true anymore. Switch from System.err to Gradle logger.
@@ -66,15 +60,19 @@ public final class MuzzleGradlePluginUtil {
    */
   public static void assertInstrumentationMuzzled(
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
-      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+          IllegalAccessException {
 
-    Class<?> matcherClass = agentClassLoader
-        .loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher");
+    Class<?> matcherClass =
+        agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher");
 
-    //We cannot reference Mismatch class directly here, because we are loaded from a differen classloader.
-    Map<String, List<Object>> allMismatches = (Map<String, List<Object>>) matcherClass
-        .getMethod("matchesAll", ClassLoader.class, boolean.class)
-        .invoke(null, userClassLoader, assertPass);
+    // We cannot reference Mismatch class directly here, because we are loaded from a differen
+    // classloader.
+    Map<String, List<Object>> allMismatches =
+        (Map<String, List<Object>>)
+            matcherClass
+                .getMethod("matchesAll", ClassLoader.class, boolean.class)
+                .invoke(null, userClassLoader, assertPass);
 
     allMismatches.forEach(
         (moduleName, mismatches) -> {
@@ -108,45 +106,13 @@ public final class MuzzleGradlePluginUtil {
    *
    * <p>Called by the {@code printMuzzleReferences} gradle task.
    */
-  public static void printMuzzleReferences(ClassLoader instrumentationClassLoader) {
-    for (InstrumentationModule instrumentationModule :
-        ServiceLoader.load(InstrumentationModule.class, instrumentationClassLoader)) {
-      try {
-        System.out.println(instrumentationModule.getClass().getName());
-        for (ClassRef ref : instrumentationModule.getMuzzleReferences().values()) {
-          System.out.print(prettyPrint(ref));
-        }
-      } catch (RuntimeException e) {
-        String message =
-            "Unexpected exception printing references for "
-                + instrumentationModule.getClass().getName();
-        System.out.println(message);
-        throw new IllegalStateException(message, e);
-      }
-    }
-  }
-
-  private static String prettyPrint(ClassRef ref) {
-    StringBuilder builder = new StringBuilder(INDENT).append(ref).append(lineSeparator());
-    if (!ref.getSources().isEmpty()) {
-      builder.append(INDENT).append(INDENT).append("Sources:").append(lineSeparator());
-      for (Source source : ref.getSources()) {
-        builder
-            .append(INDENT)
-            .append(INDENT)
-            .append(INDENT)
-            .append("at: ")
-            .append(source)
-            .append(lineSeparator());
-      }
-    }
-    for (FieldRef field : ref.getFields()) {
-      builder.append(INDENT).append(INDENT).append(field).append(lineSeparator());
-    }
-    for (MethodRef method : ref.getMethods()) {
-      builder.append(INDENT).append(INDENT).append(method).append(lineSeparator());
-    }
-    return builder.toString();
+  public static void printMuzzleReferences(ClassLoader instrumentationClassLoader)
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+          IllegalAccessException {
+    Class<?> matcherClass =
+        instrumentationClassLoader.loadClass(
+            "io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter");
+    matcherClass.getMethod("printMuzzleReferences").invoke(null);
   }
 
   private MuzzleGradlePluginUtil() {}

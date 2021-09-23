@@ -11,6 +11,7 @@ import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.testing.internal.armeria.client.WebClient
+
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 

@@ -30,8 +30,12 @@ tasks {
   val compileTestKotlin by existing(AbstractCompile::class)
 
   named<GroovyCompile>("compileTestGroovy") {
-    //Note: look like it should be `classpath += files(sourceSets.test.kotlin.classesDirectory)`
-    //instead, but kotlin plugin doesn't support it (yet?)
+    // Note: look like it should be `classpath += files(sourceSets.test.kotlin.classesDirectory)`
+    // instead, but kotlin plugin doesn't support it (yet?)
     classpath = classpath.plus(files(compileTestKotlin.get().destinationDir))
   }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 }

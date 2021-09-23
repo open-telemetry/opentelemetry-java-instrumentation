@@ -22,9 +22,3 @@ configurations.configureEach {
     exclude(module = "javaagent-bootstrap")
   }
 }
-
-tasks {
-  withType<Test>().configureEach {
-    dependsOn(":testing:agent-for-testing:shadowJar")
-  }
-}

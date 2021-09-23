@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.asserts
 
-import static AttributesAssert.assertAttributes
-import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEvent
-
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.common.Attributes
@@ -16,7 +13,11 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
 import java.util.regex.Pattern
+
+import static AttributesAssert.assertAttributes
+import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEvent
 
 class SpanAssert {
   private final SpanData span
@@ -44,6 +45,11 @@ class SpanAssert {
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(this)
     assertDefaults()
+  }
+
+  void events(int expectedCount) {
+    assert span.totalRecordedEvents == expectedCount
+    assert span.events.size() == expectedCount
   }
 
   void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {

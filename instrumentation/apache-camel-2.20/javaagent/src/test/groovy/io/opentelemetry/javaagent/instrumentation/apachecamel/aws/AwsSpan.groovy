@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 
 class AwsSpan {
 

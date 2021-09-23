@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.metrics.Meter;
+import application.io.opentelemetry.api.metrics.MeterBuilder;
 import application.io.opentelemetry.api.metrics.MeterProvider;
 
 // Our convention for accessing agent packages.
@@ -21,13 +21,7 @@ public class ApplicationMeterProvider implements MeterProvider {
   }
 
   @Override
-  public Meter get(String instrumentationName) {
-    return new ApplicationMeter(agentMeterProvider.get(instrumentationName));
-  }
-
-  @Override
-  public Meter get(String instrumentationName, String instrumentationVersion) {
-    return new ApplicationMeter(
-        agentMeterProvider.get(instrumentationName, instrumentationVersion));
+  public MeterBuilder meterBuilder(String instrumentationName) {
+    return new ApplicationMeterBuilder(agentMeterProvider.meterBuilder(instrumentationName));
   }
 }

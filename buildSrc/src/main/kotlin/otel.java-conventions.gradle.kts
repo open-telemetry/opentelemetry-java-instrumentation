@@ -1,6 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
-import java.time.Duration
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import java.time.Duration
 
 plugins {
   `java-library`
@@ -187,16 +187,15 @@ gradle.sharedServices.registerIfAbsent("testcontainersBuildService", Testcontain
   maxParallelUsages.convention(2)
 }
 
-val testJavaVersion = gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
 val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
@@ -229,12 +228,16 @@ tasks.withType<Test>().configureEach {
 }
 
 afterEvaluate {
+  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+  val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
+    ?: false
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
       javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+        implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
       })
-      isEnabled = isJavaVersionAllowed(testJavaVersion)
+      isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
@@ -259,12 +262,12 @@ afterEvaluate {
 }
 
 codenarc {
-  configFile = rootProject.file("gradle/enforcement/codenarc.groovy")
+  configFile = rootProject.file("buildscripts/codenarc.groovy")
   toolVersion = "2.0.0"
 }
 
 checkstyle {
-  configFile = rootProject.file("gradle/enforcement/checkstyle.xml")
+  configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
   toolVersion = "8.37"
   maxWarnings = 0

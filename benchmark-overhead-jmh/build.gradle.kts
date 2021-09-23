@@ -9,8 +9,6 @@ plugins {
 
 dependencies {
   jmhImplementation("org.springframework.boot:spring-boot-starter-web:2.5.2")
-
-  testImplementation("org.assertj:assertj-core")
 }
 
 tasks {
@@ -26,15 +24,27 @@ tasks {
 
   // TODO(trask) move to otel.jmh-conventions?
   val jmhFork = gradle.startParameter.projectProperties["jmh.fork"]?.toInt()
+  val jmhWarmupIterations = gradle.startParameter.projectProperties["jmh.warmupIterations"]?.toInt()
+  val jmhIterations = gradle.startParameter.projectProperties["jmh.iterations"]?.toInt()
   val jmhIncludes = gradle.startParameter.projectProperties["jmh.includes"]
 
+  // note: if you want to capture a flight recording for a single benchmark, try
+  //  -Pjmh.fork=1
+  //  -Pjmh.warmupIterations=5
+  //  -Pjmh.iterations=5
+  //  -Pjmh.includes=<benchmark>
+  //  -Pjmh.startFlightRecording=settings=profile.jfc,delay=50s,duration=50s,filename=output.jfr
+  // since each iteration is 10 seconds, the flight recording produced will approximately cover the
+  // (post-warmup) benchmarking iterations
+  val jmhStartFlightRecording = gradle.startParameter.projectProperties.get("jmh.startFlightRecording")
+
   named<JMHTask>("jmh") {
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("fullJavaagentJar").get()
     inputs.files(layout.files(shadowTask))
 
     // note: without an exporter, toSpanData() won't even be called
     // (which is good for benchmarking the instrumentation itself)
-    val args = listOf(
+    val args = mutableListOf(
       "-javaagent:${shadowTask.archiveFile.get()}",
       "-Dotel.traces.exporter=none",
       "-Dotel.metrics.exporter=none",
@@ -42,14 +52,29 @@ tasks {
       // and this benchmark is focused on servlet overhead for now
       "-Dotel.instrumentation.http-url-connection.enabled=false"
     )
+    if (jmhStartFlightRecording != null) {
+      args.addAll(listOf(
+        "-XX:+FlightRecorder",
+        "-XX:StartFlightRecording=$jmhStartFlightRecording",
+        // enabling profiling at non-safepoints helps with micro-profiling
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+DebugNonSafepoints"
+      ))
+    }
     // see https://github.com/melix/jmh-gradle-plugin/issues/200
     jvmArgsPrepend.add(args.joinToString(" "))
 
-    if (jmhIncludes != null) {
-      includes.addAll(jmhIncludes.split(','))
-    }
     if (jmhFork != null) {
       fork.set(jmhFork)
+    }
+    if (jmhWarmupIterations != null) {
+      warmupIterations.set(jmhWarmupIterations)
+    }
+    if (jmhIterations != null) {
+      iterations.set(jmhIterations)
+    }
+    if (jmhIncludes != null) {
+      includes.addAll(jmhIncludes.split(','))
     }
 
     // TODO(trask) is this ok? if it's ok, move to otel.jmh-conventions?

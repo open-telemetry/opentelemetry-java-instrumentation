@@ -55,15 +55,15 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = contextStore.get(handler);
-      if (data == null) {
+      ContextStore<AsyncHandler<?>, RequestContext> contextStore =
+          InstrumentationContext.get(AsyncHandler.class, RequestContext.class);
+      RequestContext requestContext = contextStore.get(handler);
+      if (requestContext == null) {
         return null;
       }
       contextStore.put(handler, null);
-      instrumenter().end(data.getContext(), data.getRequest(), response, null);
-      return data.getParentContext().makeCurrent();
+      instrumenter().end(requestContext.getContext(), requestContext, response, null);
+      return requestContext.getParentContext().makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -81,15 +81,15 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = contextStore.get(handler);
-      if (data == null) {
+      ContextStore<AsyncHandler<?>, RequestContext> contextStore =
+          InstrumentationContext.get(AsyncHandler.class, RequestContext.class);
+      RequestContext requestContext = contextStore.get(handler);
+      if (requestContext == null) {
         return null;
       }
       contextStore.put(handler, null);
-      instrumenter().end(data.getContext(), data.getRequest(), null, throwable);
-      return data.getParentContext().makeCurrent();
+      instrumenter().end(requestContext.getContext(), requestContext, null, throwable);
+      return requestContext.getParentContext().makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

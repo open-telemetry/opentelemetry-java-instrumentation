@@ -11,11 +11,14 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.4.1"
+val otelVersion = "1.6.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
 val groovyVersion = "2.5.11"
+
+rootProject.extra["caffeine2Version"] = "2.9.2"
+rootProject.extra["caffeine3Version"] = "3.0.4"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
@@ -57,7 +60,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "net.bytebuddy",
     // When updating, also update buildSrc/build.gradle.kts
-    "1.11.2",
+    "1.11.18",
     listOf("byte-buddy", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(
@@ -78,14 +81,13 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "org.testcontainers",
     "1.15.3",
-    listOf("testcontainers", "junit-jupiter")
+    listOf("testcontainers", "junit-jupiter", "cassandra", "couchbase", "elasticsearch", "kafka", "localstack", "selenium")
   )
 )
 
 val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.3",
   "com.blogspot.mydailyjava:weak-lock-free:0.18",
-  "com.github.ben-manes.caffeine:caffeine:2.9.0",
   "com.github.stefanbirkner:system-lambda:1.2.0",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "com.google.auto.service:auto-service:1.0",

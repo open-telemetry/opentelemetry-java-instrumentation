@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static java.util.Collections.emptyMap
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static java.util.Collections.emptyMap
 
 abstract class ChunkRootSpanTest extends AgentInstrumentationSpecification {
 

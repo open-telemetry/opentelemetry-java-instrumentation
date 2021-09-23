@@ -26,13 +26,24 @@ public final class FutureListenerWrappers {
           GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
       wrappers = Cache.newBuilder().setWeakKeys().setWeakValues().build();
 
+  private static final ClassValue<Boolean> shouldWrap =
+      new ClassValue<Boolean>() {
+        @Override
+        protected Boolean computeValue(Class<?> type) {
+          // we only want to wrap user callbacks
+          String className = type.getName();
+          return !className.startsWith("io.opentelemetry.javaagent.")
+              && !className.startsWith("io.netty.");
+        }
+      };
+
+  public static boolean shouldWrap(GenericFutureListener<? extends Future<?>> listener) {
+    return shouldWrap.get(listener.getClass());
+  }
+
   @SuppressWarnings("unchecked")
   public static GenericFutureListener<?> wrap(
       Context context, GenericFutureListener<? extends Future<?>> delegate) {
-    if (delegate instanceof WrappedFutureListener
-        || delegate instanceof WrappedProgressiveFutureListener) {
-      return delegate;
-    }
     return wrappers.computeIfAbsent(
         delegate,
         key -> {

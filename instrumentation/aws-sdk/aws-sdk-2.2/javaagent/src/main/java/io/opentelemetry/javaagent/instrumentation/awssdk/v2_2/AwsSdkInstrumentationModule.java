@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -33,8 +34,8 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
    * service loading mechanism to pick it up.
    */
   @Override
-  public List<String> helperResourceNames() {
-    return singletonList("software/amazon/awssdk/global/handlers/execution.interceptors");
+  public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
+    helperResourceBuilder.register("software/amazon/awssdk/global/handlers/execution.interceptors");
   }
 
   @Override

@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.testing;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -56,6 +60,19 @@ final class TestInstrumenters {
   <T, E extends Throwable> T runWithServerSpan(String spanName, ThrowingSupplier<T, E> callback)
       throws E {
     return runWithInstrumenter(spanName, testServerInstrumenter, callback);
+  }
+
+  /** Runs the provided {@code callback} inside the scope of a non-recording span. */
+  <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback) throws E {
+    SpanContext spanContext =
+        SpanContext.create(
+            "12345678123456781234567812345678",
+            "1234567812345678",
+            TraceFlags.getDefault(),
+            TraceState.getDefault());
+    try (Scope ignored = Span.wrap(spanContext).makeCurrent()) {
+      return callback.get();
+    }
   }
 
   private static <T, E extends Throwable> T runWithInstrumenter(

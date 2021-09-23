@@ -56,11 +56,7 @@ public class ClassLoaderMatcher {
 
   private static List<Mismatch> checkReferenceMatcher(
       InstrumentationModule instrumentationModule, ClassLoader classLoader) {
-    ReferenceMatcher muzzle =
-        new ReferenceMatcher(
-            instrumentationModule.getMuzzleHelperClassNames(),
-            instrumentationModule.getMuzzleReferences(),
-            instrumentationModule::isHelperClass);
+    ReferenceMatcher muzzle = ReferenceMatcher.of(instrumentationModule);
     return muzzle.getMismatchedReferenceSources(classLoader);
   }
 
@@ -82,11 +78,17 @@ public class ClassLoaderMatcher {
     try {
       // verify helper injector works
       List<String> allHelperClasses = instrumentationModule.getMuzzleHelperClassNames();
+      HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
+      List<String> helperResourceNames = instrumentationModule.helperResourceNames();
+      for (String helperResourceName : helperResourceNames) {
+        helperResourceBuilder.register(helperResourceName);
+      }
+      instrumentationModule.registerHelperResources(helperResourceBuilder);
       if (!allHelperClasses.isEmpty()) {
         new HelperInjector(
                 instrumentationModule.instrumentationName(),
                 allHelperClasses,
-                instrumentationModule.helperResourceNames(),
+                helperResourceBuilder.getResources(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
             .transform(null, null, classLoader, null);

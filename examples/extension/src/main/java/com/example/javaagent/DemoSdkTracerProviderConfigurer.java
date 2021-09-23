@@ -1,17 +1,18 @@
 package com.example.javaagent;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.sdk.autoconfigure.spi.SdkTracerProviderConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.traces.SdkTracerProviderConfigurer;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanLimits;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 /**
- * This is one of the main entry points for Instrumentation Agent's customizations.
- * It allows configuring {@link SdkTracerProviderBuilder}.
- * See the {@link #configure(SdkTracerProviderBuilder)} method below.
- * <p>
- * Also see https://github.com/open-telemetry/opentelemetry-java/issues/2022
+ * This is one of the main entry points for Instrumentation Agent's customizations. It allows
+ * configuring {@link SdkTracerProviderBuilder}. See the {@link
+ * #configure(SdkTracerProviderBuilder)} method below.
+ *
+ * <p>Also see https://github.com/open-telemetry/opentelemetry-java/issues/2022
  *
  * @see SdkTracerProviderConfigurer
  * @see DemoPropagatorProvider
@@ -19,7 +20,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 @AutoService(SdkTracerProviderConfigurer.class)
 public class DemoSdkTracerProviderConfigurer implements SdkTracerProviderConfigurer {
   @Override
-  public void configure(SdkTracerProviderBuilder tracerProvider) {
+  public void configure(SdkTracerProviderBuilder tracerProvider, ConfigProperties config) {
     tracerProvider
         .setIdGenerator(new DemoIdGenerator())
         .setSpanLimits(SpanLimits.builder().setMaxNumberOfAttributes(1024).build())

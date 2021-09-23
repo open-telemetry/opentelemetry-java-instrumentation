@@ -21,8 +21,7 @@ import reactor.core.publisher.SignalType;
 public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.lettuce.experimental-span-attributes", false);
+      Config.get().getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private Context context;
   private int numResults;

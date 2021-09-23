@@ -5,80 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
+import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.metrics.BoundLongCounter;
 import application.io.opentelemetry.api.metrics.LongCounter;
-import application.io.opentelemetry.api.metrics.LongCounterBuilder;
-import application.io.opentelemetry.api.metrics.common.Labels;
+import application.io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
 class ApplicationLongCounter implements LongCounter {
 
-  private final io.opentelemetry.api.metrics.LongCounter agentLongCounter;
+  private final io.opentelemetry.api.metrics.LongCounter agentCounter;
 
-  ApplicationLongCounter(io.opentelemetry.api.metrics.LongCounter agentLongCounter) {
-    this.agentLongCounter = agentLongCounter;
-  }
-
-  io.opentelemetry.api.metrics.LongCounter getAgentLongCounter() {
-    return agentLongCounter;
+  ApplicationLongCounter(io.opentelemetry.api.metrics.LongCounter agentCounter) {
+    this.agentCounter = agentCounter;
   }
 
   @Override
-  public void add(long delta, Labels labels) {
-    agentLongCounter.add(delta, LabelBridging.toAgent(labels));
+  public void add(long value) {
+    agentCounter.add(value);
   }
 
   @Override
-  public void add(long l) {
-    agentLongCounter.add(l);
+  public void add(long value, Attributes applicationAttributes) {
+    agentCounter.add(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public BoundLongCounter bind(Labels labels) {
-    return new BoundInstrument(agentLongCounter.bind(LabelBridging.toAgent(labels)));
+  public void add(long value, Attributes applicationAttributes, Context applicationContext) {
+    agentCounter.add(
+        value,
+        Bridging.toAgent(applicationAttributes),
+        AgentContextStorage.getAgentContext(applicationContext));
   }
 
-  static class BoundInstrument implements BoundLongCounter {
-
-    private final io.opentelemetry.api.metrics.BoundLongCounter agentBoundLongCounter;
-
-    BoundInstrument(io.opentelemetry.api.metrics.BoundLongCounter agentBoundLongCounter) {
-      this.agentBoundLongCounter = agentBoundLongCounter;
-    }
-
-    @Override
-    public void add(long delta) {
-      agentBoundLongCounter.add(delta);
-    }
-
-    @Override
-    public void unbind() {
-      agentBoundLongCounter.unbind();
-    }
-  }
-
-  static class Builder implements LongCounterBuilder {
-
-    private final io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder;
-
-    Builder(io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
-      this.agentBuilder = agentBuilder;
-    }
-
-    @Override
-    public Builder setDescription(String description) {
-      agentBuilder.setDescription(description);
-      return this;
-    }
-
-    @Override
-    public Builder setUnit(String unit) {
-      agentBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public LongCounter build() {
-      return new ApplicationLongCounter(agentBuilder.build());
-    }
+  @Override
+  public BoundLongCounter bind(Attributes attributes) {
+    return new ApplicationBoundLongCounter(agentCounter.bind(Bridging.toAgent(attributes)));
   }
 }

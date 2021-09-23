@@ -21,11 +21,6 @@ public class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentatio
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // TODO (trask) add test for Tomee JAX-WS (which is based on OpenEJB/CXF)
-    //  in the meantime:
-    //  it's important to instrument this underlying class, instead of
-    //  org.apache.cxf.jaxws.EndpointImpl, because Tomee JAX-WS (which is based on OpenEJB/CXF) has
-    //  it's own copy/variant of that class (org.apache.openejb.server.cxf.CxfEndpoint)
     return named("org.apache.cxf.jaxws.JaxWsServerFactoryBean");
   }
 

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.dropwizardviews.DropwizardTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.dropwizardviews.DropwizardSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,14 +52,24 @@ public class DropwizardRendererInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) View view,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        context = tracer().startSpan("Render " + view.getTemplateName());
-        scope = context.makeCurrent();
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+
+      // don't start a new top-level span
+      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
+        return;
       }
+      if (!instrumenter().shouldStart(parentContext, view)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, view);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(0) View view,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -67,11 +77,7 @@ public class DropwizardRendererInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      instrumenter().end(context, view, null, throwable);
     }
   }
 }

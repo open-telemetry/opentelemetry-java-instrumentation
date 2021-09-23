@@ -3,15 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.time.Duration
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.annotation.RabbitListener
@@ -22,6 +16,13 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import java.time.Duration
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 
@@ -81,7 +82,8 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, null on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
@@ -131,7 +133,8 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           name "basic.ack"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, null on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"

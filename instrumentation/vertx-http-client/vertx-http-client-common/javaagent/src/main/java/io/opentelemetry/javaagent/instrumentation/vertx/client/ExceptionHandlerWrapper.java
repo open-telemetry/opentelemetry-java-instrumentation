@@ -16,7 +16,7 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
   private final ContextStore<HttpClientRequest, Contexts> contextStore;
   private final Handler<Throwable> handler;
 
-  public ExceptionHandlerWrapper(
+  private ExceptionHandlerWrapper(
       AbstractVertxClientTracer tracer,
       HttpClientRequest request,
       ContextStore<HttpClientRequest, Contexts> contextStore,
@@ -25,6 +25,18 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
     this.request = request;
     this.contextStore = contextStore;
     this.handler = handler;
+  }
+
+  public static Handler<Throwable> wrap(
+      AbstractVertxClientTracer tracer,
+      HttpClientRequest request,
+      ContextStore<HttpClientRequest, Contexts> contextStore,
+      Handler<Throwable> handler) {
+    if (handler instanceof ExceptionHandlerWrapper) {
+      return handler;
+    }
+
+    return new ExceptionHandlerWrapper(tracer, request, contextStore, handler);
   }
 
   @Override

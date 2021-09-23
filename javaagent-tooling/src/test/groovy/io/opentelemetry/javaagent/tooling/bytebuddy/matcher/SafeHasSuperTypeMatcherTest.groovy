@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType
-import static net.bytebuddy.matcher.ElementMatchers.named
-
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E
@@ -18,6 +15,9 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.description.type.TypeList
 import spock.lang.Shared
 import spock.lang.Specification
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType
+import static net.bytebuddy.matcher.ElementMatchers.named
 
 class SafeHasSuperTypeMatcherTest extends Specification {
   @Shared

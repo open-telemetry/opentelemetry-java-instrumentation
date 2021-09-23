@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
-import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.inheritsAnnotation;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -18,10 +20,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import java.lang.reflect.Method;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsServerSpanNaming;
 import javax.jws.WebService;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -61,15 +65,25 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.This Object target,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelRequest") JaxWsRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       callDepth = CallDepth.forClass(WebService.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
-      context = tracer().startSpan(target.getClass(), method);
+
+      Context parentContext = currentContext();
+      request = new JaxWsRequest(target.getClass(), methodName);
+      ServerSpanNaming.updateServerSpanName(
+          parentContext, CONTROLLER, JaxWsServerSpanNaming.SERVER_SPAN_NAME, request);
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -77,18 +91,15 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelRequest") JaxWsRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
       scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }

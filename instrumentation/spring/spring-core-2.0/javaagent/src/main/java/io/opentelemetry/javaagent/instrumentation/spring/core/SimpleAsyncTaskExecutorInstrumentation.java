@@ -11,14 +11,15 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,23 +46,22 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterJobSubmit(
+    public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
-        task = newTask;
-        ContextStore<Runnable, State> contextStore =
-            InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8BytecodeBridge.currentContext());
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        task = RunnableWrapper.wrapIfNeeded(task);
+        ContextStore<Runnable, PropagatedContext> contextStore =
+            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 }

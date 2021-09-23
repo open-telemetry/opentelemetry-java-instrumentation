@@ -4,8 +4,9 @@
  */
 
 import com.rabbitmq.client.ConnectionFactory
-import java.time.Duration
 import org.testcontainers.containers.GenericContainer
+
+import java.time.Duration
 
 trait WithRabbitMqTrait {
 

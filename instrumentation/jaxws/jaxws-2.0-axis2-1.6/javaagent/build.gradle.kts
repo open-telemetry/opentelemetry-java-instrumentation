@@ -27,9 +27,9 @@ dependencies {
   implementation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:library"))
 
   val axis2Version = "1.6.0"
-  library("org.apache.axis2:axis2-jaxws:${axis2Version}")
-  testLibrary("org.apache.axis2:axis2-transport-http:${axis2Version}")
-  testLibrary("org.apache.axis2:axis2-transport-local:${axis2Version}")
+  library("org.apache.axis2:axis2-jaxws:$axis2Version")
+  testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")
+  testLibrary("org.apache.axis2:axis2-transport-local:$axis2Version")
 
   testImplementation(project(":instrumentation:jaxws:jaxws-2.0-testing"))
 

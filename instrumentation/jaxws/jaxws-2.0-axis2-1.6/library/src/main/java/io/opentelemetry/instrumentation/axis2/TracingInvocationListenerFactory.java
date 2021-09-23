@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.axis2;
 
-import static io.opentelemetry.instrumentation.axis2.Axis2JaxWsTracer.tracer;
-
 import org.apache.axis2.jaxws.core.MessageContext;
 import org.apache.axis2.jaxws.server.InvocationListener;
 import org.apache.axis2.jaxws.server.InvocationListenerBean;
@@ -29,10 +27,10 @@ public class TracingInvocationListenerFactory implements InvocationListenerFacto
     public void notify(InvocationListenerBean invocationListenerBean) {
       switch (invocationListenerBean.getState()) {
         case REQUEST:
-          tracer().startSpan(messageContext);
+          Axis2Helper.start(messageContext);
           break;
         case RESPONSE:
-          tracer().end(messageContext);
+          Axis2Helper.end(messageContext, null);
           break;
         default:
       }
@@ -40,7 +38,7 @@ public class TracingInvocationListenerFactory implements InvocationListenerFacto
 
     @Override
     public void notifyOnException(InvocationListenerBean invocationListenerBean) {
-      tracer().end(messageContext, invocationListenerBean.getThrowable());
+      Axis2Helper.end(messageContext, invocationListenerBean.getThrowable());
     }
   }
 }

@@ -11,6 +11,9 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextStorage;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.AgentExtension;
@@ -45,6 +48,7 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,9 @@ public class AgentInstaller {
   // and continue using the javaagent
   private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
       "otel.javaagent.experimental.force-synchronous-agent-listeners";
+
+  private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
+      "otel.javaagent.testing.strict-context-stressor-millis";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
@@ -87,12 +94,19 @@ public class AgentInstaller {
     // caffeine uses AtomicReferenceArray, ensure it is loaded to avoid ClassCircularityError during
     // transform.
     AtomicReferenceArray.class.getName();
+
+    Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
+    if (strictContextStressorMillis != null) {
+      io.opentelemetry.context.ContextStorage.addWrapper(
+          storage -> new StrictContextStressor(storage, strictContextStressorMillis));
+    }
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
     Config config = Config.get();
-    if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+      setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
       installBytebuddyAgent(inst, agentListeners);
     } else {
@@ -168,6 +182,14 @@ public class AgentInstaller {
     return resettableClassFileTransformer;
   }
 
+  private static void setupUnsafe(Instrumentation inst) {
+    try {
+      UnsafeInitializer.initialize(inst, AgentInstaller.class.getClassLoader());
+    } catch (UnsupportedClassVersionError exception) {
+      // ignore
+    }
+  }
+
   private static void setBootstrapPackages(Config config) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer : load(BootstrapPackagesConfigurer.class)) {
@@ -215,7 +237,7 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to classloader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        Config.get().getBooleanProperty(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     if (!shouldForceSynchronousAgentListenersCalls
         && isJavaBefore9()
         && isAppUsingCustomLogManager()) {
@@ -485,4 +507,44 @@ public class AgentInstaller {
   }
 
   private AgentInstaller() {}
+
+  private static class StrictContextStressor implements ContextStorage, AutoCloseable {
+
+    private final ContextStorage contextStorage;
+    private final int sleepMillis;
+
+    private StrictContextStressor(ContextStorage contextStorage, int sleepMillis) {
+      this.contextStorage = contextStorage;
+      this.sleepMillis = sleepMillis;
+    }
+
+    @Override
+    public Scope attach(Context toAttach) {
+      return wrap(contextStorage.attach(toAttach));
+    }
+
+    @Nullable
+    @Override
+    public Context current() {
+      return contextStorage.current();
+    }
+
+    @Override
+    public void close() throws Exception {
+      if (contextStorage instanceof AutoCloseable) {
+        ((AutoCloseable) contextStorage).close();
+      }
+    }
+
+    private Scope wrap(Scope scope) {
+      return () -> {
+        try {
+          Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+        scope.close();
+      };
+    }
+  }
 }

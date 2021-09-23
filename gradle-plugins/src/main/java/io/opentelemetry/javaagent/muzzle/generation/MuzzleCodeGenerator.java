@@ -13,6 +13,9 @@ import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
 import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
+import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
 import java.net.URLClassLoader;
 import java.util.Collection;
@@ -50,7 +53,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
   private static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
-      "getMuzzleContextStoreClasses";
+      "registerMuzzleContextStoreClasses";
   private final URLClassLoader classLoader;
 
   public MuzzleCodeGenerator(URLClassLoader classLoader) {
@@ -176,6 +179,11 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         collector.collectReferencesFromAdvice(adviceClass);
       }
       for (String resource : instrumentationModule.helperResourceNames()) {
+        collector.collectReferencesFromResource(resource);
+      }
+      HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
+      instrumentationModule.registerHelperResources(helperResourceBuilder);
+      for (HelperResource resource : helperResourceBuilder.getResources()) {
         collector.collectReferencesFromResource(resource);
       }
       collector.prune();
@@ -503,50 +511,40 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private void generateMuzzleContextStoreClassesMethod(ReferenceCollector collector) {
       /*
-       * public Map<String, String> getMuzzleContextStoreClasses() {
-       *   Map<String, String> contextStore = new HashMap<>(...);
-       *   contextStore.put(..., ...);
-       *   return contextStore;
+       * public void registerMuzzleContextStoreClasses(InstrumentationContextBuilder builder) {
+       *   builder.register(..., ...);
        * }
        */
       MethodVisitor mv =
           super.visitMethod(
               Opcodes.ACC_PUBLIC,
               MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
-              "()Ljava/util/Map;",
+              "(Lio/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder;)V",
               null,
               null);
       mv.visitCode();
 
-      Map<String, String> contextStoreClasses = collector.getContextStoreClasses();
-
-      writeNewMap(mv, contextStoreClasses.size());
-      // stack: map
-      mv.visitVarInsn(Opcodes.ASTORE, 1);
-      // stack: <empty>
-
-      contextStoreClasses.forEach(
-          (className, contextClassName) -> {
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            // stack: map
-            mv.visitLdcInsn(className);
-            // stack: map, className
-            mv.visitLdcInsn(contextClassName);
-            // stack: map, className, contextClassName
-            mv.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE,
-                "java/util/Map",
-                "put",
-                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                /* isInterface= */ true);
-            // stack: previousValue
-            mv.visitInsn(Opcodes.POP);
-            // stack: <empty>
-          });
+      ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
 
       mv.visitVarInsn(Opcodes.ALOAD, 1);
-      // stack: map
-      mv.visitInsn(Opcodes.ARETURN);
+      // stack: builder
+      contextStoreMappings.forEach(
+          (className, contextClassName) -> {
+            mv.visitLdcInsn(className);
+            // stack: builder, className
+            mv.visitLdcInsn(contextClassName);
+            // stack: builder, className, contextClassName
+            mv.visitMethodInsn(
+                Opcodes.INVOKEINTERFACE,
+                "io/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder",
+                "register",
+                "(Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder;",
+                /* isInterface= */ true);
+            // stack: builder
+          });
+      mv.visitInsn(Opcodes.POP);
+      // stack: <empty>
+      mv.visitInsn(Opcodes.RETURN);
 
       mv.visitMaxs(0, 0);
       mv.visitEnd();

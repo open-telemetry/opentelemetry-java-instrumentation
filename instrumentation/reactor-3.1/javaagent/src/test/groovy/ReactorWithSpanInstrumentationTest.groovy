@@ -40,7 +40,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Mono"() {
     setup:
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def mono = source.singleOrEmpty()
     def result = new TracedWithSpan()
       .mono(mono)
@@ -99,7 +99,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Mono"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def mono = source.singleOrEmpty()
     def result = new TracedWithSpan()
       .mono(mono)
@@ -132,7 +132,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for canceled Mono"() {
     setup:
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def mono = source.singleOrEmpty()
     def result = new TracedWithSpan()
       .mono(mono)
@@ -185,7 +185,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Flux"() {
     setup:
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def result = new TracedWithSpan()
       .flux(source)
     def verifier = StepVerifier.create(result)
@@ -243,7 +243,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Flux"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def result = new TracedWithSpan()
       .flux(source)
     def verifier = StepVerifier.create(result)
@@ -275,7 +275,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for canceled Flux"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def result = new TracedWithSpan()
       .flux(source)
     def verifier = StepVerifier.create(result)

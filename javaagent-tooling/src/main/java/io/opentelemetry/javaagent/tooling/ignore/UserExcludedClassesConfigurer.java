@@ -19,7 +19,7 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(Config config, IgnoredTypesBuilder builder) {
-    List<String> excludedClasses = config.getListProperty(EXCLUDED_CLASSES_CONFIG);
+    List<String> excludedClasses = config.getList(EXCLUDED_CLASSES_CONFIG);
     for (String excludedClass : excludedClasses) {
       excludedClass = excludedClass.trim();
       // remove the trailing *

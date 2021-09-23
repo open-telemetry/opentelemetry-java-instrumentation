@@ -5,19 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.inject;
+import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.kubernetes.client.openapi.ApiCallback;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -55,15 +57,17 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) Request request) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
       Request.Builder requestWithPropagation = request.newBuilder();
-      Context context = tracer().startSpan(parentContext, request, requestWithPropagation);
-      CurrentContextAndScope.set(parentContext, context);
+      inject(context, requestWithPropagation);
       request = requestWithPropagation.build();
+      CurrentState.set(parentContext, context, scope, request);
     }
   }
 
@@ -73,15 +77,19 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
-      Context context = CurrentContextAndScope.removeAndClose();
-      if (context == null) {
+      CurrentState currentState = CurrentState.remove();
+      if (currentState == null) {
         return;
       }
-      if (throwable == null) {
-        tracer().end(context, response);
-      } else {
-        tracer().endExceptionally(context, response, throwable);
+
+      currentState.getScope().close();
+      Context context = currentState.getContext();
+      ApiResponse<?> endResponse = response;
+      if (response == null && throwable instanceof ApiException) {
+        ApiException apiException = (ApiException) throwable;
+        endResponse = new ApiResponse<>(apiException.getCode(), apiException.getResponseHeaders());
       }
+      instrumenter().end(context, currentState.getRequest(), endResponse, throwable);
     }
   }
 
@@ -93,28 +101,32 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Call httpCall,
         @Advice.Argument(value = 2, readOnly = false) ApiCallback<?> callback,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      CurrentContextAndScope current = CurrentContextAndScope.remove();
-      if (current != null) {
-        context = current.getContext();
-        scope = current.getScope();
-        callback = new TracingApiCallback<>(callback, current.getParentContext(), context);
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") Request request) {
+      CurrentState current = CurrentState.remove();
+      if (current == null) {
+        return;
       }
+
+      context = current.getContext();
+      scope = current.getScope();
+      request = current.getRequest();
+      callback = new TracingApiCallback<>(callback, current.getParentContext(), context, request);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") Request request) {
       if (scope == null) {
         return;
       }
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
       // else span will be ended in the TracingApiCallback
     }

@@ -114,11 +114,6 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    protected @Nullable String clientIp(Void unused, @Nullable Void unused2) {
-      return null;
-    }
-
-    @Override
     protected @Nullable Integer statusCode(Void unused, Void unused2) {
       return 200;
     }

@@ -45,3 +45,7 @@ dependencies {
 
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:2.0.+")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+}

@@ -6,7 +6,6 @@
 package server.base
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.time.Duration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
@@ -14,6 +13,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
+
+import java.time.Duration
 
 /**
  * Tests the case which uses route handlers, and where "controller" span is created within a Mono

@@ -47,7 +47,7 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
     public static void addInvoker(
         @Advice.Argument(0) String path,
         @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) Object invoker) {
-      String normalizedPath = JaxRsPathUtil.normalizePath(path);
+      String normalizedPath = JaxrsPathUtil.normalizePath(path);
       if (invoker instanceof ResourceLocatorInvoker) {
         ResourceLocatorInvoker resourceLocatorInvoker = (ResourceLocatorInvoker) invoker;
         InstrumentationContext.get(ResourceLocatorInvoker.class, String.class)

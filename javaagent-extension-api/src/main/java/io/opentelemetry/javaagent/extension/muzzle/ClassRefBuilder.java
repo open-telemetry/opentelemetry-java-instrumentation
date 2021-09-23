@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.muzzle;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -20,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * The builder of {@link ClassRef}.
  *
- * <p>This class is used in the auto-generated {@link InstrumentationModule#getMuzzleReferences()}
+ * <p>This class is used in the auto-generated {@code InstrumentationModule#getMuzzleReferences()}
  * method, it is not meant to be used directly by agent extension developers.
  */
 public final class ClassRefBuilder {

@@ -10,13 +10,21 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -26,14 +34,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
+  /** Instrumentation type suppression configuration property key. */
+  private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
+      Config.get()
+          .getBoolean("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
+
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
+  final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
+  final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -41,7 +55,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  @Nullable EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor = null;
+  boolean disabled = false;
+
+  private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -84,10 +101,20 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
-  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
-  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
-      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
-    spanLinkExtractors.add(spanLinkExtractor);
+  /** Adds a {@link SpanLinksExtractor} to extract span links from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
+      SpanLinksExtractor<REQUEST> spanLinksExtractor) {
+    spanLinksExtractors.add(spanLinksExtractor);
+    return this;
+  }
+
+  /**
+   * Adds a {@link ContextCustomizer} to customize the context during {@link
+   * Instrumenter#start(Context, Object)}.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
+      ContextCustomizer<? super REQUEST> contextCustomizer) {
+    contextCustomizers.add(contextCustomizer);
     return this;
   }
 
@@ -114,9 +141,52 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * determining start and end timestamps to the OpenTelemetry SDK.
    */
   public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
-      StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
+      StartTimeExtractor<REQUEST> startTimeExtractor,
+      EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor) {
     this.startTimeExtractor = requireNonNull(startTimeExtractor);
     this.endTimeExtractor = requireNonNull(endTimeExtractor);
+    return this;
+  }
+
+  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
+    this.disabled = disabled;
+    return this;
+  }
+
+  // visible for tests
+  /**
+   * Enables CLIENT nested span suppression based on the instrumentation type.
+   *
+   * <p><strong>When enabled:</strong>.
+   *
+   * <ul>
+   *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
+   *       HttpAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or {@linkplain
+   *       DbAttributesExtractor database} clients. If a span with the same type is present in the
+   *       parent context object, new span of the same type will not be started.
+   * </ul>
+   *
+   * <p><strong>When disabled:</strong>
+   *
+   * <ul>
+   *   <li>CLIENT nested spans are always suppressed.
+   * </ul>
+   *
+   * <p>For all other {@linkplain SpanKind span kinds} the suppression rules are as follows:
+   *
+   * <ul>
+   *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
+   *       context object, new SERVER span will not be started.
+   *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
+   *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
+   *       operation is present in the parent context object, new span with the same operation will
+   *       not be started.
+   *   <li>INTERNAL spans are never suppressed.
+   * </ul>
+   */
+  InstrumenterBuilder<REQUEST, RESPONSE> enableInstrumentationTypeSuppression(
+      boolean enableInstrumentationType) {
+    this.enableSpanSuppressionByType = enableInstrumentationType;
     return this;
   }
 
@@ -187,6 +257,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
+  }
+
+  SpanSuppressionStrategy getSpanSuppressionStrategy() {
+    Set<SpanKey> spanKeys = SpanKeyExtractor.determineSpanKeys(attributesExtractors);
+    if (enableSpanSuppressionByType) {
+      return SpanSuppressionStrategy.from(spanKeys);
+    }
+    // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
+    return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

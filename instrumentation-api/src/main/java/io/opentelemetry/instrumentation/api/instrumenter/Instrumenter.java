@@ -15,11 +15,10 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
-import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
@@ -69,13 +68,16 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
+  private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
-  private final List<? extends SpanLinkExtractor<? super REQUEST>> spanLinkExtractors;
+  private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
+  private final boolean disabled;
+  private final SpanSuppressionStrategy spanSuppressionStrategy;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -84,12 +86,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
+    this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
-    this.spanLinkExtractors = new ArrayList<>(builder.spanLinkExtractors);
+    this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
+    this.disabled = builder.disabled;
+    this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
   }
 
   /**
@@ -99,19 +104,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * without calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
-    boolean suppressed = false;
-    SpanKind spanKind = spanKindExtractor.extract(request);
-    switch (spanKind) {
-      case SERVER:
-      case CONSUMER:
-        suppressed = ServerSpan.exists(parentContext) || ConsumerSpan.exists(parentContext);
-        break;
-      case CLIENT:
-        suppressed = ClientSpan.exists(parentContext);
-        break;
-      default:
-        break;
+    if (disabled) {
+      return false;
     }
+    SpanKind spanKind = spanKindExtractor.extract(request);
+    boolean suppressed = spanSuppressionStrategy.shouldSuppress(parentContext, spanKind);
+
     if (suppressed) {
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
     }
@@ -133,12 +131,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setSpanKind(spanKind)
             .setParent(parentContext);
 
+    Instant startTime = null;
     if (startTimeExtractor != null) {
-      spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
+      startTime = startTimeExtractor.extract(request);
+      spanBuilder.setStartTimestamp(startTime);
     }
 
-    for (SpanLinkExtractor<? super REQUEST> extractor : spanLinkExtractors) {
-      spanBuilder.addLink(extractor.extract(parentContext, request));
+    SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
+    for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
+      spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
     }
 
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
@@ -149,23 +150,22 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    for (RequestListener requestListener : requestListeners) {
-      context = requestListener.start(context, attributes);
+    for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
+      context = contextCustomizer.start(context, request, attributes);
+    }
+
+    if (!requestListeners.isEmpty()) {
+      long startNanos = getNanos(startTime);
+      for (RequestListener requestListener : requestListeners) {
+        context = requestListener.start(context, attributes, startNanos);
+      }
     }
 
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.startSpan();
     context = context.with(span);
-    switch (spanKind) {
-      case SERVER:
-        return ServerSpan.with(context, span);
-      case CLIENT:
-        return ClientSpan.with(context, span);
-      case CONSUMER:
-        return ConsumerSpan.with(context, span);
-      default:
-        return context;
-    }
+
+    return spanSuppressionStrategy.storeInContext(context, spanKind, span);
   }
 
   /**
@@ -178,21 +178,28 @@ public class Instrumenter<REQUEST, RESPONSE> {
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributesBuilder, request, response);
-    }
-    Attributes attributes = attributesBuilder;
-
-    for (RequestListener requestListener : requestListeners) {
-      requestListener.end(context, attributes);
-    }
-
-    span.setAllAttributes(attributes);
-
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);
       span.recordException(error);
+    }
+
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
+      extractor.onEnd(attributesBuilder, request, response, error);
+    }
+    Attributes attributes = attributesBuilder;
+    span.setAllAttributes(attributes);
+
+    Instant endTime = null;
+    if (endTimeExtractor != null) {
+      endTime = endTimeExtractor.extract(request, response, error);
+    }
+
+    if (!requestListeners.isEmpty()) {
+      long endNanos = getNanos(endTime);
+      for (RequestListener requestListener : requestListeners) {
+        requestListener.end(context, attributes, endNanos);
+      }
     }
 
     StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
@@ -200,10 +207,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.setStatus(statusCode);
     }
 
-    if (endTimeExtractor != null) {
-      span.end(endTimeExtractor.extract(response));
+    if (endTime != null) {
+      span.end(endTime);
     } else {
       span.end();
     }
+  }
+
+  private static long getNanos(@Nullable Instant time) {
+    if (time == null) {
+      return System.nanoTime();
+    }
+    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 }

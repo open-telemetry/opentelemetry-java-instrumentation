@@ -107,8 +107,10 @@ public abstract class BaseTracer {
         suppressed = ClientSpan.exists(context);
         break;
       case SERVER:
+        suppressed = ServerSpan.exists(context);
+        break;
       case CONSUMER:
-        suppressed = ServerSpan.exists(context) || ConsumerSpan.exists(context);
+        suppressed = ConsumerSpan.exists(context);
         break;
       default:
         break;

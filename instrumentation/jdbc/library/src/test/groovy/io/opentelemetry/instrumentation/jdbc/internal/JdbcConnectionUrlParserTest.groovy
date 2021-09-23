@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse
-
 import spock.lang.Shared
 import spock.lang.Specification
+
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse
 
 class JdbcConnectionUrlParserTest extends Specification {
 

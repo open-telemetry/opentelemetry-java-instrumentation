@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.linecorp.armeria.client.ClientFactory;
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.client.WebClientBuilder;
@@ -14,25 +16,36 @@ import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   protected abstract WebClientBuilder configureClient(WebClientBuilder clientBuilder);
 
+  private AtomicBoolean decoratorCalled;
+
   private WebClient client;
 
   @BeforeEach
   void setupClient() {
+    decoratorCalled = new AtomicBoolean();
     client =
         configureClient(
                 WebClient.builder()
+                    .decorator(
+                        (delegate, ctx, req) -> {
+                          decoratorCalled.set(true);
+                          return delegate.execute(ctx, req);
+                        })
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
   }
@@ -70,27 +83,26 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
                 requestResult.complete(() -> response.status().code(), throwable));
   }
 
-  // Not supported yet: https://github.com/line/armeria/issues/2489
   @Override
-  protected final boolean testRedirects() {
-    return false;
-  }
-
-  @Override
-  protected final boolean testReusedRequest() {
+  protected void configure(HttpClientTestOptions options) {
+    // Not supported yet: https://github.com/line/armeria/issues/2489
+    options.disableTestRedirects();
     // armeria requests can't be reused
-    return false;
-  }
+    options.disableTestReusedRequest();
 
-  @Override
-  protected Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = new HashSet<>();
     extra.add(SemanticAttributes.HTTP_HOST);
     extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
     extra.add(SemanticAttributes.HTTP_SCHEME);
     extra.add(SemanticAttributes.HTTP_TARGET);
-    extra.addAll(super.httpAttributes(uri));
-    return extra;
+    extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    options.setHttpAttributes(unused -> extra);
+  }
+
+  @Test
+  void userDecoratorsNotClobbered() {
+    client.get(resolveAddress("/success").toString()).aggregate().join();
+    assertThat(decoratorCalled).isTrue();
   }
 }

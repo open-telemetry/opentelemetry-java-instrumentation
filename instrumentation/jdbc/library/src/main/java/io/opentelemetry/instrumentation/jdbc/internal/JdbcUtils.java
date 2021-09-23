@@ -65,7 +65,16 @@ public final class JdbcUtils {
   }
 
   public static DbInfo extractDbInfo(Connection connection) {
-    return JdbcMaps.connectionInfo.computeIfAbsent(connection, JdbcUtils::computeDbInfo);
+    // intentionally not using computeIfAbsent() since that would perform computeDbInfo() under a
+    // lock, and computeDbInfo() calls back to the application code via Connection.getMetaData()
+    // which could then result in a deadlock
+    // (e.g. https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4188)
+    DbInfo dbInfo = JdbcData.connectionInfo.get(connection);
+    if (dbInfo == null) {
+      dbInfo = computeDbInfo(connection);
+      JdbcData.connectionInfo.put(connection, dbInfo);
+    }
+    return dbInfo;
   }
 
   public static DbInfo computeDbInfo(Connection connection) {

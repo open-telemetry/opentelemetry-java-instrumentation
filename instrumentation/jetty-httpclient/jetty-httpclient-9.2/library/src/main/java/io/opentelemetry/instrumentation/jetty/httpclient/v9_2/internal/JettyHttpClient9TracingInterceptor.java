@@ -10,6 +10,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,6 +38,16 @@ public class JettyHttpClient9TracingInterceptor
 
   private static final Logger logger =
       LoggerFactory.getLogger(JettyHttpClient9TracingInterceptor.class);
+
+  private static final Class<?>[] requestlistenerInterfaces = {
+    Request.BeginListener.class,
+    Request.FailureListener.class,
+    Request.SuccessListener.class,
+    Request.HeadersListener.class,
+    Request.ContentListener.class,
+    Request.CommitListener.class,
+    Request.QueuedListener.class
+  };
 
   @Nullable private Context context;
 
@@ -79,26 +91,35 @@ public class JettyHttpClient9TracingInterceptor
   private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
 
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
+
     while (iterator.hasNext()) {
-      Request.RequestListener requestListener = iterator.next();
-      if (requestListener instanceof Request.FailureListener) {
-        iterator.set(
-            (Request.FailureListener)
-                (request, throwable) -> {
-                  try (Scope ignore = context.makeCurrent()) {
-                    ((Request.FailureListener) requestListener).onFailure(request, throwable);
-                  }
-                });
+      List<Class<?>> interfaces = new ArrayList<>();
+      Request.RequestListener listener = iterator.next();
+
+      Class<?> listenerClass = listener.getClass();
+
+      for (Class<?> type : requestlistenerInterfaces) {
+        if (type.isInstance(listener)) {
+          interfaces.add(type);
+        }
       }
-      if (requestListener instanceof Request.BeginListener) {
-        iterator.set(
-            (Request.FailureListener)
-                (request, throwable) -> {
-                  try (Scope ignore = context.makeCurrent()) {
-                    ((Request.BeginListener) requestListener).onBegin(request);
-                  }
-                });
+
+      if (interfaces.isEmpty()) {
+        continue;
       }
+
+      Request.RequestListener proxiedListner =
+          (Request.RequestListener)
+              Proxy.newProxyInstance(
+                  listenerClass.getClassLoader(),
+                  interfaces.toArray(new Class[0]),
+                  (proxy, method, args) -> {
+                    try (Scope ignored = context.makeCurrent()) {
+                      return method.invoke(listener, args);
+                    }
+                  });
+
+      iterator.set(proxiedListner);
     }
   }
 

@@ -18,7 +18,8 @@ public class InstrumentationContext {
    * <p>In reality, the <em>calls</em> to this method are re-written to something more performant
    * while injecting advice into a method.
    *
-   * <p>This method must only be called within an Advice class.
+   * <p>When using this method outside of Advice method, the {@link ContextStore} should be looked
+   * up once and stored in a field to avoid repeatedly calling this method.
    *
    * @param keyClass The key class context is attached to.
    * @param contextClass The context class attached to the user class.
@@ -28,7 +29,27 @@ public class InstrumentationContext {
    */
   public static <Q extends K, K, C> ContextStore<Q, C> get(
       Class<K> keyClass, Class<C> contextClass) {
-    throw new IllegalStateException(
-        "Calls to this method will be rewritten by Instrumentation Context Provider (e.g. FieldBackedProvider)");
+    if (contextStoreSupplier == null) {
+      throw new IllegalStateException("Context store supplier not set");
+    }
+    return contextStoreSupplier.get(keyClass, contextClass);
+  }
+
+  public interface ContextStoreSupplier<Q extends K, K, C> {
+    ContextStore<Q, C> get(Class<K> keyClass, Class<C> contextClass);
+  }
+
+  private static volatile ContextStoreSupplier contextStoreSupplier;
+
+  /**
+   * Sets the {@link ContextStoreSupplier} to execute when instrumentation needs to access {@link
+   * ContextStore}. This is called from the agent startup, instrumentation must not call this.
+   */
+  public static void internalSetContextStoreSupplier(ContextStoreSupplier contextStoreSupplier) {
+    if (InstrumentationContext.contextStoreSupplier != null) {
+      // Only possible by misuse of this API, just ignore.
+      return;
+    }
+    InstrumentationContext.contextStoreSupplier = contextStoreSupplier;
   }
 }

@@ -84,10 +84,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(otelContext);
       }
-      openTelemetrySdk
-          .getSdkTracerProvider()
-          .forceFlush()
-          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 

@@ -9,10 +9,22 @@ import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jetty.client.api.Response;
 
 public final class JettyClientWrapUtil {
+  private static final Class<?>[] listenerInterfaces = {
+    Response.CompleteListener.class,
+    Response.FailureListener.class,
+    Response.SuccessListener.class,
+    Response.AsyncContentListener.class,
+    Response.ContentListener.class,
+    Response.HeadersListener.class,
+    Response.HeaderListener.class,
+    Response.BeginListener.class
+  };
 
   private JettyClientWrapUtil() {}
 
@@ -33,17 +45,29 @@ public final class JettyClientWrapUtil {
 
   private static Response.ResponseListener wrapTheListener(
       Response.ResponseListener listener, Context context) {
-    Response.ResponseListener wrappedListener = listener;
-    if (listener instanceof Response.CompleteListener
-        && !(listener instanceof JettyHttpClient9TracingInterceptor)) {
-      wrappedListener =
-          (Response.CompleteListener)
-              result -> {
-                try (Scope ignored = context.makeCurrent()) {
-                  ((Response.CompleteListener) listener).onComplete(result);
-                }
-              };
+    if (listener == null || listener instanceof JettyHttpClient9TracingInterceptor) {
+      return listener;
     }
-    return wrappedListener;
+
+    Class<?> listenerClass = listener.getClass();
+    List<Class<?>> interfaces = new ArrayList<>();
+    for (Class<?> type : listenerInterfaces) {
+      if (type.isInstance(listener)) {
+        interfaces.add(type);
+      }
+    }
+    if (interfaces.isEmpty()) {
+      return listener;
+    }
+
+    return (Response.ResponseListener)
+        Proxy.newProxyInstance(
+            listenerClass.getClassLoader(),
+            interfaces.toArray(new Class[0]),
+            (proxy, method, args) -> {
+              try (Scope ignored = context.makeCurrent()) {
+                return method.invoke(listener, args);
+              }
+            });
   }
 }

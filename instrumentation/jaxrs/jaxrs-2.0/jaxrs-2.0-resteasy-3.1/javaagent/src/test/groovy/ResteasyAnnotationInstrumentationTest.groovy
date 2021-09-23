@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-class ResteasyAnnotationInstrumentationTest extends JaxRsAnnotationsInstrumentationTest {
+class ResteasyAnnotationInstrumentationTest extends JaxrsAnnotationsInstrumentationTest {
 }

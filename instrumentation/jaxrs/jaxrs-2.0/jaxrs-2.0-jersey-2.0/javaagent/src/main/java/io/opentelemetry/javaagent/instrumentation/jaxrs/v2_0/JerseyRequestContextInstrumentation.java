@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
@@ -35,31 +37,42 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext,
+        @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
       UriInfo uriInfo = requestContext.getUriInfo();
 
-      if (requestContext.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
-          && uriInfo instanceof ResourceInfo) {
+      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null
+          || !(uriInfo instanceof ResourceInfo)) {
+        return;
+      }
 
-        ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
-        Method method = resourceInfo.getResourceMethod();
-        Class<?> resourceClass = resourceInfo.getResourceClass();
+      ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
+      Method method = resourceInfo.getResourceMethod();
+      Class<?> resourceClass = resourceInfo.getResourceClass();
 
-        context =
-            RequestContextHelper.createOrUpdateAbortSpan(requestContext, resourceClass, method);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
+      if (resourceClass == null || method == null) {
+        return;
+      }
+
+      handlerData = new HandlerData(resourceClass, method);
+      context = RequestContextHelper.createOrUpdateAbortSpan(requestContext, handlerData);
+      if (context != null) {
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      RequestContextHelper.closeSpanAndScope(context, scope, throwable);
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

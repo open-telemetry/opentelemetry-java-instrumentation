@@ -142,4 +142,7 @@ public interface InstrumentationTestRunner {
    */
   <T, E extends Throwable> T runWithServerSpan(String spanName, ThrowingSupplier<T, E> callback)
       throws E;
+
+  /** Runs the provided {@code callback} inside the scope of a non-recording span. */
+  <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback) throws E;
 }

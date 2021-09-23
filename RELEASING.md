@@ -38,8 +38,8 @@ adding/modifying the public APIs.
 Open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
 You will see a button that says "Run workflow". Press the button, enter the version number you want
-to release in the input field for version that pops up and the commits you want to cherrypick for the
-patch as a comma-separated list. Then, press "Run workflow".
+to release in the input field for version that pops up and the commits you want to cherrypick.
+If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
 
 If the commits cannot be cleanly applied to the release branch, for example because it has diverged
 too much from main, then the workflow will fail before building. In this case, you will need to

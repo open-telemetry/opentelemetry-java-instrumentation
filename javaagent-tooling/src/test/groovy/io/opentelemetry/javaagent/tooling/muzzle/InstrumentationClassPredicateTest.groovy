@@ -33,10 +33,10 @@ class InstrumentationClassPredicateTest extends Specification {
     !predicate.isInstrumentationClass(className)
 
     where:
-    desc                        | className
-    "Java SDK class"            | "java.util.ArrayList"
-    "javaagent-tooling class"   | "io.opentelemetry.javaagent.tooling.Constants"
-    "instrumentation-api class" | "io.opentelemetry.instrumentation.api.InstrumentationVersion"
-    "javaagent-instrumentation-api class"       | "io.opentelemetry.javaagent.instrumentation.api.ContextStore"
+    desc                                  | className
+    "Java SDK class"                      | "java.util.ArrayList"
+    "javaagent-tooling class"             | "io.opentelemetry.javaagent.tooling.Constants"
+    "instrumentation-api class"           | "io.opentelemetry.instrumentation.api.InstrumentationVersion"
+    "javaagent-instrumentation-api class" | "io.opentelemetry.javaagent.instrumentation.api.ContextStore"
   }
 }

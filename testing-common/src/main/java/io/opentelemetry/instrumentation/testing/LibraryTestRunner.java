@@ -124,6 +124,12 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
     return testInstrumenters.runWithServerSpan(spanName, callback);
   }
 
+  @Override
+  public <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
+
   private static class FlushTrackingSpanProcessor implements SpanProcessor {
     @Override
     public void onStart(Context parentContext, ReadWriteSpan span) {}

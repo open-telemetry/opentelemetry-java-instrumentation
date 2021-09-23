@@ -5,18 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static org.junit.Assume.assumeTrue
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
@@ -32,9 +20,22 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
+import spock.lang.Unroll
+
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import spock.lang.Unroll
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
@@ -398,7 +399,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     when:
     count.times { index ->
       HttpRequestBuilder request = HttpRequest.builder()
-        // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+      // Force HTTP/1 via h1c so upgrade requests don't show up as traces
         .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
         .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
       runUnderTrace("client " + index) {
@@ -598,7 +599,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
         if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+          // "localhost" on linux, "127.0.0.1" on windows
+          "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
         }
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
@@ -608,6 +610,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
+    def extraAttributes = extraAttributes()
     ServerEndpoint endpoint = INDEXED_CHILD
     trace.span(1) {
       name expectedServerSpanName(endpoint)
@@ -622,6 +625,36 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
+          // currently reports '/*' which is a fallback route.
+          "${SemanticAttributes.HTTP_ROUTE}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "?id=$requestId"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
       }
     }
   }

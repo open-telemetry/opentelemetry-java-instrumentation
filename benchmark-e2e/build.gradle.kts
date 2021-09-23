@@ -14,11 +14,11 @@ dependencies {
 
 tasks {
   test {
-    dependsOn(":javaagent:shadowJar")
+    dependsOn(":javaagent:fullJavaagentJar")
     maxParallelForks = 2
 
     doFirst {
-      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(":javaagent").tasks.getByName<ShadowJar>("shadowJar").archivePath}")
+      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(":javaagent").tasks.getByName<ShadowJar>("fullJavaagentJar").archivePath}")
     }
   }
 }

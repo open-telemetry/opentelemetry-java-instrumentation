@@ -17,8 +17,7 @@ public class ModelAndViewAttributesExtractor extends AttributesExtractor<ModelAn
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.spring-webmvc.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.spring-webmvc.experimental-span-attributes", false);
 
   @Override
   protected void onStart(AttributesBuilder attributes, ModelAndView modelAndView) {
@@ -33,5 +32,8 @@ public class ModelAndViewAttributesExtractor extends AttributesExtractor<ModelAn
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, ModelAndView modelAndView, @Nullable Void unused) {}
+      AttributesBuilder attributes,
+      ModelAndView modelAndView,
+      @Nullable Void unused,
+      @Nullable Throwable error) {}
 }

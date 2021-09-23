@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
+import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
+import org.glassfish.jersey.client.ClientConfig
+import org.glassfish.jersey.client.ClientProperties
+import org.glassfish.jersey.client.JerseyClientBuilder
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import spock.lang.Unroll
+
 import javax.ws.rs.ProcessingException
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -20,12 +22,11 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
-import org.glassfish.jersey.client.ClientConfig
-import org.glassfish.jersey.client.ClientProperties
-import org.glassfish.jersey.client.JerseyClientBuilder
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Unroll
+import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
@@ -104,6 +105,10 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "${SemanticAttributes.HTTP_METHOD.key}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_HOST.key}" "localhost"
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
+            "${SemanticAttributes.HTTP_TARGET.key}" path
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key}" Long
           }
         }
         serverSpan(it, 1, span(0))

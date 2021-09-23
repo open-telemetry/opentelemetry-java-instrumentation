@@ -117,12 +117,6 @@ final class ArmeriaHttpAttributesExtractor
     return null;
   }
 
-  @Override
-  @Nullable
-  protected String clientIp(RequestContext ctx, @Nullable RequestLog requestLog) {
-    return null;
-  }
-
   private static HttpRequest request(RequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {

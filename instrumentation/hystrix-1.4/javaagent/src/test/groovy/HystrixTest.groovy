@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.netflix.hystrix.HystrixCommand
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
-import com.netflix.hystrix.HystrixCommand
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
 
 class HystrixTest extends AgentInstrumentationSpecification {
 
@@ -47,7 +48,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -108,7 +109,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -117,7 +118,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
       }

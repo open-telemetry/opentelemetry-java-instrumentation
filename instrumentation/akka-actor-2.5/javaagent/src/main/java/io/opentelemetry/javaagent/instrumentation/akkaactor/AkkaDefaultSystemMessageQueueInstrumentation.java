@@ -11,13 +11,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.sysmsg.SystemMessage;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,19 +47,20 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
   public static class DispatchSystemAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enter(@Advice.Argument(1) SystemMessage systemMessage) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(systemMessage)) {
-        ContextStore<SystemMessage, State> contextStore =
-            InstrumentationContext.get(SystemMessage.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(
-            contextStore, systemMessage, Java8BytecodeBridge.currentContext());
+    public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
+      Context context = Java8BytecodeBridge.currentContext();
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
+        ContextStore<SystemMessage, PropagatedContext> contextStore =
+            InstrumentationContext.get(SystemMessage.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, systemMessage);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter State state, @Advice.Thrown Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+    public static void exit(
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 }

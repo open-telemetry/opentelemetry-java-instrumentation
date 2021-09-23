@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -17,18 +17,22 @@ import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseStatus;
+import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
+  private final Request request;
   private final Context context;
   private final Context parentContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler delegate, Context context, Context parentContext) {
+  public AsyncHandlerWrapper(
+      AsyncHandler delegate, Request request, Context context, Context parentContext) {
     this.delegate = delegate;
+    this.request = request;
     this.context = context;
     this.parentContext = parentContext;
   }
@@ -59,7 +63,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   @Override
   public Object onCompleted() throws Exception {
     Response response = builder.build();
-    tracer().end(context, response);
+    instrumenter().end(context, request, response, null);
 
     try (Scope ignored = parentContext.makeCurrent()) {
       return delegate.onCompleted();
@@ -68,7 +72,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(context, throwable);
+    instrumenter().end(context, request, null, throwable);
 
     try (Scope ignored = parentContext.makeCurrent()) {
       delegate.onThrowable(throwable);

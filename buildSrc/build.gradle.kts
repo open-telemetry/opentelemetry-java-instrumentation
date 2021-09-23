@@ -7,8 +7,8 @@ plugins {
 
 spotless {
   java {
-    googleJavaFormat("1.10.0")
-    licenseHeaderFile(rootProject.file("../gradle/enforcement/spotless.license.java"), "(package|import|public)")
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
 }
@@ -29,7 +29,8 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.1.0-SNAPSHOT")
+  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.8.0-SNAPSHOT")
+  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:0.8.0-SNAPSHOT")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
@@ -44,7 +45,7 @@ dependencies {
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
   implementation("org.gradle:test-retry-gradle-plugin:1.2.1")
   // When updating, also update dependencyManagement/dependencyManagement.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.18")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.5")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")

@@ -49,7 +49,7 @@ class RpcAttributesExtractorTest {
             entry(SemanticAttributes.RPC_SYSTEM, "test"),
             entry(SemanticAttributes.RPC_SERVICE, "my.Service"),
             entry(SemanticAttributes.RPC_METHOD, "Method"));
-    extractor.onEnd(attributes, request, null);
+    extractor.onEnd(attributes, request, null, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.RPC_SYSTEM, "test"),

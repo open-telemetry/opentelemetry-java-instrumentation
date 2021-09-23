@@ -8,7 +8,6 @@ Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `0.17.0`
- - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
 For Maven add to your `pom.xml`:
@@ -397,7 +396,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 | Feature         | Property                      | Default Value                      |
 |-----------------|-------------------------------|------------------------------------|
-| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:55680                    |
+| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:4317                    |
 |                 | otel.exporter.otlp.timeout    | 1s                                 |
 | Jaeger Exporter | otel.exporter.jaeger.endpoint | localhost:14250                    |
 |                 | otel.exporter.jaeger.timeout  | 1s                                 |

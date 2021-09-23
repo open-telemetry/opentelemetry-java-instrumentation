@@ -3,11 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.concurrent.Executors
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -23,6 +20,10 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.Executors
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
 @Unroll
 abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpecification {
@@ -57,30 +58,24 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel.subscribe(messageHandler)
 
     when:
-    runWithSpan("parent") {
-      channel.send(MessageBuilder.withPayload("test")
-        .build())
-    }
+    channel.send(MessageBuilder.withPayload("test")
+      .build())
 
     then:
     def capturedMessage = messageHandler.join()
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
-          name "parent"
-        }
-        span(1) {
           name interceptorSpanName
-          childOf span(0)
           kind CONSUMER
         }
-        span(2) {
+        span(1) {
           name "handler"
-          childOf span(1)
+          childOf span(0)
         }
 
-        def interceptorSpan = span(1)
+        def interceptorSpan = span(0)
         verifyCorrectSpanWasPropagated(capturedMessage, interceptorSpan)
       }
     }
@@ -94,6 +89,38 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     "executorChannel" | "executorChannel process"
   }
 
+  def "should not create a span when there is already a span in the context"() {
+    given:
+    def channel = applicationContext.getBean("directChannel", SubscribableChannel)
+
+    def messageHandler = new CapturingMessageHandler()
+    channel.subscribe(messageHandler)
+
+    when:
+    runWithSpan("parent") {
+      channel.send(MessageBuilder.withPayload("test")
+        .build())
+    }
+
+    then:
+    messageHandler.join()
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+        }
+        span(1) {
+          name "handler"
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    channel.unsubscribe(messageHandler)
+  }
+
   def "should handle multiple message channels in a chain"() {
     given:
     def channel1 = applicationContext.getBean("linkedChannel1", SubscribableChannel)
@@ -103,30 +130,24 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel2.subscribe(messageHandler)
 
     when:
-    runWithSpan("parent") {
-      channel1.send(MessageBuilder.withPayload("test")
-        .build())
-    }
+    channel1.send(MessageBuilder.withPayload("test")
+      .build())
 
     then:
     def capturedMessage = messageHandler.join()
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
-          name "parent"
-        }
-        span(1) {
           name "application.linkedChannel1 process"
-          childOf span(0)
           kind CONSUMER
         }
-        span(2) {
+        span(1) {
           name "handler"
-          childOf span(1)
+          childOf span(0)
         }
 
-        def lastChannelSpan = span(1)
+        def lastChannelSpan = span(0)
         verifyCorrectSpanWasPropagated(capturedMessage, lastChannelSpan)
       }
     }

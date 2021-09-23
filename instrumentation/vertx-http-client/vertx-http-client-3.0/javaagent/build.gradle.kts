@@ -16,7 +16,7 @@ dependencies {
 
   implementation(project(":instrumentation:vertx-http-client:vertx-http-client-common:javaagent"))
 
-  //We need both version as different versions of Vert.x use different versions of Netty
+  // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
@@ -28,6 +28,6 @@ dependencies {
 
 tasks {
   named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 }

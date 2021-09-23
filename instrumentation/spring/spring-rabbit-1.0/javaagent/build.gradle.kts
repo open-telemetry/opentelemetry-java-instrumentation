@@ -8,7 +8,7 @@ muzzle {
     module.set("spring-rabbit")
     versions.set("(,)")
     // Problematic release depending on snapshots
-    skip("2.1.1.RELEASE")
+    skip("1.6.4.RELEASE", "2.1.1.RELEASE")
   }
 }
 

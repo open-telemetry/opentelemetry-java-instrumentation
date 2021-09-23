@@ -9,7 +9,7 @@ import org.eclipse.aether.version.Version
 import java.util.Locale
 import java.util.function.Predicate
 
-internal class AcceptableVersions(private val skipVersions: Collection<String>) :
+class AcceptableVersions(private val skipVersions: Collection<String>) :
   Predicate<Version?> {
 
   override fun test(version: Version?): Boolean {

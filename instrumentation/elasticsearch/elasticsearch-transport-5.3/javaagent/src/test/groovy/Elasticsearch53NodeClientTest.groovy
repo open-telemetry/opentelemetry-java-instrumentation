@@ -3,14 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
-
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
+import org.elasticsearch.client.Client
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.env.Environment
@@ -19,8 +14,14 @@ import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
+import spock.lang.Unroll
 
-class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
+
+class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest {
   public static final long TIMEOUT = 10000 // 10 seconds
 
   @Shared
@@ -30,7 +31,8 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
   @Shared
   String clusterName = UUID.randomUUID().toString()
 
-  def client = testNode.client()
+  @Shared
+  Client client
 
   def setupSpec() {
 
@@ -49,12 +51,13 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
+    client = testNode.client()
     runWithSpan("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
-      testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+      client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
       // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
-      testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
+      client.admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
     ignoreTracesAndClear(1)
   }
@@ -67,20 +70,32 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "test elasticsearch status"() {
-    setup:
-    def result = client.admin().cluster().health(new ClusterHealthRequest())
+  @Override
+  Client client() {
+    client
+  }
 
-    def clusterHealthStatus = result.get().status
+  @Unroll
+  def "test elasticsearch status #callKind"() {
+    setup:
+    def clusterHealthStatus = runWithSpan("parent") {
+      call.call()
+    }
 
     expect:
     clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "ClusterHealthAction"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "ClusterHealthAction"
@@ -88,24 +103,45 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
             "elasticsearch.request" "ClusterHealthRequest"
           }
         }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
+        }
       }
     }
+
+    where:
+    callKind | call
+    "sync"   | { clusterHealthSync() }
+    "async"  | { clusterHealthAsync() }
   }
 
-  def "test elasticsearch error"() {
+  @Unroll
+  def "test elasticsearch error #callKind"() {
     when:
-    client.prepareGet(indexName, indexType, id).get()
+    runWithSpan("parent") {
+      call.call(indexName, indexType, id)
+    }
 
     then:
     thrown IndexNotFoundException
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          status ERROR
+          errorEvent IndexNotFoundException, "no such index"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GetAction"
           kind CLIENT
           status ERROR
+          childOf(span(0))
           errorEvent IndexNotFoundException, "no such index"
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
@@ -115,6 +151,11 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
             "elasticsearch.request.indices" indexName
           }
         }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
+        }
       }
     }
 
@@ -122,6 +163,9 @@ class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
     indexName = "invalid-index"
     indexType = "test-type"
     id = "1"
+    callKind | call
+    "sync" | { indexName, indexType, id -> prepareGetSync(indexName, indexType, id) }
+    "async" | { indexName, indexType, id -> prepareGetAsync(indexName, indexType, id) }
   }
 
   def "test elasticsearch get"() {

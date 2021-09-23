@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -48,13 +48,13 @@ public class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) AsyncHandler<?> handler,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      Context context = tracer().startSpan(parentContext, request, request);
-      InstrumentationContext.get(AsyncHandler.class, Contexts.class)
-          .put(handler, Contexts.create(parentContext, context));
+      Context context = instrumenter().start(parentContext, request);
+      InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class)
+          .put(handler, AsyncHandlerData.create(parentContext, context, request));
       scope = context.makeCurrent();
     }
 
@@ -63,7 +63,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
       if (scope != null) {
         scope.close();
       }
-      // span ended in ResponseAdvice or ResponseFailureAdvice
+      // span ended in OnCompletedAdvice or OnThrowableAdvice
     }
   }
 }

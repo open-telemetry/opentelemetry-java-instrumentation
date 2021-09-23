@@ -5,21 +5,18 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 final class LambdaUtils {
 
-  static void forceFlush() {
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    if (openTelemetry instanceof OpenTelemetrySdk) {
-      ((OpenTelemetrySdk) openTelemetry)
-          .getSdkTracerProvider()
-          .forceFlush()
-          .join(1, TimeUnit.SECONDS);
-    }
+  static void forceFlush(OpenTelemetrySdk openTelemetrySdk, long flushTimeout, TimeUnit unit) {
+    CompletableResultCode traceFlush = openTelemetrySdk.getSdkTracerProvider().forceFlush();
+    CompletableResultCode metricsFlush = IntervalMetricReader.forceFlushGlobal();
+    CompletableResultCode.ofAll(Arrays.asList(traceFlush, metricsFlush)).join(flushTimeout, unit);
   }
 
   private LambdaUtils() {}

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0.ElasticsearchRest5Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -48,24 +48,39 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) String method,
         @Advice.Argument(1) String endpoint,
+        @Advice.Local("otelRequest") String request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      context = tracer().startSpan(currentContext(), null, method + " " + endpoint);
+      Context parentContext = currentContext();
+      request = method + " " + endpoint;
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
-      responseListener = new RestResponseListener(responseListener, context);
+      responseListener =
+          new RestResponseListener(
+              responseListener, parentContext, instrumenter(), context, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") String request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      if (scope == null) {
+        return;
+      }
       scope.close();
+
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
       // span ended in RestResponseListener
     }

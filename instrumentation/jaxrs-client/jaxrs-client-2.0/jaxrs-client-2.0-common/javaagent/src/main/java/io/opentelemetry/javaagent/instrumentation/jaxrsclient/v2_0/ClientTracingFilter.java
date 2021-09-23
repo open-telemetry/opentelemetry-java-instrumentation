@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import javax.annotation.Priority;
@@ -22,8 +22,8 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   @Override
   public void filter(ClientRequestContext requestContext) {
     Context parentContext = Context.current();
-    if (tracer().shouldStartSpan(parentContext)) {
-      Context context = tracer().startSpan(parentContext, requestContext, requestContext);
+    if (instrumenter().shouldStart(parentContext, requestContext)) {
+      Context context = instrumenter().start(parentContext, requestContext);
       requestContext.setProperty(CONTEXT_PROPERTY_NAME, context);
     }
   }
@@ -33,7 +33,10 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
     Object contextObj = requestContext.getProperty(CONTEXT_PROPERTY_NAME);
     if (contextObj instanceof Context) {
       Context context = (Context) contextObj;
-      tracer().end(context, responseContext);
+      instrumenter().end(context, requestContext, responseContext, null);
     }
+    // we are done with this request, remove context so it could be gcd immediately in case request
+    // context stays around for whatever reason
+    requestContext.removeProperty(CONTEXT_PROPERTY_NAME);
   }
 }

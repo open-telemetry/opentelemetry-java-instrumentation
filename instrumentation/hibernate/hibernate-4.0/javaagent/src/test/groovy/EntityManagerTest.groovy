@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Shared
+import spock.lang.Unroll
+
 import javax.persistence.EntityManager
 import javax.persistence.EntityManagerFactory
 import javax.persistence.EntityTransaction
 import javax.persistence.LockModeType
 import javax.persistence.Persistence
 import javax.persistence.Query
-import spock.lang.Shared
-import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class EntityManagerTest extends AbstractHibernateTest {
 
@@ -132,24 +133,24 @@ class EntityManagerTest extends AbstractHibernateTest {
     }
 
     where:
-    testName                                  | methodName   | resource | attach | flushOnCommit | sessionMethodTest
-    "lock"                                    | "lock"       | "Value"  | true   | false         | { em, val ->
+    testName  | methodName   | resource | attach | flushOnCommit | sessionMethodTest
+    "lock"    | "lock"       | "Value"  | true   | false         | { em, val ->
       em.lock(val, LockModeType.PESSIMISTIC_READ)
     }
-    "refresh"                                 | "refresh"    | "Value"  | true   | false         | { em, val ->
+    "refresh" | "refresh"    | "Value"  | true   | false         | { em, val ->
       em.refresh(val)
     }
-    "find"                                    | "(get|find)" | "Value"  | false  | false         | { em, val ->
+    "find"    | "(get|find)" | "Value"  | false  | false         | { em, val ->
       em.find(Value, val.getId())
     }
-    "persist"                                 | "persist"    | "Value"  | false  | true          | { em, val ->
+    "persist" | "persist"    | "Value"  | false  | true          | { em, val ->
       em.persist(new Value("insert me"))
     }
-    "merge"                                   | "merge"      | "Value"  | true   | true          | { em, val ->
+    "merge"   | "merge"      | "Value"  | true   | true          | { em, val ->
       val.setName("New name")
       em.merge(val)
     }
-    "remove"                                  | "delete"     | "Value"  | true   | true          | { em, val ->
+    "remove"  | "delete"     | "Value"  | true   | true          | { em, val ->
       em.remove(val)
     }
   }

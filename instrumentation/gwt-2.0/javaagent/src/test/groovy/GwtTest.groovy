@@ -8,7 +8,6 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -19,6 +18,8 @@ import org.testcontainers.Testcontainers
 import org.testcontainers.containers.BrowserWebDriverContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
+
+import java.util.concurrent.TimeUnit
 
 class GwtTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
   private static final Logger logger = LoggerFactory.getLogger(GwtTest)
@@ -86,6 +87,8 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     // wait for page to load
     driver.findElementByClassName("greeting.button")
     assertTraces(4) {
+      traces.sort(orderByRootSpanName("/*", "HTTP GET"))
+
       // /xyz/greeting.html
       trace(0, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
@@ -94,13 +97,13 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
       trace(1, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
       }
-      // /favicon.ico
-      trace(2, 1) {
-        serverSpan(it, 0, "HTTP GET")
-      }
       // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
-      trace(3, 1) {
+      trace(2, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
+      }
+      // /favicon.ico
+      trace(3, 1) {
+        serverSpan(it, 0, "HTTP GET")
       }
     }
     clearExportedData()

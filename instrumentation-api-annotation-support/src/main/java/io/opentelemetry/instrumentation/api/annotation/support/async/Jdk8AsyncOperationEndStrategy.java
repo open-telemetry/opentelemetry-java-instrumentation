@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support.async;
 
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   INSTANCE;
@@ -75,13 +76,5 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
     return stage.whenComplete(
         (result, exception) ->
             instrumenter.end(context, request, tryToGetResponse(responseType, result), exception));
-  }
-
-  @Nullable
-  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
-    if (responseType.isInstance(result)) {
-      return responseType.cast(result);
-    }
-    return null;
   }
 }

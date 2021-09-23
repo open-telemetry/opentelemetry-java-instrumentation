@@ -48,7 +48,7 @@ dependencies {
 
 tasks {
   named<Test>("test") {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
   withType<Test>().configureEach {

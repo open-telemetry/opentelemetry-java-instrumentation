@@ -13,7 +13,7 @@ class ClassLoadingTest extends AgentInstrumentationSpecification {
     when:
     Class<?> clazz
     try {
-      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.concurrent.State", false, classLoader)
+      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext", false, classLoader)
     } catch (ClassNotFoundException e) {
     }
 

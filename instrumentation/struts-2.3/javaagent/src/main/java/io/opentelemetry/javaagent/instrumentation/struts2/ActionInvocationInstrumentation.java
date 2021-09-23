@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.struts2.Struts2Tracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.struts2.StrutsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -51,25 +53,32 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
 
-      context = tracer().startSpan(parentContext, actionInvocation);
-      scope = context.makeCurrent();
+      ServerSpanNaming.updateServerSpanName(
+          parentContext,
+          CONTROLLER,
+          StrutsServerSpanNaming.SERVER_SPAN_NAME,
+          actionInvocation.getProxy());
 
-      tracer().updateServerSpanName(parentContext, actionInvocation.getProxy());
+      if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, actionInvocation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.This ActionInvocation actionInvocation,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
+      if (scope == null) {
+        return;
       }
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      scope.close();
+
+      instrumenter().end(context, actionInvocation, null, throwable);
     }
   }
 }

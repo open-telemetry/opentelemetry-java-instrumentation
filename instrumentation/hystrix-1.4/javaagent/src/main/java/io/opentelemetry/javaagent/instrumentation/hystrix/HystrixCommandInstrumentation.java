@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
+import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -52,7 +54,8 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Thrown Throwable throwable) {
 
-      result = Observable.create(new HystrixOnSubscribe<>(result, command, "execute"));
+      HystrixRequest request = HystrixRequest.create(command, "execute");
+      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 
@@ -65,7 +68,8 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Thrown Throwable throwable) {
 
-      result = Observable.create(new HystrixOnSubscribe<>(result, command, "fallback"));
+      HystrixRequest request = HystrixRequest.create(command, "fallback");
+      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

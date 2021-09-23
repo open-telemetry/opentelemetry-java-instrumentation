@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
@@ -15,6 +11,10 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
@@ -83,6 +83,9 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
             "${SemanticAttributes.HTTP_METHOD.key}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_HOST.key}" "localhost"
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
+            "${SemanticAttributes.HTTP_TARGET.key}" "/error"
           }
         }
         serverSpan(it, 1, span(0))

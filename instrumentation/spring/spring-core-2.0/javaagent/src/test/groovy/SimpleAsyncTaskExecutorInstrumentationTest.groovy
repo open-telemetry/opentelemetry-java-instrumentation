@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class SimpleAsyncTaskExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 

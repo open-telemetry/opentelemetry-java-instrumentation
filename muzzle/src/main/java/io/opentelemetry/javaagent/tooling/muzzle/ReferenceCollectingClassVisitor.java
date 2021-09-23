@@ -112,7 +112,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   // helper super classes which are themselves also helpers
   // this is needed for injecting the helper classes into the class loader in the correct order
   private final Set<String> helperSuperClasses = new HashSet<>();
-  private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
+  private final InstrumentationContextBuilderImpl contextStoreMappingsBuilder =
+      new InstrumentationContextBuilderImpl();
   private String refSourceClassName;
   private Type refSourceType;
 
@@ -135,8 +136,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     return helperSuperClasses;
   }
 
-  Map<String, String> getContextStoreClasses() {
-    return contextStoreClasses;
+  ContextStoreMappings getContextStoreMappings() {
+    return contextStoreMappingsBuilder.build();
   }
 
   private void addExtendsReference(ClassRef ref) {
@@ -519,7 +520,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (lastTwoClassConstants.remainingCapacity() == 0) {
           String className = lastTwoClassConstants.poll();
           String contextClassName = lastTwoClassConstants.poll();
-          contextStoreClasses.put(className, contextClassName);
+          contextStoreMappingsBuilder.register(className, contextClassName);
         } else {
           throw new MuzzleCompilationException(
               "Invalid InstrumentationContext#get(Class, Class) usage: you cannot pass variables,"

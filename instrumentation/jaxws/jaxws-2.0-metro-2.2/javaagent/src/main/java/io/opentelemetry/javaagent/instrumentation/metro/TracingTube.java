@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
-import static io.opentelemetry.javaagent.instrumentation.metro.MetroJaxWsTracer.tracer;
-
 import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.pipe.Fiber;
 import com.sun.xml.ws.api.pipe.NextAction;
@@ -36,14 +34,14 @@ public class TracingTube extends AbstractFilterTubeImpl {
 
   @Override
   public NextAction processRequest(Packet request) {
-    tracer().startSpan(endpoint, request);
+    MetroHelper.start(endpoint, request);
 
     return super.processRequest(request);
   }
 
   @Override
   public NextAction processResponse(Packet response) {
-    tracer().end(response);
+    MetroHelper.end(response);
 
     return super.processResponse(response);
   }
@@ -60,7 +58,7 @@ public class TracingTube extends AbstractFilterTubeImpl {
       // fiber not available
     }
     if (request != null) {
-      tracer().end(request, throwable);
+      MetroHelper.end(request, throwable);
     }
 
     return super.processException(throwable);

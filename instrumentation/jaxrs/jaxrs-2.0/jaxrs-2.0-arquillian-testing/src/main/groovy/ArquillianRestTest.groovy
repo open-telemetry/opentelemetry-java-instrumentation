@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
@@ -20,6 +18,8 @@ import spock.lang.Unroll
 import test.CdiRestResource
 import test.EjbRestResource
 import test.RestApplication
+
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 @RunWith(ArquillianSputnik)
 @RunAsClient

@@ -3,13 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
-
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
@@ -24,8 +18,14 @@ import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.TransportService
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
+import spock.lang.Unroll
 
-class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecification {
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
+
+class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportClientTest {
   public static final long TIMEOUT = 10000 // 10 seconds
 
   @Shared
@@ -85,20 +85,32 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
     }
   }
 
-  def "test elasticsearch status"() {
-    setup:
-    def result = client.admin().cluster().health(new ClusterHealthRequest())
+  @Override
+  TransportClient client() {
+    client
+  }
 
-    def clusterHealthStatus = result.get().status
+  @Unroll
+  def "test elasticsearch status #callKind"() {
+    setup:
+    def clusterHealthStatus = runWithSpan("parent") {
+      call.call()
+    }
 
     expect:
     clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "ClusterHealthAction"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
@@ -109,21 +121,40 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
             "elasticsearch.request" "ClusterHealthRequest"
           }
         }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
+        }
       }
     }
+
+    where:
+    callKind | call
+    "sync"   | { clusterHealthSync() }
+    "async"  | { clusterHealthAsync() }
   }
 
-  def "test elasticsearch error"() {
+  def "test elasticsearch error #callKind"() {
     when:
-    client.prepareGet(indexName, indexType, id).get()
+    runWithSpan("parent") {
+      call.call(indexName, indexType, id)
+    }
 
     then:
     thrown IndexNotFoundException
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          name "parent"
+          status ERROR
+          errorEvent IndexNotFoundException, "no such index"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GetAction"
           kind CLIENT
           status ERROR
@@ -136,6 +167,11 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
             "elasticsearch.request.indices" indexName
           }
         }
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
+        }
       }
     }
 
@@ -143,6 +179,9 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
     indexName = "invalid-index"
     indexType = "test-type"
     id = "1"
+    callKind | call
+    "sync" | { indexName, indexType, id -> prepareGetSync(indexName, indexType, id) }
+    "async" | { indexName, indexType, id -> prepareGetAsync(indexName, indexType, id) }
   }
 
   def "test elasticsearch get"() {

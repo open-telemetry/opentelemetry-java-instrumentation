@@ -92,11 +92,6 @@ class HttpAttributesExtractorTest {
     protected String serverName(Map<String, String> request, Map<String, String> response) {
       return request.get("serverName");
     }
-
-    @Override
-    protected String clientIp(Map<String, String> request, Map<String, String> response) {
-      return request.get("clientIp");
-    }
   }
 
   @Test
@@ -113,7 +108,6 @@ class HttpAttributesExtractorTest {
     request.put("requestContentLengthUncompressed", "11");
     request.put("flavor", "http/2");
     request.put("serverName", "server");
-    request.put("clientIp", "1.2.3.4");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -133,7 +127,7 @@ class HttpAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"));
 
-    extractor.onEnd(attributes, request, response);
+    extractor.onEnd(attributes, request, response, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
@@ -147,7 +141,6 @@ class HttpAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, 11L),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
-            entry(SemanticAttributes.HTTP_CLIENT_IP, "1.2.3.4"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, 21L));

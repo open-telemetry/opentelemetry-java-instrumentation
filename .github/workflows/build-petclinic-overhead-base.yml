@@ -2,7 +2,7 @@ name: publish-petclinic-base-image
 on:
   push:
     paths:
-      - 'testing-overhead/Dockerfile-petclinic-base'
+      - 'benchmark-overhead/Dockerfile-petclinic-base'
     branches: [ 'main' ]
   workflow_dispatch:
 jobs:
@@ -26,5 +26,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: testing-overhead/Dockerfile-petclinic-base
+          file: benchmark-overhead/Dockerfile-petclinic-base
           tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest

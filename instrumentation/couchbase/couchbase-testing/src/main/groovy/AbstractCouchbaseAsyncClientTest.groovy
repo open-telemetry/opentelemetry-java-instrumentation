@@ -10,10 +10,11 @@ import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
 import io.opentelemetry.api.trace.SpanKind
-import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
 import util.AbstractCouchbaseTest
+
+import java.util.concurrent.TimeUnit
 
 @Unroll
 abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
@@ -32,8 +33,8 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     assert hasBucket.get()
     assertTraces(1) {
       trace(0, 2) {
-        assertCouchbaseCall(it, 0, "Cluster.openBucket", null)
-        assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", null, span(0))
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+        assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", span(0))
       }
     }
 
@@ -74,8 +75,8 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
           hasNoParent()
         }
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", span(1), bucketSettings.name())
       }
     }
 
@@ -123,9 +124,9 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
           hasNoParent()
         }
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
-        assertCouchbaseCall(it, 3, "Bucket.get", bucketSettings.name(), span(2))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", span(1), bucketSettings.name())
+        assertCouchbaseCall(it, 3, "Bucket.get", span(2), bucketSettings.name())
       }
     }
 
@@ -172,10 +173,10 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
           hasNoParent()
         }
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", span(0))
 
         def dbName = bucketCouchbase.name()
-        assertCouchbaseCall(it, 2, "SELECT $dbName", dbName, span(1), 'SELECT mockrow')
+        assertCouchbaseCall(it, 2, "SELECT $dbName", span(1), dbName, 'SELECT mockrow', 'SELECT')
       }
     }
 

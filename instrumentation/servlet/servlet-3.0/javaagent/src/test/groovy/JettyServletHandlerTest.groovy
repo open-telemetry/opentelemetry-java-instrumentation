@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import javax.servlet.Servlet
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
+
+import javax.servlet.Servlet
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 

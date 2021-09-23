@@ -5,6 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import jakarta.servlet.annotation.WebServlet
+import jakarta.servlet.http.HttpServlet
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+
+import java.util.concurrent.CountDownLatch
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -12,23 +20,15 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import jakarta.servlet.annotation.WebServlet
-import jakarta.servlet.http.HttpServlet
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
-import java.util.concurrent.Phaser
-
 @WebServlet(asyncSupported = true)
 class AsyncServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) {
     HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
-    def phaser = new Phaser(2)
+    def latch = new CountDownLatch(1)
     def context = req.startAsync()
     context.start {
       try {
-        phaser.arriveAndAwaitAdvance()
         HttpServerTest.controller(endpoint) {
           resp.contentType = "text/plain"
           switch (endpoint) {
@@ -64,10 +64,9 @@ class AsyncServlet extends HttpServlet {
           }
         }
       } finally {
-        phaser.arriveAndDeregister()
+        latch.countDown()
       }
     }
-    phaser.arriveAndAwaitAdvance()
-    phaser.arriveAndAwaitAdvance()
+    latch.await()
   }
 }

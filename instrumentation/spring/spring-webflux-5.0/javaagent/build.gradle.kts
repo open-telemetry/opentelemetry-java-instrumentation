@@ -61,11 +61,6 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
-  // TODO(anuraaga): There is no actual context leak - it just seems that the server-side does not
-  // fully complete processing before the test cases finish, which is when we check for context
-  // leaks. Adding Thread.sleep(1000) just before checking for leaks allows it to pass but is not
-  // a good approach. Come up with a better one and enable this.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

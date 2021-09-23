@@ -13,15 +13,15 @@ muzzle {
 }
 
 dependencies {
-  library("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
+  compileOnly("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
   implementation(project(":instrumentation:tomcat:tomcat-common:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
 
-  // Tests need at least version 9 to have necessary classes to configure the embedded tomcat...
-  // ... but not newer that version 10, because its servlet 5.
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-core:[9.+, 10)")
+  testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
+  testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:[9.+, 10)")
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:[9.+, 10)")
 }

@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.Request
 import com.amazonaws.auth.BasicAWSCredentials
@@ -20,6 +17,9 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
   @Override

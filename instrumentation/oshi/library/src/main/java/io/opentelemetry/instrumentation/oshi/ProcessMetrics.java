@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 /** Java Runtime Metrics Utility. */
 public class ProcessMetrics {
-  private static final String TYPE_LABEL_KEY = "type";
+  private static final AttributeKey<String> TYPE_KEY = AttributeKey.stringKey("type");
 
   private ProcessMetrics() {}
 
@@ -26,27 +27,26 @@ public class ProcessMetrics {
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
 
     meter
-        .longUpDownSumObserverBuilder("runtime.java.memory")
+        .gaugeBuilder("runtime.java.memory")
+        .ofLongs()
         .setDescription("Runtime Java memory")
         .setUnit("bytes")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.observe(processInfo.getResidentSetSize(), Labels.of(TYPE_LABEL_KEY, "rss"));
-              r.observe(processInfo.getVirtualSize(), Labels.of(TYPE_LABEL_KEY, "vms"));
-            })
-        .build();
+              r.observe(processInfo.getResidentSetSize(), Attributes.of(TYPE_KEY, "rss"));
+              r.observe(processInfo.getVirtualSize(), Attributes.of(TYPE_KEY, "vms"));
+            });
 
     meter
-        .doubleValueObserverBuilder("runtime.java.cpu_time")
+        .gaugeBuilder("runtime.java.cpu_time")
         .setDescription("Runtime Java CPU time")
         .setUnit("seconds")
-        .setUpdater(
+        .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.observe(processInfo.getUserTime() * 1000, Labels.of(TYPE_LABEL_KEY, "user"));
-              r.observe(processInfo.getKernelTime() * 1000, Labels.of(TYPE_LABEL_KEY, "system"));
-            })
-        .build();
+              r.observe(processInfo.getUserTime() * 1000, Attributes.of(TYPE_KEY, "user"));
+              r.observe(processInfo.getKernelTime() * 1000, Attributes.of(TYPE_KEY, "system"));
+            });
   }
 }

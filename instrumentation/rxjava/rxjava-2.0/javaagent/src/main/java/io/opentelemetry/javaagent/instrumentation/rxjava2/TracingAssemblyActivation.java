@@ -24,8 +24,7 @@ public final class TracingAssemblyActivation {
       TracingAssembly.newBuilder()
           .setCaptureExperimentalSpanAttributes(
               Config.get()
-                  .getBooleanProperty(
-                      "otel.instrumentation.rxjava.experimental-span-attributes", false))
+                  .getBoolean("otel.instrumentation.rxjava.experimental-span-attributes", false))
           .build()
           .enable();
     }

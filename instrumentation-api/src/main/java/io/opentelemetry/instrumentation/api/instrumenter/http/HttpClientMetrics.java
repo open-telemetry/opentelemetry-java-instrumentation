@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleValueRecorder;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
@@ -48,29 +48,26 @@ public final class HttpClientMetrics implements RequestListener {
     return HttpClientMetrics::new;
   }
 
-  private final DoubleValueRecorder duration;
+  private final DoubleHistogram duration;
 
   private HttpClientMetrics(Meter meter) {
     duration =
         meter
-            .doubleValueRecorderBuilder("http.client.duration")
+            .histogramBuilder("http.client.duration")
             .setUnit("milliseconds")
             .setDescription("The duration of the outbound HTTP request")
             .build();
   }
 
   @Override
-  public Context start(Context context, Attributes requestAttributes) {
-    long startTimeNanos = System.nanoTime();
-    Labels durationLabels = durationLabels(requestAttributes);
-
+  public Context start(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         HTTP_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_HttpClientMetrics_State(durationLabels, startTimeNanos));
+        new AutoValue_HttpClientMetrics_State(startAttributes, startNanos));
   }
 
   @Override
-  public void end(Context context, Attributes responseAttributes) {
+  public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
@@ -78,41 +75,14 @@ public final class HttpClientMetrics implements RequestListener {
       return;
     }
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS, state.durationLabels());
-  }
-
-  private static Labels durationLabels(Attributes attributes) {
-    LabelsBuilder labels = Labels.builder();
-    attributes.forEach(
-        (key, value) -> {
-          switch (key.getKey()) {
-            case "http.method":
-            case "http.host":
-            case "http.scheme":
-            case "http.flavor":
-            case "http.server_name":
-            case "net.host.name":
-              if (value instanceof String) {
-                labels.put(key.getKey(), (String) value);
-              }
-              break;
-            case "http.status_code":
-            case "net.host.port":
-              if (value instanceof Long) {
-                labels.put(key.getKey(), Long.toString((long) value));
-              }
-              break;
-            default:
-              // fall through
-          }
-        });
-    return labels.build();
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
+        applyDurationView(state.startAttributes()));
   }
 
   @AutoValue
   abstract static class State {
 
-    abstract Labels durationLabels();
+    abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
   }

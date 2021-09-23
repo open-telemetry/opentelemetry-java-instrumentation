@@ -8,30 +8,45 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
+import org.apache.http.client.params.ClientPNames
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.conn.ClientConnectionManagerFactory
+import org.apache.http.conn.scheme.SchemeRegistry
 import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager
 import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicHttpRequest
+import org.apache.http.params.BasicHttpParams
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 
+import java.util.function.Consumer
+
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
-  def client = new DefaultHttpClient()
+  DefaultHttpClient client
 
   def setupSpec() {
-    HttpParams httpParams = client.getParams()
+    HttpParams httpParams = new BasicHttpParams()
     HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+    httpParams.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME, ThreadSafeClientConnManagerFactory.getName())
+    client = new DefaultHttpClient(httpParams)
   }
 
-  @Override
-  boolean testCausality() {
-    false
+  static class ThreadSafeClientConnManagerFactory implements ClientConnectionManagerFactory {
+    @Override
+    ClientConnectionManager newInstance(HttpParams httpParams, SchemeRegistry schemeRegistry) {
+      return new ThreadSafeClientConnManager(httpParams, schemeRegistry)
+    }
+  }
+
+  def cleanupSpec() {
+    client.getConnectionManager().shutdown()
   }
 
   @Override

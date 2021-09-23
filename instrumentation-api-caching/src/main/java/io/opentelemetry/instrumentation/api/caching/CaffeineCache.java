@@ -6,43 +6,28 @@
 package io.opentelemetry.instrumentation.api.caching;
 
 import java.util.Set;
-import java.util.function.Function;
+import java.util.concurrent.Executor;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-final class CaffeineCache<K, V> implements Cache<K, V> {
+interface CaffeineCache<K, V> extends Cache<K, V> {
 
-  private final com.github.benmanes.caffeine.cache.Cache<K, V> delegate;
+  interface Builder<K, V> {
 
-  CaffeineCache(com.github.benmanes.caffeine.cache.Cache<K, V> delegate) {
-    this.delegate = delegate;
-  }
+    void weakKeys();
 
-  @Override
-  public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-    return delegate.get(key, mappingFunction);
-  }
+    void weakValues();
 
-  @Override
-  public V get(K key) {
-    return delegate.getIfPresent(key);
-  }
+    void maximumSize(@NonNegative long maximumSize);
 
-  @Override
-  public void put(K key, V value) {
-    delegate.put(key, value);
-  }
+    void executor(@NonNull Executor executor);
 
-  @Override
-  public void remove(K key) {
-    delegate.invalidate(key);
+    Cache<K, V> build();
   }
 
   // Visible for testing
-  Set<K> keySet() {
-    return delegate.asMap().keySet();
-  }
+  Set<K> keySet();
 
   // Visible for testing
-  void cleanup() {
-    delegate.cleanUp();
-  }
+  void cleanup();
 }

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +26,12 @@ public final class ContextPropagationDebug {
 
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
       Config.get()
-          .getBooleanProperty(
+          .getBoolean(
               "otel.javaagent.experimental.thread-propagation-debugger.enabled",
               Config.get().isAgentDebugEnabled());
 
   private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Config.get().getBooleanProperty("otel.javaagent.testing.fail-on-context-leak", false);
+      Config.get().getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
 
   public static boolean isThreadPropagationDebuggerEnabled() {
     return THREAD_PROPAGATION_DEBUGGER;
@@ -68,6 +69,7 @@ public final class ContextPropagationDebug {
     }
   }
 
+  @Nullable
   private static List<Propagation> getPropagations(Context context) {
     return context.get(THREAD_PROPAGATION_LOCATIONS);
   }

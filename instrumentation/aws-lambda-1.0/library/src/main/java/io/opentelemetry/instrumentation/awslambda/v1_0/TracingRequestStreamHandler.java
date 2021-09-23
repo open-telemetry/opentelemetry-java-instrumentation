@@ -72,10 +72,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
           context);
     } catch (Throwable t) {
       tracer.endExceptionally(otelContext, t);
-      openTelemetrySdk
-          .getSdkTracerProvider()
-          .forceFlush()
-          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
       throw t;
     }
   }
@@ -122,10 +119,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     public void close() throws IOException {
       delegate.close();
       tracer.end(otelContext);
-      openTelemetrySdk
-          .getSdkTracerProvider()
-          .forceFlush()
-          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 }

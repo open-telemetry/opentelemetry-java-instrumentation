@@ -6,8 +6,10 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import play.shaded.ahc.io.netty.resolver.InetNameResolver
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor
 import play.shaded.ahc.io.netty.util.concurrent.ImmediateEventExecutor
@@ -59,6 +61,20 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
   @Override
   int maxRedirects() {
     3
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET
+    ]
+    def attributes = super.httpAttributes(uri) + extra
+    if (uri.toString().endsWith("/circular-redirect")) {
+      attributes.remove(SemanticAttributes.NET_PEER_NAME)
+      attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    }
+    return attributes
   }
 }
 

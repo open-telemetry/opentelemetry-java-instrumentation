@@ -13,7 +13,11 @@ import java.util.Set;
  * A {@link MetricExporterFactory} acts as the bootstrap for a {@link MetricExporter}
  * implementation. An exporter must register its implementation of a {@link MetricExporterFactory}
  * through the Java SPI framework.
+ *
+ * @deprecated Use {@code io.opentelemetry.sdk.autoconfigure.spi.ConfigurableMetricExporterProvider}
+ *     from the {@code opentelemetry-sdk-extension-autoconfigure} instead.
  */
+@Deprecated
 public interface MetricExporterFactory {
   /**
    * Creates an instance of a {@link MetricExporter} based on the provided configuration.

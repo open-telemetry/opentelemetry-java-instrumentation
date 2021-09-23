@@ -15,7 +15,6 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer;
 import net.bytebuddy.asm.Advice;
@@ -49,16 +48,18 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
     public static void onEnter(
         @Advice.This ChannelHandlerContext channelContext,
         @Advice.Argument(0) Throwable throwable) {
-      if (throwable != null) {
-        Attribute<Context> clientContextAttr =
-            channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-        Context context = clientContextAttr.get();
-        if (context != null) {
-          NettyHttpClientTracer.tracer().endExceptionally(context, throwable);
-        } else {
-          NettyHttpServerTracer.tracer()
-              .onException(Java8BytecodeBridge.currentContext(), throwable);
-        }
+      Attribute<Context> clientContextAttr =
+          channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+      Context clientContext = clientContextAttr.get();
+      if (clientContext != null) {
+        NettyHttpClientTracer.tracer().endExceptionally(clientContext, throwable);
+        return;
+      }
+      Attribute<Context> serverContextAttr =
+          channelContext.channel().attr(AttributeKeys.SERVER_CONTEXT);
+      Context serverContext = serverContextAttr.get();
+      if (serverContext != null) {
+        NettyHttpServerTracer.tracer().onException(serverContext, throwable);
       }
     }
   }

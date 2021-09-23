@@ -19,10 +19,4 @@ class ApacheClientHostAbsoluteUriRequestContextTest extends AbstractApacheClient
       .build()
     return builder.build()
   }
-
-  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-  @Override
-  boolean testWithClientParent() {
-    false
-  }
 }

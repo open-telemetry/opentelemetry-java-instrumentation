@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
@@ -21,21 +22,16 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
         ArmeriaTracing.create(testing.getOpenTelemetry()).newClientDecorator());
   }
 
-  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
   @Override
-  protected boolean testWithClientParent() {
-    return false;
-  }
+  protected void configure(HttpClientTestOptions options) {
+    super.configure(options);
 
-  // Agent users have automatic propagation through executor instrumentation, but library users
-  // should do manually using Armeria patterns.
-  @Override
-  protected boolean testCallbackWithParent() {
-    return false;
-  }
+    // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+    options.disableTestWithClientParent();
 
-  @Override
-  protected boolean testErrorWithCallback() {
-    return false;
+    // Agent users have automatic propagation through executor instrumentation, but library users
+    // should do manually using Armeria patterns.
+    options.disableTestCallbackWithParent();
+    options.disableTestErrorWithCallback();
   }
 }

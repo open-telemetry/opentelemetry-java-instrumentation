@@ -3,13 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import jakarta.servlet.RequestDispatcher
 import jakarta.servlet.ServletException
@@ -17,7 +10,15 @@ import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import java.util.concurrent.Phaser
+
+import java.util.concurrent.CountDownLatch
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class TestServlet5 {
 
@@ -63,11 +64,10 @@ class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
-      def phaser = new Phaser(2)
+      def latch = new CountDownLatch(1)
       def context = req.startAsync()
       context.start {
         try {
-          phaser.arriveAndAwaitAdvance()
           HttpServerTest.controller(endpoint) {
             resp.contentType = "text/plain"
             switch (endpoint) {
@@ -104,11 +104,10 @@ class TestServlet5 {
             }
           }
         } finally {
-          phaser.arriveAndDeregister()
+          latch.countDown()
         }
       }
-      phaser.arriveAndAwaitAdvance()
-      phaser.arriveAndAwaitAdvance()
+      latch.await()
     }
   }
 

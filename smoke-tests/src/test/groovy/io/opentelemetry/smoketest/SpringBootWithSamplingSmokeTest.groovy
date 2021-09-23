@@ -16,13 +16,13 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
   }
 
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_TRACES_SAMPLER": "parentbased_traceidratio",
+      "OTEL_TRACES_SAMPLER"    : "parentbased_traceidratio",
       "OTEL_TRACES_SAMPLER_ARG": String.valueOf(SAMPLER_PROBABILITY),
     ]
   }
@@ -45,6 +45,6 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 15]
+    jdk << [8, 11, 16]
   }
 }

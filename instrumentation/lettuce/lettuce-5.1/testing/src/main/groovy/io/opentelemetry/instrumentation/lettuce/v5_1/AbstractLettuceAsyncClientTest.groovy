@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisFuture
@@ -19,15 +16,20 @@ import io.lettuce.core.codec.StringCodec
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.FixedHostPortGenericContainer
+import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
+
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import org.testcontainers.containers.FixedHostPortGenericContainer
-import spock.lang.Shared
-import spock.util.concurrent.AsyncConditions
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
@@ -92,6 +94,17 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
   def cleanup() {
     connection.close()
     redisServer.stop()
+  }
+
+  boolean testCallback() {
+    return true
+  }
+
+  def <T> T runWithCallbackSpan(String spanName, Closure callback) {
+    if (testCallback()) {
+      return runWithSpan(spanName, callback)
+    }
+    return callback.call()
   }
 
   def "connect using get on ConnectionFuture"() {
@@ -166,21 +179,30 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     Consumer<String> consumer = new Consumer<String>() {
       @Override
       void accept(String res) {
-        conds.evaluate {
-          assert res == "TESTVAL"
+        runWithCallbackSpan("callback") {
+          conds.evaluate {
+            assert res == "TESTVAL"
+          }
         }
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.get("TESTKEY")
-    redisFuture.thenAccept(consumer)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.get("TESTKEY")
+      redisFuture.thenAccept(consumer)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2 + (testCallback() ? 1 : 0)) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET"
           kind CLIENT
           attributes {
@@ -197,6 +219,13 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
             eventName "redis.encode.end"
           }
         }
+        if (testCallback()) {
+          span(2) {
+            name "callback"
+            kind INTERNAL
+            childOf(span(0))
+          }
+        }
       }
     }
   }
@@ -210,9 +239,11 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
       String apply(String res, Throwable throwable) {
-        conds.evaluate {
-          assert res == null
-          assert throwable == null
+        runWithCallbackSpan("callback1") {
+          conds.evaluate {
+            assert res == null
+            assert throwable == null
+          }
         }
         return (res == null ? successStr : res)
       }
@@ -220,24 +251,34 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     Function<String, Object> secondStage = new Function<String, Object>() {
       @Override
       Object apply(String input) {
-        conds.evaluate {
-          assert input == successStr
+        runWithCallbackSpan("callback2") {
+          conds.evaluate {
+            assert input == successStr
+          }
         }
         return null
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.get("NON_EXISTENT_KEY")
-    redisFuture.handleAsync(firstStage).thenApply(secondStage)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.get("NON_EXISTENT_KEY")
+      redisFuture.handleAsync(firstStage).thenApply(secondStage)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2 + (testCallback() ? 2 : 0)) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "GET"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -252,6 +293,18 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
             eventName "redis.encode.end"
           }
         }
+        if (testCallback()) {
+          span(2) {
+            name "callback1"
+            kind INTERNAL
+            childOf(span(0))
+          }
+          span(3) {
+            name "callback2"
+            kind INTERNAL
+            childOf(span(0))
+          }
+        }
       }
     }
   }
@@ -262,23 +315,33 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
       void accept(String keyRetrieved, Throwable throwable) {
-        conds.evaluate {
-          assert keyRetrieved != null
+        runWithCallbackSpan("callback") {
+          conds.evaluate {
+            assert keyRetrieved != null
+          }
         }
       }
     }
 
     when:
-    RedisFuture<String> redisFuture = asyncCommands.randomkey()
-    redisFuture.whenCompleteAsync(biConsumer)
+    runWithSpan("parent") {
+      RedisFuture<String> redisFuture = asyncCommands.randomkey()
+      redisFuture.whenCompleteAsync(biConsumer)
+    }
 
     then:
     conds.await()
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2 + (testCallback() ? 1 : 0)) {
         span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
           name "RANDOMKEY"
           kind CLIENT
+          childOf(span(0))
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -291,6 +354,13 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           }
           event(1) {
             eventName "redis.encode.end"
+          }
+        }
+        if (testCallback()) {
+          span(2) {
+            name "callback"
+            kind INTERNAL
+            childOf(span(0))
           }
         }
       }

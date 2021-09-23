@@ -15,8 +15,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.TaskAdviceHelper;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,10 +40,10 @@ public class CallableInstrumentation implements TypeInstrumentation {
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This Callable<?> thiz) {
-      ContextStore<Callable<?>, State> contextStore =
-          InstrumentationContext.get(Callable.class, State.class);
-      return AdviceUtils.startTaskScope(contextStore, thiz);
+    public static Scope enter(@Advice.This Callable<?> task) {
+      ContextStore<Callable<?>, PropagatedContext> contextStore =
+          InstrumentationContext.get(Callable.class, PropagatedContext.class);
+      return TaskAdviceHelper.makePropagatedContextCurrent(contextStore, task);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -20,6 +16,10 @@ import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 @Unroll
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
@@ -93,6 +93,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         span(1) {
           name sharedTopic + " process"
           kind CONSUMER
+          childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic

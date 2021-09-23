@@ -59,6 +59,10 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRedissonRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
       scope.close();
       instrumenter().end(context, request, null, throwable);
     }

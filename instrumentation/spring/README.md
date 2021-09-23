@@ -24,7 +24,6 @@ Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeSer
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `1.1.0`
- - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
  
 ### Maven
 
@@ -599,7 +598,6 @@ Add the following dependencies to your build file.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `1.1.0`
- - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 #### Maven
 ```xml
@@ -861,7 +859,7 @@ Add the following configurations to overwrite the default exporter values listed
 #otel.traces.sampler.probability=1
 
 ## Default exporter configurations
-#otel.exporter.otlp.endpoint=localhost:55680
+#otel.exporter.otlp.endpoint=localhost:4317
 #otel.exporter.otlp.timeout=10s
 #otel.exporter.jaeger.endpoint=localhost:14250
 #otel.exporter.jaeger.timeout=10s

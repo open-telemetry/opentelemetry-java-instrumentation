@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
+import util.SpringWebfluxTestUtil
 
 class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySpec> implements AgentTestTrait {
 
@@ -32,6 +33,10 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
     return WebClient.builder().clientConnector(connector).build().method(HttpMethod.resolve(method))
       .uri(uri)
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
+  }
+
+  def cleanup() {
+    SpringWebfluxTestUtil.waitForRequestsToComplete()
   }
 
   private static boolean isOldVersion() {

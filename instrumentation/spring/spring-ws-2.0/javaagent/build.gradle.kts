@@ -32,6 +32,9 @@ tasks {
 dependencies {
   compileOnly("org.springframework.ws:spring-ws-core:2.0.0.RELEASE")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   testLibrary("org.springframework.boot:spring-boot-starter-web-services:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:2.0.0.RELEASE")
 

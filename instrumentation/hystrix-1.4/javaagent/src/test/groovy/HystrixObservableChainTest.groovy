@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 import com.netflix.hystrix.HystrixObservableCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import rx.Observable
 import rx.schedulers.Schedulers
+
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class HystrixObservableChainTest extends AgentInstrumentationSpecification {
 
@@ -71,7 +71,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(2) {
@@ -86,7 +86,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
-            "hystrix.circuit-open" false
+            "hystrix.circuit_open" false
           }
         }
         span(4) {

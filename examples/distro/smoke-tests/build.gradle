@@ -7,8 +7,8 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
   testImplementation("com.google.protobuf:protobuf-java-util:3.12.4")
   testImplementation("com.squareup.okhttp3:okhttp:3.12.12")
-  testImplementation("io.opentelemetry:opentelemetry-proto:1.0.0-alpha")
-  testImplementation("io.opentelemetry:opentelemetry-api:1.0.0")
+  testImplementation("io.opentelemetry:opentelemetry-proto:1.6.0-alpha")
+  testImplementation("io.opentelemetry:opentelemetry-api:1.6.0")
 
   testImplementation("ch.qos.logback:logback-classic:1.2.3")
 }
@@ -19,6 +19,7 @@ tasks.test {
   testLogging.showStandardStreams = true
 
   def shadowTask = project(":agent").tasks.shadowJar
+  dependsOn(shadowTask)
   inputs.files(layout.files(shadowTask))
 
   doFirst {

@@ -12,7 +12,7 @@ import spock.lang.IgnoreIf
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-play-jdk$jdk-20201128.1734635"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20210917.1246460868"
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {
@@ -32,7 +32,8 @@ class PlaySmokeTest extends SmokeTest {
     stopTarget()
 
     where:
+    // Play doesn't support Java 16 (or 17) yet
+    // https://github.com/playframework/playframework/pull/10819
     jdk << [8, 11, 15]
   }
-
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.testcontainers.containers.output.OutputFrame;
@@ -22,7 +23,7 @@ public interface TestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
-      Map<String, String> extraResources,
+      List<ResourceMapping> extraResources,
       TargetWaitStrategy waitStrategy);
 
   void stopTarget();

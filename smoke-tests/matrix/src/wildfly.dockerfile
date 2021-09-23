@@ -1,6 +1,7 @@
-ARG jdk
-ARG vm
-FROM adoptopenjdk:${jdk}-jdk-${vm}
+ARG jdkImage
+
+FROM ${jdkImage}
+ARG version
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
@@ -16,7 +17,6 @@ WORKDIR /opt/jboss
 USER jboss
 
 # Set the WILDFLY_VERSION env variable
-ARG version
 ENV WILDFLY_VERSION=${version}
 ENV JBOSS_HOME /opt/jboss/wildfly
 

@@ -49,11 +49,13 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) AsyncHandler<?> handler,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      RequestContext requestContext = new RequestContext(parentContext, request);
+      if (!instrumenter().shouldStart(parentContext, requestContext)) {
         return;
       }
 
-      Context context = instrumenter().start(parentContext, request);
+      Context context = instrumenter().start(parentContext, requestContext);
+      requestContext.setContext(context);
 
       // TODO (trask) instead of using InstrumentationContext, wrap the AsyncHandler in an
       // instrumented AsyncHandler which delegates to the original AsyncHandler
@@ -68,8 +70,8 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       // 2.1, so the instrumentation module will need to be essentially duplicated (or a common
       // module introduced)
 
-      InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class)
-          .put(handler, AsyncHandlerData.create(parentContext, context, request));
+      InstrumentationContext.get(AsyncHandler.class, RequestContext.class)
+          .put(handler, requestContext);
       scope = context.makeCurrent();
     }
 

@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-class CxfAnnotationInstrumentationTest extends JaxRsAnnotationsInstrumentationTest {
+class CxfAnnotationInstrumentationTest extends JaxrsAnnotationsInstrumentationTest {
 }

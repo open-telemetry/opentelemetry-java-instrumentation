@@ -16,7 +16,12 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.trace.data.SpanData
+import org.junit.Rule
+import org.junit.rules.Timeout
 import spock.lang.Specification
+
+import java.util.concurrent.TimeUnit
+
 /**
  * Base class for test specifications that are shared between instrumentation libraries and agent.
  * The methods in this class are implemented by {@link AgentTestTrait} and
@@ -24,6 +29,9 @@ import spock.lang.Specification
  */
 abstract class InstrumentationSpecification extends Specification {
   abstract InstrumentationTestRunner testRunner()
+
+  @Rule
+  public Timeout testTimeout = new Timeout(10, TimeUnit.MINUTES)
 
   def setupSpec() {
     testRunner().beforeTestClass()

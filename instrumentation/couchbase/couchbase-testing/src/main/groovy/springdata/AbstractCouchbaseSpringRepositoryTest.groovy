@@ -6,7 +6,6 @@
 package springdata
 
 
-
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.env.CouchbaseEnvironment
@@ -83,7 +82,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     assertTraces(1) {
       trace(0, 1) {
         def dbName = bucketCouchbase.name()
-        assertCouchbaseCall(it, 0, dbName, dbName, null, ~/^ViewQuery\(doc\/all\).*/)
+        assertCouchbaseCall(it, 0, dbName, null, dbName, ~/^ViewQuery\(doc\/all\).*/, { it == null })
       }
     }
   }
@@ -99,7 +98,7 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     result == doc
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketCouchbase.name())
+        assertCouchbaseCall(it, 0, "Bucket.upsert", null, bucketCouchbase.name())
       }
     }
 
@@ -129,8 +128,8 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), bucketCouchbase.name())
+        assertCouchbaseCall(it, 2, "Bucket.get", span(0), bucketCouchbase.name())
       }
     }
 
@@ -160,8 +159,8 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), bucketCouchbase.name())
+        assertCouchbaseCall(it, 2, "Bucket.upsert", span(0), bucketCouchbase.name())
       }
     }
 
@@ -194,9 +193,9 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
         }
 
         def dbName = bucketCouchbase.name()
-        assertCouchbaseCall(it, 1, "Bucket.upsert", dbName, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", dbName, span(0))
-        assertCouchbaseCall(it, 3, dbName, dbName, span(0), ~/^ViewQuery\(doc\/all\).*/)
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), dbName)
+        assertCouchbaseCall(it, 2, "Bucket.remove", span(0), dbName)
+        assertCouchbaseCall(it, 3, dbName, span(0), dbName, ~/^ViewQuery\(doc\/all\).*/, { it == null })
       }
     }
   }

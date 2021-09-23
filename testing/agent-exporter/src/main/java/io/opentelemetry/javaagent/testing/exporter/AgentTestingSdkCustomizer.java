@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.SdkTracerProviderConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.traces.SdkTracerProviderConfigurer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -26,7 +27,7 @@ public class AgentTestingSdkCustomizer implements SdkTracerProviderConfigurer {
   }
 
   @Override
-  public void configure(SdkTracerProviderBuilder tracerProviderBuilder) {
+  public void configure(SdkTracerProviderBuilder tracerProviderBuilder, ConfigProperties config) {
     tracerProviderBuilder.addSpanProcessor(spanProcessor);
 
     // Until metrics story settles down there is no SPI for it, we rely on the fact that metrics is

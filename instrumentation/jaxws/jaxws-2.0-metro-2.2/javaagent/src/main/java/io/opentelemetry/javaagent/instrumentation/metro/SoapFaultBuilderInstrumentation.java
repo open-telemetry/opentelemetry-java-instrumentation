@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
-import static io.opentelemetry.javaagent.instrumentation.metro.MetroJaxWsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -50,7 +49,7 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
         // fiber not available
       }
       if (request != null) {
-        tracer().storeThrowable(request, throwable);
+        MetroHelper.storeThrowable(request, throwable);
       }
     }
   }

@@ -5,42 +5,44 @@
 
 package io.opentelemetry.instrumentation.rxjava;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import rx.Observable;
 import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
-public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
+public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscribe<T> {
   private final Observable.OnSubscribe<T> delegate;
-  private final String spanName;
+  private final Instrumenter<REQUEST, ?> instrumenter;
+  private final REQUEST request;
   private final Context parentContext;
-  private final BaseTracer tracer;
-  private final SpanKind spanKind;
 
   public TracedOnSubscribe(
-      Observable<T> originalObservable, String spanName, BaseTracer tracer, SpanKind spanKind) {
+      Observable<T> originalObservable, Instrumenter<REQUEST, ?> instrumenter, REQUEST request) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
-    this.spanName = spanName;
-    this.tracer = tracer;
-    this.spanKind = spanKind;
+    this.instrumenter = instrumenter;
+    this.request = request;
 
     parentContext = Context.current();
   }
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
-    Context context = tracer.startSpan(parentContext, spanName, spanKind);
-    decorateSpan(Span.fromContext(context));
-    try (Scope ignored = context.makeCurrent()) {
-      delegate.call(new TracedSubscriber<>(context, subscriber, tracer));
-    }
-  }
+    /*
+    TODO: can't really call shouldStart() - couchbase async instrumentation nests CLIENT calls
+    which normally should happen in a sequence
+    InstrumentationTypes to the rescue?
 
-  protected void decorateSpan(Span span) {
-    // Subclasses can use it to provide addition attributes to the span
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      delegate.call(subscriber);
+      return;
+    }
+     */
+
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      delegate.call(new TracedSubscriber<>(subscriber, instrumenter, context, request));
+    }
   }
 }

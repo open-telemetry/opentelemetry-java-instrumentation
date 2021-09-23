@@ -15,7 +15,7 @@ final class LettuceTestUtil {
 
   static {
     def options = ClientOptions.builder()
-      // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+    // Disable autoreconnect so we do not get stray traces popping up on server shutdown
       .autoReconnect(false)
     if (Boolean.getBoolean("testLatestDeps")) {
       // Force RESP2 on 6+ for consistency in tests

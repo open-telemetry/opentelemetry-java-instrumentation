@@ -60,6 +60,7 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
   }
 
   @Override
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   protected @Nullable String flavor(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
@@ -73,17 +74,14 @@ final class OkHttpAttributesExtractor extends HttpAttributesExtractor<Request, R
         return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
       case SPDY_3:
         return SemanticAttributes.HttpFlavorValues.SPDY;
+        // No OTel mapping for other protocols like H2C.
+      default:
+        return null;
     }
-    return null;
   }
 
   @Override
   protected @Nullable String serverName(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String clientIp(Request request, @Nullable Response response) {
     return null;
   }
 

@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -56,14 +56,15 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       Context parentContext = currentContext();
-      if (isRootClientHandler && tracer().shouldStartSpan(parentContext)) {
-        context = tracer().startSpan(parentContext, request, request);
+      if (isRootClientHandler && instrumenter().shouldStart(parentContext, request)) {
+        context = instrumenter().start(parentContext, request);
         scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
+        @Advice.Argument(0) ClientRequest request,
         @Advice.Return ClientResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -73,11 +74,7 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context, response);
-      }
+      instrumenter().end(context, request, response, throwable);
     }
   }
 }

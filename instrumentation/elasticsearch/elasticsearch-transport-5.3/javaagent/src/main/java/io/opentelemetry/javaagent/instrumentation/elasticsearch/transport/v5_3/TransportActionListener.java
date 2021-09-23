@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -29,16 +30,20 @@ public class TransportActionListener<T extends ActionResponse> implements Action
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.elasticsearch.experimental-span-attributes", false);
+          .getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes", false);
 
   private final ActionListener<T> listener;
   private final Context context;
+  private final Context parentContext;
 
   public TransportActionListener(
-      ActionRequest actionRequest, ActionListener<T> listener, Context context) {
+      ActionRequest actionRequest,
+      ActionListener<T> listener,
+      Context context,
+      Context parentContext) {
     this.listener = listener;
     this.context = context;
+    this.parentContext = parentContext;
     onRequest(actionRequest);
   }
 
@@ -125,12 +130,16 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     }
 
     tracer().end(context);
-    listener.onResponse(response);
+    try (Scope ignored = parentContext.makeCurrent()) {
+      listener.onResponse(response);
+    }
   }
 
   @Override
   public void onFailure(Exception e) {
     tracer().endExceptionally(context, e);
-    listener.onFailure(e);
+    try (Scope ignored = parentContext.makeCurrent()) {
+      listener.onFailure(e);
+    }
   }
 }

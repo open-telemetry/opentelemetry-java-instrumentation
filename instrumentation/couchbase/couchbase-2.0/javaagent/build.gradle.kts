@@ -28,6 +28,9 @@ muzzle {
 }
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")

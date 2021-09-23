@@ -5,26 +5,29 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
+
+import java.time.Duration
+import java.util.concurrent.CountDownLatch
 
 abstract class AbstractSubscriptionTest extends InstrumentationSpecification {
 
   def "subscription test"() {
     when:
+    Mono<Connection> connection = Mono.create {
+      it.success(new Connection())
+    }
     CountDownLatch latch = new CountDownLatch(1)
     runWithSpan("parent") {
-      Mono<Connection> connection = Mono.create {
-        it.success(new Connection())
-      }
-      connection.subscribe {
-        it.query()
-        latch.countDown()
-      }
+      connection
+        .delayElement(Duration.ofMillis(1))
+        .subscribe {
+          it.query()
+          latch.countDown()
+        }
     }
     latch.await()
 
@@ -43,7 +46,6 @@ abstract class AbstractSubscriptionTest extends InstrumentationSpecification {
         }
       }
     }
-
   }
 
   static class Connection {

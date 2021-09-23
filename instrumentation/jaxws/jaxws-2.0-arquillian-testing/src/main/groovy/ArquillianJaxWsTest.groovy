@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -26,6 +22,10 @@ import test.EjbHelloServiceImpl
 import test.HelloService
 import test.HelloServiceImpl
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 @RunWith(ArquillianSputnik)
 @RunAsClient
 abstract class ArquillianJaxWsTest extends AgentInstrumentationSpecification {
@@ -44,8 +44,16 @@ abstract class ArquillianJaxWsTest extends AgentInstrumentationSpecification {
       .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
   }
 
+  def getContextRoot() {
+    return url.getPath()
+  }
+
+  def getServicePath(String service) {
+    service
+  }
+
   def getAddress(String service) {
-    return url.resolve(service).toString()
+    return url.resolve(getServicePath(service)).toString()
   }
 
   @Unroll
@@ -83,7 +91,7 @@ abstract class ArquillianJaxWsTest extends AgentInstrumentationSpecification {
   }
 
   def serverSpanName(String service, String operation) {
-    return service + "Impl." + operation
+    return getContextRoot() + getServicePath(service) + "/" + service + "/" + operation
   }
 
   static serverSpan(TraceAssert trace, int index, String operation, Throwable exception = null) {

@@ -5,8 +5,9 @@
 
 import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
 import io.opentelemetry.javaagent.instrumentation.internal.proxy.ProxyHelper
-import java.util.concurrent.Callable
 import spock.lang.Specification
+
+import java.util.concurrent.Callable
 
 class ProxyHelperTest extends Specification {
 

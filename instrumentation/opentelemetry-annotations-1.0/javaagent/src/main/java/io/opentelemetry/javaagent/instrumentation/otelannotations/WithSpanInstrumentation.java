@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -15,11 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
-import application.io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -92,7 +93,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            Config.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =
@@ -115,23 +116,27 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,
+        @Advice.Local("otelOperationEndSupport")
+            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
-      SpanKind kind = tracer().extractSpanKind(applicationAnnotation);
+      Instrumenter<Method, Object> instrumenter = instrumenter();
       Context current = Java8BytecodeBridge.currentContext();
 
-      // don't create a nested span if you're not supposed to.
-      if (tracer().shouldStartSpan(current, kind)) {
-        context = tracer().startSpan(current, applicationAnnotation, method, kind, null);
+      if (instrumenter.shouldStart(current, method)) {
+        context = instrumenter.start(current, method);
         scope = context.makeCurrent();
+        operationEndSupport =
+            AsyncOperationEndSupport.create(instrumenter, Object.class, method.getReturnType());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Origin Method method,
+        @Advice.Local("otelOperationEndSupport")
+            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
@@ -140,12 +145,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        returnValue = tracer().end(context, method.getReturnType(), returnValue);
-      }
+      returnValue = operationEndSupport.asyncEnd(context, method, returnValue, throwable);
     }
   }
 
@@ -156,23 +156,30 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
+        @Advice.Local("otelOperationEndSupport")
+            AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
+        @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
-      SpanKind kind = tracer().extractSpanKind(applicationAnnotation);
+      Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
       Context current = Java8BytecodeBridge.currentContext();
+      request = new MethodRequest(method, args);
 
-      // don't create a nested span if you're not supposed to.
-      if (tracer().shouldStartSpan(current, kind)) {
-        context = tracer().startSpan(current, applicationAnnotation, method, kind, args);
+      if (instrumenter.shouldStart(current, request)) {
+        context = instrumenter.start(current, request);
         scope = context.makeCurrent();
+        operationEndSupport =
+            AsyncOperationEndSupport.create(instrumenter, Object.class, method.getReturnType());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Origin Method method,
+        @Advice.Local("otelOperationEndSupport")
+            AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
+        @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
@@ -181,12 +188,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        returnValue = tracer().end(context, method.getReturnType(), returnValue);
-      }
+      returnValue = operationEndSupport.asyncEnd(context, request, returnValue, throwable);
     }
   }
 }

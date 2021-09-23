@@ -5,19 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
-import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.MetricDataType;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class HttpServerMetricsTest {
@@ -35,8 +32,6 @@ class HttpServerMetricsTest {
             .put("http.scheme", "https")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
-            .put("rpc.service", "unused")
-            .put("rpc.method", "unused")
             .build();
 
     // Currently ignored.
@@ -47,90 +42,97 @@ class HttpServerMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context context1 = listener.start(Context.current(), requestAttributes);
+    Context context1 = listener.start(Context.current(), requestAttributes, nanos(100));
 
     Collection<MetricData> metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
     assertThat(metrics)
         .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.active_requests");
-              assertThat(metric.getDescription())
-                  .isEqualTo("The number of concurrent HTTP requests that are currently in-flight");
-              assertThat(metric.getUnit()).isEqualTo("requests");
-              assertThat(metric.getType()).isEqualTo(MetricDataType.LONG_SUM);
-              assertThat(metric.getLongSumData().getPoints()).hasSize(1);
-              LongPointData data = metric.getLongSumData().getPoints().stream().findFirst().get();
-              assertThat(data.getAttributes().asMap())
-                  .containsOnly(
-                      entry(stringKey("http.host"), "host"),
-                      entry(stringKey("http.method"), "GET"),
-                      entry(stringKey("http.scheme"), "https"));
-              assertThat(data.getValue()).isEqualTo(1);
-            });
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.active_requests")
+                    .hasDescription(
+                        "The number of concurrent HTTP requests that are currently in-flight")
+                    .hasUnit("requests")
+                    .hasLongSum()
+                    .points()
+                    .satisfiesExactly(
+                        point ->
+                            assertThat(point)
+                                .hasValue(1)
+                                .attributes()
+                                .containsOnly(
+                                    attributeEntry("http.host", "host"),
+                                    attributeEntry("http.method", "GET"),
+                                    attributeEntry("http.scheme", "https"))));
 
-    Context context2 = listener.start(Context.current(), requestAttributes);
+    Context context2 = listener.start(Context.current(), requestAttributes, nanos(150));
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
     assertThat(metrics)
         .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.active_requests");
-              assertThat(metric.getLongSumData().getPoints()).hasSize(1);
-              LongPointData data = metric.getLongSumData().getPoints().stream().findFirst().get();
-              assertThat(data.getValue()).isEqualTo(2);
-            });
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.active_requests")
+                    .hasLongSum()
+                    .points()
+                    .satisfiesExactly(point -> assertThat(point).hasValue(2)));
 
-    listener.end(context1, responseAttributes);
-
-    metrics = meterProvider.collectAllMetrics();
-    assertThat(metrics).hasSize(2);
-    assertThat(metrics)
-        .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.active_requests");
-              assertThat(metric.getLongSumData().getPoints()).hasSize(1);
-              LongPointData data = metric.getLongSumData().getPoints().stream().findFirst().get();
-              assertThat(data.getValue()).isEqualTo(1);
-            });
-    assertThat(metrics)
-        .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.duration");
-              assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(1);
-              DoubleSummaryPointData data =
-                  metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
-              assertThat(data.getAttributes().asMap())
-                  .containsOnly(
-                      entry(stringKey("http.host"), "host"),
-                      entry(stringKey("http.method"), "GET"),
-                      entry(stringKey("http.scheme"), "https"),
-                      entry(stringKey("net.host.name"), "localhost"),
-                      entry(stringKey("net.host.port"), "1234"));
-              assertThat(data.getPercentileValues()).isNotEmpty();
-            });
-
-    listener.end(context2, responseAttributes);
+    listener.end(context1, responseAttributes, nanos(250));
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(2);
     assertThat(metrics)
         .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.active_requests");
-              assertThat(metric.getLongSumData().getPoints()).hasSize(1);
-              LongPointData data = metric.getLongSumData().getPoints().stream().findFirst().get();
-              assertThat(data.getValue()).isEqualTo(0);
-            });
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.active_requests")
+                    .hasLongSum()
+                    .points()
+                    .satisfiesExactly(point -> assertThat(point).hasValue(1)));
     assertThat(metrics)
         .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("http.server.duration");
-              assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(1);
-              DoubleSummaryPointData data =
-                  metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
-              assertThat(data.getPercentileValues()).isNotEmpty();
-            });
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.duration")
+                    .hasDoubleHistogram()
+                    .points()
+                    .satisfiesExactly(
+                        point ->
+                            assertThat(point)
+                                .hasSum(150 /* millis */)
+                                .attributes()
+                                .containsOnly(
+                                    attributeEntry("http.host", "host"),
+                                    attributeEntry("http.method", "GET"),
+                                    attributeEntry("http.scheme", "https"),
+                                    attributeEntry("net.host.name", "localhost"),
+                                    attributeEntry("net.host.port", 1234L))));
+
+    listener.end(context2, responseAttributes, nanos(300));
+
+    metrics = meterProvider.collectAllMetrics();
+    assertThat(metrics).hasSize(2);
+    assertThat(metrics)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.active_requests")
+                    .hasLongSum()
+                    .points()
+                    .satisfiesExactly(point -> assertThat(point).hasValue(0)));
+    assertThat(metrics)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.duration")
+                    .hasDoubleHistogram()
+                    .points()
+                    .satisfiesExactly(point -> assertThat(point).hasSum(300 /* millis */)));
+  }
+
+  private static long nanos(int millis) {
+    return TimeUnit.MILLISECONDS.toNanos(millis);
   }
 }

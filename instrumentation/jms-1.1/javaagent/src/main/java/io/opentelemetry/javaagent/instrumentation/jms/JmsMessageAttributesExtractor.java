@@ -16,6 +16,17 @@ public class JmsMessageAttributesExtractor
     extends MessagingAttributesExtractor<MessageWithDestination, Void> {
   private static final Logger logger = LoggerFactory.getLogger(JmsMessageAttributesExtractor.class);
 
+  private final MessageOperation operation;
+
+  public JmsMessageAttributesExtractor(MessageOperation operation) {
+    this.operation = operation;
+  }
+
+  @Override
+  public MessageOperation operation() {
+    return operation;
+  }
+
   @Nullable
   @Override
   protected String system(MessageWithDestination messageWithDestination) {
@@ -25,13 +36,13 @@ public class JmsMessageAttributesExtractor
   @Nullable
   @Override
   protected String destinationKind(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getDestinationKind();
+    return messageWithDestination.destinationKind();
   }
 
   @Nullable
   @Override
   protected String destination(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getDestinationName();
+    return messageWithDestination.destinationName();
   }
 
   @Override
@@ -61,7 +72,7 @@ public class JmsMessageAttributesExtractor
   @Override
   protected String conversationId(MessageWithDestination messageWithDestination) {
     try {
-      return messageWithDestination.getMessage().getJMSCorrelationID();
+      return messageWithDestination.message().getJMSCorrelationID();
     } catch (JMSException e) {
       logger.debug("Failure getting JMS correlation id", e);
       return null;
@@ -80,16 +91,11 @@ public class JmsMessageAttributesExtractor
     return null;
   }
 
-  @Override
-  protected MessageOperation operation(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.getMessageOperation();
-  }
-
   @Nullable
   @Override
   protected String messageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
-      return messageWithDestination.getMessage().getJMSMessageID();
+      return messageWithDestination.message().getJMSMessageID();
     } catch (JMSException e) {
       logger.debug("Failure getting JMS message id", e);
       return null;

@@ -6,9 +6,21 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SpanNames {
+
+  private static final ClassValue<Map<String, String>> spanNameCaches =
+      new ClassValue<Map<String, String>>() {
+        @Override
+        protected Map<String, String> computeValue(Class<?> clazz) {
+          // the cache is naturally bounded by the number of methods in a class
+          return new ConcurrentHashMap<>();
+        }
+      };
+
   /**
    * This method is used to generate a span name based on a method. Anonymous classes are named
    * based on their parent.
@@ -29,8 +41,16 @@ public final class SpanNames {
    * This method is used to generate a span name based on a method. Anonymous classes are named
    * based on their parent.
    */
-  public static String fromMethod(Class<?> cl, String methodName) {
-    return ClassNames.simpleName(cl) + "." + methodName;
+  public static String fromMethod(Class<?> clazz, String methodName) {
+    Map<String, String> spanNameCache = spanNameCaches.get(clazz);
+    // not using computeIfAbsent, because it would require a capturing (allocating) lambda
+    String spanName = spanNameCache.get(methodName);
+    if (spanName != null) {
+      return spanName;
+    }
+    spanName = ClassNames.simpleName(clazz) + "." + methodName;
+    spanNameCache.put(methodName, spanName);
+    return spanName;
   }
 
   private SpanNames() {}

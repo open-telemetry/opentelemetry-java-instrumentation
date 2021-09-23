@@ -6,10 +6,10 @@
 class WildflyJaxWsTest extends ArquillianJaxWsTest {
 
   @Override
-  def getAddress(String service) {
+  def getServicePath(String service) {
     if (service == "EjbHelloService") {
       service = "EjbHelloService/EjbHelloServiceImpl"
     }
-    return super.getAddress(service)
+    return service
   }
 }

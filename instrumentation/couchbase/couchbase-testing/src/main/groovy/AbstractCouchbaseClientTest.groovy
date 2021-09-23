@@ -71,8 +71,8 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", span(0), bucketSettings.name())
+        assertCouchbaseCall(it, 2, "Bucket.get", span(0), bucketSettings.name())
       }
     }
 
@@ -112,7 +112,7 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
       }
       trace(1, 1) {
         def dbName = bucketCouchbase.name()
-        assertCouchbaseCall(it, 0, "SELECT $dbName", dbName, null, 'SELECT mockrow')
+        assertCouchbaseCall(it, 0, "SELECT $dbName", null, dbName, 'SELECT mockrow', 'SELECT')
       }
     }
 

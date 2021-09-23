@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import com.google.auto.value.AutoValue;
 import java.time.Instant;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -14,69 +14,37 @@ import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class MessageWithDestination {
+@AutoValue
+public abstract class MessageWithDestination {
+
   // visible for tests
   static final String TIBCO_TMP_PREFIX = "$TMP$";
 
-  private final Message message;
-  private final MessageOperation messageOperation;
-  private final String destinationName;
-  private final String destinationKind;
-  private final boolean temporaryDestination;
-  private final Instant startTime;
+  public abstract Message message();
 
-  private MessageWithDestination(
-      Message message,
-      MessageOperation messageOperation,
-      String destinationName,
-      String destinationKind,
-      boolean temporary,
-      Instant startTime) {
-    this.message = message;
-    this.messageOperation = messageOperation;
-    this.destinationName = destinationName;
-    this.destinationKind = destinationKind;
-    this.temporaryDestination = temporary;
-    this.startTime = startTime;
+  public abstract String destinationName();
+
+  public abstract String destinationKind();
+
+  public abstract boolean isTemporaryDestination();
+
+  abstract Timer timer();
+
+  public Instant startTime() {
+    return timer().startTime();
   }
 
-  public Message getMessage() {
-    return message;
+  public Instant endTime() {
+    return timer().endTime();
   }
 
-  public MessageOperation getMessageOperation() {
-    return messageOperation;
-  }
-
-  public String getDestinationName() {
-    return destinationName;
-  }
-
-  public String getDestinationKind() {
-    return destinationKind;
-  }
-
-  public boolean isTemporaryDestination() {
-    return temporaryDestination;
-  }
-
-  @Nullable
-  public Instant getStartTime() {
-    return startTime;
+  public static MessageWithDestination create(Message message, Destination fallbackDestination) {
+    return create(message, fallbackDestination, Timer.start());
   }
 
   public static MessageWithDestination create(
-      Message message, MessageOperation operation, Destination fallbackDestination) {
-    return create(message, operation, fallbackDestination, null);
-  }
-
-  public static MessageWithDestination create(
-      Message message,
-      MessageOperation operation,
-      Destination fallbackDestination,
-      @Nullable Instant startTime) {
+      Message message, Destination fallbackDestination, Timer timer) {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
@@ -88,17 +56,17 @@ public final class MessageWithDestination {
     }
 
     if (jmsDestination instanceof Queue) {
-      return createMessageWithQueue(message, operation, (Queue) jmsDestination, startTime);
+      return createMessageWithQueue(message, (Queue) jmsDestination, timer);
     }
     if (jmsDestination instanceof Topic) {
-      return createMessageWithTopic(message, operation, (Topic) jmsDestination, startTime);
+      return createMessageWithTopic(message, (Topic) jmsDestination, timer);
     }
-    return new MessageWithDestination(
-        message, operation, "unknown", "unknown", /* temporary= */ false, startTime);
+    return new AutoValue_MessageWithDestination(
+        message, "unknown", "unknown", /* isTemporaryDestination= */ false, timer);
   }
 
   private static MessageWithDestination createMessageWithQueue(
-      Message message, MessageOperation operation, Queue destination, @Nullable Instant startTime) {
+      Message message, Queue destination, Timer timer) {
     String queueName;
     try {
       queueName = destination.getQueueName();
@@ -109,11 +77,11 @@ public final class MessageWithDestination {
     boolean temporary =
         destination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new MessageWithDestination(message, operation, queueName, "queue", temporary, startTime);
+    return new AutoValue_MessageWithDestination(message, queueName, "queue", temporary, timer);
   }
 
   private static MessageWithDestination createMessageWithTopic(
-      Message message, MessageOperation operation, Topic destination, @Nullable Instant startTime) {
+      Message message, Topic destination, Timer timer) {
     String topicName;
     try {
       topicName = destination.getTopicName();
@@ -124,6 +92,6 @@ public final class MessageWithDestination {
     boolean temporary =
         destination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new MessageWithDestination(message, operation, topicName, "topic", temporary, startTime);
+    return new AutoValue_MessageWithDestination(message, topicName, "topic", temporary, timer);
   }
 }

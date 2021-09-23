@@ -34,8 +34,7 @@ public abstract class AbstractNettyHttpClientTracer<REQUEST extends AbstractNett
     extends HttpClientTracer<REQUEST, HttpHeaders, HttpResponse> {
 
   private static final boolean alwaysCreateConnectSpan =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.netty.always-create-connect-span", false);
+      Config.get().getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
 
   protected AbstractNettyHttpClientTracer() {
     super(NetPeerAttributes.INSTANCE);

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -26,71 +25,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
-  static final MessagingAttributesExtractor<Map<String, String>, String> underTest =
-      new MessagingAttributesExtractor<Map<String, String>, String>() {
-        @Override
-        protected String system(Map<String, String> request) {
-          return request.get("system");
-        }
-
-        @Override
-        protected String destinationKind(Map<String, String> request) {
-          return request.get("destinationKind");
-        }
-
-        @Override
-        protected String destination(Map<String, String> request) {
-          return request.get("destination");
-        }
-
-        @Override
-        protected boolean temporaryDestination(Map<String, String> request) {
-          return request.containsKey("temporaryDestination");
-        }
-
-        @Override
-        protected String protocol(Map<String, String> request) {
-          return request.get("protocol");
-        }
-
-        @Override
-        protected String protocolVersion(Map<String, String> request) {
-          return request.get("protocolVersion");
-        }
-
-        @Override
-        protected String url(Map<String, String> request) {
-          return request.get("url");
-        }
-
-        @Override
-        protected String conversationId(Map<String, String> request) {
-          return request.get("conversationId");
-        }
-
-        @Override
-        protected Long messagePayloadSize(Map<String, String> request) {
-          String payloadSize = request.get("payloadSize");
-          return payloadSize == null ? null : Long.valueOf(payloadSize);
-        }
-
-        @Override
-        protected Long messagePayloadCompressedSize(Map<String, String> request) {
-          String payloadSize = request.get("payloadCompressedSize");
-          return payloadSize == null ? null : Long.valueOf(payloadSize);
-        }
-
-        @Override
-        protected MessageOperation operation(Map<String, String> request) {
-          String operation = request.get("operation");
-          return operation == null ? null : MessageOperation.valueOf(operation);
-        }
-
-        @Override
-        protected String messageId(Map<String, String> request, String response) {
-          return response;
-        }
-      };
 
   @ParameterizedTest
   @MethodSource("destinations")
@@ -113,14 +47,15 @@ class MessagingAttributesExtractorTest {
     request.put("conversationId", "42");
     request.put("payloadSize", "100");
     request.put("payloadCompressedSize", "10");
-    request.put("operation", operation.name());
+
+    TestMessagingAttributesExtractor underTest = new TestMessagingAttributesExtractor(operation);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, "42");
+    underTest.onEnd(endAttributes, request, "42", null);
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
@@ -152,27 +87,93 @@ class MessagingAttributesExtractorTest {
   }
 
   @Test
-  void shouldNotSetSendOperation() {
-    // when
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, singletonMap("operation", MessageOperation.SEND.name()));
-
-    // then
-    assertThat(attributes.build().isEmpty()).isTrue();
-  }
-
-  @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
+    // given
+    TestMessagingAttributesExtractor underTest =
+        new TestMessagingAttributesExtractor(MessageOperation.SEND);
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
     underTest.onStart(startAttributes, Collections.emptyMap());
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, Collections.emptyMap(), null);
+    underTest.onEnd(endAttributes, Collections.emptyMap(), null, null);
 
     // then
     assertThat(startAttributes.build().isEmpty()).isTrue();
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  static class TestMessagingAttributesExtractor
+      extends MessagingAttributesExtractor<Map<String, String>, String> {
+
+    private final MessageOperation operation;
+
+    TestMessagingAttributesExtractor(MessageOperation operation) {
+      this.operation = operation;
+    }
+
+    @Override
+    public MessageOperation operation() {
+      return operation;
+    }
+
+    @Override
+    protected String system(Map<String, String> request) {
+      return request.get("system");
+    }
+
+    @Override
+    protected String destinationKind(Map<String, String> request) {
+      return request.get("destinationKind");
+    }
+
+    @Override
+    protected String destination(Map<String, String> request) {
+      return request.get("destination");
+    }
+
+    @Override
+    protected boolean temporaryDestination(Map<String, String> request) {
+      return request.containsKey("temporaryDestination");
+    }
+
+    @Override
+    protected String protocol(Map<String, String> request) {
+      return request.get("protocol");
+    }
+
+    @Override
+    protected String protocolVersion(Map<String, String> request) {
+      return request.get("protocolVersion");
+    }
+
+    @Override
+    protected String url(Map<String, String> request) {
+      return request.get("url");
+    }
+
+    @Override
+    protected String conversationId(Map<String, String> request) {
+      return request.get("conversationId");
+    }
+
+    @Override
+    protected Long messagePayloadSize(Map<String, String> request) {
+      String payloadSize = request.get("payloadSize");
+      return payloadSize == null ? null : Long.valueOf(payloadSize);
+    }
+
+    @Override
+    protected Long messagePayloadCompressedSize(Map<String, String> request) {
+      String payloadSize = request.get("payloadCompressedSize");
+      return payloadSize == null ? null : Long.valueOf(payloadSize);
+    }
+
+    @Override
+    protected String messageId(Map<String, String> request, String response) {
+      return response;
+    }
   }
 }

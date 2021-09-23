@@ -4,10 +4,17 @@
  */
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.sdk.trace.data.SpanData
 
 class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
   @Override
-  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null, Object statement = null) {
-    CouchbaseSpanUtil.assertCouchbaseCall(trace, index, name, bucketName, parentSpan, statement)
+  void assertCouchbaseCall(TraceAssert trace,
+                           int index,
+                           Object name,
+                           SpanData parentSpan = null,
+                           String bucketName = null,
+                           Object statement = null,
+                           Object operation = null) {
+    CouchbaseSpanUtil.assertCouchbaseCall(trace, index, name, parentSpan, bucketName, statement, operation)
   }
 }

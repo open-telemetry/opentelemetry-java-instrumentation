@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4.ElasticsearchRest6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -47,25 +47,38 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener,
+        @Advice.Local("otelRequest") String otelRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context =
-          tracer()
-              .startSpan(currentContext(), null, request.getMethod() + " " + request.getEndpoint());
+      Context parentContext = currentContext();
+      otelRequest = request.getMethod() + " " + request.getEndpoint();
+      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
-      responseListener = new RestResponseListener(responseListener, context);
+      responseListener =
+          new RestResponseListener(
+              responseListener, parentContext, instrumenter(), context, otelRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") String otelRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      if (scope == null) {
+        return;
+      }
       scope.close();
+
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, otelRequest, null, throwable);
       }
       // span ended in RestResponseListener
     }

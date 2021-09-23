@@ -1037,9 +1037,9 @@ class RxJava2AsyncOperationEndStrategyTest extends Specification {
     }
 
     @Override
-    void request(long l) { }
+    void request(long l) {}
 
     @Override
-    void cancel() { }
+    void cancel() {}
   }
 }

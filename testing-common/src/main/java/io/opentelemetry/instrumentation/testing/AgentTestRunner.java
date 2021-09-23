@@ -105,4 +105,10 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
       String spanName, ThrowingSupplier<T, E> callback) throws E {
     return testInstrumenters.runWithServerSpan(spanName, callback);
   }
+
+  @Override
+  public <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
 }

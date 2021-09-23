@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientSingletons.instrumenter;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -44,27 +44,29 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
         @Advice.Local("otelContext") Context context) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
+      context = instrumenter().start(parentContext, request);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
             new StreamedAsyncHandlerWrapper(
-                (StreamedAsyncHandler<?>) asyncHandler, context, parentContext);
+                (StreamedAsyncHandler<?>) asyncHandler, request, context, parentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, context, parentContext);
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, request, context, parentContext);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
+        @Advice.Argument(0) Request request,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context) {
       if (context != null && throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
   }

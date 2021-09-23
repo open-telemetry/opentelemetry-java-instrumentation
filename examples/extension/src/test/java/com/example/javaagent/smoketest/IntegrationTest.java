@@ -38,7 +38,7 @@ abstract class IntegrationTest {
   private static final Network network = Network.newNetwork();
   protected static final String agentPath =
       System.getProperty("io.opentelemetry.smoketest.agentPath");
-  //Javaagent with extensions embedded inside it
+  // Javaagent with extensions embedded inside it
   protected static final String extendedAgentPath =
       System.getProperty("io.opentelemetry.smoketest.extendedAgentPath");
   protected static final String extensionPath =
@@ -46,38 +46,24 @@ abstract class IntegrationTest {
 
   protected abstract String getTargetImage(int jdk);
 
-  /**
-   * Subclasses can override this method to customise target application's environment
-   */
+  /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap();
   }
 
   private static GenericContainer backend;
-  private static GenericContainer collector;
 
   @BeforeAll
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-            "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210324.684269693")
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20210918.1248928123")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
             .withNetworkAliases("backend")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     backend.start();
-
-    collector =
-        new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
-            .dependsOn(backend)
-            .withNetwork(network)
-            .withNetworkAliases("collector")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-            .withCommand("--config /etc/otel.yaml");
-    collector.start();
   }
 
   protected GenericContainer<?> target;
@@ -100,19 +86,22 @@ abstract class IntegrationTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
-            //Adds instrumentation agent with debug configuration to the target application
-            .withEnv("JAVA_TOOL_OPTIONS",
+            // Adds instrumentation agent with debug configuration to the target application
+            .withEnv(
+                "JAVA_TOOL_OPTIONS",
                 "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
             .withEnv(getExtraEnv());
-    //If external extensions are requested
+    // If external extensions are requested
     if (extensionLocation != null) {
-      //Asks instrumentation agent to include extensions from given location into its runtime
-      result = result.withCopyFileToContainer(
-          MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
-          .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", extensionLocation);
+      // Asks instrumentation agent to include extensions from given location into its runtime
+      result =
+          result
+              .withCopyFileToContainer(
+                  MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
+              .withEnv("OTEL_JAVAAGENT_EXTENSIONS", extensionLocation);
     }
     return result;
   }
@@ -122,9 +111,7 @@ abstract class IntegrationTest {
     client
         .newCall(
             new Request.Builder()
-                .url(
-                    String.format(
-                        "http://localhost:%d/clear", backend.getMappedPort(8080)))
+                .url(String.format("http://localhost:%d/clear", backend.getMappedPort(8080)))
                 .build())
         .execute()
         .close();
@@ -137,17 +124,19 @@ abstract class IntegrationTest {
   @AfterAll
   static void cleanupSpec() {
     backend.stop();
-    collector.stop();
   }
 
-  protected static int countResourcesByValue(Collection<ExportTraceServiceRequest> traces,
-      String resourceName, String value) {
-    return (int) traces.stream()
-        .flatMap(it -> it.getResourceSpansList().stream())
-        .flatMap(it -> it.getResource().getAttributesList().stream())
-        .filter(
-            kv -> kv.getKey().equals(resourceName) && kv.getValue().getStringValue().equals(value))
-        .count();
+  protected static int countResourcesByValue(
+      Collection<ExportTraceServiceRequest> traces, String resourceName, String value) {
+    return (int)
+        traces.stream()
+            .flatMap(it -> it.getResourceSpansList().stream())
+            .flatMap(it -> it.getResource().getAttributesList().stream())
+            .filter(
+                kv ->
+                    kv.getKey().equals(resourceName)
+                        && kv.getValue().getStringValue().equals(value))
+            .count();
   }
 
   protected static int countSpansByName(
@@ -157,11 +146,14 @@ abstract class IntegrationTest {
 
   protected static int countSpansByAttributeValue(
       Collection<ExportTraceServiceRequest> traces, String attributeName, String attributeValue) {
-    return (int) getSpanStream(traces)
-        .flatMap(it -> it.getAttributesList().stream())
-        .filter(kv -> kv.getKey().equals(attributeName) && kv.getValue().getStringValue()
-            .equals(attributeValue))
-        .count();
+    return (int)
+        getSpanStream(traces)
+            .flatMap(it -> it.getAttributesList().stream())
+            .filter(
+                kv ->
+                    kv.getKey().equals(attributeName)
+                        && kv.getValue().getStringValue().equals(attributeValue))
+            .count();
   }
 
   protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {
