@@ -145,11 +145,15 @@ public class AgentClassLoader extends URLClassLoader {
       }
 
       definePackageIfNeeded(name);
-      return defineClass(name, bytes, 0, bytes.length, codeSource);
+      return defineClass(name, bytes);
     }
 
     // find class from agent initializer jar
     return super.findClass(name);
+  }
+
+  public Class<?> defineClass(String name, byte[] bytes) {
+    return defineClass(name, bytes, 0, bytes.length, codeSource);
   }
 
   private byte[] getJarEntryBytes(JarEntry jarEntry) throws IOException {

@@ -106,6 +106,7 @@ public class AgentInstaller {
     logVersionInfo();
     Config config = Config.get();
     if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+      setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
       installBytebuddyAgent(inst, agentListeners);
     } else {
@@ -179,6 +180,14 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     runAfterAgentListeners(agentListeners, config);
     return resettableClassFileTransformer;
+  }
+
+  private static void setupUnsafe(Instrumentation inst) {
+    try {
+      UnsafeInitializer.initialize(inst, AgentInstaller.class.getClassLoader());
+    } catch (UnsupportedClassVersionError exception) {
+      // ignore
+    }
   }
 
   private static void setBootstrapPackages(Config config) {
