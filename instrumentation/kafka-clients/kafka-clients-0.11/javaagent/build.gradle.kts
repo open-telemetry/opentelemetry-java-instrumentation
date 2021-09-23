@@ -39,10 +39,21 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
   }
 
-  named<Test>("test") {
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/KafkaClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
+  }
+
+  test {
     dependsOn(testPropagationDisabled)
+    dependsOn(testReceiveSpansDisabled)
     filter {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
       isFailOnNoMatchingTests = false
     }
   }
