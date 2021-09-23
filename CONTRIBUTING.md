@@ -65,3 +65,16 @@ See [Debugging](docs/contributing/debugging.md)
 ### Understanding Muzzle
 
 See [Understanding Muzzle](docs/contributing/muzzle.md)
+
+### Troubleshooting PR build failures
+
+The build logs are very long and there is a lot of parallelization, so the logs can be hard to
+decipher, but if you scroll to the bottom you should see something like:
+
+```
+Publishing build scan...
+https://gradle.com/s/ila4qwp5lcf5s
+```
+
+Opening the build scan link can sometimes take several seconds (it's a large build), but it
+typically makes it a lot clearer what's failing.
