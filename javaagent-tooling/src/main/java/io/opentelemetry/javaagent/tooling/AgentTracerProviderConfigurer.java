@@ -11,7 +11,8 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
-import io.opentelemetry.sdk.autoconfigure.spi.SdkTracerProviderConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.traces.SdkTracerProviderConfigurer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -38,7 +39,8 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
   private static final String ADD_THREAD_DETAILS = "otel.javaagent.add-thread-details";
 
   @Override
-  public void configure(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
+  public void configure(
+      SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
     if (!Config.get().getBoolean(OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG, true)) {
       return;
     }

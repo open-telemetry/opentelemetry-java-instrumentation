@@ -33,8 +33,6 @@ public class KafkaBatchProcessSpanLinksExtractor
 
     // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though there's
     // no current CONSUMER span
-    // this instrumentation will create CONSUMER receive spans for each record instead of
-    // kafka-clients
     if (it instanceof KafkaConsumerIteratorWrapper) {
       it = ((KafkaConsumerIteratorWrapper<?, ?>) it).unwrap();
     }

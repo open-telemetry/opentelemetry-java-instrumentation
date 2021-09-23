@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.caching;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -13,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class CacheBuilder {
 
   private static final long UNSET = -1;
+  private static final boolean USE_CAFFEINE_3 = Caffeine3Cache.available();
 
   private boolean weakKeys;
   private boolean weakValues;
@@ -51,7 +51,8 @@ public final class CacheBuilder {
     if (weakKeys && !weakValues && maximumSize == UNSET) {
       return new WeakLockFreeCache<>();
     }
-    Caffeine<?, ?> caffeine = Caffeine.newBuilder();
+    CaffeineCache.Builder<K, V> caffeine =
+        USE_CAFFEINE_3 ? new Caffeine3Cache.Builder<>() : new Caffeine2Cache.Builder<>();
     if (weakKeys) {
       caffeine.weakKeys();
     }
@@ -66,10 +67,7 @@ public final class CacheBuilder {
     } else {
       caffeine.executor(Runnable::run);
     }
-    @SuppressWarnings("unchecked")
-    com.github.benmanes.caffeine.cache.Cache<K, V> delegate =
-        (com.github.benmanes.caffeine.cache.Cache<K, V>) caffeine.build();
-    return new CaffeineCache<>(delegate);
+    return caffeine.build();
   }
 
   CacheBuilder() {}

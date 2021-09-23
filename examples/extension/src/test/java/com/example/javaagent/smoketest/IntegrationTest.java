@@ -52,30 +52,18 @@ abstract class IntegrationTest {
   }
 
   private static GenericContainer backend;
-  private static GenericContainer collector;
 
   @BeforeAll
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-                "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210324.684269693")
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20210918.1248928123")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
             .withNetworkAliases("backend")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     backend.start();
-
-    collector =
-        new GenericContainer<>("otel/opentelemetry-collector-contrib-dev:latest")
-            .dependsOn(backend)
-            .withNetwork(network)
-            .withNetworkAliases("collector")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-            .withCommand("--config /etc/otel.yaml");
-    collector.start();
   }
 
   protected GenericContainer<?> target;
@@ -136,7 +124,6 @@ abstract class IntegrationTest {
   @AfterAll
   static void cleanupSpec() {
     backend.stop();
-    collector.stop();
   }
 
   protected static int countResourcesByValue(

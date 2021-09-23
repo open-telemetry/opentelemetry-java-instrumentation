@@ -1,5 +1,108 @@
 # Changelog
 
+## Version 1.6.0 - 2021-09-18
+
+### 🌟 New javaagent instrumentation
+
+- Add instrumentation for Quartz 2.0
+  ([#4017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4017))
+- Restlet instrumentation
+  ([#3946](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3946))
+
+### 🌟 New library instrumentation
+
+- Add instrumentation for Quartz 2.0
+  ([#4017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4017))
+- Restlet instrumentation
+  ([#3946](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3946))
+
+### 📈 Enhancements
+
+- Extract Jedis 3 net attributes from InetSocketAddress
+  ([#3912](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3912))
+- Add option to suppress controller and view spans
+  ([#3865](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3865))
+- Capture http.user_agent for AsyncHttpClient
+  ([#3930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3930))
+- Instrument spring-kafka batch message listeners
+  ([#3922](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3922))
+- Use unsafe to inject classes to the bootstrap class loader
+  ([#4026](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4026))
+- Some performance optimizations
+  ([#4004](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4004),
+  [#4006](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4006),
+  [#4008](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4008),
+  [#4013](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4013),
+  [#4014](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4014))
+- Do not fallback to net attributes for http.client_ip
+  ([#4063](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4063))
+- Start a CONSUMER span for Kafka poll()
+  ([#4041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4041))
+- Support otlp http exporter
+  ([#4068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4068))
+- Better grpc events
+  ([#4098](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4098))
+
+### 🛠️ Bug fixes
+
+- Bridge span keys defined in instrumentation-api
+  ([#3911](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3911))
+- Hide generated fields and methods from reflection
+  ([#3948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3948))
+- Remove invalid message header
+  ([#3958](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3958))
+- Fix memleak in the Netty ChannelPipeline instrumentation
+  ([#4053](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4053))
+- Fix grpc instrumentation of callbacks
+  ([#4097](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4097))
+- Bridge trace builder
+  ([#4090](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4090))
+- Remove original handler when removelast in netty
+  ([#4123](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4123))
+
+### 🧰 Tooling
+
+- Deprecate old extensions
+  ([#3825](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3825))
+- Add request parameter to EndTimeExtractor
+  ([#3947](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3947))
+- Make Config behave exactly as SDK DefaultConfigProperties
+  ([#4035](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4035))
+- Fix extension shading
+  ([#4064](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4064))
+- Add error parameter to EndTimeExtractor and AttributesExtractor#onEnd()
+  ([#3988](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3988))
+- Allow adding multiple ContextStore fields to one key class
+  ([#4067](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4067),
+  [#4084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4084),
+  [#4110](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4110))
+
+## Version 1.5.3 - 2021-08-31
+
+### 🛠️ Bug fixes
+
+- Fix parsing of unclean map values in Config
+  ([#4032](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4032))
+
+## Version 1.5.2 - 2021-08-27
+
+### 🛠️ Bug fixes
+
+- Fix unbounded metrics cardinality, which in particular causes memory leak when not using any
+  metrics exporter
+  ([#3972](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3972))
+
+## Version 1.5.1 - 2021-08-25
+
+### 🛠️ Bug fixes
+
+- Fix broken Android level 21-25 support in OkHttp 3 library instrumentation
+  ([#3910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3910))
+- Fix maven central pom file for the opentelemetry-javaagent artifact
+  ([#3929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3929))
+- Fix maven central pom file for the opentelemetry-agent-for-testing artifact
+  ([#3935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3935))
+
 ## Version 1.5.0 - 2021-08-22
 
 ### 🌟 New library instrumentation
@@ -21,7 +124,7 @@
   ([#3681](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3681))
 - Sanitize SQL in Apache Camel instrumentation
   ([#3683](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3683),
-   [#3717](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3717))
+  [#3717](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3717))
 - Add option to create span on new netty connection
   ([#3707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3707))
 - Propagate context into jdk http client callback
@@ -42,7 +145,7 @@
   ([#3851](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3851))
 - Propagate context to elasticsearch callbacks
   ([#3858](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3858),
-   [#3861](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3861))
+  [#3861](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3861))
 - Added Vertx http client 4 instrumentation
   ([#3665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3665))
 - Make empty agent bridged context equal root context
@@ -52,7 +155,7 @@
 
 - Fix OkHttp 3 correlation when using callback under concurrency
   ([#3669](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3669),
-   [#3676](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3676))
+  [#3676](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3676))
 - Fix Netty span not captured on read timeout
   ([#3613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3613))
 - Fix Netty connection failure handling when listener is lambda
@@ -69,7 +172,7 @@
   ([#3809](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3809))
 - Fix jetty httpclient returning empty response when instrumented
   ([#3831](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3831),
-   [#3833](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3833))
+  [#3833](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3833))
 - Don't clobber user decorators in Armeria client instrumentation
   ([#3873](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3873))
 - Use valid Java identifiers for message keys
@@ -87,7 +190,7 @@
   ([#3604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3604))
 - Publish muzzle plugins to Gradle Plugin Portal
   ([#3720](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3720),
-   [#3763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3763))
+  [#3763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3763))
 - Fill `http.client_ip` in ServerInstrumenter
   ([#3756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3756))
 - Fix printMuzzleReferences gradle task
@@ -156,7 +259,7 @@
   ([#3380](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3380))
 - Exclude duplicate classes from final jars
   ([#3432](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3432),
-   [#3430](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3430))
+  [#3430](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3430))
 - Port AsyncSpanEndStrategy to Instrumenter API
   ([#3262](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3262))
 - Rename `opentelemetry-javaagent-api` artifact to `opentelemetry-javaagent-instrumentation-api`
@@ -210,9 +313,9 @@
   ([#3194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3194))
 - New experimental support for agent extensions
   ([#2881](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2881),
-   [#3071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3071),
-   [#3226](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3226),
-   [#3237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3237))
+  [#3071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3071),
+  [#3226](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3226),
+  [#3237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3237))
 - Propagate context to akka http callbacks
   ([#3263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3263))
 
@@ -249,7 +352,7 @@
 
 - Migrate MuzzlePlugin to Java
   ([#2996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2996),
-   [#3017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3017))
+  [#3017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3017))
 - Refactor TypeInstrumentation#transformers() method
   ([#3019](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3019))
 - Change a couple of Longs to Integers in Instrumenter API
@@ -357,13 +460,20 @@
   ([#2870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2870))
 - Extracted javaagent-extension-api from tooling & spi
   ([#2879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2879))
-  - You no longer have to depend on the `javaagent-tooling` module to implement custom instrumentations: a new `javaagent-extension-api` module was introduced, containing all the necessary instrumentation classes and interfaces;
-  - `InstrumentationModule` and `TypeInstrumentation` were moved to the `io.opentelemetry.javaagent.extension.instrumentation` package;
-  - `AgentElementMatchers`, `ClassLoaderMatcher` and `NameMatchers` were moved to the `io.opentelemetry.javaagent.extension.matcher` package;
+  - You no longer have to depend on the `javaagent-tooling` module to implement custom
+    instrumentations: a new `javaagent-extension-api` module was introduced, containing all the
+    necessary instrumentation classes and interfaces;
+  - `InstrumentationModule` and `TypeInstrumentation` were moved to
+    the `io.opentelemetry.javaagent.extension.instrumentation` package;
+  - `AgentElementMatchers`, `ClassLoaderMatcher` and `NameMatchers` were moved to
+    the `io.opentelemetry.javaagent.extension.matcher` package;
   - A new SPI `AgentExtension` was introduced: it replaces `ByteBuddyAgentCustomizer`;
   - `InstrumentationModule#getOrder()` was renamed to `order()`;
-  - `InstrumentationModule#additionalHelperClassNames()` has been removed; use `isHelperClass(String)` instead if you use the muzzle compile plugin. If you're not using muzzle, you can override `getMuzzleHelperClassNames()` directly instead;
-  - `InstrumentationModule#getAllHelperClassNames()` has been removed; you can call `getMuzzleHelperClassNames()` to retrieve all helper class names instead.
+  - `InstrumentationModule#additionalHelperClassNames()` has been removed;
+    use `isHelperClass(String)` instead if you use the muzzle compile plugin. If you're not using
+    muzzle, you can override `getMuzzleHelperClassNames()` directly instead;
+  - `InstrumentationModule#getAllHelperClassNames()` has been removed; you can
+    call `getMuzzleHelperClassNames()` to retrieve all helper class names instead.
 
 ## Version 1.1.0 - 2021-04-14
 

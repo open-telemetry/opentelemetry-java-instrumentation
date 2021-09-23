@@ -15,7 +15,7 @@ abstract class PropagationTest extends SmokeTest {
 
   @Override
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
   }
 
   def "Should propagate test"() {
@@ -82,7 +82,7 @@ class JaegerPropagationTest extends PropagationTest {
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
   }
 
   // OtTracer only propagates lower half of trace ID so we have to mangle the trace IDs similar to

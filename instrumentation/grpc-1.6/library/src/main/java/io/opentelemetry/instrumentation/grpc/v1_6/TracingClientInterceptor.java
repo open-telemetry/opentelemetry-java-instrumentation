@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.GrpcInjectAdapter.SETTE
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
-import io.grpc.ClientCall.Listener;
 import io.grpc.ClientInterceptor;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
@@ -30,8 +29,8 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 final class TracingClientInterceptor implements ClientInterceptor {
 
   @SuppressWarnings("rawtypes")
-  private static final AtomicLongFieldUpdater<TracingClientCallListener> MESSAGE_ID_UPDATER =
-      AtomicLongFieldUpdater.newUpdater(TracingClientCallListener.class, "messageId");
+  private static final AtomicLongFieldUpdater<TracingClientCall> MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "messageId");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
@@ -72,6 +71,10 @@ final class TracingClientInterceptor implements ClientInterceptor {
     private final Context context;
     private final GrpcRequest request;
 
+    // Used by MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long messageId;
+
     TracingClientCall(
         ClientCall<REQUEST, RESPONSE> delegate,
         Context parentContext,
@@ -88,7 +91,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       propagators.getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = context.makeCurrent()) {
         super.start(
-            new TracingClientCallListener<>(responseListener, parentContext, context, request),
+            new TracingClientCallListener(responseListener, parentContext, context, request),
             headers);
       } catch (Throwable e) {
         instrumenter.end(context, request, null, e);
@@ -104,30 +107,6 @@ final class TracingClientInterceptor implements ClientInterceptor {
         instrumenter.end(context, request, null, e);
         throw e;
       }
-    }
-  }
-
-  final class TracingClientCallListener<RESPONSE>
-      extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
-
-    private final Context parentContext;
-    private final Context context;
-    private final GrpcRequest request;
-
-    // Used by MESSAGE_ID_UPDATER
-    @SuppressWarnings("UnusedVariable")
-    volatile long messageId;
-
-    TracingClientCallListener(
-        Listener<RESPONSE> delegate, Context parentContext, Context context, GrpcRequest request) {
-      super(delegate);
-      this.parentContext = parentContext;
-      this.context = context;
-      this.request = request;
-    }
-
-    @Override
-    public void onMessage(RESPONSE message) {
       Span span = Span.fromContext(context);
       Attributes attributes =
           Attributes.of(
@@ -136,29 +115,54 @@ final class TracingClientInterceptor implements ClientInterceptor {
               GrpcHelper.MESSAGE_ID,
               MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
-      try (Scope ignored = context.makeCurrent()) {
-        delegate().onMessage(message);
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
-      }
     }
 
-    @Override
-    public void onClose(Status status, Metadata trailers) {
-      instrumenter.end(context, request, status, status.getCause());
-      try (Scope ignored = parentContext.makeCurrent()) {
-        delegate().onClose(status, trailers);
-      }
-    }
+    final class TracingClientCallListener
+        extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
 
-    @Override
-    public void onReady() {
-      try (Scope ignored = context.makeCurrent()) {
-        delegate().onReady();
-      } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
-        throw e;
+      private final Context parentContext;
+      private final Context context;
+      private final GrpcRequest request;
+
+      TracingClientCallListener(
+          Listener<RESPONSE> delegate,
+          Context parentContext,
+          Context context,
+          GrpcRequest request) {
+        super(delegate);
+        this.parentContext = parentContext;
+        this.context = context;
+        this.request = request;
+      }
+
+      @Override
+      public void onMessage(RESPONSE message) {
+        Span span = Span.fromContext(context);
+        Attributes attributes =
+            Attributes.of(
+                GrpcHelper.MESSAGE_TYPE,
+                "RECEIVED",
+                GrpcHelper.MESSAGE_ID,
+                MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this));
+        span.addEvent("message", attributes);
+        try (Scope ignored = context.makeCurrent()) {
+          delegate().onMessage(message);
+        }
+      }
+
+      @Override
+      public void onClose(Status status, Metadata trailers) {
+        instrumenter.end(context, request, status, status.getCause());
+        try (Scope ignored = parentContext.makeCurrent()) {
+          delegate().onClose(status, trailers);
+        }
+      }
+
+      @Override
+      public void onReady() {
+        try (Scope ignored = context.makeCurrent()) {
+          delegate().onReady();
+        }
       }
     }
   }

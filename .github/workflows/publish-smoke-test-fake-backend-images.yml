@@ -1,0 +1,115 @@
+name: Publish fake backend images for smoke tests
+
+on:
+  push:
+    paths:
+      - 'smoke-tests/fake-backend/**'
+      - '.github/workflows/publish-smoke-test-fake-backend-images.yml'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publishLinux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache gradle dependencies
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: fakebackend-smoke
+          read-only: true
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v1.10.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
+          echo "Using extra tag $TAG"
+          ./gradlew jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=$TAG
+        working-directory: smoke-tests/fake-backend
+
+  publishWindows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache gradle dependencies
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: fakebackend-smoke
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Login to GitHub Package Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
+          echo "Using extra tag $TAG"
+          ./gradlew dockerPush -PextraTag=$TAG
+        working-directory: smoke-tests/fake-backend
+
+  issue:
+    name: Open issue on failure
+    needs: [ publishLinux, publishWindows ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2.2
+
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - uses: JasonEtco/create-an-issue@v2.5.0
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/templates/smoke-test-image-publishing-failed.md

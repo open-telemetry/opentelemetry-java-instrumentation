@@ -5,16 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.naming.ServletMappingResolverFactory;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import java.util.Collection;
 
-public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory
-    implements ContextStore.Factory<MappingResolver> {
+public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;
 
   public JakartaServletMappingResolverFactory(ServletConfig servletConfig) {

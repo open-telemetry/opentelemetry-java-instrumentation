@@ -64,7 +64,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
       ChannelTraceContext channelTraceContext =
-          contextStore.putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE);
+          contextStore.putIfAbsent(future.getChannel(), ChannelTraceContext.FACTORY);
       Context parentContext = channelTraceContext.getConnectionContext();
       if (parentContext == null) {
         return null;

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ public final class PropagatedContext {
   private static final AtomicReferenceFieldUpdater<PropagatedContext, Context> contextUpdater =
       AtomicReferenceFieldUpdater.newUpdater(PropagatedContext.class, Context.class, "context");
 
-  static final ContextStore.Factory<PropagatedContext> FACTORY = PropagatedContext::new;
+  static final Supplier<PropagatedContext> FACTORY = PropagatedContext::new;
 
   // Used by AtomicReferenceFieldUpdater
   @SuppressWarnings("UnusedVariable")

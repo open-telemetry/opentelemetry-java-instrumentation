@@ -23,7 +23,7 @@ val versions: Map<String, String> by project
 dependencies {
   compileOnly("org.elasticsearch.client:rest:5.0.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:library"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))

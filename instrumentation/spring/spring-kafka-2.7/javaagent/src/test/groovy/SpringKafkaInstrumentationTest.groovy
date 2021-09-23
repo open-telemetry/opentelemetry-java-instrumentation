@@ -69,7 +69,7 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    assertTraces(3) {
+    assertTraces(2) {
       traces.sort(orderByRootSpanName("producer", "testTopic receive", "testTopic process"))
 
       SpanData producer1, producer2
@@ -102,7 +102,7 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
         producer1 = span(1)
         producer2 = span(2)
       }
-      trace(1, 1) {
+      trace(1, 3) {
         span(0) {
           name "testTopic receive"
           kind CONSUMER
@@ -114,11 +114,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
-      }
-      trace(2, 2) {
-        span(0) {
+        span(1) {
           name "testTopic process"
           kind CONSUMER
+          childOf span(0)
           hasLink producer1
           hasLink producer2
           attributes {
@@ -128,9 +127,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
         }
-        span(1) {
+        span(2) {
           name "consumer"
-          childOf span(0)
+          childOf span(1)
         }
       }
     }
@@ -148,8 +147,8 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    assertTraces(3) {
-      traces.sort(orderByRootSpanName("producer", "testTopic receive", "testTopic process"))
+    assertTraces(2) {
+      traces.sort(orderByRootSpanName("producer", "testTopic receive"))
 
       SpanData producer
 
@@ -170,7 +169,7 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
         producer = span(1)
       }
-      trace(1, 1) {
+      trace(1, 3) {
         span(0) {
           name "testTopic receive"
           kind CONSUMER
@@ -182,11 +181,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
-      }
-      trace(2, 2) {
-        span(0) {
+        span(1) {
           name "testTopic process"
           kind CONSUMER
+          childOf span(0)
           hasLink producer
           status ERROR
           errorEvent IllegalArgumentException, "boom"
@@ -197,9 +195,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
         }
-        span(1) {
+        span(2) {
           name "consumer"
-          childOf span(0)
+          childOf span(1)
         }
       }
     }

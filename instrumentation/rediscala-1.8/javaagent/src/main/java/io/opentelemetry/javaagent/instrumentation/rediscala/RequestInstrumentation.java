@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rediscala;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -62,23 +62,34 @@ public class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), cmd, cmd);
+
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, cmd)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, cmd);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    public static void onExit(
+        @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable,
         @Advice.FieldValue("executionContext") ExecutionContext ctx,
         @Advice.Return(readOnly = false) Future<Object> responseFuture) {
+
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, cmd, null, throwable);
       } else {
-        responseFuture.onComplete(new OnCompleteHandler(context), ctx);
+        responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
       }
     }
   }

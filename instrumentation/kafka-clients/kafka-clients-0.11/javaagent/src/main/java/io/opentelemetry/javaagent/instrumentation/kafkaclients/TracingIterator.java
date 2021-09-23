@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerProcessInstrumenter;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
@@ -18,10 +20,6 @@ public class TracingIterator<K, V>
     implements Iterator<ConsumerRecord<K, V>>, KafkaConsumerIteratorWrapper<K, V> {
 
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
-  // TODO: use the context extracted from ConsumerRecords (receive context) as the parent span
-  // for that to work properly we'd have to modify the consumer span suppression strategy to
-  // differentiate between receive and process consumer spans - right now if we were to pass the
-  // receive context to this instrumentation it'd be suppressed
   private final Context parentContext;
 
   /*
@@ -32,9 +30,16 @@ public class TracingIterator<K, V>
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  public TracingIterator(Iterator<ConsumerRecord<K, V>> delegateIterator) {
+  public TracingIterator(
+      Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable SpanContext receiveSpanContext) {
     this.delegateIterator = delegateIterator;
-    parentContext = Context.current();
+
+    // use the receive CONSUMER span as parent if it's available
+    Context parentContext = Context.current();
+    if (receiveSpanContext != null) {
+      parentContext = parentContext.with(Span.wrap(receiveSpanContext));
+    }
+    this.parentContext = parentContext;
   }
 
   @Override

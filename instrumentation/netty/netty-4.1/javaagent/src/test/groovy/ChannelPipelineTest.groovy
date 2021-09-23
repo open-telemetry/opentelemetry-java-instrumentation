@@ -87,6 +87,48 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     "by name"     | { pipeline, oldName, oldHandler, newName, newHandler -> pipeline.replace(oldName, newName, newHandler) }
   }
 
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4056
+  def "should addAfter and removeLast handler #desc"() {
+    setup:
+    def channel = new EmbeddedChannel()
+    def channelPipeline = new DefaultChannelPipeline(channel)
+    def httpHandler = new HttpClientCodec()
+
+    expect: "no handlers initially"
+    channelPipeline.size() == 0
+
+    when:
+    channelPipeline.addLast("http", httpHandler)
+
+    then: "add http and instrumentation handlers"
+    channelPipeline.size() == 2
+    channelPipeline.first() == httpHandler
+    channelPipeline.last().getClass() == HttpClientTracingHandler
+
+    when:
+    def noopHandler = new NoopChannelHandler()
+    channelPipeline.addAfter("http", "noop", noopHandler)
+
+    then: "instrumentation handler is between with http and noop"
+    channelPipeline.size() == 3
+    channelPipeline.first() == httpHandler
+    channelPipeline.last() == noopHandler
+
+    when:
+    channelPipeline.removeLast()
+
+    then: "http and instrumentation handlers will be remained"
+    channelPipeline.size() == 2
+    channelPipeline.first() == httpHandler
+    channelPipeline.last().getClass() == HttpClientTracingHandler
+
+    when:
+    channelPipeline.removeLast()
+
+    then: "there is no handler in pipeline"
+    channelPipeline.size() == 0
+  }
+
   private static class NoopChannelHandler extends ChannelHandlerAdapter {
   }
 }

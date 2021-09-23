@@ -14,15 +14,8 @@ import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesAdapter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
-import io.opentelemetry.sdk.autoconfigure.spi.SdkMeterProviderConfigurer;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorFactory;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
-import io.opentelemetry.sdk.metrics.view.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.view.View;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,29 +59,6 @@ public class OpenTelemetryInstaller implements AgentListener {
 
     } else {
       logger.info("Tracing is disabled.");
-    }
-  }
-
-  // Configure histogram metrics similarly to how the SDK will default in 1.5.0 for early feedback.
-  @AutoService(SdkMeterProviderConfigurer.class)
-  public static final class OpenTelemetryMetricsConfigurer implements SdkMeterProviderConfigurer {
-
-    @Override
-    public void configure(SdkMeterProviderBuilder sdkMeterProviderBuilder) {
-      sdkMeterProviderBuilder.registerView(
-          InstrumentSelector.builder()
-              .setInstrumentNameRegex(".*duration")
-              .setInstrumentType(InstrumentType.HISTOGRAM)
-              .build(),
-          // Histogram buckets the same as the metrics prototype/prometheus.
-          View.builder()
-              .setAggregatorFactory(
-                  AggregatorFactory.histogram(
-                      Arrays.asList(
-                          5d, 10d, 25d, 50d, 75d, 100d, 250d, 500d, 750d, 1_000d, 2_500d, 5_000d,
-                          7_500d, 10_000d),
-                      AggregationTemporality.CUMULATIVE))
-              .build());
     }
   }
 }

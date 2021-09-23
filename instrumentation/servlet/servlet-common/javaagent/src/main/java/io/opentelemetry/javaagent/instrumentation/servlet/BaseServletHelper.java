@@ -19,12 +19,14 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
+import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
+  private final Function<REQUEST, String> contextPathExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -32,6 +34,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.instrumenter = instrumenter;
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
+    this.contextPathExtractor = accessor::getRequestContextPath;
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -67,12 +70,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return context;
   }
 
-  private Context addServletContextPath(Context context, REQUEST request) {
-    String contextPath = accessor.getRequestContextPath(request);
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
-    }
-    return context;
+  protected Context addServletContextPath(Context context, REQUEST request) {
+    return ServletContextPath.init(context, contextPathExtractor, request);
   }
 
   public Context getServerContext(REQUEST request) {
@@ -88,27 +87,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     AppServerBridge.recordException(context, throwable);
   }
 
-  /**
-   * When server spans are managed by app server instrumentation we need to add context path of
-   * current request to context if it isn't already added. Servlet instrumentation adds it when it
-   * starts server span.
-   */
-  public Context updateContext(Context context, REQUEST request) {
-    String contextPath = context.get(ServletContextPath.CONTEXT_KEY);
-    if (contextPath == null) {
-      context = addServletContextPath(context, request);
-    }
-
-    return context;
-  }
-
   public Context updateContext(
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     ServerSpanNaming.updateServerSpanName(
         context,
         servlet ? SERVLET : FILTER,
         () -> spanNameProvider.getSpanNameOrNull(mappingResolver, request));
-    return updateContext(context, request);
+    return addServletContextPath(context, request);
   }
 
   /*

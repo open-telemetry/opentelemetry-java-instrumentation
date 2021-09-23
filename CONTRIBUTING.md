@@ -34,9 +34,9 @@ and then you can find the java agent artifact at
 
 `javaagent/build/libs/opentelemetry-javaagent-<version>.jar`.
 
-### IntelliJ setup
+### IntelliJ setup and troubleshooting
 
-See [IntelliJ setup](docs/contributing/intellij-setup.md)
+See [IntelliJ setup and troubleshooting](docs/contributing/intellij-setup-and-troubleshooting.md)
 
 ### Style guide
 
