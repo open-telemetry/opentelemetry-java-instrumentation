@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
@@ -46,6 +47,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -103,6 +105,16 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
       SpanLinksExtractor<REQUEST> spanLinksExtractor) {
     spanLinksExtractors.add(spanLinksExtractor);
+    return this;
+  }
+
+  /**
+   * Adds a {@link ContextCustomizer} to customize the context during {@link
+   * Instrumenter#start(Context, Object)}.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
+      ContextCustomizer<? super REQUEST> contextCustomizer) {
+    contextCustomizers.add(contextCustomizer);
     return this;
   }
 

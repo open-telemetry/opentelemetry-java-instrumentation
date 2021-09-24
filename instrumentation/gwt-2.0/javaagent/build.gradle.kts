@@ -23,8 +23,6 @@ sourceSets {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   // these are needed for compileGwt task
   if (findProperty("testLatestDeps") as Boolean) {
@@ -41,7 +39,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
-  testImplementation("org.testcontainers:selenium:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:selenium")
   testImplementation("org.seleniumhq.selenium:selenium-java:3.141.59")
 
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")

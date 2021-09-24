@@ -60,16 +60,14 @@ public final class HttpClientMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes) {
-    long startTimeNanos = System.nanoTime();
-
+  public Context start(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         HTTP_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_HttpClientMetrics_State(startAttributes, startTimeNanos));
+        new AutoValue_HttpClientMetrics_State(startAttributes, startNanos));
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes) {
+  public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
@@ -77,7 +75,7 @@ public final class HttpClientMetrics implements RequestListener {
       return;
     }
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS,
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
         applyDurationView(state.startAttributes()));
   }
 

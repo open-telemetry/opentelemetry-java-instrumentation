@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper class for finding a mapping that matches current request from a collection of mappings.
@@ -55,7 +56,8 @@ public final class MappingResolver {
   }
 
   /** Find mapping for requested path. */
-  public String resolve(String servletPath, String pathInfo) {
+  @Nullable
+  public String resolve(@Nullable String servletPath, @Nullable String pathInfo) {
     if (servletPath == null) {
       return null;
     }

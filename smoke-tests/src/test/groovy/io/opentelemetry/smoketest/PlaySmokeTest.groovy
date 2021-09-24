@@ -12,7 +12,7 @@ import spock.lang.IgnoreIf
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-play-jdk$jdk-20210915.1238703013"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20210917.1246460868"
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {

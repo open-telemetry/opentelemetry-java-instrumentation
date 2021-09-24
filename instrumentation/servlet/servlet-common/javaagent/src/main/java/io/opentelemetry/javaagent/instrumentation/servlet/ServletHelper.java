@@ -5,13 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 
@@ -21,12 +17,6 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletAccessor<REQUEST, RESPONSE> accessor) {
     super(instrumenter, accessor);
-  }
-
-  public Context start(
-      Context parentContext, ServletRequestContext<REQUEST> requestContext, boolean servlet) {
-    ServerSpanNaming.Source namingSource = servlet ? SERVLET : FILTER;
-    return start(parentContext, requestContext, namingSource);
   }
 
   public void end(

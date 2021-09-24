@@ -149,7 +149,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "SET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SET"
           }
         }
       }
@@ -170,7 +169,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "GET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
         }
       }
@@ -191,7 +189,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "GET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
         }
       }
@@ -212,7 +209,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "RANDOMKEY"
-            "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
           }
         }
       }
@@ -233,7 +229,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "LPUSH"
-            "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH"
           }
         }
       }
@@ -254,7 +249,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "HMSET"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HMSET"
           }
         }
       }
@@ -275,7 +269,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "HGETALL"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL"
           }
         }
       }
@@ -295,7 +288,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "DEBUG"
-            "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG"
           }
         }
       }
@@ -315,7 +307,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_OPERATION.key}" "SHUTDOWN"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN"
           }
         }
       }

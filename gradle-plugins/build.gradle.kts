@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.18")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")

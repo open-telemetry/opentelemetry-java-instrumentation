@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class HttpServerMetricsTest {
@@ -41,7 +42,7 @@ class HttpServerMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context context1 = listener.start(Context.current(), requestAttributes);
+    Context context1 = listener.start(Context.current(), requestAttributes, nanos(100));
 
     Collection<MetricData> metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
@@ -65,7 +66,7 @@ class HttpServerMetricsTest {
                                     attributeEntry("http.method", "GET"),
                                     attributeEntry("http.scheme", "https"))));
 
-    Context context2 = listener.start(Context.current(), requestAttributes);
+    Context context2 = listener.start(Context.current(), requestAttributes, nanos(150));
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(1);
@@ -78,7 +79,7 @@ class HttpServerMetricsTest {
                     .points()
                     .satisfiesExactly(point -> assertThat(point).hasValue(2)));
 
-    listener.end(context1, responseAttributes);
+    listener.end(context1, responseAttributes, nanos(250));
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(2);
@@ -98,19 +99,18 @@ class HttpServerMetricsTest {
                     .hasDoubleHistogram()
                     .points()
                     .satisfiesExactly(
-                        point -> {
-                          assertThat(point.getSum()).isPositive();
-                          assertThat(point)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("http.host", "host"),
-                                  attributeEntry("http.method", "GET"),
-                                  attributeEntry("http.scheme", "https"),
-                                  attributeEntry("net.host.name", "localhost"),
-                                  attributeEntry("net.host.port", 1234L));
-                        }));
+                        point ->
+                            assertThat(point)
+                                .hasSum(150 /* millis */)
+                                .attributes()
+                                .containsOnly(
+                                    attributeEntry("http.host", "host"),
+                                    attributeEntry("http.method", "GET"),
+                                    attributeEntry("http.scheme", "https"),
+                                    attributeEntry("net.host.name", "localhost"),
+                                    attributeEntry("net.host.port", 1234L))));
 
-    listener.end(context2, responseAttributes);
+    listener.end(context2, responseAttributes, nanos(300));
 
     metrics = meterProvider.collectAllMetrics();
     assertThat(metrics).hasSize(2);
@@ -129,6 +129,10 @@ class HttpServerMetricsTest {
                     .hasName("http.server.duration")
                     .hasDoubleHistogram()
                     .points()
-                    .satisfiesExactly(point -> assertThat(point.getSum()).isPositive()));
+                    .satisfiesExactly(point -> assertThat(point).hasSum(300 /* millis */)));
+  }
+
+  private static long nanos(int millis) {
+    return TimeUnit.MILLISECONDS.toNanos(millis);
   }
 }
