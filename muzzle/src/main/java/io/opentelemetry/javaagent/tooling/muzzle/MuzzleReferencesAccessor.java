@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
