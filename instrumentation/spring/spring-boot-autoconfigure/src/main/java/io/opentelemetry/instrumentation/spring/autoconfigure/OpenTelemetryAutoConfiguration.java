@@ -56,6 +56,6 @@ public class OpenTelemetryAutoConfiguration {
     return OpenTelemetrySdk.builder()
         .setTracerProvider(tracerProvider)
         .setPropagators(propagators)
-        .buildAndRegisterGlobal();
+        .build();
   }
 }
