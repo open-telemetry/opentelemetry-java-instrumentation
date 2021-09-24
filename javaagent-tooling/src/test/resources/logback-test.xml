@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <Pattern>
+        %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </Pattern>
+    </layout>
+  </appender>
+
+  <!-- some tests rely code being executed inside of logger.isDebugEnabled() -->
+  <logger name="io.opentelemetry.javaagent.extension.matcher" level="DEBUG"/>
+  <logger name="io.opentelemetry.javaagent.bootstrap.ExceptionLogger" level="DEBUG"/>
+
+  <root level="INFO">
+    <appender-ref ref="console"/>
+  </root>
+</configuration>
