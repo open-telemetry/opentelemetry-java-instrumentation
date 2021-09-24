@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
@@ -53,8 +53,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       ServletAccessor<REQUEST, RESPONSE> accessor,
       SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor,
-      HttpAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+      HttpServerAttributesExtractor<
+              ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           httpAttributesExtractor) {
+
     SpanStatusExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ServletNetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor =
@@ -83,7 +85,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
-    HttpAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+    HttpServerAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesExtractor = new ServletHttpAttributesExtractor<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         new ServletSpanNameExtractor<>(accessor, mappingResolverFunction);

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import java.util.HashSet;
@@ -23,7 +23,7 @@ final class SpanKeyExtractor {
       List<? extends AttributesExtractor<?, ?>> attributesExtractors) {
     Set<SpanKey> spanKeys = new HashSet<>();
     for (AttributesExtractor<?, ?> attributeExtractor : attributesExtractors) {
-      if (attributeExtractor instanceof HttpAttributesExtractor) {
+      if (attributeExtractor instanceof HttpClientAttributesExtractor) {
         spanKeys.add(SpanKey.HTTP_CLIENT);
       } else if (attributeExtractor instanceof RpcAttributesExtractor) {
         spanKeys.add(SpanKey.RPC_CLIENT);

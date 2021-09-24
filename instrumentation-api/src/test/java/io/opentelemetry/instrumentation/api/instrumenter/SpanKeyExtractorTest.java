@@ -12,7 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
@@ -41,7 +41,7 @@ class SpanKeyExtractorTest {
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           Arguments.of(mock(DbAttributesExtractor.class), SpanKey.DB_CLIENT),
-          Arguments.of(mock(HttpAttributesExtractor.class), SpanKey.HTTP_CLIENT),
+          Arguments.of(mock(HttpClientAttributesExtractor.class), SpanKey.HTTP_CLIENT),
           Arguments.of(mock(RpcAttributesExtractor.class), SpanKey.RPC_CLIENT));
     }
   }

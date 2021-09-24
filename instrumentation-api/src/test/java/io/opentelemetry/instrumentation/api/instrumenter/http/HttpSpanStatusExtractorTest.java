@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpSpanStatusExtractorTest {
-  @Mock private HttpAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
+  @Mock private HttpCommonAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})

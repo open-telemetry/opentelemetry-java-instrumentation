@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class HttpUrlHttpAttributesExtractor extends HttpAttributesExtractor<HttpURLConnection, Integer> {
+class HttpUrlHttpAttributesExtractor
+    extends HttpClientAttributesExtractor<HttpURLConnection, Integer> {
   @Override
   protected String method(HttpURLConnection connection) {
     return connection.getRequestMethod();
@@ -28,11 +29,6 @@ class HttpUrlHttpAttributesExtractor extends HttpAttributesExtractor<HttpURLConn
 
   @Override
   protected @Nullable String host(HttpURLConnection connection) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(HttpURLConnection connection) {
     return null;
   }
 
@@ -61,12 +57,6 @@ class HttpUrlHttpAttributesExtractor extends HttpAttributesExtractor<HttpURLConn
   @Override
   protected String flavor(HttpURLConnection connection, @Nullable Integer statusCode) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-  }
-
-  @Override
-  protected @Nullable String serverName(
-      HttpURLConnection connection, @Nullable Integer statusCode) {
-    return null;
   }
 
   @Override

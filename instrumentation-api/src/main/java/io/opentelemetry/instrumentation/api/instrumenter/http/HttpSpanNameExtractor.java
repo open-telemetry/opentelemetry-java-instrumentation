@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extractor of the <a
@@ -20,19 +21,19 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
    * will be examined to determine the name of the span.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpAttributesExtractor<REQUEST, ?> attributesExtractor) {
+      HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor) {
     return new HttpSpanNameExtractor<>(attributesExtractor);
   }
 
-  private final HttpAttributesExtractor<REQUEST, ?> attributesExtractor;
+  private final HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor;
 
-  private HttpSpanNameExtractor(HttpAttributesExtractor<REQUEST, ?> attributesExtractor) {
+  private HttpSpanNameExtractor(HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor) {
     this.attributesExtractor = attributesExtractor;
   }
 
   @Override
   public String extract(REQUEST request) {
-    String route = attributesExtractor.route(request);
+    String route = extractRoute(request);
     if (route != null) {
       return route;
     }
@@ -41,5 +42,13 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
       return "HTTP " + method;
     }
     return "HTTP request";
+  }
+
+  @Nullable
+  private String extractRoute(REQUEST request) {
+    if (attributesExtractor instanceof HttpServerAttributesExtractor) {
+      return ((HttpServerAttributesExtractor<REQUEST, ?>) attributesExtractor).route(request);
+    }
+    return null;
   }
 }

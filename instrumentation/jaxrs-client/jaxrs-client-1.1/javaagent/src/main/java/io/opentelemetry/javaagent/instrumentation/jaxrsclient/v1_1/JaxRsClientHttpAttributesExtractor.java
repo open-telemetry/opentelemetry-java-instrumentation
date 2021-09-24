@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<ClientRequest, ClientResponse> {
+    extends HttpClientAttributesExtractor<ClientRequest, ClientResponse> {
 
   @Override
   protected @Nullable String method(ClientRequest httpRequest) {
@@ -92,17 +92,6 @@ final class JaxRsClientHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(
       ClientRequest httpRequest, ClientResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(ClientRequest httpRequest) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String serverName(
-      ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
     return null;
   }
 }

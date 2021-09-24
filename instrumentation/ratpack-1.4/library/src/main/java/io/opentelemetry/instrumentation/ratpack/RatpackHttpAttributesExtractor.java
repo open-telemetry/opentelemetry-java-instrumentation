@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import ratpack.handling.Context;
@@ -13,7 +13,8 @@ import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.server.PublicAddress;
 
-final class RatpackHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class RatpackHttpAttributesExtractor
+    extends HttpServerAttributesExtractor<Request, Response> {
   @Override
   protected String method(Request request) {
     return request.getMethod().getName();

@@ -23,7 +23,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
@@ -142,7 +143,12 @@ class InstrumenterTest {
   @RegisterExtension
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
-  @Mock HttpAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpAttributes;
+  @Mock
+  HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpClientAttributes;
+
+  @Mock
+  HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpServerAttributes;
+
   @Mock DbAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
 
   @Mock
@@ -266,7 +272,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
-                mockHttpAttributes,
+                mockHttpServerAttributes,
                 mockNetAttributes,
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
@@ -305,7 +311,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
-                mockHttpAttributes,
+                mockHttpServerAttributes,
                 mockNetAttributes,
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
@@ -751,7 +757,7 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(false, mockDbAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(false, mockHttpAttributes);
+        getInstrumenterWithType(false, mockHttpClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -780,7 +786,7 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(true, mockDbAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockHttpAttributes);
+        getInstrumenterWithType(true, mockHttpClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -818,7 +824,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_http() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockHttpAttributes, new AttributesExtractor1());
+        getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
 
     Map<String, String> request = new HashMap<>(REQUEST);
 

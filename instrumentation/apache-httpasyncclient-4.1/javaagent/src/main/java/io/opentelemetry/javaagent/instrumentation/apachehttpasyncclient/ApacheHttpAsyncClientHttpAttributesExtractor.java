@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpAsyncClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
+    extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   protected String method(ApacheHttpClientRequest request) {
@@ -83,18 +83,6 @@ final class ApacheHttpAsyncClientHttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(
       ApacheHttpClientRequest request, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String serverName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String route(ApacheHttpClientRequest request) {
     return null;
   }
 }

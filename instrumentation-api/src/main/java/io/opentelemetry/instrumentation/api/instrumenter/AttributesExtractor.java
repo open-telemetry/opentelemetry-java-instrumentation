@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -21,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * #onStart(AttributesBuilder, Object)} to have it available during sampling.
  *
  * @see DbAttributesExtractor
- * @see HttpAttributesExtractor
+ * @see HttpClientAttributesExtractor
  * @see NetAttributesExtractor
  */
 public abstract class AttributesExtractor<REQUEST, RESPONSE> {

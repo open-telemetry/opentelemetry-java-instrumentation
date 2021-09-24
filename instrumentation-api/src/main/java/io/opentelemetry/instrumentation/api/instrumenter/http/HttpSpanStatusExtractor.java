@@ -25,13 +25,15 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    * default status} otherwise.
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
-      HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     return new HttpSpanStatusExtractor<>(attributesExtractor);
   }
 
-  private final HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor;
+  private final HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE>
+      attributesExtractor;
 
-  private HttpSpanStatusExtractor(HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+  private HttpSpanStatusExtractor(
+      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     this.attributesExtractor = attributesExtractor;
   }
 
