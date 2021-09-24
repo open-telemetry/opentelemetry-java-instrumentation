@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.servlet.naming.MappingResolverFactory;
+import io.opentelemetry.instrumentation.servlet.naming.ServletMappingResolverFactory;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class JakartaServletMappingResolverFactory extends MappingResolverFactory {
+public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;
 
   public JakartaServletMappingResolverFactory(ServletConfig servletConfig) {

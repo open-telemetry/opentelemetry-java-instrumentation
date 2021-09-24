@@ -13,7 +13,7 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
-    extends MappingResolverFactory {
+    extends ServletMappingResolverFactory {
 
   protected abstract FILTERREGISTRATION getFilterRegistration();
 

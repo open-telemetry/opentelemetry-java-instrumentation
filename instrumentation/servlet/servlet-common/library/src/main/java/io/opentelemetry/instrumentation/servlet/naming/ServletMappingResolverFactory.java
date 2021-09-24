@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import java.util.Collection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class MappingResolverFactory {
+public abstract class ServletMappingResolverFactory implements MappingResolver.Factory {
 
   private volatile MappingResolverHolder holder;
 
@@ -25,6 +25,7 @@ public abstract class MappingResolverFactory {
     return MappingResolver.build(mappings.getMappings());
   }
 
+  @Override
   @Nullable
   public final MappingResolver get() {
     // build MappingResolver if it is not already built, no need to synchronize as it can safely be
