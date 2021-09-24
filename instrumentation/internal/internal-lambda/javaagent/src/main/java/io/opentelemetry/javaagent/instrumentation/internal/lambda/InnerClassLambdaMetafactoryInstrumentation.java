@@ -74,7 +74,14 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
       MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-      // depending on jdk version we instrument either spinInnerClass or generateInnerClass
+      // The version of InnerClassLambdaMetafactory used in first version of jdk8 can be seen at
+      // https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/lang/invoke/InnerClassLambdaMetafactory.java
+      // Depending on jdk version we instrument either spinInnerClass or generateInnerClass.
+      // We look for a call to ASM ClassWriter.toByteArray() and insert our lambda class
+      // transformation after it so that defining lambda class will proceed with replaced bytecode.
+      // This transformation uses ASM instead of Byte-Buddy advice because advice allows adding
+      // code to the start and end of the method, but here we are modifying a call in the middle of
+      // the method.
       if (("spinInnerClass".equals(name) || "generateInnerClass".equals(name))
           && "()Ljava/lang/Class;".equals(descriptor)) {
         mv =
@@ -83,8 +90,8 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
               public void visitMethodInsn(
                   int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-                // look for a call to ASM ClassWriter.toByteArray() and insert transformation
-                // after it
+                // if current instruction is a call to ASM ClassWriter.toByteArray() insert call to
+                // our lambda transformer
                 if (opcode == Opcodes.INVOKEVIRTUAL
                     && "toByteArray".equals(name)
                     && "()[B".equals(descriptor)) {
