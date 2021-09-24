@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Accessor;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
@@ -39,6 +40,11 @@ public final class Servlet3Singletons {
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new ServletHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
 
+  private static final ContextStore<Servlet, MappingResolver.Factory> SERVLET_CONTEXT_STORE =
+      InstrumentationContext.get(Servlet.class, MappingResolver.Factory.class);
+  private static final ContextStore<Filter, MappingResolver.Factory> FILTER_CONTEXT_STORE =
+      InstrumentationContext.get(Filter.class, MappingResolver.Factory.class);
+
   public static ServletHelper<HttpServletRequest, HttpServletResponse> helper() {
     return HELPER;
   }
@@ -59,11 +65,9 @@ public final class Servlet3Singletons {
   private static MappingResolver.Factory getMappingResolverFactory(Object servletOrFilter) {
     boolean servlet = servletOrFilter instanceof Servlet;
     if (servlet) {
-      return InstrumentationContext.get(Servlet.class, MappingResolver.Factory.class)
-          .get((Servlet) servletOrFilter);
+      return SERVLET_CONTEXT_STORE.get((Servlet) servletOrFilter);
     } else {
-      return InstrumentationContext.get(Filter.class, MappingResolver.Factory.class)
-          .get((Filter) servletOrFilter);
+      return FILTER_CONTEXT_STORE.get((Filter) servletOrFilter);
     }
   }
 
