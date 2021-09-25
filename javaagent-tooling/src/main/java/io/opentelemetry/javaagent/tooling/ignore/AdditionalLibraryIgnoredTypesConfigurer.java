@@ -46,7 +46,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.apache.lucene.")
         .ignoreClass("org.apache.tartarus.")
         .ignoreClass("org.json.simple.")
-        .ignoreClass("org.yaml.snakeyaml.");
+        .ignoreClass("org.yaml.snakeyaml.")
+        .allowClass("org.apache.lucene.util.bkd.BKDWriter$OneDimensionBKDWriter$$Lambda$");
 
     builder.ignoreClass("net.sf.cglib.").allowClass("net.sf.cglib.core.internal.LoadingCache$2");
 
@@ -97,9 +98,13 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda$")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
         .allowClass(
             "org.springframework.boot.autoconfigure.web.ResourceProperties$Cache$Cachecontrol$$Lambda$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda$")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda$")
         .allowClass(
@@ -152,6 +157,9 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.http.")
+        .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda$")
+        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda$")
+        .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda$")
         // There are some Mono implementation that get instrumented
         .allowClass("org.springframework.http.server.reactive.");
 
