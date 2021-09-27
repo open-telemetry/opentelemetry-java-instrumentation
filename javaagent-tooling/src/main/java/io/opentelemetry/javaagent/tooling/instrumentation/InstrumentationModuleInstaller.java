@@ -130,6 +130,10 @@ public final class InstrumentationModuleInstaller {
       if (!mappings.isEmpty()) {
         return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
       }
+    } else {
+      logger.debug(
+          "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {}",
+          instrumentationModule);
     }
 
     return NoopContextProvider.INSTANCE;
