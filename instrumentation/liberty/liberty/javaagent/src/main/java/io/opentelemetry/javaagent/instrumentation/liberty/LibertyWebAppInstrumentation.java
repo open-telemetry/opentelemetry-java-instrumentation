@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty;
 
-import static io.opentelemetry.javaagent.instrumentation.liberty.LibertyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.liberty.LibertySingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -70,41 +70,22 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
         @Advice.Thrown Throwable throwable) {
-      ThreadLocalContext ctx = ThreadLocalContext.endRequest();
-      if (ctx == null) {
-        return;
-      }
-
-      Context context = ctx.getContext();
-      Scope scope = ctx.getScope();
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      if (context == null) {
-        // an existing span was found
+      ThreadLocalContext requestInfo = ThreadLocalContext.endRequest();
+      if (requestInfo == null) {
         return;
       }
 
       HttpServletRequest request = (HttpServletRequest) servletRequest;
       HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-      tracer().setPrincipal(context, request);
-
-      Throwable error = throwable;
-      if (error == null) {
-        error = AppServerBridge.getException(context);
-      }
-
-      if (error != null) {
-        tracer().endExceptionally(context, error, response);
-        return;
-      }
-
-      if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(tracer(), request)) {
-        tracer().end(context, response);
-      }
+      helper()
+          .end(
+              requestInfo.getRequestContext(),
+              request,
+              response,
+              throwable,
+              requestInfo.getContext(),
+              requestInfo.getScope());
     }
   }
 
@@ -113,20 +94,27 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      ThreadLocalContext ctx = ThreadLocalContext.get();
-      if (ctx == null || !ctx.startSpan()) {
+      ThreadLocalContext requestInfo = ThreadLocalContext.get();
+      if (requestInfo == null || !requestInfo.startSpan()) {
         return;
       }
 
-      Context context = tracer().startSpan(ctx.getRequest());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      ServletRequestContext<HttpServletRequest> requestContext = requestInfo.getRequestContext();
+
+      if (!helper().shouldStart(parentContext, requestContext)) {
+        return;
+      }
+
+      Context context = helper().start(parentContext, requestContext);
       Scope scope = context.makeCurrent();
 
-      ctx.setContext(context);
-      ctx.setScope(scope);
+      requestInfo.setContext(context);
+      requestInfo.setScope(scope);
 
       // Must be set here since Liberty RequestProcessors can use startAsync outside of servlet
       // scope.
-      tracer().setAsyncListenerResponse(ctx.getRequest(), ctx.getResponse());
+      helper().setAsyncListenerResponse(requestInfo.getRequest(), requestInfo.getResponse());
     }
   }
 }

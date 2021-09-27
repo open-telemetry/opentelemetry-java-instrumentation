@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,6 +17,7 @@ public class ThreadLocalContext {
 
   private final HttpServletRequest request;
   private final HttpServletResponse response;
+  private final ServletRequestContext<HttpServletRequest> requestContext;
   private Context context;
   private Scope scope;
   private boolean started;
@@ -23,6 +25,7 @@ public class ThreadLocalContext {
   private ThreadLocalContext(HttpServletRequest request, HttpServletResponse response) {
     this.request = request;
     this.response = response;
+    this.requestContext = new ServletRequestContext<>(request);
   }
 
   public Context getContext() {
@@ -43,6 +46,10 @@ public class ThreadLocalContext {
 
   public HttpServletRequest getRequest() {
     return request;
+  }
+
+  public ServletRequestContext<HttpServletRequest> getRequestContext() {
+    return requestContext;
   }
 
   public HttpServletResponse getResponse() {
