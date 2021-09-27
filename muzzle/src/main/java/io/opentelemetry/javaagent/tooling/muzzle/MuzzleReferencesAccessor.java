@@ -45,6 +45,11 @@ class MuzzleReferencesAccessor {
    */
   @SuppressWarnings("unchecked")
   static Map<String, ClassRef> getFor(InstrumentationModule instrumentationModule) {
+    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      return ((InstrumentationModuleMuzzle) instrumentationModule).getMuzzleReferences();
+    }
+
+    //Older classes created and compiled outside of this repo may not yet have the interface above.
     Map<String, ClassRef> muzzleReferences = emptyMap();
     MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
     if (methodHandle != null) {

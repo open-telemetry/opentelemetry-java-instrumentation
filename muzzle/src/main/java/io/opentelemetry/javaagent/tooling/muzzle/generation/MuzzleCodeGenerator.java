@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
@@ -83,6 +84,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   }
 
   private static class GenerateMuzzleMethodsAndFields extends ClassVisitor {
+    private final String[] defaultInterfaces = new String[] {
+        Utils.getInternalName(InstrumentationModuleMuzzle.class)};
 
     private final URLClassLoader classLoader;
     private String instrumentationClassName;
@@ -116,7 +119,19 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       } catch (Exception e) {
         throw new IllegalStateException(e);
       }
-      super.visit(version, access, name, signature, superName, interfaces);
+
+      super.visit(version, access, name, signature, superName, addMuzzleInterface(interfaces));
+    }
+
+    private String[] addMuzzleInterface(String[] interfaces) {
+      if (interfaces == null) {
+        return defaultInterfaces;
+      }
+
+      String[] allInterfaces = new String[interfaces.length + 1];
+      allInterfaces[0] = Utils.getInternalName(InstrumentationModuleMuzzle.class);
+      System.arraycopy(interfaces, 0, allInterfaces, 1, interfaces.length);
+      return allInterfaces;
     }
 
     @Override
