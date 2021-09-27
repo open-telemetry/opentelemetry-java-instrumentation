@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -46,6 +47,7 @@ public final class JmsSingletons {
         .addAttributesExtractor(attributesExtractor)
         .setTimeExtractors(
             MessageWithDestination::startTime, (request, response, error) -> request.endTime())
+        .setDisabled(ExperimentalConfig.get().suppressMessagingReceiveSpans())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
