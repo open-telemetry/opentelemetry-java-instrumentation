@@ -136,9 +136,7 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [
-      SemanticAttributes.HTTP_TARGET,
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_TRANSPORT
     ]
   }
 

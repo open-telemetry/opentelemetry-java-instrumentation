@@ -26,11 +26,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    protected String url(Map<String, String> request) {
-      return request.get("url");
-    }
-
-    @Override
     protected String target(Map<String, String> request) {
       return request.get("target");
     }
@@ -120,7 +115,6 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "github.com"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
@@ -131,7 +125,6 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "github.com"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.UriBuilder;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -25,43 +24,25 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected @Nullable String url(ServletRequestContext<REQUEST> requestContext) {
-    REQUEST request = requestContext.request();
-
-    return UriBuilder.uri(
-        accessor.getRequestScheme(request),
-        accessor.getRequestServerName(request),
-        accessor.getRequestServerPort(request),
-        accessor.getRequestUri(request),
-        accessor.getRequestQueryString(request));
-  }
-
-  @Override
   protected @Nullable String target(ServletRequestContext<REQUEST> requestContext) {
-    /*
-    String target = httpServletRequest.getRequestURI();
-    String queryString = httpServletRequest.getQueryString();
+    REQUEST request = requestContext.request();
+    String target = accessor.getRequestUri(request);
+    String queryString = accessor.getRequestQueryString(request);
     if (queryString != null) {
       target += "?" + queryString;
     }
     return target;
-     */
-    return null;
   }
 
   @Override
   protected @Nullable String host(ServletRequestContext<REQUEST> requestContext) {
-    /*
     REQUEST request = requestContext.request();
     return accessor.getRequestServerName(request) + ":" + accessor.getRequestServerPort(request);
-     */
-    return null;
   }
 
   @Override
   protected @Nullable String scheme(ServletRequestContext<REQUEST> requestContext) {
-    // return accessor.getRequestScheme(requestContext.request());
-    return null;
+    return accessor.getRequestScheme(requestContext.request());
   }
 
   @Override
