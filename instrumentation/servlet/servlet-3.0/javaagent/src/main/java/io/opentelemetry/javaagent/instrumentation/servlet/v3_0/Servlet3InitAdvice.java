@@ -20,7 +20,7 @@ public class Servlet3InitAdvice {
     if (servletConfig == null) {
       return;
     }
-    InstrumentationContext.get(Servlet.class, MappingResolver.class)
+    InstrumentationContext.get(Servlet.class, MappingResolver.Factory.class)
         .putIfAbsent(servlet, new Servlet3MappingResolverFactory(servletConfig));
   }
 }
