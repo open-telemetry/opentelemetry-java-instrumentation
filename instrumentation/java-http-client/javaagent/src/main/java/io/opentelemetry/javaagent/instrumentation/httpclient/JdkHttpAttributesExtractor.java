@@ -26,21 +26,6 @@ class JdkHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(HttpRequest httpRequest) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String host(HttpRequest httpRequest) {
-    return httpRequest.uri().getHost();
-  }
-
-  @Override
-  protected @Nullable String scheme(HttpRequest httpRequest) {
-    return httpRequest.uri().getScheme();
-  }
-
-  @Override
   protected @Nullable String userAgent(HttpRequest httpRequest) {
     return httpRequest.headers().firstValue("User-Agent").orElse(null);
   }

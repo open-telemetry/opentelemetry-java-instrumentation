@@ -25,21 +25,6 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(HttpRequest httpRequest) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String host(HttpRequest httpRequest) {
-    return httpRequest.getHeaders().getFirst("host");
-  }
-
-  @Override
-  protected @Nullable String scheme(HttpRequest httpRequest) {
-    return httpRequest.getURI().getScheme();
-  }
-
-  @Override
   protected @Nullable String userAgent(HttpRequest httpRequest) {
     // using lowercase header name intentionally to ensure extraction is not case-sensitive
     return httpRequest.getHeaders().getFirst("user-agent");

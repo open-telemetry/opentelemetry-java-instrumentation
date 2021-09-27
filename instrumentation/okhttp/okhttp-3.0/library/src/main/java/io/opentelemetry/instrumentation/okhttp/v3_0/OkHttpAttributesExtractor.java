@@ -23,21 +23,6 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   }
 
   @Override
-  protected @Nullable String target(Request request) {
-    return null;
-  }
-
-  @Override
-  protected String host(Request request) {
-    return request.url().host();
-  }
-
-  @Override
-  protected String scheme(Request request) {
-    return request.url().scheme();
-  }
-
-  @Override
   protected @Nullable String userAgent(Request request) {
     // using lowercase header name intentionally to ensure extraction is not case-sensitive
     return request.header("user-agent");

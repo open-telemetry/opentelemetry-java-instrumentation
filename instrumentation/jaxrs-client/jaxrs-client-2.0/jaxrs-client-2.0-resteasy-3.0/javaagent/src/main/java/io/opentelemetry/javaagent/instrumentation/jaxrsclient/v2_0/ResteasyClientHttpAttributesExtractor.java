@@ -25,36 +25,6 @@ final class ResteasyClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(ClientInvocation httpRequest) {
-    StringBuilder result = new StringBuilder();
-    String path = httpRequest.getUri().getPath();
-    if (path != null) {
-      result.append(path);
-    }
-    String query = httpRequest.getUri().getQuery();
-    if (query != null) {
-      result.append('?');
-      result.append(query);
-    }
-    String fragment = httpRequest.getUri().getFragment();
-    if (fragment != null) {
-      result.append('#');
-      result.append(fragment);
-    }
-    return result.length() > 0 ? result.toString() : null;
-  }
-
-  @Override
-  protected @Nullable String host(ClientInvocation httpRequest) {
-    return httpRequest.getUri().getHost();
-  }
-
-  @Override
-  protected @Nullable String scheme(ClientInvocation httpRequest) {
-    return httpRequest.getUri().getScheme();
-  }
-
-  @Override
   protected @Nullable String userAgent(ClientInvocation httpRequest) {
     return httpRequest.getHeaders().getHeader("User-Agent");
   }
