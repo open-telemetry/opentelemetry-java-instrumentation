@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +15,7 @@ enum AwsSdkRequestType {
   S3(request("aws.bucket.name", "Bucket")),
   SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
   Kinesis(request("aws.stream.name", "StreamName")),
-  DynamoDB(
-      request("aws.table.name", "TableName"),
-      request(SemanticAttributes.DB_NAME.getKey(), "TableName"));
+  DynamoDB(request("aws.table.name", "TableName"));
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
