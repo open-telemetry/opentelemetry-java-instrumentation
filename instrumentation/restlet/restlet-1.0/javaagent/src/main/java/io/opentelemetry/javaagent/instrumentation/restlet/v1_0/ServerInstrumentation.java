@@ -75,8 +75,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
       scope.close();
 
-      if (response.getStatus() != null
-          && response.getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)) {
+      if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
         ServerSpanNaming.updateServerSpanName(
             context, CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, "/*");
       }
