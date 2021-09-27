@@ -84,8 +84,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   }
 
   private static class GenerateMuzzleMethodsAndFields extends ClassVisitor {
-    private final String[] defaultInterfaces = new String[] {
-        Utils.getInternalName(InstrumentationModuleMuzzle.class)};
+    private final String[] defaultInterfaces =
+        new String[] {Utils.getInternalName(InstrumentationModuleMuzzle.class)};
 
     private final URLClassLoader classLoader;
     private String instrumentationClassName;
