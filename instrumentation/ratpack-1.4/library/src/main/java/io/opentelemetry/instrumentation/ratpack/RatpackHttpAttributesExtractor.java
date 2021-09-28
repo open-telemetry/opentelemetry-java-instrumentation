@@ -38,7 +38,7 @@ final class RatpackHttpAttributesExtractor
     if (publicAddress == null) {
       return null;
     }
-    URI uri = publicAddress.builder().build();
+    URI uri = publicAddress.get();
     return uri.getHost() + ":" + uri.getPort();
   }
 
@@ -60,7 +60,7 @@ final class RatpackHttpAttributesExtractor
     if (publicAddress == null) {
       return null;
     }
-    return publicAddress.builder().build().getScheme();
+    return publicAddress.get().getScheme();
   }
 
   @Override
