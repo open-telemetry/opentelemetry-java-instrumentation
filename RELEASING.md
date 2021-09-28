@@ -35,7 +35,12 @@ release notes, just point it at the created tag.
 All patch releases should include only bug-fixes, and must avoid
 adding/modifying the public APIs.
 
-Open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
+In general, patch releases are only made for bug-fixes for the following types of issues:
+* Regressions
+* Memory leaks
+* Deadlocks
+
+To make a patch release, open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
 You will see a button that says "Run workflow". Press the button, enter the version number you want
 to release in the input field for version that pops up and the commits you want to cherrypick.

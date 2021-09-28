@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.restlet.data.Reference;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-final class RestletHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class RestletHttpAttributesExtractor
+    extends HttpServerAttributesExtractor<Request, Response> {
+
   @Override
   protected String method(Request request) {
     return request.getMethod().toString();

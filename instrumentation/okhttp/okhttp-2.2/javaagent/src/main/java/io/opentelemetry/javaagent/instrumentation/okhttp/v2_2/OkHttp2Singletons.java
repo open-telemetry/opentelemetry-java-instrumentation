@@ -15,7 +15,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -29,7 +29,7 @@ public final class OkHttp2Singletons {
   private static final TracingInterceptor TRACING_INTERCEPTOR;
 
   static {
-    HttpAttributesExtractor<Request, Response> httpAttributesExtractor =
+    HttpClientAttributesExtractor<Request, Response> httpAttributesExtractor =
         new OkHttp2HttpAttributesExtractor();
     SpanNameExtractor<Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);

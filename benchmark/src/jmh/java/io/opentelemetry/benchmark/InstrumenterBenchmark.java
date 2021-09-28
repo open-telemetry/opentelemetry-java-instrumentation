@@ -8,7 +8,7 @@ package io.opentelemetry.benchmark;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -54,8 +54,8 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  static class ConstantHttpAttributesExtractor extends HttpAttributesExtractor<Void, Void> {
-    static final HttpAttributesExtractor<Void, Void> INSTANCE =
+  static class ConstantHttpAttributesExtractor extends HttpClientAttributesExtractor<Void, Void> {
+    static final HttpClientAttributesExtractor<Void, Void> INSTANCE =
         new ConstantHttpAttributesExtractor();
 
     @Override
@@ -76,11 +76,6 @@ public class InstrumenterBenchmark {
     @Override
     protected @Nullable String host(Void unused) {
       return "opentelemetry.io";
-    }
-
-    @Override
-    protected @Nullable String route(Void unused) {
-      return "/benchmark";
     }
 
     @Override
@@ -106,11 +101,6 @@ public class InstrumenterBenchmark {
     @Override
     protected @Nullable String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    }
-
-    @Override
-    protected @Nullable String serverName(Void unused, @Nullable Void unused2) {
-      return null;
     }
 
     @Override

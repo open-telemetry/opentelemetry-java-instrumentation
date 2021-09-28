@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -33,7 +33,7 @@ public final class TomcatInstrumenterBuilder {
       String instrumentationName,
       ServletAccessor<REQUEST, RESPONSE> accessor,
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider) {
-    HttpAttributesExtractor<Request, Response> httpAttributesExtractor =
+    HttpServerAttributesExtractor<Request, Response> httpAttributesExtractor =
         new TomcatHttpAttributesExtractor();
     SpanNameExtractor<Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);

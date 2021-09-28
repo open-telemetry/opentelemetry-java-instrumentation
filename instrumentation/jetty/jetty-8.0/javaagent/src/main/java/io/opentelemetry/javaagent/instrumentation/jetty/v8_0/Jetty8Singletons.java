@@ -10,11 +10,11 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Accessor;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Accessor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

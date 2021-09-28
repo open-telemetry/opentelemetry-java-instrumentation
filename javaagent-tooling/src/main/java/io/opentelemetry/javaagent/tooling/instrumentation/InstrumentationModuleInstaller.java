@@ -23,6 +23,7 @@ import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
 import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilderImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
@@ -120,20 +121,27 @@ public final class InstrumentationModuleInstaller {
 
   private static InstrumentationContextProvider createInstrumentationContextProvider(
       InstrumentationModule instrumentationModule) {
-    InstrumentationContextBuilderImpl builder = new InstrumentationContextBuilderImpl();
-    instrumentationModule.registerMuzzleContextStoreClasses(builder);
-    ContextStoreMappings mappings = builder.build();
-    if (!mappings.isEmpty()) {
-      return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
+
+    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      InstrumentationContextBuilderImpl builder = new InstrumentationContextBuilderImpl();
+      ((InstrumentationModuleMuzzle) instrumentationModule)
+          .registerMuzzleContextStoreClasses(builder);
+      ContextStoreMappings mappings = builder.build();
+      if (!mappings.isEmpty()) {
+        return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
+      }
     } else {
-      return NoopContextProvider.INSTANCE;
+      logger.debug(
+          "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {}",
+          instrumentationModule);
     }
+
+    return NoopContextProvider.INSTANCE;
   }
 
   private static class FieldBackedProviderFactory {
     static {
-      InstrumentationContext.internalSetContextStoreSupplier(
-          (keyClass, contextClass) -> FieldBackedProvider.getContextStore(keyClass, contextClass));
+      InstrumentationContext.internalSetContextStoreSupplier(FieldBackedProvider::getContextStore);
     }
 
     static FieldBackedProvider get(

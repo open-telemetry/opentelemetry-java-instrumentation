@@ -47,13 +47,8 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
 
     ServletResponseContext<RESPONSE> responseContext =
         new ServletResponseContext<>(response, throwable);
-    if (throwable != null) {
+    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
       instrumenter.end(context, requestContext, responseContext, throwable);
-      return;
-    }
-
-    if (mustEndOnHandlerMethodExit(request)) {
-      instrumenter.end(context, requestContext, responseContext, null);
     }
   }
 

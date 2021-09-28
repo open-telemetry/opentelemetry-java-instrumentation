@@ -170,7 +170,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
             "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_NAME.key}" "sometable"
             "${SemanticAttributes.DB_OPERATION.key}" "CreateTable"
             "aws.dynamodb.global_secondary_indexes" "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"
             "aws.dynamodb.provisioned_throughput.read_capacity_units" "1"
@@ -206,7 +205,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
             "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_NAME.key}" "sometable"
             "${SemanticAttributes.DB_OPERATION.key}" "Query"
             "aws.dynamodb.limit" "10"
             "aws.dynamodb.select" "ALL_ATTRIBUTES"
@@ -241,7 +239,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
             "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_NAME.key}" "sometable"
             "${SemanticAttributes.DB_OPERATION.key}" "${operation}"
           }
         }

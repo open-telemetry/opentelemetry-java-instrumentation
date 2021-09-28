@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.servlet.naming.ServletMappingResolverFac
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
-import java.util.Collection;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;
@@ -19,8 +19,8 @@ public class JakartaServletMappingResolverFactory extends ServletMappingResolver
   }
 
   @Override
-  @SuppressWarnings("ReturnsNullCollection")
-  public Collection<String> getMappings() {
+  @Nullable
+  public Mappings getMappings() {
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();
     if (servletName == null || servletContext == null) {
@@ -31,6 +31,6 @@ public class JakartaServletMappingResolverFactory extends ServletMappingResolver
     if (servletRegistration == null) {
       return null;
     }
-    return servletRegistration.getMappings();
+    return new Mappings(servletRegistration.getMappings());
   }
 }

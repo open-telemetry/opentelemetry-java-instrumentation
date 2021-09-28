@@ -9,6 +9,7 @@ pluginManagement {
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
     id("nebula.release") version "15.3.1"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
   }
 }
 
@@ -49,6 +50,8 @@ buildCache {
 }
 
 rootProject.name = "opentelemetry-java-instrumentation"
+
+includeBuild("conventions")
 
 include(":muzzle")
 
@@ -117,6 +120,7 @@ include(":instrumentation:cdi-testing")
 include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
+include(":instrumentation:internal:internal-lambda:javaagent")
 include(":instrumentation:internal:internal-proxy:javaagent")
 include(":instrumentation:internal:internal-proxy:javaagent-unit-tests")
 include(":instrumentation:internal:internal-reflection:javaagent")
@@ -304,7 +308,6 @@ include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-javax-common:library")
 include(":instrumentation:servlet:servlet-javax-common:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
-include(":instrumentation:servlet:servlet-3.0:library")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:spark-2.3:javaagent")

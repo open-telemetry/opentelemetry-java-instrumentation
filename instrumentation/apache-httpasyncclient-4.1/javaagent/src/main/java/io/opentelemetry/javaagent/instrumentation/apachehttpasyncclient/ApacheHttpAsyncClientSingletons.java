@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -22,7 +22,7 @@ public final class ApacheHttpAsyncClientSingletons {
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
+    HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
         new ApacheHttpAsyncClientHttpAttributesExtractor();
     SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);

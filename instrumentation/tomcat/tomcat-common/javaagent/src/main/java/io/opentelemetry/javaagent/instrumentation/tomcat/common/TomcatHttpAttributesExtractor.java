@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.UriBuilder;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TomcatHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+public class TomcatHttpAttributesExtractor
+    extends HttpServerAttributesExtractor<Request, Response> {
 
   @Override
   protected String method(Request request) {

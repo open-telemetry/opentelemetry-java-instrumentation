@@ -9,6 +9,7 @@ dependencies {
   testCompileOnly(project(":javaagent-instrumentation-api"))
   testCompileOnly(project(":javaagent-tooling"))
   testCompileOnly(project(":javaagent-extension-api"))
+  testCompileOnly(project(":muzzle"))
 
   testImplementation("net.bytebuddy:byte-buddy")
   testImplementation("net.bytebuddy:byte-buddy-agent")

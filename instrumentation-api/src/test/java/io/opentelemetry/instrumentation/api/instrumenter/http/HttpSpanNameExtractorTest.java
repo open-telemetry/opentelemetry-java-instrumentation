@@ -22,26 +22,30 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class HttpSpanNameExtractorTest {
 
-  @Mock private HttpAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
+  @Mock
+  private HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> clientExtractor;
+
+  @Mock
+  private HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> serverExtractor;
 
   @Test
   void routeAndMethod() {
-    when(extractor.route(anyMap())).thenReturn("/cats/{id}");
-    when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
+    when(serverExtractor.route(anyMap())).thenReturn("/cats/{id}");
+    when(serverExtractor.method(anyMap())).thenReturn("GET");
+    assertThat(HttpSpanNameExtractor.create(serverExtractor).extract(Collections.emptyMap()))
         .isEqualTo("/cats/{id}");
   }
 
   @Test
   void method() {
-    when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
+    when(clientExtractor.method(anyMap())).thenReturn("GET");
+    assertThat(HttpSpanNameExtractor.create(clientExtractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP GET");
   }
 
   @Test
   void nothing() {
-    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(clientExtractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP request");
   }
 }

@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class JdkHttpAttributesExtractor extends HttpAttributesExtractor<HttpRequest, HttpResponse<?>> {
+class JdkHttpAttributesExtractor
+    extends HttpClientAttributesExtractor<HttpRequest, HttpResponse<?>> {
 
   @Override
   protected String method(HttpRequest httpRequest) {
@@ -78,17 +79,6 @@ class JdkHttpAttributesExtractor extends HttpAttributesExtractor<HttpRequest, Ht
   @Override
   protected @Nullable Long responseContentLengthUncompressed(
       HttpRequest httpRequest, HttpResponse<?> httpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String serverName(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String route(HttpRequest httpRequest) {
     return null;
   }
 }

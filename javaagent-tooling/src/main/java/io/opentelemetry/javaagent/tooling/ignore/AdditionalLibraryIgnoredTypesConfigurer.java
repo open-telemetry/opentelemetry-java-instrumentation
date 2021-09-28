@@ -46,7 +46,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.apache.lucene.")
         .ignoreClass("org.apache.tartarus.")
         .ignoreClass("org.json.simple.")
-        .ignoreClass("org.yaml.snakeyaml.");
+        .ignoreClass("org.yaml.snakeyaml.")
+        .allowClass("org.apache.lucene.util.bkd.BKDWriter$OneDimensionBKDWriter$$Lambda$");
 
     builder.ignoreClass("net.sf.cglib.").allowClass("net.sf.cglib.core.internal.LoadingCache$2");
 
@@ -76,7 +77,9 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.data.")
         .allowClass("org.springframework.data.repository.core.support.RepositoryFactorySupport")
         .allowClass("org.springframework.data.convert.ClassGeneratingEntityInstantiator$")
-        .allowClass("org.springframework.data.jpa.repository.config.InspectionClassLoader");
+        .allowClass("org.springframework.data.jpa.repository.config.InspectionClassLoader")
+        .allowClass(
+            "org.springframework.data.jpa.repository.query.QueryParameterSetter$NamedOrIndexedQueryParameterSetter$$Lambda$");
 
     builder
         .ignoreClass("org.springframework.amqp.")
@@ -95,8 +98,15 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda$")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.web.ResourceProperties$Cache$Cachecontrol$$Lambda$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda$")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+        .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda$")
         .allowClass(
             "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
         .allowClass(
@@ -127,6 +137,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         // More runnables to deal with
         .allowClass("org.springframework.context.support.AbstractApplicationContext$")
         .allowClass("org.springframework.context.support.ContextTypeMatchClassLoader")
+        .allowClass("org.springframework.context.support.DefaultLifecycleProcessor$$Lambda$")
         // Allow instrumenting ApplicationContext implementations - to inject beans
         .allowClass("org.springframework.context.annotation.AnnotationConfigApplicationContext")
         .allowClass("org.springframework.context.support.AbstractApplicationContext")
@@ -146,6 +157,9 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.http.")
+        .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda$")
+        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda$")
+        .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda$")
         // There are some Mono implementation that get instrumented
         .allowClass("org.springframework.http.server.reactive.");
 
@@ -222,7 +236,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     builder
         .ignoreClass("com.google.common.")
         .allowClass("com.google.common.util.concurrent.")
-        .allowClass("com.google.common.base.internal.Finalizer");
+        .allowClass("com.google.common.base.internal.Finalizer")
+        .allowClass("com.google.common.base.Java8Usage$$Lambda$");
 
     builder
         .ignoreClass("com.google.inject.")

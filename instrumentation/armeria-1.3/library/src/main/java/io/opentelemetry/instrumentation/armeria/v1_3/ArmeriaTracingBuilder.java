@@ -13,7 +13,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -63,30 +62,43 @@ public final class ArmeriaTracingBuilder {
   }
 
   public ArmeriaTracing build() {
-    ArmeriaHttpAttributesExtractor httpAttributesExtractor = new ArmeriaHttpAttributesExtractor();
+    ArmeriaHttpClientAttributesExtractor clientAttributesExtractor =
+        new ArmeriaHttpClientAttributesExtractor();
+    ArmeriaHttpServerAttributesExtractor serverAttributesExtractor =
+        new ArmeriaHttpServerAttributesExtractor();
+
     ArmeriaNetAttributesExtractor netAttributesExtractor = new ArmeriaNetAttributesExtractor();
 
-    SpanNameExtractor<? super RequestContext> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super RequestContext, ? super RequestLog> spanStatusExtractor =
-        statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(httpAttributesExtractor));
-
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+        Instrumenter.newBuilder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            HttpSpanNameExtractor.create(clientAttributesExtractor));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+        Instrumenter.newBuilder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            HttpSpanNameExtractor.create(serverAttributesExtractor));
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(
             instrumenter ->
                 instrumenter
-                    .setSpanStatusExtractor(spanStatusExtractor)
-                    .addAttributesExtractor(httpAttributesExtractor)
                     .addAttributesExtractor(netAttributesExtractor)
                     .addAttributesExtractors(additionalExtractors));
 
-    clientInstrumenterBuilder.addRequestMetrics(HttpClientMetrics.get());
-    serverInstrumenterBuilder.addRequestMetrics(HttpServerMetrics.get());
+    clientInstrumenterBuilder
+        .setSpanStatusExtractor(
+            statusExtractorTransformer.apply(
+                HttpSpanStatusExtractor.create(clientAttributesExtractor)))
+        .addAttributesExtractor(clientAttributesExtractor)
+        .addRequestMetrics(HttpClientMetrics.get());
+    serverInstrumenterBuilder
+        .setSpanStatusExtractor(
+            statusExtractorTransformer.apply(
+                HttpSpanStatusExtractor.create(serverAttributesExtractor)))
+        .addAttributesExtractor(serverAttributesExtractor)
+        .addRequestMetrics(HttpServerMetrics.get());
 
     return new ArmeriaTracing(
         clientInstrumenterBuilder.newClientInstrumenter(new ClientRequestContextSetter()),

@@ -8,11 +8,13 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is used to access {@code getMuzzleReferences} method from the {@link
@@ -21,6 +23,9 @@ import java.util.Map;
  * io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
  */
 class MuzzleReferencesAccessor {
+
+  private static final Logger logger = LoggerFactory.getLogger(MuzzleReferencesAccessor.class);
+
   private static final ClassValue<MethodHandle> getMuzzleReferences =
       new ClassValue<MethodHandle>() {
         @Override
@@ -45,9 +50,17 @@ class MuzzleReferencesAccessor {
    */
   @SuppressWarnings("unchecked")
   static Map<String, ClassRef> getFor(InstrumentationModule instrumentationModule) {
+    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      return ((InstrumentationModuleMuzzle) instrumentationModule).getMuzzleReferences();
+    }
+
+    // Older classes created and compiled outside of this repo may not yet have the interface above.
     Map<String, ClassRef> muzzleReferences = emptyMap();
     MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
     if (methodHandle != null) {
+      logger.warn(
+          "{} is compiled with old version of Muzzle. Its support will stop soon. Please recompile it against newer version of OpenTelemetry Java Instrumentation APIs",
+          instrumentationModule);
       try {
         muzzleReferences = (Map<String, ClassRef>) methodHandle.invoke(instrumentationModule);
       } catch (Throwable ignored) {
