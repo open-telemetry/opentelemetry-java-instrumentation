@@ -13,11 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,10 +57,9 @@ public class QueryInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ContextStore<Query, Context> contextStore =
-          InstrumentationContext.get(Query.class, Context.class);
+      VirtualField<Query, Context> virtualField = VirtualField.find(Query.class, Context.class);
 
-      context = SessionMethodUtils.startSpanFromQuery(contextStore, query, query.getQueryString());
+      context = SessionMethodUtils.startSpanFromQuery(virtualField, query, query.getQueryString());
       if (context != null) {
         scope = context.makeCurrent();
       }

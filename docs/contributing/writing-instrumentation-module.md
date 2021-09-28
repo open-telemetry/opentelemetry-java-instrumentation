@@ -31,7 +31,8 @@ class MyLibraryInstrumentationModule extends InstrumentationModule {
 An `InstrumentationModule` needs to have at least one name. The user of the javaagent can
 [suppress a chosen instrumentation](../suppressing-instrumentation.md) by referring to it by one of
 its names. The instrumentation module names use kebab-case. The main instrumentation name (the first
-one) is supposed to be the same as the gradle module name (excluding the version suffix if it has one).
+one) is supposed to be the same as the gradle module name (excluding the version suffix if it has
+one).
 
 ```java
 public MyLibraryInstrumentationModule() {
@@ -104,8 +105,8 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 }
 ```
 
-The above example will skip instrumenting the application code if it does not contain the class that was
-introduced in the version your instrumentation covers.
+The above example will skip instrumenting the application code if it does not contain the class that
+was introduced in the version your instrumentation covers.
 
 ### `typeInstrumentations()`
 
@@ -174,8 +175,8 @@ of available transformations that you can apply:
 
 * Calling `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` allows you to
   apply an advice class (the second parameter) to all matching methods (the first parameter). It is
-  suggested to make the method matchers as strict as possible - the type instrumentation should
-  only instrument the code that it's supposed to, not more.
+  suggested to make the method matchers as strict as possible - the type instrumentation should only
+  instrument the code that it's supposed to, not more.
 * `applyTransformer(AgentBuilder.Transformer)` allows you to inject an arbitrary ByteBuddy
   transformer. This is an advanced, low-level option that will not be subjected to muzzle safety
   checks and helper class detection - use it responsibly.
@@ -250,9 +251,9 @@ Exceptions thrown by the advice methods will get caught and handled by a special
 that OpenTelemetry javaagent defines. The handler makes sure to properly log all unexpected
 exceptions.
 
-The `OnMethodEnter` and `OnMethodExit` advice methods often need to share several pieces
-of information. We use local variables prefixed with `otel` to pass context, scope (and sometimes
-more) between those methods.
+The `OnMethodEnter` and `OnMethodExit` advice methods often need to share several pieces of
+information. We use local variables prefixed with `otel` to pass context, scope (and sometimes more)
+between those methods.
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -305,18 +306,17 @@ for accessing these default methods from advice.
 In fact, we suggest avoiding Java 8 language features in advice classes at all - sometimes you don't
 know what bytecode version is used by the instrumented class.
 
-Sometimes there is a need to associate some context class with an instrumented library class,
-and the library does not offer a way to do this. The OpenTelemetry javaagent provides the
-`ContextStore` for that purpose:
+Sometimes there is a need to associate some context class with an instrumented library class, and
+the library does not offer a way to do this. The OpenTelemetry javaagent provides the
+`VirtualField` for that purpose:
 
 ```java
-ContextStore<Runnable, Context> contextStore =
-    InstrumentationContext.get(Runnable.class, Context.class);
+VirtualField<Runnable, Context> virtualField =
+    VirtualField.get(Runnable.class, Context.class);
 ```
 
-A `ContextStore` is conceptually very similar to a map. It is not a simple map though:
-the javaagent uses a lot of bytecode modification magic to make this optimal.
-Because of this, retrieving a `ContextStore` instance is rather limited:
-the `InstrumentationContext#get()` method can only be called in advice classes, and it MUST receive
-class references as its parameters - it won't work with variables, method params etc.
+A `VirtualField` is conceptually very similar to a map. It is not a simple map though:
+the javaagent uses a lot of bytecode modification magic to make this optimal. Because of this,
+retrieving a `VirtualField` instance is rather limited: the `VirtualField#get()`
+MUST receive class references as its parameters - it won't work with variables, method params etc.
 Both the key class and the context class must be known at compile time for it to work.

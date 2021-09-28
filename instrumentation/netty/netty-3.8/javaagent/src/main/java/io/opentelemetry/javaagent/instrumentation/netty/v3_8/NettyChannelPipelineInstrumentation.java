@@ -12,11 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientTracingHandler;
@@ -69,34 +68,34 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
    */
   public static class ChannelPipelineAdviceUtil {
     public static void wrapHandler(
-        ContextStore<Channel, ChannelTraceContext> contextStore,
+        VirtualField<Channel, ChannelTraceContext> virtualField,
         ChannelPipeline pipeline,
         ChannelHandler handler) {
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
         pipeline.addLast(
-            HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(contextStore));
+            HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(virtualField));
       } else if (handler instanceof HttpRequestDecoder) {
         pipeline.addLast(
             HttpServerRequestTracingHandler.class.getName(),
-            new HttpServerRequestTracingHandler(contextStore));
+            new HttpServerRequestTracingHandler(virtualField));
       } else if (handler instanceof HttpResponseEncoder) {
         pipeline.addLast(
             HttpServerResponseTracingHandler.class.getName(),
-            new HttpServerResponseTracingHandler(contextStore));
+            new HttpServerResponseTracingHandler(virtualField));
       } else
       // Client pipeline handlers
       if (handler instanceof HttpClientCodec) {
         pipeline.addLast(
-            HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(contextStore));
+            HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(virtualField));
       } else if (handler instanceof HttpRequestEncoder) {
         pipeline.addLast(
             HttpClientRequestTracingHandler.class.getName(),
-            new HttpClientRequestTracingHandler(contextStore));
+            new HttpClientRequestTracingHandler(virtualField));
       } else if (handler instanceof HttpResponseDecoder) {
         pipeline.addLast(
             HttpClientResponseTracingHandler.class.getName(),
-            new HttpClientResponseTracingHandler(contextStore));
+            new HttpClientResponseTracingHandler(virtualField));
       }
     }
   }
@@ -128,10 +127,10 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      ContextStore<Channel, ChannelTraceContext> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
+      VirtualField<Channel, ChannelTraceContext> virtualField =
+          VirtualField.find(Channel.class, ChannelTraceContext.class);
 
-      ChannelPipelineAdviceUtil.wrapHandler(contextStore, pipeline, handler);
+      ChannelPipelineAdviceUtil.wrapHandler(virtualField, pipeline, handler);
     }
   }
 
@@ -162,10 +161,10 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      ContextStore<Channel, ChannelTraceContext> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
+      VirtualField<Channel, ChannelTraceContext> virtualField =
+          VirtualField.find(Channel.class, ChannelTraceContext.class);
 
-      ChannelPipelineAdviceUtil.wrapHandler(contextStore, pipeline, handler);
+      ChannelPipelineAdviceUtil.wrapHandler(virtualField, pipeline, handler);
     }
   }
 }

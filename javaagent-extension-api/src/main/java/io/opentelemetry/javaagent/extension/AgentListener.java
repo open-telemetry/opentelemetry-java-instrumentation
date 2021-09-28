@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.extension;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.lang.instrument.Instrumentation;
-import java.util.Map;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
@@ -26,8 +26,8 @@ public interface AgentListener extends Ordered {
    *
    * <p>Execute only a minimal code because any classes loaded before the agent installation will
    * have to be retransformed, which takes extra time, and more importantly means that fields can't
-   * be added to those classes - which causes {@link InstrumentationContext} to fall back to the
-   * less performant {@link Map} implementation for those classes.
+   * be added to those classes - which causes {@link VirtualField} to fall back to the less
+   * performant {@link Cache} implementation for those classes.
    */
   default void beforeAgent(Config config) {}
 

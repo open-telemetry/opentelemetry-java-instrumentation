@@ -15,10 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -58,9 +57,9 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
 
       // copy the receive CONSUMER span association
-      ContextStore<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
-          InstrumentationContext.get(ConsumerRecord.class, SpanContext.class);
-      singleRecordReceiveSpan.put(result, singleRecordReceiveSpan.get(incoming));
+      VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
+          VirtualField.find(ConsumerRecord.class, SpanContext.class);
+      singleRecordReceiveSpan.set(result, singleRecordReceiveSpan.get(incoming));
     }
   }
 }

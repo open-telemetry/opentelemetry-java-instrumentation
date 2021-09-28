@@ -19,10 +19,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -63,7 +63,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Span currentSpan = InstrumentationContext.get(ILoggingEvent.class, Span.class).get(event);
+      Span currentSpan = VirtualField.find(ILoggingEvent.class, Span.class).get(event);
       if (currentSpan == null || !currentSpan.getSpanContext().isValid()) {
         return;
       }

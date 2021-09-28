@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,8 +20,10 @@ import okio.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class TracingCallFactory implements Call.Factory {
-  private static final Cache<Request, Context> contextsByRequest =
-      Cache.newBuilder().setWeakKeys().build();
+
+  private static final VirtualField<Request, Context> contextsByRequest =
+      VirtualField.find(Request.class, Context.class);
+
   // We use old-school reflection here, rather than MethodHandles because Android doesn't support
   // MethodHandles until API 26.
   @Nullable private static Method timeoutMethod;
@@ -55,7 +57,7 @@ class TracingCallFactory implements Call.Factory {
   public Call newCall(Request request) {
     Context callingContext = Context.current();
     Request requestCopy = request.newBuilder().build();
-    contextsByRequest.put(requestCopy, callingContext);
+    contextsByRequest.set(requestCopy, callingContext);
     return new TracingCall(okHttpClient.newCall(requestCopy), callingContext);
   }
 

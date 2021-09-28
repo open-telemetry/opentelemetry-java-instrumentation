@@ -15,10 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -57,9 +56,9 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       Context context = tracer().startSpan(parentContext, "Session");
 
-      ContextStore<SharedSessionContract, Context> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Context.class);
-      contextStore.putIfAbsent(session, context);
+      VirtualField<SharedSessionContract, Context> virtualField =
+          VirtualField.find(SharedSessionContract.class, Context.class);
+      virtualField.setIfAbsentAndGet(session, context);
     }
   }
 }

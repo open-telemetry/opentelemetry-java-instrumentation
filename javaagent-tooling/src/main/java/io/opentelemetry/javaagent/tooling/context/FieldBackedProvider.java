@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -67,14 +66,14 @@ import net.bytebuddy.utility.JavaModule;
  *   <li>Injecting a Dynamic Interface that provides getter and setter for context field
  *   <li>Applying Dynamic Interface to a type needing context, implementing interface methods and
  *       adding context storage field
- *   <li>Injecting a Dynamic Class created from {@link ContextStoreImplementationTemplate} to use
+ *   <li>Injecting a Dynamic Class created from {@link VirtualFieldImplementationTemplate} to use
  *       injected field or fall back to a static map
  *   <li>Rewriting calls to the context-store to access the specific dynamic {@link
- *       ContextStoreImplementationTemplate}
+ *       VirtualFieldImplementationTemplate}
  * </ol>
  *
  * <p>Example:<br>
- * <em>InstrumentationContext.get(Runnable.class, RunnableState.class)")</em><br>
+ * <em>VirtualField.find(Runnable.class, RunnableState.class)")</em><br>
  * is rewritten to:<br>
  * <em>FieldBackedProvider$ContextStore$Runnable$RunnableState12345.getContextStore(Runnable.class,
  * RunnableState.class)</em>
@@ -101,9 +100,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   static {
     try {
-      CONTEXT_GET_METHOD = InstrumentationContext.class.getMethod("get", Class.class, Class.class);
+      CONTEXT_GET_METHOD = VirtualField.class.getMethod("find", Class.class, Class.class);
       GET_CONTEXT_STORE_METHOD =
-          ContextStoreImplementationTemplate.class.getMethod(
+          VirtualFieldImplementationTemplate.class.getMethod(
               "getContextStore", Class.class, Class.class);
     } catch (Exception e) {
       throw new IllegalStateException(e);
@@ -143,14 +142,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         bootstrapHelperInjector(contextStoreImplementations.values());
   }
 
-  public static <Q extends K, K, C> ContextStore<Q, C> getContextStore(
+  public static <Q extends K, K, C> VirtualField<Q, C> getContextStore(
       Class<K> keyClass, Class<C> contextClass) {
     try {
       String contextStoreClassName =
           getContextStoreImplementationClassName(keyClass.getName(), contextClass.getName());
       Class<?> contextStoreClass = Class.forName(contextStoreClassName, false, null);
       Method method = contextStoreClass.getMethod("getContextStore", Class.class, Class.class);
-      return (ContextStore<Q, C>) method.invoke(null, keyClass, contextClass);
+      return (VirtualField<Q, C>) method.invoke(null, keyClass, contextClass);
     } catch (ClassNotFoundException exception) {
       throw new IllegalStateException("Context store not found", exception);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
@@ -622,7 +621,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private DynamicType.Unloaded<?> makeContextStoreImplementationClass(
       String keyClassName, String contextClassName) {
     return byteBuddy
-        .rebase(ContextStoreImplementationTemplate.class)
+        .rebase(VirtualFieldImplementationTemplate.class)
         .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL, SyntheticState.SYNTHETIC)
         .name(getContextStoreImplementationClassName(keyClassName, contextClassName))
         .visit(getContextStoreImplementationVisitor(keyClassName, contextClassName))
@@ -866,58 +865,58 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    */
   // Called from generated code
   @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
-  private static final class ContextStoreImplementationTemplate
-      implements ContextStore<Object, Object> {
-    private static final ContextStoreImplementationTemplate INSTANCE =
-        new ContextStoreImplementationTemplate(Cache.newBuilder().setWeakKeys().build());
+  private static final class VirtualFieldImplementationTemplate
+      extends VirtualField<Object, Object> {
+    private static final VirtualFieldImplementationTemplate INSTANCE =
+        new VirtualFieldImplementationTemplate(Cache.newBuilder().setWeakKeys().build());
 
     private final Cache<Object, Object> map;
 
-    private ContextStoreImplementationTemplate(Cache<Object, Object> map) {
+    private VirtualFieldImplementationTemplate(Cache<Object, Object> map) {
       this.map = map;
     }
 
     @Override
-    public Object get(Object key) {
-      return realGet(key);
+    public Object get(Object object) {
+      return realGet(object);
     }
 
     @Override
-    public Object putIfAbsent(Object key, Object context) {
-      Object existingContext = realGet(key);
+    public Object setIfAbsentAndGet(Object object, Object fieldValue) {
+      Object oldFieldValue = realGet(object);
+      if (oldFieldValue != null) {
+        return oldFieldValue;
+      }
+      synchronized (realSynchronizeInstance(object)) {
+        oldFieldValue = realGet(object);
+        if (oldFieldValue != null) {
+          return oldFieldValue;
+        }
+        realPut(object, fieldValue);
+        return fieldValue;
+      }
+    }
+
+    @Override
+    public Object setIfAbsentAndGet(Object object, Supplier<Object> fieldValueSupplier) {
+      Object existingContext = realGet(object);
       if (null != existingContext) {
         return existingContext;
       }
-      synchronized (realSynchronizeInstance(key)) {
-        existingContext = realGet(key);
+      synchronized (realSynchronizeInstance(object)) {
+        existingContext = realGet(object);
         if (null != existingContext) {
           return existingContext;
         }
-        realPut(key, context);
+        Object context = fieldValueSupplier.get();
+        realPut(object, context);
         return context;
       }
     }
 
     @Override
-    public Object putIfAbsent(Object key, Supplier<Object> contextFactory) {
-      Object existingContext = realGet(key);
-      if (null != existingContext) {
-        return existingContext;
-      }
-      synchronized (realSynchronizeInstance(key)) {
-        existingContext = realGet(key);
-        if (null != existingContext) {
-          return existingContext;
-        }
-        Object context = contextFactory.get();
-        realPut(key, context);
-        return context;
-      }
-    }
-
-    @Override
-    public void put(Object key, Object context) {
-      realPut(key, context);
+    public void set(Object object, Object fieldValue) {
+      realPut(object, fieldValue);
     }
 
     private Object realGet(Object key) {
@@ -950,7 +949,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       return map;
     }
 
-    public static ContextStore getContextStore(Class keyClass, Class contextClass) {
+    public static VirtualField getContextStore(Class keyClass, Class contextClass) {
       // We do not actually check the keyClass here - but that should be fine since compiler would
       // check things for us.
       return INSTANCE;

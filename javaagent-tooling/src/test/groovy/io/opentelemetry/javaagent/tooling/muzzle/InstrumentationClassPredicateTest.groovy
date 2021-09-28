@@ -37,6 +37,6 @@ class InstrumentationClassPredicateTest extends Specification {
     "Java SDK class"                      | "java.util.ArrayList"
     "javaagent-tooling class"             | "io.opentelemetry.javaagent.tooling.Constants"
     "instrumentation-api class"           | "io.opentelemetry.instrumentation.api.InstrumentationVersion"
-    "javaagent-instrumentation-api class" | "io.opentelemetry.javaagent.instrumentation.api.ContextStore"
+    "javaagent-instrumentation-api class" | "io.opentelemetry.instrumentation.api.field.ContextStore"
   }
 }

@@ -15,11 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
@@ -63,10 +62,10 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("remoteSocket") String remoteSocket,
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(1) CouchbaseRequest request) {
-      ContextStore<CouchbaseRequest, Span> contextStore =
-          InstrumentationContext.get(CouchbaseRequest.class, Span.class);
+      VirtualField<CouchbaseRequest, Span> virtualField =
+          VirtualField.find(CouchbaseRequest.class, Span.class);
 
-      Span span = contextStore.get(request);
+      Span span = virtualField.get(request);
       if (span != null) {
         NetPeerAttributes.INSTANCE.setNetPeer(span, remoteHostname, null);
 

@@ -14,10 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -60,11 +59,11 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         return null;
       }
 
-      ContextStore<Channel, ChannelTraceContext> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
+      VirtualField<Channel, ChannelTraceContext> virtualField =
+          VirtualField.find(Channel.class, ChannelTraceContext.class);
 
       ChannelTraceContext channelTraceContext =
-          contextStore.putIfAbsent(future.getChannel(), ChannelTraceContext.FACTORY);
+          virtualField.setIfAbsentAndGet(future.getChannel(), ChannelTraceContext.FACTORY);
       Context parentContext = channelTraceContext.getConnectionContext();
       if (parentContext == null) {
         return null;
