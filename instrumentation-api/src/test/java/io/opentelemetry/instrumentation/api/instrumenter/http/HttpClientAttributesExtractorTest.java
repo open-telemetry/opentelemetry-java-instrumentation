@@ -31,21 +31,6 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    protected String target(Map<String, String> request) {
-      return request.get("target");
-    }
-
-    @Override
-    protected String host(Map<String, String> request) {
-      return request.get("host");
-    }
-
-    @Override
-    protected String scheme(Map<String, String> request) {
-      return request.get("scheme");
-    }
-
-    @Override
     protected String userAgent(Map<String, String> request) {
       return request.get("userAgent");
     }
@@ -89,9 +74,6 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("target", "github.com");
-    request.put("host", "github.com:80");
-    request.put("scheme", "https");
     request.put("userAgent", "okhttp 3.x");
     request.put("requestContentLength", "10");
     request.put("requestContentLengthUncompressed", "11");
@@ -109,9 +91,6 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
-            entry(SemanticAttributes.HTTP_TARGET, "github.com"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
-            entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"));
 
     extractor.onEnd(attributes, request, response, null);
@@ -119,9 +98,6 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
-            entry(SemanticAttributes.HTTP_TARGET, "github.com"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
-            entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, 11L),

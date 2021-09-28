@@ -25,36 +25,6 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(ClientRequest httpRequest) {
-    StringBuilder result = new StringBuilder();
-    String path = httpRequest.getURI().getPath();
-    if (path != null) {
-      result.append(path);
-    }
-    String query = httpRequest.getURI().getQuery();
-    if (query != null) {
-      result.append('?');
-      result.append(query);
-    }
-    String fragment = httpRequest.getURI().getFragment();
-    if (fragment != null) {
-      result.append('#');
-      result.append(fragment);
-    }
-    return result.length() > 0 ? result.toString() : null;
-  }
-
-  @Override
-  protected @Nullable String host(ClientRequest httpRequest) {
-    return httpRequest.getURI().getHost();
-  }
-
-  @Override
-  protected @Nullable String scheme(ClientRequest httpRequest) {
-    return httpRequest.getURI().getScheme();
-  }
-
-  @Override
   protected @Nullable String userAgent(ClientRequest httpRequest) {
     Object header = httpRequest.getHeaders().getFirst("User-Agent");
     return header != null ? header.toString() : null;

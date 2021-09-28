@@ -61,27 +61,6 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected String target(ClassicHttpRequest request) {
-    return request.getRequestUri();
-  }
-
-  @Override
-  @Nullable
-  protected String host(ClassicHttpRequest request) {
-    Header header = request.getFirstHeader("Host");
-    if (header != null) {
-      return header.getValue();
-    }
-    return null;
-  }
-
-  @Override
-  protected String scheme(ClassicHttpRequest request) {
-    String scheme = request.getScheme();
-    return scheme != null ? scheme : "http";
-  }
-
-  @Override
   @Nullable
   protected String userAgent(ClassicHttpRequest request) {
     Header header = request.getFirstHeader("User-Agent");

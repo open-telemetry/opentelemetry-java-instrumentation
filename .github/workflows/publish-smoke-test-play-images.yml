@@ -67,7 +67,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: JasonEtco/create-an-issue@v2.5.0
+      - uses: JasonEtco/create-an-issue@v2.6
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -25,23 +25,6 @@ final class OkHttp2HttpAttributesExtractor
   }
 
   @Override
-  protected String target(Request request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String host(Request request) {
-    return request.url().getHost();
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(Request request) {
-    return request.url().getProtocol();
-  }
-
-  @Override
   @Nullable
   protected String userAgent(Request request) {
     return request.header("User-Agent");

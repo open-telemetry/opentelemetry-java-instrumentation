@@ -91,11 +91,8 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     options.disableTestReusedRequest();
 
     Set<AttributeKey<?>> extra = new HashSet<>();
-    extra.add(SemanticAttributes.HTTP_HOST);
     extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
-    extra.add(SemanticAttributes.HTTP_SCHEME);
-    extra.add(SemanticAttributes.HTTP_TARGET);
     extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     options.setHttpAttributes(unused -> extra);
   }

@@ -59,27 +59,6 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  String getTarget() {
-    if (uri == null) {
-      return null;
-    }
-    String pathString = uri.getPath();
-    String queryString = uri.getQuery();
-    if (pathString != null && queryString != null) {
-      return pathString + "?" + queryString;
-    } else if (queryString != null) {
-      return "?" + queryString;
-    } else {
-      return pathString;
-    }
-  }
-
-  @Nullable
-  String getScheme() {
-    return uri != null ? uri.getScheme() : null;
-  }
-
-  @Nullable
   String getFlavor() {
     ProtocolVersion protocolVersion = delegate.getProtocolVersion();
     String protocol = protocolVersion.getProtocol();

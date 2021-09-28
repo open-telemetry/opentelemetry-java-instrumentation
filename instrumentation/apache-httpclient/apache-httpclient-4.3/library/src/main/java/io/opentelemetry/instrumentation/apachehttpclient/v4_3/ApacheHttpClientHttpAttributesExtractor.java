@@ -25,24 +25,6 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String target(ApacheHttpClientRequest request) {
-    return request.getTarget();
-  }
-
-  @Override
-  @Nullable
-  protected String host(ApacheHttpClientRequest request) {
-    return request.getHeader("Host");
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(ApacheHttpClientRequest request) {
-    return request.getScheme();
-  }
-
-  @Override
-  @Nullable
   protected String userAgent(ApacheHttpClientRequest request) {
     return request.getHeader("User-Agent");
   }
