@@ -95,7 +95,7 @@ def windowsTargets = [
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "1t"], args: [release: "2020-11-11_0736"]]
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
   ]
 ]
 
@@ -125,8 +125,8 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 
   def jdkImage
   if (vm == "hotspot") {
-    if (jdk == "17") {
-      jdkImage = "openjdk:${jdk}"
+    if (jdk == "15") {
+      jdkImage = "adoptopenjdk:${jdk}"
     } else {
       jdkImage = "eclipse-temurin:${jdk}"
     }
