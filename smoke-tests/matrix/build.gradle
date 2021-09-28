@@ -95,8 +95,7 @@ def windowsTargets = [
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2020-11-11_0736"]],
-    [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "1t"], args: [release: "2020-11-11_0736"]]
   ]
 ]
 
