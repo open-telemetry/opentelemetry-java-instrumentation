@@ -30,11 +30,11 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Dockerfile name, args key passes raw arguments to docker build
 def linuxTargets = [
   "jetty"  : [
-    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
     [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"]],
-    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"]],
+    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "17"]],
     [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"]],
-    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], war: "servlet-5.0"],
+    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "17"], war: "servlet-5.0"],
     [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
   ],
   "tomcat" : [
@@ -58,7 +58,7 @@ def linuxTargets = [
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
@@ -69,19 +69,18 @@ def linuxTargets = [
 
 def windowsTargets = [
   "jetty"  : [
-    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
-    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
-    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"],
-    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
+    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "15"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "15"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
+    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
+    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"],
+    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
   ],
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
     [version: ["8.5.60"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
     [version: ["9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
-    [version: ["10.0.4"], vm: ["hotspot"], jdk: ["11", "16", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
-    [version: ["10.0.4"], vm: ["openj9"], jdk: ["11", "16"], args: [majorVersion: "10"], war: "servlet-5.0"]
+    [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], args: [majorVersion: "10"], war: "servlet-5.0"],
   ],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -92,11 +91,11 @@ def windowsTargets = [
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [release: "2020-11-11_0736"]],
+    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2020-11-11_0736"]],
     [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
   ]
 ]

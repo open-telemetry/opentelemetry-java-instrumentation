@@ -6,6 +6,11 @@
 package io.opentelemetry.smoketest
 
 @AppServer(version = "20.0.0.12", jdk = "8")
+@AppServer(version = "20.0.0.12", jdk = "8-openj9")
+@AppServer(version = "20.0.0.12", jdk = "11")
+@AppServer(version = "20.0.0.12", jdk = "11-openj9")
+@AppServer(version = "20.0.0.12", jdk = "17")
+@AppServer(version = "20.0.0.12", jdk = "16-openj9")
 class LibertyServletOnlySmokeTest extends LibertySmokeTest {
 
   @Override
