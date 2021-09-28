@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 class MuzzleReferencesAccessor {
 
-  private static final Logger log = LoggerFactory.getLogger(MuzzleReferencesAccessor.class);
+  private static final Logger logger = LoggerFactory.getLogger(MuzzleReferencesAccessor.class);
 
   private static final ClassValue<MethodHandle> getMuzzleReferences =
       new ClassValue<MethodHandle>() {
@@ -58,7 +58,7 @@ class MuzzleReferencesAccessor {
     Map<String, ClassRef> muzzleReferences = emptyMap();
     MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
     if (methodHandle != null) {
-      log.warn(
+      logger.warn(
           "{} is compiled with old version of Muzzle. Its support will stop soon. Please recompile it against newer version of OpenTelemetry Java Instrumentation APIs",
           instrumentationModule);
       try {
