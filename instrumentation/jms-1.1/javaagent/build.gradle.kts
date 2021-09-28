@@ -18,20 +18,45 @@ muzzle {
 
 testSets {
   create("jms2Test")
+  create("jms2TestReceiveSpansDisabled") {
+    extendsFrom("jms2Test")
+  }
 }
 
 tasks {
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("SpringListenerJms1SuppressReceiveSpansTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/SpringListenerJms1SuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
+  }
+
   val jms2Test by existing(Test::class) {
     filter {
       // this is needed because "test.dependsOn jms2Test", and so without this,
       // running a single test in the default test set will fail
-      setFailOnNoMatchingTests(false)
+      isFailOnNoMatchingTests = false
     }
   }
 
-  named<Test>("test") {
+  val jms2TestReceiveSpansDisabled by existing(Test::class) {
+    filter {
+      isFailOnNoMatchingTests = false
+    }
+    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
+  }
+
+  test {
+    dependsOn(testReceiveSpansDisabled)
     dependsOn(jms2Test)
+    dependsOn(jms2TestReceiveSpansDisabled)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    filter {
+      excludeTestsMatching("SpringListenerJms1SuppressReceiveSpansTest")
+      isFailOnNoMatchingTests = false
+    }
   }
 }
 
@@ -54,4 +79,7 @@ dependencies {
     // this doesn't exist in maven central, and doesn't seem to be needed anyways
     exclude("org.jboss.naming", "jnpserver")
   }
+
+  // this is just to avoid a bit more copy-pasting
+  add("jms2TestReceiveSpansDisabledImplementation", sourceSets["jms2Test"].output)
 }

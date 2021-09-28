@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Accessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrumenterBuilder;
