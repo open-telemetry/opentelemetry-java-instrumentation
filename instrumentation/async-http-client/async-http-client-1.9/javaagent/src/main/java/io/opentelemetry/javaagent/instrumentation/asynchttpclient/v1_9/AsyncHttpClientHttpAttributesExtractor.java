@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
-import com.ning.http.client.uri.Uri;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,29 +22,6 @@ final class AsyncHttpClientHttpAttributesExtractor
   @Override
   protected String url(Request request) {
     return request.getUri().toUrl();
-  }
-
-  @Override
-  protected String target(Request request) {
-    Uri uri = request.getUri();
-    String query = uri.getQuery();
-    return query != null ? uri.getPath() + "?" + query : uri.getPath();
-  }
-
-  @Override
-  @Nullable
-  protected String host(Request request) {
-    String host = request.getHeaders().getFirstValue("Host");
-    if (host != null) {
-      return host;
-    }
-    return request.getVirtualHost();
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(Request request) {
-    return request.getUri().getScheme();
   }
 
   @Override

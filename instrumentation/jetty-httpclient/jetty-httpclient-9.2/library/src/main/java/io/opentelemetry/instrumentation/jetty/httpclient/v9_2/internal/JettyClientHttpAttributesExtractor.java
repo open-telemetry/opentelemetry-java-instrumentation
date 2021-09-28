@@ -38,25 +38,6 @@ final class JettyClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String target(Request request) {
-    String queryString = request.getQuery();
-    return queryString != null ? request.getPath() + "?" + queryString : request.getPath();
-  }
-
-  @Override
-  @Nullable
-  protected String host(Request request) {
-    return request.getHost();
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(Request request) {
-    return request.getScheme();
-  }
-
-  @Override
-  @Nullable
   protected String userAgent(Request request) {
     HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
     return agentField != null ? agentField.getValue() : null;

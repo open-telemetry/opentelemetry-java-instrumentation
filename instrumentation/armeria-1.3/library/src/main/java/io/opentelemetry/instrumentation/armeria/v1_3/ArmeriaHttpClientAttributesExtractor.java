@@ -29,23 +29,6 @@ final class ArmeriaHttpClientAttributesExtractor
   }
 
   @Override
-  protected String target(RequestContext ctx) {
-    return request(ctx).path();
-  }
-
-  @Override
-  @Nullable
-  protected String host(RequestContext ctx) {
-    return request(ctx).authority();
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(RequestContext ctx) {
-    return request(ctx).scheme();
-  }
-
-  @Override
   @Nullable
   protected String userAgent(RequestContext ctx) {
     return request(ctx).headers().get(HttpHeaderNames.USER_AGENT);
