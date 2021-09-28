@@ -256,7 +256,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     return;
                   }
                   throw new IllegalStateException(
-                      "Incorrect Context Api Usage detected. Key and context class must be class-literals. Example of correct usage: InstrumentationContext.get(Runnable.class, RunnableContext.class)");
+                      "Incorrect Context Api Usage detected. Key and context class must be class-literals. Example of correct usage: VirtualField.find(Runnable.class, RunnableContext.class)");
                 } else {
                   super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 }
