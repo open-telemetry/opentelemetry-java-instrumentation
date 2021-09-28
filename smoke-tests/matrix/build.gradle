@@ -80,8 +80,7 @@ def windowsTargets = [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
     [version: ["8.5.60"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
     [version: ["9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
-    [version: ["10.0.4"], vm: ["hotspot"], jdk: ["11", "16", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
-    [version: ["10.0.4"], vm: ["openj9"], jdk: ["11", "16"], args: [majorVersion: "10"], war: "servlet-5.0"]
+    [version: ["10.0.4"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], args: [majorVersion: "10"], war: "servlet-5.0"],
   ],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -92,12 +91,11 @@ def windowsTargets = [
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
-    [version: ["20.0.0.12"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [release: "2020-11-11_0736"]],
-    [version: ["20.0.0.12"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
   ]
 ]
 
@@ -127,8 +125,8 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 
   def jdkImage
   if (vm == "hotspot") {
-    if (jdk == "17") {
-      jdkImage = "openjdk:${jdk}"
+    if (jdk == "15") {
+      jdkImage = "adoptopenjdk:${jdk}-hotspot"
     } else {
       jdkImage = "eclipse-temurin:${jdk}"
     }
