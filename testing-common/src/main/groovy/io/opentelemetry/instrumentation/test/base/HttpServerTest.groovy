@@ -574,9 +574,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_FLAVOR.key}" { it == "1.1" || it == "2.0" }
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-        "${SemanticAttributes.HTTP_SCHEME}" "http"
-        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
+        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
+          // netty instrumentation uses this
+          "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        } else {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
+        }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
@@ -619,9 +624,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-        "${SemanticAttributes.HTTP_SCHEME}" "http"
-        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
+        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
+          // netty instrumentation uses this
+          "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
+        } else {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
+        }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long

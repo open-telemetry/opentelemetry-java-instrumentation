@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.http.scaladsl.model.Uri;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import scala.Option;
 
 public class AkkaHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
@@ -44,8 +46,24 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected String url(HttpRequest httpRequest) {
-    return httpRequest.uri().toString();
+  protected String scheme(HttpRequest httpRequest) {
+    return httpRequest.uri().scheme();
+  }
+
+  @Override
+  protected String host(HttpRequest httpRequest) {
+    Uri.Authority authority = httpRequest.uri().authority();
+    return authority.host().address() + ":" + authority.port();
+  }
+
+  @Override
+  protected String target(HttpRequest httpRequest) {
+    String target = httpRequest.uri().path().toString();
+    Option<String> queryString = httpRequest.uri().rawQueryString();
+    if (queryString.isDefined()) {
+      target += "?" + queryString.get();
+    }
+    return target;
   }
 
   @Override

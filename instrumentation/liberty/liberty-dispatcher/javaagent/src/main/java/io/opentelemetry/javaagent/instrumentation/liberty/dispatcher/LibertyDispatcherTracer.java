@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import java.net.URI;
-import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,21 +66,23 @@ public class LibertyDispatcherTracer
   }
 
   @Override
-  protected String url(LibertyRequestWrapper libertyRequestWrapper) {
-    try {
-      return new URI(
-              libertyRequestWrapper.getScheme(),
-              null,
-              libertyRequestWrapper.getServerName(),
-              libertyRequestWrapper.getServerPort(),
-              libertyRequestWrapper.getRequestUri(),
-              libertyRequestWrapper.getQueryString(),
-              null)
-          .toString();
-    } catch (URISyntaxException e) {
-      logger.debug("Failed to construct request URI", e);
-      return null;
+  protected String scheme(LibertyRequestWrapper libertyRequestWrapper) {
+    return libertyRequestWrapper.getScheme();
+  }
+
+  @Override
+  protected String host(LibertyRequestWrapper libertyRequestWrapper) {
+    return libertyRequestWrapper.getServerName() + ":" + libertyRequestWrapper.getServerPort();
+  }
+
+  @Override
+  protected String target(LibertyRequestWrapper libertyRequestWrapper) {
+    String target = libertyRequestWrapper.getRequestUri();
+    String queryString = libertyRequestWrapper.getQueryString();
+    if (queryString != null) {
+      target += "?" + queryString;
     }
+    return target;
   }
 
   @Override

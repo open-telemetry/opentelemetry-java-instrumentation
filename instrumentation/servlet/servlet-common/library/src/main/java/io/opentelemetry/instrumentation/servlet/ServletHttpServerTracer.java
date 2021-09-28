@@ -20,8 +20,6 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -92,21 +90,25 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   }
 
   @Override
-  protected String url(REQUEST httpServletRequest) {
-    try {
-      return new URI(
-              accessor.getRequestScheme(httpServletRequest),
-              null,
-              accessor.getRequestServerName(httpServletRequest),
-              accessor.getRequestServerPort(httpServletRequest),
-              accessor.getRequestUri(httpServletRequest),
-              accessor.getRequestQueryString(httpServletRequest),
-              null)
-          .toString();
-    } catch (URISyntaxException e) {
-      logger.debug("Failed to construct request URI", e);
-      return null;
+  protected String scheme(REQUEST httpServletRequest) {
+    return accessor.getRequestScheme(httpServletRequest);
+  }
+
+  @Override
+  protected String host(REQUEST httpServletRequest) {
+    return accessor.getRequestServerName(httpServletRequest)
+        + ":"
+        + accessor.getRequestServerPort(httpServletRequest);
+  }
+
+  @Override
+  protected String target(REQUEST httpServletRequest) {
+    String target = accessor.getRequestUri(httpServletRequest);
+    String queryString = accessor.getRequestQueryString(httpServletRequest);
+    if (queryString != null) {
+      target += "?" + queryString;
     }
+    return target;
   }
 
   @Override

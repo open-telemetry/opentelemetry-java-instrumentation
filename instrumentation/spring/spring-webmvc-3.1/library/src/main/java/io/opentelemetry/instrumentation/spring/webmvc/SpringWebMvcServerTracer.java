@@ -37,8 +37,23 @@ class SpringWebMvcServerTracer
   }
 
   @Override
-  protected String url(HttpServletRequest request) {
-    return request.getRequestURI();
+  protected String scheme(HttpServletRequest request) {
+    return request.getScheme();
+  }
+
+  @Override
+  protected String host(HttpServletRequest request) {
+    return request.getServerName() + ":" + request.getServerPort();
+  }
+
+  @Override
+  protected String target(HttpServletRequest request) {
+    String target = request.getPathInfo();
+    String queryString = request.getQueryString();
+    if (queryString != null) {
+      target += "?" + queryString;
+    }
+    return target;
   }
 
   @Override

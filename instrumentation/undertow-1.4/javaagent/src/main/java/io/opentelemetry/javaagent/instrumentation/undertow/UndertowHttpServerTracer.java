@@ -124,13 +124,23 @@ public class UndertowHttpServerTracer
   }
 
   @Override
-  protected String url(HttpServerExchange exchange) {
-    String result = exchange.getRequestURL();
-    if (exchange.getQueryString() == null || exchange.getQueryString().isEmpty()) {
-      return result;
-    } else {
-      return result + "?" + exchange.getQueryString();
+  protected String scheme(HttpServerExchange exchange) {
+    return exchange.getRequestScheme();
+  }
+
+  @Override
+  protected String host(HttpServerExchange exchange) {
+    return exchange.getHostAndPort();
+  }
+
+  @Override
+  protected String target(HttpServerExchange exchange) {
+    String target = exchange.getRequestPath();
+    String queryString = exchange.getQueryString();
+    if (queryString != null) {
+      target += "?" + queryString;
     }
+    return target;
   }
 
   @Override
