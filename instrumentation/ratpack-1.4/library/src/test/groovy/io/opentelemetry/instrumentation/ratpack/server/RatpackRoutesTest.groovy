@@ -29,10 +29,7 @@ class RatpackRoutesTest extends AbstractRatpackRoutesTest implements LibraryTest
   List<AttributeKey<?>> extraAttributes() {
     return [
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_HOST,
-      SemanticAttributes.HTTP_TARGET,
-      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_TRANSPORT
     ]
   }
 }
