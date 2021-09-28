@@ -31,6 +31,8 @@ public abstract class TracingBuilder<
           ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
       transformSpanStatusExtractor = Function.identity();
 
+  protected TracingBuilder() {}
+
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors of this
