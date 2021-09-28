@@ -12,8 +12,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Represents a "virtual" field of type {@code F} that is added to type {@code T} in the runtime.
  *
- * <p>Field values are weakly referenced and will be garbage collected when their owner instance is
- * collected.
+ * <p>A virtual field has similar semantics to a weak-keys strong-values map: the value will be
+ * garbage collected when their owner instance is collected. It is discouraged to use a virtual
+ * field for keeping values that might reference their key, as it may cause memory leaks.
  *
  * @param <T> The type that will contain the new virtual field.
  * @param <F> The field type that'll be added to {@code T}.
@@ -48,14 +49,14 @@ public abstract class VirtualField<T, F> {
   public abstract void set(T object, @Nullable F fieldValue);
 
   /**
-   * Sets the new value of this virtual field if the current value is {@code null} or absent.
+   * Sets the new value of this virtual field if the current value is {@code null}.
    *
    * @return The old field value if it was present, or the passed {@code fieldValue}.
    */
   public abstract F setIfAbsentAndGet(T object, F fieldValue);
 
   /**
-   * Sets the new value of this virtual field if the current value is {@code null} or absent.
+   * Sets the new value of this virtual field if the current value is {@code null}.
    *
    * @return The old field value if it was present, or the result of evaluating passed {@code
    *     fieldValueSupplier}.
