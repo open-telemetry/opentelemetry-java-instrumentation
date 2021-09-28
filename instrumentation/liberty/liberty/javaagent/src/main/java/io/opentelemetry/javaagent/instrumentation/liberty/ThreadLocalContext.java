@@ -15,7 +15,6 @@ public class ThreadLocalContext {
 
   private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
 
-  private final HttpServletRequest request;
   private final HttpServletResponse response;
   private final ServletRequestContext<HttpServletRequest> requestContext;
   private Context context;
@@ -23,7 +22,6 @@ public class ThreadLocalContext {
   private boolean started;
 
   private ThreadLocalContext(HttpServletRequest request, HttpServletResponse response) {
-    this.request = request;
     this.response = response;
     this.requestContext = new ServletRequestContext<>(request);
   }
@@ -45,7 +43,7 @@ public class ThreadLocalContext {
   }
 
   public HttpServletRequest getRequest() {
-    return request;
+    return requestContext.request();
   }
 
   public ServletRequestContext<HttpServletRequest> getRequestContext() {
