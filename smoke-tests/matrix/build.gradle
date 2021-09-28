@@ -133,7 +133,7 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
       jdkImage = "eclipse-temurin:${jdk}"
     }
   } else if (vm == "openj9") {
-    jdkImage = "adoptopenjdk:${jdk}-openj9"
+    jdkImage = "ibmsemeruruntime/open-${jdk}-jdk:focal-jdk-latest"
   } else {
     throw new GradleException("Unexpected vm: $vm")
   }
