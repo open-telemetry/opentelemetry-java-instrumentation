@@ -137,7 +137,7 @@ public class UndertowHttpServerTracer
   protected String target(HttpServerExchange exchange) {
     String target = exchange.getRequestPath();
     String queryString = exchange.getQueryString();
-    if (queryString != null) {
+    if (queryString != null && !queryString.isEmpty()) {
       target += "?" + queryString;
     }
     return target;
