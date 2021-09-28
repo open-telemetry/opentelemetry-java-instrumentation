@@ -11,7 +11,7 @@ import java.time.Duration
 @AppServer(version = "20.0.0.12", jdk = "8-openj9")
 @AppServer(version = "20.0.0.12", jdk = "11")
 @AppServer(version = "20.0.0.12", jdk = "11-openj9")
-@AppServer(version = "20.0.0.12", jdk = "16")
+@AppServer(version = "20.0.0.12", jdk = "17")
 @AppServer(version = "20.0.0.12", jdk = "16-openj9")
 class LibertySmokeTest extends AppServerTest {
 
