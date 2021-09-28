@@ -23,21 +23,6 @@ class HttpUrlHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(HttpURLConnection connection) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String host(HttpURLConnection connection) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String scheme(HttpURLConnection connection) {
-    return null;
-  }
-
-  @Override
   protected @Nullable String userAgent(HttpURLConnection connection) {
     return connection.getRequestProperty("User-Agent");
   }

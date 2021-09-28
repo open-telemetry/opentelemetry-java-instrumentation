@@ -105,9 +105,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "${SemanticAttributes.HTTP_METHOD.key}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost"
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_TARGET.key}" path
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key}" Long
           }
         }

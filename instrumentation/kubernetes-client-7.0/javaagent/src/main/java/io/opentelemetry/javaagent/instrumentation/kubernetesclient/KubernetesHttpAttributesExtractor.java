@@ -24,21 +24,6 @@ class KubernetesHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(Request request) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String host(Request request) {
-    return null;
-  }
-
-  @Override
-  protected @Nullable String scheme(Request request) {
-    return null;
-  }
-
-  @Override
   protected @Nullable String userAgent(Request request) {
     return request.header("user-agent");
   }

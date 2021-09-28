@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.tooling.ExporterClassLoader;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 
 @AutoService(IgnoredTypesConfigurer.class)
@@ -109,7 +108,6 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
-        .ignoreClassLoader(ExporterClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName());
 
     builder

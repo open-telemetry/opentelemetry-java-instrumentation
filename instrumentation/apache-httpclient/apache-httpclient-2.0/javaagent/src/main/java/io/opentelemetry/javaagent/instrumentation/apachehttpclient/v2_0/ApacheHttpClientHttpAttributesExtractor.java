@@ -28,33 +28,6 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected String target(HttpMethod request) {
-    String queryString = request.getQueryString();
-    return queryString != null ? request.getPath() + "?" + queryString : request.getPath();
-  }
-
-  @Override
-  @Nullable
-  protected String host(HttpMethod request) {
-    Header header = request.getRequestHeader("Host");
-    if (header != null) {
-      return header.getValue();
-    }
-    HostConfiguration hostConfiguration = request.getHostConfiguration();
-    if (hostConfiguration != null) {
-      return hostConfiguration.getVirtualHost();
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected String scheme(HttpMethod request) {
-    HostConfiguration hostConfiguration = request.getHostConfiguration();
-    return hostConfiguration != null ? hostConfiguration.getProtocol().getScheme() : null;
-  }
-
-  @Override
   @Nullable
   protected String userAgent(HttpMethod request) {
     Header header = request.getRequestHeader("User-Agent");

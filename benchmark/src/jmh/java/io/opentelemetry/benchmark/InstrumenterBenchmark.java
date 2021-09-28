@@ -69,21 +69,6 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    protected @Nullable String target(Void unused) {
-      return "/benchmark";
-    }
-
-    @Override
-    protected @Nullable String host(Void unused) {
-      return "opentelemetry.io";
-    }
-
-    @Override
-    protected @Nullable String scheme(Void unused) {
-      return "https";
-    }
-
-    @Override
     protected @Nullable String userAgent(Void unused) {
       return "OpenTelemetryBot";
     }

@@ -25,11 +25,6 @@ public abstract class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);
     set(attributes, SemanticAttributes.HTTP_URL, url(request));
-
-    // TODO: these are specific to servers, should we remove those?
-    set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
-    set(attributes, SemanticAttributes.HTTP_HOST, host(request));
-    set(attributes, SemanticAttributes.HTTP_SCHEME, scheme(request));
   }
 
   @Override
@@ -45,16 +40,4 @@ public abstract class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   protected abstract String url(REQUEST request);
-
-  // TODO: this is specific to servers, should we remove this?
-  @Nullable
-  protected abstract String target(REQUEST request);
-
-  // TODO: this is specific to servers, should we remove this?
-  @Nullable
-  protected abstract String host(REQUEST request);
-
-  // TODO: this is specific to servers, should we remove this?
-  @Nullable
-  protected abstract String scheme(REQUEST request);
 }
