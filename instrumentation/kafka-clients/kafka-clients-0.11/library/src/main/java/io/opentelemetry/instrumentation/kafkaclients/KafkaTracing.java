@@ -24,8 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KafkaTracing {
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11.library";
-
   private static final Logger logger = LoggerFactory.getLogger(KafkaTracing.class);
 
   private static final TextMapGetter<Headers> GETTER = new KafkaHeadersGetter();
@@ -42,7 +40,13 @@ public class KafkaTracing {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  public static KafkaTracingBuilder create(OpenTelemetry openTelemetry) {
+  /** Returns a new {@link KafkaTracing} configured with the given {@link OpenTelemetry}. */
+  public static KafkaTracing create(OpenTelemetry openTelemetry) {
+    return newBuilder(openTelemetry).build();
+  }
+
+  /** Returns a new {@link KafkaTracingBuilder} configured with the given {@link OpenTelemetry}. */
+  public static KafkaTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
     return new KafkaTracingBuilder(openTelemetry);
   }
 

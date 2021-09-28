@@ -13,7 +13,7 @@ abstract class KafkaTracingHolder {
 
   public synchronized KafkaTracing getTracing() {
     if (tracing == null) {
-      tracing = KafkaTracing.create(GlobalOpenTelemetry.get()).build();
+      tracing = KafkaTracing.create(GlobalOpenTelemetry.get());
     }
     return tracing;
   }

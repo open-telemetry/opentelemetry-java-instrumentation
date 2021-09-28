@@ -12,7 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 public final class KafkaSingletons {
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11.javaagent";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER =
       KafkaUtils.buildProducerInstrumenter(INSTRUMENTATION_NAME);
