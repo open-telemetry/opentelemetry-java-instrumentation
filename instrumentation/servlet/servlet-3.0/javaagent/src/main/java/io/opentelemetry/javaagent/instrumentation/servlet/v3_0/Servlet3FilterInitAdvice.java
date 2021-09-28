@@ -20,7 +20,7 @@ public class Servlet3FilterInitAdvice {
     if (filterConfig == null) {
       return;
     }
-    InstrumentationContext.get(Filter.class, MappingResolver.class)
+    InstrumentationContext.get(Filter.class, MappingResolver.Factory.class)
         .putIfAbsent(filter, new Servlet3FilterMappingResolverFactory(filterConfig));
   }
 }

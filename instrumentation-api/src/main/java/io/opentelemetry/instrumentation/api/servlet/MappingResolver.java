@@ -139,4 +139,16 @@ public final class MappingResolver {
       return mapping;
     }
   }
+
+  /**
+   * Factory interface for creating {@link MappingResolver} instances. The main reason this class is
+   * here is that we need to ensure that the class used for {@code InstrumentationContext} lookup is
+   * always the same. If we would use an injected class it could be different in different class
+   * loaders.
+   */
+  public interface Factory {
+
+    @Nullable
+    MappingResolver get();
+  }
 }

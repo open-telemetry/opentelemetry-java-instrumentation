@@ -123,7 +123,7 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 
   def extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
   def vmSuffix = vm == "hotspot" ? "" : "-$vm"
-  def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
+  def image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   def jdkImage
   if (vm == "hotspot") {
