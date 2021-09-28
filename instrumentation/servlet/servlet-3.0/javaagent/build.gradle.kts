@@ -17,8 +17,8 @@ muzzle {
 
 dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
-  api(project(":instrumentation:servlet:servlet-3.0:library"))
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
+  api(project(":instrumentation:servlet:servlet-javax-common:library"))
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
@@ -29,7 +29,6 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 
   // Jetty 10 seems to refuse to run on java8.
-  // TODO: we need to setup separate test for Jetty 10 when that is released.
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:9.+")
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:9.+")
 
