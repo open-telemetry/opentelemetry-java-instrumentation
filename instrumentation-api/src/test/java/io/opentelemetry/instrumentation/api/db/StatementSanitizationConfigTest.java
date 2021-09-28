@@ -14,7 +14,8 @@ public class StatementSanitizationConfigTest {
 
   @Test
   void shouldGetFalse() {
-    Config config = Config.newBuilder()
+    Config config =
+        Config.newBuilder()
             .addProperty("otel.instrumentation.common.db-statement-sanitizer.enabled", "false")
             .build();
     Config.internalInitializeConfig(config);
