@@ -55,18 +55,12 @@ class MuzzleReferencesAccessor {
     }
 
     // Older classes created and compiled outside of this repo may not yet have the interface above.
-    Map<String, ClassRef> muzzleReferences = emptyMap();
     MethodHandle methodHandle = getMuzzleReferences.get(instrumentationModule.getClass());
     if (methodHandle != null) {
       logger.warn(
-          "{} is compiled with old version of Muzzle. Its support will stop soon. Please recompile it against newer version of OpenTelemetry Java Instrumentation APIs",
+          "{} is compiled with old version of Muzzle and must be recompiled against newer version of OpenTelemetry Java Instrumentation APIs",
           instrumentationModule);
-      try {
-        muzzleReferences = (Map<String, ClassRef>) methodHandle.invoke(instrumentationModule);
-      } catch (Throwable ignored) {
-        // silence error prone
-      }
     }
-    return muzzleReferences;
+    return emptyMap();
   }
 }
