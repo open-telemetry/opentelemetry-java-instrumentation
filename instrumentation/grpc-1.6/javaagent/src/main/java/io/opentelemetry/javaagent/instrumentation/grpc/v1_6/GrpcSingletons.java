@@ -35,7 +35,7 @@ public final class GrpcSingletons {
     GrpcTracing tracing =
         GrpcTracing.newBuilder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
-            .addAttributeExtractor(peerServiceAttributesExtractor)
+            .addAttributesExtractor(peerServiceAttributesExtractor)
             .build();
 
     CLIENT_INTERCEPTOR = tracing.newClientInterceptor();

@@ -42,7 +42,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
-  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
@@ -200,10 +200,31 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns a new {@link Instrumenter} which will create client spans and inject context into
+   * requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(
+      TracingBuilder<REQUEST, RESPONSE, ?> tracingBuilder, TextMapSetter<REQUEST> setter) {
+    applyTracingBuilder(tracingBuilder);
+    return newInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
+  }
+
+  /**
    * Returns a new {@link Instrumenter} which will create server spans and extract context from
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysServer(), getter);
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create server spans and extract context from
+   * requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(
+      TracingBuilder<REQUEST, RESPONSE, ?> tracingBuilder, TextMapGetter<REQUEST> getter) {
+    applyTracingBuilder(tracingBuilder);
     return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysServer(), getter);
   }
 
@@ -252,11 +273,33 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return newInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
   }
 
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@code spanKindExtractor} and do no context propagation.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+      TracingBuilder<REQUEST, RESPONSE, ?> tracingBuilder,
+      SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+    applyTracingBuilder(tracingBuilder);
+    return newInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
+  }
+
   private Instrumenter<REQUEST, RESPONSE> newInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
+  }
+
+  private void applyTracingBuilder(TracingBuilder<REQUEST, RESPONSE, ?> tracingBuilder) {
+    attributesExtractors.addAll(tracingBuilder.additionalAttributesExtractors);
+    contextCustomizers.addAll(tracingBuilder.additionalContextCustomizers);
+    requestListeners.addAll(tracingBuilder.additionalListeners);
+    spanLinksExtractors.addAll(tracingBuilder.additionalLinksExtractors);
+
+    errorCauseExtractor = tracingBuilder.transformErrorCauseExtractor.apply(errorCauseExtractor);
+    spanNameExtractor = tracingBuilder.transformSpanNameExtractor.apply(spanNameExtractor);
+    spanStatusExtractor = tracingBuilder.transformSpanStatusExtractor.apply(spanStatusExtractor);
   }
 
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
