@@ -10,10 +10,12 @@ import com.twitter.util.Await
 import com.twitter.util.Closable
 import com.twitter.util.Duration
 import com.twitter.util.Promise
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -93,5 +95,12 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements Agen
       attributes {
       }
     }
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    return [
+      SemanticAttributes.HTTP_URL
+    ]
   }
 }
