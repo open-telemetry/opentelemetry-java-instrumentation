@@ -259,61 +259,6 @@ class ReferenceCollectorTest {
     assertThat(helperClasses).containsExactly(ExternalHelper.class.getName());
   }
 
-  @ParameterizedTest
-  @MethodSource
-  public void shouldCollectHelperClassesFromResourceFile(
-      @SuppressWarnings("unused") String desc, String resource) {
-    ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromResource(resource);
-    collector.prune();
-
-    List<String> helperClasses = collector.getSortedHelperClasses();
-    assertThat(helperClasses)
-        .containsSubsequence(
-            Arrays.asList(
-                TestHelperClasses.HelperInterface.class.getName(),
-                TestHelperClasses.Helper.class.getName()));
-    assertThat(helperClasses)
-        .containsSubsequence(
-            Arrays.asList(
-                TestHelperClasses.HelperSuperClass.class.getName(),
-                TestHelperClasses.Helper.class.getName()));
-  }
-
-  @SuppressWarnings("unused")
-  private static List<Arguments> shouldCollectHelperClassesFromResourceFile() {
-    return Arrays.asList(
-        Arguments.of("Java SPI", "META-INF/services/test.resource.file"),
-        Arguments.of(
-            "AWS SDK v2 global interceptors file",
-            "software/amazon/awssdk/global/handlers/execution.interceptors"),
-        Arguments.of(
-            "AWS SDK v2 service interceptors file",
-            "software/amazon/awssdk/services/testservice/execution.interceptors"),
-        Arguments.of(
-            "AWS SDK v2 service (second level) interceptors file",
-            "software/amazon/awssdk/services/testservice/testsubservice/execution.interceptors"),
-        Arguments.of(
-            "AWS SDK v1 global interceptors file",
-            "com/amazonaws/global/handlers/request.handler2s"),
-        Arguments.of(
-            "AWS SDK v1 service interceptors file",
-            "com/amazonaws/services/testservice/request.handler2s"),
-        Arguments.of(
-            "AWS SDK v1 service (second level) interceptors file",
-            "com/amazonaws/services/testservice/testsubservice/request.handler2s"));
-  }
-
-  @Test
-  public void shouldIgnoreArbitraryResourceFile() {
-    ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromResource("application.properties");
-    collector.prune();
-
-    assertThat(collector.getReferences()).isEmpty();
-    assertThat(collector.getSortedHelperClasses()).isEmpty();
-  }
-
   @Test
   public void shouldCollectContextStoreClasses() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
