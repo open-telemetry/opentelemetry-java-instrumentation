@@ -34,7 +34,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     }
 
     ChannelTraceContext channelTraceContext =
-        virtualField.setIfAbsentAndGet(ctx.getChannel(), ChannelTraceContext.FACTORY);
+        virtualField.setIfNullAndGet(ctx.getChannel(), ChannelTraceContext.FACTORY);
 
     Context parentContext = channelTraceContext.getConnectionContext();
     if (parentContext != null) {

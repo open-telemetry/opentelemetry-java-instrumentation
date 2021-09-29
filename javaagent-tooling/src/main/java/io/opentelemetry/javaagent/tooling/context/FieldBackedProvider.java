@@ -882,7 +882,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public Object setIfAbsentAndGet(Object object, Object fieldValue) {
+    public Object setIfNullAndGet(Object object, Object fieldValue) {
       Object oldFieldValue = realGet(object);
       if (oldFieldValue != null) {
         return oldFieldValue;
@@ -898,7 +898,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public Object setIfAbsentAndGet(Object object, Supplier<Object> fieldValueSupplier) {
+    public Object setIfNullAndGet(Object object, Supplier<Object> fieldValueSupplier) {
       Object existingContext = realGet(object);
       if (null != existingContext) {
         return existingContext;

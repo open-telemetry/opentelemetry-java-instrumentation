@@ -52,7 +52,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       VirtualField<KeyClass, Context> virtualField =
           VirtualField.find(KeyClass.class, Context.class);
-      Context context = virtualField.setIfAbsentAndGet(thiz, new Context());
+      Context context = virtualField.setIfNullAndGet(thiz, new Context());
       contextCount = ++context.count;
     }
   }
@@ -64,7 +64,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       VirtualField<KeyClass, Context> virtualField =
           VirtualField.find(KeyClass.class, Context.class);
-      Context context = virtualField.setIfAbsentAndGet(thiz, Context.FACTORY);
+      Context context = virtualField.setIfNullAndGet(thiz, Context.FACTORY);
       contextCount = ++context.count;
     }
   }

@@ -53,7 +53,7 @@ public abstract class VirtualField<T, F> {
    *
    * @return The old field value if it was present, or the passed {@code fieldValue}.
    */
-  public abstract F setIfAbsentAndGet(T object, F fieldValue);
+  public abstract F setIfNullAndGet(T object, F fieldValue);
 
   /**
    * Sets the new value of this virtual field if the current value is {@code null}.
@@ -61,5 +61,5 @@ public abstract class VirtualField<T, F> {
    * @return The old field value if it was present, or the result of evaluating passed {@code
    *     fieldValueSupplier}.
    */
-  public abstract F setIfAbsentAndGet(T object, Supplier<F> fieldValueSupplier);
+  public abstract F setIfNullAndGet(T object, Supplier<F> fieldValueSupplier);
 }

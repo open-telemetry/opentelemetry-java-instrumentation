@@ -44,7 +44,7 @@ public final class ExecutorAdviceHelper {
   public static <T> PropagatedContext attachContextToTask(
       Context context, VirtualField<T, PropagatedContext> virtualField, T task) {
     PropagatedContext propagatedContext =
-        virtualField.setIfAbsentAndGet(task, PropagatedContext.FACTORY);
+        virtualField.setIfNullAndGet(task, PropagatedContext.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
       context =
           ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace(), task);
