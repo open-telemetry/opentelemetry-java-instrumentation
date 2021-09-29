@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrap
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
-import java.util.Iterator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,8 +37,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
             .and(isPrivate())
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         this.getClass().getName() + "$PollRecordsAdvice");
-    transformer.applyAdviceToMethod(
-        named("pollPhase").and(isPrivate()), this.getClass().getName() + "$PollPhaseAdvice");
+    transformer.applyAdviceToMethod(named("runLoop"), this.getClass().getName() + "$RunLoopAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -59,22 +57,15 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
       VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
           VirtualField.find(ConsumerRecord.class, SpanContext.class);
 
-      Iterator<? extends ConsumerRecord<?, ?>> it = records.iterator();
-      // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though
-      // there's no current CONSUMER span
-      if (it instanceof KafkaConsumerIteratorWrapper) {
-        it = ((KafkaConsumerIteratorWrapper<?, ?>) it).unwrap();
-      }
-
-      while (it.hasNext()) {
-        ConsumerRecord<?, ?> record = it.next();
+      for (ConsumerRecord<?, ?> record : records) {
         singleRecordReceiveSpan.set(record, receiveSpanContext);
       }
     }
   }
 
+  // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class PollPhaseAdvice {
+  public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
       KafkaTracingWrapperUtil.disableWrapping();
