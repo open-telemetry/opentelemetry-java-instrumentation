@@ -30,7 +30,7 @@ page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/relea
 `Draft a new release` to write release notes about the new release. If there is already a draft
 release notes, just point it at the created tag.
 
-## Patch Releases
+## Patch Release
 
 All patch releases should include only bug-fixes, and must avoid
 adding/modifying the public APIs.
@@ -40,10 +40,15 @@ In general, patch releases are only made for bug-fixes for the following types o
 * Memory leaks
 * Deadlocks
 
-### Making a patch release
+To make a patch release, open the patch release build workflow in your browser
+[here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
-Unfortunately, the automated branch creation in the patch release build workflow
-is currently failing, e.g.
+You will see a button that says "Run workflow". Press the button, enter the version number you want
+to release in the input field for version that pops up and the commits you want to cherrypick.
+If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
+
+The automated branch creation will fail if any of the yaml files differ between the release branch
+and `main`, e.g.
 
 ```
 Switched to a new branch 'v1.6.x'
@@ -51,20 +56,14 @@ To https://github.com/open-telemetry/opentelemetry-java-instrumentation
 ! [remote rejected]     v1.6.x -> v1.6.x (refusing to allow a GitHub App to create or update workflow `.github/workflows/pr-smoke-test-fake-backend-images.yml` without `workflows` permission)
 ```
 
-so if the patch branch doesn't exist already, you will need to manually create it before proceeding,
-e.g.
+and you will need to manually create it before proceeding, e.g.
 
 ```
 git checkout -b v1.6.x v1.6.0
 git push upstream v1.6.x
 ```
 
-Next, open the patch release build workflow in your browser
-[here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
-You will see a button that says "Run workflow". Press the button, enter the version number you want
-to release in the input field for version that pops up and the commits you want to cherrypick.
-If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
 
 If the commits cannot be cleanly applied to the release branch, for example because it has diverged
 too much from main, then the workflow will fail before building. In this case, you will need to
