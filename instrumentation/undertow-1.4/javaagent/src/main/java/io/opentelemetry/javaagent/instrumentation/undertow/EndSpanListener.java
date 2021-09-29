@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowSingletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.undertow.server.ExchangeCompletionListener;
@@ -20,7 +20,7 @@ public class EndSpanListener implements ExchangeCompletionListener {
 
   @Override
   public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
-    tracer().exchangeCompleted(context, exchange);
+    helper().exchangeCompleted(context, exchange);
     nextListener.proceed();
   }
 }

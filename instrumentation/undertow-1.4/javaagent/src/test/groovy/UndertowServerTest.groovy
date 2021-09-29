@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
@@ -93,6 +94,18 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
     return "HTTP GET"
   }
 
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
+
   def "test send response"() {
     setup:
     def uri = address.resolve("sendResponse")
@@ -126,6 +139,13 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+            "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+            "${SemanticAttributes.HTTP_SCHEME}" "http"
+            "${SemanticAttributes.HTTP_TARGET}" "/sendResponse"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {
@@ -172,6 +192,13 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+            "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+            "${SemanticAttributes.HTTP_SCHEME}" "http"
+            "${SemanticAttributes.HTTP_TARGET}" "/sendResponseWithException"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {
