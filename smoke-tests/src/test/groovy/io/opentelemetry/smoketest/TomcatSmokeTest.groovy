@@ -25,6 +25,6 @@ package io.opentelemetry.smoketest
 class TomcatSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:tomcat"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomcat"
   }
 }

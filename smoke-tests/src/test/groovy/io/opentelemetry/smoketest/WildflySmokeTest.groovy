@@ -25,7 +25,7 @@ import spock.lang.Unroll
 class WildflySmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:wildfly"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-wildfly"
   }
 
   @Unroll

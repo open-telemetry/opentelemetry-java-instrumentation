@@ -14,7 +14,7 @@ import java.time.Duration
 class GlassFishSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:payara"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-payara"
   }
 
   @Override
