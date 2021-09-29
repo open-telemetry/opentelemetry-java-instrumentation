@@ -16,7 +16,7 @@ import java.time.Duration
 class TomeeSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:tomee"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomee"
   }
 
   @Override
