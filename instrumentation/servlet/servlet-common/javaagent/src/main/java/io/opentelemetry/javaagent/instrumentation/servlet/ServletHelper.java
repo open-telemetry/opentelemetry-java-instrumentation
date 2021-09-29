@@ -9,9 +9,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 
 public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
+  private static final String ASYNC_LISTENER_ATTRIBUTE =
+      ServletHelper.class.getName() + ".AsyncListener";
+  private static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
+      ServletHelper.class.getName() + ".AsyncListenerResponse";
 
   public ServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -76,14 +79,11 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
    * is not possible to access response from async event in listeners.
    */
   public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
-    accessor.setRequestAttribute(
-        request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
+    accessor.setRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
   }
 
   public RESPONSE getAsyncListenerResponse(REQUEST request) {
-    return (RESPONSE)
-        accessor.getRequestAttribute(
-            request, ServletHttpServerTracer.ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+    return (RESPONSE) accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
   }
 
   public void attachAsyncListener(REQUEST request) {
@@ -102,12 +102,11 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
           request,
           new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),
           response);
-      accessor.setRequestAttribute(request, ServletHttpServerTracer.ASYNC_LISTENER_ATTRIBUTE, true);
+      accessor.setRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE, true);
     }
   }
 
   public boolean isAsyncListenerAttached(REQUEST request) {
-    return accessor.getRequestAttribute(request, ServletHttpServerTracer.ASYNC_LISTENER_ATTRIBUTE)
-        != null;
+    return accessor.getRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE) != null;
   }
 }
