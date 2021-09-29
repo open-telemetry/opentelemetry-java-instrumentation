@@ -9,7 +9,6 @@ pluginManagement {
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
     id("nebula.release") version "15.3.1"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
   }
 }
 
@@ -50,8 +49,6 @@ buildCache {
 }
 
 rootProject.name = "opentelemetry-java-instrumentation"
-
-includeBuild("conventions")
 
 include(":muzzle")
 

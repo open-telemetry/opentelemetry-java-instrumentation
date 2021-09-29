@@ -13,8 +13,9 @@ dependencies {
 
   /*
     Dependencies added to this configuration will be found by the muzzle gradle plugin during code
-    generation phase. These classes become part of the code that plugin inspects and traverses during
-    references collection phase.
+    generation phase. They differ from the implementation dependencies declared in plugin's build
+    script, because these classes become part of the code that plugin inspects and traverses during
+    references collection phase. They are not part of the observer, they are part of the observation.
    */
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }

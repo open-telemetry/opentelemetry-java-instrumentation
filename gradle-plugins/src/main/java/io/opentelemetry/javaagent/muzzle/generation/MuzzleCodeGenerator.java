@@ -3,23 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.generation;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
-import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
-import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
-import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,9 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class generates the actual implementation of the {@code
+ * This class generates the actual implementation of the {@link
  * InstrumentationModule#getMuzzleReferences()} method. It collects references from all advice
- * classes defined in an instrumentation and writes them as Java bytecode in the generated {@code
+ * classes defined in an instrumentation and writes them as Java bytecode in the generated {@link
  * InstrumentationModule#getMuzzleReferences()} method.
  *
  * <p>This class is run at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy plugin.

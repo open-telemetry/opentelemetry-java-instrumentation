@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.muzzle.matcher;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ import java.util.Map;
  *
  * <p>Second, there is agent or instrumentation class loader, which contains all
  * InstrumentationModules and helper classes. The actual muzzle check process happens "inside" that
- * class loader. This means that we load {@code
+ * class loader. This means that we load {@link
  * io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher} from it and we allow it to find all
  * InstrumentationModules from agent class loader.
  *
@@ -43,10 +45,10 @@ public final class MuzzleGradlePluginUtil {
    * true):
    *
    * <ol>
-   *   <li>{@code userClassLoader} is not matched by the {@code
+   *   <li>{@code userClassLoader} is not matched by the {@link
    *       InstrumentationModule#classLoaderMatcher()} method
-   *   <li>{@code ReferenceMatcher} of any instrumentation module finds any mismatch
-   *   <li>any helper class defined in {@code InstrumentationModule#getMuzzleHelperClassNames()}
+   *   <li>{@link ReferenceMatcher} of any instrumentation module finds any mismatch
+   *   <li>any helper class defined in {@link InstrumentationModule#getMuzzleHelperClassNames()}
    *       fails to be injected into {@code userClassLoader}
    * </ol>
    *
