@@ -20,7 +20,7 @@ import spock.lang.Unroll
 @AppServer(version = "21.0.0.Final", jdk = "8-openj9")
 @AppServer(version = "21.0.0.Final", jdk = "11")
 @AppServer(version = "21.0.0.Final", jdk = "11-openj9")
-@AppServer(version = "21.0.0.Final", jdk = "16")
+@AppServer(version = "21.0.0.Final", jdk = "17")
 @AppServer(version = "21.0.0.Final", jdk = "16-openj9")
 class WildflySmokeTest extends AppServerTest {
 
