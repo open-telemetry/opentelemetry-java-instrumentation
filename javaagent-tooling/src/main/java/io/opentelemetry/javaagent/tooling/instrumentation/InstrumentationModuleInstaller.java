@@ -61,10 +61,6 @@ public final class InstrumentationModuleInstaller {
     }
     List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
-    List<String> helperResourceNames = instrumentationModule.helperResourceNames();
-    for (String helperResourceName : helperResourceNames) {
-      helperResourceBuilder.register(helperResourceName);
-    }
     instrumentationModule.registerHelperResources(helperResourceBuilder);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {

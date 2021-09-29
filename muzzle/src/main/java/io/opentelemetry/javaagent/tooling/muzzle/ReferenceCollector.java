@@ -74,21 +74,6 @@ public final class ReferenceCollector {
    * implementation as a reference, traversing the graph of classes until a non-instrumentation
    * (external) class is encountered.
    *
-   * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
-   * @see InstrumentationClassPredicate
-   * @deprecated Use {@link #collectReferencesFromResource(HelperResource)} instead.
-   */
-  @Deprecated
-  public void collectReferencesFromResource(String resource) {
-    collectReferencesFromResource(HelperResource.create(resource, resource));
-  }
-
-  /**
-   * If passed {@code resource} path points to an SPI file (either Java {@link
-   * java.util.ServiceLoader} or AWS SDK {@code ExecutionInterceptor}) reads the file and adds every
-   * implementation as a reference, traversing the graph of classes until a non-instrumentation
-   * (external) class is encountered.
-   *
    * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromResource(HelperResource helperResource) {

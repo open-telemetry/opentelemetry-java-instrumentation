@@ -4,15 +4,6 @@ plugins {
   `java-library`
 }
 
-afterEvaluate {
-  configurations.configureEach {
-    if (isCanBeResolved && !isCanBeConsumed) {
-      // TODO(anuraaga): Read version from properties file embedded by build.
-      project.dependencies.add(name, project.dependencies.platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:1.3.1-alpha"))
-    }
-  }
-}
-
 /**
  * We define three dependency configurations to use when adding dependencies to libraries being
  * instrumented.
