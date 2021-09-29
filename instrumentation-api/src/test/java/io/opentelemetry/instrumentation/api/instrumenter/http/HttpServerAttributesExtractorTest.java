@@ -94,7 +94,7 @@ class HttpServerAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("target", "github.com");
+    request.put("target", "/repositories/1");
     request.put("host", "github.com:80");
     request.put("scheme", "https");
     request.put("userAgent", "okhttp 3.x");
@@ -115,7 +115,7 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_TARGET, "github.com"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
@@ -125,7 +125,7 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_TARGET, "github.com"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
