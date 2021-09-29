@@ -122,9 +122,17 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Local publish
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Build distro
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
+
+      - name: Build extension
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
 
   release:
     needs: [ test, smoke-test, examples ]
