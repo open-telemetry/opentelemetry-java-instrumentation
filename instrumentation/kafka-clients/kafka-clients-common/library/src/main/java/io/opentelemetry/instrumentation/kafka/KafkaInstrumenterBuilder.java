@@ -16,21 +16,22 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import java.util.Collections;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-@SuppressWarnings("unchecked")
-public final class KafkaUtils {
+public final class KafkaInstrumenterBuilder {
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
       String instrumentationName) {
-    return buildProducerInstrumenter(instrumentationName, GlobalOpenTelemetry.get());
+    return buildProducerInstrumenter(
+        instrumentationName, GlobalOpenTelemetry.get(), Collections.emptyList());
   }
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      AttributesExtractor<ProducerRecord<?, ?>, Void>... extractors) {
+      Iterable<AttributesExtractor<ProducerRecord<?, ?>, Void>> extractors) {
     KafkaProducerAttributesExtractor attributesExtractor = new KafkaProducerAttributesExtractor();
     SpanNameExtractor<ProducerRecord<?, ?>> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
@@ -45,13 +46,14 @@ public final class KafkaUtils {
 
   public static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
       String instrumentationName) {
-    return buildConsumerReceiveInstrumenter(instrumentationName, GlobalOpenTelemetry.get());
+    return buildConsumerReceiveInstrumenter(
+        instrumentationName, GlobalOpenTelemetry.get(), Collections.emptyList());
   }
 
   public static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      AttributesExtractor<ReceivedRecords, Void>... extractors) {
+      Iterable<AttributesExtractor<ReceivedRecords, Void>> extractors) {
     KafkaReceiveAttributesExtractor attributesExtractor = new KafkaReceiveAttributesExtractor();
     SpanNameExtractor<ReceivedRecords> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
@@ -68,14 +70,17 @@ public final class KafkaUtils {
   public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter(
       String instrumentationName) {
     return buildConsumerOperationInstrumenter(
-        instrumentationName, GlobalOpenTelemetry.get(), MessageOperation.PROCESS);
+        instrumentationName,
+        GlobalOpenTelemetry.get(),
+        MessageOperation.PROCESS,
+        Collections.emptyList());
   }
 
   public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerOperationInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       MessageOperation operation,
-      AttributesExtractor<ConsumerRecord<?, ?>, Void>... extractors) {
+      Iterable<AttributesExtractor<ConsumerRecord<?, ?>, Void>> extractors) {
     KafkaConsumerAttributesExtractor attributesExtractor =
         new KafkaConsumerAttributesExtractor(operation);
     SpanNameExtractor<ConsumerRecord<?, ?>> spanNameExtractor =
@@ -103,5 +108,5 @@ public final class KafkaUtils {
     }
   }
 
-  private KafkaUtils() {}
+  private KafkaInstrumenterBuilder() {}
 }

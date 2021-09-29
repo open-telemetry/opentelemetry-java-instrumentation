@@ -16,7 +16,7 @@ public class TracingConsumerInterceptor<K, V> extends KafkaTracingHolder
 
   @Override
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    getTracing().buildAndFinishSpan(records);
+    tracing.buildAndFinishSpan(records);
     return records;
   }
 

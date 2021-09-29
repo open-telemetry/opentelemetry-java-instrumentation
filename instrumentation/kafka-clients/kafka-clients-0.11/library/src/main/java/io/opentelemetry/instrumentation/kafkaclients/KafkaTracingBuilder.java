@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.kafka.KafkaUtils;
+import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,8 +21,8 @@ public class KafkaTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<ProducerRecord<?, ?>, Void>> producerAttributesExtractors =
       new ArrayList<>();
-  private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>>
-      consumerProcessAttributesExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerAttributesExtractors =
+      new ArrayList<>();
 
   KafkaTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
@@ -33,22 +33,20 @@ public class KafkaTracingBuilder {
     producerAttributesExtractors.add(extractor);
   }
 
-  public void addConsumerAttributesProcessExtractors(
+  public void addConsumerAttributesExtractors(
       AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
-    consumerProcessAttributesExtractors.add(extractor);
+    consumerAttributesExtractors.add(extractor);
   }
 
-  @SuppressWarnings("unchecked")
   public KafkaTracing build() {
     return new KafkaTracing(
-        KafkaUtils.buildProducerInstrumenter(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            producerAttributesExtractors.toArray(new AttributesExtractor[0])),
-        KafkaUtils.buildConsumerOperationInstrumenter(
+        openTelemetry,
+        KafkaInstrumenterBuilder.buildProducerInstrumenter(
+            INSTRUMENTATION_NAME, openTelemetry, producerAttributesExtractors),
+        KafkaInstrumenterBuilder.buildConsumerOperationInstrumenter(
             INSTRUMENTATION_NAME,
             openTelemetry,
             MessageOperation.RECEIVE,
-            consumerProcessAttributesExtractors.toArray(new AttributesExtractor[0])));
+            consumerAttributesExtractors));
   }
 }

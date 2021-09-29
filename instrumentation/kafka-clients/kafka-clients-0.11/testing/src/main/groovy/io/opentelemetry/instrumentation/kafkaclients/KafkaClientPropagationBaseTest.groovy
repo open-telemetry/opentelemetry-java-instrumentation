@@ -26,6 +26,7 @@ abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest implem
     awaitUntilConsumerIsReady()
     // check that the message was received
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    records.count() == 1
     for (record in records) {
       assert record.headers().iterator().hasNext() == propagationEnabled
     }

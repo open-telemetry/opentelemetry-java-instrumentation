@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.KafkaUtils;
+import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public final class KafkaStreamsSingletons {
@@ -16,7 +16,7 @@ public final class KafkaStreamsSingletons {
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> INSTRUMENTER = buildInstrumenter();
 
   private static Instrumenter<ConsumerRecord<?, ?>, Void> buildInstrumenter() {
-    return KafkaUtils.buildConsumerProcessInstrumenter(INSTRUMENTATION_NAME);
+    return KafkaInstrumenterBuilder.buildConsumerProcessInstrumenter(INSTRUMENTATION_NAME);
   }
 
   public static Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter() {

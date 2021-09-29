@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.KafkaUtils;
+import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
 import io.opentelemetry.instrumentation.kafka.ReceivedRecords;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -15,11 +15,11 @@ public final class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER =
-      KafkaUtils.buildProducerInstrumenter(INSTRUMENTATION_NAME);
+      KafkaInstrumenterBuilder.buildProducerInstrumenter(INSTRUMENTATION_NAME);
   private static final Instrumenter<ReceivedRecords, Void> CONSUMER_RECEIVE_INSTRUMENTER =
-      KafkaUtils.buildConsumerReceiveInstrumenter(INSTRUMENTATION_NAME);
+      KafkaInstrumenterBuilder.buildConsumerReceiveInstrumenter(INSTRUMENTATION_NAME);
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> CONSUMER_PROCESS_INSTRUMENTER =
-      KafkaUtils.buildConsumerProcessInstrumenter(INSTRUMENTATION_NAME);
+      KafkaInstrumenterBuilder.buildConsumerProcessInstrumenter(INSTRUMENTATION_NAME);
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter() {
     return PRODUCER_INSTRUMENTER;

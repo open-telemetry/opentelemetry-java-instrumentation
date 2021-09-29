@@ -14,7 +14,7 @@ public class TracingProducerInterceptor<K, V> extends KafkaTracingHolder
     implements ProducerInterceptor<K, V> {
   @Override
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    getTracing().buildAndInjectSpan(producerRecord).run();
+    tracing.buildAndInjectSpan(producerRecord);
     return producerRecord;
   }
 

@@ -9,12 +9,5 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 
 abstract class KafkaTracingHolder {
 
-  private KafkaTracing tracing;
-
-  public synchronized KafkaTracing getTracing() {
-    if (tracing == null) {
-      tracing = KafkaTracing.create(GlobalOpenTelemetry.get());
-    }
-    return tracing;
-  }
+  static final KafkaTracing tracing = KafkaTracing.create(GlobalOpenTelemetry.get());
 }

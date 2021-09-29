@@ -52,14 +52,15 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
     awaitUntilConsumerIsReady()
     // check that the message was received
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
+    records.count() == 1
     for (record in records) {
       assert record.value() == greeting
       assert record.key() == null
     }
 
-    assertTraces(3) {
+    assertTraces(2) {
       traces.sort(orderByRootSpanKind(INTERNAL, PRODUCER, CONSUMER))
-      trace(0, 2) {
+      trace(0, 3) {
         span(0) {
           name "parent"
           kind INTERNAL
@@ -75,19 +76,11 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
-      }
-      trace(1, 1) {
-        span(0) {
-          name "producer callback"
-          kind INTERNAL
-          hasNoParent()
-        }
-      }
-      trace(2, 1) {
-        span(0) {
+        span(2) {
           name SHARED_TOPIC + " receive"
           kind CONSUMER
-          hasNoParent()
+          childOf span(1)
+          hasLink(span(1))
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -98,6 +91,13 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
           }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          name "producer callback"
+          kind INTERNAL
+          hasNoParent()
         }
       }
     }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -14,7 +13,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.KafkaHeadersGetter;
+import io.opentelemetry.instrumentation.kafka.KafkaConsumerRecordGetter;
 import io.opentelemetry.instrumentation.kafka.KafkaHeadersSetter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -23,19 +22,22 @@ import org.apache.kafka.common.header.Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaTracing {
+public final class KafkaTracing {
   private static final Logger logger = LoggerFactory.getLogger(KafkaTracing.class);
 
-  private static final TextMapGetter<Headers> GETTER = new KafkaHeadersGetter();
+  private static final TextMapGetter<ConsumerRecord<?, ?>> GETTER = new KafkaConsumerRecordGetter();
 
   private static final TextMapSetter<Headers> SETTER = new KafkaHeadersSetter();
 
+  private final OpenTelemetry openTelemetry;
   private final Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter;
   private final Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter;
 
   KafkaTracing(
+      OpenTelemetry openTelemetry,
       Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter,
       Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter) {
+    this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
@@ -50,21 +52,20 @@ public class KafkaTracing {
     return new KafkaTracingBuilder(openTelemetry);
   }
 
-  private static TextMapPropagator propagator() {
-    return GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+  private TextMapPropagator propagator() {
+    return openTelemetry.getPropagators().getTextMapPropagator();
   }
 
   /**
    * Build and inject span into record. Return Runnable handle to end the current span.
    *
    * @param record the producer record to inject span info.
-   * @return runnable to close the current span
    */
-  <K, V> Runnable buildAndInjectSpan(ProducerRecord<K, V> record) {
+  <K, V> void buildAndInjectSpan(ProducerRecord<K, V> record) {
     Context currentContext = Context.current();
 
     if (!producerInstrumenter.shouldStart(currentContext, record)) {
-      return () -> {};
+      return;
     }
 
     Context current = producerInstrumenter.start(currentContext, record);
@@ -77,20 +78,20 @@ public class KafkaTracing {
       }
     }
 
-    return () -> producerInstrumenter.end(current, record, null, null);
+    producerInstrumenter.end(current, record, null, null);
   }
 
   <K, V> void buildAndFinishSpan(ConsumerRecords<K, V> records) {
     Context currentContext = Context.current();
     for (ConsumerRecord<K, V> record : records) {
-      Context linkedContext = propagator().extract(currentContext, record.headers(), GETTER);
-      currentContext.with(Span.fromContext(linkedContext));
+      Context linkedContext = propagator().extract(currentContext, record, GETTER);
+      Context newContext = currentContext.with(Span.fromContext(linkedContext));
 
-      if (!consumerProcessInstrumenter.shouldStart(currentContext, record)) {
+      if (!consumerProcessInstrumenter.shouldStart(newContext, record)) {
         continue;
       }
 
-      Context current = consumerProcessInstrumenter.start(currentContext, record);
+      Context current = consumerProcessInstrumenter.start(newContext, record);
       consumerProcessInstrumenter.end(current, record, null, null);
     }
   }
