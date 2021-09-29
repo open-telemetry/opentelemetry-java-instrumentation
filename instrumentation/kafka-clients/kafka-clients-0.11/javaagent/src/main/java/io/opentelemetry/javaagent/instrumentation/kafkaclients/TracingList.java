@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -15,10 +16,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class TracingList<K, V> extends TracingIterable<K, V> implements List<ConsumerRecord<K, V>> {
   private final List<ConsumerRecord<K, V>> delegate;
 
-  public TracingList(
+  private TracingList(
       List<ConsumerRecord<K, V>> delegate, @Nullable SpanContext receiveSpanContext) {
     super(delegate, receiveSpanContext);
     this.delegate = delegate;
+  }
+
+  public static <K, V> List<ConsumerRecord<K, V>> wrap(
+      List<ConsumerRecord<K, V>> delegate, @Nullable SpanContext receiveSpanContext) {
+    if (KafkaTracingWrapperUtil.wrappingEnabled()) {
+      return new TracingList(delegate, receiveSpanContext);
+    }
+    return delegate;
   }
 
   @Override

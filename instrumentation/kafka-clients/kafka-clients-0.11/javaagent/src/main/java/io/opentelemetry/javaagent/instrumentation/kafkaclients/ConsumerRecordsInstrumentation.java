@@ -60,13 +60,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class IterableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(
+    public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
+        @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
       if (iterable != null) {
         SpanContext receiveSpanContext =
             VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        iterable = new TracingIterable(iterable, receiveSpanContext);
+        iterable = TracingIterable.wrap(iterable, receiveSpanContext);
       }
     }
   }
@@ -75,13 +75,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class ListAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(
+    public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> list) {
+        @Advice.Return(readOnly = false) List<ConsumerRecord<K, V>> list) {
       if (list != null) {
         SpanContext receiveSpanContext =
             VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        list = new TracingList(list, receiveSpanContext);
+        list = TracingList.wrap(list, receiveSpanContext);
       }
     }
   }
@@ -90,13 +90,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   public static class IteratorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(
+    public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) Iterator<ConsumerRecord<?, ?>> iterator) {
+        @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
       if (iterator != null) {
         SpanContext receiveSpanContext =
             VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        iterator = new TracingIterator(iterator, receiveSpanContext);
+        iterator = TracingIterator.wrap(iterator, receiveSpanContext);
       }
     }
   }

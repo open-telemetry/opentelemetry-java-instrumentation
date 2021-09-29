@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -22,14 +21,10 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 
-// at some point in time SourceNodeRecordDeserializer was refactored into RecordDeserializer
+// in 1.0.0 SourceNodeRecordDeserializer was refactored into RecordDeserializer
 public class RecordDeserializerInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.kafka.streams.processor.internals.RecordDeserializer");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -55,6 +50,16 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(1) ConsumerRecord<?, ?> incoming,
         @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
+      if (result == null) {
+        return;
+      }
+
+      // on 1.x we need to copy headers from incoming to result
+      if (!result.headers().iterator().hasNext()) {
+        for (Header header : incoming.headers()) {
+          result.headers().add(header);
+        }
+      }
 
       // copy the receive CONSUMER span association
       VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =

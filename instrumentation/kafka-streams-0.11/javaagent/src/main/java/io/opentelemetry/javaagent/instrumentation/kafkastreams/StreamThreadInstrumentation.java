@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrapper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
 import java.util.Iterator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -37,6 +38,8 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
             .and(isPrivate())
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         this.getClass().getName() + "$PollRecordsAdvice");
+    transformer.applyAdviceToMethod(
+        named("pollPhase").and(isPrivate()), this.getClass().getName() + "$PollPhaseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -67,6 +70,19 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
         ConsumerRecord<?, ?> record = it.next();
         singleRecordReceiveSpan.set(record, receiveSpanContext);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PollPhaseAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      KafkaTracingWrapperUtil.disableWrapping();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit() {
+      KafkaTracingWrapperUtil.enableWrapping();
     }
   }
 }
