@@ -79,10 +79,6 @@ public class ClassLoaderMatcher {
       // verify helper injector works
       List<String> allHelperClasses = instrumentationModule.getMuzzleHelperClassNames();
       HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
-      List<String> helperResourceNames = instrumentationModule.helperResourceNames();
-      for (String helperResourceName : helperResourceNames) {
-        helperResourceBuilder.register(helperResourceName);
-      }
       instrumentationModule.registerHelperResources(helperResourceBuilder);
       if (!allHelperClasses.isEmpty()) {
         new HelperInjector(
