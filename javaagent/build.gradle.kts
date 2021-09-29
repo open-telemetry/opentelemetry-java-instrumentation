@@ -184,7 +184,7 @@ tasks {
     }
   }
 
-  // Includes instrumentations, but not exporters
+  // Includes instrumentations plus the OTLP/gRPC exporters
   val slimShadowJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
