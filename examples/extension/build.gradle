@@ -12,8 +12,8 @@ plugins {
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.7.0"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "0.7.0"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.8.0-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "0.8.0-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -95,8 +95,8 @@ dependencies {
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
 
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleTooling", "ch.qos.logback:logback-classic:1.2.3")
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
+  add("codegen", "ch.qos.logback:logback-classic:1.2.3")
 }
 
 //Extracts manifest from OpenTelemetry Java agent to reuse it later
