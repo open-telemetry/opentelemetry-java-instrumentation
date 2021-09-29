@@ -28,11 +28,6 @@ are implemented by Java autoinstrumentation and which ones are not.
 Netty instrumentation is currently the only exception to this rule. Netty instrumentation
 captures `http.url` (and does not capture `http.scheme`, `http.host`, or `http.target`).
 
-As the majority of Java frameworks don't provide a standard way to obtain "The full request
-target as passed in a HTTP request line or equivalent.", we don't set `http.target` semantic
-attribute. As either it or `http.url` is required, we set the latter. This, in turn, makes setting
-`http.schema` and `http.host` unnecessary duplication. Therefore, we do not set them as well.
-
 **[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
 
