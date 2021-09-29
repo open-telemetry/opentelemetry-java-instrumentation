@@ -5,15 +5,26 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
+import static io.opentelemetry.instrumentation.restlet.v1_0.RestletHeadersGetter.getHeaders;
+
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.restlet.data.Parameter;
 import org.restlet.data.Reference;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 final class RestletHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  RestletHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
 
   @Override
   protected String method(Request request) {
@@ -46,6 +57,13 @@ final class RestletHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(Request request) {
     return request.getClientInfo().getAgent();
+  }
+
+  @Override
+  protected List<String> requestHeader(Request request, String name) {
+    return getHeaders(request).subList(name, /* ignoreCase = */ true).stream()
+        .map(Parameter::getValue)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -93,5 +111,12 @@ final class RestletHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return getHeaders(response).subList(name, /* ignoreCase = */ true).stream()
+        .map(Parameter::getValue)
+        .collect(Collectors.toList());
   }
 }

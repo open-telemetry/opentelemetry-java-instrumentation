@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -40,9 +43,10 @@ public final class ApacheHttpClientRequest {
     delegate = httpRequest;
   }
 
-  public String getHeader(String name) {
-    Header header = delegate.getFirstHeader(name);
-    return header != null ? header.getValue() : null;
+  public List<String> getHeader(String name) {
+    return Arrays.stream(delegate.getHeaders(name))
+        .map(Header::getValue)
+        .collect(Collectors.toList());
   }
 
   public void setHeader(String name, String value) {

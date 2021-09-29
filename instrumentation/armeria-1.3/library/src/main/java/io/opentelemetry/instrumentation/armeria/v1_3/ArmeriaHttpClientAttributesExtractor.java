@@ -11,12 +11,19 @@ import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ArmeriaHttpClientAttributesExtractor
     extends HttpClientAttributesExtractor<RequestContext, RequestLog> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  ArmeriaHttpClientAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
 
   @Override
   protected String method(RequestContext ctx) {
@@ -32,6 +39,11 @@ final class ArmeriaHttpClientAttributesExtractor
   @Nullable
   protected String userAgent(RequestContext ctx) {
     return request(ctx).headers().get(HttpHeaderNames.USER_AGENT);
+  }
+
+  @Override
+  protected List<String> requestHeader(RequestContext ctx, String name) {
+    return request(ctx).headers().getAll(name);
   }
 
   @Override
@@ -79,6 +91,11 @@ final class ArmeriaHttpClientAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(RequestContext ctx, RequestLog requestLog, String name) {
+    return requestLog.responseHeaders().getAll(name);
   }
 
   private static HttpRequest request(RequestContext ctx) {

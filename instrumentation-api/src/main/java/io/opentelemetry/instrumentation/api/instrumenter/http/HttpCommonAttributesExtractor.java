@@ -5,11 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.requestAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.responseAttributeKey;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -20,13 +24,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
-  // directly extending this class should not be possible outside of this package
-  HttpCommonAttributesExtractor() {}
+  private final CapturedHttpHeaders capturedHttpHeaders;
+
+  HttpCommonAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    this.capturedHttpHeaders = capturedHttpHeaders;
+  }
 
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.HTTP_METHOD, method(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
+
+    for (String name : capturedHttpHeaders.requestHeaders()) {
+      List<String> values = requestHeader(request, name);
+      if (!values.isEmpty()) {
+        set(attributes, requestAttributeKey(name), values);
+      }
+    }
   }
 
   @Override
@@ -44,6 +58,7 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
         requestContentLengthUncompressed(request, response));
+
     if (response != null) {
       Integer statusCode = statusCode(request, response);
       if (statusCode != null) {
@@ -57,6 +72,13 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
           responseContentLengthUncompressed(request, response));
+
+      for (String name : capturedHttpHeaders.responseHeaders()) {
+        List<String> values = responseHeader(request, response, name);
+        if (!values.isEmpty()) {
+          set(attributes, responseAttributeKey(name), values);
+        }
+      }
     }
   }
 
@@ -65,8 +87,18 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String method(REQUEST request);
 
+  // TODO: remove implementations?
   @Nullable
-  protected abstract String userAgent(REQUEST request);
+  protected String userAgent(REQUEST request) {
+    List<String> values = requestHeader(request, "user-agent");
+    return values.isEmpty() ? null : values.get(0);
+  }
+
+  /**
+   * Extracts all values of header named {@code name} from the request, or an empty list if there
+   * were none.
+   */
+  protected abstract List<String> requestHeader(REQUEST request, String name);
 
   // Attributes which are not always available when the request is ready.
 
@@ -115,4 +147,13 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
    */
   @Nullable
   protected abstract Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
+
+  /**
+   * Extracts all values of header named {@code name} from the response, or an empty list if there
+   * were none.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
+   */
+  protected abstract List<String> responseHeader(REQUEST request, RESPONSE response, String name);
 }

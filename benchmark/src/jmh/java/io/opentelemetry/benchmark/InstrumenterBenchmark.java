@@ -8,11 +8,14 @@ package io.opentelemetry.benchmark;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -58,6 +61,10 @@ public class InstrumenterBenchmark {
     static final HttpClientAttributesExtractor<Void, Void> INSTANCE =
         new ConstantHttpAttributesExtractor();
 
+    public ConstantHttpAttributesExtractor() {
+      super(CapturedHttpHeaders.empty());
+    }
+
     @Override
     protected @Nullable String method(Void unused) {
       return "GET";
@@ -71,6 +78,11 @@ public class InstrumenterBenchmark {
     @Override
     protected @Nullable String userAgent(Void unused) {
       return "OpenTelemetryBot";
+    }
+
+    @Override
+    protected List<String> requestHeader(Void unused, String name) {
+      return Collections.emptyList();
     }
 
     @Override
@@ -101,6 +113,11 @@ public class InstrumenterBenchmark {
     @Override
     protected @Nullable Long responseContentLengthUncompressed(Void unused, Void unused2) {
       return null;
+    }
+
+    @Override
+    protected List<String> responseHeader(Void unused, Void unused2, String name) {
+      return Collections.emptyList();
     }
   }
 

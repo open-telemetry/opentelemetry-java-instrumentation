@@ -5,14 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientInvocation, Response> {
+
+  ResteasyClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected @Nullable String method(ClientInvocation httpRequest) {
@@ -27,6 +36,13 @@ final class ResteasyClientHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(ClientInvocation httpRequest) {
     return httpRequest.getHeaders().getHeader("User-Agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(ClientInvocation httpRequest, String name) {
+    return httpRequest.getHeaders().getHeaders().getOrDefault(name, emptyList()).stream()
+        .map(String::valueOf)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -62,5 +78,11 @@ final class ResteasyClientHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       ClientInvocation httpRequest, Response httpResponse) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ClientInvocation clientInvocation, Response response, String name) {
+    return response.getStringHeaders().getOrDefault(name, emptyList());
   }
 }

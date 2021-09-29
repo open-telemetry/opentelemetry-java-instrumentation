@@ -6,12 +6,16 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +23,10 @@ class HttpServerAttributesExtractorTest {
 
   static class TestHttpServerAttributesExtractor
       extends HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> {
+
+    TestHttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+      super(capturedHttpHeaders);
+    }
 
     @Override
     protected String method(Map<String, String> request) {
@@ -28,11 +36,6 @@ class HttpServerAttributesExtractorTest {
     @Override
     protected String target(Map<String, String> request) {
       return request.get("target");
-    }
-
-    @Override
-    protected String host(Map<String, String> request) {
-      return request.get("host");
     }
 
     @Override
@@ -51,8 +54,8 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    protected String userAgent(Map<String, String> request) {
-      return request.get("userAgent");
+    protected List<String> requestHeader(Map<String, String> request, String name) {
+      return asList(request.get("header." + name).split(","));
     }
 
     @Override
@@ -87,6 +90,12 @@ class HttpServerAttributesExtractorTest {
         Map<String, String> request, Map<String, String> response) {
       return Long.parseLong(response.get("responseContentLengthUncompressed"));
     }
+
+    @Override
+    protected List<String> responseHeader(
+        Map<String, String> request, Map<String, String> response, String name) {
+      return asList(response.get("header." + name).split(","));
+    }
   }
 
   @Test
@@ -95,49 +104,63 @@ class HttpServerAttributesExtractorTest {
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("target", "/repositories/1");
-    request.put("host", "github.com:80");
     request.put("scheme", "https");
-    request.put("userAgent", "okhttp 3.x");
     request.put("requestContentLength", "10");
     request.put("requestContentLengthUncompressed", "11");
     request.put("flavor", "http/2");
     request.put("route", "/repositories/{id}");
     request.put("serverName", "server");
+    request.put("header.user-agent", "okhttp 3.x");
+    request.put("header.host", "github.com");
+    request.put("header.custom-request-header", "123,456");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
     response.put("responseContentLength", "20");
     response.put("responseContentLengthUncompressed", "21");
+    response.put("header.custom-response-header", "654,321");
 
-    TestHttpServerAttributesExtractor extractor = new TestHttpServerAttributesExtractor();
+    TestHttpServerAttributesExtractor extractor =
+        new TestHttpServerAttributesExtractor(
+            CapturedHttpHeaders.create(
+                singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")));
+
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, request);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
+            entry(SemanticAttributes.HTTP_HOST, "github.com"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"));
+            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(
+                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                asList("123", "456")));
 
     extractor.onEnd(attributes, request, response, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com:80"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
+            entry(SemanticAttributes.HTTP_HOST, "github.com"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(
+                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                asList("123", "456")),
             entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, 11L),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, 21L));
+            entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, 21L),
+            entry(
+                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                asList("654", "321")));
   }
 }

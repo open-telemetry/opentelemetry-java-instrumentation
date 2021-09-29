@@ -6,12 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpAsyncClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
+
+  ApacheHttpAsyncClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected String method(ApacheHttpClientRequest request) {
@@ -24,9 +33,8 @@ final class ApacheHttpAsyncClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(ApacheHttpClientRequest request) {
-    return request.getHeader("User-Agent");
+  protected List<String> requestHeader(ApacheHttpClientRequest request, String name) {
+    return request.getHeader(name);
   }
 
   @Override
@@ -67,5 +75,13 @@ final class ApacheHttpAsyncClientHttpAttributesExtractor
   protected Long responseContentLengthUncompressed(
       ApacheHttpClientRequest request, HttpResponse response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ApacheHttpClientRequest request, HttpResponse response, String name) {
+    return Arrays.stream(response.getHeaders(name))
+        .map(Header::getValue)
+        .collect(Collectors.toList());
   }
 }
