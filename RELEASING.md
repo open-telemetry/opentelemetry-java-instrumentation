@@ -48,7 +48,7 @@ to release in the input field for version that pops up and the commits you want 
 If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
 
 The automated branch creation will fail if any of the yaml files differ between the release branch
-and `main`, e.g.
+and `main`:
 
 ```
 Switched to a new branch 'v1.6.x'
@@ -62,8 +62,6 @@ and you will need to manually create it before proceeding, e.g.
 git checkout -b v1.6.x v1.6.0
 git push upstream v1.6.x
 ```
-
-
 
 If the commits cannot be cleanly applied to the release branch, for example because it has diverged
 too much from main, then the workflow will fail before building. In this case, you will need to
