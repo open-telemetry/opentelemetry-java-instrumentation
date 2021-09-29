@@ -32,6 +32,7 @@ spotless {
   format("misc") {
     // not using "**/..." to help keep spotless fast
     target(
+      ".gitignore",
       ".gitattributes",
       ".gitconfig",
       ".editorconfig",

@@ -11,6 +11,16 @@ plugins {
 }
 
 dependencies {
+  /*
+    Dependencies added to this configuration will be found by the muzzle gradle plugin during code
+    generation phase. These classes become part of the code that plugin inspects and traverses during
+    references collection phase.
+   */
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+}
+
+
+dependencies {
   // Integration tests may need to define custom instrumentation modules so we include the standard
   // instrumentation infrastructure for testing too.
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
