@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.generation;
+package io.opentelemetry.javaagent.muzzle.generation;
 
 final class Utils {
 

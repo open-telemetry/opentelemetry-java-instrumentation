@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static java.lang.System.lineSeparator;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.extension.muzzle.Source;
 import java.util.ServiceLoader;
 
 @SuppressWarnings("SystemOut")

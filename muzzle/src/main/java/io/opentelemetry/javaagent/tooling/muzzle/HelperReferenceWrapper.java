@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static net.bytebuddy.description.method.MethodDescription.CONSTRUCTOR_INTERNAL_NAME;
 
-import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
