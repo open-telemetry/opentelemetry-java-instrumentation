@@ -13,6 +13,8 @@ dependencies {
 
   implementation("org.restlet:org.restlet:1.1.5")
   implementation("com.noelios.restlet:com.noelios.restlet:1.1.5")
+  implementation("org.restlet:org.restlet.ext.spring:1.1.5")
+  implementation("org.springframework:spring:2.5.6")
 
   implementation("org.codehaus.groovy:groovy-all")
   implementation("io.opentelemetry:opentelemetry-api")
