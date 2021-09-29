@@ -11,11 +11,11 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTracing;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 // Holds singleton references.
 public final class GrpcSingletons {
