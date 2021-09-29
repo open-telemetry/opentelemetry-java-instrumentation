@@ -6,7 +6,7 @@ val versions: Map<String, String> by project
 
 dependencies {
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
-  library("org.apache.kafka:kafka-clients:0.11.0.0")
+  library("org.apache.kafka:kafka-clients:2.8.1")
 
   testImplementation(project(":instrumentation:kafka-clients:kafka-clients-0.11:testing"))
 
