@@ -1,7 +1,7 @@
 ARG version
 ARG jdk
-ARG vm
+ARG tagSuffix
 
-FROM tomcat:${version}-jdk${jdk}-adoptopenjdk-${vm}
+FROM tomcat:${version}-jdk${jdk}${tagSuffix}
 
 COPY app.war /usr/local/tomcat/webapps/
