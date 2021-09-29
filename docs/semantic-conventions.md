@@ -23,8 +23,8 @@ are implemented by Java autoinstrumentation and which ones are not.
 | `http.route` | N | - |
 | `http.client_ip` | N | + |
 
-**[1]:** Most server instrumentation captures `http.scheme`, `http.host`, and `http.target`
-(and does not capture `http.url`).
+**[1]:** Most server instrumentations capture `http.scheme`, `http.host`, and `http.target`
+(and do not capture `http.url`).
 Netty instrumentation is currently the only exception to this rule. Netty instrumentation
 captures `http.url` (and does not capture `http.scheme`, `http.host`, or `http.target`).
 
