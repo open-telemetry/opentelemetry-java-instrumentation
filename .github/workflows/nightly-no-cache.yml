@@ -176,7 +176,8 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Local publish
-        run: ./gradlew publishToMavenLocal --no-build-cache
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ./gradlew publishToMavenLocal --no-build-cache -x javadoc
 
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
