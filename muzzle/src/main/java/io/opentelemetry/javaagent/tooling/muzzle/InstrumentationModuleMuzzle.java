@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import java.util.Map;

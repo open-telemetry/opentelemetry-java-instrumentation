@@ -192,9 +192,6 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
-      for (String resource : instrumentationModule.helperResourceNames()) {
-        collector.collectReferencesFromResource(resource);
-      }
       HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
       instrumentationModule.registerHelperResources(helperResourceBuilder);
       for (HelperResource resource : helperResourceBuilder.getResources()) {
@@ -533,7 +530,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
           super.visitMethod(
               Opcodes.ACC_PUBLIC,
               MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
-              "(Lio/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder;)V",
+              "(Lio/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder;)V",
               null,
               null);
       mv.visitCode();
@@ -550,9 +547,9 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
             // stack: builder, className, contextClassName
             mv.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
-                "io/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder",
+                "io/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder",
                 "register",
-                "(Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/extension/instrumentation/InstrumentationContextBuilder;",
+                "(Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder;",
                 /* isInterface= */ true);
             // stack: builder
           });
