@@ -54,9 +54,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         VirtualField<Channel, ChannelTraceContext> virtualField =
             VirtualField.find(Channel.class, ChannelTraceContext.class);
 
-        if (virtualField
-                .setIfNullAndGet(channel, ChannelTraceContext.FACTORY)
-                .getConnectionContext()
+        if (virtualField.computeIfNull(channel, ChannelTraceContext.FACTORY).getConnectionContext()
             == null) {
           virtualField.get(channel).setConnectionContext(context);
         }

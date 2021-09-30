@@ -62,11 +62,11 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
       if (session instanceof Session) {
         VirtualField<Session, Context> virtualField =
             VirtualField.find(Session.class, Context.class);
-        virtualField.setIfNullAndGet((Session) session, context);
+        virtualField.setIfNull((Session) session, context);
       } else if (session instanceof StatelessSession) {
         VirtualField<StatelessSession, Context> virtualField =
             VirtualField.find(StatelessSession.class, Context.class);
-        virtualField.setIfNullAndGet((StatelessSession) session, context);
+        virtualField.setIfNull((StatelessSession) session, context);
       }
     }
   }

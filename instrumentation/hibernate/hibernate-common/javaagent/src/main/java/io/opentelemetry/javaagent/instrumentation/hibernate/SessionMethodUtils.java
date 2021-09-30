@@ -90,7 +90,7 @@ public final class SessionMethodUtils {
       return;
     }
 
-    targetVirtualField.setIfNullAndGet(target, sessionContext);
+    targetVirtualField.setIfNull(target, sessionContext);
   }
 
   public static String getSessionMethodSpanName(String methodName) {

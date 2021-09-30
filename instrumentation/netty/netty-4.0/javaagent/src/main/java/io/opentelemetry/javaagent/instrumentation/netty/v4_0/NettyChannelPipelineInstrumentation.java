@@ -89,7 +89,7 @@ public class NettyChannelPipelineInstrumentation
           pipeline.addLast(ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
           VirtualField.find(ChannelHandler.class, ChannelHandler.class)
-              .setIfNullAndGet(handler, ourHandler);
+              .setIfNull(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
         }

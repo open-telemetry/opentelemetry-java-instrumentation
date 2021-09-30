@@ -28,7 +28,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) {
     ChannelTraceContext channelTraceContext =
-        virtualField.setIfNullAndGet(ctx.getChannel(), ChannelTraceContext.FACTORY);
+        virtualField.computeIfNull(ctx.getChannel(), ChannelTraceContext.FACTORY);
 
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {

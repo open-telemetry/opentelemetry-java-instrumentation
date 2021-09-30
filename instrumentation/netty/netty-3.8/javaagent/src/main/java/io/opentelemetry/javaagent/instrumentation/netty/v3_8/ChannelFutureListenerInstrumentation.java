@@ -63,7 +63,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
           VirtualField.find(Channel.class, ChannelTraceContext.class);
 
       ChannelTraceContext channelTraceContext =
-          virtualField.setIfNullAndGet(future.getChannel(), ChannelTraceContext.FACTORY);
+          virtualField.computeIfNull(future.getChannel(), ChannelTraceContext.FACTORY);
       Context parentContext = channelTraceContext.getConnectionContext();
       if (parentContext == null) {
         return null;
