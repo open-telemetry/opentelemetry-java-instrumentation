@@ -13,7 +13,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:library"))
+  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
   library("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
   testLibrary("org.apache.cxf:cxf-rt-transports-http:3.0.0")

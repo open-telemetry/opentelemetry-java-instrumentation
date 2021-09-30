@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 
 public final class WebfluxSingletons {

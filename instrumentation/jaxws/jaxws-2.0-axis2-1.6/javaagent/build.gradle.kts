@@ -15,17 +15,7 @@ muzzle {
     skip("1.2", "1.3")
   }
 }
-
-configurations.configureEach {
-  if (!name.contains("muzzle")) {
-    // axis has a dependency on servlet api, get rid of it
-    exclude("javax.servlet", "servlet-api")
-  }
-}
-
 dependencies {
-  implementation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:library"))
-
   val axis2Version = "1.6.0"
   library("org.apache.axis2:axis2-jaxws:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")

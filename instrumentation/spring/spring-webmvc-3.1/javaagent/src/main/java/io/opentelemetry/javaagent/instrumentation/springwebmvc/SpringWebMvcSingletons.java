@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.api.config.ExperimentalConfig;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcSingletons {

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.axis2;
+package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
-import static io.opentelemetry.instrumentation.axis2.Axis2Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.axis2.Axis2Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;

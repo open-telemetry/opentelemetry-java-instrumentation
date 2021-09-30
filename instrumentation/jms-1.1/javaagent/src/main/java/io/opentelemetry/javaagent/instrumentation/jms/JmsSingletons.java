@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.ExperimentalConfig;
 
 public final class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";

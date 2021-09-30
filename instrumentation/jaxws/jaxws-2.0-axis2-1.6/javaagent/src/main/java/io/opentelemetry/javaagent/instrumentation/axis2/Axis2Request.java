@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.axis2;
+package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import org.apache.axis2.jaxws.core.MessageContext;
 

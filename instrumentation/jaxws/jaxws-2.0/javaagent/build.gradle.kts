@@ -12,5 +12,5 @@ muzzle {
 
 dependencies {
   library("javax.xml.ws:jaxws-api:2.0")
-  implementation(project(":instrumentation:jaxws:jaxws-common:library"))
+  implementation(project(":instrumentation:jaxws:jaxws-common:javaagent"))
 }

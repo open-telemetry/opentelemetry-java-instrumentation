@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.config;
+package io.opentelemetry.javaagent.instrumentation.api.config;
+
+import io.opentelemetry.instrumentation.api.config.Config;
 
 public final class ExperimentalConfig {
 
