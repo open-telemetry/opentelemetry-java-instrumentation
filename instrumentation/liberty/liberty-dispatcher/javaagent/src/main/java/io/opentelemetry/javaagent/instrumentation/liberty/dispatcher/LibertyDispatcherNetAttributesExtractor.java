@@ -27,7 +27,7 @@ public class LibertyDispatcherNetAttributesExtractor
   }
 
   @Override
-  public Integer peerPort(
+  public @Nullable Integer peerPort(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
     if (!libertyRequest.isCompleted()) {
       return libertyRequest.getServerPort();

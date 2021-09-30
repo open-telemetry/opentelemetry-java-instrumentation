@@ -99,7 +99,7 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String host(LibertyRequest libertyRequest) {
+  protected String host(LibertyRequest libertyRequest) {
     return libertyRequest.getServerName() + ":" + libertyRequest.getServerPort();
   }
 
