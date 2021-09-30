@@ -93,6 +93,6 @@ final class AsyncHttpClientHttpAttributesExtractor
   @Override
   protected List<String> responseHeader(
       RequestContext requestContext, Response response, String name) {
-    return response.getHeaders(name);
+    return response.getHeaders().getAll(name);
   }
 }
