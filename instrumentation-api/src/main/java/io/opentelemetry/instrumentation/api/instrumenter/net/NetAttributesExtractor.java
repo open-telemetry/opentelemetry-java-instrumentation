@@ -22,8 +22,15 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
-    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, null));
-    set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, null));
+
+    String peerIp = peerIp(request, null);
+    String peerName = peerName(request, null);
+
+    if (peerName != null && !peerName.equals(peerIp)) {
+      set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+    }
+    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+
     Integer peerPort = peerPort(request, null);
     if (peerPort != null) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
@@ -36,8 +43,15 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
-    set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, response));
+
+    String peerIp = peerIp(request, response);
+    String peerName = peerName(request, response);
+
+    if (peerName != null && !peerName.equals(peerIp)) {
+      set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+    }
+    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+
     Integer peerPort = peerPort(request, response);
     if (peerPort != null) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
