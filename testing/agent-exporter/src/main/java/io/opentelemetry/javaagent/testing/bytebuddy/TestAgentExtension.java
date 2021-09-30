@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.AgentExtension;
+import io.opentelemetry.javaagent.tooling.AgentExtension;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(AgentExtension.class)

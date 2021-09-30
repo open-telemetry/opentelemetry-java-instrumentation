@@ -200,9 +200,17 @@ jobs:
           git fetch origin main
           git cherry-pick ${{ github.event.inputs.commits }}
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Local publish
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Build distro
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
+
+      - name: Build extension
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
 
   release:
     runs-on: ubuntu-latest
@@ -235,7 +243,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: assemble final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}

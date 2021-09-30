@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -51,18 +51,23 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, readOnly = false) HttpServerExchange exchange,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Context attachedContext = tracer().getServerContext(exchange);
+      Context attachedContext = helper().getServerContext(exchange);
       if (attachedContext != null) {
         if (!Java8BytecodeBridge.currentContext().equals(attachedContext)) {
           // request processing is dispatched to another thread
           scope = attachedContext.makeCurrent();
           context = attachedContext;
-          tracer().handlerStarted(attachedContext);
+          helper().handlerStarted(attachedContext);
         }
         return;
       }
 
-      context = tracer().startServerSpan(exchange);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!helper().shouldStart(parentContext, exchange)) {
+        return;
+      }
+
+      context = helper().start(parentContext, exchange);
       scope = context.makeCurrent();
 
       exchange.addExchangeCompleteListener(new EndSpanListener(context));
@@ -79,7 +84,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      tracer().handlerCompleted(context, throwable, exchange);
+      helper().handlerCompleted(context, throwable, exchange);
     }
   }
 }

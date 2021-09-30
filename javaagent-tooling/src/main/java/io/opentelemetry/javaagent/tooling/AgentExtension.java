@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.agent.builder.AgentBuilder;
 

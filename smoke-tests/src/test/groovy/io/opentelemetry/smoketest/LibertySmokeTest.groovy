@@ -16,7 +16,7 @@ import java.time.Duration
 class LibertySmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:liberty"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-liberty"
   }
 
   @Override
