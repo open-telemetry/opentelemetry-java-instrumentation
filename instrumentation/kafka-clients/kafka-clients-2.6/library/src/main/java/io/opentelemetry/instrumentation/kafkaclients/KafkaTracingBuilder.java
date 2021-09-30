@@ -15,7 +15,7 @@ import java.util.Objects;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-public class KafkaTracingBuilder {
+public final class KafkaTracingBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private final OpenTelemetry openTelemetry;
@@ -28,14 +28,16 @@ public class KafkaTracingBuilder {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
   }
 
-  public void addProducerAttributesExtractors(
+  public KafkaTracingBuilder addProducerAttributesExtractors(
       AttributesExtractor<ProducerRecord<?, ?>, Void> extractor) {
     producerAttributesExtractors.add(extractor);
+    return this;
   }
 
-  public void addConsumerAttributesExtractors(
+  public KafkaTracingBuilder addConsumerAttributesExtractors(
       AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
     consumerAttributesExtractors.add(extractor);
+    return this;
   }
 
   public KafkaTracing build() {

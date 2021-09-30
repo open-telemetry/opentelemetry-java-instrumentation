@@ -20,7 +20,7 @@ import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 
-public class TracingProducer<K, V> implements Producer<K, V> {
+class TracingProducer<K, V> implements Producer<K, V> {
   private final Producer<K, V> producer;
   private final KafkaTracing tracing;
 

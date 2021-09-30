@@ -7,6 +7,7 @@ dependencies {
   library("org.apache.kafka:kafka-clients:2.6.0")
 
   testImplementation(project(":instrumentation:kafka-clients:kafka-clients-0.11:testing"))
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
 
   testImplementation("org.testcontainers:kafka")
 }

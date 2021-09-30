@@ -24,7 +24,7 @@ import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 
-public class TracingConsumer<K, V> implements Consumer<K, V> {
+class TracingConsumer<K, V> implements Consumer<K, V> {
   private final Consumer<K, V> consumer;
   private final KafkaTracing tracing;
 

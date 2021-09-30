@@ -62,10 +62,12 @@ public final class KafkaTracing {
     return openTelemetry.getPropagators().getTextMapPropagator();
   }
 
+  /** Returns a decorated {@link Producer} that emits spans for each sent message. */
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
     return new TracingProducer<>(producer, this);
   }
 
+  /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
     return new TracingConsumer<>(consumer, this);
   }
