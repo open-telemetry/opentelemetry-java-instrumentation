@@ -22,7 +22,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> create(
       String instrumentationName,
-      AttributesExtractor<ElasticTransportRequest, Object> experimentalAttributesExtractor,
+      AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
       NetAttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
 
     ElasticsearchTransportAttributesExtractor attributesExtractor =

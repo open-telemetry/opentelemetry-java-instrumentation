@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.TransportActionListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -62,11 +63,16 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
 
       transportRequest = ElasticTransportRequest.create(action, actionRequest);
       Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, transportRequest)) {
+        return;
+      }
+
       context = instrumenter().start(parentContext, transportRequest);
       scope = context.makeCurrent();
 
       actionListener =
-          new TransportActionListener<>(transportRequest, actionListener, context, parentContext);
+          new TransportActionListener<>(
+              instrumenter(), transportRequest, actionListener, context, parentContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -75,6 +81,10 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelRequest") ElasticTransportRequest transportRequest) {
+      if (scope == null) {
+        return;
+      }
+
       scope.close();
 
       if (throwable != null) {
