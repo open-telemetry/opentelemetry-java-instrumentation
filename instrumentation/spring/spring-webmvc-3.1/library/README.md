@@ -10,7 +10,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
  - `Minimum version: 3.1`
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
- - `Minimum version: 0.8.0`
+ - `Minimum version: 1.7.0`
 
 For Maven add to your `pom.xml`:
 
@@ -60,14 +60,14 @@ implementation("org.springframework:spring-webmvc:SPRING_VERSION")
 
 ### Features
 
-#### WebMvcTracingFilter
+#### SpringWebMvcTracing
 
-WebMvcTracingFilter adds OpenTelemetry server spans to requests processed by request dispatch, on any spring servlet container. An example is shown below:
+`SpringWebMvcTracing` adds OpenTelemetry server spans to requests processed by request dispatch, on any spring servlet container. An example is shown below:
 
 ##### Usage
 
 ```java
-import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter
+import io.opentelemetry.instrumentation.spring.webmvc.SpringWebMvcTracing;
 import io.opentelemetry.api.trace.Tracer;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,12 +79,12 @@ import org.springframework.web.client.RestTemplate;
 public class WebMvcTracingFilterConfig {
 
    @Bean
-   public WebMvcTracingFilter webMvcTracingFilter(Tracer tracer) {
-      return new WebMvcTracingFilter(tracer);
+   public WebMvcTracingFilter webMvcTracingFilter(OpenTelemetry openTelemetry) {
+      return SpringWebMvcTracing.create(openTelemetry).newServletFilter();
    }
 }
 ```
 
 ### Starter Guide
 
-Check out the opentelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the OpenTelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.

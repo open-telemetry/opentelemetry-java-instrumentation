@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -16,26 +16,31 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered {
+final class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered {
 
-  private static final String FILTER_CLASS = "WebMVCTracingFilter";
-  private static final String FILTER_METHOD = "doFilterInternal";
-  private final SpringWebMvcServerTracer tracer;
+  private final Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter;
 
-  public WebMvcTracingFilter(OpenTelemetry openTelemetry) {
-    this.tracer = new SpringWebMvcServerTracer(openTelemetry);
+  WebMvcTracingFilter(Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
   @Override
   public void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    Context ctx = tracer.startSpan(request, request, request, FILTER_CLASS + "." + FILTER_METHOD);
-    try (Scope ignored = ctx.makeCurrent()) {
+
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
       filterChain.doFilter(request, response);
-      tracer.end(ctx, response);
+      return;
+    }
+
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      filterChain.doFilter(request, response);
+      instrumenter.end(context, request, response, null);
     } catch (Throwable t) {
-      tracer.endExceptionally(ctx, t, response);
+      instrumenter.end(context, request, response, t);
       throw t;
     }
   }

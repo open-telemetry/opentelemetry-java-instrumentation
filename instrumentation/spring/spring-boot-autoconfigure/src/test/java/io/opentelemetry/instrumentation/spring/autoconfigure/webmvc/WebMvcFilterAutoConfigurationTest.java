@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter;
+import javax.servlet.Filter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,8 +36,7 @@ class WebMvcFilterAutoConfigurationTest {
         .withPropertyValues("otel.springboot.web.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelWebMvcTracingFilter", WebMvcTracingFilter.class))
-                    .isNotNull());
+                assertThat(context.getBean("otelWebMvcTracingFilter", Filter.class)).isNotNull());
   }
 
   @Test
@@ -53,7 +52,6 @@ class WebMvcFilterAutoConfigurationTest {
   void noProperty() {
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean("otelWebMvcTracingFilter", WebMvcTracingFilter.class))
-                .isNotNull());
+            assertThat(context.getBean("otelWebMvcTracingFilter", Filter.class)).isNotNull());
   }
 }
