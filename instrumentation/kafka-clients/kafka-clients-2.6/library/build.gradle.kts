@@ -2,15 +2,13 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
-  library("org.apache.kafka:kafka-clients:2.8.1")
+  library("org.apache.kafka:kafka-clients:2.6.0")
 
   testImplementation(project(":instrumentation:kafka-clients:kafka-clients-0.11:testing"))
 
-  testImplementation("org.testcontainers:kafka:${versions["org.testcontainers"]}")
+  testImplementation("org.testcontainers:kafka")
 }
 
 tasks {
