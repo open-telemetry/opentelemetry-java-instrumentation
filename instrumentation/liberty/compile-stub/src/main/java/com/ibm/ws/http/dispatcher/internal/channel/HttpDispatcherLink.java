@@ -16,6 +16,10 @@ public class HttpDispatcherLink {
     throw new UnsupportedOperationException();
   }
 
+  public String getRemoteHostName(boolean canonical) {
+    throw new UnsupportedOperationException();
+  }
+
   public String getRequestedHost() {
     throw new UnsupportedOperationException();
   }

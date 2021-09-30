@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import static io.opentelemetry.javaagent.instrumentation.liberty.dispatcher.LibertyDispatcherTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.liberty.dispatcher.LibertyDispatcherSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,16 +54,15 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
     public static void onEnter(
         @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc,
+        @Advice.Local("otelRequest") LibertyRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      LibertyRequestWrapper requestWrapper =
-          new LibertyRequestWrapper(httpDispatcherLink, isc.getRequest());
-      LibertyConnectionWrapper connectionWrapper =
-          new LibertyConnectionWrapper(httpDispatcherLink, isc.getRequest());
-      context =
-          tracer()
-              .startSpan(
-                  requestWrapper, connectionWrapper, null, "HTTP " + requestWrapper.getMethod());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = new LibertyRequest(httpDispatcherLink, isc.getRequest());
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -71,6 +71,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
         @Advice.Argument(value = 2) Exception failure,
+        @Advice.Local("otelRequest") LibertyRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -78,15 +79,11 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
       }
       scope.close();
 
-      LibertyResponseWrapper responseWrapper = new LibertyResponseWrapper(statusCode);
+      LibertyResponse response = new LibertyResponse(statusCode);
+      request.setCompleted();
 
       Throwable t = failure != null ? failure : throwable;
-      if (t != null) {
-        tracer().endExceptionally(context, t, responseWrapper);
-        return;
-      }
-
-      tracer().end(context, responseWrapper);
+      instrumenter().end(context, request, response, t);
     }
   }
 }
