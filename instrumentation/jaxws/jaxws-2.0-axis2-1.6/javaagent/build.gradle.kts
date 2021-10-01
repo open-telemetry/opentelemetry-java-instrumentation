@@ -15,6 +15,12 @@ muzzle {
     skip("1.2", "1.3")
   }
 }
+
+configurations.named("testRuntimeClasspath").configure {
+  // get rid of the servlet 2 dependency (provided transitively by axis), tests require servlet 3
+  exclude("javax.servlet", "servlet-api")
+}
+
 dependencies {
   val axis2Version = "1.6.0"
   library("org.apache.axis2:axis2-jaxws:$axis2Version")
