@@ -64,7 +64,9 @@ implementation("org.springframework:spring-webmvc:SPRING_VERSION")
 
 `SpringWebMvcTracing` adds OpenTelemetry server spans to requests processed by request dispatch, on any spring servlet container. An example is shown below:
 
-##### Usage
+##### Usage in Spring Boot
+
+Spring Boot allows servlet `Filter`s to be registered as beans:
 
 ```java
 import io.opentelemetry.instrumentation.spring.webmvc.SpringWebMvcTracing;
