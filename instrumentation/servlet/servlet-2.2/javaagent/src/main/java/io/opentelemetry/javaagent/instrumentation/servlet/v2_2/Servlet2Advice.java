@@ -9,9 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.ServletRequest;
@@ -62,7 +62,7 @@ public class Servlet2Advice {
     scope = context.makeCurrent();
     // reset response status from previous request
     // (some servlet containers reuse response objects to reduce memory allocations)
-    InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, null);
+    VirtualField.find(ServletResponse.class, Integer.class).set(response, null);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -94,8 +94,7 @@ public class Servlet2Advice {
     }
 
     int responseStatusCode = HttpServletResponse.SC_OK;
-    Integer responseStatus =
-        InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
+    Integer responseStatus = VirtualField.find(ServletResponse.class, Integer.class).get(response);
     if (responseStatus != null) {
       responseStatusCode = responseStatus;
     }

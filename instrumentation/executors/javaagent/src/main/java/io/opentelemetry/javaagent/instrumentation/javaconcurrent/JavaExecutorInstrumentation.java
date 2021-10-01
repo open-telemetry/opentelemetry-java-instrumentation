@@ -11,9 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
@@ -71,9 +70,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<Runnable, PropagatedContext> contextStore =
-            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<Runnable, PropagatedContext> virtualField =
+            VirtualField.find(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }
@@ -93,9 +92,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
-            InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+            VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }
@@ -115,9 +114,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<Runnable, PropagatedContext> contextStore =
-            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<Runnable, PropagatedContext> virtualField =
+            VirtualField.find(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }
@@ -128,9 +127,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (propagatedContext != null && future != null) {
-        ContextStore<Future<?>, PropagatedContext> contextStore =
-            InstrumentationContext.get(Future.class, PropagatedContext.class);
-        contextStore.put(future, propagatedContext);
+        VirtualField<Future<?>, PropagatedContext> virtualField =
+            VirtualField.find(Future.class, PropagatedContext.class);
+        virtualField.set(future, propagatedContext);
       }
       ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
@@ -144,9 +143,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<Callable<?>, PropagatedContext> contextStore =
-            InstrumentationContext.get(Callable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<Callable<?>, PropagatedContext> virtualField =
+            VirtualField.find(Callable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }
@@ -157,9 +156,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (propagatedContext != null && future != null) {
-        ContextStore<Future<?>, PropagatedContext> contextStore =
-            InstrumentationContext.get(Future.class, PropagatedContext.class);
-        contextStore.put(future, propagatedContext);
+        VirtualField<Future<?>, PropagatedContext> virtualField =
+            VirtualField.find(Future.class, PropagatedContext.class);
+        virtualField.set(future, propagatedContext);
       }
       ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
@@ -178,9 +177,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
       Context context = Java8BytecodeBridge.currentContext();
       for (Callable<?> task : tasks) {
         if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-          ContextStore<Callable<?>, PropagatedContext> contextStore =
-              InstrumentationContext.get(Callable.class, PropagatedContext.class);
-          ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+          VirtualField<Callable<?>, PropagatedContext> virtualField =
+              VirtualField.find(Callable.class, PropagatedContext.class);
+          ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
         }
       }
 
@@ -204,9 +203,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
       if (throwable != null) {
         for (Callable<?> task : tasks) {
           if (task != null) {
-            ContextStore<Callable<?>, PropagatedContext> contextStore =
-                InstrumentationContext.get(Callable.class, PropagatedContext.class);
-            PropagatedContext propagatedContext = contextStore.get(task);
+            VirtualField<Callable<?>, PropagatedContext> virtualField =
+                VirtualField.find(Callable.class, PropagatedContext.class);
+            PropagatedContext propagatedContext = virtualField.get(task);
             ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
           }
         }

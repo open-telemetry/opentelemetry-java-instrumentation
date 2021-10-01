@@ -17,9 +17,9 @@ class OSGIClassloadingTest extends AgentInstrumentationSpecification {
     when:
     def clazz
     if (args == 1) {
-      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext")
+      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge")
     } else {
-      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext", false)
+      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge", false)
     }
 
     then:

@@ -26,6 +26,6 @@ class TomcatClassloadingTest extends AgentInstrumentationSpecification {
 
     expect:
     // If instrumentation didn't work this would blow up with NPE due to incomplete resources mocking
-    classloader.loadClass("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext")
+    classloader.loadClass("io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge")
   }
 }

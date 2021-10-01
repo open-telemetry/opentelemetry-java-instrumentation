@@ -16,9 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -61,7 +61,7 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
       // use the receive CONSUMER span as parent if it's available
       Context parentContext = currentContext();
       SpanContext receiveSpanContext =
-          InstrumentationContext.get(ConsumerRecord.class, SpanContext.class).get(record.value);
+          VirtualField.find(ConsumerRecord.class, SpanContext.class).get(record.value);
       if (receiveSpanContext != null) {
         parentContext = parentContext.with(wrapSpan(receiveSpanContext));
       }

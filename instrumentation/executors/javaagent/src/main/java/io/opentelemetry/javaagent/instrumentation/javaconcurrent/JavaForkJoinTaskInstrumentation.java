@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
@@ -62,14 +61,14 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> task) {
-      ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
-          InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
-      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(contextStore, task);
+      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(virtualField, task);
       if (task instanceof Runnable) {
-        ContextStore<Runnable, PropagatedContext> runnableContextStore =
-            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        VirtualField<Runnable, PropagatedContext> runnableVirtualField =
+            VirtualField.find(Runnable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(runnableContextStore, (Runnable) task);
+            TaskAdviceHelper.makePropagatedContextCurrent(runnableVirtualField, (Runnable) task);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -79,10 +78,10 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (task instanceof Callable) {
-        ContextStore<Callable<?>, PropagatedContext> callableContextStore =
-            InstrumentationContext.get(Callable.class, PropagatedContext.class);
+        VirtualField<Callable<?>, PropagatedContext> callableVirtualField =
+            VirtualField.find(Callable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(callableContextStore, (Callable<?>) task);
+            TaskAdviceHelper.makePropagatedContextCurrent(callableVirtualField, (Callable<?>) task);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -109,9 +108,9 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
-            InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+            VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }

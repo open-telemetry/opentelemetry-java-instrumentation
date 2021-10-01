@@ -16,10 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.ExceptionHandlerWrapper;
@@ -99,7 +98,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
 
       context = tracer().startSpan(parentContext, request, request);
       Contexts contexts = new Contexts(parentContext, context);
-      InstrumentationContext.get(HttpClientRequest.class, Contexts.class).put(request, contexts);
+      VirtualField.find(HttpClientRequest.class, Contexts.class).set(request, contexts);
 
       scope = context.makeCurrent();
     }
@@ -126,8 +125,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpClientRequest request,
         @Advice.Argument(0) Throwable t,
         @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts =
-          InstrumentationContext.get(HttpClientRequest.class, Contexts.class).get(request);
+      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
 
       if (contexts == null) {
         return;
@@ -155,8 +153,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpClientRequest request,
         @Advice.Argument(1) HttpClientResponse response,
         @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts =
-          InstrumentationContext.get(HttpClientRequest.class, Contexts.class).get(request);
+      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
 
       if (contexts == null) {
         return;
@@ -182,8 +179,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void mountContext(
         @Advice.This HttpClientRequest request, @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts =
-          InstrumentationContext.get(HttpClientRequest.class, Contexts.class).get(request);
+      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
       if (contexts == null) {
         return;
       }
@@ -207,9 +203,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpClientRequest request,
         @Advice.Argument(value = 0, readOnly = false) Handler<Throwable> handler) {
       if (handler != null) {
-        ContextStore<HttpClientRequest, Contexts> contextStore =
-            InstrumentationContext.get(HttpClientRequest.class, Contexts.class);
-        handler = ExceptionHandlerWrapper.wrap(tracer(), request, contextStore, handler);
+        VirtualField<HttpClientRequest, Contexts> virtualField =
+            VirtualField.find(HttpClientRequest.class, Contexts.class);
+        handler = ExceptionHandlerWrapper.wrap(tracer(), request, virtualField, handler);
       }
     }
   }

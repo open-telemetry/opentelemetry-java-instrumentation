@@ -14,6 +14,7 @@ import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import java.io.BufferedReader;
@@ -339,7 +340,7 @@ public final class ReferenceCollector {
   }
 
   /**
-   * Returns a map of {@link io.opentelemetry.javaagent.instrumentation.api.ContextStore} mappings.
+   * Returns a map of {@link VirtualField} mappings.
    *
    * @deprecated Use {@link #getContextStoreMappings()} instead.
    */

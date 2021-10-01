@@ -72,7 +72,7 @@ public final class JdbcUtils {
     DbInfo dbInfo = JdbcData.connectionInfo.get(connection);
     if (dbInfo == null) {
       dbInfo = computeDbInfo(connection);
-      JdbcData.connectionInfo.put(connection, dbInfo);
+      JdbcData.connectionInfo.set(connection, dbInfo);
     }
     return dbInfo;
   }

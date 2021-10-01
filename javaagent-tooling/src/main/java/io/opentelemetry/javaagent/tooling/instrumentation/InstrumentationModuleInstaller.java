@@ -10,9 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -137,7 +137,7 @@ public final class InstrumentationModuleInstaller {
 
   private static class FieldBackedProviderFactory {
     static {
-      InstrumentationContext.internalSetContextStoreSupplier(FieldBackedProvider::getContextStore);
+      RuntimeVirtualFieldSupplier.set(FieldBackedProvider::getContextStore);
     }
 
     static FieldBackedProvider get(

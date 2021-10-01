@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTrac
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,20 +24,20 @@ public final class SessionMethodUtils {
       new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
 
   public static <TARGET, ENTITY> Context startSpanFrom(
-      ContextStore<TARGET, Context> contextStore,
+      VirtualField<TARGET, Context> virtualField,
       TARGET spanKey,
       String operationName,
       String entityName) {
-    return startSpanFrom(contextStore, spanKey, () -> operationName, entityName);
+    return startSpanFrom(virtualField, spanKey, () -> operationName, entityName);
   }
 
   private static <TARGET, ENTITY> Context startSpanFrom(
-      ContextStore<TARGET, Context> contextStore,
+      VirtualField<TARGET, Context> virtualField,
       TARGET spanKey,
       Supplier<String> operationNameSupplier,
       String entityName) {
 
-    Context sessionContext = contextStore.get(spanKey);
+    Context sessionContext = virtualField.get(spanKey);
     if (sessionContext == null) {
       return null; // No state found. We aren't in a Session.
     }
@@ -46,7 +46,7 @@ public final class SessionMethodUtils {
   }
 
   public static <TARGET> Context startSpanFromQuery(
-      ContextStore<TARGET, Context> contextStore, TARGET spanKey, String query) {
+      VirtualField<TARGET, Context> virtualField, TARGET spanKey, String query) {
     Supplier<String> operationNameSupplier =
         () -> {
           // set operation to default value that is used when sql sanitizer fails to extract
@@ -61,7 +61,7 @@ public final class SessionMethodUtils {
           }
           return operation;
         };
-    return startSpanFrom(contextStore, spanKey, operationNameSupplier, null);
+    return startSpanFrom(virtualField, spanKey, operationNameSupplier, null);
   }
 
   public static void end(@Nullable Context context, Throwable throwable) {
@@ -77,20 +77,20 @@ public final class SessionMethodUtils {
     }
   }
 
-  // Copies a span from the given Session ContextStore into the targetContextStore. Used to
+  // Copies a span from the given Session VirtualField into the targetVirtualField. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <S, T> void attachSpanFromStore(
-      ContextStore<S, Context> sourceContextStore,
+      VirtualField<S, Context> sourceVirtualField,
       S source,
-      ContextStore<T, Context> targetContextStore,
+      VirtualField<T, Context> targetVirtualField,
       T target) {
 
-    Context sessionContext = sourceContextStore.get(source);
+    Context sessionContext = sourceVirtualField.get(source);
     if (sessionContext == null) {
       return;
     }
 
-    targetContextStore.putIfAbsent(target, sessionContext);
+    targetVirtualField.setIfNull(target, sessionContext);
   }
 
   public static String getSessionMethodSpanName(String methodName) {

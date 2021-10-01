@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,14 +48,14 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store
 
-        ContextStore<CouchbaseRequest, Span> contextStore =
-            InstrumentationContext.get(CouchbaseRequest.class, Span.class);
+        VirtualField<CouchbaseRequest, Span> virtualField =
+            VirtualField.find(CouchbaseRequest.class, Span.class);
 
-        Span span = contextStore.get(request);
+        Span span = virtualField.get(request);
 
         if (span == null) {
           span = parentSpan;
-          contextStore.put(request, span);
+          virtualField.set(request, span);
           if (CouchbaseConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
             span.setAttribute("couchbase.operation_id", request.operationId());
           }

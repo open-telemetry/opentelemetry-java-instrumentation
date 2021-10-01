@@ -48,7 +48,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      JdbcData.preparedStatement.put(statement, sql);
+      JdbcData.preparedStatement.set(statement, sql);
     }
   }
 }

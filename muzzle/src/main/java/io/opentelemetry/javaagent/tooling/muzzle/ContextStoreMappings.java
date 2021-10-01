@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+// TODO: we should rename the class so that it doesn't mention "Context", but "VirtualField"
+// instead; probably once this class is hidden somewhere in the muzzle codegen contract
 public final class ContextStoreMappings {
   private final Set<Map.Entry<String, String>> entrySet;
 

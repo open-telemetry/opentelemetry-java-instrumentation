@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.common.collect.EvictingQueue;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
@@ -465,7 +466,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   private class InstrumentationContextMethodVisitor extends MethodVisitor {
     // this data structure will remember last two LDC <class> instructions before
-    // InstrumentationContext.get() call
+    // VirtualField.get() call
     private final EvictingQueue<String> lastTwoClassConstants = EvictingQueue.create(2);
 
     InstrumentationContextMethodVisitor(MethodVisitor methodVisitor) {
@@ -506,14 +507,19 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     public void visitMethodInsn(
         int opcode, String owner, String name, String descriptor, boolean isInterface) {
 
+      String getVirtualFieldDescriptor =
+          Type.getMethodDescriptor(
+              Type.getType(VirtualField.class),
+              Type.getType(Class.class),
+              Type.getType(Class.class));
+
       Type methodType = Type.getMethodType(descriptor);
       Type ownerType = Type.getType("L" + owner + ";");
 
-      // remember used context classes if this is an InstrumentationContext.get() call
-      if ("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext"
-              .equals(ownerType.getClassName())
-          && "get".equals(name)
-          && methodType.getArgumentTypes().length == 2) {
+      // remember used context classes if this is an VirtualField.get() call
+      if ("io.opentelemetry.instrumentation.api.field.VirtualField".equals(ownerType.getClassName())
+          && "find".equals(name)
+          && methodType.getDescriptor().equals(getVirtualFieldDescriptor)) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
@@ -523,7 +529,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
           contextStoreMappingsBuilder.register(className, contextClassName);
         } else {
           throw new MuzzleCompilationException(
-              "Invalid InstrumentationContext#get(Class, Class) usage: you cannot pass variables,"
+              "Invalid VirtualField#get(Class, Class) usage: you cannot pass variables,"
                   + " method parameters, compute classes; class references need to be passed"
                   + " directly to the get() method");
         }
@@ -548,7 +554,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     private void registerOpcode(int opcode, Object value) {
       // check if this is an LDC <class> instruction; if so, remember the class that was used
       // we need to remember last two LDC <class> instructions that were executed before
-      // InstrumentationContext.get() call
+      // VirtualField.get() call
       if (opcode == Opcodes.LDC) {
         if (value instanceof Type) {
           Type type = (Type) value;

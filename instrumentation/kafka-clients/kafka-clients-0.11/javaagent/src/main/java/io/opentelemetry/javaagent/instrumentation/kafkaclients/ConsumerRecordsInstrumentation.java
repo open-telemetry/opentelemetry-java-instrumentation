@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.Iterator;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
@@ -65,7 +65,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
         SpanContext receiveSpanContext =
-            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class).get(records);
+            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
         iterable = new TracingIterable(iterable, receiveSpanContext);
       }
     }
@@ -80,7 +80,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> list) {
       if (list != null) {
         SpanContext receiveSpanContext =
-            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class).get(records);
+            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
         list = new TracingList(list, receiveSpanContext);
       }
     }
@@ -95,7 +95,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<?, ?>> iterator) {
       if (iterator != null) {
         SpanContext receiveSpanContext =
-            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class).get(records);
+            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
         iterator = new TracingIterator(iterator, receiveSpanContext);
       }
     }

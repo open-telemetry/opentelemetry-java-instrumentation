@@ -12,11 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,12 +57,12 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ContextStore<ProcedureCall, Context> contextStore =
-          InstrumentationContext.get(ProcedureCall.class, Context.class);
+      VirtualField<ProcedureCall, Context> virtualField =
+          VirtualField.find(ProcedureCall.class, Context.class);
 
       context =
           SessionMethodUtils.startSpanFrom(
-              contextStore, call, "ProcedureCall." + name, call.getProcedureName());
+              virtualField, call, "ProcedureCall." + name, call.getProcedureName());
       if (context != null) {
         scope = context.makeCurrent();
       }

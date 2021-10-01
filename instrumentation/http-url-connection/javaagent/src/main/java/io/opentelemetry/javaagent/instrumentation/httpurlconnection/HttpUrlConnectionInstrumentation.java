@@ -19,12 +19,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
@@ -83,8 +82,8 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       // using storage for a couple of reasons:
       // - to start an operation in connect() and end it in getInputStream()
       // - to avoid creating a new operation on multiple subsequent calls to getInputStream()
-      ContextStore<HttpURLConnection, HttpUrlState> storage =
-          InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
+      VirtualField<HttpURLConnection, HttpUrlState> storage =
+          VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
       httpUrlState = storage.get(connection);
 
       if (httpUrlState != null) {
@@ -96,7 +95,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
 
       Context context = instrumenter().start(parentContext, connection);
       httpUrlState = new HttpUrlState(context);
-      storage.put(connection, httpUrlState);
+      storage.set(connection, httpUrlState);
       scope = context.makeCurrent();
     }
 
@@ -149,8 +148,8 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 
-      ContextStore<HttpURLConnection, HttpUrlState> storage =
-          InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
+      VirtualField<HttpURLConnection, HttpUrlState> storage =
+          VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
       HttpUrlState httpUrlState = storage.get(connection);
       if (httpUrlState != null) {
         Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);

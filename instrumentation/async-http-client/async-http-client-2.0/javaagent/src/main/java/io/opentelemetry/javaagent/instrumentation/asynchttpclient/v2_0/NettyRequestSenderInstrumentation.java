@@ -12,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -59,8 +59,8 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.Argument(0) Request request) {
-      InstrumentationContext.get(Request.class, Context.class)
-          .put(request, Java8BytecodeBridge.currentContext());
+      VirtualField.find(Request.class, Context.class)
+          .set(request, Java8BytecodeBridge.currentContext());
     }
   }
 
@@ -70,7 +70,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static Scope mountContext(@Advice.Argument(0) NettyResponseFuture<?> responseFuture) {
       Request request = responseFuture.getCurrentRequest();
-      Context context = InstrumentationContext.get(Request.class, Context.class).get(request);
+      Context context = VirtualField.find(Request.class, Context.class).get(request);
       return context == null ? null : context.makeCurrent();
     }
 
@@ -88,7 +88,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void rememberNettyRequest(@Advice.Return NettyResponseFuture responseFuture) {
       RequestContext requestContext =
-          InstrumentationContext.get(AsyncHandler.class, RequestContext.class)
+          VirtualField.find(AsyncHandler.class, RequestContext.class)
               .get(responseFuture.getAsyncHandler());
       if (requestContext != null) {
         requestContext.setNettyRequest(responseFuture.getNettyRequest());

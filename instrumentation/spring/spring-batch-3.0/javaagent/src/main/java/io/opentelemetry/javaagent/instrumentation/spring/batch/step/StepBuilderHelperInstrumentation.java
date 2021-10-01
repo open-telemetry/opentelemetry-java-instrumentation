@@ -10,10 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -42,9 +41,9 @@ public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This StepBuilderHelper<?> stepBuilder) {
-      ContextStore<StepExecution, ContextAndScope> executionContextStore =
-          InstrumentationContext.get(StepExecution.class, ContextAndScope.class);
-      stepBuilder.listener(new TracingStepExecutionListener(executionContextStore));
+      VirtualField<StepExecution, ContextAndScope> executionVirtualField =
+          VirtualField.find(StepExecution.class, ContextAndScope.class);
+      stepBuilder.listener(new TracingStepExecutionListener(executionVirtualField));
     }
   }
 }
