@@ -30,7 +30,7 @@ the `InstrumentationModule#isHelperClass(String)` predicate). Aside from referen
 the collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
 injected to the application classloader (`InstrumentationModule#getMuzzleHelperClassNames()`).
-Muzzle also automatically generates the `InstrumentationModule#getMuzzleContextStoreClasses()`
+Muzzle also automatically generates the `InstrumentationModule#registerMuzzleVirtualFields()`
 method.
 
 If you extend any of these `getMuzzle...()` methods in your `InstrumentationModule`, the muzzle

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 
-public class InstrumentationContextTestClasses {
+public class VirtualFieldTestClasses {
   public static class ValidAdvice {
     public static void advice() {
       Runnable.class.getName();
@@ -19,7 +19,7 @@ public class InstrumentationContextTestClasses {
     }
   }
 
-  public static class TwoContextStoresAdvice {
+  public static class TwoVirtualFieldsInTheSameClassAdvice {
     public static void advice() {
       VirtualField.find(Key1.class, Context.class);
       VirtualField.find(Key1.class, State.class);
