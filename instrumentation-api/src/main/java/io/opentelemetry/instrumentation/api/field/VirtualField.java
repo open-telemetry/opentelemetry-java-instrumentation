@@ -48,9 +48,6 @@ public abstract class VirtualField<T, F> {
   /** Sets the new value of this virtual field. */
   public abstract void set(T object, @Nullable F fieldValue);
 
-  /** Sets the new value of this virtual field if the current value is {@code null}. */
-  public abstract void setIfNull(T object, F fieldValue);
-
   /**
    * Sets the new value of this virtual field if the current value is {@code null}.
    *

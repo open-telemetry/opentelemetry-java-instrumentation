@@ -67,6 +67,14 @@ public class NettyChannelPipelineInstrumentation
         return;
       }
 
+      VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+
+      // don't add another instrumentation handler if there already is one attached
+      if (instrumentationHandlerField.get(handler) != null) {
+        return;
+      }
+
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
@@ -88,8 +96,7 @@ public class NettyChannelPipelineInstrumentation
         try {
           pipeline.addLast(ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class)
-              .setIfNull(handler, ourHandler);
+          instrumentationHandlerField.set(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
         }

@@ -73,11 +73,6 @@ public final class RuntimeVirtualFieldSupplier {
     }
 
     @Override
-    public void setIfNull(T object, F fieldValue) {
-      cache.computeIfAbsent(object, k -> fieldValue);
-    }
-
-    @Override
     public F computeIfNull(T object, Supplier<F> fieldValueSupplier) {
       return cache.computeIfAbsent(object, k -> fieldValueSupplier.get());
     }
