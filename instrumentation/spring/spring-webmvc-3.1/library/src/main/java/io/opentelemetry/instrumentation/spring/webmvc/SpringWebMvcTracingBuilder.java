@@ -55,6 +55,7 @@ public final class SpringWebMvcTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
+            .addAttributesExtractor(new StatusCodeExtractor())
             .addAttributesExtractor(new SpringWebMvcNetAttributesExtractor())
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())

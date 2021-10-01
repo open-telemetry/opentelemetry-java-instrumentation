@@ -41,8 +41,9 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
-    return response.getStatus();
+  protected @Nullable Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
+    // set in StatusCodeExtractor
+    return null;
   }
 
   @Override
