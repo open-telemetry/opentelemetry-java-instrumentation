@@ -79,7 +79,7 @@ import org.springframework.web.client.RestTemplate;
 public class WebMvcTracingFilterConfig {
 
    @Bean
-   public WebMvcTracingFilter webMvcTracingFilter(OpenTelemetry openTelemetry) {
+   public Filter webMvcTracingFilter(OpenTelemetry openTelemetry) {
       return SpringWebMvcTracing.create(openTelemetry).newServletFilter();
    }
 }
