@@ -115,7 +115,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
 
     and:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           name "ElasticsearchRepository.index"
           kind INTERNAL
@@ -141,17 +141,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           }
         }
         span(2) {
-          name "PutMappingAction"
-          kind CLIENT
-          childOf span(1)
-          attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-          }
-        }
-        span(3) {
           name "RefreshAction"
           kind CLIENT
           childOf span(0)
