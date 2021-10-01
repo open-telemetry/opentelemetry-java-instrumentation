@@ -32,9 +32,7 @@ public class JspCompilationContextInstrumentationSingletons {
   }
 
   public static String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
-    return jspCompilationContext == null
-        ? "Compile"
-        : "Compile " + jspCompilationContext.getJspFile();
+    return "Compile " + jspCompilationContext.getJspFile();
   }
 
   public static Instrumenter<JspCompilationContext, Void> instrumenter() {
@@ -56,13 +54,15 @@ public class JspCompilationContextInstrumentationSingletons {
         JspCompilationContext jspCompilationContext,
         @Nullable Void unused,
         @Nullable Throwable error) {
-      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-        Compiler compiler = jspCompilationContext.getCompiler();
-        if (compiler != null) {
-          attributes.put("jsp.compiler", compiler.getClass().getName());
-        }
-        attributes.put("jsp.classFQCN", jspCompilationContext.getFQCN());
+      if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        return;
       }
+
+      Compiler compiler = jspCompilationContext.getCompiler();
+      if (compiler != null) {
+        attributes.put("jsp.compiler", compiler.getClass().getName());
+      }
+      attributes.put("jsp.classFQCN", jspCompilationContext.getFQCN());
     }
   }
 }

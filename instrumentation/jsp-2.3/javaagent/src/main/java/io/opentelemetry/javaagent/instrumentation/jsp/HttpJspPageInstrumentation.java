@@ -52,8 +52,12 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) HttpServletRequest req,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!instrumenter().shouldStart(parentContext, req)) {
+        return;
+      }
 
-      context = instrumenter().start(Java8BytecodeBridge.currentContext(), req);
+      context = instrumenter().start(parentContext, req);
       scope = context.makeCurrent();
     }
 
@@ -63,8 +67,11 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+      if (scope == null) {
+        return;
+      }
 
+      scope.close();
       instrumenter().end(context, req, null, throwable);
     }
   }

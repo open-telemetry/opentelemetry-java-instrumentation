@@ -41,7 +41,12 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = instrumenter().start(Java8BytecodeBridge.currentContext(), jspCompilationContext);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!instrumenter().shouldStart(parentContext, jspCompilationContext)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, jspCompilationContext);
       scope = context.makeCurrent();
     }
 
@@ -51,8 +56,11 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+      if (scope == null) {
+        return;
+      }
 
+      scope.close();
       instrumenter().end(context, jspCompilationContext, null, throwable);
     }
   }
