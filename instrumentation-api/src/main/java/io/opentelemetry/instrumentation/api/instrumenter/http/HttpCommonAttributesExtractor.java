@@ -97,6 +97,9 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts all values of header named {@code name} from the request, or an empty list if there
    * were none.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
+   * returned instead.
    */
   protected abstract List<String> requestHeader(REQUEST request, String name);
 
@@ -154,6 +157,9 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
+   * returned instead.
    */
   protected abstract List<String> responseHeader(REQUEST request, RESPONSE response, String name);
 }
