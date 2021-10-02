@@ -15,9 +15,9 @@ import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,8 +53,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class)
-          .put(handler, AsyncHandlerData.create(parentContext, context, request));
+      VirtualField.find(AsyncHandler.class, AsyncHandlerData.class)
+          .set(handler, AsyncHandlerData.create(parentContext, context, request));
       scope = context.makeCurrent();
     }
 

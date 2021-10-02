@@ -14,9 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,7 +57,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       Context context = instrumenter().start(parentContext, requestContext);
       requestContext.setContext(context);
 
-      // TODO (trask) instead of using InstrumentationContext, wrap the AsyncHandler in an
+      // TODO (trask) instead of using VirtualField, wrap the AsyncHandler in an
       // instrumented AsyncHandler which delegates to the original AsyncHandler
       // (similar to other http client instrumentations, and needed for library instrumentation)
       //
@@ -70,8 +70,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       // 2.1, so the instrumentation module will need to be essentially duplicated (or a common
       // module introduced)
 
-      InstrumentationContext.get(AsyncHandler.class, RequestContext.class)
-          .put(handler, requestContext);
+      VirtualField.find(AsyncHandler.class, RequestContext.class).set(handler, requestContext);
       scope = context.makeCurrent();
     }
 

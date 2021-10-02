@@ -28,7 +28,7 @@ class JBossClassloadingTest extends AgentInstrumentationSpecification {
     when:
     Class<?> clazz
     try {
-      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext", false, classLoader)
+      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge", false, classLoader)
     } catch (ClassNotFoundException e) {
     }
 

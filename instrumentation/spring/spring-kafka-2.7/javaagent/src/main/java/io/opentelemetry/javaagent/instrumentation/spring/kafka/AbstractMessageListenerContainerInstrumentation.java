@@ -11,10 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,11 +43,11 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) BatchInterceptor<?, ?> interceptor) {
       if (!(interceptor instanceof InstrumentedBatchInterceptor)) {
-        ContextStore receiveSpanContextStore =
-            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class);
-        ContextStore stateStore = InstrumentationContext.get(ConsumerRecords.class, State.class);
+        VirtualField receiveSpanVirtualField =
+            VirtualField.find(ConsumerRecords.class, SpanContext.class);
+        VirtualField stateStore = VirtualField.find(ConsumerRecords.class, State.class);
         interceptor =
-            new InstrumentedBatchInterceptor<>(receiveSpanContextStore, stateStore, interceptor);
+            new InstrumentedBatchInterceptor<>(receiveSpanVirtualField, stateStore, interceptor);
       }
     }
   }

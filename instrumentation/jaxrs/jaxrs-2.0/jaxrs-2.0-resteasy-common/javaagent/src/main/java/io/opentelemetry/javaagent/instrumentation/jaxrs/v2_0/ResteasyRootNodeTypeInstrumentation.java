@@ -9,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -50,12 +50,12 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
       String normalizedPath = JaxrsPathUtil.normalizePath(path);
       if (invoker instanceof ResourceLocatorInvoker) {
         ResourceLocatorInvoker resourceLocatorInvoker = (ResourceLocatorInvoker) invoker;
-        InstrumentationContext.get(ResourceLocatorInvoker.class, String.class)
-            .put(resourceLocatorInvoker, normalizedPath);
+        VirtualField.find(ResourceLocatorInvoker.class, String.class)
+            .set(resourceLocatorInvoker, normalizedPath);
       } else if (invoker instanceof ResourceMethodInvoker) {
         ResourceMethodInvoker resourceMethodInvoker = (ResourceMethodInvoker) invoker;
-        InstrumentationContext.get(ResourceMethodInvoker.class, String.class)
-            .put(resourceMethodInvoker, normalizedPath);
+        VirtualField.find(ResourceMethodInvoker.class, String.class)
+            .set(resourceMethodInvoker, normalizedPath);
       }
     }
   }

@@ -12,7 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.Chun
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import javax.annotation.Nullable;
 import org.springframework.batch.core.ChunkListener;
@@ -20,13 +20,13 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
 
 public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
-  private final ContextStore<ChunkContext, ContextAndScope> executionContextStore;
+  private final VirtualField<ChunkContext, ContextAndScope> executionVirtualField;
   private final Class<?> builderClass;
   private ChunkContextAndBuilder chunkContextAndBuilder;
 
   public TracingChunkExecutionListener(
-      ContextStore<ChunkContext, ContextAndScope> executionContextStore, Class<?> builderClass) {
-    this.executionContextStore = executionContextStore;
+      VirtualField<ChunkContext, ContextAndScope> executionVirtualField, Class<?> builderClass) {
+    this.executionVirtualField = executionVirtualField;
     this.builderClass = builderClass;
   }
 
@@ -41,7 +41,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
     Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
-    executionContextStore.put(chunkContext, new ContextAndScope(context, scope));
+    executionVirtualField.set(chunkContext, new ContextAndScope(context, scope));
   }
 
   @Override
@@ -57,12 +57,12 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
   }
 
   private void end(ChunkContext chunkContext, @Nullable Throwable throwable) {
-    ContextAndScope contextAndScope = executionContextStore.get(chunkContext);
+    ContextAndScope contextAndScope = executionVirtualField.get(chunkContext);
     if (contextAndScope == null) {
       return;
     }
 
-    executionContextStore.put(chunkContext, null);
+    executionVirtualField.set(chunkContext, null);
     contextAndScope.closeScope();
     chunkInstrumenter().end(contextAndScope.getContext(), chunkContextAndBuilder, null, throwable);
   }

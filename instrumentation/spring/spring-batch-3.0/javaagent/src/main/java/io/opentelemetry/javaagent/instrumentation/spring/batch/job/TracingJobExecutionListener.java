@@ -10,18 +10,18 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobSin
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.core.Ordered;
 
 public final class TracingJobExecutionListener implements JobExecutionListener, Ordered {
-  private final ContextStore<JobExecution, ContextAndScope> executionContextStore;
+  private final VirtualField<JobExecution, ContextAndScope> executionVirtualField;
 
   public TracingJobExecutionListener(
-      ContextStore<JobExecution, ContextAndScope> executionContextStore) {
-    this.executionContextStore = executionContextStore;
+      VirtualField<JobExecution, ContextAndScope> executionVirtualField) {
+    this.executionVirtualField = executionVirtualField;
   }
 
   @Override
@@ -34,16 +34,16 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
     Context context = jobInstrumenter().start(parentContext, jobExecution);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
-    executionContextStore.put(jobExecution, new ContextAndScope(context, scope));
+    executionVirtualField.set(jobExecution, new ContextAndScope(context, scope));
   }
 
   @Override
   public void afterJob(JobExecution jobExecution) {
-    ContextAndScope contextAndScope = executionContextStore.get(jobExecution);
+    ContextAndScope contextAndScope = executionVirtualField.get(jobExecution);
     if (contextAndScope == null) {
       return;
     }
-    executionContextStore.put(jobExecution, null);
+    executionVirtualField.set(jobExecution, null);
     contextAndScope.closeScope();
     jobInstrumenter().end(contextAndScope.getContext(), jobExecution, null, null);
   }

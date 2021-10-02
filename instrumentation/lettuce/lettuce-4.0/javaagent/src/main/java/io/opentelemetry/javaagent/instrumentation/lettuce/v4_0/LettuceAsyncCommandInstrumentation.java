@@ -11,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,7 +43,7 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(LettuceSingletons.COMMAND_CONTEXT_KEY);
-      InstrumentationContext.get(AsyncCommand.class, Context.class).put(asyncCommand, context);
+      VirtualField.find(AsyncCommand.class, Context.class).set(asyncCommand, context);
     }
   }
 
@@ -53,8 +53,7 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This AsyncCommand<?, ?, ?> asyncCommand, @Advice.Local("otelScope") Scope scope) {
-      Context context =
-          InstrumentationContext.get(AsyncCommand.class, Context.class).get(asyncCommand);
+      Context context = VirtualField.find(AsyncCommand.class, Context.class).get(asyncCommand);
       scope = context.makeCurrent();
     }
 

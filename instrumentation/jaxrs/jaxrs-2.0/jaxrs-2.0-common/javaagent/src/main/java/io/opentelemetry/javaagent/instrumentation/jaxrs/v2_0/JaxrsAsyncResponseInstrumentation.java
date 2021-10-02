@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
@@ -54,12 +53,12 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
+      VirtualField<AsyncResponse, AsyncResponseData> virtualField =
+          VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
 
-      AsyncResponseData data = contextStore.get(asyncResponse);
+      AsyncResponseData data = virtualField.get(asyncResponse);
       if (data != null) {
-        contextStore.put(asyncResponse, null);
+        virtualField.set(asyncResponse, null);
         instrumenter().end(data.getContext(), data.getHandlerData(), null, null);
       }
     }
@@ -72,12 +71,12 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.This AsyncResponse asyncResponse, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
+      VirtualField<AsyncResponse, AsyncResponseData> virtualField =
+          VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
 
-      AsyncResponseData data = contextStore.get(asyncResponse);
+      AsyncResponseData data = virtualField.get(asyncResponse);
       if (data != null) {
-        contextStore.put(asyncResponse, null);
+        virtualField.set(asyncResponse, null);
         instrumenter().end(data.getContext(), data.getHandlerData(), null, throwable);
       }
     }
@@ -89,12 +88,12 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, AsyncResponseData> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
+      VirtualField<AsyncResponse, AsyncResponseData> virtualField =
+          VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
 
-      AsyncResponseData data = contextStore.get(asyncResponse);
+      AsyncResponseData data = virtualField.get(asyncResponse);
       if (data != null) {
-        contextStore.put(asyncResponse, null);
+        virtualField.set(asyncResponse, null);
         Context context = data.getContext();
         if (JaxrsConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
           Java8BytecodeBridge.spanFromContext(context).setAttribute("jaxrs.canceled", true);

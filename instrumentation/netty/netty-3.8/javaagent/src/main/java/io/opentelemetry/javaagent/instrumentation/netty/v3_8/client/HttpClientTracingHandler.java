@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.CombinedSimpleChannelHandler;
 import org.jboss.netty.channel.Channel;
@@ -14,9 +14,9 @@ public class HttpClientTracingHandler
     extends CombinedSimpleChannelHandler<
         HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
 
-  public HttpClientTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
+  public HttpClientTracingHandler(VirtualField<Channel, ChannelTraceContext> virtualField) {
     super(
-        new HttpClientResponseTracingHandler(contextStore),
-        new HttpClientRequestTracingHandler(contextStore));
+        new HttpClientResponseTracingHandler(virtualField),
+        new HttpClientRequestTracingHandler(virtualField));
   }
 }

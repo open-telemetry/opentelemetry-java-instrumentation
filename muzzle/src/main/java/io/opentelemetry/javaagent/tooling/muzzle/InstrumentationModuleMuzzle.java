@@ -27,5 +27,6 @@ public interface InstrumentationModuleMuzzle {
    * classes. Keys (and their subclasses) will be associated with a context class stored in the
    * value.
    */
+  // TODO: we should rename the method so that it doesn't mention "Context", but "VirtualField"
   void registerMuzzleContextStoreClasses(InstrumentationContextBuilder builder);
 }

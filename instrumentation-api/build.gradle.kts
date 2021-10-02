@@ -42,3 +42,9 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
+
+tasks {
+  sourcesJar {
+    dependsOn("generateJflex")
+  }
+}

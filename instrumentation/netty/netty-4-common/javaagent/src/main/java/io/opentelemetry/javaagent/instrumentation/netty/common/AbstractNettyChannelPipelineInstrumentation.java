@@ -15,10 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -68,12 +67,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
+      VirtualField<ChannelHandler, ChannelHandler> virtualField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
+        virtualField.set(handler, null);
       }
     }
   }
@@ -89,12 +88,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
+      VirtualField<ChannelHandler, ChannelHandler> virtualField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
+        virtualField.set(handler, null);
       }
     }
   }
@@ -111,12 +110,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
+      VirtualField<ChannelHandler, ChannelHandler> virtualField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
+        virtualField.set(handler, null);
       }
     }
   }
@@ -127,12 +126,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
+      VirtualField<ChannelHandler, ChannelHandler> virtualField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
+        virtualField.set(handler, null);
       }
     }
   }
@@ -143,12 +142,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
+      VirtualField<ChannelHandler, ChannelHandler> virtualField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
+        virtualField.set(handler, null);
       } else if (handler
           .getClass()
           .getName()
@@ -167,9 +166,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         @Advice.Argument(value = 1, readOnly = false) String name) {
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
-        ContextStore<ChannelHandler, ChannelHandler> contextStore =
-            InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-        ChannelHandler ourHandler = contextStore.get(handler);
+        VirtualField<ChannelHandler, ChannelHandler> virtualField =
+            VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+        ChannelHandler ourHandler = virtualField.get(handler);
         if (ourHandler != null) {
           name = ourHandler.getClass().getName();
         }

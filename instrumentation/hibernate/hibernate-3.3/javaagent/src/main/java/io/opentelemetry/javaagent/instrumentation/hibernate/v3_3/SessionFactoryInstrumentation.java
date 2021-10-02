@@ -15,10 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -61,13 +60,13 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
       Context context = tracer().startSpan(parentContext, "Session");
 
       if (session instanceof Session) {
-        ContextStore<Session, Context> contextStore =
-            InstrumentationContext.get(Session.class, Context.class);
-        contextStore.putIfAbsent((Session) session, context);
+        VirtualField<Session, Context> virtualField =
+            VirtualField.find(Session.class, Context.class);
+        virtualField.setIfNull((Session) session, context);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> contextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
-        contextStore.putIfAbsent((StatelessSession) session, context);
+        VirtualField<StatelessSession, Context> virtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
+        virtualField.setIfNull((StatelessSession) session, context);
       }
     }
   }

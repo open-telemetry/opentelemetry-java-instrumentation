@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
@@ -50,9 +49,9 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
-        ContextStore<SystemMessage, PropagatedContext> contextStore =
-            InstrumentationContext.get(SystemMessage.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, systemMessage);
+        VirtualField<SystemMessage, PropagatedContext> virtualField =
+            VirtualField.find(SystemMessage.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, systemMessage);
       }
       return null;
     }

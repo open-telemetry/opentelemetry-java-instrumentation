@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.rmi.server.ObjID;
 import net.bytebuddy.asm.Advice;
@@ -79,8 +78,8 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       }
 
       // caching if a connection can support enhanced format
-      ContextStore<Connection, Boolean> knownConnections =
-          InstrumentationContext.get(Connection.class, Boolean.class);
+      VirtualField<Connection, Boolean> knownConnections =
+          VirtualField.find(Connection.class, Boolean.class);
 
       PROPAGATOR.attemptToPropagateContext(knownConnections, c, currentContext);
     }

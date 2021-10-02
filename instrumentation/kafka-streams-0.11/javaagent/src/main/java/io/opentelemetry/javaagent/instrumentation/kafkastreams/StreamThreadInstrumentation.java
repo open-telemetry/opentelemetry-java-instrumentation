@@ -10,11 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.kafka.KafkaConsumerIteratorWrapper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.Iterator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,13 +48,13 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
       }
 
       SpanContext receiveSpanContext =
-          InstrumentationContext.get(ConsumerRecords.class, SpanContext.class).get(records);
+          VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
       if (receiveSpanContext == null) {
         return;
       }
 
-      ContextStore<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
-          InstrumentationContext.get(ConsumerRecord.class, SpanContext.class);
+      VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
+          VirtualField.find(ConsumerRecord.class, SpanContext.class);
 
       Iterator<? extends ConsumerRecord<?, ?>> it = records.iterator();
       // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though
@@ -66,7 +65,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
 
       while (it.hasNext()) {
         ConsumerRecord<?, ?> record = it.next();
-        singleRecordReceiveSpan.put(record, receiveSpanContext);
+        singleRecordReceiveSpan.set(record, receiveSpanContext);
       }
     }
   }

@@ -41,10 +41,10 @@ def linuxTargets = [
     [version: ["7.0.109"], vm: ["hotspot"], jdk: ["8"], args: [tagSuffix: ""]],
     [version: ["7.0.109"], vm: ["openj9"], jdk: ["8"], args: [tagSuffix: "-adoptopenjdk-openj9"]],
     [version: ["8.5.71", "9.0.53"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [tagSuffix: ""]],
-    // 8.5.70 and 9.0.52 are the latest tomcat images published with openj9 (and there's no jdk 17)
+    // 8.5.70 and 9.0.52 are the latest tomcat images published with openj9 (and there's no openj9 image for jdk 17)
     [version: ["8.5.70", "9.0.52"], vm: ["openj9"], jdk: ["8", "11"], args: [tagSuffix: "-adoptopenjdk-openj9"]],
     [version: ["10.0.11"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [tagSuffix: ""], war: "servlet-5.0"],
-    // 10.0.8 is the latest tomcat image published with openj9 (and there's no jdk 17)
+    // 10.0.8 is the latest tomcat image published with openj9 (and there's no openj9 image for jdk 17)
     [version: ["10.0.8"], vm: ["openj9"], jdk: ["8", "11"], args: [tagSuffix: "-adoptopenjdk-openj9"], war: "servlet-5.0"]
   ],
   "tomee"  : [
@@ -60,7 +60,8 @@ def linuxTargets = [
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
+    // there's no openj9 image for jdk 17
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [

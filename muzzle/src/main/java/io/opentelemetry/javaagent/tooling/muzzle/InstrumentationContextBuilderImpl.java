@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+// TODO: we should rename the class so that it doesn't mention "Context", but "VirtualField"
+// instead; probably once this class is hidden somewhere in the muzzle codegen contract
 public final class InstrumentationContextBuilderImpl implements InstrumentationContextBuilder {
   private final Set<Map.Entry<String, String>> entrySet = new HashSet<>();
 

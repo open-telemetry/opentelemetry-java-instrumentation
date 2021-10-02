@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.Elasticsearch53TransportSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -15,6 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.TransportActionListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,27 +53,38 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) ActionRequest actionRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") ElasticTransportRequest transportRequest,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
+      transportRequest = ElasticTransportRequest.create(action, actionRequest);
       Context parentContext = currentContext();
-      context = tracer().startSpan(parentContext, null, action);
+      if (!instrumenter().shouldStart(parentContext, transportRequest)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, transportRequest);
       scope = context.makeCurrent();
 
-      tracer().onRequest(context, action.getClass(), actionRequest.getClass());
       actionListener =
-          new TransportActionListener<>(actionRequest, actionListener, context, parentContext);
+          new TransportActionListener<>(
+              instrumenter(), transportRequest, actionListener, context, parentContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") ElasticTransportRequest transportRequest) {
+      if (scope == null) {
+        return;
+      }
+
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, transportRequest, null, throwable);
       }
     }
   }

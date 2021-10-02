@@ -15,6 +15,7 @@ import net.bytebuddy.agent.ByteBuddyAgent
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
+import spock.lang.Unroll
 
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
@@ -38,6 +39,7 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
     })
   }
 
+  @Unroll
   def "#keyClassName structure modified = #shouldModifyStructure"() {
     setup:
     boolean hasField = false
