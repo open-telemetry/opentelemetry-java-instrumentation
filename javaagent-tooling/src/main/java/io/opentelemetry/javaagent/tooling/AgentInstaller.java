@@ -17,7 +17,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
-import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;

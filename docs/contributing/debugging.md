@@ -33,5 +33,5 @@ The following example shows remote debugger configuration. The breakpoints
 should work in any code except ByteBuddy advice methods.
 
 ```bash
-java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>-all.jar -jar app.jar
+java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>.jar -jar app.jar
 ```

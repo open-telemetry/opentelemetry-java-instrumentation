@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,13 +49,13 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getProcedureCall(
         @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 
-      ContextStore<SharedSessionContract, Context> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Context.class);
-      ContextStore<ProcedureCall, Context> returnedContextStore =
-          InstrumentationContext.get(ProcedureCall.class, Context.class);
+      VirtualField<SharedSessionContract, Context> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, Context.class);
+      VirtualField<ProcedureCall, Context> returnedVirtualField =
+          VirtualField.find(ProcedureCall.class, Context.class);
 
       SessionMethodUtils.attachSpanFromStore(
-          sessionContextStore, session, returnedContextStore, returned);
+          sessionVirtualField, session, returnedVirtualField, returned);
     }
   }
 }

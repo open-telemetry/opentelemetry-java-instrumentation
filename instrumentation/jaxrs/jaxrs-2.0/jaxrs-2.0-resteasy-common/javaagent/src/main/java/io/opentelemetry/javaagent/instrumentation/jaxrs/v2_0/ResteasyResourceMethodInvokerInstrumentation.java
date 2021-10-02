@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,8 +40,7 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
     public static void onEnter(@Advice.This ResourceMethodInvoker resourceInvoker) {
 
       String name =
-          InstrumentationContext.get(ResourceMethodInvoker.class, String.class)
-              .get(resourceInvoker);
+          VirtualField.find(ResourceMethodInvoker.class, String.class).get(resourceInvoker);
       ResteasyTracingUtil.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);
     }
   }

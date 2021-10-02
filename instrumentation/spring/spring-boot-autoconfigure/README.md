@@ -124,9 +124,9 @@ For Gradle add to your dependencies:
 
 ```groovy
 //opentelemetry exporter
-implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
-implementation("io.opentelemetry:opentelemetry-exporters-zipkin:OPENTELEMETRY_VERSION")
-implementation("io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporter-jaeger:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporter-zipkin:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporter-otlp:OPENTELEMETRY_VERSION")
 
 //Used to autoconfigure spring-web
 implementation("org.springframework:spring-web:SPRING_VERSION")

@@ -11,22 +11,22 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.kafka.listener.BatchInterceptor;
 
 public final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
-  private final ContextStore<ConsumerRecords<K, V>, SpanContext> receiveSpanContextStore;
-  private final ContextStore<ConsumerRecords<K, V>, State<K, V>> stateStore;
+  private final VirtualField<ConsumerRecords<K, V>, SpanContext> receiveSpanVirtualField;
+  private final VirtualField<ConsumerRecords<K, V>, State<K, V>> stateStore;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
   public InstrumentedBatchInterceptor(
-      ContextStore<ConsumerRecords<K, V>, SpanContext> receiveSpanContextStore,
-      ContextStore<ConsumerRecords<K, V>, State<K, V>> stateStore,
+      VirtualField<ConsumerRecords<K, V>, SpanContext> receiveSpanVirtualField,
+      VirtualField<ConsumerRecords<K, V>, State<K, V>> stateStore,
       @Nullable BatchInterceptor<K, V> decorated) {
-    this.receiveSpanContextStore = receiveSpanContextStore;
+    this.receiveSpanVirtualField = receiveSpanVirtualField;
     this.stateStore = stateStore;
     this.decorated = decorated;
   }
@@ -38,7 +38,7 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
     if (processInstrumenter().shouldStart(parentContext, records)) {
       Context context = processInstrumenter().start(parentContext, records);
       Scope scope = context.makeCurrent();
-      stateStore.put(records, State.create(records, context, scope));
+      stateStore.set(records, State.create(records, context, scope));
     }
 
     return decorated == null ? records : decorated.intercept(records, consumer);
@@ -47,7 +47,7 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
   private Context getParentContext(ConsumerRecords<K, V> records) {
     Context parentContext = Context.current();
     // use the receive CONSUMER span as parent if it's available
-    SpanContext receiveSpanContext = receiveSpanContextStore.get(records);
+    SpanContext receiveSpanContext = receiveSpanVirtualField.get(records);
     if (receiveSpanContext != null) {
       parentContext = parentContext.with(Span.wrap(receiveSpanContext));
     }
@@ -72,7 +72,7 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
 
   private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
     State<K, V> state = stateStore.get(records);
-    stateStore.put(records, null);
+    stateStore.set(records, null);
     if (state != null) {
       state.scope().close();
       processInstrumenter().end(state.context(), state.request(), null, error);

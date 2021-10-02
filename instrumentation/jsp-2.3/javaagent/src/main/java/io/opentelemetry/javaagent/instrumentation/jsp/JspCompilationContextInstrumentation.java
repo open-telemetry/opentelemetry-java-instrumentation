@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
-import static io.opentelemetry.javaagent.instrumentation.jsp.JspTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JspCompilationContextInstrumentationSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,8 +41,12 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context =
-          tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), SpanKind.INTERNAL);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!instrumenter().shouldStart(parentContext, jspCompilationContext)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, jspCompilationContext);
       scope = context.makeCurrent();
     }
 
@@ -52,16 +56,12 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-
-      // Decorate on return because additional properties are available
-      tracer().onCompile(context, jspCompilationContext);
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      instrumenter().end(context, jspCompilationContext, null, throwable);
     }
   }
 }

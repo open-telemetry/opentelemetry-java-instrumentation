@@ -16,9 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.Hashtable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -61,7 +61,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
+        Span span = VirtualField.find(LoggingEvent.class, Span.class).get(event);
         if (span == null || !span.getSpanContext().isValid()) {
           return;
         }
@@ -107,7 +107,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
         // Assume already instrumented event if traceId is present.
         if (!mdc.containsKey(TRACE_ID)) {
-          Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
+          Span span = VirtualField.find(LoggingEvent.class, Span.class).get(event);
           if (span != null && span.getSpanContext().isValid()) {
             SpanContext spanContext = span.getSpanContext();
             mdc.put(TRACE_ID, spanContext.getTraceId());

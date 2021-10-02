@@ -13,11 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.grpc.ServerBuilder;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,11 +49,11 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       callDepth = CallDepth.forClass(ServerBuilder.class);
       if (callDepth.getAndIncrement() == 0) {
-        ContextStore<ServerBuilder<?>, Boolean> instrumented =
-            InstrumentationContext.get(ServerBuilder.class, Boolean.class);
+        VirtualField<ServerBuilder<?>, Boolean> instrumented =
+            VirtualField.find(ServerBuilder.class, Boolean.class);
         if (!Boolean.TRUE.equals(instrumented.get(serverBuilder))) {
           serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
-          instrumented.put(serverBuilder, true);
+          instrumented.set(serverBuilder, true);
         }
       }
     }

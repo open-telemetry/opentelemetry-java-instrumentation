@@ -200,9 +200,17 @@ jobs:
           git fetch origin main
           git cherry-pick ${{ github.event.inputs.commits }}
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Local publish
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Build distro
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
+
+      - name: Build extension
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
 
   release:
     runs-on: ubuntu-latest
@@ -235,7 +243,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: assemble final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -265,6 +273,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ github.event.inputs.version }}-all.jar
+          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ github.event.inputs.version }}.jar
+          asset_name: opentelemetry-javaagent.jar
+          asset_content_type: application/java-archive
+
+        # TODO (trask) delete this after the 1.7.0 release (to make sure it is used for any 1.6.x patches)
+      - name: Upload Release Asset (backwards compatible "all" artifact)
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ github.event.inputs.version }}.jar
           asset_name: opentelemetry-javaagent-all.jar
           asset_content_type: application/java-archive

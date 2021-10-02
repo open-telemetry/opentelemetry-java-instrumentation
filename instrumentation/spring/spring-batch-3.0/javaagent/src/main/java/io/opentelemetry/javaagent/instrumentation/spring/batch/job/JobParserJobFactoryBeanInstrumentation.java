@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -59,9 +58,9 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false) JobExecutionListener[] listeners) {
-      ContextStore<JobExecution, ContextAndScope> executionContextStore =
-          InstrumentationContext.get(JobExecution.class, ContextAndScope.class);
-      JobExecutionListener tracingListener = new TracingJobExecutionListener(executionContextStore);
+      VirtualField<JobExecution, ContextAndScope> executionVirtualField =
+          VirtualField.find(JobExecution.class, ContextAndScope.class);
+      JobExecutionListener tracingListener = new TracingJobExecutionListener(executionVirtualField);
 
       if (listeners == null) {
         listeners = new JobExecutionListener[] {tracingListener};

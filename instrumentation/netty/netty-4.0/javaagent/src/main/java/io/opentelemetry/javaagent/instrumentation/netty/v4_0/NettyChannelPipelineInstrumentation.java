@@ -18,9 +18,9 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
@@ -67,6 +67,14 @@ public class NettyChannelPipelineInstrumentation
         return;
       }
 
+      VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
+          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+
+      // don't add another instrumentation handler if there already is one attached
+      if (instrumentationHandlerField.get(handler) != null) {
+        return;
+      }
+
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
@@ -88,8 +96,7 @@ public class NettyChannelPipelineInstrumentation
         try {
           pipeline.addLast(ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class)
-              .putIfAbsent(handler, ourHandler);
+          instrumentationHandlerField.set(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
         }

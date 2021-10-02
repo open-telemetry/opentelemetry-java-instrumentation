@@ -246,7 +246,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           }
         }
       }
-      trace(3, 2) {
+      trace(3, 1) {
         span(0) {
           name "IndexAction"
           kind CLIENT
@@ -262,17 +262,6 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.failed" 0
-          }
-        }
-        span(1) {
-          name "PutMappingAction"
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
           }
         }
       }

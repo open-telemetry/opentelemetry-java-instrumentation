@@ -42,3 +42,27 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
+
+tasks {
+  sourcesJar {
+    dependsOn("generateJflex")
+  }
+
+  val testStatementSanitizerConfig by registering(Test::class) {
+    filter {
+      includeTestsMatching("StatementSanitizationConfigTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/StatementSanitizationConfigTest.*")
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=false")
+  }
+
+  named<Test>("test") {
+    dependsOn(testStatementSanitizerConfig)
+
+    filter {
+      excludeTestsMatching("StatementSanitizationConfigTest")
+      isFailOnNoMatchingTests = false
+    }
+  }
+}

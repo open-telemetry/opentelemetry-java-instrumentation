@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.6.1 - 2021-09-29
+
+### 🛠️ Bug fixes
+
+- Fix possible JDBC instrumentation deadlock
+  ([#4191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4191))
+
 ## Version 1.6.0 - 2021-09-18
 
 ### 🌟 New javaagent instrumentation

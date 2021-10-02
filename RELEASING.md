@@ -40,17 +40,34 @@ In general, patch releases are only made for bug-fixes for the following types o
 * Memory leaks
 * Deadlocks
 
-To make a patch release, open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
+To make a patch release, open the patch release build workflow in your browser
+[here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
 You will see a button that says "Run workflow". Press the button, enter the version number you want
 to release in the input field for version that pops up and the commits you want to cherrypick.
 If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
 
+The automated branch creation will fail if any of the yaml files differ between the release branch
+and `main`:
+
+```
+Switched to a new branch 'v1.6.x'
+To https://github.com/open-telemetry/opentelemetry-java-instrumentation
+! [remote rejected]     v1.6.x -> v1.6.x (refusing to allow a GitHub App to create or update workflow `.github/workflows/pr-smoke-test-fake-backend-images.yml` without `workflows` permission)
+```
+
+and you will need to manually create it before proceeding, e.g.
+
+```
+git checkout -b v1.6.x v1.6.0
+git push upstream v1.6.x
+```
+
 If the commits cannot be cleanly applied to the release branch, for example because it has diverged
 too much from main, then the workflow will fail before building. In this case, you will need to
 prepare the release branch manually.
 
-This example will assume patching into release branch `v1.2.x` from a git repository with remotes
+This example will assume patching into release branch `v1.6.x` from a git repository with remotes
 named `origin` and `upstream`.
 
 ```
@@ -64,8 +81,8 @@ upstream	git@github.com:open-telemetry/opentelemetry-java.git (push)
 First, checkout the release branch
 
 ```
-git fetch upstream v1.2.x
-git checkout upstream/v1.2.x
+git fetch upstream v1.6.x
+git checkout upstream/v1.6.x
 ```
 
 Apply cherrypicks manually and commit. It is ok to apply multiple cherrypicks in a single commit.
@@ -74,7 +91,7 @@ Use a commit message such as "Manual cherrypick for commits commithash1, commith
 After committing the change, push to your fork's branch.
 
 ```
-git push origin v1.2.x
+git push origin v1.6.x
 ```
 
 Create a PR to have code review and merge this into upstream's release branch. As this was not

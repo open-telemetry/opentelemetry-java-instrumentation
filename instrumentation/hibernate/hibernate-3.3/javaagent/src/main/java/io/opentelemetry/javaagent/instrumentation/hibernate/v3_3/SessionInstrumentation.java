@@ -19,11 +19,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -79,7 +78,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
-    // current Span to the returned object using a ContextStore.
+    // current Span to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
         isMethod()
             .and(namedOneOf("beginTransaction", "getTransaction"))
@@ -104,13 +103,13 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       Context sessionContext = null;
       if (session instanceof Session) {
-        ContextStore<Session, Context> contextStore =
-            InstrumentationContext.get(Session.class, Context.class);
-        sessionContext = contextStore.get((Session) session);
+        VirtualField<Session, Context> virtualField =
+            VirtualField.find(Session.class, Context.class);
+        sessionContext = virtualField.get((Session) session);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> contextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
-        sessionContext = contextStore.get((StatelessSession) session);
+        VirtualField<StatelessSession, Context> virtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
+        sessionContext = virtualField.get((StatelessSession) session);
       }
 
       if (sessionContext == null) {
@@ -145,13 +144,13 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       Context sessionContext = null;
       if (session instanceof Session) {
-        ContextStore<Session, Context> contextStore =
-            InstrumentationContext.get(Session.class, Context.class);
-        sessionContext = contextStore.get((Session) session);
+        VirtualField<Session, Context> virtualField =
+            VirtualField.find(Session.class, Context.class);
+        sessionContext = virtualField.get((Session) session);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> contextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
-        sessionContext = contextStore.get((StatelessSession) session);
+        VirtualField<StatelessSession, Context> virtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
+        sessionContext = virtualField.get((StatelessSession) session);
       }
 
       if (sessionContext == null) {
@@ -192,18 +191,18 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
-      ContextStore<Query, Context> queryContextStore =
-          InstrumentationContext.get(Query.class, Context.class);
+      VirtualField<Query, Context> queryVirtualField =
+          VirtualField.find(Query.class, Context.class);
       if (session instanceof Session) {
-        ContextStore<Session, Context> sessionContextStore =
-            InstrumentationContext.get(Session.class, Context.class);
+        VirtualField<Session, Context> sessionVirtualField =
+            VirtualField.find(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (Session) session, queryContextStore, query);
+            sessionVirtualField, (Session) session, queryVirtualField, query);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
+        VirtualField<StatelessSession, Context> sessionVirtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (StatelessSession) session, queryContextStore, query);
+            sessionVirtualField, (StatelessSession) session, queryVirtualField, query);
       }
     }
   }
@@ -215,19 +214,19 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getTransaction(
         @Advice.This Object session, @Advice.Return Transaction transaction) {
 
-      ContextStore<Transaction, Context> transactionContextStore =
-          InstrumentationContext.get(Transaction.class, Context.class);
+      VirtualField<Transaction, Context> transactionVirtualField =
+          VirtualField.find(Transaction.class, Context.class);
 
       if (session instanceof Session) {
-        ContextStore<Session, Context> sessionContextStore =
-            InstrumentationContext.get(Session.class, Context.class);
+        VirtualField<Session, Context> sessionVirtualField =
+            VirtualField.find(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (Session) session, transactionContextStore, transaction);
+            sessionVirtualField, (Session) session, transactionVirtualField, transaction);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
+        VirtualField<StatelessSession, Context> sessionVirtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (StatelessSession) session, transactionContextStore, transaction);
+            sessionVirtualField, (StatelessSession) session, transactionVirtualField, transaction);
       }
     }
   }
@@ -238,18 +237,18 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
-      ContextStore<Criteria, Context> criteriaContextStore =
-          InstrumentationContext.get(Criteria.class, Context.class);
+      VirtualField<Criteria, Context> criteriaVirtualField =
+          VirtualField.find(Criteria.class, Context.class);
       if (session instanceof Session) {
-        ContextStore<Session, Context> sessionContextStore =
-            InstrumentationContext.get(Session.class, Context.class);
+        VirtualField<Session, Context> sessionVirtualField =
+            VirtualField.find(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (Session) session, criteriaContextStore, criteria);
+            sessionVirtualField, (Session) session, criteriaVirtualField, criteria);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Context> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Context.class);
+        VirtualField<StatelessSession, Context> sessionVirtualField =
+            VirtualField.find(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, (StatelessSession) session, criteriaContextStore, criteria);
+            sessionVirtualField, (StatelessSession) session, criteriaVirtualField, criteria);
       }
     }
   }

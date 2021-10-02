@@ -11,10 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.dispatch.Envelope;
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.TaskAdviceHelper;
 import net.bytebuddy.asm.Advice;
@@ -43,9 +42,9 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
-      ContextStore<Envelope, PropagatedContext> contextStore =
-          InstrumentationContext.get(Envelope.class, PropagatedContext.class);
-      return TaskAdviceHelper.makePropagatedContextCurrent(contextStore, envelope);
+      VirtualField<Envelope, PropagatedContext> virtualField =
+          VirtualField.find(Envelope.class, PropagatedContext.class);
+      return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, envelope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -61,9 +60,9 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
-      ContextStore<SystemMessage, PropagatedContext> contextStore =
-          InstrumentationContext.get(SystemMessage.class, PropagatedContext.class);
-      return TaskAdviceHelper.makePropagatedContextCurrent(contextStore, systemMessage);
+      VirtualField<SystemMessage, PropagatedContext> virtualField =
+          VirtualField.find(SystemMessage.class, PropagatedContext.class);
+      return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, systemMessage);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

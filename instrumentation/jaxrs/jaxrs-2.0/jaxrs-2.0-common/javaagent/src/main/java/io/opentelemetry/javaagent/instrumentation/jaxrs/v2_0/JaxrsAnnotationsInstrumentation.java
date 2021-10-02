@@ -17,12 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
@@ -83,12 +82,12 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ContextStore<AsyncResponse, AsyncResponseData> contextStore = null;
+      VirtualField<AsyncResponse, AsyncResponseData> virtualField = null;
       for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
           asyncResponse = (AsyncResponse) arg;
-          contextStore = InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class);
-          if (contextStore.get(asyncResponse) != null) {
+          virtualField = VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
+          if (virtualField.get(asyncResponse) != null) {
             /*
              * We are probably in a recursive call and don't want to start a new span because it
              * would replace the existing span in the asyncResponse and cause it to never finish. We
@@ -117,8 +116,8 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       context = instrumenter().start(parentContext, handlerData);
       scope = context.makeCurrent();
 
-      if (contextStore != null && asyncResponse != null) {
-        contextStore.put(asyncResponse, AsyncResponseData.create(context, handlerData));
+      if (virtualField != null && asyncResponse != null) {
+        virtualField.set(asyncResponse, AsyncResponseData.create(context, handlerData));
       }
     }
 
@@ -151,8 +150,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
       if (asyncResponse != null && !asyncResponse.isSuspended()) {
         // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        InstrumentationContext.get(AsyncResponse.class, AsyncResponseData.class)
-            .put(asyncResponse, null);
+        VirtualField.find(AsyncResponse.class, AsyncResponseData.class).set(asyncResponse, null);
       }
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback

@@ -142,9 +142,8 @@ public final class MappingResolver {
 
   /**
    * Factory interface for creating {@link MappingResolver} instances. The main reason this class is
-   * here is that we need to ensure that the class used for {@code InstrumentationContext} lookup is
-   * always the same. If we would use an injected class it could be different in different class
-   * loaders.
+   * here is that we need to ensure that the class used for {@code VirtualField} lookup is always
+   * the same. If we would use an injected class it could be different in different class loaders.
    */
   public interface Factory {
 

@@ -12,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +60,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This HttpServletResponse response) {
-      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
+      VirtualField.find(ServletResponse.class, Integer.class).set(response, 302);
     }
   }
 
@@ -70,7 +70,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
-      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, status);
+      VirtualField.find(ServletResponse.class, Integer.class).set(response, status);
     }
   }
 }

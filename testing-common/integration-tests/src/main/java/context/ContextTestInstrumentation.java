@@ -8,10 +8,9 @@ package context;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import library.KeyClass;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -51,21 +50,9 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
-      Context context = contextStore.putIfAbsent(thiz, new Context());
-      contextCount = ++context.count;
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class StoreAndIncrementWithFactoryApiUsageAdvice {
-    @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
-      Context context = contextStore.putIfAbsent(thiz, Context.FACTORY);
+      VirtualField<KeyClass, Context> virtualField =
+          VirtualField.find(KeyClass.class, Context.class);
+      Context context = virtualField.computeIfNull(thiz, Context.FACTORY);
       contextCount = ++context.count;
     }
   }
@@ -75,9 +62,9 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
-      Context context = contextStore.get(thiz);
+      VirtualField<KeyClass, Context> virtualField =
+          VirtualField.find(KeyClass.class, Context.class);
+      Context context = virtualField.get(thiz);
       contextCount = context == null ? 0 : context.count;
     }
   }
@@ -86,11 +73,11 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
+      VirtualField<KeyClass, Context> virtualField =
+          VirtualField.find(KeyClass.class, Context.class);
       Context context = new Context();
       context.count = value;
-      contextStore.put(thiz, context);
+      virtualField.set(thiz, context);
     }
   }
 
@@ -98,9 +85,9 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   public static class RemoveApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
-      contextStore.put(thiz, null);
+      VirtualField<KeyClass, Context> virtualField =
+          VirtualField.find(KeyClass.class, Context.class);
+      virtualField.set(thiz, null);
     }
   }
 }

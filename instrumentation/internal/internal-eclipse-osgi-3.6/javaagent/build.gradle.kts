@@ -11,8 +11,8 @@ plugins {
 
 // TODO write a smoke test that does the following:
 //
-//  docker run --mount 'type=bind,src=$AGENT_PATH,dst=/opentelemetry-javaagent-all.jar'
-//             -e JAVA_TOOL_OPTIONS=-javaagent:/opentelemetry-javaagent-all.jar
+//  docker run --mount 'type=bind,src=$AGENT_PATH,dst=/opentelemetry-javaagent.jar'
+//             -e JAVA_TOOL_OPTIONS=-javaagent:/opentelemetry-javaagent.jar
 //             wso2/wso2ei-business-process:6.5.0
 //
 //  without this instrumentation, the following error will appear in the docker logs:

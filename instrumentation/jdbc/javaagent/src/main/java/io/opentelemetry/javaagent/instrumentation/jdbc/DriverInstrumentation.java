@@ -58,7 +58,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
         return;
       }
       DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, props);
-      JdbcData.connectionInfo.put(connection, dbInfo);
+      JdbcData.connectionInfo.set(connection, dbInfo);
     }
   }
 }

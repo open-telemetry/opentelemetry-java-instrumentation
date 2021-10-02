@@ -35,9 +35,14 @@ val exporterLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
+// this configuration collects just exporter libs for slim artifact (also placed in the agent classloader & isolated from the instrumented application)
+val exporterSlimLibs by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(javaagentLibs, exporterLibs).forEach {
+listOf(javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
@@ -72,6 +77,10 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   exporterLibs(project(":javaagent-exporters"))
+
+  exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp")
+  exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
+  exporterSlimLibs("io.grpc:grpc-okhttp:1.41.0")
 
   // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
   licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
@@ -143,12 +152,23 @@ tasks {
     archiveFileName.set("exporterLibs-relocated.jar")
   }
 
-  // Includes instrumentations, but not exporters
+  val relocateExporterSlimLibs by registering(ShadowJar::class) {
+    configurations = listOf(exporterSlimLibs)
+
+    archiveFileName.set("exporterSlimLibs-relocated.jar")
+  }
+
+  // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    dependsOn(relocateJavaagentLibs)
+    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
+    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
+    dependsOn(jar, relocateJavaagentLibs, relocateExporterLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
+    isolateClasses(relocateExporterLibs.get().outputs.files)
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     archiveClassifier.set("")
 
@@ -164,17 +184,15 @@ tasks {
     }
   }
 
-  // Includes everything needed for OOTB experience
-  val fullJavaagentJar by registering(ShadowJar::class) {
+  // Includes instrumentations plus the OTLP/gRPC exporters
+  val slimShadowJar by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
+    dependsOn(relocateJavaagentLibs, relocateExporterSlimLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
-    isolateClasses(relocateExporterLibs.get().outputs.files)
+    isolateClasses(relocateExporterSlimLibs.get().outputs.files)
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    archiveClassifier.set("all")
+    archiveClassifier.set("slim")
 
     manifest {
       attributes(shadowJar.get().manifest.attributes)
@@ -207,18 +225,18 @@ tasks {
   }
 
   assemble {
-    dependsOn(shadowJar, fullJavaagentJar, baseJavaagentJar)
+    dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
-    dependsOn(fullJavaagentJar)
-    inputs.file(fullJavaagentJar.get().archiveFile)
+    dependsOn(shadowJar)
+    inputs.file(shadowJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
     doFirst {
       // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${fullJavaagentJar.get().archiveFile.get().asFile}")
+      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
     }
 
     testLogging {
@@ -237,7 +255,7 @@ tasks {
   publishing {
     publications {
       named<MavenPublication>("maven") {
-        artifact(fullJavaagentJar)
+        artifact(slimShadowJar)
       }
     }
   }

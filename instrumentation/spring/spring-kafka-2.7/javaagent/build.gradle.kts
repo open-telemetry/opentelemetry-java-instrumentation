@@ -15,7 +15,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
+  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 

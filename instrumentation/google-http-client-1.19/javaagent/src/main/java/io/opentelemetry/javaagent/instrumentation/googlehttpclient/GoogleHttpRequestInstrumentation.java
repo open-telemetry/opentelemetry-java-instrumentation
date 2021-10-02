@@ -17,9 +17,9 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,7 +58,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context = InstrumentationContext.get(HttpRequest.class, Context.class).get(request);
+      context = VirtualField.find(HttpRequest.class, Context.class).get(request);
       if (context != null) {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         // (executeAsync ends up calling execute from a separate thread)
@@ -105,7 +105,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
-      InstrumentationContext.get(HttpRequest.class, Context.class).put(request, context);
+      VirtualField.find(HttpRequest.class, Context.class).set(request, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

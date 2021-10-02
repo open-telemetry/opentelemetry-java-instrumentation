@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.TaskAdviceHelper;
 import java.util.concurrent.Callable;
@@ -64,14 +63,14 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
-      ContextStore<ForkJoinTask<?>, PropagatedContext> contextStore =
-          InstrumentationContext.get(ForkJoinTask.class, PropagatedContext.class);
-      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(contextStore, thiz);
+      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(virtualField, thiz);
       if (thiz instanceof Runnable) {
-        ContextStore<Runnable, PropagatedContext> runnableContextStore =
-            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
+        VirtualField<Runnable, PropagatedContext> runnableVirtualField =
+            VirtualField.find(Runnable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(runnableContextStore, (Runnable) thiz);
+            TaskAdviceHelper.makePropagatedContextCurrent(runnableVirtualField, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -81,10 +80,10 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (thiz instanceof Callable) {
-        ContextStore<Callable<?>, PropagatedContext> callableContextStore =
-            InstrumentationContext.get(Callable.class, PropagatedContext.class);
+        VirtualField<Callable<?>, PropagatedContext> callableVirtualField =
+            VirtualField.find(Callable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(callableContextStore, (Callable<?>) thiz);
+            TaskAdviceHelper.makePropagatedContextCurrent(callableVirtualField, (Callable<?>) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();

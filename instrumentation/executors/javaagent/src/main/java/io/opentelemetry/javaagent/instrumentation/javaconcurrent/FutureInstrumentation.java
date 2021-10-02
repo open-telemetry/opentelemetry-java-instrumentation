@@ -9,10 +9,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,9 +101,9 @@ public class FutureInstrumentation implements TypeInstrumentation {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another
-      ContextStore<Future<?>, PropagatedContext> contextStore =
-          InstrumentationContext.get(Future.class, PropagatedContext.class);
-      PropagatedContext propagatedContext = contextStore.get(future);
+      VirtualField<Future<?>, PropagatedContext> virtualField =
+          VirtualField.find(Future.class, PropagatedContext.class);
+      PropagatedContext propagatedContext = virtualField.get(future);
       if (propagatedContext != null) {
         propagatedContext.clear();
       }

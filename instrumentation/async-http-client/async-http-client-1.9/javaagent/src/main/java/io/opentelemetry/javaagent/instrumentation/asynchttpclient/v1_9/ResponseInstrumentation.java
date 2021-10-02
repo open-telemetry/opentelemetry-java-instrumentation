@@ -16,10 +16,9 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -55,13 +54,13 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = contextStore.get(handler);
+      VirtualField<AsyncHandler<?>, AsyncHandlerData> virtualField =
+          VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
+      AsyncHandlerData data = virtualField.get(handler);
       if (data == null) {
         return null;
       }
-      contextStore.put(handler, null);
+      virtualField.set(handler, null);
       instrumenter().end(data.getContext(), data.getRequest(), response, null);
       return data.getParentContext().makeCurrent();
     }
@@ -81,13 +80,13 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = contextStore.get(handler);
+      VirtualField<AsyncHandler<?>, AsyncHandlerData> virtualField =
+          VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
+      AsyncHandlerData data = virtualField.get(handler);
       if (data == null) {
         return null;
       }
-      contextStore.put(handler, null);
+      virtualField.set(handler, null);
       instrumenter().end(data.getContext(), data.getRequest(), null, throwable);
       return data.getParentContext().makeCurrent();
     }

@@ -22,6 +22,6 @@ package io.opentelemetry.smoketest
 class JettySmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/java-test-containers:jetty"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-jetty"
   }
 }

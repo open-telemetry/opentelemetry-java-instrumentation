@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
@@ -48,7 +48,7 @@ public class ContextPropagator {
   }
 
   public void attemptToPropagateContext(
-      ContextStore<Connection, Boolean> knownConnections, Connection c, Context context) {
+      VirtualField<Connection, Boolean> knownConnections, Connection c, Context context) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(context), CONTEXT_PAYLOAD_OPERATION_ID)) {
         logger.debug("Couldn't send context payload");
@@ -57,14 +57,14 @@ public class ContextPropagator {
   }
 
   private static boolean checkIfContextCanBePassed(
-      ContextStore<Connection, Boolean> knownConnections, Connection c) {
+      VirtualField<Connection, Boolean> knownConnections, Connection c) {
     Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
       return storedResult;
     }
 
     boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
-    knownConnections.put(c, result);
+    knownConnections.set(c, result);
     return result;
   }
 
