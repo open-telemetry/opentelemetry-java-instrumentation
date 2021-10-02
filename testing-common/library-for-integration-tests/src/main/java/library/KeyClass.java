@@ -16,11 +16,6 @@ public class KeyClass {
     return -1;
   }
 
-  public int incrementContextCountWithFactory() {
-    // implementation replaced with test instrumentation
-    return -1;
-  }
-
   public int getContextCount() {
     // implementation replaced with test instrumentation
     return -1;

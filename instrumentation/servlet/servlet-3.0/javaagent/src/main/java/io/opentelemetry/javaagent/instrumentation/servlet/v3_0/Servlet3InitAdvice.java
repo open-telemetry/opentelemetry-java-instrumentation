@@ -21,6 +21,6 @@ public class Servlet3InitAdvice {
       return;
     }
     VirtualField.find(Servlet.class, MappingResolver.Factory.class)
-        .setIfNull(servlet, new Servlet3MappingResolverFactory(servletConfig));
+        .set(servlet, new Servlet3MappingResolverFactory(servletConfig));
   }
 }

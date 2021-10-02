@@ -882,21 +882,6 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public void setIfNull(Object object, Object fieldValue) {
-      Object oldFieldValue = realGet(object);
-      if (oldFieldValue != null) {
-        return;
-      }
-      synchronized (realSynchronizeInstance(object)) {
-        oldFieldValue = realGet(object);
-        if (oldFieldValue != null) {
-          return;
-        }
-        realPut(object, fieldValue);
-      }
-    }
-
-    @Override
     public Object computeIfNull(Object object, Supplier<Object> fieldValueSupplier) {
       Object existingContext = realGet(object);
       if (null != existingContext) {
