@@ -29,7 +29,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
     when:
     runWithSpan({
       return publisherSupplier().transform({ publisher -> traceNonBlocking(publisher, "inner")})
-    });
+    })
 
     then:
     assertTraces(1) {
@@ -126,7 +126,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       .doOnEach({ signal ->
         if (signal.isOnError()) {
           // reactor 3.1 does not support getting context here yet
-          Span.current().setStatus(status);
+          Span.current().setStatus(status)
           Span.current().end()
         } else if (signal.isOnComplete()) {
           Span.current().end()
@@ -143,7 +143,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
           .startSpan()
 
         return TracingOperator.storeInContext(ctx, parent.with(innerSpan))
-      });
+      })
   }
 
   def getDummy(def publisher) {
