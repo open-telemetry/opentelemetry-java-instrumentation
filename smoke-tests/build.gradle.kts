@@ -43,7 +43,7 @@ dependencies {
 
 tasks {
   test {
-    inputs.files(project(":javaagent").tasks.getByName("fullJavaagentJar").outputs.files)
+    inputs.files(project(":javaagent").tasks.getByName("shadowJar").outputs.files)
 
     testLogging.showStandardStreams = true
 
@@ -78,7 +78,7 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("fullJavaagentJar").get()
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
 
     doFirst {

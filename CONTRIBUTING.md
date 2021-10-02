@@ -32,7 +32,7 @@ java -version
 
 and then you can find the java agent artifact at
 
-`javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`.
+`javaagent/build/libs/opentelemetry-javaagent-<version>.jar`.
 
 ### IntelliJ setup and troubleshooting
 
