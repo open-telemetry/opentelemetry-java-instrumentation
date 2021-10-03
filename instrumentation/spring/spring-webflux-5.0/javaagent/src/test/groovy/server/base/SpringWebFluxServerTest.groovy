@@ -5,8 +5,10 @@
 
 package server.base
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import util.SpringWebfluxTestUtil
@@ -68,5 +70,12 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
   @Override
   Class<?> expectedExceptionClass() {
     return IllegalStateException
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    return [
+      SemanticAttributes.HTTP_URL
+    ]
   }
 }

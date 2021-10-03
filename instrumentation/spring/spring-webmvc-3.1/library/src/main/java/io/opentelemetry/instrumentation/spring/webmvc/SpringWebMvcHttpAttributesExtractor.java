@@ -59,11 +59,6 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String url(HttpServletRequest request) {
-    return null;
-  }
-
-  @Override
   protected @Nullable String target(HttpServletRequest request) {
     String target = request.getRequestURI();
     String queryString = request.getQueryString();

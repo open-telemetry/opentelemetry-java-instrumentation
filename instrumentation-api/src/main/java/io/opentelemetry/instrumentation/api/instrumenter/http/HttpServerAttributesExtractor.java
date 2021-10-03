@@ -31,9 +31,6 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, route(request));
-
-    // TODO: this is specific to clients, should we remove this?
-    set(attributes, SemanticAttributes.HTTP_URL, url(request));
   }
 
   @Override
@@ -48,10 +45,6 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   // Attributes that always exist in a request
-
-  // TODO: this is specific to clients, should we remove this?
-  @Nullable
-  protected abstract String url(REQUEST request);
 
   @Nullable
   protected abstract String target(REQUEST request);

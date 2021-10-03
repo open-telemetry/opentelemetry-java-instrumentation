@@ -25,11 +25,6 @@ final class ArmeriaHttpServerAttributesExtractor
   }
 
   @Override
-  protected String url(RequestContext ctx) {
-    return request(ctx).uri().toString();
-  }
-
-  @Override
   protected String target(RequestContext ctx) {
     return request(ctx).path();
   }
