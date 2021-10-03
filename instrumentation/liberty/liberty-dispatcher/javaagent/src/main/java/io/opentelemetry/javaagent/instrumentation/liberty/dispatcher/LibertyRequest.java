@@ -13,7 +13,6 @@ import java.util.List;
 public class LibertyRequest {
   private final HttpDispatcherLink httpDispatcherLink;
   private final HttpRequestMessage httpRequestMessage;
-  private boolean completed;
 
   public LibertyRequest(
       HttpDispatcherLink httpDispatcherLink, HttpRequestMessage httpRequestMessage) {
@@ -68,13 +67,5 @@ public class LibertyRequest {
 
   public String getProtocol() {
     return httpRequestMessage.getVersion();
-  }
-
-  public boolean isCompleted() {
-    return completed;
-  }
-
-  public void setCompleted() {
-    completed = true;
   }
 }
