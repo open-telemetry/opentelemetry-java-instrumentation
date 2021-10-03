@@ -20,6 +20,7 @@ public class LibertyDispatcherNetAttributesExtractor
   @Override
   public @Nullable String peerName(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
+    // condition limits calling peerName to onStart because in onEnd it may throw a NPE
     if (!libertyRequest.isCompleted()) {
       return libertyRequest.peerName();
     }
@@ -29,6 +30,7 @@ public class LibertyDispatcherNetAttributesExtractor
   @Override
   public @Nullable Integer peerPort(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
+    // condition limits calling getServerPort to onStart because in onEnd it may throw a NPE
     if (!libertyRequest.isCompleted()) {
       return libertyRequest.getServerPort();
     }
@@ -38,6 +40,7 @@ public class LibertyDispatcherNetAttributesExtractor
   @Override
   public @Nullable String peerIp(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
+    // condition limits calling peerIp to onStart because in onEnd it may throw a NPE
     if (!libertyRequest.isCompleted()) {
       return libertyRequest.peerIp();
     }
