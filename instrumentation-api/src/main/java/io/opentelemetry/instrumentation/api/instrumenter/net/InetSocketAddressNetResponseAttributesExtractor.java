@@ -26,12 +26,12 @@ public abstract class InetSocketAddressNetResponseAttributesExtractor<REQUEST, R
    * phases of processing.
    */
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request, RESPONSE response);
+  public abstract InetSocketAddress getAddress(RESPONSE response);
 
   @Override
   @Nullable
-  public final String peerName(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  public final String peerName(RESPONSE response) {
+    InetSocketAddress address = getAddress(response);
     if (address == null) {
       return null;
     }
@@ -43,8 +43,8 @@ public abstract class InetSocketAddressNetResponseAttributesExtractor<REQUEST, R
 
   @Override
   @Nullable
-  public final Integer peerPort(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  public final Integer peerPort(RESPONSE response) {
+    InetSocketAddress address = getAddress(response);
     if (address == null) {
       return null;
     }
@@ -53,8 +53,8 @@ public abstract class InetSocketAddressNetResponseAttributesExtractor<REQUEST, R
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  public final String peerIp(RESPONSE response) {
+    InetSocketAddress address = getAddress(response);
     if (address == null) {
       return null;
     }

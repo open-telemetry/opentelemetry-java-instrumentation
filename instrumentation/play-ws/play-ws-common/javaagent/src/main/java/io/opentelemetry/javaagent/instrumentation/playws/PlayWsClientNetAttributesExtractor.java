@@ -16,12 +16,12 @@ final class PlayWsClientNetAttributesExtractor
     extends InetSocketAddressNetResponseAttributesExtractor<Request, Response> {
 
   @Override
-  public String transport(Request request) {
+  public String transport(@Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable InetSocketAddress getAddress(Request request, @Nullable Response response) {
+  public @Nullable InetSocketAddress getAddress(@Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

@@ -45,32 +45,32 @@ class NetAttributesExtractorTest {
       extends NetResponseAttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String transport(Map<String, String> request) {
-      return request.get("transport");
+    public String transport(Map<String, String> response) {
+      return response.get("transport");
     }
 
     @Override
-    public String peerName(Map<String, String> request, Map<String, String> response) {
+    public String peerName(Map<String, String> response) {
       if (response != null) {
         return response.get("peerName");
       }
-      return request.get("peerName");
+      return null;
     }
 
     @Override
-    public Integer peerPort(Map<String, String> request, Map<String, String> response) {
+    public Integer peerPort(Map<String, String> response) {
       if (response != null) {
         return Integer.valueOf(response.get("peerPort"));
       }
-      return Integer.valueOf(request.get("peerPort"));
+      return null;
     }
 
     @Override
-    public String peerIp(Map<String, String> request, Map<String, String> response) {
+    public String peerIp(Map<String, String> response) {
       if (response != null) {
         return response.get("peerIp");
       }
-      return request.get("peerIp");
+      return null;
     }
   }
 

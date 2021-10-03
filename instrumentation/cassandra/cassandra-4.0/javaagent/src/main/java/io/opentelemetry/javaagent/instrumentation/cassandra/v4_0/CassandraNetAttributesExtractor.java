@@ -17,13 +17,12 @@ final class CassandraNetAttributesExtractor
 
   @Override
   @Nullable
-  public String transport(CassandraRequest request) {
+  public String transport(@Nullable ExecutionInfo executionInfo) {
     return null;
   }
 
   @Override
-  public @Nullable InetSocketAddress getAddress(
-      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+  public @Nullable InetSocketAddress getAddress(@Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
     }
