@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -26,10 +26,12 @@ public abstract class CompletionListener<T> {
   private static final String MISS = "miss";
 
   private final Context context;
+  private final SpymemcachedRequest request;
 
   protected CompletionListener(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    context = tracer().startSpan(parentContext, connection, methodName);
+    request = SpymemcachedRequest.create(connection, methodName);
+    context = instrumenter().start(parentContext, request);
   }
 
   protected void closeAsyncSpan(T future) {
@@ -48,26 +50,22 @@ public abstract class CompletionListener<T> {
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         }
       } else {
-        tracer().endExceptionally(context, e);
+        instrumenter().end(context, request, null, e);
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
-      tracer().endExceptionally(context, e);
+      instrumenter().end(context, request, null, e);
       Thread.currentThread().interrupt();
     } catch (Throwable t) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, request, null, t);
     } finally {
-      tracer().end(context);
+      instrumenter().end(context, request, future, null);
     }
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    if (thrown == null) {
-      tracer().end(context);
-    } else {
-      tracer().endExceptionally(context, thrown);
-    }
+    instrumenter().end(context, request, null, thrown);
   }
 
   protected abstract void processResult(Span span, T future)

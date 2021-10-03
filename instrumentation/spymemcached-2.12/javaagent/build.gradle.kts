@@ -14,6 +14,9 @@ muzzle {
 dependencies {
   library("net.spy:spymemcached:2.12.0")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   testImplementation("com.google.guava:guava")
 }
 
