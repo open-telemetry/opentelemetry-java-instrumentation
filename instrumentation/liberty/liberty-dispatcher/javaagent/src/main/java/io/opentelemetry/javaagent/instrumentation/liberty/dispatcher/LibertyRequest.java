@@ -10,11 +10,12 @@ import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
 import java.util.List;
 
-public class LibertyRequestWrapper {
+public class LibertyRequest {
   private final HttpDispatcherLink httpDispatcherLink;
   private final HttpRequestMessage httpRequestMessage;
+  private boolean completed;
 
-  public LibertyRequestWrapper(
+  public LibertyRequest(
       HttpDispatcherLink httpDispatcherLink, HttpRequestMessage httpRequestMessage) {
     this.httpDispatcherLink = httpDispatcherLink;
     this.httpRequestMessage = httpRequestMessage;
@@ -51,5 +52,29 @@ public class LibertyRequestWrapper {
   public String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
+  }
+
+  public int peerPort() {
+    return httpDispatcherLink.getRemotePort();
+  }
+
+  public String peerIp() {
+    return httpDispatcherLink.getRemoteHostAddress();
+  }
+
+  public String peerName() {
+    return httpDispatcherLink.getRemoteHostName(false);
+  }
+
+  public String getProtocol() {
+    return httpRequestMessage.getVersion();
+  }
+
+  public boolean isCompleted() {
+    return completed;
+  }
+
+  public void setCompleted() {
+    completed = true;
   }
 }
