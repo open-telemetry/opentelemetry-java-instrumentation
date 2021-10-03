@@ -20,12 +20,12 @@ final class ResteasyClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(ClientInvocation request, @Nullable Response response) {
+  public @Nullable String peerName(ClientInvocation request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(ClientInvocation request, @Nullable Response response) {
+  public Integer peerPort(ClientInvocation request) {
     int port = request.getUri().getPort();
     if (port != -1) {
       return port;
@@ -34,7 +34,7 @@ final class ResteasyClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(ClientInvocation request, @Nullable Response response) {
+  public @Nullable String peerIp(ClientInvocation request) {
     return null;
   }
 }

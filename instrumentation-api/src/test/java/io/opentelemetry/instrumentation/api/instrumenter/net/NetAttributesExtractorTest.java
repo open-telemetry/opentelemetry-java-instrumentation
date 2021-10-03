@@ -26,6 +26,30 @@ class NetAttributesExtractorTest {
     }
 
     @Override
+    public String peerName(Map<String, String> request) {
+      return request.get("peerName");
+    }
+
+    @Override
+    public Integer peerPort(Map<String, String> request) {
+      return Integer.valueOf(request.get("peerPort"));
+    }
+
+    @Override
+    public String peerIp(Map<String, String> request) {
+      return request.get("peerIp");
+    }
+  }
+
+  static class TestNetResponseAttributesExtractor
+      extends NetResponseAttributesExtractor<Map<String, String>, Map<String, String>> {
+
+    @Override
+    public String transport(Map<String, String> request) {
+      return request.get("transport");
+    }
+
+    @Override
     public String peerName(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
         return response.get("peerName");
@@ -59,12 +83,36 @@ class NetAttributesExtractorTest {
     request.put("peerPort", "123");
     request.put("peerIp", "1.2.3.4");
 
+    TestNetAttributesExtractor extractor = new TestNetAttributesExtractor();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, request);
+
+    // then
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
+            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
+            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
+  }
+
+  @Test
+  void responseAttributes() {
+    // given
+    Map<String, String> request = new HashMap<>();
+    request.put("transport", "TCP");
+    request.put("peerName", "github.com");
+    request.put("peerPort", "123");
+    request.put("peerIp", "1.2.3.4");
+
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "opentelemetry.io");
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetAttributesExtractor extractor = new TestNetAttributesExtractor();
+    TestNetResponseAttributesExtractor extractor = new TestNetResponseAttributesExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();

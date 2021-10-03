@@ -20,7 +20,7 @@ public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  public @Nullable String peerName(Request request) {
     /*
     request.action(ActionCode.REQ_HOST_ATTRIBUTE, request);
     return request.remoteHost().toString();
@@ -29,13 +29,13 @@ public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable Integer peerPort(Request request, @Nullable Response response) {
+  public @Nullable Integer peerPort(Request request) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  public @Nullable String peerIp(Request request) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return request.remoteAddr().toString();
   }

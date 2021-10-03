@@ -25,24 +25,18 @@ public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public @Nullable String peerName(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
+  public @Nullable String peerName(ServletRequestContext<REQUEST> requestContext) {
     // return accessor.getRequestRemoteHost(requestContext.request());
     return null;
   }
 
   @Override
-  public @Nullable Integer peerPort(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
+  public @Nullable Integer peerPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemotePort(requestContext.request());
   }
 
   @Override
-  public @Nullable String peerIp(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
+  public @Nullable String peerIp(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemoteAddr(requestContext.request());
   }
 }

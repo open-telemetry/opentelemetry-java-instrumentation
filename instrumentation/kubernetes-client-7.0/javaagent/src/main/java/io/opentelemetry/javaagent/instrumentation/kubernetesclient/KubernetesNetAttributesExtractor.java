@@ -18,17 +18,17 @@ class KubernetesNetAttributesExtractor extends NetAttributesExtractor<Request, A
   }
 
   @Override
-  public String peerName(Request request, @Nullable ApiResponse<?> apiResponse) {
+  public String peerName(Request request) {
     return request.url().host();
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable ApiResponse<?> apiResponse) {
+  public Integer peerPort(Request request) {
     return request.url().port();
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable ApiResponse<?> apiResponse) {
+  public @Nullable String peerIp(Request request) {
     return null;
   }
 }

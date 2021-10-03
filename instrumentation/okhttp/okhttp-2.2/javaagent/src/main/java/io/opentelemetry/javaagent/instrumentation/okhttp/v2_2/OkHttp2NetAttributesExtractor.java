@@ -18,17 +18,17 @@ public final class OkHttp2NetAttributesExtractor extends NetAttributesExtractor<
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  public @Nullable String peerName(Request request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.url().getPort();
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  public @Nullable String peerIp(Request request) {
     return null;
   }
 }

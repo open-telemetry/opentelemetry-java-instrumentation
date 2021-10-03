@@ -20,12 +20,12 @@ final class GoogleHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(HttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(HttpRequest request) {
     return request.getUrl().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(HttpRequest request) {
     int port = request.getUrl().getPort();
     if (port != -1) {
       return port;
@@ -34,7 +34,7 @@ final class GoogleHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(HttpRequest request) {
     return null;
   }
 }

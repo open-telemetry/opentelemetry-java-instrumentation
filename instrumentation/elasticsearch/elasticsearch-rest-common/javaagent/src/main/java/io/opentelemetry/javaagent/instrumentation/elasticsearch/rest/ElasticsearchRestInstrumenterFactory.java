@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceResponseAttributesExtractor;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestInstrumenterFactory {
@@ -19,14 +19,15 @@ public final class ElasticsearchRestInstrumenterFactory {
     ElasticsearchRestAttributesExtractor attributesExtractor =
         new ElasticsearchRestAttributesExtractor();
     SpanNameExtractor<String> spanNameExtractor = DbSpanNameExtractor.create(attributesExtractor);
-    ElasticsearchRestNetAttributesExtractor netAttributesExtractor =
-        new ElasticsearchRestNetAttributesExtractor();
+    ElasticsearchRestNetResponseAttributesExtractor netAttributesExtractor =
+        new ElasticsearchRestNetResponseAttributesExtractor();
 
     return Instrumenter.<String, Response>newBuilder(
             GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+        .addAttributesExtractor(
+            PeerServiceResponseAttributesExtractor.create(netAttributesExtractor))
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -17,17 +17,17 @@ class HttpUrlNetAttributesExtractor extends NetAttributesExtractor<HttpURLConnec
   }
 
   @Override
-  public String peerName(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public String peerName(HttpURLConnection connection) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public Integer peerPort(HttpURLConnection connection) {
     return connection.getURL().getPort();
   }
 
   @Override
-  public @Nullable String peerIp(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public @Nullable String peerIp(HttpURLConnection connection) {
     return null;
   }
 }
