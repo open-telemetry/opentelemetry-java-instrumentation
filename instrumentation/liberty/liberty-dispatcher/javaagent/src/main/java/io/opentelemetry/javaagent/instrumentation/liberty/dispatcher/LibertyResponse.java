@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import com.ibm.wsspi.http.channel.values.StatusCodes;
 
-public class LibertyResponseWrapper {
+public class LibertyResponse {
   private final StatusCodes code;
 
-  public LibertyResponseWrapper(StatusCodes code) {
+  public LibertyResponse(StatusCodes code) {
     this.code = code;
   }
 
