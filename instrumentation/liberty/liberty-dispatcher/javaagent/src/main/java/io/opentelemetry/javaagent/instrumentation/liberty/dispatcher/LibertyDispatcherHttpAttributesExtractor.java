@@ -38,8 +38,7 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
+  protected @Nullable String flavor(LibertyRequest libertyRequest) {
     String flavor = libertyRequest.getProtocol();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions

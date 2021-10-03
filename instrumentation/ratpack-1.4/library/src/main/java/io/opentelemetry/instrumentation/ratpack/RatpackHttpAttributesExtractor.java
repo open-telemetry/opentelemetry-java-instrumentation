@@ -83,7 +83,7 @@ final class RatpackHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String flavor(Request request, @Nullable Response response) {
+  protected String flavor(Request request) {
     switch (request.getProtocol()) {
       case "HTTP/1.0":
         return SemanticAttributes.HttpFlavorValues.HTTP_1_0;

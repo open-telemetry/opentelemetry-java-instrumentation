@@ -72,7 +72,7 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    protected String flavor(Map<String, String> request, Map<String, String> response) {
+    protected String flavor(Map<String, String> request) {
       return request.get("flavor");
     }
 
@@ -114,6 +114,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, request);
     assertThat(attributes.build())
         .containsOnly(
+            entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_HOST, "github.com:80"),

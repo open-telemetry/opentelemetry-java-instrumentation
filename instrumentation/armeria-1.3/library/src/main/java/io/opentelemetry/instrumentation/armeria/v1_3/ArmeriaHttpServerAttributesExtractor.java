@@ -74,7 +74,7 @@ final class ArmeriaHttpServerAttributesExtractor
   }
 
   @Override
-  protected String flavor(RequestContext ctx, @Nullable RequestLog requestLog) {
+  protected String flavor(RequestContext ctx) {
     SessionProtocol protocol = ctx.sessionProtocol();
     if (protocol.isMultiplex()) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;

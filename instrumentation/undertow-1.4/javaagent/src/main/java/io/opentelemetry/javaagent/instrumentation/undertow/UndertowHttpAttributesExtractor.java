@@ -36,7 +36,7 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected String flavor(HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  protected String flavor(HttpServerExchange exchange) {
     String flavor = exchange.getProtocol().toString();
     // remove HTTP/ prefix to comply with semantic conventions
     if (flavor.startsWith("HTTP/")) {

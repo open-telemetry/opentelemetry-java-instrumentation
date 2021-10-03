@@ -27,6 +27,7 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);
 
+    set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request));
     set(attributes, SemanticAttributes.HTTP_SCHEME, scheme(request));
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
@@ -45,6 +46,9 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   // Attributes that always exist in a request
+
+  @Nullable
+  protected abstract String flavor(REQUEST request);
 
   @Nullable
   protected abstract String target(REQUEST request);

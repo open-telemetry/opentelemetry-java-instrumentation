@@ -60,7 +60,7 @@ final class RestletHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(Request request, @Nullable Response response) {
+  protected @Nullable String flavor(Request request) {
     String version = (String) request.getAttributes().get("org.restlet.http.version");
     switch (version) {
       case "HTTP/1.0":
