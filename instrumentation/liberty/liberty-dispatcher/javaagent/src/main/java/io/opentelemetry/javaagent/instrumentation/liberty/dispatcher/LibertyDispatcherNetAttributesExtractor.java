@@ -18,32 +18,17 @@ public class LibertyDispatcherNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling peerName to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.peerName();
-    }
-    return null;
+  public @Nullable String peerName(LibertyRequest libertyRequest) {
+    return libertyRequest.peerName();
   }
 
   @Override
-  public @Nullable Integer peerPort(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling getServerPort to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.getServerPort();
-    }
-    return null;
+  public @Nullable Integer peerPort(LibertyRequest libertyRequest) {
+    return libertyRequest.getServerPort();
   }
 
   @Override
-  public @Nullable String peerIp(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling peerIp to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.peerIp();
-    }
-    return null;
+  public @Nullable String peerIp(LibertyRequest libertyRequest) {
+    return libertyRequest.peerIp();
   }
 }
