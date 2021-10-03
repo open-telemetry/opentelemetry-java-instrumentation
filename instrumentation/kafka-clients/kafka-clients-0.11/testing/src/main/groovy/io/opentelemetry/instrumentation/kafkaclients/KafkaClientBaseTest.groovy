@@ -29,13 +29,13 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
   protected static final SHARED_TOPIC = "shared.topic"
 
   @Shared
-  static KafkaContainer kafka
+  KafkaContainer kafka
   @Shared
-  static Producer<Integer, String> producer
+  Producer<Integer, String> producer
   @Shared
-  static Consumer<Integer, String> consumer
+  Consumer<Integer, String> consumer
   @Shared
-  static CountDownLatch consumerReady = new CountDownLatch(1)
+  CountDownLatch consumerReady = new CountDownLatch(1)
 
   static TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, 0)
 
@@ -97,7 +97,7 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
   }
 
   // Kafka's eventual consistency behavior forces us to do a couple of empty poll() calls until it gets properly assigned a topic partition
-  static void awaitUntilConsumerIsReady() {
+  void awaitUntilConsumerIsReady() {
     if (consumerReady.await(0, TimeUnit.SECONDS)) {
       return
     }
