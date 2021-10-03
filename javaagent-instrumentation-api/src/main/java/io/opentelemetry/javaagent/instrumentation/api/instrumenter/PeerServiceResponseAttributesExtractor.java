@@ -60,10 +60,10 @@ public final class PeerServiceResponseAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    String peerName = netResponseAttributesExtractor.peerName(request, response);
+    String peerName = netResponseAttributesExtractor.peerName(response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String peerIp = netResponseAttributesExtractor.peerIp(request, response);
+      String peerIp = netResponseAttributesExtractor.peerIp(response);
       peerService = mapToPeerService(peerIp);
     }
     if (peerService != null) {

@@ -12,13 +12,12 @@ import org.elasticsearch.action.ActionResponse;
 public class ElasticTransportNetResponseAttributesExtractor
     extends NetResponseAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
-  public @Nullable String transport(ElasticTransportRequest elasticTransportRequest) {
+  public @Nullable String transport(@Nullable ActionResponse response) {
     return null;
   }
 
   @Override
-  public @Nullable String peerName(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+  public @Nullable String peerName(@Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getHost();
     }
@@ -26,8 +25,7 @@ public class ElasticTransportNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable Integer peerPort(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+  public @Nullable Integer peerPort(@Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getPort();
     }
@@ -35,8 +33,7 @@ public class ElasticTransportNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+  public @Nullable String peerIp(@Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
     }

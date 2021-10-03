@@ -279,8 +279,8 @@ class InstrumenterTest {
             .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
 
-    when(mockNetAttributes.peerIp(REQUEST, null)).thenReturn("2.2.2.2");
-    when(mockNetAttributes.peerIp(REQUEST, RESPONSE)).thenReturn("2.2.2.2");
+    when(mockNetAttributes.peerIp(REQUEST)).thenReturn("2.2.2.2");
+    when(mockNetAttributes.peerIp(REQUEST)).thenReturn("2.2.2.2");
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -322,8 +322,8 @@ class InstrumenterTest {
     request.remove("Forwarded");
     request.put("X-Forwarded-For", "1.1.1.1");
 
-    when(mockNetAttributes.peerIp(request, null)).thenReturn("2.2.2.2");
-    when(mockNetAttributes.peerIp(request, RESPONSE)).thenReturn("2.2.2.2");
+    when(mockNetAttributes.peerIp(request)).thenReturn("2.2.2.2");
+    when(mockNetAttributes.peerIp(request)).thenReturn("2.2.2.2");
 
     Context context = instrumenter.start(Context.root(), request);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();

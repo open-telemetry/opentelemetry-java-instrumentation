@@ -13,12 +13,12 @@ import org.elasticsearch.client.Response;
 final class ElasticsearchRestNetResponseAttributesExtractor
     extends NetResponseAttributesExtractor<String, Response> {
   @Override
-  public String transport(String s) {
+  public String transport(Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(String s, @Nullable Response response) {
+  public @Nullable String peerName(@Nullable Response response) {
     if (response != null) {
       return response.getHost().getHostName();
     }
@@ -26,7 +26,7 @@ final class ElasticsearchRestNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable Integer peerPort(String s, @Nullable Response response) {
+  public @Nullable Integer peerPort(@Nullable Response response) {
     if (response != null) {
       return response.getHost().getPort();
     }
@@ -34,7 +34,7 @@ final class ElasticsearchRestNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(String s, @Nullable Response response) {
+  public @Nullable String peerIp(@Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

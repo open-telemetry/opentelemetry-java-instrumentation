@@ -15,13 +15,12 @@ public class Elasticsearch6TransportNetAttributesExtractor
     extends InetSocketAddressNetResponseAttributesExtractor<
         ElasticTransportRequest, ActionResponse> {
   @Override
-  public @Nullable String transport(ElasticTransportRequest elasticTransportRequest) {
+  public @Nullable String transport(@Nullable ActionResponse response) {
     return null;
   }
 
   @Override
-  public @Nullable InetSocketAddress getAddress(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+  public @Nullable InetSocketAddress getAddress(@Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().address();
     }
