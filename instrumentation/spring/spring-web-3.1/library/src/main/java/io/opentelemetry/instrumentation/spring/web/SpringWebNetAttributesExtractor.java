@@ -19,20 +19,17 @@ final class SpringWebNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
+  public @Nullable String peerName(HttpRequest httpRequest) {
     return httpRequest.getURI().getHost();
   }
 
   @Override
-  public Integer peerPort(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
+  public Integer peerPort(HttpRequest httpRequest) {
     return httpRequest.getURI().getPort();
   }
 
   @Override
-  public @Nullable String peerIp(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
+  public @Nullable String peerIp(HttpRequest httpRequest) {
     return null;
   }
 }

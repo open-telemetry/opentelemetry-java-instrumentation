@@ -15,7 +15,7 @@ public final class DubboNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<DubboRequest, Result> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(DubboRequest request, @Nullable Result result) {
+  public @Nullable InetSocketAddress getAddress(DubboRequest request) {
     return request.context().getRemoteAddress();
   }
 

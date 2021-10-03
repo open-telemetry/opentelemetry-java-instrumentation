@@ -24,14 +24,12 @@ public class JdkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
+  public @Nullable String peerName(HttpRequest httpRequest) {
     return httpRequest.uri().getHost();
   }
 
   @Override
-  public @Nullable Integer peerPort(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
+  public @Nullable Integer peerPort(HttpRequest httpRequest) {
     int port = httpRequest.uri().getPort();
     if (port != -1) {
       return port;
@@ -52,7 +50,7 @@ public class JdkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
+  public @Nullable String peerIp(HttpRequest httpRequest) {
     return null;
   }
 }

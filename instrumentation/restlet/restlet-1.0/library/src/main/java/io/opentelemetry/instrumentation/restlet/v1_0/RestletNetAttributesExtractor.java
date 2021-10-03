@@ -18,17 +18,17 @@ final class RestletNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  public @Nullable String peerName(Request request) {
     return null;
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.getClientInfo().getPort();
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  public @Nullable String peerIp(Request request) {
     return request.getClientInfo().getAddress();
   }
 }

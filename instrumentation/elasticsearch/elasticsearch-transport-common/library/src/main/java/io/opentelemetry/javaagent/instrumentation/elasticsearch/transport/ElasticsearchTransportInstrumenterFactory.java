@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import org.elasticsearch.action.ActionResponse;
 
 public final class ElasticsearchTransportInstrumenterFactory {
@@ -23,7 +22,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
   public static Instrumenter<ElasticTransportRequest, ActionResponse> create(
       String instrumentationName,
       AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
-      NetAttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
+      AttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
 
     ElasticsearchTransportAttributesExtractor attributesExtractor =
         new ElasticsearchTransportAttributesExtractor();

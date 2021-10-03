@@ -25,12 +25,12 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(ClassicHttpRequest request) {
     return request.getAuthority().getHostName();
   }
 
   @Override
-  public Integer peerPort(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(ClassicHttpRequest request) {
     int port = request.getAuthority().getPort();
     if (port != -1) {
       return port;
@@ -51,7 +51,7 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(ClassicHttpRequest request) {
     return null;
   }
 }

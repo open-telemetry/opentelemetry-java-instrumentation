@@ -20,18 +20,18 @@ public final class RatpackNetAttributesExtractor extends NetAttributesExtractor<
 
   @Override
   @Nullable
-  public String peerName(Request request, @Nullable Response response) {
+  public String peerName(Request request) {
     return null;
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.getRemoteAddress().getPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(Request request, @Nullable Response response) {
+  public String peerIp(Request request) {
     return null;
   }
 }

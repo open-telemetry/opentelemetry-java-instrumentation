@@ -19,18 +19,17 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(ApacheHttpClientRequest request) {
     return request.getPeerName();
   }
 
   @Override
-  public Integer peerPort(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(ApacheHttpClientRequest request) {
     return request.getPeerPort();
   }
 
   @Override
-  public @Nullable String peerIp(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(ApacheHttpClientRequest request) {
     return null;
   }
 }

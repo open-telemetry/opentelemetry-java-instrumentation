@@ -15,7 +15,7 @@ final class JedisNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<JedisRequest, Void> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(JedisRequest jedisRequest, @Nullable Void unused) {
+  public @Nullable InetSocketAddress getAddress(JedisRequest jedisRequest) {
     Socket socket = jedisRequest.getConnection().getSocket();
     if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) socket.getRemoteSocketAddress();

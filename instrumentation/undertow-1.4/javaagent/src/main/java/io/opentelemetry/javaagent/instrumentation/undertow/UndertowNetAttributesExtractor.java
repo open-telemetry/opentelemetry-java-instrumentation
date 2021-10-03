@@ -15,8 +15,7 @@ public class UndertowNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<HttpServerExchange, HttpServerExchange> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  public @Nullable InetSocketAddress getAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 

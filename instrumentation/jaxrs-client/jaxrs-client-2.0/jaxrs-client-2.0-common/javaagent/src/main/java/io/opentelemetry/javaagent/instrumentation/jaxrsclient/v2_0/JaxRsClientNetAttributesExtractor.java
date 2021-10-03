@@ -20,13 +20,12 @@ final class JaxRsClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      ClientRequestContext request, @Nullable ClientResponseContext response) {
+  public @Nullable String peerName(ClientRequestContext request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(ClientRequestContext request, @Nullable ClientResponseContext response) {
+  public Integer peerPort(ClientRequestContext request) {
     int port = request.getUri().getPort();
     if (port != -1) {
       return port;
@@ -35,8 +34,7 @@ final class JaxRsClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(
-      ClientRequestContext request, @Nullable ClientResponseContext response) {
+  public @Nullable String peerIp(ClientRequestContext request) {
     return null;
   }
 }

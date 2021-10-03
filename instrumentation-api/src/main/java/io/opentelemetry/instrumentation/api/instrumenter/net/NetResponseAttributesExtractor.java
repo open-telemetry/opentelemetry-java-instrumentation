@@ -16,25 +16,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
  * it is more convenient to use {@link InetSocketAddressNetAttributesExtractor}.
  */
-public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
+public abstract class NetResponseAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
-
-    String peerIp = peerIp(request);
-    String peerName = peerName(request);
-
-    if (peerName != null && !peerName.equals(peerIp)) {
-      set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-    }
-    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
-
-    Integer peerPort = peerPort(request);
-    if (peerPort != null) {
-      set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
-    }
   }
 
   @Override
@@ -42,7 +29,21 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+
+    String peerIp = peerIp(request, response);
+    String peerName = peerName(request, response);
+
+    if (peerName != null && !peerName.equals(peerIp)) {
+      set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+    }
+    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+
+    Integer peerPort = peerPort(request, response);
+    if (peerPort != null) {
+      set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    }
+  }
 
   @Nullable
   public abstract String transport(REQUEST request);
@@ -53,7 +54,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  public abstract String peerName(REQUEST request);
+  public abstract String peerName(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -61,7 +62,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  public abstract Integer peerPort(REQUEST request);
+  public abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -69,5 +70,5 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  public abstract String peerIp(REQUEST request);
+  public abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

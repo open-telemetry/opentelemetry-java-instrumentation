@@ -19,19 +19,17 @@ final class SpringWebMvcNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
+  public @Nullable String peerName(HttpServletRequest request) {
     return request.getRemoteHost();
   }
 
   @Override
-  public Integer peerPort(HttpServletRequest request, @Nullable HttpServletResponse response) {
+  public Integer peerPort(HttpServletRequest request) {
     return request.getRemotePort();
   }
 
   @Override
-  public @Nullable String peerIp(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
+  public @Nullable String peerIp(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
 }

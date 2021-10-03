@@ -111,7 +111,7 @@ public class InstrumenterBenchmark {
         InetSocketAddress.createUnresolved("localhost", 8080);
 
     @Override
-    public @Nullable InetSocketAddress getAddress(Void unused, @Nullable Void unused2) {
+    public @Nullable InetSocketAddress getAddress(Void unused) {
       return ADDRESS;
     }
 

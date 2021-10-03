@@ -23,7 +23,7 @@ public final class ArmeriaNetAttributesExtractor
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public InetSocketAddress getAddress(RequestContext ctx) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

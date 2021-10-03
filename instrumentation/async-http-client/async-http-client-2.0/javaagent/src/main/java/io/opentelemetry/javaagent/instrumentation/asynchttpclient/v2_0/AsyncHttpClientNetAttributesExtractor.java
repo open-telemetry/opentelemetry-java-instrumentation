@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetResponseAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientNetAttributesExtractor
-    extends InetSocketAddressNetAttributesExtractor<RequestContext, Response> {
+    extends InetSocketAddressNetResponseAttributesExtractor<RequestContext, Response> {
 
   @Override
   public String transport(RequestContext requestContext) {

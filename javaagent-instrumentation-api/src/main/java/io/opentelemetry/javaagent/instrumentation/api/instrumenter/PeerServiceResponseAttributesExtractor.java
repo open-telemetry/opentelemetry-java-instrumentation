@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetResponseAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,43 +22,36 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * otel.instrumentation.common.peer-service-mapping} configuration property. The format used is a
  * comma-separated list of {@code host=name} pairs.
  */
-public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
+public final class PeerServiceResponseAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
-  private final NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
+  private final NetResponseAttributesExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor;
 
   // visible for tests
-  PeerServiceAttributesExtractor(
+  PeerServiceResponseAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetResponseAttributesExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
-    this.netAttributesExtractor = netAttributesExtractor;
+    this.netResponseAttributesExtractor = netResponseAttributesExtractor;
   }
 
   /**
-   * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
+   * Returns a new {@link PeerServiceResponseAttributesExtractor} that will use the passed {@code
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
-  public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
-    return new PeerServiceAttributesExtractor<>(
-        JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesExtractor);
+  public static <REQUEST, RESPONSE>
+      PeerServiceResponseAttributesExtractor<REQUEST, RESPONSE> create(
+          NetResponseAttributesExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
+    return new PeerServiceResponseAttributesExtractor<>(
+        JAVAAGENT_PEER_SERVICE_MAPPING, netResponseAttributesExtractor);
   }
 
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
-    String peerName = netAttributesExtractor.peerName(request);
-    String peerService = mapToPeerService(peerName);
-    if (peerService == null) {
-      String peerIp = netAttributesExtractor.peerIp(request);
-      peerService = mapToPeerService(peerIp);
-    }
-    if (peerService != null) {
-      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
-    }
+    onEnd(attributes, request, null, null);
   }
 
   @Override
@@ -66,7 +59,17 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    String peerName = netResponseAttributesExtractor.peerName(request, response);
+    String peerService = mapToPeerService(peerName);
+    if (peerService == null) {
+      String peerIp = netResponseAttributesExtractor.peerIp(request, response);
+      peerService = mapToPeerService(peerIp);
+    }
+    if (peerService != null) {
+      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
+    }
+  }
 
   private String mapToPeerService(String endpoint) {
     if (endpoint == null) {
