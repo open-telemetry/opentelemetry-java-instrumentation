@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -55,13 +54,13 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler<?>, RequestContext> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, RequestContext.class);
-      RequestContext requestContext = contextStore.get(handler);
+      VirtualField<AsyncHandler<?>, RequestContext> virtualField =
+          VirtualField.find(AsyncHandler.class, RequestContext.class);
+      RequestContext requestContext = virtualField.get(handler);
       if (requestContext == null) {
         return null;
       }
-      contextStore.put(handler, null);
+      virtualField.set(handler, null);
       instrumenter().end(requestContext.getContext(), requestContext, response, null);
       return requestContext.getParentContext().makeCurrent();
     }
@@ -81,13 +80,13 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncHandler<?>, RequestContext> contextStore =
-          InstrumentationContext.get(AsyncHandler.class, RequestContext.class);
-      RequestContext requestContext = contextStore.get(handler);
+      VirtualField<AsyncHandler<?>, RequestContext> virtualField =
+          VirtualField.find(AsyncHandler.class, RequestContext.class);
+      RequestContext requestContext = virtualField.get(handler);
       if (requestContext == null) {
         return null;
       }
-      contextStore.put(handler, null);
+      virtualField.set(handler, null);
       instrumenter().end(requestContext.getContext(), requestContext, null, throwable);
       return requestContext.getParentContext().makeCurrent();
     }

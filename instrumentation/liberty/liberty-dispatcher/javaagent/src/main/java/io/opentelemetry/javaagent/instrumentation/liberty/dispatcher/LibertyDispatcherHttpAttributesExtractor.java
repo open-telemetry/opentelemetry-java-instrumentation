@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import java.net.URI;
-import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,24 +66,6 @@ public class LibertyDispatcherHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return null;
-  }
-
-  @Override
-  protected @Nullable String url(LibertyRequest libertyRequest) {
-    try {
-      return new URI(
-              libertyRequest.getScheme(),
-              null,
-              libertyRequest.getServerName(),
-              libertyRequest.getServerPort(),
-              libertyRequest.getRequestUri(),
-              libertyRequest.getQueryString(),
-              null)
-          .toString();
-    } catch (URISyntaxException e) {
-      logger.debug("Failed to construct request URI", e);
-      return null;
-    }
   }
 
   @Override

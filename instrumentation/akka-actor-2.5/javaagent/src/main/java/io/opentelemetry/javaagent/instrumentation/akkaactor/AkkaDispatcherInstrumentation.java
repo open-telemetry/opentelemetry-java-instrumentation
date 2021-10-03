@@ -10,10 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.Envelope;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
@@ -44,9 +43,9 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope)) {
-        ContextStore<Envelope, PropagatedContext> contextStore =
-            InstrumentationContext.get(Envelope.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, envelope);
+        VirtualField<Envelope, PropagatedContext> virtualField =
+            VirtualField.find(Envelope.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, envelope);
       }
       return null;
     }

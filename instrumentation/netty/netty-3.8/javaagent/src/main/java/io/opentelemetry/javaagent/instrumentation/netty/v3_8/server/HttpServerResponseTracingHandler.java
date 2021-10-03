@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.Netty
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -19,16 +19,16 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHandler {
 
-  private final ContextStore<Channel, ChannelTraceContext> contextStore;
+  private final VirtualField<Channel, ChannelTraceContext> virtualField;
 
-  public HttpServerResponseTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
-    this.contextStore = contextStore;
+  public HttpServerResponseTracingHandler(VirtualField<Channel, ChannelTraceContext> virtualField) {
+    this.virtualField = virtualField;
   }
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
-        contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.FACTORY);
+        virtualField.computeIfNull(ctx.getChannel(), ChannelTraceContext.FACTORY);
 
     Context context = tracer().getServerContext(channelTraceContext);
     if (context == null || !(msg.getMessage() instanceof HttpResponse)) {

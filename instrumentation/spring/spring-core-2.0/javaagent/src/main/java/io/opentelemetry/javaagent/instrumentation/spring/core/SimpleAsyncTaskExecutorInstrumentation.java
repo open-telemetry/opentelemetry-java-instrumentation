@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
@@ -49,9 +48,9 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        ContextStore<Runnable, PropagatedContext> contextStore =
-            InstrumentationContext.get(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, contextStore, task);
+        VirtualField<Runnable, PropagatedContext> virtualField =
+            VirtualField.find(Runnable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
       }
       return null;
     }

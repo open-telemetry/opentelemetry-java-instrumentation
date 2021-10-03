@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.AgentExtension;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

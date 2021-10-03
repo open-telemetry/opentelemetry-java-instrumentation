@@ -64,16 +64,6 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected String url(HttpServerExchange exchange) {
-    String result = exchange.getRequestURL();
-    if (exchange.getQueryString() == null || exchange.getQueryString().isEmpty()) {
-      return result;
-    } else {
-      return result + "?" + exchange.getQueryString();
-    }
-  }
-
-  @Override
   protected @Nullable String target(HttpServerExchange exchange) {
     String requestPath = exchange.getRequestPath();
     String queryString = exchange.getQueryString();

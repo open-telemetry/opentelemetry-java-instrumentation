@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepS
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
@@ -18,11 +18,11 @@ import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.core.Ordered;
 
 public final class TracingStepExecutionListener implements StepExecutionListener, Ordered {
-  private final ContextStore<StepExecution, ContextAndScope> executionContextStore;
+  private final VirtualField<StepExecution, ContextAndScope> executionVirtualField;
 
   public TracingStepExecutionListener(
-      ContextStore<StepExecution, ContextAndScope> executionContextStore) {
-    this.executionContextStore = executionContextStore;
+      VirtualField<StepExecution, ContextAndScope> executionVirtualField) {
+    this.executionVirtualField = executionVirtualField;
   }
 
   @Override
@@ -35,17 +35,17 @@ public final class TracingStepExecutionListener implements StepExecutionListener
     Context context = stepInstrumenter().start(parentContext, stepExecution);
     // beforeStep & afterStep always execute on the same thread
     Scope scope = context.makeCurrent();
-    executionContextStore.put(stepExecution, new ContextAndScope(context, scope));
+    executionVirtualField.set(stepExecution, new ContextAndScope(context, scope));
   }
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    ContextAndScope contextAndScope = executionContextStore.get(stepExecution);
+    ContextAndScope contextAndScope = executionVirtualField.get(stepExecution);
     if (contextAndScope == null) {
       return null;
     }
 
-    executionContextStore.put(stepExecution, null);
+    executionVirtualField.set(stepExecution, null);
     contextAndScope.closeScope();
     stepInstrumenter().end(contextAndScope.getContext(), stepExecution, null, null);
     return null;

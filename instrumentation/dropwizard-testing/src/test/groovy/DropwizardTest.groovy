@@ -113,7 +113,9 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
         // dropwizard reports peer ip as the client ip
         "${SemanticAttributes.NET_PEER_IP.key}" TEST_CLIENT_IP
         "${SemanticAttributes.NET_PEER_PORT.key}" Long
-        "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_SCHEME.key}" "http"
+        "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

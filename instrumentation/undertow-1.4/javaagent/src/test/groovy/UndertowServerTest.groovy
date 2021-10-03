@@ -134,7 +134,9 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-            "${SemanticAttributes.HTTP_URL.key}" uri.toString()
+            "${SemanticAttributes.HTTP_SCHEME.key}" uri.getScheme()
+            "${SemanticAttributes.HTTP_HOST.key}" uri.getHost() + ":" + uri.getPort()
+            "${SemanticAttributes.HTTP_TARGET.key}" uri.getPath()
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -187,7 +189,9 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-            "${SemanticAttributes.HTTP_URL.key}" uri.toString()
+            "${SemanticAttributes.HTTP_SCHEME.key}" uri.getScheme()
+            "${SemanticAttributes.HTTP_HOST.key}" uri.getHost() + ":" + uri.getPort()
+            "${SemanticAttributes.HTTP_TARGET.key}" uri.getPath()
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

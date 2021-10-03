@@ -38,13 +38,10 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [
-      SemanticAttributes.HTTP_HOST,
       SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
       SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_SERVER_NAME,
-      SemanticAttributes.HTTP_TARGET,
       SemanticAttributes.NET_PEER_NAME,
       SemanticAttributes.NET_TRANSPORT
     ]

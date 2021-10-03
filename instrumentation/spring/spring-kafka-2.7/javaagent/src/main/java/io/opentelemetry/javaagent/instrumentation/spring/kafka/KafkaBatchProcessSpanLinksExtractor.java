@@ -9,8 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaHeadersGetter;
+import io.opentelemetry.instrumentation.kafka.KafkaConsumerIteratorWrapper;
+import io.opentelemetry.instrumentation.kafka.KafkaConsumerRecordGetter;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -22,7 +22,7 @@ public class KafkaBatchProcessSpanLinksExtractor
 
   public KafkaBatchProcessSpanLinksExtractor(ContextPropagators contextPropagators) {
     this.singleRecordLinkExtractor =
-        SpanLinksExtractor.fromUpstreamRequest(contextPropagators, new KafkaHeadersGetter());
+        SpanLinksExtractor.fromUpstreamRequest(contextPropagators, new KafkaConsumerRecordGetter());
   }
 
   @Override

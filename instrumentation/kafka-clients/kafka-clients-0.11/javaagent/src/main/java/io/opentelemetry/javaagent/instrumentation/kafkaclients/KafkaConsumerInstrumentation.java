@@ -16,10 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.kafka.ReceivedRecords;
+import io.opentelemetry.instrumentation.kafka.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import java.time.Duration;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -72,9 +73,9 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
         // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-        ContextStore<ConsumerRecords, SpanContext> consumerRecordsSpan =
-            InstrumentationContext.get(ConsumerRecords.class, SpanContext.class);
-        consumerRecordsSpan.put(records, spanFromContext(context).getSpanContext());
+        VirtualField<ConsumerRecords, SpanContext> consumerRecordsSpan =
+            VirtualField.find(ConsumerRecords.class, SpanContext.class);
+        consumerRecordsSpan.set(records, spanFromContext(context).getSpanContext());
       }
     }
   }

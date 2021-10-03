@@ -92,7 +92,7 @@ dependencies {
   testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
 
   //Otel Java instrumentation that we use and extend during integration tests
-  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}:all")
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
 
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
@@ -111,7 +111,7 @@ task agentManifest(type: Copy) {
 //The location of extension directory inside agent jar is hard-coded in the agent source code
 task extendedAgent(type: Jar) {
   dependsOn agentManifest
-  archiveFileName = "opentelemetry-javaagent-all.jar"
+  archiveFileName = "opentelemetry-javaagent.jar"
   manifest.from "$buildDir/META-INF/MANIFEST.MF"
   from zipTree(configurations.otel.singleFile)
   from(tasks.shadowJar.archiveFile) {

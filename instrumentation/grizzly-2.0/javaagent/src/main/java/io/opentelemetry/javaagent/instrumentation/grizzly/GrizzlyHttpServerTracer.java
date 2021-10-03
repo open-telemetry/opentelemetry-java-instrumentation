@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import java.net.URI;
-import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
@@ -55,22 +53,23 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected String url(HttpRequestPacket httpRequest) {
-    try {
-      return new URI(
-              (httpRequest.isSecure() ? "https://" : "http://")
-                  + httpRequest.serverName()
-                  + ":"
-                  + httpRequest.getServerPort()
-                  + httpRequest.getRequestURI()
-                  + (httpRequest.getQueryString() != null
-                      ? "?" + httpRequest.getQueryString()
-                      : ""))
-          .toString();
-    } catch (URISyntaxException e) {
-      logger.warn("Failed to construct request URI", e);
-      return null;
+  protected String scheme(HttpRequestPacket httpRequest) {
+    return httpRequest.isSecure() ? "https" : "http";
+  }
+
+  @Override
+  protected String host(HttpRequestPacket httpRequest) {
+    return httpRequest.serverName() + ":" + httpRequest.getServerPort();
+  }
+
+  @Override
+  protected String target(HttpRequestPacket httpRequest) {
+    String target = httpRequest.getRequestURI();
+    String queryString = httpRequest.getQueryString();
+    if (queryString != null) {
+      target += "?" + queryString;
     }
+    return target;
   }
 
   @Override

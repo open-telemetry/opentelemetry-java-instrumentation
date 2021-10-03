@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -58,6 +59,24 @@ public class NettyHttpServerTracer
     } else {
       return uri;
     }
+  }
+
+  @Override
+  @Nullable
+  protected String scheme(HttpRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  protected String host(HttpRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  protected String target(HttpRequest request) {
+    return null;
   }
 
   @Override

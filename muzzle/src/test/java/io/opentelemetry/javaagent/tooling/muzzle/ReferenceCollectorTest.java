@@ -361,7 +361,7 @@ class ReferenceCollectorTest {
   private static List<Arguments> shouldNotCollectContextStoreClassesForInvalidScenario() {
     return Arrays.asList(
         Arguments.of(
-            "passing arbitrary variables or parameters to InstrumentationContext.get()",
+            "passing arbitrary variables or parameters to VirtualField.find()",
             InstrumentationContextTestClasses.NotUsingClassRefAdvice.class.getName()),
         Arguments.of(
             "storing class ref in a local var",

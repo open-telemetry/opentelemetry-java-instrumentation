@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 import java.util.concurrent.ExecutorService;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,7 +19,7 @@ public final class ExecutorAdviceHelper {
 
   /**
    * Check if {@code context} should be propagated to the passed {@code task}. This method must be
-   * called before each {@link #attachContextToTask(Context, ContextStore, Object)} call to ensure
+   * called before each {@link #attachContextToTask(Context, VirtualField, Object)} call to ensure
    * that unwanted tasks are not instrumented.
    */
   public static boolean shouldPropagateContext(Context context, @Nullable Object task) {
@@ -37,13 +37,14 @@ public final class ExecutorAdviceHelper {
   }
 
   /**
-   * Associate {@code context} with passed {@code task} using {@code contextStore}. Once the context
+   * Associate {@code context} with passed {@code task} using {@code virtualField}. Once the context
    * is attached, {@link TaskAdviceHelper} can be used to make that context current during {@code
    * task} execution.
    */
   public static <T> PropagatedContext attachContextToTask(
-      Context context, ContextStore<T, PropagatedContext> contextStore, T task) {
-    PropagatedContext propagatedContext = contextStore.putIfAbsent(task, PropagatedContext.FACTORY);
+      Context context, VirtualField<T, PropagatedContext> virtualField, T task) {
+    PropagatedContext propagatedContext =
+        virtualField.computeIfNull(task, PropagatedContext.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
       context =
           ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace(), task);

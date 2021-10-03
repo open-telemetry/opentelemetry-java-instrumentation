@@ -569,15 +569,20 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
-        "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
         "${SemanticAttributes.HTTP_FLAVOR.key}" { it == "1.1" || it == "2.0" }
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
+          // netty instrumentation uses this
+          "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        } else {
           "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
+
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
         }
@@ -589,14 +594,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // currently reports '/*' which is a fallback route.
           "${SemanticAttributes.HTTP_ROUTE}" String
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
-          "${SemanticAttributes.HTTP_SCHEME}" "http"
-        }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
-          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
         if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
           // "localhost" on linux, "127.0.0.1" on windows
@@ -620,15 +619,20 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
-        "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
         "${SemanticAttributes.HTTP_METHOD.key}" "GET"
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
+          // netty instrumentation uses this
+          "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
+        } else {
           "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
         }
+
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
         }
@@ -640,14 +644,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // currently reports '/*' which is a fallback route.
           "${SemanticAttributes.HTTP_ROUTE}" String
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
-          "${SemanticAttributes.HTTP_SCHEME}" "http"
-        }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
-          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "?id=$requestId"
         }
         if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
           "${SemanticAttributes.NET_PEER_NAME}" "localhost"

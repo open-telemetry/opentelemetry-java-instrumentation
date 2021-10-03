@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIterableWrapper;
+import io.opentelemetry.instrumentation.kafka.KafkaConsumerIterableWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;

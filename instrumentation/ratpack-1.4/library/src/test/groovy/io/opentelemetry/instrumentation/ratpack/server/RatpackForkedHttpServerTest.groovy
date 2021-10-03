@@ -29,8 +29,7 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   List<AttributeKey<?>> extraAttributes() {
     return [
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.HTTP_TARGET,
-      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_TRANSPORT
     ]
   }
 }
