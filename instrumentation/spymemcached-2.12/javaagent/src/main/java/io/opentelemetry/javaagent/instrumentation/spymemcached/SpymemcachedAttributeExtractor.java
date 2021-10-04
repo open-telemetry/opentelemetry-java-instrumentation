@@ -5,7 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SpymemcachedAttributeExtractor extends DbAttributesExtractor<SpymemcachedRequest, Object> {
   @Override
-  protected @Nullable String system(SpymemcachedRequest spymemcachedRequest) {
+  protected String system(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
   }
 
