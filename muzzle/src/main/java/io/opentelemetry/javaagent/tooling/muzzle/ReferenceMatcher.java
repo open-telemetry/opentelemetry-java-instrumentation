@@ -39,8 +39,8 @@ public final class ReferenceMatcher {
 
   public static ReferenceMatcher of(InstrumentationModule instrumentationModule) {
     return new ReferenceMatcher(
-        instrumentationModule.getMuzzleHelperClassNames(),
-        MuzzleReferencesAccessor.getFor(instrumentationModule),
+        InstrumentationModuleMuzzle.getMuzzleHelperClassNames(instrumentationModule),
+        InstrumentationModuleMuzzle.getMuzzleReferences(instrumentationModule),
         instrumentationModule::isHelperClass);
   }
 
