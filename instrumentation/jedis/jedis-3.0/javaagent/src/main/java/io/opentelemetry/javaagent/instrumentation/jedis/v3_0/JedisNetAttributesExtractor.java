@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class JedisNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<JedisRequest, Void> {
 
+  JedisNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public @Nullable InetSocketAddress getAddress(JedisRequest jedisRequest, @Nullable Void unused) {
     Socket socket = jedisRequest.getConnection().getSocket();

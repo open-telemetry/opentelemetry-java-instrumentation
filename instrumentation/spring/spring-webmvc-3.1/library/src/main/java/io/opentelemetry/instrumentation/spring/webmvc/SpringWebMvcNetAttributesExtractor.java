@@ -13,6 +13,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class SpringWebMvcNetAttributesExtractor
     extends NetAttributesExtractor<HttpServletRequest, HttpServletResponse> {
+  SpringWebMvcNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(HttpServletRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

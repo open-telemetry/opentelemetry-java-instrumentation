@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ApacheHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpMethod, HttpMethod> {
 
+  ApacheHttpClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(HttpMethod request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

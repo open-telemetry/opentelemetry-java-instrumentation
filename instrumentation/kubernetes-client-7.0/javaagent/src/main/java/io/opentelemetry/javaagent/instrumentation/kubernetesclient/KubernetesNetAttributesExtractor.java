@@ -12,6 +12,10 @@ import okhttp3.Request;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class KubernetesNetAttributesExtractor extends NetAttributesExtractor<Request, ApiResponse<?>> {
+  KubernetesNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

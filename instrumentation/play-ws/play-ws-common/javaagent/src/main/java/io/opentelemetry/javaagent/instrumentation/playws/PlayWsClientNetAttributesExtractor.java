@@ -15,6 +15,10 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 final class PlayWsClientNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<Request, Response> {
 
+  PlayWsClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

@@ -15,6 +15,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class CassandraNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<CassandraRequest, ExecutionInfo> {
 
+  CassandraNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   @Nullable
   public String transport(CassandraRequest request) {

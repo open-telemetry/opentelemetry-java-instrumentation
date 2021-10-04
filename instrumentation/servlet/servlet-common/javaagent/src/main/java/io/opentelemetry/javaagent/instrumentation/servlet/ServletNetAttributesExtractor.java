@@ -15,6 +15,7 @@ public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
   public ServletNetAttributesExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
+    super(NetPeerAttributeExtraction.ON_START);
     this.accessor = accessor;
   }
 

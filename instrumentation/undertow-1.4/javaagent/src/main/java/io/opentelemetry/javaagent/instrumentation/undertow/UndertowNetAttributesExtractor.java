@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class UndertowNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<HttpServerExchange, HttpServerExchange> {
 
+  protected UndertowNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public @Nullable InetSocketAddress getAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {

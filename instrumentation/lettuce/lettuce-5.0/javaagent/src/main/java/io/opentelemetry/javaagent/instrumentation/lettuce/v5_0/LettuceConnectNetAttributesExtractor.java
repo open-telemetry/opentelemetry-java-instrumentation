@@ -11,6 +11,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class LettuceConnectNetAttributesExtractor extends NetAttributesExtractor<RedisURI, Void> {
 
+  LettuceConnectNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   @Nullable
   public String transport(RedisURI redisUri) {

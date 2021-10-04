@@ -110,6 +110,10 @@ public class InstrumenterBenchmark {
     private static final InetSocketAddress ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 
+    protected ConstantNetAttributesExtractor() {
+      super(NetPeerAttributeExtraction.ON_START);
+    }
+
     @Override
     public @Nullable InetSocketAddress getAddress(Void unused, @Nullable Void unused2) {
       return ADDRESS;

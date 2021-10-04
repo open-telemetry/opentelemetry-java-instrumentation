@@ -12,6 +12,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OkHttp2NetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
+  public OkHttp2NetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

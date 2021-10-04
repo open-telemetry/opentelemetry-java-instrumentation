@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class DubboNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<DubboRequest, Result> {
 
+  public DubboNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public @Nullable InetSocketAddress getAddress(DubboRequest request, @Nullable Result result) {
     return request.context().getRemoteAddress();

@@ -12,6 +12,10 @@ import ratpack.http.Request;
 import ratpack.http.Response;
 
 public final class RatpackNetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
+  public RatpackNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   @Nullable
   public String transport(Request request) {

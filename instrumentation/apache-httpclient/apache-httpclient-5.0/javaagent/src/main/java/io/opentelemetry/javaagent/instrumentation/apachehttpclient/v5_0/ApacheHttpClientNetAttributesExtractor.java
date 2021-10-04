@@ -19,6 +19,10 @@ final class ApacheHttpClientNetAttributesExtractor
   private static final Logger logger =
       LoggerFactory.getLogger(ApacheHttpClientNetAttributesExtractor.class);
 
+  ApacheHttpClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(ClassicHttpRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

@@ -12,6 +12,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class RedissonNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<RedissonRequest, Void> {
 
+  RedissonNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();

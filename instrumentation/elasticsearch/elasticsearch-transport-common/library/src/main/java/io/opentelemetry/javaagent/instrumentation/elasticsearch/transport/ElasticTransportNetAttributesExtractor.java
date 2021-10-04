@@ -11,6 +11,10 @@ import org.elasticsearch.action.ActionResponse;
 
 public class ElasticTransportNetAttributesExtractor
     extends NetAttributesExtractor<ElasticTransportRequest, ActionResponse> {
+  public ElasticTransportNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   public @Nullable String transport(ElasticTransportRequest elasticTransportRequest) {
     return null;

@@ -19,9 +19,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
+  private final NetPeerAttributeExtraction netPeerAttributeExtraction;
+
+  protected NetAttributesExtractor() {
+    this(NetPeerAttributeExtraction.ON_BOTH);
+  }
+
+  protected NetAttributesExtractor(NetPeerAttributeExtraction netPeerAttributeExtraction) {
+    this.netPeerAttributeExtraction = netPeerAttributeExtraction;
+  }
+
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
+
+    if (netPeerAttributeExtraction == NetPeerAttributeExtraction.ON_END) {
+      return;
+    }
 
     String peerIp = peerIp(request, null);
     String peerName = peerName(request, null);
@@ -43,6 +57,10 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+
+    if (netPeerAttributeExtraction == NetPeerAttributeExtraction.ON_START) {
+      return;
+    }
 
     String peerIp = peerIp(request, response);
     String peerName = peerName(request, response);
@@ -84,4 +102,10 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    */
   @Nullable
   public abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
+
+  public enum NetPeerAttributeExtraction {
+    ON_START,
+    ON_END,
+    ON_BOTH
+  }
 }

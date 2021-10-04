@@ -14,6 +14,10 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 final class ResteasyClientNetAttributesExtractor
     extends NetAttributesExtractor<ClientInvocation, Response> {
 
+  ResteasyClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(ClientInvocation request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

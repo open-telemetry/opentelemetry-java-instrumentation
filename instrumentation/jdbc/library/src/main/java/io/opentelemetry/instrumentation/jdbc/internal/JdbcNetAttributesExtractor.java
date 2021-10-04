@@ -10,6 +10,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest, Void> {
 
+  public JdbcNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Nullable
   @Override
   public String transport(DbRequest request) {

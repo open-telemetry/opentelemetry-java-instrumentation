@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class GoogleHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpRequest, HttpResponse> {
 
+  GoogleHttpClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(HttpRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

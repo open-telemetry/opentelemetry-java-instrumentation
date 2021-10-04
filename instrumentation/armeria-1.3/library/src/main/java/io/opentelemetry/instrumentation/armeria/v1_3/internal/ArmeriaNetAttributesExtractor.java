@@ -16,6 +16,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ArmeriaNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
 
+  public ArmeriaNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   public String transport(RequestContext ctx) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

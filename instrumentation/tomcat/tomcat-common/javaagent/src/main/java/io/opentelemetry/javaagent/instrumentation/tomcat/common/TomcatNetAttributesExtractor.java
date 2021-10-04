@@ -13,6 +13,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
 
+  public TomcatNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public @Nullable String transport(Request request) {
     // return SemanticAttributes.NetTransportValues.IP_TCP;

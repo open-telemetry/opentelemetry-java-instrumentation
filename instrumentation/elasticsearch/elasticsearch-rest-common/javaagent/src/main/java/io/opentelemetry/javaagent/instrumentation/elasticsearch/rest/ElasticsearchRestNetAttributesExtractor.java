@@ -12,6 +12,10 @@ import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetAttributesExtractor
     extends NetAttributesExtractor<String, Response> {
+  ElasticsearchRestNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   public String transport(String s) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

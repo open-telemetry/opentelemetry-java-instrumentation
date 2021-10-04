@@ -12,6 +12,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class LibertyDispatcherNetAttributesExtractor
     extends NetAttributesExtractor<LibertyRequest, LibertyResponse> {
 
+  public LibertyDispatcherNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(LibertyRequest libertyRequest) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
@@ -20,30 +24,18 @@ public class LibertyDispatcherNetAttributesExtractor
   @Override
   public @Nullable String peerName(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling peerName to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.peerName();
-    }
-    return null;
+    return libertyRequest.peerName();
   }
 
   @Override
   public @Nullable Integer peerPort(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling getServerPort to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.getServerPort();
-    }
-    return null;
+    return libertyRequest.getServerPort();
   }
 
   @Override
   public @Nullable String peerIp(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    // condition limits calling peerIp to onStart because in onEnd it may throw a NPE
-    if (!libertyRequest.isCompleted()) {
-      return libertyRequest.peerIp();
-    }
-    return null;
+    return libertyRequest.peerIp();
   }
 }

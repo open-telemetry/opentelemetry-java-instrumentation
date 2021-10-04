@@ -15,6 +15,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class GrpcNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<GrpcRequest, Status> {
+
+  public GrpcNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   @Nullable
   public InetSocketAddress getAddress(GrpcRequest request, @Nullable Status status) {

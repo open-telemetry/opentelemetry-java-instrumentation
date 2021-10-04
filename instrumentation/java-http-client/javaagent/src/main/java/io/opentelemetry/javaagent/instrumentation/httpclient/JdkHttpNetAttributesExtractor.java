@@ -18,6 +18,10 @@ public class JdkHttpNetAttributesExtractor
 
   private static final Logger logger = LoggerFactory.getLogger(JdkHttpNetAttributesExtractor.class);
 
+  public JdkHttpNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(HttpRequest httpRequest) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

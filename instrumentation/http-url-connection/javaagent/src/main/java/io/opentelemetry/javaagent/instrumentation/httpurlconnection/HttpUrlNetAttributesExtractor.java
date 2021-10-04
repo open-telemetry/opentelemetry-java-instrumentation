@@ -11,6 +11,10 @@ import java.net.HttpURLConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpUrlNetAttributesExtractor extends NetAttributesExtractor<HttpURLConnection, Integer> {
+  HttpUrlNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public @Nullable String transport(HttpURLConnection connection) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

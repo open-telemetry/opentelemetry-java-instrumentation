@@ -19,6 +19,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     extends NetAttributesExtractor<REQUEST, RESPONSE> {
 
+  protected InetSocketAddressNetAttributesExtractor() {
+    this(NetPeerAttributeExtraction.ON_BOTH);
+  }
+
+  protected InetSocketAddressNetAttributesExtractor(
+      NetPeerAttributeExtraction netPeerAttributeExtraction) {
+    super(netPeerAttributeExtraction);
+  }
+
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
    * then) and when the response ends. This way it is possible to capture net attributes in both

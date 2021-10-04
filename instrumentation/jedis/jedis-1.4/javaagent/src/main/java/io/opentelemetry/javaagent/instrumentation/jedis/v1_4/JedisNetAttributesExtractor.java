@@ -10,6 +10,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JedisNetAttributesExtractor extends NetAttributesExtractor<JedisRequest, Void> {
 
+  JedisNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   @Nullable
   public String transport(JedisRequest request) {

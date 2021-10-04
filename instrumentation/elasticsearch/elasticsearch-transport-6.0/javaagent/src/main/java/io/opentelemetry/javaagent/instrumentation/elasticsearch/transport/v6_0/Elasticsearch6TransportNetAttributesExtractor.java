@@ -13,6 +13,11 @@ import org.elasticsearch.action.ActionResponse;
 
 public class Elasticsearch6TransportNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<ElasticTransportRequest, ActionResponse> {
+
+  public Elasticsearch6TransportNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_END);
+  }
+
   @Override
   public @Nullable String transport(ElasticTransportRequest elasticTransportRequest) {
     return null;

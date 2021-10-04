@@ -13,6 +13,10 @@ import org.springframework.http.client.ClientHttpResponse;
 
 final class SpringWebNetAttributesExtractor
     extends NetAttributesExtractor<HttpRequest, ClientHttpResponse> {
+  SpringWebNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(HttpRequest httpRequest) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

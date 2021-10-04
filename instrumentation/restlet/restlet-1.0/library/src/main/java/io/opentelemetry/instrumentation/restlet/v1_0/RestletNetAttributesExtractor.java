@@ -12,6 +12,10 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 
 final class RestletNetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
+  RestletNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

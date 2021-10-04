@@ -14,6 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class JaxRsClientNetAttributesExtractor
     extends NetAttributesExtractor<ClientRequestContext, ClientResponseContext> {
 
+  JaxRsClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(ClientRequestContext request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

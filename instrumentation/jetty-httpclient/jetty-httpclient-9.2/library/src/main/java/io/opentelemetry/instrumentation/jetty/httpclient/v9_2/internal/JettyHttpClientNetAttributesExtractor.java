@@ -14,6 +14,10 @@ import org.eclipse.jetty.client.api.Response;
 public class JettyHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<Request, Response> {
 
+  public JettyHttpClientNetAttributesExtractor() {
+    super(NetPeerAttributeExtraction.ON_START);
+  }
+
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
