@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesOnStartExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
@@ -105,7 +105,7 @@ public class InstrumenterBenchmark {
   }
 
   static class ConstantNetAttributesExtractor
-      extends InetSocketAddressNetAttributesExtractor<Void, Void> {
+      extends InetSocketAddressNetAttributesOnStartExtractor<Void, Void> {
 
     private static final InetSocketAddress ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);

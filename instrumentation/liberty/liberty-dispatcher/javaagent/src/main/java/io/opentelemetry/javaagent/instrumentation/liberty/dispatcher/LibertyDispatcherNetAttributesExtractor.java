@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LibertyDispatcherNetAttributesExtractor
-    extends NetAttributesExtractor<LibertyRequest, LibertyResponse> {
+    extends NetAttributesOnStartExtractor<LibertyRequest, LibertyResponse> {
 
   @Override
   public String transport(LibertyRequest libertyRequest) {

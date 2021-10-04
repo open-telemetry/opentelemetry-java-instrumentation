@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetResponseAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnEndExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetResponseAttributesExtractor
-    extends NetResponseAttributesExtractor<String, Response> {
+    extends NetAttributesOnEndExtractor<String, Response> {
   @Override
-  public String transport(Response response) {
+  public String transport(String operation, Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(@Nullable Response response) {
+  public @Nullable String peerName(String operation, @Nullable Response response) {
     if (response != null) {
       return response.getHost().getHostName();
     }
@@ -26,7 +26,7 @@ final class ElasticsearchRestNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable Integer peerPort(@Nullable Response response) {
+  public @Nullable Integer peerPort(String operation, @Nullable Response response) {
     if (response != null) {
       return response.getHost().getPort();
     }
@@ -34,7 +34,7 @@ final class ElasticsearchRestNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(@Nullable Response response) {
+  public @Nullable String peerIp(String operation, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-final class RestletNetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
+final class RestletNetAttributesExtractor extends NetAttributesOnStartExtractor<Request, Response> {
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

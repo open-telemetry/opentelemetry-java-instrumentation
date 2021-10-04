@@ -12,27 +12,27 @@ import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestAttributesExtractor extends DbAttributesExtractor<String, Response> {
   @Override
-  protected String system(String s) {
+  protected String system(String operation) {
     return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Override
-  protected @Nullable String user(String s) {
+  protected @Nullable String user(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(String s) {
+  protected @Nullable String name(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String connectionString(String s) {
+  protected @Nullable String connectionString(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String statement(String s) {
+  protected @Nullable String statement(String operation) {
     return null;
   }
 
