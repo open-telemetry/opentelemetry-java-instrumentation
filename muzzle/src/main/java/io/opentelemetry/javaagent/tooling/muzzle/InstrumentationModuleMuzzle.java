@@ -24,7 +24,7 @@ public interface InstrumentationModuleMuzzle {
    */
   Map<String, ClassRef> getMuzzleReferences();
 
-  /** @see #getMuzzleReferences() */
+  /** See {@link #getMuzzleReferences()} */
   static Map<String, ClassRef> getMuzzleReferences(InstrumentationModule module) {
     if (module instanceof InstrumentationModuleMuzzle) {
       return ((InstrumentationModuleMuzzle) module).getMuzzleReferences();
@@ -47,7 +47,7 @@ public interface InstrumentationModuleMuzzle {
    */
   List<String> getMuzzleHelperClassNames();
 
-  /** @see #getMuzzleHelperClassNames() */
+  /** See {@link #getMuzzleHelperClassNames()} */
   static List<String> getMuzzleHelperClassNames(InstrumentationModule module) {
     if (module instanceof InstrumentationModuleMuzzle) {
       return ((InstrumentationModuleMuzzle) module).getMuzzleHelperClassNames();
