@@ -50,6 +50,7 @@ dependencies {
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.5")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.1.0")
+  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.3.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")

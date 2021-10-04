@@ -1,6 +1,7 @@
 plugins {
   id("otel.java-conventions")
   id("otel.jacoco-conventions")
+  id("otel.japicmp-conventions")
   id("otel.publish-conventions")
 }
 

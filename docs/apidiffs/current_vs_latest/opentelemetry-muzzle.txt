@@ -1,0 +1,256 @@
+Comparing source compatibility of  against 
+---! REMOVED CLASS: PUBLIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.ClassRef  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getClassName()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getFields()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getFlags()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getInterfaceNames()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getMethods()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getSources()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getSuperClassName()
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRef merge(io.opentelemetry.javaagent.extension.muzzle.ClassRef)
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder newBuilder(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String toString()
+---! REMOVED CLASS: PUBLIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addField(io.opentelemetry.javaagent.extension.muzzle.Source[], io.opentelemetry.javaagent.extension.muzzle.Flag[], java.lang.String, net.bytebuddy.jar.asm.Type, boolean)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addFlag(io.opentelemetry.javaagent.extension.muzzle.Flag)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addInterfaceName(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addInterfaceNames(java.util.Collection)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addMethod(io.opentelemetry.javaagent.extension.muzzle.Source[], io.opentelemetry.javaagent.extension.muzzle.Flag[], java.lang.String, net.bytebuddy.jar.asm.Type, net.bytebuddy.jar.asm.Type[])
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addSource(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder addSource(java.lang.String, int)
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRef build()
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder setSuperClassName(java.lang.String)
+---! REMOVED CLASS: PUBLIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.FieldRef  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED METHOD: PUBLIC(-) boolean equals(java.lang.Object)
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getDescriptor()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getFlags()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getName()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getSources()
+	---! REMOVED METHOD: PUBLIC(-) int hashCode()
+	---! REMOVED METHOD: PUBLIC(-) boolean isDeclared()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String toString()
+---! REMOVED INTERFACE: PUBLIC(-) ABSTRACT(-) io.opentelemetry.javaagent.extension.muzzle.Flag  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED METHOD: PUBLIC(-) ABSTRACT(-) boolean matches(int)
+	---! REMOVED METHOD: PUBLIC(-) ABSTRACT(-) java.lang.String name()
+---! REMOVED ENUM: PUBLIC(-) ABSTRACT(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag  (class removed)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED INTERFACE: io.opentelemetry.javaagent.extension.muzzle.Flag
+	---! REMOVED INTERFACE: java.lang.Comparable
+	---! REMOVED INTERFACE: java.io.Serializable
+	---! REMOVED SUPERCLASS: java.lang.Enum
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag NON_FINAL
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag INTERFACE
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag FINAL
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag ABSTRACT
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag NON_INTERFACE
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag valueOf(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$ManifestationFlag[] values()
+---! REMOVED ENUM: PUBLIC(-) ABSTRACT(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag  (class removed)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED INTERFACE: io.opentelemetry.javaagent.extension.muzzle.Flag
+	---! REMOVED INTERFACE: java.lang.Comparable
+	---! REMOVED INTERFACE: java.io.Serializable
+	---! REMOVED SUPERCLASS: java.lang.Enum
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag PACKAGE_OR_HIGHER
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag PROTECTED_OR_HIGHER
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag PRIVATE_OR_HIGHER
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag PUBLIC
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag valueOf(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$MinimumVisibilityFlag[] values()
+---! REMOVED ENUM: PUBLIC(-) ABSTRACT(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$OwnershipFlag  (class removed)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED INTERFACE: io.opentelemetry.javaagent.extension.muzzle.Flag
+	---! REMOVED INTERFACE: java.lang.Comparable
+	---! REMOVED INTERFACE: java.io.Serializable
+	---! REMOVED SUPERCLASS: java.lang.Enum
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$OwnershipFlag NON_STATIC
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$OwnershipFlag STATIC
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$OwnershipFlag valueOf(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$OwnershipFlag[] values()
+---! REMOVED ENUM: PUBLIC(-) ABSTRACT(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag  (class removed)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED INTERFACE: io.opentelemetry.javaagent.extension.muzzle.Flag
+	---! REMOVED INTERFACE: java.lang.Comparable
+	---! REMOVED INTERFACE: java.io.Serializable
+	---! REMOVED SUPERCLASS: java.lang.Enum
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag PACKAGE
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag PUBLIC
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag PROTECTED
+	---! REMOVED FIELD: PUBLIC(-) STATIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag PRIVATE
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag valueOf(java.lang.String)
+	---! REMOVED METHOD: PUBLIC(-) STATIC(-) io.opentelemetry.javaagent.extension.muzzle.Flag$VisibilityFlag[] values()
+---! REMOVED CLASS: PUBLIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.MethodRef  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED METHOD: PUBLIC(-) boolean equals(java.lang.Object)
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getDescriptor()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getFlags()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getName()
+	---! REMOVED METHOD: PUBLIC(-) java.util.Set getSources()
+	---! REMOVED METHOD: PUBLIC(-) int hashCode()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String toString()
+---! REMOVED CLASS: PUBLIC(-) FINAL(-) io.opentelemetry.javaagent.extension.muzzle.Source  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Source(java.lang.String, int)
+	---! REMOVED METHOD: PUBLIC(-) boolean equals(java.lang.Object)
+	---! REMOVED METHOD: PUBLIC(-) int getLine()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String getName()
+	---! REMOVED METHOD: PUBLIC(-) int hashCode()
+	---! REMOVED METHOD: PUBLIC(-) java.lang.String toString()
+***! MODIFIED CLASS: PUBLIC STATIC io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper$Factory  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper create(io.opentelemetry.javaagent.extension.muzzle.ClassRef)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper create(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilder register(java.lang.String, java.lang.String)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilderImpl  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	+++  NEW INTERFACE: io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilder
+	***! MODIFIED METHOD: PUBLIC io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilder (<-io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextBuilder) register(java.lang.String, java.lang.String)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.Map getMuzzleReferences()
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) void registerMuzzleContextStoreClasses(io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilder)
+***! MODIFIED CLASS: PUBLIC STATIC io.opentelemetry.javaagent.tooling.muzzle.Mismatch$MissingClass  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$MissingClass(io.opentelemetry.javaagent.extension.muzzle.ClassRef)
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$MissingClass(io.opentelemetry.javaagent.extension.muzzle.ClassRef, java.lang.String)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$MissingClass(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef, java.lang.String)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$MissingClass(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef)
+***! MODIFIED CLASS: PUBLIC STATIC io.opentelemetry.javaagent.tooling.muzzle.Mismatch$MissingFlag  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$MissingFlag(java.util.Collection, java.lang.String, io.opentelemetry.javaagent.extension.muzzle.Flag, int)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$MissingFlag(java.util.Collection, java.lang.String, io.opentelemetry.javaagent.tooling.muzzle.references.Flag, int)
+***! MODIFIED CLASS: PUBLIC STATIC io.opentelemetry.javaagent.tooling.muzzle.Mismatch$MissingMethod  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$MissingMethod(io.opentelemetry.javaagent.extension.muzzle.ClassRef, io.opentelemetry.javaagent.extension.muzzle.MethodRef)
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$MissingMethod(io.opentelemetry.javaagent.extension.muzzle.ClassRef, io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper$Method)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$MissingMethod(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef, io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper$Method)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$MissingMethod(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef, io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef)
+***! MODIFIED CLASS: PUBLIC STATIC io.opentelemetry.javaagent.tooling.muzzle.Mismatch$ReferenceCheckError  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED CONSTRUCTOR: PUBLIC(-) Mismatch$ReferenceCheckError(java.lang.Exception, io.opentelemetry.javaagent.extension.muzzle.ClassRef, java.lang.ClassLoader)
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Mismatch$ReferenceCheckError(java.lang.Exception, io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef, java.lang.ClassLoader)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) void collectReferencesFromResource(java.lang.String)
+		---  REMOVED ANNOTATION: java.lang.Deprecated
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getClassName()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getFields()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getFlags()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getInterfaceNames()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getMethods()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getSources()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getSuperClassName()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef merge(io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder newBuilder(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) java.lang.String toString()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addField(io.opentelemetry.javaagent.tooling.muzzle.references.Source[], io.opentelemetry.javaagent.tooling.muzzle.references.Flag[], java.lang.String, net.bytebuddy.jar.asm.Type, boolean)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addFlag(io.opentelemetry.javaagent.tooling.muzzle.references.Flag)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addInterfaceName(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addInterfaceNames(java.util.Collection)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addMethod(io.opentelemetry.javaagent.tooling.muzzle.references.Source[], io.opentelemetry.javaagent.tooling.muzzle.references.Flag[], java.lang.String, net.bytebuddy.jar.asm.Type, net.bytebuddy.jar.asm.Type[])
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addSource(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder addSource(java.lang.String, int)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder setSuperClassName(java.lang.String)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) boolean equals(java.lang.Object)
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getDescriptor()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getFlags()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getName()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getSources()
+	+++  NEW METHOD: PUBLIC(+) int hashCode()
+	+++  NEW METHOD: PUBLIC(+) boolean isDeclared()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String toString()
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) boolean matches(int)
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String name()
++++  NEW ENUM: PUBLIC(+) ABSTRACT(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag  (compatible)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.javaagent.tooling.muzzle.references.Flag
+	+++  NEW INTERFACE: java.lang.Comparable
+	+++  NEW INTERFACE: java.io.Serializable
+	+++  NEW SUPERCLASS: java.lang.Enum
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag NON_FINAL
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag INTERFACE
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag FINAL
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag ABSTRACT
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag NON_INTERFACE
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag valueOf(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$ManifestationFlag[] values()
++++  NEW ENUM: PUBLIC(+) ABSTRACT(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag  (compatible)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.javaagent.tooling.muzzle.references.Flag
+	+++  NEW INTERFACE: java.lang.Comparable
+	+++  NEW INTERFACE: java.io.Serializable
+	+++  NEW SUPERCLASS: java.lang.Enum
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag PACKAGE_OR_HIGHER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag PROTECTED_OR_HIGHER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag PRIVATE_OR_HIGHER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag PUBLIC
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag valueOf(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$MinimumVisibilityFlag[] values()
++++  NEW ENUM: PUBLIC(+) ABSTRACT(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$OwnershipFlag  (compatible)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.javaagent.tooling.muzzle.references.Flag
+	+++  NEW INTERFACE: java.lang.Comparable
+	+++  NEW INTERFACE: java.io.Serializable
+	+++  NEW SUPERCLASS: java.lang.Enum
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$OwnershipFlag NON_STATIC
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$OwnershipFlag STATIC
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$OwnershipFlag valueOf(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$OwnershipFlag[] values()
++++  NEW ENUM: PUBLIC(+) ABSTRACT(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag  (compatible)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.javaagent.tooling.muzzle.references.Flag
+	+++  NEW INTERFACE: java.lang.Comparable
+	+++  NEW INTERFACE: java.io.Serializable
+	+++  NEW SUPERCLASS: java.lang.Enum
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag PACKAGE
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag PUBLIC
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag PROTECTED
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag PRIVATE
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag valueOf(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.javaagent.tooling.muzzle.references.Flag$VisibilityFlag[] values()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) boolean equals(java.lang.Object)
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getDescriptor()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getFlags()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getName()
+	+++  NEW METHOD: PUBLIC(+) java.util.Set getSources()
+	+++  NEW METHOD: PUBLIC(+) int hashCode()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String toString()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.javaagent.tooling.muzzle.references.Source  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) Source(java.lang.String, int)
+	+++  NEW METHOD: PUBLIC(+) boolean equals(java.lang.Object)
+	+++  NEW METHOD: PUBLIC(+) int getLine()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getName()
+	+++  NEW METHOD: PUBLIC(+) int hashCode()
+	+++  NEW METHOD: PUBLIC(+) java.lang.String toString()
