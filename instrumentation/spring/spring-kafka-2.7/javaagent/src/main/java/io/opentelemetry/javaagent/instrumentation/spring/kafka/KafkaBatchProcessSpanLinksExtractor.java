@@ -32,7 +32,9 @@ public class KafkaBatchProcessSpanLinksExtractor
     // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though there's
     // no current CONSUMER span
     if (it instanceof KafkaClientsConsumerProcessWrapper) {
-      it = ((KafkaClientsConsumerProcessWrapper<Iterator<? extends ConsumerRecord<?, ?>>>) it).unwrap();
+      it =
+          ((KafkaClientsConsumerProcessWrapper<Iterator<? extends ConsumerRecord<?, ?>>>) it)
+              .unwrap();
     }
 
     while (it.hasNext()) {
