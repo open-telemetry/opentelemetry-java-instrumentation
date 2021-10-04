@@ -10,8 +10,8 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
@@ -40,9 +40,16 @@ final class ResteasyClientHttpAttributesExtractor
 
   @Override
   protected List<String> requestHeader(ClientInvocation httpRequest, String name) {
-    return httpRequest.getHeaders().getHeaders().getOrDefault(name, emptyList()).stream()
-        .map(String::valueOf)
-        .collect(Collectors.toList());
+    List<Object> rawHeaders = httpRequest.getHeaders().getHeaders().getOrDefault(name, emptyList());
+    if (rawHeaders.isEmpty()) {
+      return emptyList();
+    }
+    List<String> stringHeaders = new ArrayList<>(rawHeaders.size());
+    int i = 0;
+    for (Object headerValue : rawHeaders) {
+      stringHeaders.set(i++, String.valueOf(headerValue));
+    }
+    return stringHeaders;
   }
 
   @Override

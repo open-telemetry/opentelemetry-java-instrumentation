@@ -12,8 +12,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientHttpAttributesExtractor
@@ -41,9 +41,16 @@ final class JaxRsClientHttpAttributesExtractor
 
   @Override
   protected List<String> requestHeader(ClientRequest httpRequest, String name) {
-    return httpRequest.getHeaders().getOrDefault(name, emptyList()).stream()
-        .map(String::valueOf)
-        .collect(Collectors.toList());
+    List<Object> rawHeaders = httpRequest.getHeaders().getOrDefault(name, emptyList());
+    if (rawHeaders.isEmpty()) {
+      return emptyList();
+    }
+    List<String> stringHeaders = new ArrayList<>(rawHeaders.size());
+    int i = 0;
+    for (Object headerValue : rawHeaders) {
+      stringHeaders.set(i++, String.valueOf(headerValue));
+    }
+    return stringHeaders;
   }
 
   @Override

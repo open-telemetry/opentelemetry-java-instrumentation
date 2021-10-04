@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpResponse;
@@ -77,9 +77,7 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   protected List<String> requestHeader(ClassicHttpRequest request, String name) {
-    return Arrays.stream(request.getHeaders(name))
-        .map(Header::getValue)
-        .collect(Collectors.toList());
+    return headersToList(request.getHeaders(name));
   }
 
   @Override
@@ -142,8 +140,18 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Override
   protected List<String> responseHeader(
       ClassicHttpRequest request, HttpResponse response, String name) {
-    return Arrays.stream(response.getHeaders(name))
-        .map(Header::getValue)
-        .collect(Collectors.toList());
+    return headersToList(response.getHeaders(name));
+  }
+
+  // minimize memory overhead by not using streams
+  private static List<String> headersToList(Header[] headers) {
+    if (headers.length == 0) {
+      return Collections.emptyList();
+    }
+    List<String> headersList = new ArrayList<>(headers.length);
+    for (int i = 0; i < headers.length; ++i) {
+      headersList.set(i, headers[i].getValue());
+    }
+    return headersList;
   }
 }

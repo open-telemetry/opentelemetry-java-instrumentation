@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -79,8 +78,6 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Override
   protected List<String> responseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
-    return Arrays.stream(response.getHeaders(name))
-        .map(Header::getValue)
-        .collect(Collectors.toList());
+    return headersToList(response.getHeaders(name));
   }
 }
