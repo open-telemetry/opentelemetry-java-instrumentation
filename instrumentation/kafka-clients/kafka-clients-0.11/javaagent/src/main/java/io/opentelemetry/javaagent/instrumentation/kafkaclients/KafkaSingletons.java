@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
-import io.opentelemetry.instrumentation.kafka.ReceivedRecords;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterBuilder;
+import io.opentelemetry.instrumentation.kafka.internal.ReceivedRecords;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 

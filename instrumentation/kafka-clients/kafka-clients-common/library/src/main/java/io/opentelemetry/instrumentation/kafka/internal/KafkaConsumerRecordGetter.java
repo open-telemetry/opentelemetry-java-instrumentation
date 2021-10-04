@@ -3,28 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafka;
+package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.Headers;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class KafkaHeadersGetter implements TextMapGetter<Headers> {
+public final class KafkaConsumerRecordGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
   @Override
-  public Iterable<String> keys(Headers carrier) {
-    return StreamSupport.stream(carrier.spliterator(), false)
+  public Iterable<String> keys(ConsumerRecord<?, ?> carrier) {
+    return StreamSupport.stream(carrier.headers().spliterator(), false)
         .map(Header::key)
         .collect(Collectors.toList());
   }
 
   @Nullable
   @Override
-  public String get(@Nullable Headers carrier, String key) {
-    Header header = carrier.lastHeader(key);
+  public String get(@Nullable ConsumerRecord<?, ?> carrier, String key) {
+    Header header = carrier.headers().lastHeader(key);
     if (header == null) {
       return null;
     }
