@@ -20,16 +20,18 @@ public abstract class SpymemcachedRequest {
   public abstract String getStatement();
 
   public String dbOperation() {
-    char[] chars =
-        getStatement()
-            .replaceFirst("^async", "")
-            // 'CAS' name is special, we have to lowercase whole name
-            .replaceFirst("^CAS", "cas")
-            .toCharArray();
+    String statement = getStatement();
+    if (statement.startsWith("async")) {
+      statement = statement.substring("async".length());
+    }
+    if (statement.startsWith("CAS")) {
+      // 'CAS' name is special, we have to lowercase whole name
+      return "cas" + statement.substring("CAS".length());
+    }
 
+    char[] chars = statement.toCharArray();
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
-
     return new String(chars);
   }
 }
