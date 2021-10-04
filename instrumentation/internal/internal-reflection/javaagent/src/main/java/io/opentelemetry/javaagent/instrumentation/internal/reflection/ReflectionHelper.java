@@ -23,7 +23,7 @@ public final class ReflectionHelper {
     List<Field> result = new ArrayList<>(fields.length);
     for (Field field : fields) {
       // FieldBackedProvider marks added fields as synthetic
-      if (field.isSynthetic() && field.getName().startsWith("__opentelemetryContext$")) {
+      if (field.isSynthetic() && field.getName().startsWith("__opentelemetryVirtualField$")) {
         continue;
       }
       result.add(field);
@@ -40,8 +40,8 @@ public final class ReflectionHelper {
     for (Method method : methods) {
       // FieldBackedProvider marks added method as synthetic
       if (method.isSynthetic()
-          && (method.getName().startsWith("get__opentelemetryContext$")
-              || method.getName().startsWith("set__opentelemetryContext$"))) {
+          && (method.getName().startsWith("get__opentelemetryVirtualField$")
+              || method.getName().startsWith("set__opentelemetryVirtualField$"))) {
         continue;
       }
       result.add(method);
