@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.6.2 - 2021-09-30
+
+### 🛠️ Bug fixes
+
+- The 1.6.1 patch release was not backwards compatible with javaagent extensions built against 1.6.0
+  ([#4245](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4245))
+
 ## Version 1.6.1 - 2021-09-29
 
 ### 🛠️ Bug fixes
