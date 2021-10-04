@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kafka;
+package io.opentelemetry.javaagent.bootstrap.kafka;
 
-public final class KafkaTracingWrapperUtil {
+public final class KafkaClientsConsumerProcessTracing {
   private static final ThreadLocal<Boolean> wrappingEnabled = ThreadLocal.withInitial(() -> true);
 
-  private KafkaTracingWrapperUtil() {}
+  private KafkaClientsConsumerProcessTracing() {}
 
   public static void enableWrapping() {
     wrappingEnabled.set(true);

@@ -11,15 +11,15 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrapper;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterator<K, V>
-    implements Iterator<ConsumerRecord<K, V>>, KafkaConsumerIteratorWrapper<K, V> {
-
+    implements Iterator<ConsumerRecord<K, V>>,
+    KafkaClientsConsumerProcessWrapper<Iterator<ConsumerRecord<K, V>>> {
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
   private final Context parentContext;
 
@@ -45,7 +45,7 @@ public class TracingIterator<K, V>
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
       Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable SpanContext receiveSpanContext) {
-    if (KafkaTracingWrapperUtil.wrappingEnabled()) {
+    if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
       return new TracingIterator<>(delegateIterator, receiveSpanContext);
     }
     return delegateIterator;

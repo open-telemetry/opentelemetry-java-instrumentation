@@ -12,6 +12,7 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":instrumentation:kafka-clients:kafka-clients-0.11:bootstrap"))
   implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
 
   library("org.apache.kafka:kafka-streams:0.11.0.0")

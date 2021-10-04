@@ -11,10 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrapper;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -54,7 +53,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
+      VirtualField<ConsumerRecord<?, ?>, SpanContext> singleRecordReceiveSpan =
           VirtualField.find(ConsumerRecord.class, SpanContext.class);
 
       for (ConsumerRecord<?, ?> record : records) {
@@ -68,12 +67,12 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
   public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      KafkaTracingWrapperUtil.disableWrapping();
+      KafkaClientsConsumerProcessTracing.disableWrapping();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {
-      KafkaTracingWrapperUtil.enableWrapping();
+      KafkaClientsConsumerProcessTracing.enableWrapping();
     }
   }
 }

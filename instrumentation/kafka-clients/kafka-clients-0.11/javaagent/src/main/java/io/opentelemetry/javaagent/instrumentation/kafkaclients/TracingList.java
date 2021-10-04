@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaTracingWrapperUtil;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -24,8 +24,8 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   public static <K, V> List<ConsumerRecord<K, V>> wrap(
       List<ConsumerRecord<K, V>> delegate, @Nullable SpanContext receiveSpanContext) {
-    if (KafkaTracingWrapperUtil.wrappingEnabled()) {
-      return new TracingList(delegate, receiveSpanContext);
+    if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
+      return new TracingList<>(delegate, receiveSpanContext);
     }
     return delegate;
   }
