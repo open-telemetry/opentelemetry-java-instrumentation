@@ -21,6 +21,7 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
 
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WrappedLambda wrappedLambda;
+  private final Method targetMethod;
   private final BiFunction<I, Class, Object> parameterMapper;
 
   protected TracingRequestWrapperBase(BiFunction<I, Class, Object> parameterMapper) {
@@ -37,12 +38,12 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
       BiFunction<I, Class, Object> parameterMapper) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
     this.wrappedLambda = wrappedLambda;
+    this.targetMethod = wrappedLambda.getRequestTargetMethod();
     this.parameterMapper = parameterMapper;
   }
 
   @Override
   protected O doHandleRequest(I input, Context context) {
-    Method targetMethod = wrappedLambda.getRequestTargetMethod();
     Object[] parameters = LambdaParameters.toArray(targetMethod, input, context, parameterMapper);
     O result;
     try {

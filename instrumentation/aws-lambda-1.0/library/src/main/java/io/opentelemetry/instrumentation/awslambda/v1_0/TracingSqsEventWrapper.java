@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 public class TracingSqsEventWrapper extends TracingSqsEventHandler {
 
   private final WrappedLambda wrappedLambda;
+  private final Method targetMethod;
 
   public TracingSqsEventWrapper() {
     this(OpenTelemetrySdkAutoConfiguration.initialize(), WrappedLambda.fromConfiguration());
@@ -24,11 +25,11 @@ public class TracingSqsEventWrapper extends TracingSqsEventHandler {
   TracingSqsEventWrapper(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
     this.wrappedLambda = wrappedLambda;
+    this.targetMethod = wrappedLambda.getRequestTargetMethod();
   }
 
   @Override
   protected void handleEvent(SQSEvent sqsEvent, Context context) {
-    Method targetMethod = wrappedLambda.getRequestTargetMethod();
     Object[] parameters =
         LambdaParameters.toArray(targetMethod, sqsEvent, context, (event, clazz) -> event);
     try {
