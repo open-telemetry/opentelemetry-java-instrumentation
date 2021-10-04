@@ -185,7 +185,7 @@ public abstract class Mismatch {
   }
 
   /**
-   * Represents failure to inject {@link InstrumentationModule#getMuzzleHelperClassNames()} into
+   * Represents failure to inject {@link InstrumentationModuleMuzzle#getMuzzleHelperClassNames()} into
    * some classloader.
    */
   public static class HelperClassesInjectionError extends Mismatch {
