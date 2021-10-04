@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
-<<<<<<< HEAD
-=======
-import io.opentelemetry.instrumentation.kafka.KafkaConsumerRecordGetter;
->>>>>>> Move classes used by multiple instrumentations into bootstrap module to ensure that everybody uses the same copy of them
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -24,6 +26,7 @@ public class KafkaBatchProcessSpanLinksExtractor
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, ConsumerRecords<?, ?> records) {
 

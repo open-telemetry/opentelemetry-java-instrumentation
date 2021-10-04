@@ -19,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterator<K, V>
     implements Iterator<ConsumerRecord<K, V>>,
-    KafkaClientsConsumerProcessWrapper<Iterator<ConsumerRecord<K, V>>> {
+        KafkaClientsConsumerProcessWrapper<Iterator<ConsumerRecord<K, V>>> {
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
   private final Context parentContext;
 
