@@ -12,7 +12,7 @@ import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracing;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnEndExtractor;
 import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
@@ -23,9 +23,8 @@ public final class ArmeriaSingletons {
   public static final Function<? super HttpService, ? extends HttpService> SERVER_DECORATOR;
 
   static {
-    PeerServiceAttributesOnStartExtractor<RequestContext, RequestLog>
-        peerServiceAttributesExtractor =
-            PeerServiceAttributesOnStartExtractor.create(new ArmeriaNetAttributesExtractor());
+    PeerServiceAttributesOnEndExtractor<RequestContext, RequestLog> peerServiceAttributesExtractor =
+        PeerServiceAttributesOnEndExtractor.create(new ArmeriaNetAttributesExtractor());
 
     ArmeriaTracing tracing =
         ArmeriaTracing.newBuilder(GlobalOpenTelemetry.get())
