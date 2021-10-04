@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterBuilder;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public final class KafkaStreamsSingletons {

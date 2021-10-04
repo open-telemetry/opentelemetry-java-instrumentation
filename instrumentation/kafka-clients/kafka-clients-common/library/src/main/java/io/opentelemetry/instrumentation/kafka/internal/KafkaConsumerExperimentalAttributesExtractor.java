@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafka;
+package io.opentelemetry.instrumentation.kafka.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 

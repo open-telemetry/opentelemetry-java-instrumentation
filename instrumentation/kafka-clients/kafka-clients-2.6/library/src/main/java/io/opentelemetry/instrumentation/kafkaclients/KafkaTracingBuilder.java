@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.kafka.KafkaInstrumenterBuilder;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
