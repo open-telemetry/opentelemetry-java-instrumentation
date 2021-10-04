@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.context;
+package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -13,13 +13,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
-import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -57,8 +57,8 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * InstrumentationContextProvider which stores context in a field that is injected into a class and
- * falls back to global map if field was not injected.
+ * A {@link VirtualFieldImplementationInstaller} which stores context in a field that is injected
+ * into a class and falls back to global map if field was not injected.
  *
  * <p>This is accomplished by
  *
@@ -73,37 +73,37 @@ import net.bytebuddy.utility.JavaModule;
  * </ol>
  *
  * <p>Example:<br>
- * <em>VirtualField.find(Runnable.class, RunnableState.class)")</em><br>
+ * <em>VirtualField.find(Runnable.class, RunnableState.class)</em><br>
  * is rewritten to:<br>
- * <em>FieldBackedProvider$ContextStore$Runnable$RunnableState12345.getContextStore(Runnable.class,
+ * <em>FieldBackedImplementation$VirtualField$Runnable$RunnableState12345.getVirtualField(Runnable.class,
  * RunnableState.class)</em>
  */
-public class FieldBackedProvider implements InstrumentationContextProvider {
+public class FieldBackedImplementationInstaller implements VirtualFieldImplementationInstaller {
 
   private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(FieldBackedProvider.class);
+      TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
 
   /**
-   * Note: the value here has to be inside on of the prefixes in
-   * io.opentelemetry.javaagent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that
+   * Note: the value here has to be inside on of the prefixes in {@link
+   * io.opentelemetry.javaagent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. This ensures that
    * 'isolating' (or 'module') classloaders like jboss and osgi see injected classes. This works
    * because we instrument those classloaders to load everything inside bootstrap packages.
    */
   private static final String DYNAMIC_CLASSES_PACKAGE =
       "io.opentelemetry.javaagent.bootstrap.instrumentation.context.";
 
-  private static final String INJECTED_FIELDS_MARKER_CLASS_NAME =
-      Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class);
+  private static final String INSTALLED_FIELDS_MARKER_CLASS_NAME =
+      Utils.getInternalName(VirtualFieldInstalledMarker.class);
 
-  private static final Method CONTEXT_GET_METHOD;
-  private static final Method GET_CONTEXT_STORE_METHOD;
+  private static final Method FIND_VIRTUAL_FIELD_METHOD;
+  private static final Method FIND_VIRTUAL_FIELD_IMPL_METHOD;
 
   static {
     try {
-      CONTEXT_GET_METHOD = VirtualField.class.getMethod("find", Class.class, Class.class);
-      GET_CONTEXT_STORE_METHOD =
+      FIND_VIRTUAL_FIELD_METHOD = VirtualField.class.getMethod("find", Class.class, Class.class);
+      FIND_VIRTUAL_FIELD_IMPL_METHOD =
           VirtualFieldImplementationTemplate.class.getMethod(
-              "getContextStore", Class.class, Class.class);
+              "getVirtualField", Class.class, Class.class);
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -114,7 +114,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
-  private final ContextStoreMappings contextStore;
+  private final VirtualFieldMappings virtualFieldMappings;
 
   // fields-accessor-interface-name -> fields-accessor-interface-dynamic-type
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
@@ -122,57 +122,58 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
 
   // context-store-type-name -> context-store-type-name-dynamic-type
-  private final Map<String, DynamicType.Unloaded<?>> contextStoreImplementations;
+  private final Map<String, DynamicType.Unloaded<?>> virtualFieldImplementations;
 
-  private final AgentBuilder.Transformer contextStoreImplementationsInjector;
+  private final AgentBuilder.Transformer virtualFieldImplementationsInjector;
 
   private final Instrumentation instrumentation;
 
-  public FieldBackedProvider(Class<?> instrumenterClass, ContextStoreMappings contextStore) {
+  public FieldBackedImplementationInstaller(
+      Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
     this.instrumenterClass = instrumenterClass;
-    this.contextStore = contextStore;
+    this.virtualFieldMappings = virtualFieldMappings;
     // This class is used only when running with javaagent, thus this calls is safe
     this.instrumentation = InstrumentationHolder.getInstrumentation();
 
     byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
     fieldAccessorInterfacesInjector = bootstrapHelperInjector(fieldAccessorInterfaces.values());
-    contextStoreImplementations = generateContextStoreImplementationClasses();
-    contextStoreImplementationsInjector =
-        bootstrapHelperInjector(contextStoreImplementations.values());
+    virtualFieldImplementations = generateVirtualFieldImplementationClasses();
+    virtualFieldImplementationsInjector =
+        bootstrapHelperInjector(virtualFieldImplementations.values());
   }
 
-  public static <Q extends K, K, C> VirtualField<Q, C> getContextStore(
-      Class<K> keyClass, Class<C> contextClass) {
+  public static <Q extends K, K, C> VirtualField<Q, C> findVirtualField(
+      Class<K> type, Class<C> fieldType) {
     try {
-      String contextStoreClassName =
-          getContextStoreImplementationClassName(keyClass.getName(), contextClass.getName());
-      Class<?> contextStoreClass = Class.forName(contextStoreClassName, false, null);
-      Method method = contextStoreClass.getMethod("getContextStore", Class.class, Class.class);
-      return (VirtualField<Q, C>) method.invoke(null, keyClass, contextClass);
+      String virtualFieldImplClassName =
+          getVirtualFieldImplementationClassName(type.getName(), fieldType.getName());
+      Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
+      Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
+      return (VirtualField<Q, C>) method.invoke(null, type, fieldType);
     } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException("Context store not found", exception);
+      throw new IllegalStateException("VirtualField not found", exception);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
-      throw new IllegalStateException("Failed to get context store", exception);
+      throw new IllegalStateException("Failed to get VirtualField", exception);
     }
   }
 
   @Override
-  public AgentBuilder.Identified.Extendable instrumentationTransformer(
+  public AgentBuilder.Identified.Extendable rewriteVirtualFieldsCalls(
       AgentBuilder.Identified.Extendable builder) {
-    if (!contextStore.isEmpty()) {
+    if (!virtualFieldMappings.isEmpty()) {
       /*
        * Install transformer that rewrites accesses to context store with specialized bytecode that
        * invokes appropriate storage implementation.
        */
       builder =
-          builder.transform(getTransformerForAsmVisitor(getContextStoreReadsRewritingVisitor()));
+          builder.transform(getTransformerForAsmVisitor(getVirtualFieldFindsRewritingVisitor()));
       builder = injectHelpersIntoBootstrapClassloader(builder);
     }
     return builder;
   }
 
-  private AsmVisitorWrapper getContextStoreReadsRewritingVisitor() {
+  private AsmVisitorWrapper getVirtualFieldFindsRewritingVisitor() {
     return new AsmVisitorWrapper() {
       @Override
       public int mergeWriter(int flags) {
@@ -209,54 +210,56 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               public void visitMethodInsn(
                   int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 pushOpcode(opcode);
-                if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass()).equals(owner)
-                    && CONTEXT_GET_METHOD.getName().equals(name)
-                    && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  logger.trace("Found context-store access in {}", instrumenterClass.getName());
+                if (Utils.getInternalName(FIND_VIRTUAL_FIELD_METHOD.getDeclaringClass())
+                        .equals(owner)
+                    && FIND_VIRTUAL_FIELD_METHOD.getName().equals(name)
+                    && Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_METHOD).equals(descriptor)) {
+                  logger.trace(
+                      "Found VirtualField#find() access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
-                  `InstrumentationContext.get(K.class, V.class)`. If it does the inside of this if rewrites it to call
+                  `VirtualField.find(K.class, V.class)`. If it does the inside of this if rewrites it to call
                   dynamically injected context store implementation instead.
                    */
                   if ((insnStack[0] == Opcodes.INVOKESTATIC
                           && insnStack[1] == Opcodes.LDC
                           && insnStack[2] == Opcodes.LDC)
                       && (stack[0] instanceof Type && stack[1] instanceof Type)) {
-                    String contextClassName = ((Type) stack[0]).getClassName();
-                    String keyClassName = ((Type) stack[1]).getClassName();
-                    TypeDescription contextStoreImplementationClass =
-                        getContextStoreImplementation(keyClassName, contextClassName);
+                    String fieldTypeName = ((Type) stack[0]).getClassName();
+                    String typeName = ((Type) stack[1]).getClassName();
+                    TypeDescription virtualFieldImplementationClass =
+                        getVirtualFieldImplementation(typeName, fieldTypeName);
                     if (logger.isTraceEnabled()) {
                       logger.trace(
-                          "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
+                          "Rewriting VirtualField#find() for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),
-                          keyClassName,
-                          contextClassName);
+                          typeName,
+                          fieldTypeName);
                     }
-                    if (contextStoreImplementationClass == null) {
+                    if (virtualFieldImplementationClass == null) {
                       throw new IllegalStateException(
                           String.format(
-                              "Incorrect Context Api Usage detected. Cannot find map holder class for %s context %s. Was that class defined in contextStore for instrumentation %s?",
-                              keyClassName, contextClassName, instrumenterClass.getName()));
+                              "Incorrect VirtualField usage detected. Cannot find implementation for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
+                              typeName, fieldTypeName, instrumenterClass.getName()));
                     }
-                    if (!contextStore.hasMapping(keyClassName, contextClassName)) {
+                    if (!virtualFieldMappings.hasMapping(typeName, fieldTypeName)) {
                       throw new IllegalStateException(
                           String.format(
-                              "Incorrect Context Api Usage detected. Incorrect context class %s for instrumentation %s",
-                              contextClassName, instrumenterClass.getName()));
+                              "Incorrect VirtualField usage detected. Cannot find mapping for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
+                              typeName, fieldTypeName, instrumenterClass.getName()));
                     }
-                    // stack: contextClass | keyClass
+                    // stack: fieldType | type
                     mv.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
-                        contextStoreImplementationClass.getInternalName(),
-                        GET_CONTEXT_STORE_METHOD.getName(),
-                        Type.getMethodDescriptor(GET_CONTEXT_STORE_METHOD),
+                        virtualFieldImplementationClass.getInternalName(),
+                        FIND_VIRTUAL_FIELD_IMPL_METHOD.getName(),
+                        Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_IMPL_METHOD),
                         /* isInterface= */ false);
                     return;
                   }
                   throw new IllegalStateException(
-                      "Incorrect Context Api Usage detected. Key and context class must be class-literals. Example of correct usage: VirtualField.find(Runnable.class, RunnableContext.class)");
+                      "Incorrect VirtualField usage detected. Type and field type must be class-literals. Example of correct usage: VirtualField.find(Runnable.class, RunnableContext.class)");
                 } else {
                   super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 }
@@ -317,18 +320,18 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
       AgentBuilder.Identified.Extendable builder) {
     /*
-     * We inject into bootstrap classloader because field accessor interfaces are needed by context
-     * store implementations. Unfortunately this forces us to remove stored type checking because
+     * We inject into bootstrap classloader because field accessor interfaces are needed by virtual
+     * field implementations. Unfortunately this forces us to remove stored type checking because
      * actual classes may not be available at this point.
      */
     builder = builder.transform(fieldAccessorInterfacesInjector);
 
     /*
-     * We inject context store implementation into bootstrap classloader because same implementation
+     * We inject virtual field implementations into bootstrap classloader because same implementation
      * may be used by different instrumentations and it has to use same static map in case of
      * fallback to map-backed storage.
      */
-    builder = builder.transform(contextStoreImplementationsInjector);
+    builder = builder.transform(virtualFieldImplementationsInjector);
     return builder;
   }
 
@@ -349,7 +352,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         return injector.transform(
             builder,
             typeDescription,
-            // context store implementation classes will always go to the bootstrap
+            // virtual field implementation classes will always go to the bootstrap
             null,
             module);
       }
@@ -357,43 +360,44 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   /*
-  Set of pairs (context holder, context class) for which we have matchers installed.
+  Set of pairs (type name, field type name) for which we have matchers installed.
   We use this to make sure we do not install matchers repeatedly for cases when same
   context class is used by multiple instrumentations.
    */
-  private static final Set<Map.Entry<String, String>> INSTALLED_CONTEXT_MATCHERS = new HashSet<>();
+  private static final Set<Map.Entry<String, String>> INSTALLED_VIRTUAL_FIELD_MATCHERS =
+      new HashSet<>();
 
   /** Clear set that prevents multiple matchers for same context class. */
   public static void resetContextMatchers() {
-    synchronized (INSTALLED_CONTEXT_MATCHERS) {
-      INSTALLED_CONTEXT_MATCHERS.clear();
+    synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
+      INSTALLED_VIRTUAL_FIELD_MATCHERS.clear();
     }
   }
 
   @Override
-  public AgentBuilder.Identified.Extendable additionalInstrumentation(
+  public AgentBuilder.Identified.Extendable installFields(
       AgentBuilder.Identified.Extendable builder) {
 
     if (FIELD_INJECTION_ENABLED) {
-      for (Map.Entry<String, String> entry : contextStore.entrySet()) {
+      for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
         /*
-         * For each context store defined in a current instrumentation we create an agent builder
+         * For each virtual field defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
          * Note: this synchronization should not have any impact on performance
          * since this is done when agent builder is being made, it doesn't affect actual
          * class transformation.
          */
-        synchronized (INSTALLED_CONTEXT_MATCHERS) {
-          if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
+        synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
+          if (INSTALLED_VIRTUAL_FIELD_MATCHERS.contains(entry)) {
             logger.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
           logger.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
-          INSTALLED_CONTEXT_MATCHERS.add(entry);
+          INSTALLED_VIRTUAL_FIELD_MATCHERS.add(entry);
 
           /*
-           * For each context store defined in a current instrumentation we create an agent builder
+           * For each virtual field defined in a current instrumentation we create an agent builder
            * that injects necessary fields.
            */
           builder =
@@ -439,12 +443,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         return classBeingRedefined == null
             || Arrays.asList(classBeingRedefined.getInterfaces())
-                .contains(FieldBackedContextStoreAppliedMarker.class);
+                .contains(VirtualFieldInstalledMarker.class);
       }
     };
   }
 
-  private AsmVisitorWrapper getFieldInjectionVisitor(String keyClassName, String contextClassName) {
+  private AsmVisitorWrapper getFieldInjectionVisitor(String typeName, String fieldTypeName) {
     return new AsmVisitorWrapper() {
 
       @Override
@@ -468,15 +472,15 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           int writerFlags,
           int readerFlags) {
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
-          // We are using Object class name instead of contextClassName here because this gets
+          // We are using Object class name instead of fieldTypeName here because this gets
           // injected onto Bootstrap classloader where context class may be unavailable
           private final TypeDescription contextType =
               new TypeDescription.ForLoadedType(Object.class);
-          private final String fieldName = getContextFieldName(keyClassName);
-          private final String getterMethodName = getContextGetterName(keyClassName);
-          private final String setterMethodName = getContextSetterName(keyClassName);
+          private final String fieldName = getRealFieldName(typeName);
+          private final String getterMethodName = getRealGetterName(typeName);
+          private final String setterMethodName = getRealSetterName(typeName);
           private final TypeDescription interfaceType =
-              getFieldAccessorInterface(keyClassName, contextClassName);
+              getFieldAccessorInterface(typeName, fieldTypeName);
           private boolean foundField = false;
           private boolean foundGetter = false;
           private boolean foundSetter = false;
@@ -493,7 +497,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               interfaces = new String[] {};
             }
             Set<String> set = new LinkedHashSet<>(Arrays.asList(interfaces));
-            set.add(INJECTED_FIELDS_MARKER_CLASS_NAME);
+            set.add(INSTALLED_FIELDS_MARKER_CLASS_NAME);
             set.add(interfaceType.getInternalName());
             super.visit(version, access, name, signature, superName, set.toArray(new String[] {}));
           }
@@ -587,11 +591,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
-  private TypeDescription getContextStoreImplementation(
+  private TypeDescription getVirtualFieldImplementation(
       String keyClassName, String contextClassName) {
     DynamicType.Unloaded<?> type =
-        contextStoreImplementations.get(
-            getContextStoreImplementationClassName(keyClassName, contextClassName));
+        virtualFieldImplementations.get(
+            getVirtualFieldImplementationClassName(keyClassName, contextClassName));
     if (type == null) {
       return null;
     } else {
@@ -599,15 +603,15 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
   }
 
-  private Map<String, DynamicType.Unloaded<?>> generateContextStoreImplementationClasses() {
-    Map<String, DynamicType.Unloaded<?>> contextStoreImplementations =
-        new HashMap<>(contextStore.size());
-    for (Map.Entry<String, String> entry : contextStore.entrySet()) {
+  private Map<String, DynamicType.Unloaded<?>> generateVirtualFieldImplementationClasses() {
+    Map<String, DynamicType.Unloaded<?>> virtualFieldImplementations =
+        new HashMap<>(virtualFieldMappings.size());
+    for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
       DynamicType.Unloaded<?> type =
-          makeContextStoreImplementationClass(entry.getKey(), entry.getValue());
-      contextStoreImplementations.put(type.getTypeDescription().getName(), type);
+          makeVirtualFieldImplementationClass(entry.getKey(), entry.getValue());
+      virtualFieldImplementations.put(type.getTypeDescription().getName(), type);
     }
-    return Collections.unmodifiableMap(contextStoreImplementations);
+    return Collections.unmodifiableMap(virtualFieldImplementations);
   }
 
   /**
@@ -618,25 +622,25 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * @param contextClassName context class name
    * @return unloaded dynamic type containing generated class
    */
-  private DynamicType.Unloaded<?> makeContextStoreImplementationClass(
+  private DynamicType.Unloaded<?> makeVirtualFieldImplementationClass(
       String keyClassName, String contextClassName) {
     return byteBuddy
         .rebase(VirtualFieldImplementationTemplate.class)
         .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL, SyntheticState.SYNTHETIC)
-        .name(getContextStoreImplementationClassName(keyClassName, contextClassName))
-        .visit(getContextStoreImplementationVisitor(keyClassName, contextClassName))
+        .name(getVirtualFieldImplementationClassName(keyClassName, contextClassName))
+        .visit(getVirtualFieldImplementationVisitor(keyClassName, contextClassName))
         .make();
   }
 
   /**
-   * Returns a visitor that 'fills in' missing methods into concrete implementation of
-   * ContextStoreImplementationTemplate for given key class name and context class name.
+   * Returns a visitor that 'fills in' missing methods into concrete implementation of {@link
+   * VirtualFieldImplementationTemplate} for given key class name and context class name.
    *
    * @param keyClassName key class name
    * @param contextClassName context class name
    * @return visitor that adds implementation for methods that need to be generated
    */
-  private AsmVisitorWrapper getContextStoreImplementationVisitor(
+  private AsmVisitorWrapper getVirtualFieldImplementationVisitor(
       String keyClassName, String contextClassName) {
     return new AsmVisitorWrapper() {
 
@@ -706,7 +710,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            * @param name name of the method being visited
            */
           private void generateRealGetMethod(String name) {
-            String getterName = getContextGetterName(keyClassName);
+            String getterName = getRealGetterName(keyClassName);
             Label elseLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
@@ -759,7 +763,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            * @param name name of the method being visited
            */
           private void generateRealPutMethod(String name) {
-            String setterName = getContextSetterName(keyClassName);
+            String setterName = getRealSetterName(keyClassName);
             Label elseLabel = new Label();
             Label endLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);
@@ -933,7 +937,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       return map;
     }
 
-    public static VirtualField getContextStore(Class keyClass, Class contextClass) {
+    public static VirtualField getVirtualField(Class keyClass, Class contextClass) {
       // We do not actually check the keyClass here - but that should be fine since compiler would
       // check things for us.
       return INSTANCE;
@@ -953,8 +957,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private Map<String, DynamicType.Unloaded<?>> generateFieldAccessorInterfaces() {
     Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces =
-        new HashMap<>(contextStore.size());
-    for (Map.Entry<String, String> entry : contextStore.entrySet()) {
+        new HashMap<>(virtualFieldMappings.size());
+    for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
       DynamicType.Unloaded<?> type = makeFieldAccessorInterface(entry.getKey(), entry.getValue());
       fieldAccessorInterfaces.put(type.getTypeDescription().getName(), type);
     }
@@ -978,9 +982,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         .makeInterface()
         .merge(SyntheticState.SYNTHETIC)
         .name(getContextAccessorInterfaceName(keyClassName, contextClassName))
-        .defineMethod(getContextGetterName(keyClassName), contextType, Visibility.PUBLIC)
+        .defineMethod(getRealGetterName(keyClassName), contextType, Visibility.PUBLIC)
         .withoutCode()
-        .defineMethod(getContextSetterName(keyClassName), TypeDescription.VOID, Visibility.PUBLIC)
+        .defineMethod(getRealSetterName(keyClassName), TypeDescription.VOID, Visibility.PUBLIC)
         .withParameter(contextType, "value")
         .withoutCode()
         .make();
@@ -990,11 +994,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return (builder, typeDescription, classLoader, module) -> builder.visit(visitor);
   }
 
-  private static String getContextStoreImplementationClassName(
+  private static String getVirtualFieldImplementationClassName(
       String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
-        + FieldBackedProvider.class.getSimpleName()
-        + "$ContextStore$"
+        + FieldBackedImplementationInstaller.class.getSimpleName()
+        + "$VirtualField$"
         + Utils.convertToInnerClassName(keyClassName)
         + "$"
         + Utils.convertToInnerClassName(contextClassName);
@@ -1003,22 +1007,22 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private String getContextAccessorInterfaceName(String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
         + getClass().getSimpleName()
-        + "$ContextAccessor$"
+        + "$VirtualFieldAccessor$"
         + Utils.convertToInnerClassName(keyClassName)
         + "$"
         + Utils.convertToInnerClassName(contextClassName);
   }
 
-  private static String getContextFieldName(String keyClassName) {
-    return "__opentelemetryContext$" + Utils.convertToInnerClassName(keyClassName);
+  private static String getRealFieldName(String keyClassName) {
+    return "__opentelemetryVirtualField$" + Utils.convertToInnerClassName(keyClassName);
   }
 
-  private static String getContextGetterName(String keyClassName) {
-    return "get" + getContextFieldName(keyClassName);
+  private static String getRealGetterName(String keyClassName) {
+    return "get" + getRealFieldName(keyClassName);
   }
 
-  private static String getContextSetterName(String key) {
-    return "set" + getContextFieldName(key);
+  private static String getRealSetterName(String key) {
+    return "set" + getRealFieldName(key);
   }
 
   // Originally found in AgentBuilder.Transformer.NoOp, but removed in 1.10.7

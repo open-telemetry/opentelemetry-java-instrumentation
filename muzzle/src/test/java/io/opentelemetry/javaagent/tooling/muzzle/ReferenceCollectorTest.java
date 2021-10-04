@@ -14,7 +14,7 @@ import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextTestClasses.State;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldTestClasses.State;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
@@ -316,36 +316,35 @@ class ReferenceCollectorTest {
   }
 
   @Test
-  public void shouldCollectContextStoreClasses() {
+  public void shouldCollectVirtualFields() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromAdvice(
-        InstrumentationContextTestClasses.ValidAdvice.class.getName());
+    collector.collectReferencesFromAdvice(VirtualFieldTestClasses.ValidAdvice.class.getName());
     collector.prune();
 
-    ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
-    assertThat(contextStoreMappings.entrySet())
+    VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
+    assertThat(virtualFieldMappings.entrySet())
         .containsExactlyInAnyOrder(
-            entry(InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(InstrumentationContextTestClasses.Key2.class.getName(), Context.class.getName()));
+            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
   }
 
   @Test
-  public void shouldCollectMultipleContextClassesForSingleKey() {
+  public void shouldCollectMultipleVirtualFieldsForSingleClass() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
     collector.collectReferencesFromAdvice(
-        InstrumentationContextTestClasses.TwoContextStoresAdvice.class.getName());
+        VirtualFieldTestClasses.TwoVirtualFieldsInTheSameClassAdvice.class.getName());
     collector.prune();
 
-    ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
-    assertThat(contextStoreMappings.entrySet())
+    VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
+    assertThat(virtualFieldMappings.entrySet())
         .containsExactlyInAnyOrder(
-            entry(InstrumentationContextTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(InstrumentationContextTestClasses.Key1.class.getName(), State.class.getName()));
+            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            entry(VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource
-  public void shouldNotCollectContextStoreClassesForInvalidScenario(
+  public void shouldNotCollectVirtualFieldsForInvalidScenario(
       @SuppressWarnings("unused") String desc, String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
@@ -358,14 +357,14 @@ class ReferenceCollectorTest {
   }
 
   @SuppressWarnings("unused")
-  private static List<Arguments> shouldNotCollectContextStoreClassesForInvalidScenario() {
+  private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
     return Arrays.asList(
         Arguments.of(
             "passing arbitrary variables or parameters to VirtualField.find()",
-            InstrumentationContextTestClasses.NotUsingClassRefAdvice.class.getName()),
+            VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
         Arguments.of(
             "storing class ref in a local var",
-            InstrumentationContextTestClasses.PassingVariableAdvice.class.getName()));
+            VirtualFieldTestClasses.PassingVariableAdvice.class.getName()));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

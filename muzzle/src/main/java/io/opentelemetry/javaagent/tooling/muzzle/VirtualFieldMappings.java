@@ -10,12 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-// TODO: we should rename the class so that it doesn't mention "Context", but "VirtualField"
-// instead; probably once this class is hidden somewhere in the muzzle codegen contract
-public final class ContextStoreMappings {
+public final class VirtualFieldMappings {
   private final Set<Map.Entry<String, String>> entrySet;
 
-  public ContextStoreMappings(Set<Map.Entry<String, String>> entrySet) {
+  public VirtualFieldMappings(Set<Map.Entry<String, String>> entrySet) {
     this.entrySet = entrySet;
   }
 
@@ -27,9 +25,8 @@ public final class ContextStoreMappings {
     return entrySet.isEmpty();
   }
 
-  public boolean hasMapping(String keyClassName, String contextClassName) {
-    return entrySet.contains(
-        new AbstractMap.SimpleImmutableEntry<>(keyClassName, contextClassName));
+  public boolean hasMapping(String typeName, String fieldTypeName) {
+    return entrySet.contains(new AbstractMap.SimpleImmutableEntry<>(typeName, fieldTypeName));
   }
 
   public Set<Map.Entry<String, String>> entrySet() {

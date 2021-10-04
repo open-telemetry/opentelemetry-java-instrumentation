@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference
 // this test is run using
 //   -Dotel.instrumentation.context-test-instrumentation.enabled=true
 // (see integration-tests.gradle)
-class FieldBackedProviderTest extends AgentInstrumentationSpecification {
+class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     TestAgentListenerAccess.addSkipErrorCondition({ typeName, throwable ->
@@ -60,10 +60,10 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
     boolean hasAccessorInterface = false
     boolean accessorInterfaceIsSynthetic = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedImplementationInstaller$VirtualFieldAccessor')) {
         hasAccessorInterface = true
         accessorInterfaceIsSynthetic = inter.isSynthetic()
       }

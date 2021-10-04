@@ -37,7 +37,7 @@ class FieldInjectionDisabledTest extends AgentInstrumentationSpecification {
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker') {
         hasMarkerInterface = true
       }
       if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {

@@ -113,8 +113,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   // helper super classes which are themselves also helpers
   // this is needed for injecting the helper classes into the class loader in the correct order
   private final Set<String> helperSuperClasses = new HashSet<>();
-  private final InstrumentationContextBuilderImpl contextStoreMappingsBuilder =
-      new InstrumentationContextBuilderImpl();
+  private final VirtualFieldMappingsBuilderImpl virtualFieldMappingsBuilder =
+      new VirtualFieldMappingsBuilderImpl();
   private String refSourceClassName;
   private Type refSourceType;
 
@@ -137,8 +137,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     return helperSuperClasses;
   }
 
-  ContextStoreMappings getContextStoreMappings() {
-    return contextStoreMappingsBuilder.build();
+  VirtualFieldMappings getVirtualFieldMappings() {
+    return virtualFieldMappingsBuilder.build();
   }
 
   private void addExtendsReference(ClassRef ref) {
@@ -246,7 +246,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
-        new InstrumentationContextMethodVisitor(
+        new VirtualFieldCollectingMethodVisitor(
             super.visitMethod(access, name, descriptor, signature, exceptions)));
   }
 
@@ -464,12 +464,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     }
   }
 
-  private class InstrumentationContextMethodVisitor extends MethodVisitor {
+  private class VirtualFieldCollectingMethodVisitor extends MethodVisitor {
     // this data structure will remember last two LDC <class> instructions before
-    // VirtualField.get() call
+    // VirtualField.find() call
     private final EvictingQueue<String> lastTwoClassConstants = EvictingQueue.create(2);
 
-    InstrumentationContextMethodVisitor(MethodVisitor methodVisitor) {
+    VirtualFieldCollectingMethodVisitor(MethodVisitor methodVisitor) {
       super(Opcodes.ASM7, methodVisitor);
     }
 
@@ -524,12 +524,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
         if (lastTwoClassConstants.remainingCapacity() == 0) {
-          String className = lastTwoClassConstants.poll();
-          String contextClassName = lastTwoClassConstants.poll();
-          contextStoreMappingsBuilder.register(className, contextClassName);
+          String typeName = lastTwoClassConstants.poll();
+          String fieldTypeName = lastTwoClassConstants.poll();
+          virtualFieldMappingsBuilder.register(typeName, fieldTypeName);
         } else {
           throw new MuzzleCompilationException(
-              "Invalid VirtualField#get(Class, Class) usage: you cannot pass variables,"
+              "Invalid VirtualField#find(Class, Class) usage: you cannot pass variables,"
                   + " method parameters, compute classes; class references need to be passed"
                   + " directly to the get() method");
         }
