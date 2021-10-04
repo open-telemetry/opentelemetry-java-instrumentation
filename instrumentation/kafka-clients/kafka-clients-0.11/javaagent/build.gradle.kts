@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.kafka")
     module.set("kafka-clients")
     versions.set("[0.11.0.0,)")
+    extraDependency(project(":instrumentation:kafka-clients:kafka-clients-0.11:bootstrap"))
     assertInverse.set(true)
   }
 }
