@@ -145,8 +145,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
             "${SemanticAttributes.HTTP_SCHEME}" "http"
             "${SemanticAttributes.HTTP_TARGET}" "/sendResponse"
-            // "localhost" on linux, "127.0.0.1" on windows
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
             "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
@@ -200,8 +200,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
             "${SemanticAttributes.HTTP_SCHEME}" "http"
             "${SemanticAttributes.HTTP_TARGET}" "/sendResponseWithException"
-            // "localhost" on linux, "127.0.0.1" on windows
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
             "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
