@@ -35,7 +35,3 @@ tasks {
     classpath = classpath.plus(files(compileTestKotlin.get().destinationDir))
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}

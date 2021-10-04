@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.test
 
+import static org.awaitility.Awaitility.await
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
@@ -16,6 +18,8 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.lang.reflect.Field
+import java.util.concurrent.ConcurrentHashMap
 import org.junit.Rule
 import org.junit.rules.Timeout
 import spock.lang.Specification
@@ -46,9 +50,104 @@ abstract class InstrumentationSpecification extends Specification {
   }
 
   def cleanup() {
+    ContextRestorer restorer = ContextRestorer.create()
+    if (restorer == null) {
+      tryCleanup()
+      return
+    }
+
+    // If close is called before all request processing threads have completed we might get false
+    // positive notifications for leaked scopes when strict context checks are enabled. Here we
+    // retry close when scope leak was reported.
+    await()
+      .ignoreException(AssertionError)
+      .atMost(15, TimeUnit.SECONDS)
+      .until({
+        restorer.runWithRestore { tryCleanup() }
+        true
+      })
+  }
+
+  def tryCleanup() {
     ContextStorage storage = ContextStorage.get()
     if (storage instanceof AutoCloseable) {
       ((AutoCloseable) storage).close()
+    }
+  }
+
+  // Helper class that allows for retrying ContextStorage close operation by restoring ContextStorage
+  // to the state where it was before close was called.
+  static abstract class ContextRestorer {
+    abstract void restore()
+
+    void runWithRestore(Closure target) {
+      try {
+        target.run()
+      } catch (AssertionError assertionError) {
+        restore()
+        throw assertionError
+      }
+    }
+
+    static ContextRestorer create() {
+      def strictContextStorage = getStrictContextStorage()
+      if (strictContextStorage == null) {
+        return null
+      }
+      def pendingScopes = getStrictContextStoragePendingScopes(strictContextStorage)
+
+      def pendingScopesClass = Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.StrictContextStorage\$PendingScopes")
+      Field mapField = pendingScopesClass.getDeclaredField("map")
+      mapField.setAccessible(true)
+      ConcurrentHashMap map = mapField.get(pendingScopes)
+      Map copy = new HashMap(map)
+
+      return new ContextRestorer() {
+        @Override
+        void restore() {
+          map.putAll(copy)
+        }
+      }
+    }
+
+    static getStrictContextStoragePendingScopes(def strictContextStorage) {
+      def strictContextStorageClass = Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.StrictContextStorage")
+      Field field = strictContextStorageClass.getDeclaredField("pendingScopes")
+      field.setAccessible(true)
+      return field.get(strictContextStorage)
+    }
+
+    static getStrictContextStorage() {
+      def contextStorage = getAgentContextStorage()
+      if (contextStorage == null) {
+        return null
+      }
+      contextStorage = unwrapStrictContextStressor(contextStorage)
+      def contextStorageClass = contextStorage.getClass()
+      if (contextStorageClass.getName().contains("StrictContextStorage")) {
+        return contextStorage
+      }
+      return null
+    }
+
+    static getAgentContextStorage() {
+      try {
+        def contextStorageClass = Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage")
+        def method = contextStorageClass.getDeclaredMethod("get")
+        return method.invoke(null)
+      } catch (Exception exception) {
+        return null
+      }
+    }
+
+    static unwrapStrictContextStressor(def contextStorage) {
+      Class<?> contextStorageClass = contextStorage.getClass()
+      if (contextStorageClass.getName().contains("StrictContextStressor")) {
+        Field field = contextStorageClass.getDeclaredField("contextStorage")
+        field.setAccessible(true)
+        return field.get(contextStorage)
+      }
+      return contextStorage
     }
   }
 

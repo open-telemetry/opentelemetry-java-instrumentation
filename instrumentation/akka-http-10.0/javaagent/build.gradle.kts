@@ -51,7 +51,3 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka-actor-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:akka-actor-fork-join-2.5:javaagent"))
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}
