@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStar
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
 import io.undertow.server.HttpServerExchange;
 
 public final class UndertowSingletons {
@@ -43,7 +43,8 @@ public final class UndertowSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(
+                PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   context = ServerSpanNaming.init(context, CONTAINER);
