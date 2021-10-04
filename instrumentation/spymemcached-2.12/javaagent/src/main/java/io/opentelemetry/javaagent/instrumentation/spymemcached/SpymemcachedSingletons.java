@@ -20,12 +20,11 @@ public final class SpymemcachedSingletons {
   static {
     DbAttributesExtractor<SpymemcachedRequest, Object> attributesExtractor =
         new SpymemcachedAttributeExtractor();
-    SpanNameExtractor<SpymemcachedRequest> spanName = DbSpanNameExtractor
-        .create(attributesExtractor);
+    SpanNameExtractor<SpymemcachedRequest> spanName =
+        DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.newBuilder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
+        Instrumenter.newBuilder(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
