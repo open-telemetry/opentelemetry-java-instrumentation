@@ -11,7 +11,9 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
+// IMPORTANT when updating otelVersion, need to also update grpcVersion
 val otelVersion = "1.6.0"
+val grpcVersion = "1.40.1"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -35,6 +37,7 @@ rootProject.extra["caffeine3Version"] = "3.0.4"
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.12.3",
   "com.google.guava:guava-bom:30.1.1-jre",
+  "io.grpc:grpc-bom:${grpcVersion}",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
