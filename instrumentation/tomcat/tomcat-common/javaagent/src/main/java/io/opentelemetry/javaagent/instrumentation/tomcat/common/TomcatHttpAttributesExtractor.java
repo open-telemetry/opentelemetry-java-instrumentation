@@ -61,7 +61,7 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(Request request, @Nullable Response response) {
+  protected @Nullable String flavor(Request request) {
     String flavor = request.protocol().toString();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions

@@ -35,8 +35,7 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
+  protected @Nullable String flavor(HttpServletRequest request) {
     return request.getProtocol();
   }
 

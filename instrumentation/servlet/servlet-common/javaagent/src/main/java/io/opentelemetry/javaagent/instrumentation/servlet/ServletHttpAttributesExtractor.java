@@ -71,9 +71,7 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected @Nullable String flavor(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
+  protected @Nullable String flavor(ServletRequestContext<REQUEST> requestContext) {
     String flavor = accessor.getRequestProtocol(requestContext.request());
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions

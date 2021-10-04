@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -34,10 +36,22 @@ public abstract class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     super.onEnd(attributes, request, response, error);
+    set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
   }
 
   // Attributes that always exist in a request
 
   @Nullable
   protected abstract String url(REQUEST request);
+
+  // Attributes which are not always available when the request is ready.
+
+  /**
+   * Extracts the {@code http.flavor} span attribute.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
+   */
+  @Nullable
+  protected abstract String flavor(REQUEST request, @Nullable RESPONSE response);
 }
