@@ -11,11 +11,11 @@ for dir in . \
            benchmark-overhead \
            examples/distro \
            examples/extension \
-           smoke-tests/fake-backend \
-           smoke-tests/grpc \
-           smoke-tests/matrix \
-           smoke-tests/play \
-           smoke-tests/springboot
+           smoke-tests/images/fake-backend \
+           smoke-tests/images/grpc \
+           smoke-tests/images/servlet \
+           smoke-tests/images/play \
+           smoke-tests/images/springboot
 do
   (cd $dir && ./gradlew wrapper --gradle-version $GRADLE_VERSION \
                   --gradle-distribution-sha256-sum=$GRADLE_VERSION_CHECKSUM)

@@ -3,7 +3,7 @@ name: PR build fake backend images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/fake-backend/**'
+      - 'smoke-tests/images/fake-backend/**'
       - '.github/workflows/pr-smoke-test-fake-backend-images.yml'
 
 jobs:
@@ -30,11 +30,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
         run: ./gradlew jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: smoke-tests/fake-backend
+        working-directory: smoke-tests/images/fake-backend
 
   buildWindows:
     runs-on: windows-latest
@@ -64,8 +64,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
         run: ./gradlew windowsBackendImageBuild
-        working-directory: smoke-tests/fake-backend
+        working-directory: smoke-tests/images/fake-backend
