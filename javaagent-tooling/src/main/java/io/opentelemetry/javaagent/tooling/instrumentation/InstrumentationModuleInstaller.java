@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.lang.instrument.Instrumentation;
