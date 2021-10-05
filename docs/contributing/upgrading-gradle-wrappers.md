@@ -13,7 +13,7 @@ for dir in . \
            examples/extension \
            smoke-tests/images/fake-backend \
            smoke-tests/images/grpc \
-           smoke-tests/images/matrix \
+           smoke-tests/images/servlet \
            smoke-tests/images/play \
            smoke-tests/images/springboot
 do
