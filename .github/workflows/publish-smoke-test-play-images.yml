@@ -72,4 +72,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          filename: .github/templates/smoke-test-image-publishing-failed.md
+          filename: .github/templates/workflow-failed.md
