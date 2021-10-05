@@ -44,13 +44,6 @@ final class JettyClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
-    return agentField != null ? agentField.getValue() : null;
-  }
-
-  @Override
   protected List<String> requestHeader(Request request, String name) {
     return request.getHeaders().getValuesList(name);
   }

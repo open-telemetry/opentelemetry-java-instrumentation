@@ -10,22 +10,18 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationInstaller;
-import io.opentelemetry.javaagent.tooling.field.NoopVirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
+import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
-import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
-import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappingsBuilderImpl;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
@@ -42,12 +38,15 @@ public final class InstrumentationModuleInstaller {
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLogger = LoggerFactory.getLogger("muzzleMatcher");
-  private final Instrumentation instrumentation;
 
   // Added here instead of AgentInstaller's ignores because it's relatively
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
+
+  private final Instrumentation instrumentation;
+  private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
+      new VirtualFieldImplementationInstallerFactory();
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
     this.instrumentation = instrumentation;
@@ -85,7 +84,7 @@ public final class InstrumentationModuleInstaller {
             Utils.getExtensionsClassLoader(),
             instrumentation);
     VirtualFieldImplementationInstaller contextProvider =
-        getVirtualFieldImplementationInstaller(instrumentationModule);
+        virtualFieldInstallerFactory.create(instrumentationModule);
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
@@ -108,42 +107,12 @@ public final class InstrumentationModuleInstaller {
       TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      extendableAgentBuilder = contextProvider.installFields(extendableAgentBuilder);
+      extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
     }
 
     return agentBuilder;
-  }
-
-  private static VirtualFieldImplementationInstaller getVirtualFieldImplementationInstaller(
-      InstrumentationModule instrumentationModule) {
-
-    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
-      VirtualFieldMappingsBuilderImpl builder = new VirtualFieldMappingsBuilderImpl();
-      ((InstrumentationModuleMuzzle) instrumentationModule).registerMuzzleVirtualFields(builder);
-      VirtualFieldMappings mappings = builder.build();
-      if (!mappings.isEmpty()) {
-        return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
-      }
-    } else {
-      logger.debug(
-          "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {}",
-          instrumentationModule);
-    }
-
-    return NoopVirtualFieldImplementationInstaller.INSTANCE;
-  }
-
-  private static class FieldBackedProviderFactory {
-    static {
-      RuntimeVirtualFieldSupplier.set(FieldBackedImplementationInstaller::findVirtualField);
-    }
-
-    static FieldBackedImplementationInstaller get(
-        Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
-      return new FieldBackedImplementationInstaller(instrumenterClass, virtualFieldMappings);
-    }
   }
 
   /**

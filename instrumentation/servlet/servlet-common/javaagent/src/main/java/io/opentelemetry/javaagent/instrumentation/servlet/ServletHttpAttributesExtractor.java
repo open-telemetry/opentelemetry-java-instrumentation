@@ -38,19 +38,8 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected @Nullable String host(ServletRequestContext<REQUEST> requestContext) {
-    REQUEST request = requestContext.request();
-    return accessor.getRequestServerName(request) + ":" + accessor.getRequestServerPort(request);
-  }
-
-  @Override
   protected @Nullable String scheme(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestScheme(requestContext.request());
-  }
-
-  @Override
-  protected @Nullable String userAgent(ServletRequestContext<REQUEST> requestContext) {
-    return accessor.getRequestHeader(requestContext.request(), "User-Agent");
   }
 
   @Override

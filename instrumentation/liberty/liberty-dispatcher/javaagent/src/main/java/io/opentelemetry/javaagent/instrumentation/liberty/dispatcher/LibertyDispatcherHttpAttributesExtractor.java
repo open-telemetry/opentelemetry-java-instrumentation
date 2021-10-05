@@ -23,11 +23,6 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(LibertyRequest libertyRequest) {
-    return libertyRequest.getHeaderValue("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(LibertyRequest libertyRequest, String name) {
     return libertyRequest.getHeaderValues(name);
   }
@@ -88,11 +83,6 @@ public class LibertyDispatcherHttpAttributesExtractor
       return requestUri + "?" + queryString;
     }
     return requestUri;
-  }
-
-  @Override
-  protected String host(LibertyRequest libertyRequest) {
-    return libertyRequest.getServerName() + ":" + libertyRequest.getServerPort();
   }
 
   @Override

@@ -6,21 +6,31 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIterableWrapper;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterable<K, V>
-    implements Iterable<ConsumerRecord<K, V>>, KafkaConsumerIterableWrapper<K, V> {
+    implements Iterable<ConsumerRecord<K, V>>,
+        KafkaClientsConsumerProcessWrapper<Iterable<ConsumerRecord<K, V>>> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
   @Nullable private final SpanContext receiveSpanContext;
   private boolean firstIterator = true;
 
-  public TracingIterable(
+  protected TracingIterable(
       Iterable<ConsumerRecord<K, V>> delegate, @Nullable SpanContext receiveSpanContext) {
     this.delegate = delegate;
     this.receiveSpanContext = receiveSpanContext;
+  }
+
+  public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
+      Iterable<ConsumerRecord<K, V>> delegate, @Nullable SpanContext receiveSpanContext) {
+    if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
+      return new TracingIterable<>(delegate, receiveSpanContext);
+    }
+    return delegate;
   }
 
   @Override
@@ -30,7 +40,7 @@ public class TracingIterable<K, V>
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // ConsumerRecords is performed in the same thread that called poll()
     if (firstIterator) {
-      it = new TracingIterator<>(delegate.iterator(), receiveSpanContext);
+      it = TracingIterator.wrap(delegate.iterator(), receiveSpanContext);
       firstIterator = false;
     } else {
       it = delegate.iterator();

@@ -30,11 +30,6 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpServletRequest request) {
-    return request.getHeader("user-agent");
-  }
-
-  @Override
   protected List<String> requestHeader(HttpServletRequest request, String name) {
     Enumeration<String> headers = request.getHeaders(name);
     return headers == null ? Collections.emptyList() : Collections.list(headers);
@@ -96,11 +91,6 @@ final class SpringWebMvcHttpAttributesExtractor
       target += "?" + queryString;
     }
     return target;
-  }
-
-  @Override
-  protected @Nullable String host(HttpServletRequest request) {
-    return request.getHeader("host");
   }
 
   @Override

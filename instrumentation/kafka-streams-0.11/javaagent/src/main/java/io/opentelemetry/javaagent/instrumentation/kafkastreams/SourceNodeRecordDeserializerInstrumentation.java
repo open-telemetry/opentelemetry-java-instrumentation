@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.header.Header;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
 public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
@@ -47,20 +47,14 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
     public static void saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
         @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
+      if (result == null) {
+        return;
+      }
 
-      result =
-          new ConsumerRecord<>(
-              result.topic(),
-              result.partition(),
-              result.offset(),
-              result.timestamp(),
-              TimestampType.CREATE_TIME,
-              result.checksum(),
-              result.serializedKeySize(),
-              result.serializedValueSize(),
-              result.key(),
-              result.value(),
-              incoming.headers());
+      // copy headers from incoming to result
+      for (Header header : incoming.headers()) {
+        result.headers().add(header);
+      }
 
       // copy the receive CONSUMER span association
       VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =

@@ -31,11 +31,6 @@ final class GoogleHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpRequest httpRequest) {
-    return httpRequest.getHeaders().getUserAgent();
-  }
-
-  @Override
   protected List<String> requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeaders().getHeaderStringValues(name);
   }

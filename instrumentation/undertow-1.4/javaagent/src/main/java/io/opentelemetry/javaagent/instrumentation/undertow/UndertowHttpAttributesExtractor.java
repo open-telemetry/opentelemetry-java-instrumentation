@@ -26,11 +26,6 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpServerExchange exchange) {
-    return exchange.getRequestHeaders().getFirst("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(HttpServerExchange exchange, String name) {
     HeaderValues values = exchange.getRequestHeaders().get(name);
     return values == null ? Collections.emptyList() : values;
@@ -92,11 +87,6 @@ public class UndertowHttpAttributesExtractor
       return requestPath + "?" + queryString;
     }
     return requestPath;
-  }
-
-  @Override
-  protected @Nullable String host(HttpServerExchange exchange) {
-    return exchange.getHostAndPort();
   }
 
   @Override
