@@ -137,8 +137,8 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            // "localhost" on linux, "127.0.0.1" on windows
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+            // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
