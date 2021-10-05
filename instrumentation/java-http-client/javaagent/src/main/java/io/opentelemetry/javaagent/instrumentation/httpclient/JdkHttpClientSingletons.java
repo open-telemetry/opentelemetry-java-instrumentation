@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
@@ -36,8 +36,7 @@ public class JdkHttpClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(
-                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(SETTER);
   }

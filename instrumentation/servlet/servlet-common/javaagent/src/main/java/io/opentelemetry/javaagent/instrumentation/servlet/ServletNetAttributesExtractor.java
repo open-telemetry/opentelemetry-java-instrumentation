@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
-    extends NetAttributesOnStartExtractor<
+    extends NetAttributesServerExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 

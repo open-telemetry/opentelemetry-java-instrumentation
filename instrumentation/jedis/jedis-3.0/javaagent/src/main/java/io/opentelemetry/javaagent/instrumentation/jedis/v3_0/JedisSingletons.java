@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
@@ -29,8 +29,7 @@ public final class JedisSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(
-                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

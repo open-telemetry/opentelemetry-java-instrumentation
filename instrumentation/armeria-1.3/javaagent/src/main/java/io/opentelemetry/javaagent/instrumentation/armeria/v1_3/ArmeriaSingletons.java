@@ -12,7 +12,7 @@ import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracing;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesClientExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
@@ -25,13 +25,12 @@ public final class ArmeriaSingletons {
   static {
     // TODO (trask) split ArmeriaNetAttributesExtractor into client/server
     //  (and move into ArmeriaTracingBuilder?)
-    PeerServiceAttributesClientExtractor<RequestContext, RequestLog>
-        peerServiceAttributesClientExtractor =
-            PeerServiceAttributesClientExtractor.create(new ArmeriaNetClientAttributesExtractor());
+    PeerServiceAttributesExtractor<RequestContext, RequestLog> peerServiceAttributesExtractor =
+        PeerServiceAttributesExtractor.create(new ArmeriaNetClientAttributesExtractor());
 
     ArmeriaTracing tracing =
         ArmeriaTracing.newBuilder(GlobalOpenTelemetry.get())
-            .addAttributeExtractor(peerServiceAttributesClientExtractor)
+            .addAttributeExtractor(peerServiceAttributesExtractor)
             .build();
 
     CLIENT_DECORATOR = tracing.newClientDecorator();

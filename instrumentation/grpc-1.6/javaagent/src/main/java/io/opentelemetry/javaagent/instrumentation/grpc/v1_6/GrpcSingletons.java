@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTracing;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 // Holds singleton references.
 public final class GrpcSingletons {
@@ -29,8 +29,8 @@ public final class GrpcSingletons {
   static {
     boolean experimentalSpanAttributes =
         Config.get().getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
-    PeerServiceAttributesServerExtractor<GrpcRequest, Status> peerServiceAttributesExtractor =
-        PeerServiceAttributesServerExtractor.create(new GrpcNetServerAttributesExtractor());
+    PeerServiceAttributesExtractor<GrpcRequest, Status> peerServiceAttributesExtractor =
+        PeerServiceAttributesExtractor.create(new GrpcNetServerAttributesExtractor());
 
     GrpcTracing tracing =
         GrpcTracing.newBuilder(GlobalOpenTelemetry.get())

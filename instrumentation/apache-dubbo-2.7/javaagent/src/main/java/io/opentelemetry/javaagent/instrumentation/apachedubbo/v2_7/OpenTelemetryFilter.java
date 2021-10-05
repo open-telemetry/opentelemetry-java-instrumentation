@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTracing;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
@@ -25,8 +25,7 @@ public class OpenTelemetryFilter implements Filter {
         new DubboNetServerAttributesExtractor();
     delegate =
         DubboTracing.newBuilder(GlobalOpenTelemetry.get())
-            .addAttributesExtractor(
-                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .build()
             .newFilter();
   }

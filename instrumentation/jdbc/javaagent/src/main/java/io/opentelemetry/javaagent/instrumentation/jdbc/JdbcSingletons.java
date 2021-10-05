@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
@@ -31,8 +31,7 @@ public final class JdbcSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(
-                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
