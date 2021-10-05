@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import java.lang.reflect.Method;
 import java.util.function.BiFunction;
 
-class LambdaParameters {
+final class LambdaParameters {
 
   static <T> Object[] toArray(
       Method targetMethod, T input, Context context, BiFunction<T, Class, Object> mapper) {
