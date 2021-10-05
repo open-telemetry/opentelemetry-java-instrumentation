@@ -26,4 +26,6 @@ final class LambdaParameters {
     }
     return parameters;
   }
+
+  private LambdaParameters() {}
 }
