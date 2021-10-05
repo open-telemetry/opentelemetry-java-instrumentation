@@ -113,9 +113,8 @@ final class RestletHttpAttributesExtractor
       return Collections.emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
-    int i = 0;
     for (Parameter header : headers) {
-      stringHeaders.set(i++, header.getValue());
+      stringHeaders.add(header.getValue());
     }
     return stringHeaders;
   }

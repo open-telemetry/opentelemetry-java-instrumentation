@@ -40,9 +40,8 @@ final class ResteasyClientHttpAttributesExtractor
       return emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(rawHeaders.size());
-    int i = 0;
     for (Object headerValue : rawHeaders) {
-      stringHeaders.set(i++, String.valueOf(headerValue));
+      stringHeaders.add(String.valueOf(headerValue));
     }
     return stringHeaders;
   }
