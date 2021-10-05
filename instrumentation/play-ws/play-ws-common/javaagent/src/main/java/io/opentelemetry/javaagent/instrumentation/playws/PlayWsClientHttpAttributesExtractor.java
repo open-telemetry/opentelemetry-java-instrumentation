@@ -31,12 +31,6 @@ final class PlayWsClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    return null;
-  }
-
-  @Override
   protected List<String> requestHeader(Request request, String name) {
     return request.getHeaders().getAll(name);
   }

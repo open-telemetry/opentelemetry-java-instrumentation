@@ -37,19 +37,9 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String host(Request request) {
-    return request.serverName().toString() + ":" + request.getServerPort();
-  }
-
-  @Override
   protected @Nullable String scheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
-  }
-
-  @Override
-  protected @Nullable String userAgent(Request request) {
-    return request.getHeader("User-Agent");
   }
 
   @Override

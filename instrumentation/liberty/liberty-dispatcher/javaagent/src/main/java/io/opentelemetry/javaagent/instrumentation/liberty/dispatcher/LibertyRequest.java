@@ -39,10 +39,6 @@ public class LibertyRequest {
     return httpRequestMessage.getQueryString();
   }
 
-  public String getServerName() {
-    return httpDispatcherLink.getRequestedHost();
-  }
-
   public int getServerPort() {
     return httpDispatcherLink.getRequestedPort();
   }
@@ -62,9 +58,8 @@ public class LibertyRequest {
       return Collections.emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
-    int i = 0;
     for (HeaderField header : headers) {
-      stringHeaders.set(i++, header.asString());
+      stringHeaders.add(header.asString());
     }
     return stringHeaders;
   }

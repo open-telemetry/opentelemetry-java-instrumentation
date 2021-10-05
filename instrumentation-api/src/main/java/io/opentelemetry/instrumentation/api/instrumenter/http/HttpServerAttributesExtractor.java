@@ -64,9 +64,8 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String target(REQUEST request);
 
-  // TODO: remove implementations?
   @Nullable
-  protected String host(REQUEST request) {
+  private String host(REQUEST request) {
     List<String> values = requestHeader(request, "host");
     return values.isEmpty() ? null : values.get(0);
   }

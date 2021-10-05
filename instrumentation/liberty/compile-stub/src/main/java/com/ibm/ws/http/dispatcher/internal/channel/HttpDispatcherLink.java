@@ -22,10 +22,6 @@ public class HttpDispatcherLink {
     throw new UnsupportedOperationException();
   }
 
-  public String getRequestedHost() {
-    throw new UnsupportedOperationException();
-  }
-
   public int getRequestedPort() {
     throw new UnsupportedOperationException();
   }

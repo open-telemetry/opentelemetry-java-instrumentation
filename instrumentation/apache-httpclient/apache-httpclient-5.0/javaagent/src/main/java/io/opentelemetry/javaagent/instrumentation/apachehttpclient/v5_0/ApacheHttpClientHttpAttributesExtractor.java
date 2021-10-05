@@ -69,13 +69,6 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(ClassicHttpRequest request) {
-    Header header = request.getFirstHeader("User-Agent");
-    return header != null ? header.getValue() : null;
-  }
-
-  @Override
   protected List<String> requestHeader(ClassicHttpRequest request, String name) {
     return headersToList(request.getHeaders(name));
   }

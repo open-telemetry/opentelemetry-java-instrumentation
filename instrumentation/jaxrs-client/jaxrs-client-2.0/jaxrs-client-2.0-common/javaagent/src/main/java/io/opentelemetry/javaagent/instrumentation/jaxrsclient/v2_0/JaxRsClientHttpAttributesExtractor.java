@@ -33,11 +33,6 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(ClientRequestContext httpRequest) {
-    return httpRequest.getHeaderString("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(ClientRequestContext httpRequest, String name) {
     return httpRequest.getStringHeaders().getOrDefault(name, emptyList());
   }

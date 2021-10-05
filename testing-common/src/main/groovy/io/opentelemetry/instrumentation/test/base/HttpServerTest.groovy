@@ -578,8 +578,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // netty instrumentation uses this
           "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         } else {
-          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
           "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
           "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
 

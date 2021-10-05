@@ -76,12 +76,10 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    protected @Nullable String userAgent(Void unused) {
-      return "OpenTelemetryBot";
-    }
-
-    @Override
     protected List<String> requestHeader(Void unused, String name) {
+      if (name.equalsIgnoreCase("user-agent")) {
+        return Collections.singletonList("OpenTelemetryBot");
+      }
       return Collections.emptyList();
     }
 

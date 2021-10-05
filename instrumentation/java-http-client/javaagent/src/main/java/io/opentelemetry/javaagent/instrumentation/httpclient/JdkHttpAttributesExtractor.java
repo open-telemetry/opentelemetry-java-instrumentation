@@ -32,11 +32,6 @@ class JdkHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpRequest httpRequest) {
-    return httpRequest.headers().firstValue("User-Agent").orElse(null);
-  }
-
-  @Override
   protected List<String> requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().allValues(name);
   }

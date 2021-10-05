@@ -31,12 +31,6 @@ final class OkHttp2HttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    return request.header("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(Request request, String name) {
     return request.headers(name);
   }
