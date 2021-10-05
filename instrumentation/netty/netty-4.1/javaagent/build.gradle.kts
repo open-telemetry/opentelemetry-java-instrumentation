@@ -52,7 +52,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
   }
 
-  named<Test>("test") {
+  test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
     dependsOn(testConnectionSpan)

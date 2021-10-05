@@ -58,7 +58,7 @@ tasks {
     from(appLibrary).into("$buildDir/app-libs")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(modifyLogbackJar)
     dependsOn(setupServer)
     dependsOn(copyDependencies)

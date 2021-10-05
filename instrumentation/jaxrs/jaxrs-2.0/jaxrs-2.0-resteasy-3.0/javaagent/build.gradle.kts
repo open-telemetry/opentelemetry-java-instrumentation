@@ -50,7 +50,7 @@ dependencies {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 

@@ -35,7 +35,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.reactor-netty.always-create-connect-span=true")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")

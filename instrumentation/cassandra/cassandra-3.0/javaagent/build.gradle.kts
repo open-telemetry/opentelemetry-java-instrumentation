@@ -41,7 +41,7 @@ dependencies {
 configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
 
 tasks {
-  named<Test>("test") {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }

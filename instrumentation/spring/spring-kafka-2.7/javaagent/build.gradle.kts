@@ -28,7 +28,7 @@ dependencies {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     // TODO run tests both with and without experimental span attributes
