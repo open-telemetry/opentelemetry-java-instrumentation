@@ -21,11 +21,10 @@ object AkkaHttpTestWebServer {
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext = system.dispatcher
 
-  val exceptionHandler = ExceptionHandler {
-    case ex: Exception =>
-      complete(
-        HttpResponse(status = EXCEPTION.getStatus).withEntity(ex.getMessage)
-      )
+  val exceptionHandler = ExceptionHandler { case ex: Exception =>
+    complete(
+      HttpResponse(status = EXCEPTION.getStatus).withEntity(ex.getMessage)
+    )
   }
 
   val route = { //handleExceptions(exceptionHandler) {
