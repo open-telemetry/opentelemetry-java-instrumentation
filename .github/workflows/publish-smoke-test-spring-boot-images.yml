@@ -3,7 +3,7 @@ name: Publish Spring Boot images for smoke tests
 on:
   push:
     paths:
-      - 'smoke-tests/springboot/**'
+      - 'smoke-tests/images/springboot/**'
       - '.github/workflows/publish-smoke-test-spring-boot-images.yml'
     branches:
       - main
@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/springboot/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/springboot/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
@@ -49,7 +49,7 @@ jobs:
           ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
           ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
           ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-        working-directory: smoke-tests/springboot
+        working-directory: smoke-tests/images/springboot
 
   issue:
     name: Open issue on failure

@@ -3,7 +3,7 @@ name: PR build gRPC images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/grpc/**'
+      - 'smoke-tests/images/grpc/**'
       - '.github/workflows/pr-smoke-test-grpc-images.yml'
 
 jobs:
@@ -30,11 +30,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/grpc/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/grpc/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
         run: |
           ./gradlew jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
           ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
           ./gradlew jibDockerBuild -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
-        working-directory: smoke-tests/grpc
+        working-directory: smoke-tests/images/grpc
