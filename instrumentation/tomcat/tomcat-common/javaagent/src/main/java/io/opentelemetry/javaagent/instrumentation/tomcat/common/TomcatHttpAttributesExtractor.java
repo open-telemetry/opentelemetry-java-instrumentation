@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.UriBuilder;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -21,35 +20,24 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected String url(Request request) {
-    MessageBytes schemeMessageBytes = request.scheme();
-    String scheme = schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
-    String host = request.serverName().toString();
-    int serverPort = request.getServerPort();
-    String path = request.requestURI().toString();
-    String query = request.queryString().toString();
-
-    return UriBuilder.uri(scheme, host, serverPort, path, query);
-  }
-
-  @Override
   protected @Nullable String target(Request request) {
-    return null;
+    String target = request.requestURI().toString();
+    String queryString = request.queryString().toString();
+    if (queryString != null) {
+      target += "?" + queryString;
+    }
+    return target;
   }
 
   @Override
   protected @Nullable String host(Request request) {
-    // return request.serverName().toString() + ":" + request.getServerPort();
-    return null;
+    return request.serverName().toString() + ":" + request.getServerPort();
   }
 
   @Override
   protected @Nullable String scheme(Request request) {
-    /*
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
-     */
-    return null;
   }
 
   @Override
@@ -73,7 +61,7 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(Request request, @Nullable Response response) {
+  protected @Nullable String flavor(Request request) {
     String flavor = request.protocol().toString();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions

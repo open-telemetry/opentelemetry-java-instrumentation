@@ -22,10 +22,19 @@ tasks {
       File(System.getProperty("java.home"), it).absoluteFile
     }.find { it.isFile() }?.let(File::toString) ?: "rmic"
 
-    commandLine(rmicBinaryPath, "-g", "-keep", "-classpath", sourceSets.test.get().output.classesDirs.asPath, "-d", "$buildDir/classes/java/test", clazz)
+    commandLine(
+      rmicBinaryPath,
+      "-g",
+      "-keep",
+      "-classpath",
+      sourceSets.test.get().output.classesDirs.asPath,
+      "-d",
+      "$buildDir/classes/java/test",
+      clazz
+    )
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(rmic)
   }
 }
@@ -52,7 +61,9 @@ tasks {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
 
     // Can only export on Java 9+
-    val testJavaVersion = gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion) ?: JavaVersion.current()
+    val testJavaVersion =
+      gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+        ?: JavaVersion.current()
     if (testJavaVersion.isJava9Compatible) {
       jvmArgs("--add-exports=java.rmi/sun.rmi.server=ALL-UNNAMED")
       jvmArgs("--add-exports=java.rmi/sun.rmi.transport=ALL-UNNAMED")

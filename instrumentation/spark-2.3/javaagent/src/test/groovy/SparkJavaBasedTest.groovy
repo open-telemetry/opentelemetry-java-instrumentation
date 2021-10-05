@@ -48,7 +48,9 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/param/asdf1234"
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
+            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
+            "${SemanticAttributes.HTTP_TARGET.key}" "/param/asdf1234"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

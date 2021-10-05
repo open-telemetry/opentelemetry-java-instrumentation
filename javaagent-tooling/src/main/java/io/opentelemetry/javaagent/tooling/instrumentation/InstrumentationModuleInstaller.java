@@ -17,15 +17,15 @@ import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
-import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
-import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
-import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
+import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationInstaller;
+import io.opentelemetry.javaagent.tooling.field.NoopVirtualFieldImplementationInstaller;
+import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationContextBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappingsBuilderImpl;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
@@ -84,8 +84,8 @@ public final class InstrumentationModuleInstaller {
             helperResourceBuilder.getResources(),
             Utils.getExtensionsClassLoader(),
             instrumentation);
-    InstrumentationContextProvider contextProvider =
-        createInstrumentationContextProvider(instrumentationModule);
+    VirtualFieldImplementationInstaller contextProvider =
+        getVirtualFieldImplementationInstaller(instrumentationModule);
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
@@ -104,11 +104,11 @@ public final class InstrumentationModuleInstaller {
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
               .transform(helperInjector);
-      extendableAgentBuilder = contextProvider.instrumentationTransformer(extendableAgentBuilder);
+      extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
       TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      extendableAgentBuilder = contextProvider.additionalInstrumentation(extendableAgentBuilder);
+      extendableAgentBuilder = contextProvider.installFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
     }
@@ -116,14 +116,13 @@ public final class InstrumentationModuleInstaller {
     return agentBuilder;
   }
 
-  private static InstrumentationContextProvider createInstrumentationContextProvider(
+  private static VirtualFieldImplementationInstaller getVirtualFieldImplementationInstaller(
       InstrumentationModule instrumentationModule) {
 
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
-      InstrumentationContextBuilderImpl builder = new InstrumentationContextBuilderImpl();
-      ((InstrumentationModuleMuzzle) instrumentationModule)
-          .registerMuzzleContextStoreClasses(builder);
-      ContextStoreMappings mappings = builder.build();
+      VirtualFieldMappingsBuilderImpl builder = new VirtualFieldMappingsBuilderImpl();
+      ((InstrumentationModuleMuzzle) instrumentationModule).registerMuzzleVirtualFields(builder);
+      VirtualFieldMappings mappings = builder.build();
       if (!mappings.isEmpty()) {
         return FieldBackedProviderFactory.get(instrumentationModule.getClass(), mappings);
       }
@@ -133,17 +132,17 @@ public final class InstrumentationModuleInstaller {
           instrumentationModule);
     }
 
-    return NoopContextProvider.INSTANCE;
+    return NoopVirtualFieldImplementationInstaller.INSTANCE;
   }
 
   private static class FieldBackedProviderFactory {
     static {
-      RuntimeVirtualFieldSupplier.set(FieldBackedProvider::getContextStore);
+      RuntimeVirtualFieldSupplier.set(FieldBackedImplementationInstaller::findVirtualField);
     }
 
-    static FieldBackedProvider get(
-        Class<?> instrumenterClass, ContextStoreMappings contextStoreMappings) {
-      return new FieldBackedProvider(instrumenterClass, contextStoreMappings);
+    static FieldBackedImplementationInstaller get(
+        Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
+      return new FieldBackedImplementationInstaller(instrumenterClass, virtualFieldMappings);
     }
   }
 

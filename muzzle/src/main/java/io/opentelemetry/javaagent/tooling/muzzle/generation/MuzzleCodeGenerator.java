@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.tooling.muzzle.generation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.muzzle.ContextStoreMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCollector;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
@@ -52,8 +52,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
-  private static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
-      "registerMuzzleContextStoreClasses";
+  private static final String MUZZLE_VIRTUAL_FIELDS_METHOD_NAME = "registerMuzzleVirtualFields";
   private final URLClassLoader classLoader;
 
   public MuzzleCodeGenerator(URLClassLoader classLoader) {
@@ -93,7 +92,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private boolean generateReferencesMethod = true;
     private boolean generateHelperClassNamesMethod = true;
-    private boolean generateContextStoreClassesMethod = true;
+    private boolean generateVirtualFieldsMethod = true;
 
     public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
       super(Opcodes.ASM7, classVisitor);
@@ -151,11 +150,11 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
             MUZZLE_HELPER_CLASSES_METHOD_NAME,
             instrumentationClassName);
       }
-      if (MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME.equals(name)) {
-        generateContextStoreClassesMethod = false;
+      if (MUZZLE_VIRTUAL_FIELDS_METHOD_NAME.equals(name)) {
+        generateVirtualFieldsMethod = false;
         logger.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
-            MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
+            MUZZLE_VIRTUAL_FIELDS_METHOD_NAME,
             instrumentationClassName);
       }
       return super.visitMethod(access, name, descriptor, signature, exceptions);
@@ -170,8 +169,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       if (generateHelperClassNamesMethod) {
         generateMuzzleHelperClassNamesMethod(collector);
       }
-      if (generateContextStoreClassesMethod) {
-        generateMuzzleContextStoreClassesMethod(collector);
+      if (generateVirtualFieldsMethod) {
+        generateMuzzleVirtualFieldsMethod(collector);
       }
       super.visitEnd();
     }
@@ -520,36 +519,36 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitEnd();
     }
 
-    private void generateMuzzleContextStoreClassesMethod(ReferenceCollector collector) {
+    private void generateMuzzleVirtualFieldsMethod(ReferenceCollector collector) {
       /*
-       * public void registerMuzzleContextStoreClasses(InstrumentationContextBuilder builder) {
+       * public void registerMuzzleVirtualFields(VirtualFieldMappingsBuilder builder) {
        *   builder.register(..., ...);
        * }
        */
       MethodVisitor mv =
           super.visitMethod(
               Opcodes.ACC_PUBLIC,
-              MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
-              "(Lio/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder;)V",
+              MUZZLE_VIRTUAL_FIELDS_METHOD_NAME,
+              "(Lio/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder;)V",
               null,
               null);
       mv.visitCode();
 
-      ContextStoreMappings contextStoreMappings = collector.getContextStoreMappings();
+      VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
 
       mv.visitVarInsn(Opcodes.ALOAD, 1);
       // stack: builder
-      contextStoreMappings.forEach(
-          (className, contextClassName) -> {
-            mv.visitLdcInsn(className);
-            // stack: builder, className
-            mv.visitLdcInsn(contextClassName);
-            // stack: builder, className, contextClassName
+      virtualFieldMappings.forEach(
+          (typeName, fieldTypeName) -> {
+            mv.visitLdcInsn(typeName);
+            // stack: builder, typeName
+            mv.visitLdcInsn(fieldTypeName);
+            // stack: builder, typeName, fieldTypeName
             mv.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
-                "io/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder",
+                "io/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder",
                 "register",
-                "(Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/tooling/muzzle/InstrumentationContextBuilder;",
+                "(Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder;",
                 /* isInterface= */ true);
             // stack: builder
           });

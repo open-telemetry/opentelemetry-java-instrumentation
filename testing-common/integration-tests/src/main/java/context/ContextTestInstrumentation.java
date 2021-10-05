@@ -52,19 +52,6 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       VirtualField<KeyClass, Context> virtualField =
           VirtualField.find(KeyClass.class, Context.class);
-      virtualField.setIfNull(thiz, new Context());
-      Context context = virtualField.get(thiz);
-      contextCount = ++context.count;
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class StoreAndIncrementWithFactoryApiUsageAdvice {
-    @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      VirtualField<KeyClass, Context> virtualField =
-          VirtualField.find(KeyClass.class, Context.class);
       Context context = virtualField.computeIfNull(thiz, Context.FACTORY);
       contextCount = ++context.count;
     }

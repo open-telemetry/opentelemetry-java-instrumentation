@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.netty.common.server.NettyRequestExtractAdapter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Channel> {
@@ -69,6 +70,24 @@ public class NettyHttpServerTracer
     } else {
       return uri;
     }
+  }
+
+  @Override
+  @Nullable
+  protected String scheme(HttpRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  protected String host(HttpRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  protected String target(HttpRequest request) {
+    return null;
   }
 
   @Override

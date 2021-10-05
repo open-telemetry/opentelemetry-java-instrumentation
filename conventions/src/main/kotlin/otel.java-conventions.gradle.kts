@@ -179,7 +179,7 @@ class TestcontainersBuildService : BuildService<BuildServiceParameters.None?> {
 }
 // To limit number of concurrently running resource intensive tests add
 // tasks {
-//   named<Test>("test") {
+//   test {
 //     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
 //   }
 // }

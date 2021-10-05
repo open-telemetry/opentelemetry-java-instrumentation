@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.URI;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import ratpack.handling.Context;
 import ratpack.http.Request;
@@ -21,27 +22,6 @@ final class RatpackHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String url(Request request) {
-    // TODO(anuraaga): We should probably just not fill this
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3700
-    Context ratpackContext = request.get(Context.class);
-    if (ratpackContext == null) {
-      return null;
-    }
-    PublicAddress publicAddress = ratpackContext.get(PublicAddress.class);
-    if (publicAddress == null) {
-      return null;
-    }
-    return publicAddress
-        .builder()
-        .path(request.getPath())
-        .params(request.getQueryParams())
-        .build()
-        .toString();
-  }
-
-  @Override
   protected String target(Request request) {
     // Uri is the path + query string, not a full URL
     return request.getUri();
@@ -50,7 +30,16 @@ final class RatpackHttpAttributesExtractor
   @Override
   @Nullable
   protected String host(Request request) {
-    return null;
+    Context ratpackContext = request.get(Context.class);
+    if (ratpackContext == null) {
+      return null;
+    }
+    PublicAddress publicAddress = ratpackContext.get(PublicAddress.class);
+    if (publicAddress == null) {
+      return null;
+    }
+    URI uri = publicAddress.get();
+    return uri.getHost() + ":" + uri.getPort();
   }
 
   @Override
@@ -63,7 +52,15 @@ final class RatpackHttpAttributesExtractor
   @Override
   @Nullable
   protected String scheme(Request request) {
-    return null;
+    Context ratpackContext = request.get(Context.class);
+    if (ratpackContext == null) {
+      return null;
+    }
+    PublicAddress publicAddress = ratpackContext.get(PublicAddress.class);
+    if (publicAddress == null) {
+      return null;
+    }
+    return publicAddress.get().getScheme();
   }
 
   @Override
@@ -86,7 +83,7 @@ final class RatpackHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String flavor(Request request, @Nullable Response response) {
+  protected String flavor(Request request) {
     switch (request.getProtocol()) {
       case "HTTP/1.0":
         return SemanticAttributes.HttpFlavorValues.HTTP_1_0;

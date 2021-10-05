@@ -23,7 +23,7 @@ testSets {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     dependsOn("myfaces12Test")
     dependsOn("myfaces2Test")
   }

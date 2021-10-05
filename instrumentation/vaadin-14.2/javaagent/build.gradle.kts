@@ -40,7 +40,7 @@ tasks {
   val vaadin16Test by existing
   val vaadin14LatestTest by existing
 
-  named<Test>("test") {
+  test {
     dependsOn(vaadin142Test)
     dependsOn(vaadin16Test)
     if (findProperty("testLatestDeps") as Boolean) {

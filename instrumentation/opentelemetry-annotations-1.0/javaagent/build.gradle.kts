@@ -26,7 +26,7 @@ tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
-  named<Test>("test") {
+  test {
     jvmArgs("-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
   }
 }

@@ -72,7 +72,7 @@ still access helper classes from bootstrap classloader.
 ### Agent jar structure
 
 If you now look inside
-`javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
+`javaagent/build/libs/opentelemetry-javaagent-<version>.jar`, you will see the
 following "clusters" of classes:
 
 Available in the system class loader:
@@ -94,7 +94,7 @@ during creation of `javaagent` jar file by Shadow Gradle plugin
 Available in the agent class loader:
 - `inst/` - contains `javaagent-tooling` and `javaagent-extension-api` modules and
   `instrumentation` submodules, loaded and isolated inside `AgentClassLoader`.
-  Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
+  Includes the OpenTelemetry SDK.
 
 ![Agent initialization sequence](initialization-sequence.svg)
 [Image source](https://docs.google.com/drawings/d/1GHAcJ8AOaf_v2Ip82cQD9dN0mtvSk2C1B11KfwV2U8o)

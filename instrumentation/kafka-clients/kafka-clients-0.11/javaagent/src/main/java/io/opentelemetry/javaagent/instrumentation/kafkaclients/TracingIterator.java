@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrapper;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;

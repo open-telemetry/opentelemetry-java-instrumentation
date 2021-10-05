@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.proxy;
 
-import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
@@ -16,7 +16,7 @@ public class ProxyHelper {
   public static Class<?>[] filtered(Class<?>[] interfaces) {
     int numMarkers = 0;
     for (Class<?> iface : interfaces) {
-      if (iface == FieldBackedContextStoreAppliedMarker.class) {
+      if (iface == VirtualFieldInstalledMarker.class) {
         numMarkers++;
       }
     }

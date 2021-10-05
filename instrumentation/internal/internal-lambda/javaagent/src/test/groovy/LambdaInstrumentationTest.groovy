@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker
 
 class LambdaInstrumentationTest extends AgentInstrumentationSpecification {
 
@@ -13,9 +13,9 @@ class LambdaInstrumentationTest extends AgentInstrumentationSpecification {
     Runnable runnable = TestLambda.makeRunnable()
 
     expect:
-    // RunnableInstrumentation adds a ContextStore to all implementors of Runnable. If lambda class
+    // RunnableInstrumentation adds a VirtualField to all implementors of Runnable. If lambda class
     // is transformed then it must have context store marker interface.
-    runnable instanceof FieldBackedContextStoreAppliedMarker
-    !FieldBackedContextStoreAppliedMarker.isAssignableFrom(Runnable)
+    runnable instanceof VirtualFieldInstalledMarker
+    !VirtualFieldInstalledMarker.isAssignableFrom(Runnable)
   }
 }

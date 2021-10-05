@@ -36,7 +36,7 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected String flavor(HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  protected String flavor(HttpServerExchange exchange) {
     String flavor = exchange.getProtocol().toString();
     // remove HTTP/ prefix to comply with semantic conventions
     if (flavor.startsWith("HTTP/")) {
@@ -61,16 +61,6 @@ public class UndertowHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       HttpServerExchange exchange, HttpServerExchange unused) {
     return null;
-  }
-
-  @Override
-  protected String url(HttpServerExchange exchange) {
-    String result = exchange.getRequestURL();
-    if (exchange.getQueryString() == null || exchange.getQueryString().isEmpty()) {
-      return result;
-    } else {
-      return result + "?" + exchange.getQueryString();
-    }
   }
 
   @Override

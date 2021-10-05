@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker
 import io.opentelemetry.javaagent.instrumentation.internal.proxy.ProxyHelper
 import spock.lang.Specification
 
@@ -20,10 +20,10 @@ class ProxyHelperTest extends Specification {
     []                                                                                     | []
     [Runnable]                                                                             | [Runnable]
     [Runnable, Callable]                                                                   | [Runnable, Callable]
-    [Runnable, FieldBackedContextStoreAppliedMarker]                                       | [Runnable, FieldBackedContextStoreAppliedMarker]
-    [Runnable, FieldBackedContextStoreAppliedMarker, FieldBackedContextStoreAppliedMarker] | [Runnable, FieldBackedContextStoreAppliedMarker]
-    [FieldBackedContextStoreAppliedMarker, Runnable]                                       | [FieldBackedContextStoreAppliedMarker, Runnable]
-    [FieldBackedContextStoreAppliedMarker, Runnable, FieldBackedContextStoreAppliedMarker] | [FieldBackedContextStoreAppliedMarker, Runnable]
-    [FieldBackedContextStoreAppliedMarker, FieldBackedContextStoreAppliedMarker, Runnable] | [FieldBackedContextStoreAppliedMarker, Runnable]
+    [Runnable, VirtualFieldInstalledMarker]                              | [Runnable, VirtualFieldInstalledMarker]
+    [Runnable, VirtualFieldInstalledMarker, VirtualFieldInstalledMarker] | [Runnable, VirtualFieldInstalledMarker]
+    [VirtualFieldInstalledMarker, Runnable]                              | [VirtualFieldInstalledMarker, Runnable]
+    [VirtualFieldInstalledMarker, Runnable, VirtualFieldInstalledMarker] | [VirtualFieldInstalledMarker, Runnable]
+    [VirtualFieldInstalledMarker, VirtualFieldInstalledMarker, Runnable] | [VirtualFieldInstalledMarker, Runnable]
   }
 }

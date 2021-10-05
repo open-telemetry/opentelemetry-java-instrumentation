@@ -85,7 +85,7 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncResponseCancelAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
       VirtualField<AsyncResponse, AsyncResponseData> virtualField =

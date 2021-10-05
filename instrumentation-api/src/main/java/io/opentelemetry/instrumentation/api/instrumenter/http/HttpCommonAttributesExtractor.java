@@ -44,7 +44,6 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
         requestContentLengthUncompressed(request, response));
-    set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
     if (response != null) {
       Integer statusCode = statusCode(request, response);
       if (statusCode != null) {
@@ -89,15 +88,6 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract Long requestContentLengthUncompressed(
       REQUEST request, @Nullable RESPONSE response);
-
-  /**
-   * Extracts the {@code http.flavor} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  protected abstract String flavor(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * Extracts the {@code http.status_code} span attribute.

@@ -58,7 +58,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
       VirtualField<SharedSessionContract, Context> virtualField =
           VirtualField.find(SharedSessionContract.class, Context.class);
-      virtualField.setIfNull(session, context);
+      virtualField.set(session, context);
     }
   }
 }

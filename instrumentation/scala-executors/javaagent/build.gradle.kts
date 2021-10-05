@@ -44,7 +44,7 @@ tasks {
     classpath = classpath.plus(files(sourceSets["slickTest"].scala.classesDirectory))
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(slickTest)
   }
 }

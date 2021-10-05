@@ -273,7 +273,9 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key}" Long
-        "${SemanticAttributes.HTTP_URL.key}" fullUrl.toString()
+        "${SemanticAttributes.HTTP_SCHEME.key}" fullUrl.getScheme()
+        "${SemanticAttributes.HTTP_HOST.key}" fullUrl.getHost() + ":" + fullUrl.getPort()
+        "${SemanticAttributes.HTTP_TARGET.key}" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

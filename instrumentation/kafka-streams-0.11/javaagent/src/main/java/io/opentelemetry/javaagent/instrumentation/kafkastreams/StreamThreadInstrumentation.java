@@ -11,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerIteratorWrapper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.kafka.KafkaConsumerIteratorWrapper;
 import java.util.Iterator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

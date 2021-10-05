@@ -21,11 +21,6 @@ final class RestletHttpAttributesExtractor
   }
 
   @Override
-  protected String url(Request request) {
-    return request.getOriginalRef().toString();
-  }
-
-  @Override
   protected @Nullable String target(Request request) {
     Reference ref = request.getOriginalRef();
     String path = ref.getPath();
@@ -33,8 +28,9 @@ final class RestletHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String host(Request request) {
-    return null;
+  protected String host(Request request) {
+    Reference originalRef = request.getOriginalRef();
+    return originalRef.getHostDomain() + ":" + originalRef.getHostPort();
   }
 
   @Override
@@ -64,7 +60,7 @@ final class RestletHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(Request request, @Nullable Response response) {
+  protected @Nullable String flavor(Request request) {
     String version = (String) request.getAttributes().get("org.restlet.http.version");
     switch (version) {
       case "HTTP/1.0":

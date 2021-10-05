@@ -21,6 +21,6 @@ public class JakartaServletFilterInitAdvice {
       return;
     }
     VirtualField.find(Filter.class, MappingResolver.Factory.class)
-        .setIfNull(filter, new JakartaServletFilterMappingResolverFactory(filterConfig));
+        .set(filter, new JakartaServletFilterMappingResolverFactory(filterConfig));
   }
 }

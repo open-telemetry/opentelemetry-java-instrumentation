@@ -19,5 +19,5 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   // TODO(anuraaga): Move version to dependency management
-  implementation("io.grpc:grpc-netty-shaded:1.38.0")
+  implementation("io.grpc:grpc-netty-shaded:1.40.1")
 }

@@ -15,7 +15,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:javaagent"))
+  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
@@ -28,7 +28,7 @@ dependencies {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     // TODO run tests both with and without experimental span attributes

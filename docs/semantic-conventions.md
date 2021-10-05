@@ -8,12 +8,12 @@ are implemented by Java autoinstrumentation and which ones are not.
 | Attribute | Required | Implemented? |
 |---|:---:|:---:|
 | `http.method` | Y | + |
-| `http.url` | N | + |
-| `http.target` | N | - [1] |
-| `http.host` | N | - [1] |
-| `http.scheme` | N | - [1] |
+| `http.url` | N | - [1] |
+| `http.target` | N | + [1] |
+| `http.host` | N | + [1] |
+| `http.scheme` | N | + [1] |
 | `http.status_code` | Y | + |
-| `http.flavor` | N | + [3] |
+| `http.flavor` | N | + [2] |
 | `http.user_agent` | N | + |
 | `http.request_content_length` | N | - |
 | `http.request_content_length_uncompressed` | N | - |
@@ -23,12 +23,12 @@ are implemented by Java autoinstrumentation and which ones are not.
 | `http.route` | N | - |
 | `http.client_ip` | N | + |
 
-**[1]:** As the majority of Java frameworks don't provide a standard way to obtain "The full request
-target as passed in a HTTP request line or equivalent.", we don't set `http.target` semantic
-attribute. As either it or `http.url` is required, we set the latter. This, in turn, makes setting
-`http.schema` and `http.host` unnecessary duplication. Therefore, we do not set them as well.
+**[1]:** Most server instrumentations capture `http.scheme`, `http.host`, and `http.target`
+(and do not capture `http.url`).
+Netty instrumentation is currently the only exception to this rule. Netty instrumentation
+captures `http.url` (and does not capture `http.scheme`, `http.host`, or `http.target`).
 
-**[3]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
+**[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
 
 
@@ -42,19 +42,16 @@ not values defined by spec.
 | `http.host` | N | - [1] |
 | `http.scheme` | N | - [1] |
 | `http.status_code` | Y | + |
-| `http.flavor` | N | + [3] |
+| `http.flavor` | N | + [2] |
 | `http.user_agent` | N | + |
 | `http.request_content_length` | N | - |
 | `http.request_content_length_uncompressed` | N | - |
 | `http.response_content_length` | N | - |
 | `http.response_content_length_uncompressed` | N | - |
 
-**[1]:** As the majority of Java frameworks don't provide a standard way to obtain "The full request
-target as passed in a HTTP request line or equivalent.", we don't set `http.target` semantic
-attribute. As either it or `http.url` is required, we set the latter. This, in turn, makes setting
-`http.schema` and `http.host` unnecessary duplication. Therefore, we do not set them as well.
+**[1]:** `http.scheme`, `http.host` and `http.target` are unnecessary since `http.url` is captured.
 
-**[3]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
+**[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
 
 ## RPC

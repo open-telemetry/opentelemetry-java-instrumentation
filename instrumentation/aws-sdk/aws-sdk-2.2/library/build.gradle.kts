@@ -17,7 +17,7 @@ dependencies {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
   }
 }
