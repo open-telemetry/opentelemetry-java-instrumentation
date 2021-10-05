@@ -59,16 +59,15 @@ class ScalaConcurrentTests {
       val goodFuture: Future[Integer] = Future {
         1
       }
-      goodFuture onSuccess {
-        case _ =>
-          Future {
-            2
-          } onSuccess {
-            case _ => {
-              tracedChild("callback")
-              latch.countDown()
-            }
+      goodFuture onSuccess { case _ =>
+        Future {
+          2
+        } onSuccess {
+          case _ => {
+            tracedChild("callback")
+            latch.countDown()
           }
+        }
       }
 
       latch.await()
@@ -131,16 +130,22 @@ class ScalaConcurrentTests {
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
-      val completedVal = Future.firstCompletedOf(List(Future {
-        tracedChild("timeout1")
-        false
-      }, Future {
-        tracedChild("timeout2")
-        false
-      }, Future {
-        tracedChild("timeout3")
-        true
-      }))
+      val completedVal = Future.firstCompletedOf(
+        List(
+          Future {
+            tracedChild("timeout1")
+            false
+          },
+          Future {
+            tracedChild("timeout2")
+            false
+          },
+          Future {
+            tracedChild("timeout3")
+            true
+          }
+        )
+      )
       Await.result(completedVal, 30 seconds)
     } finally {
       parentSpan.end()

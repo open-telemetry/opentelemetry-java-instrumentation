@@ -9,7 +9,7 @@ import com.twitter.finatra.http.response.ResponseBuilder
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class ResponseSettingExceptionMapper @Inject()(response: ResponseBuilder)
+class ResponseSettingExceptionMapper @Inject() (response: ResponseBuilder)
     extends ExceptionMapper[Exception] {
 
   override def toResponse(request: Request, exception: Exception): Response = {
