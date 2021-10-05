@@ -16,10 +16,6 @@ val latestReleasedVersion: String by lazy {
   dependencies.add(temp.name,"io.opentelemetry.javaagent:opentelemetry-javaagent:latest.release")
   var moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
 
-  if(findProperty("otel.stable") != "true"){
-    moduleVersion = moduleVersion + "-alpha"
-  }
-
   configurations.remove(temp)
   logger.info("Discovered latest release version: " + moduleVersion)
   moduleVersion
