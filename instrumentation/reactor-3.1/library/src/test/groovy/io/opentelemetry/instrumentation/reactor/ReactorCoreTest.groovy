@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.reactor
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -126,7 +128,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       .doOnEach({ signal ->
         if (signal.isOnError()) {
           // reactor 3.1 does not support getting context here yet
-          Span.current().setStatus(status)
+          Span.current().setStatus(StatusCode.ERROR)
           Span.current().end()
         } else if (signal.isOnComplete()) {
           Span.current().end()
@@ -134,10 +136,9 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       })
       .subscriberContext({ ctx ->
 
-        io.opentelemetry.context.Context parent =
-          TracingOperator.fromContextOrDefault(ctx, io.opentelemetry.context.Context.current())
+        def parent = TracingOperator.fromContextOrDefault(ctx, Context.current())
 
-        Span innerSpan = GlobalOpenTelemetry.getTracer("test")
+        def innerSpan = GlobalOpenTelemetry.getTracer("test")
           .spanBuilder(spanName)
           .setParent(parent)
           .startSpan()
@@ -151,8 +152,8 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       return Mono.just("")
     } else if (publisher instanceof Flux) {
       return  Flux.just("")
-    } else {
-      throw new IllegalStateException("Unknown publisher: " + publisher)
     }
+
+    throw new IllegalStateException("Unknown publisher")
   }
 }
