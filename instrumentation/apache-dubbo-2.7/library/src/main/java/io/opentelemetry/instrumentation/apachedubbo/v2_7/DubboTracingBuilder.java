@@ -6,7 +6,8 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetAttributesExtractor;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -42,7 +43,6 @@ public final class DubboTracingBuilder {
   /** Returns a new {@link DubboTracing} with the settings of this {@link DubboTracingBuilder}. */
   public DubboTracing build() {
     DubboRpcAttributesExtractor rpcAttributesExtractor = new DubboRpcAttributesExtractor();
-    DubboNetAttributesExtractor netAttributesExtractor = new DubboNetAttributesExtractor();
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
@@ -50,11 +50,14 @@ public final class DubboTracingBuilder {
         Instrumenter.<DubboRequest, Result>newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(rpcAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(attributesExtractors);
 
     return new DubboTracing(
-        builder.newServerInstrumenter(new DubboHeadersGetter()),
-        builder.newClientInstrumenter(new DubboHeadersSetter()));
+        builder
+            .addAttributesExtractor(new DubboNetServerAttributesExtractor())
+            .newServerInstrumenter(new DubboHeadersGetter()),
+        builder
+            .addAttributesExtractor(new DubboNetClientAttributesExtractor())
+            .newClientInstrumenter(new DubboHeadersSetter()));
   }
 }

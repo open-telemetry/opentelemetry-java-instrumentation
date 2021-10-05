@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesClientExtractor;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class RedissonNetAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<RedissonRequest, Void> {
+    extends InetSocketAddressNetAttributesClientExtractor<RedissonRequest, Void> {
 
   @Override
-  public InetSocketAddress getAddress(RedissonRequest request) {
+  public InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();
   }
 
   @Nullable
   @Override
-  public String transport(RedissonRequest request) {
+  public String transport(RedissonRequest request, @Nullable Void unused) {
     return null;
   }
 }

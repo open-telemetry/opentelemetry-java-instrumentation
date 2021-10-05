@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
 
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-1.9";
@@ -39,7 +39,7 @@ public final class AsyncHttpClientSingletons {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
+                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(new HttpHeaderSetter());
   }

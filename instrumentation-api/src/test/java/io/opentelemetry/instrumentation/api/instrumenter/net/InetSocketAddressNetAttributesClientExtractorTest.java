@@ -17,11 +17,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class InetSocketAddressNetClientAttributesExtractorTest {
+class InetSocketAddressNetAttributesClientExtractorTest {
 
-  private final InetSocketAddressNetClientAttributesExtractor<InetSocketAddress, InetSocketAddress>
+  private final InetSocketAddressNetAttributesClientExtractor<InetSocketAddress, InetSocketAddress>
       extractor =
-          new InetSocketAddressNetClientAttributesExtractor<
+          new InetSocketAddressNetAttributesClientExtractor<
               InetSocketAddress, InetSocketAddress>() {
             @Override
             public InetSocketAddress getAddress(

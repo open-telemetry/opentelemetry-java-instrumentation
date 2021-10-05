@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * otel.instrumentation.common.peer-service-mapping} configuration property. The format used is a
  * comma-separated list of {@code host=name} pairs.
  */
-public final class PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE>
+public final class PeerServiceAttributesClientExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
@@ -31,7 +31,7 @@ public final class PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE>
   private final NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor;
 
   // visible for tests
-  PeerServiceAttributesOnEndExtractor(
+  PeerServiceAttributesClientExtractor(
       Map<String, String> peerServiceMapping,
       NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
@@ -39,12 +39,12 @@ public final class PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns a new {@link PeerServiceAttributesOnEndExtractor} that will use the passed {@code
+   * Returns a new {@link PeerServiceAttributesClientExtractor} that will use the passed {@code
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
-  public static <REQUEST, RESPONSE> PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> PeerServiceAttributesClientExtractor<REQUEST, RESPONSE> create(
       NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
-    return new PeerServiceAttributesOnEndExtractor<>(
+    return new PeerServiceAttributesClientExtractor<>(
         JAVAAGENT_PEER_SERVICE_MAPPING, netResponseAttributesExtractor);
   }
 

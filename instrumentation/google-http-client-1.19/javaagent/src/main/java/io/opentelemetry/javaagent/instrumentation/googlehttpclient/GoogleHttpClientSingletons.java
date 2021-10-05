@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
 
 public class GoogleHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.google-http-client-1.19";
@@ -39,7 +39,7 @@ public class GoogleHttpClientSingletons {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
+                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(new HttpHeaderSetter());
   }

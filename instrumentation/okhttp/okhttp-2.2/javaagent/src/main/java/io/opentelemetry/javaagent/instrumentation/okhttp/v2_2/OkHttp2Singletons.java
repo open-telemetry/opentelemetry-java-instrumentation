@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
 
 public final class OkHttp2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-2.2";
@@ -47,7 +47,7 @@ public final class OkHttp2Singletons {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
+                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());
 

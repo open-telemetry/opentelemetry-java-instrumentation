@@ -11,7 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetAttributesExtractor;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,16 +59,17 @@ public final class GrpcTracingBuilder {
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
     instrumenterBuilder
         .setSpanStatusExtractor(new GrpcSpanStatusExtractor())
-        .addAttributesExtractors(
-            new GrpcNetAttributesExtractor(),
-            new GrpcRpcAttributesExtractor(),
-            new GrpcAttributesExtractor())
+        .addAttributesExtractors(new GrpcRpcAttributesExtractor(), new GrpcAttributesExtractor())
         .addAttributesExtractors(additionalExtractors);
     return new GrpcTracing(
-        instrumenterBuilder.newServerInstrumenter(GrpcExtractAdapter.GETTER),
+        instrumenterBuilder
+            .addAttributesExtractor(new GrpcNetServerAttributesExtractor())
+            .newServerInstrumenter(GrpcExtractAdapter.GETTER),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
-        instrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysClient()),
+        instrumenterBuilder
+            .addAttributesExtractor(new GrpcNetClientAttributesExtractor())
+            .newInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators(),
         captureExperimentalSpanAttributes);
   }

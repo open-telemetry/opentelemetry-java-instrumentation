@@ -18,7 +18,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetAttributesExtractor;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -67,8 +68,6 @@ public final class ArmeriaTracingBuilder {
     ArmeriaHttpServerAttributesExtractor serverAttributesExtractor =
         new ArmeriaHttpServerAttributesExtractor();
 
-    ArmeriaNetAttributesExtractor netAttributesExtractor = new ArmeriaNetAttributesExtractor();
-
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
         Instrumenter.newBuilder(
             openTelemetry,
@@ -81,22 +80,20 @@ public final class ArmeriaTracingBuilder {
             HttpSpanNameExtractor.create(serverAttributesExtractor));
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
-        .forEach(
-            instrumenter ->
-                instrumenter
-                    .addAttributesExtractor(netAttributesExtractor)
-                    .addAttributesExtractors(additionalExtractors));
+        .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(clientAttributesExtractor)))
+        .addAttributesExtractor(new ArmeriaNetClientAttributesExtractor())
         .addAttributesExtractor(clientAttributesExtractor)
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(serverAttributesExtractor)))
+        .addAttributesExtractor(new ArmeriaNetServerAttributesExtractor())
         .addAttributesExtractor(serverAttributesExtractor)
         .addRequestMetrics(HttpServerMetrics.get());
 

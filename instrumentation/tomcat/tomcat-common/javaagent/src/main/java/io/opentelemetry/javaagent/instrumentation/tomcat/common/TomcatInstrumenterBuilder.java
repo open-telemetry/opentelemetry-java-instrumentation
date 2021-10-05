@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServer
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -50,8 +50,7 @@ public final class TomcatInstrumenterBuilder {
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
-        .addAttributesExtractor(
-            PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
+        .addAttributesExtractor(PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
         .addAttributesExtractor(additionalAttributeExtractor)
         .addContextCustomizer(
             (context, request, attributes) -> {

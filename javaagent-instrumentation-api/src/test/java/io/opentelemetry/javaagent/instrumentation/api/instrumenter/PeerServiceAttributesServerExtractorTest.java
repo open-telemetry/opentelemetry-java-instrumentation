@@ -14,7 +14,7 @@ import static org.mockito.BDDMockito.given;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,16 +24,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PeerServiceAttributesOnEndExtractorTest {
-  @Mock NetAttributesClientExtractor<String, String> netAttributesExtractor;
+class PeerServiceAttributesServerExtractorTest {
+  @Mock NetAttributesServerExtractor<String, String> netAttributesExtractor;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
     // given
     Map<String, String> peerServiceMapping = singletonMap("1.2.3.4", "myService");
 
-    PeerServiceAttributesOnEndExtractor<String, String> underTest =
-        new PeerServiceAttributesOnEndExtractor<>(peerServiceMapping, netAttributesExtractor);
+    PeerServiceAttributesServerExtractor<String, String> underTest =
+        new PeerServiceAttributesServerExtractor<>(peerServiceMapping, netAttributesExtractor);
 
     // when
     AttributesBuilder attributes = Attributes.builder();
@@ -49,10 +49,10 @@ class PeerServiceAttributesOnEndExtractorTest {
     // given
     Map<String, String> peerServiceMapping = singletonMap("example.com", "myService");
 
-    PeerServiceAttributesOnEndExtractor<String, String> underTest =
-        new PeerServiceAttributesOnEndExtractor<>(peerServiceMapping, netAttributesExtractor);
+    PeerServiceAttributesServerExtractor<String, String> underTest =
+        new PeerServiceAttributesServerExtractor<>(peerServiceMapping, netAttributesExtractor);
 
-    given(netAttributesExtractor.peerName(any(), any())).willReturn("example2.com");
+    given(netAttributesExtractor.peerName(any())).willReturn("example2.com");
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -70,10 +70,10 @@ class PeerServiceAttributesOnEndExtractorTest {
     // given
     Map<String, String> peerServiceMapping = singletonMap("1.2.3.4", "myService");
 
-    PeerServiceAttributesOnEndExtractor<String, String> underTest =
-        new PeerServiceAttributesOnEndExtractor<>(peerServiceMapping, netAttributesExtractor);
+    PeerServiceAttributesServerExtractor<String, String> underTest =
+        new PeerServiceAttributesServerExtractor<>(peerServiceMapping, netAttributesExtractor);
 
-    given(netAttributesExtractor.peerIp(any(), any())).willReturn("1.2.3.5");
+    given(netAttributesExtractor.peerIp(any())).willReturn("1.2.3.5");
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -93,10 +93,10 @@ class PeerServiceAttributesOnEndExtractorTest {
     peerServiceMapping.put("example.com", "myService");
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
-    PeerServiceAttributesOnEndExtractor<String, String> underTest =
-        new PeerServiceAttributesOnEndExtractor<>(peerServiceMapping, netAttributesExtractor);
+    PeerServiceAttributesServerExtractor<String, String> underTest =
+        new PeerServiceAttributesServerExtractor<>(peerServiceMapping, netAttributesExtractor);
 
-    given(netAttributesExtractor.peerName(any(), any())).willReturn("example.com");
+    given(netAttributesExtractor.peerName(any())).willReturn("example.com");
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -105,9 +105,9 @@ class PeerServiceAttributesOnEndExtractorTest {
     underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build())
+    assertThat(startAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test
@@ -117,11 +117,11 @@ class PeerServiceAttributesOnEndExtractorTest {
     peerServiceMapping.put("example.com", "myService");
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
-    PeerServiceAttributesOnEndExtractor<String, String> underTest =
-        new PeerServiceAttributesOnEndExtractor<>(peerServiceMapping, netAttributesExtractor);
+    PeerServiceAttributesServerExtractor<String, String> underTest =
+        new PeerServiceAttributesServerExtractor<>(peerServiceMapping, netAttributesExtractor);
 
-    given(netAttributesExtractor.peerName(any(), any())).willReturn("test.com");
-    given(netAttributesExtractor.peerIp(any(), any())).willReturn("1.2.3.4");
+    given(netAttributesExtractor.peerName(any())).willReturn("test.com");
+    given(netAttributesExtractor.peerIp(any())).willReturn("1.2.3.4");
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -130,8 +130,8 @@ class PeerServiceAttributesOnEndExtractorTest {
     underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build())
+    assertThat(startAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "someOtherService"));
+    assertThat(endAttributes.build()).isEmpty();
   }
 }

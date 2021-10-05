@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnStartExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesServerExtractor;
 
 public class JaxRsClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-client-1.1";
@@ -39,7 +39,7 @@ public class JaxRsClientSingletons {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesOnStartExtractor.create(netAttributesExtractor))
+                PeerServiceAttributesServerExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(new InjectAdapter());
   }

@@ -16,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * {@link InetSocketAddress} so this is a convenient alternative to {@link
  * NetAttributesServerExtractor}. There is no meaning to implement both in the same instrumentation.
  */
-public abstract class InetSocketAddressNetServerAttributesExtractor<REQUEST, RESPONSE>
+public abstract class InetSocketAddressNetAttributesServerExtractor<REQUEST, RESPONSE>
     extends NetAttributesServerExtractor<REQUEST, RESPONSE> {
 
   /**
