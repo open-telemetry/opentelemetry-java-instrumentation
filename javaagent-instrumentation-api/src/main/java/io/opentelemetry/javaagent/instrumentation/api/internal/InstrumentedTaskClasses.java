@@ -41,8 +41,8 @@ public final class InstrumentedTaskClasses {
   private static volatile Predicate<String> ignoredTaskClassesPredicate;
 
   /**
-   * Sets the configured ignored tasks predicate (that uses a trie to find the common prefix). This
-   * method is called internally from the agent classloader.
+   * Sets the configured ignored tasks predicate. This method is called internally from the agent
+   * classloader.
    */
   public static void setIgnoredTaskClassesPredicate(Predicate<String> ignoredTasksTriePredicate) {
     if (InstrumentedTaskClasses.ignoredTaskClassesPredicate != null) {
