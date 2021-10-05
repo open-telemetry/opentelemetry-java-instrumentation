@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -24,13 +25,18 @@ public abstract class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Create the HTTP client attributes extractor.
+   * Creates the HTTP client attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
    *     headers should be captured as span attributes.
    */
   protected HttpClientAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
     super(capturedHttpHeaders);
+  }
+
+  /** Creates the HTTP client attributes extractor with default configuration. */
+  protected HttpClientAttributesExtractor() {
+    this(CapturedHttpHeaders.client(Config.get()));
   }
 
   @Override

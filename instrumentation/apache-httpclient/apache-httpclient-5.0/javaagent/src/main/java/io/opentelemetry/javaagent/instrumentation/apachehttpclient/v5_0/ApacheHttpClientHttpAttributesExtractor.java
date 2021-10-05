@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,10 +24,6 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   private static final Logger logger =
       LoggerFactory.getLogger(ApacheHttpClientHttpAttributesExtractor.class);
-
-  ApacheHttpClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected String method(ClassicHttpRequest request) {

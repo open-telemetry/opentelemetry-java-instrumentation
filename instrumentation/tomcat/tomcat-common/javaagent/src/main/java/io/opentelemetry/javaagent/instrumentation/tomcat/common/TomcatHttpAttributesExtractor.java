@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import java.util.Collections;
 import java.util.List;
 import org.apache.coyote.Request;
@@ -16,10 +15,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
-
-  public TomcatHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedServerHeaders());
-  }
 
   @Override
   protected String method(Request request) {

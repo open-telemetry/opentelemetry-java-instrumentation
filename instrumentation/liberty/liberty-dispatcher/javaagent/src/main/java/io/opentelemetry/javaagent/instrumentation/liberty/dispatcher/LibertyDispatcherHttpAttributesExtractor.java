@@ -6,16 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LibertyDispatcherHttpAttributesExtractor
     extends HttpServerAttributesExtractor<LibertyRequest, LibertyResponse> {
-
-  public LibertyDispatcherHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedServerHeaders());
-  }
 
   @Override
   protected @Nullable String method(LibertyRequest libertyRequest) {

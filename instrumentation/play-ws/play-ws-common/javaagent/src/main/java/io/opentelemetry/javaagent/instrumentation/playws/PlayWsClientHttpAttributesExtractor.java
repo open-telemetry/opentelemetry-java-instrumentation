@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,10 +14,6 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 final class PlayWsClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, Response> {
-
-  PlayWsClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected String method(Request request) {

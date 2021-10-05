@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
@@ -16,10 +15,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 class JdkHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, HttpResponse<?>> {
-
-  JdkHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected String method(HttpRequest httpRequest) {
