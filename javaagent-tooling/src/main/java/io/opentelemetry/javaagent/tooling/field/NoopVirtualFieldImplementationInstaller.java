@@ -7,10 +7,9 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import net.bytebuddy.agent.builder.AgentBuilder.Identified.Extendable;
 
-public class NoopVirtualFieldImplementationInstaller
-    implements VirtualFieldImplementationInstaller {
+final class NoopVirtualFieldImplementationInstaller implements VirtualFieldImplementationInstaller {
 
-  public static final NoopVirtualFieldImplementationInstaller INSTANCE =
+  static final NoopVirtualFieldImplementationInstaller INSTANCE =
       new NoopVirtualFieldImplementationInstaller();
 
   private NoopVirtualFieldImplementationInstaller() {}
@@ -21,7 +20,7 @@ public class NoopVirtualFieldImplementationInstaller
   }
 
   @Override
-  public Extendable installFields(Extendable builder) {
+  public Extendable injectFields(Extendable builder) {
     return builder;
   }
 }
