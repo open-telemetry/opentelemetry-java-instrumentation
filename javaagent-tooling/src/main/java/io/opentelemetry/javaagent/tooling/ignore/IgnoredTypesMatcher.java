@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 

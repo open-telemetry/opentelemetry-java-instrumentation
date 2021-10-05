@@ -31,6 +31,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -209,7 +210,8 @@ public class AgentInstaller {
       configurer.configure(config, builder);
     }
 
-    InstrumentedTaskClasses.setIgnoredTaskClasses(builder.buildIgnoredTasksTrie());
+    Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
+    InstrumentedTaskClasses.setIgnoredTaskClassesPredicate(ignoredTasksTrie::contains);
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
