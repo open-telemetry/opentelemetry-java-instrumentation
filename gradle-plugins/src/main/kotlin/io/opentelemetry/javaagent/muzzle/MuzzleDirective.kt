@@ -18,7 +18,7 @@ abstract class MuzzleDirective {
   abstract val classifier: Property<String>
   abstract val versions: Property<String>
   abstract val skipVersions: SetProperty<String>
-  abstract val additionalDependencies: ListProperty<String>
+  abstract val additionalDependencies: ListProperty<Any>
   abstract val excludedDependencies: ListProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
@@ -42,11 +42,11 @@ abstract class MuzzleDirective {
   /**
    * Adds extra dependencies to the current muzzle test.
    *
-   * @param compileString An extra dependency in the gradle canonical form:
-   * '<group_id>:<artifact_id>:<version_id>'.
+   * @param dependencyNotation An extra dependency in the gradle canonical form:
+   * '<group_id>:<artifact_id>:<version_id>' or a project dependency project(':some-project').
    */
-  fun extraDependency(compileString: String?) {
-    additionalDependencies.add(compileString!!)
+  fun extraDependency(dependencyNotation: Any) {
+    additionalDependencies.add(dependencyNotation)
   }
 
   /**
