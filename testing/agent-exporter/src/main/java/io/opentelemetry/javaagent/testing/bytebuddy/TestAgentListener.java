@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.GlobalIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
