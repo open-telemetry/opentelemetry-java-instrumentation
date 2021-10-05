@@ -105,7 +105,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     return type;
   }
 
-  private final InstrumentationClassPredicate instrumentationClassPredicate;
+  private final HelperClassPredicate helperClassPredicate;
   private final boolean isAdviceClass;
 
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
@@ -119,9 +119,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private Type refSourceType;
 
   ReferenceCollectingClassVisitor(
-      InstrumentationClassPredicate instrumentationClassPredicate, boolean isAdviceClass) {
+      HelperClassPredicate helperClassPredicate, boolean isAdviceClass) {
     super(Opcodes.ASM7);
-    this.instrumentationClassPredicate = instrumentationClassPredicate;
+    this.helperClassPredicate = helperClassPredicate;
     this.isAdviceClass = isAdviceClass;
   }
 
@@ -143,7 +143,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   private void addExtendsReference(ClassRef ref) {
     addReference(ref);
-    if (instrumentationClassPredicate.isInstrumentationClass(ref.getClassName())) {
+    if (helperClassPredicate.isHelperClass(ref.getClassName())) {
       helperSuperClasses.add(ref.getClassName());
     }
   }
@@ -157,7 +157,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         references.put(ref.getClassName(), reference.merge(ref));
       }
     }
-    if (instrumentationClassPredicate.isInstrumentationClass(ref.getClassName())) {
+    if (helperClassPredicate.isHelperClass(ref.getClassName())) {
       helperClasses.add(ref.getClassName());
     }
   }

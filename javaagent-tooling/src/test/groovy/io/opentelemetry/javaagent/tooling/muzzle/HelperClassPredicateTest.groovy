@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.tooling.muzzle
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class InstrumentationClassPredicateTest extends Specification {
+class HelperClassPredicateTest extends Specification {
   @Unroll
   def "should collect references for #desc"() {
     setup:
-    def predicate = new InstrumentationClassPredicate({ it.startsWith("com.example.instrumentation.library") })
+    def predicate = new HelperClassPredicate({ it.startsWith("com.example.instrumentation.library") })
 
     expect:
-    predicate.isInstrumentationClass(className)
+    predicate.isHelperClass(className)
 
     where:
     desc                                       | className
@@ -27,10 +27,10 @@ class InstrumentationClassPredicateTest extends Specification {
   @Unroll
   def "should not collect references for #desc"() {
     setup:
-    def predicate = new InstrumentationClassPredicate({ false })
+    def predicate = new HelperClassPredicate({ false })
 
     expect:
-    !predicate.isInstrumentationClass(className)
+    !predicate.isHelperClass(className)
 
     where:
     desc                                  | className
