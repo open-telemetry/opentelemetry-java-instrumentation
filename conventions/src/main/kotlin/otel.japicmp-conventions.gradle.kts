@@ -12,7 +12,7 @@ plugins {
 val latestReleasedVersion: String by lazy {
   // hack to find the current released version of the project
   val temp: Configuration = configurations.create("tempConfig")
-  // pick the api, since it's always there.
+  // pick the agent, since it's always there.
   dependencies.add(temp.name,"io.opentelemetry.javaagent:opentelemetry-javaagent:latest.release")
   var moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
 
