@@ -90,8 +90,7 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   // TODO: remove implementations?
   @Nullable
   protected String userAgent(REQUEST request) {
-    List<String> values = requestHeader(request, "user-agent");
-    return values.isEmpty() ? null : values.get(0);
+    return firstHeaderValue(requestHeader(request, "user-agent"));
   }
 
   /**
@@ -162,4 +161,9 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
    * returned instead.
    */
   protected abstract List<String> responseHeader(REQUEST request, RESPONSE response, String name);
+
+  @Nullable
+  static String firstHeaderValue(List<String> values) {
+    return values.isEmpty() ? null : values.get(0);
+  }
 }
