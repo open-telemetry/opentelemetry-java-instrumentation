@@ -6,14 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LibertyDispatcherHttpAttributesExtractor
     extends HttpServerAttributesExtractor<LibertyRequest, LibertyResponse> {
-  private static final Logger logger =
-      LoggerFactory.getLogger(LibertyDispatcherHttpAttributesExtractor.class);
+
+  public LibertyDispatcherHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedServerHeaders());
+  }
 
   @Override
   protected @Nullable String method(LibertyRequest libertyRequest) {
@@ -23,6 +25,11 @@ public class LibertyDispatcherHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(LibertyRequest libertyRequest) {
     return libertyRequest.getHeaderValue("User-Agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(LibertyRequest libertyRequest, String name) {
+    return libertyRequest.getHeaderValues(name);
   }
 
   @Override
@@ -65,6 +72,12 @@ public class LibertyDispatcherHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      LibertyRequest libertyRequest, LibertyResponse libertyResponse, String name) {
+    return libertyResponse.getHeaderValues(name);
   }
 
   @Override

@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpResponse;
@@ -21,6 +25,10 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   private static final Logger logger =
       LoggerFactory.getLogger(ApacheHttpClientHttpAttributesExtractor.class);
+
+  ApacheHttpClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected String method(ClassicHttpRequest request) {
@@ -65,6 +73,11 @@ final class ApacheHttpClientHttpAttributesExtractor
   protected String userAgent(ClassicHttpRequest request) {
     Header header = request.getFirstHeader("User-Agent");
     return header != null ? header.getValue() : null;
+  }
+
+  @Override
+  protected List<String> requestHeader(ClassicHttpRequest request, String name) {
+    return headersToList(request.getHeaders(name));
   }
 
   @Override
@@ -122,5 +135,23 @@ final class ApacheHttpClientHttpAttributesExtractor
   protected Long responseContentLengthUncompressed(
       ClassicHttpRequest request, HttpResponse response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ClassicHttpRequest request, HttpResponse response, String name) {
+    return headersToList(response.getHeaders(name));
+  }
+
+  // minimize memory overhead by not using streams
+  private static List<String> headersToList(Header[] headers) {
+    if (headers.length == 0) {
+      return Collections.emptyList();
+    }
+    List<String> headersList = new ArrayList<>(headers.length);
+    for (int i = 0; i < headers.length; ++i) {
+      headersList.set(i, headers[i].getValue());
+    }
+    return headersList;
   }
 }

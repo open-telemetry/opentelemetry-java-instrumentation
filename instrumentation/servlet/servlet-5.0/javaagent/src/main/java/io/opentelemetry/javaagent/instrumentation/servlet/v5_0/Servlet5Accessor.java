@@ -13,7 +13,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
   public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
@@ -81,6 +85,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
+    Enumeration<String> values = request.getHeaders(name);
+    return values == null ? Collections.emptyList() : Collections.list(values);
+  }
+
+  @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     return Collections.list(httpServletRequest.getHeaderNames());
   }
@@ -135,6 +145,18 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public String getResponseHeader(HttpServletResponse response, String name) {
     return response.getHeader(name);
+  }
+
+  @Override
+  public List<String> getResponseHeaderValues(HttpServletResponse response, String name) {
+    Collection<String> values = response.getHeaders(name);
+    if (values == null) {
+      return Collections.emptyList();
+    }
+    if (values instanceof List) {
+      return (List<String>) values;
+    }
+    return new ArrayList<>(values);
   }
 
   @Override

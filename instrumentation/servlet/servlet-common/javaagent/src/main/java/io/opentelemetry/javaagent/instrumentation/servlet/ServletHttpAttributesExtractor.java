@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
@@ -15,6 +17,7 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
 
   public ServletHttpAttributesExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
+    super(HttpHeadersConfig.capturedServerHeaders());
     this.accessor = accessor;
   }
 
@@ -48,6 +51,11 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   @Override
   protected @Nullable String userAgent(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestHeader(requestContext.request(), "User-Agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(ServletRequestContext<REQUEST> requestContext, String name) {
+    return accessor.getRequestHeaderValues(requestContext.request(), name);
   }
 
   @Override
@@ -121,6 +129,14 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ServletRequestContext<REQUEST> requestContext,
+      ServletResponseContext<RESPONSE> responseContext,
+      String name) {
+    return accessor.getResponseHeaderValues(responseContext.response(), name);
   }
 
   @Override

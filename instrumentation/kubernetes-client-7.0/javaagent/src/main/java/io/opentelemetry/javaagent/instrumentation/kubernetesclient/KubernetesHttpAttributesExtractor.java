@@ -5,14 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
+import static java.util.Collections.emptyList;
+
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import okhttp3.Request;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class KubernetesHttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, ApiResponse<?>> {
+
+  KubernetesHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
+
   @Override
   protected String method(Request request) {
     return request.method();
@@ -26,6 +35,11 @@ class KubernetesHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(Request request) {
     return request.header("user-agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(Request request, String name) {
+    return request.headers(name);
   }
 
   @Override
@@ -59,5 +73,10 @@ class KubernetesHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       Request request, ApiResponse<?> apiResponse) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, ApiResponse<?> apiResponse, String name) {
+    return apiResponse.getHeaders().getOrDefault(name, emptyList());
   }
 }

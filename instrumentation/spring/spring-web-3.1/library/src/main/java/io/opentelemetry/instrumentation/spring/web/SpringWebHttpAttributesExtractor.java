@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.web;
 
+import static java.util.Collections.emptyList;
+
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.io.IOException;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -14,6 +18,12 @@ import org.springframework.http.client.ClientHttpResponse;
 
 final class SpringWebHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, ClientHttpResponse> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  SpringWebHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
+
   @Override
   protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
@@ -28,6 +38,11 @@ final class SpringWebHttpAttributesExtractor
   protected @Nullable String userAgent(HttpRequest httpRequest) {
     // using lowercase header name intentionally to ensure extraction is not case-sensitive
     return httpRequest.getHeaders().getFirst("user-agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.getHeaders().getOrDefault(name, emptyList());
   }
 
   @Override
@@ -67,5 +82,11 @@ final class SpringWebHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
+    return clientHttpResponse.getHeaders().getOrDefault(name, emptyList());
   }
 }

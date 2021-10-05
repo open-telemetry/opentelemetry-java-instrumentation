@@ -5,15 +5,28 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
+import static io.opentelemetry.instrumentation.restlet.v1_0.RestletHeadersGetter.getHeaders;
+
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.restlet.data.Parameter;
 import org.restlet.data.Reference;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
+import org.restlet.util.Series;
 
 final class RestletHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  RestletHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
 
   @Override
   protected String method(Request request) {
@@ -46,6 +59,11 @@ final class RestletHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(Request request) {
     return request.getClientInfo().getAgent();
+  }
+
+  @Override
+  protected List<String> requestHeader(Request request, String name) {
+    return parametersToList(getHeaders(request).subList(name, /* ignoreCase = */ true));
   }
 
   @Override
@@ -93,5 +111,23 @@ final class RestletHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return parametersToList(getHeaders(response).subList(name, /* ignoreCase = */ true));
+  }
+
+  // minimize memory overhead by not using streams
+  private static List<String> parametersToList(Series<Parameter> headers) {
+    if (headers.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<String> stringHeaders = new ArrayList<>(headers.size());
+    int i = 0;
+    for (Parameter header : headers) {
+      stringHeaders.set(i++, header.getValue());
+    }
+    return stringHeaders;
   }
 }

@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -22,6 +23,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<REQUEST, RESPONSE> {
+
+  /**
+   * Create the HTTP server attributes extractor.
+   *
+   * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
+   *     headers should be captured as span attributes.
+   */
+  protected HttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
+  }
 
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
@@ -53,8 +64,12 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String target(REQUEST request);
 
+  // TODO: remove implementations?
   @Nullable
-  protected abstract String host(REQUEST request);
+  protected String host(REQUEST request) {
+    List<String> values = requestHeader(request, "host");
+    return values.isEmpty() ? null : values.get(0);
+  }
 
   @Nullable
   protected abstract String route(REQUEST request);

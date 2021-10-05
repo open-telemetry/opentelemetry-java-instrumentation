@@ -6,11 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HeaderValues;
+import java.util.Collections;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class UndertowHttpAttributesExtractor
     extends HttpServerAttributesExtractor<HttpServerExchange, HttpServerExchange> {
+
+  public UndertowHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedServerHeaders());
+  }
 
   @Override
   protected String method(HttpServerExchange exchange) {
@@ -20,6 +28,12 @@ public class UndertowHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(HttpServerExchange exchange) {
     return exchange.getRequestHeaders().getFirst("User-Agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(HttpServerExchange exchange, String name) {
+    HeaderValues values = exchange.getRequestHeaders().get(name);
+    return values == null ? Collections.emptyList() : values;
   }
 
   @Override
@@ -61,6 +75,13 @@ public class UndertowHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       HttpServerExchange exchange, HttpServerExchange unused) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      HttpServerExchange exchange, HttpServerExchange unused, String name) {
+    HeaderValues values = exchange.getResponseHeaders().get(name);
+    return values == null ? Collections.emptyList() : values;
   }
 
   @Override

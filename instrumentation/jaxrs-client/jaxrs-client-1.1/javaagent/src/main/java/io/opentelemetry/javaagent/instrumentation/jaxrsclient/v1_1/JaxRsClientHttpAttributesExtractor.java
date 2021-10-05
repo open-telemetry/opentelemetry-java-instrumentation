@@ -5,14 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
+import static java.util.Collections.emptyList;
+
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientRequest, ClientResponse> {
+
+  JaxRsClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected @Nullable String method(ClientRequest httpRequest) {
@@ -28,6 +37,20 @@ final class JaxRsClientHttpAttributesExtractor
   protected @Nullable String userAgent(ClientRequest httpRequest) {
     Object header = httpRequest.getHeaders().getFirst("User-Agent");
     return header != null ? header.toString() : null;
+  }
+
+  @Override
+  protected List<String> requestHeader(ClientRequest httpRequest, String name) {
+    List<Object> rawHeaders = httpRequest.getHeaders().getOrDefault(name, emptyList());
+    if (rawHeaders.isEmpty()) {
+      return emptyList();
+    }
+    List<String> stringHeaders = new ArrayList<>(rawHeaders.size());
+    int i = 0;
+    for (Object headerValue : rawHeaders) {
+      stringHeaders.set(i++, String.valueOf(headerValue));
+    }
+    return stringHeaders;
   }
 
   @Override
@@ -63,5 +86,11 @@ final class JaxRsClientHttpAttributesExtractor
   protected @Nullable Long responseContentLengthUncompressed(
       ClientRequest httpRequest, ClientResponse httpResponse) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ClientRequest httpRequest, ClientResponse httpResponse, String name) {
+    return httpResponse.getHeaders().getOrDefault(name, emptyList());
   }
 }

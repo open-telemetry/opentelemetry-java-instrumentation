@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
+import java.util.Collections;
+import java.util.List;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -13,6 +16,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
+
+  public TomcatHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedServerHeaders());
+  }
 
   @Override
   protected String method(Request request) {
@@ -43,6 +50,11 @@ public class TomcatHttpAttributesExtractor
   @Override
   protected @Nullable String userAgent(Request request) {
     return request.getHeader("User-Agent");
+  }
+
+  @Override
+  protected List<String> requestHeader(Request request, String name) {
+    return Collections.list(request.getMimeHeaders().values(name));
   }
 
   @Override
@@ -89,6 +101,11 @@ public class TomcatHttpAttributesExtractor
   @Override
   protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return Collections.list(response.getMimeHeaders().values(name));
   }
 
   @Override
