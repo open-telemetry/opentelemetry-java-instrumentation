@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import java.util.function.Predicate;
 
-public final class InstrumentationClassPredicate {
+public final class HelperClassPredicate {
   // javaagent instrumentation packages
   private static final String JAVAAGENT_INSTRUMENTATION_PACKAGE =
       "io.opentelemetry.javaagent.instrumentation.";
@@ -18,11 +18,10 @@ public final class InstrumentationClassPredicate {
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
   private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
-  private final Predicate<String> additionalLibraryInstrumentationPredicate;
+  private final Predicate<String> additionalLibraryHelperClassPredicate;
 
-  public InstrumentationClassPredicate(
-      Predicate<String> additionalLibraryInstrumentationPredicate) {
-    this.additionalLibraryInstrumentationPredicate = additionalLibraryInstrumentationPredicate;
+  public HelperClassPredicate(Predicate<String> additionalLibraryHelperClassPredicate) {
+    this.additionalLibraryHelperClassPredicate = additionalLibraryHelperClassPredicate;
   }
 
   /**
@@ -37,17 +36,17 @@ public final class InstrumentationClassPredicate {
    * <p>Aside from "standard" instrumentation helper class packages, instrumentation modules can
    * pass an additional predicate to include instrumentation helper classes from 3rd party packages.
    */
-  public boolean isInstrumentationClass(String className) {
-    return isJavaagentInstrumentationClass(className)
-        || isLibraryInstrumentationClass(className)
-        || additionalLibraryInstrumentationPredicate.test(className);
+  public boolean isHelperClass(String className) {
+    return isJavaagentHelperClass(className)
+        || isLibraryHelperClass(className)
+        || additionalLibraryHelperClassPredicate.test(className);
   }
 
-  public boolean isProvidedByLibrary(String className) {
-    return !isInstrumentationClass(className) && !isProvidedByJavaagent(className);
+  public boolean isLibraryClass(String className) {
+    return !isHelperClass(className) && !isBootstrapClass(className);
   }
 
-  private static boolean isProvidedByJavaagent(String className) {
+  private static boolean isBootstrapClass(String className) {
     return className.startsWith(JAVAAGENT_API_PACKAGE)
         || className.startsWith(INSTRUMENTATION_API_PACKAGE)
         || className.startsWith("io.opentelemetry.javaagent.bootstrap.")
@@ -57,12 +56,12 @@ public final class InstrumentationClassPredicate {
         || className.startsWith("org.slf4j.");
   }
 
-  private static boolean isJavaagentInstrumentationClass(String className) {
+  private static boolean isJavaagentHelperClass(String className) {
     return className.startsWith(JAVAAGENT_INSTRUMENTATION_PACKAGE)
         && !className.startsWith(JAVAAGENT_API_PACKAGE);
   }
 
-  private static boolean isLibraryInstrumentationClass(String className) {
+  private static boolean isLibraryHelperClass(String className) {
     return className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE)
         && !className.startsWith(INSTRUMENTATION_API_PACKAGE);
   }
