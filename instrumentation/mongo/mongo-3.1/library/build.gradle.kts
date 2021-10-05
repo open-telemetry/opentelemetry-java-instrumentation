@@ -10,7 +10,7 @@ dependencies {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }

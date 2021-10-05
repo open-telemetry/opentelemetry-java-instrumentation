@@ -26,7 +26,7 @@ testSets {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     dependsOn("version5Test")
     dependsOn("version6Test")
   }
