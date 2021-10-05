@@ -3,7 +3,7 @@ name: PR build Servlet images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/images/matrix/**'
+      - 'smoke-tests/images/servlet/**'
       - '.github/workflows/pr-smoke-test-servlet-images.yml'
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/matrix/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/servlet/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Linux docker images
         working-directory: smoke-tests/images/matrix
