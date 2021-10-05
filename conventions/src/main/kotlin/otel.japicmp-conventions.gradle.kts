@@ -14,10 +14,10 @@ val latestReleasedVersion: String by lazy {
   val temp: Configuration = configurations.create("tempConfig")
   // pick the agent, since it's always there.
   dependencies.add(temp.name,"io.opentelemetry.javaagent:opentelemetry-javaagent:latest.release")
-  var moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
+  val moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
 
   configurations.remove(temp)
-  logger.info("Discovered latest release version: " + moduleVersion)
+  logger.info("Discovered latest release version: $moduleVersion")
   moduleVersion
 }
 
