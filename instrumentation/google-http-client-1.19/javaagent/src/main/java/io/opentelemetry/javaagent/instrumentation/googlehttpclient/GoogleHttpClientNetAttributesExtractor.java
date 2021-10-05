@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class GoogleHttpClientNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<HttpRequest, HttpResponse> {
+    extends NetAttributesServerExtractor<HttpRequest, HttpResponse> {
 
   @Override
   public String transport(HttpRequest request) {

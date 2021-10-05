@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<ApacheHttpClientRequest, HttpResponse> {
+    extends NetAttributesServerExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String transport(ApacheHttpClientRequest request) {

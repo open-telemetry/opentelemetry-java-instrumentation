@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnEndExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,12 +28,12 @@ public final class PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
-  private final NetAttributesOnEndExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor;
+  private final NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor;
 
   // visible for tests
   PeerServiceAttributesOnEndExtractor(
       Map<String, String> peerServiceMapping,
-      NetAttributesOnEndExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
+      NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
     this.netResponseAttributesExtractor = netResponseAttributesExtractor;
   }
@@ -43,7 +43,7 @@ public final class PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesOnEndExtractor<REQUEST, RESPONSE> create(
-      NetAttributesOnEndExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
+      NetAttributesClientExtractor<REQUEST, RESPONSE> netResponseAttributesExtractor) {
     return new PeerServiceAttributesOnEndExtractor<>(
         JAVAAGENT_PEER_SERVICE_MAPPING, netResponseAttributesExtractor);
   }

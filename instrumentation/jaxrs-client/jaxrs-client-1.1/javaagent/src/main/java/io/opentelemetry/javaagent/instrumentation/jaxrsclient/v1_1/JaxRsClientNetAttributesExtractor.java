@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<ClientRequest, ClientResponse> {
+    extends NetAttributesServerExtractor<ClientRequest, ClientResponse> {
 
   @Override
   public String transport(ClientRequest request) {

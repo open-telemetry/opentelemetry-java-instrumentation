@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<Request, Response> {
+    extends NetAttributesServerExtractor<Request, Response> {
 
   @Override
   public String transport(Request request) {

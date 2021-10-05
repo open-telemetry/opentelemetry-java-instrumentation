@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnEndExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesOnEndExtractor;
 import org.asynchttpclient.Response;
 
@@ -29,7 +29,7 @@ public final class AsyncHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<RequestContext, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesOnEndExtractor<RequestContext, Response> netAttributesExtractor =
+    NetAttributesClientExtractor<RequestContext, Response> netAttributesExtractor =
         new AsyncHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =

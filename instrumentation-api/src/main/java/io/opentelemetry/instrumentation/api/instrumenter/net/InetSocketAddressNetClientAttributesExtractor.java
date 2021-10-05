@@ -14,11 +14,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a> from a {@link InetSocketAddress}. Most network libraries will provide access to a
  * {@link InetSocketAddress} so this is a convenient alternative to {@link
- * NetAttributesOnStartExtractor}. There is no meaning to implement both in the same
- * instrumentation.
+ * NetAttributesClientExtractor}. There is no meaning to implement both in the same instrumentation.
  */
-public abstract class InetSocketAddressNetAttributesOnStartExtractor<REQUEST, RESPONSE>
-    extends NetAttributesOnStartExtractor<REQUEST, RESPONSE> {
+public abstract class InetSocketAddressNetClientAttributesExtractor<REQUEST, RESPONSE>
+    extends NetAttributesClientExtractor<REQUEST, RESPONSE> {
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -26,12 +25,12 @@ public abstract class InetSocketAddressNetAttributesOnStartExtractor<REQUEST, RE
    * phases of processing.
    */
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request);
+  public abstract InetSocketAddress getAddress(REQUEST request, RESPONSE response);
 
   @Override
   @Nullable
-  public final String peerName(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final String peerName(REQUEST request, RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -43,8 +42,8 @@ public abstract class InetSocketAddressNetAttributesOnStartExtractor<REQUEST, RE
 
   @Override
   @Nullable
-  public final Integer peerPort(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final Integer peerPort(REQUEST request, RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -53,8 +52,8 @@ public abstract class InetSocketAddressNetAttributesOnStartExtractor<REQUEST, RE
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final String peerIp(REQUEST request, RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }

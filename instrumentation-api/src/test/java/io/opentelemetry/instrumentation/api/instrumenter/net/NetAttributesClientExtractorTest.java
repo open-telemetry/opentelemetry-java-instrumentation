@@ -15,10 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class NetAttributesOnEndExtractorTest {
+class NetAttributesClientExtractorTest {
 
-  static class TestNetAttributesOnEndExtractor
-      extends NetAttributesOnEndExtractor<Map<String, String>, Map<String, String>> {
+  static class TestNetAttributesClientExtractor
+      extends NetAttributesClientExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
     public String transport(Map<String, String> request, Map<String, String> response) {
@@ -64,7 +64,7 @@ class NetAttributesOnEndExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetAttributesOnEndExtractor extractor = new TestNetAttributesOnEndExtractor();
+    TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
 
     // when
     AttributesBuilder endAttributes = Attributes.builder();
@@ -92,7 +92,7 @@ class NetAttributesOnEndExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetAttributesOnEndExtractor extractor = new TestNetAttributesOnEndExtractor();
+    TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
 
     // when
     AttributesBuilder endAttributes = Attributes.builder();

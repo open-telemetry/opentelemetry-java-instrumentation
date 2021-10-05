@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OkHttpNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<Request, Response> {
+    extends NetAttributesServerExtractor<Request, Response> {
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

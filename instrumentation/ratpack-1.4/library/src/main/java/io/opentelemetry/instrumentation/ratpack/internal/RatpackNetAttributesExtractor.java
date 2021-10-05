@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.ratpack.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import ratpack.http.Request;
 import ratpack.http.Response;
 
 public final class RatpackNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<Request, Response> {
+    extends NetAttributesServerExtractor<Request, Response> {
   @Override
   @Nullable
   public String transport(Request request) {

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class JdbcNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<DbRequest, Void> {
+    extends NetAttributesServerExtractor<DbRequest, Void> {
 
   @Nullable
   @Override

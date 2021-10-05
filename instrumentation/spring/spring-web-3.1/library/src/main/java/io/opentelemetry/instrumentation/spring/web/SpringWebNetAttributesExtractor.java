@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.web;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
 final class SpringWebNetAttributesExtractor
-    extends NetAttributesOnStartExtractor<HttpRequest, ClientHttpResponse> {
+    extends NetAttributesServerExtractor<HttpRequest, ClientHttpResponse> {
   @Override
   public String transport(HttpRequest httpRequest) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

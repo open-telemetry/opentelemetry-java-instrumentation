@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesOnStartExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @see DbAttributesExtractor
  * @see HttpClientAttributesExtractor
- * @see NetAttributesOnStartExtractor
+ * @see NetAttributesServerExtractor
  */
 public abstract class AttributesExtractor<REQUEST, RESPONSE> {
   /**
