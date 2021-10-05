@@ -20,8 +20,10 @@ Muzzle has two phases:
 The compile-time reference collection and code generation process is implemented using a ByteBuddy
 plugin (called `MuzzleCodeGenerationPlugin`).
 
-For each instrumentation module the ByteBuddy plugin collects symbols referring to both internal and
-third party APIs used by the currently processed module's type
+For each instrumentation module the ByteBuddy plugin first applies `InstrumentationModuleMuzzle`
+interface to it and then proceeds to implement all methods from that interface by generating the
+required bytecode.
+It collects symbols referring to both internal and third party APIs used by the currently processed module's type
 instrumentations (`InstrumentationModule#typeInstrumentations()`). The reference collection process
 starts from advice classes (values of the map returned by the
 `TypeInstrumentation#transformers()` method) and traverses the class graph until it encounters a
@@ -29,29 +31,23 @@ reference to a non-instrumentation class (determined by `InstrumentationClassPre
 the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references,
 the collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
-injected to the application classloader (`InstrumentationModule#getMuzzleHelperClassNames()`).
-Muzzle also automatically generates the `InstrumentationModule#registerMuzzleVirtualFields()`
-method.
+injected to the application classloader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
+Muzzle also automatically generates the `InstrumentationModuleMuzzle#registerMuzzleVirtualFields()`
+method. All collected references are then used to generate an `InstrumentationModuleMuzzle#getMuzzleReferences` method.
 
-If you extend any of these `getMuzzle...()` methods in your `InstrumentationModule`, the muzzle
-compile plugin will not override your code: muzzle will only override those methods that do not have
-a custom implementation.
+If your `InstrumentationModule` subclass defines a method with exact same signature as a method
+from `InstrumentationModuleMuzzle`, the muzzle compile plugin will not override your code:
+muzzle will only generate those methods that do not have a custom implementation.
 
-All collected references are then used to create a `ReferenceMatcher` instance. This matcher
-is stored in the instrumentation module class in the method `InstrumentationModule#getMuzzleReferenceMatcher()`
-and is shared between all type instrumentations. The bytecode of this method (basically an array of
-`Reference` builder calls) and the `getMuzzleHelperClassNames()` is generated automatically by the
-ByteBuddy plugin using an ASM code visitor.
-
-The source code of the compile-time plugin is located in the `javaagent-tooling` module,
-package `io.opentelemetry.javaagent.muzzle.generation.collector`.
+The source code of the compile-time plugin is located in the `muzzle` module,
+package `io.opentelemetry.javaagent.tooling.muzzle.generation`.
 
 ### Runtime reference matching
 
 The runtime reference matching process is implemented as a ByteBuddy matcher in `InstrumentationModule`.
-`MuzzleMatcher` uses the `getMuzzleReferenceMatcher()` method generated during the compilation phase
+`MuzzleMatcher` uses the `InstrumentationModuleMuzzle` methods generated during the compilation phase
 to verify that the class loader of the instrumented type has all necessary symbols (classes,
-methods, fields). If the `ReferenceMatcher` finds any mismatch between collected references and the
+methods, fields). If this matcher finds any mismatch between collected references and the
 actual application classpath types the whole instrumentation is discarded.
 
 It is worth noting that because the muzzle check is expensive, it is only performed after a match
@@ -59,8 +55,7 @@ has been made by the `InstrumentationModule#classLoaderMatcher()` and `TypeInstr
 matchers. The result of muzzle matcher is cached per classloader, so that it is only executed
 once for the whole instrumentation module.
 
-The source code of the runtime muzzle matcher is located in the `javaagent-tooling` module,
-in the class `Instrumenter.Default` and under the package `io.opentelemetry.javaagent.tooling.muzzle`.
+The source code of the runtime muzzle matcher is located in the `muzzle` module.
 
 ## Muzzle gradle plugin
 

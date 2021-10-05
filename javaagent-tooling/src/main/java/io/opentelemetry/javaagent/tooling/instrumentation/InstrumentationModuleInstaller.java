@@ -59,7 +59,8 @@ public final class InstrumentationModuleInstaller {
       logger.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
-    List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
+    List<String> helperClassNames =
+        InstrumentationModuleMuzzle.getMuzzleHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
     instrumentationModule.registerHelperResources(helperResourceBuilder);
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
