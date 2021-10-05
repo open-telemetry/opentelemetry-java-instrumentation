@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class LibertyRequest {
@@ -36,10 +38,6 @@ public class LibertyRequest {
     return httpRequestMessage.getQueryString();
   }
 
-  public String getServerName() {
-    return httpDispatcherLink.getRequestedHost();
-  }
-
   public int getServerPort() {
     return httpDispatcherLink.getRequestedPort();
   }
@@ -51,6 +49,18 @@ public class LibertyRequest {
   public String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
+  }
+
+  public List<String> getHeaderValues(String name) {
+    List<HeaderField> headers = httpRequestMessage.getHeaders(name);
+    if (headers.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<String> stringHeaders = new ArrayList<>(headers.size());
+    for (HeaderField header : headers) {
+      stringHeaders.add(header.asString());
+    }
+    return stringHeaders;
   }
 
   public int peerPort() {

@@ -88,7 +88,7 @@ tasks {
     into(file("$buildDir/testapp/web"))
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(sourceSets["testapp"].output)
     dependsOn(copyTestWebapp)
 

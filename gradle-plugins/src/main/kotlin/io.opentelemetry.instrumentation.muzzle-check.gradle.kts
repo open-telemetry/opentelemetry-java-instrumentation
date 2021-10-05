@@ -199,7 +199,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     config.dependencies.add(dep)
 
     for (additionalDependency in muzzleDirective.additionalDependencies.get()) {
-      val additional = if (additionalDependency.count { it == ':' } < 2) {
+      val additional = if (additionalDependency is String && additionalDependency.count { it == ':' } < 2) {
         // Dependency definition without version, use the artifact's version.
         "${additionalDependency}:${versionArtifact.version}"
       } else {

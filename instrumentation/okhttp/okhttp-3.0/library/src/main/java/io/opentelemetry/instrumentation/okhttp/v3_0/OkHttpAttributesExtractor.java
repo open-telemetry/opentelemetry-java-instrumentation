@@ -5,13 +5,21 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Request, Response> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  OkHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
+
   @Override
   protected String method(Request request) {
     return request.method();
@@ -23,9 +31,8 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   }
 
   @Override
-  protected @Nullable String userAgent(Request request) {
-    // using lowercase header name intentionally to ensure extraction is not case-sensitive
-    return request.header("user-agent");
+  protected List<String> requestHeader(Request request, String name) {
+    return request.headers(name);
   }
 
   @Override
@@ -73,5 +80,10 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   @Override
   protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return response.headers(name);
   }
 }

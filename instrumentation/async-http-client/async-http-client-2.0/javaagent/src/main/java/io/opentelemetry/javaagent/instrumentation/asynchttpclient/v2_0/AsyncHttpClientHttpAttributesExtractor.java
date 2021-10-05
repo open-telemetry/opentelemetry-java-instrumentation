@@ -6,13 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.netty.request.NettyRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<RequestContext, Response> {
+
+  AsyncHttpClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected String method(RequestContext requestContext) {
@@ -25,9 +31,8 @@ final class AsyncHttpClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(RequestContext requestContext) {
-    return null;
+  protected List<String> requestHeader(RequestContext requestContext, String name) {
+    return requestContext.getRequest().getHeaders().getAll(name);
   }
 
   @Override
@@ -83,5 +88,11 @@ final class AsyncHttpClientHttpAttributesExtractor
   protected Long responseContentLengthUncompressed(
       RequestContext requestContext, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      RequestContext requestContext, Response response, String name) {
+    return response.getHeaders().getAll(name);
   }
 }

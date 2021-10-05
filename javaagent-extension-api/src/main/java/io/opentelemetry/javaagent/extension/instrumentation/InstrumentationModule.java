@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -135,18 +134,4 @@ public abstract class InstrumentationModule implements Ordered {
 
   /** Returns a list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
-
-  /**
-   * Returns a list of instrumentation helper classes, automatically detected by muzzle during
-   * compilation. Those helpers will be injected into the application classloader.
-   *
-   * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.instrumentation.javaagent-codegen} Gradle plugin.
-   *
-   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
-   * will not generate a new implementation, it will leave the existing one.
-   */
-  public List<String> getMuzzleHelperClassNames() {
-    return Collections.emptyList();
-  }
 }

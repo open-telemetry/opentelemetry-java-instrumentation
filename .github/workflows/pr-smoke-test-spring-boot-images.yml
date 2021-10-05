@@ -3,7 +3,7 @@ name: PR build Spring Boot images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/springboot/**'
+      - 'smoke-tests/images/spring-boot/**'
       - '.github/workflows/pr-smoke-test-spring-boot-images.yml'
 
 jobs:
@@ -23,18 +23,18 @@ jobs:
       - name: Cache gradle dependencies
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          job-id: springboot-smoke
+          job-id: spring-boot-smoke
           read-only: true
 
       - name: Cache Gradle Wrapper
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/springboot/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/spring-boot/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
         run: |
           ./gradlew jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
           ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
           ./gradlew jibDockerBuild -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace
-        working-directory: smoke-tests/springboot
+        working-directory: smoke-tests/images/spring-boot

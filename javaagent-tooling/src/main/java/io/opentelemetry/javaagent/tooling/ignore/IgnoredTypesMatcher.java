@@ -6,14 +6,10 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
-import java.util.regex.Pattern;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
-
-  private static final Pattern COM_MCHANGE_PROXY =
-      Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
   private final Trie<IgnoreAllow> ignoredTypes;
 
@@ -53,6 +49,10 @@ public class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<Ty
       return true;
     }
 
-    return COM_MCHANGE_PROXY.matcher(name).matches();
+    if (name.startsWith("com.mchange.v2.c3p0.") && name.endsWith("Proxy")) {
+      return true;
+    }
+
+    return false;
   }
 }

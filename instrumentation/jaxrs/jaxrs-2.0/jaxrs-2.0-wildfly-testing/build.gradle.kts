@@ -42,7 +42,7 @@ tasks {
     }
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(modifyLogbackJar)
     dependsOn(setupServer)
 

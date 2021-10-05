@@ -22,14 +22,15 @@ public final class ReferencesPrinter {
   /**
    * For all {@link InstrumentationModule}s found in the current thread's context classloader this
    * method prints references returned by the {@link
-   * MuzzleReferencesAccessor#getFor(InstrumentationModule)} method to the standard output.
+   * InstrumentationModuleMuzzle#getMuzzleReferences()} method to the standard output.
    */
   public static void printMuzzleReferences() {
     for (InstrumentationModule instrumentationModule :
         ServiceLoader.load(InstrumentationModule.class)) {
       try {
         System.out.println(instrumentationModule.getClass().getName());
-        for (ClassRef ref : MuzzleReferencesAccessor.getFor(instrumentationModule).values()) {
+        for (ClassRef ref :
+            InstrumentationModuleMuzzle.getMuzzleReferences(instrumentationModule).values()) {
           System.out.print(prettyPrint(ref));
         }
       } catch (RuntimeException e) {

@@ -47,7 +47,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(testIncludeProperty)
     dependsOn(testExcludeMethodsProperty)
     filter {

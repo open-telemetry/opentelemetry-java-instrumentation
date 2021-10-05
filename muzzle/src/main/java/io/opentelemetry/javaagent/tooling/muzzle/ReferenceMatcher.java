@@ -35,12 +35,12 @@ public final class ReferenceMatcher {
       Cache.newBuilder().setWeakKeys().build();
   private final Map<String, ClassRef> references;
   private final Set<String> helperClassNames;
-  private final InstrumentationClassPredicate instrumentationClassPredicate;
+  private final HelperClassPredicate helperClassPredicate;
 
   public static ReferenceMatcher of(InstrumentationModule instrumentationModule) {
     return new ReferenceMatcher(
-        instrumentationModule.getMuzzleHelperClassNames(),
-        MuzzleReferencesAccessor.getFor(instrumentationModule),
+        InstrumentationModuleMuzzle.getMuzzleHelperClassNames(instrumentationModule),
+        InstrumentationModuleMuzzle.getMuzzleReferences(instrumentationModule),
         instrumentationModule::isHelperClass);
   }
 
@@ -50,8 +50,7 @@ public final class ReferenceMatcher {
       Predicate<String> libraryInstrumentationPredicate) {
     this.references = references;
     this.helperClassNames = new HashSet<>(helperClassNames);
-    this.instrumentationClassPredicate =
-        new InstrumentationClassPredicate(libraryInstrumentationPredicate);
+    this.helperClassPredicate = new HelperClassPredicate(libraryInstrumentationPredicate);
   }
 
   /**
@@ -109,7 +108,7 @@ public final class ReferenceMatcher {
    */
   private List<Mismatch> checkMatch(ClassRef reference, TypePool typePool, ClassLoader loader) {
     try {
-      if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
+      if (helperClassPredicate.isHelperClass(reference.getClassName())) {
         // make sure helper class is registered
         if (!helperClassNames.contains(reference.getClassName())) {
           return singletonList(new Mismatch.MissingClass(reference));

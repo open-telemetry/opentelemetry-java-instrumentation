@@ -39,7 +39,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(testChunkRootSpan)
     dependsOn(testItemLevelSpan)
     filter {

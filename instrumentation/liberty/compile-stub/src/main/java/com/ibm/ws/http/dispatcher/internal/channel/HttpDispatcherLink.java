@@ -5,6 +5,8 @@
 
 package com.ibm.ws.http.dispatcher.internal.channel;
 
+import com.ibm.wsspi.http.HttpResponse;
+
 // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.transport.http/src/com/ibm/ws/http/dispatcher/internal/channel/HttpDispatcherLink.java
 public class HttpDispatcherLink {
 
@@ -20,11 +22,11 @@ public class HttpDispatcherLink {
     throw new UnsupportedOperationException();
   }
 
-  public String getRequestedHost() {
+  public int getRequestedPort() {
     throw new UnsupportedOperationException();
   }
 
-  public int getRequestedPort() {
+  public HttpResponse getResponse() {
     throw new UnsupportedOperationException();
   }
 }

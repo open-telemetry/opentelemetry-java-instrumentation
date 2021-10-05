@@ -15,6 +15,8 @@ public interface HttpRequestMessage {
 
   HeaderField getHeader(String paramString);
 
+  List<HeaderField> getHeaders(String name);
+
   String getScheme();
 
   String getRequestURI();

@@ -24,9 +24,9 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    // cannot stub dbOperation() and dbTable() because they're final
-    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM table");
+    given(sqlAttributesExtractor.operation(dbRequest)).willReturn("SELECT");
     given(sqlAttributesExtractor.name(dbRequest)).willReturn("database");
+    given(sqlAttributesExtractor.table(dbRequest)).willReturn("table");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
@@ -42,9 +42,9 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    // cannot stub dbOperation() and dbTable() because they're final
-    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM another.table");
+    given(sqlAttributesExtractor.operation(dbRequest)).willReturn("SELECT");
     given(sqlAttributesExtractor.name(dbRequest)).willReturn("database");
+    given(sqlAttributesExtractor.table(dbRequest)).willReturn("another.table");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
@@ -60,8 +60,8 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    // cannot stub dbOperation() and dbTable() because they're final
-    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM table");
+    given(sqlAttributesExtractor.operation(dbRequest)).willReturn("SELECT");
+    given(sqlAttributesExtractor.table(dbRequest)).willReturn("table");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 

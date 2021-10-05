@@ -3,7 +3,7 @@ name: Publish fake backend images for smoke tests
 on:
   push:
     paths:
-      - 'smoke-tests/fake-backend/**'
+      - 'smoke-tests/images/fake-backend/**'
       - '.github/workflows/publish-smoke-test-fake-backend-images.yml'
     branches:
       - main
@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
@@ -47,7 +47,7 @@ jobs:
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Using extra tag $TAG"
           ./gradlew jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=$TAG
-        working-directory: smoke-tests/fake-backend
+        working-directory: smoke-tests/images/fake-backend
 
   publishWindows:
     runs-on: windows-latest
@@ -77,7 +77,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Login to GitHub Package Registry
         uses: azure/docker-login@v1
@@ -91,7 +91,7 @@ jobs:
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Using extra tag $TAG"
           ./gradlew dockerPush -PextraTag=$TAG
-        working-directory: smoke-tests/fake-backend
+        working-directory: smoke-tests/images/fake-backend
 
   issue:
     name: Open issue on failure

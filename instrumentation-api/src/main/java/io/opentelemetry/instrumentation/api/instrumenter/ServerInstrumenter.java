@@ -34,6 +34,8 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
     return super.start(extracted, request);
   }
 
+  // TODO: move that to HttpServerAttributesExtractor, now that we have a method for extracting
+  // header values there
   private static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> addClientIpExtractor(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapGetter<REQUEST> getter) {
     HttpServerAttributesExtractor<REQUEST, RESPONSE> httpAttributesExtractor = null;

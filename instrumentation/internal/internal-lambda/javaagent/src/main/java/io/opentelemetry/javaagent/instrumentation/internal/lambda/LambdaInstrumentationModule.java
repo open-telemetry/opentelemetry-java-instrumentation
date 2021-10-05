@@ -24,7 +24,6 @@ public class LambdaInstrumentationModule extends InstrumentationModule {
     return true;
   }
 
-  @Override
   public List<String> getMuzzleHelperClassNames() {
     // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
     // classes

@@ -45,7 +45,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(testWithRabbitInstrumentation)
 
     filter {

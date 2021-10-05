@@ -29,7 +29,9 @@ object AkkaHttpTestAsyncWebServer {
           endpoint,
           new Closure[HttpResponse](()) {
             def doCall(): HttpResponse = {
-              val resp = HttpResponse(status = endpoint.getStatus) //.withHeaders(headers.Type)resp.contentType = "text/plain"
+              val resp = HttpResponse(status =
+                endpoint.getStatus
+              ) //.withHeaders(headers.Type)resp.contentType = "text/plain"
               endpoint match {
                 case SUCCESS => resp.withEntity(endpoint.getBody)
                 case INDEXED_CHILD =>

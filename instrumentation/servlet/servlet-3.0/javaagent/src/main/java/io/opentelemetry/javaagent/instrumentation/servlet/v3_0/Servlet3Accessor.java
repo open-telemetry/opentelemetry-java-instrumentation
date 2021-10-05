@@ -7,6 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +46,18 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
   @Override
   public String getResponseHeader(HttpServletResponse response, String name) {
     return response.getHeader(name);
+  }
+
+  @Override
+  public List<String> getResponseHeaderValues(HttpServletResponse response, String name) {
+    Collection<String> values = response.getHeaders(name);
+    if (values == null) {
+      return Collections.emptyList();
+    }
+    if (values instanceof List) {
+      return (List<String>) values;
+    }
+    return new ArrayList<>(values);
   }
 
   @Override

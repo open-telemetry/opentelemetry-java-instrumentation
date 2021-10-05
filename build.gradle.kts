@@ -1,5 +1,5 @@
-import java.time.Duration
 import nebula.plugin.release.git.opinion.Strategies
+import java.time.Duration
 
 plugins {
   id("idea")

@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,10 +24,34 @@ public interface InstrumentationModuleMuzzle {
    */
   Map<String, ClassRef> getMuzzleReferences();
 
+  /** See {@link #getMuzzleReferences()}. */
+  static Map<String, ClassRef> getMuzzleReferences(InstrumentationModule module) {
+    if (module instanceof InstrumentationModuleMuzzle) {
+      return ((InstrumentationModuleMuzzle) module).getMuzzleReferences();
+    } else {
+      return Collections.emptyMap();
+    }
+  }
+
   /**
    * Builds the associations between instrumented library classes and instrumentation context
    * classes. Keys (and their subclasses) will be associated with a context class stored in the
    * value.
    */
   void registerMuzzleVirtualFields(VirtualFieldMappingsBuilder builder);
+
+  /**
+   * Returns a list of instrumentation helper classes, automatically detected by muzzle during
+   * compilation. Those helpers will be injected into the application classloader.
+   */
+  List<String> getMuzzleHelperClassNames();
+
+  /** See {@link #getMuzzleHelperClassNames()}. */
+  static List<String> getMuzzleHelperClassNames(InstrumentationModule module) {
+    if (module instanceof InstrumentationModuleMuzzle) {
+      return ((InstrumentationModuleMuzzle) module).getMuzzleHelperClassNames();
+    } else {
+      return Collections.emptyList();
+    }
+  }
 }

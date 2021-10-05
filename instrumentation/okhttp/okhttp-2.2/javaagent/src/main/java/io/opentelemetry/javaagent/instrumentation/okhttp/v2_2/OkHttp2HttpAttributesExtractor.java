@@ -8,11 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class OkHttp2HttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, Response> {
+
+  OkHttp2HttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected String method(Request request) {
@@ -25,9 +31,8 @@ final class OkHttp2HttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    return request.header("User-Agent");
+  protected List<String> requestHeader(Request request, String name) {
+    return request.headers(name);
   }
 
   @Override
@@ -77,5 +82,10 @@ final class OkHttp2HttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return response.headers(name);
   }
 }
