@@ -53,10 +53,10 @@ public class LatestAgentSnapshotResolver {
     return match.get().stream()
         .filter(
             elem -> {
-              String classifier = $(elem).child("classifier").content();
+              Match classifierMatch = $(elem).child("classifier");
+              String classifier = classifierMatch == null ? null : classifierMatch.content();
               String extension = $(elem).child("extension").content();
-              // TODO (trask) this needs to be updated now that no more "all" artifact
-              return "all".equals(classifier) && "jar".equals(extension);
+              return "jar".equals(extension) && (classifier == null);
             })
         .map(e -> $(e).child("value").content())
         .findFirst()
