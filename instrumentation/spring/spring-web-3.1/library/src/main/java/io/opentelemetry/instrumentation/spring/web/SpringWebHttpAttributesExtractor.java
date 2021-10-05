@@ -35,12 +35,6 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpRequest httpRequest) {
-    // using lowercase header name intentionally to ensure extraction is not case-sensitive
-    return httpRequest.getHeaders().getFirst("user-agent");
-  }
-
-  @Override
   protected List<String> requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeaders().getOrDefault(name, emptyList());
   }

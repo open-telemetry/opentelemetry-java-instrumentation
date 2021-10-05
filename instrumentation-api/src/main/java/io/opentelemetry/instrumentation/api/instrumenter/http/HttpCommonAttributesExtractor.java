@@ -87,9 +87,8 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String method(REQUEST request);
 
-  // TODO: remove implementations?
   @Nullable
-  protected String userAgent(REQUEST request) {
+  private String userAgent(REQUEST request) {
     List<String> values = requestHeader(request, "user-agent");
     return values.isEmpty() ? null : values.get(0);
   }

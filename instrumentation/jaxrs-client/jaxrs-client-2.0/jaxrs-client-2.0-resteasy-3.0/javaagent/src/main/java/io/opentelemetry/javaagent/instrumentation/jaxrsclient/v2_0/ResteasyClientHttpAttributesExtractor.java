@@ -34,11 +34,6 @@ final class ResteasyClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(ClientInvocation httpRequest) {
-    return httpRequest.getHeaders().getHeader("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(ClientInvocation httpRequest, String name) {
     List<Object> rawHeaders = httpRequest.getHeaders().getHeaders().getOrDefault(name, emptyList());
     if (rawHeaders.isEmpty()) {

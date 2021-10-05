@@ -33,11 +33,6 @@ class KubernetesHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(Request request) {
-    return request.header("user-agent");
-  }
-
-  @Override
   protected List<String> requestHeader(Request request, String name) {
     return request.headers(name);
   }

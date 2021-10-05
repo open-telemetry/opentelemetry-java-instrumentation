@@ -39,10 +39,6 @@ public class LibertyRequest {
     return httpRequestMessage.getQueryString();
   }
 
-  public String getServerName() {
-    return httpDispatcherLink.getRequestedHost();
-  }
-
   public int getServerPort() {
     return httpDispatcherLink.getRequestedPort();
   }

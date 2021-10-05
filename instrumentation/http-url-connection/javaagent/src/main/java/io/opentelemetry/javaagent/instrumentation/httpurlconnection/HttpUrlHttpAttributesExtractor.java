@@ -33,11 +33,6 @@ class HttpUrlHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(HttpURLConnection connection) {
-    return connection.getRequestProperty("User-Agent");
-  }
-
-  @Override
   protected List<String> requestHeader(HttpURLConnection connection, String name) {
     String value = connection.getRequestProperty(name);
     return value == null ? emptyList() : singletonList(value);

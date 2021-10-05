@@ -34,12 +34,6 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String userAgent(ClientRequest httpRequest) {
-    Object header = httpRequest.getHeaders().getFirst("User-Agent");
-    return header != null ? header.toString() : null;
-  }
-
-  @Override
   protected List<String> requestHeader(ClientRequest httpRequest, String name) {
     List<Object> rawHeaders = httpRequest.getHeaders().getOrDefault(name, emptyList());
     if (rawHeaders.isEmpty()) {

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.ratpack;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.URI;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import ratpack.handling.Context;
@@ -37,21 +36,6 @@ final class RatpackHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String host(Request request) {
-    Context ratpackContext = request.get(Context.class);
-    if (ratpackContext == null) {
-      return null;
-    }
-    PublicAddress publicAddress = ratpackContext.get(PublicAddress.class);
-    if (publicAddress == null) {
-      return null;
-    }
-    URI uri = publicAddress.get();
-    return uri.getHost() + ":" + uri.getPort();
-  }
-
-  @Override
-  @Nullable
   protected String route(Request request) {
     // Ratpack route not available at the beginning of request.
     return null;
@@ -69,12 +53,6 @@ final class RatpackHttpAttributesExtractor
       return null;
     }
     return publicAddress.get().getScheme();
-  }
-
-  @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    return request.getHeaders().get("user-agent");
   }
 
   @Override

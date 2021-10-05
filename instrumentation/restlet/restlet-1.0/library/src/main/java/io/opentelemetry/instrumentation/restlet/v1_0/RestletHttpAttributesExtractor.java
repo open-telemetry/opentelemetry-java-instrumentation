@@ -41,12 +41,6 @@ final class RestletHttpAttributesExtractor
   }
 
   @Override
-  protected String host(Request request) {
-    Reference originalRef = request.getOriginalRef();
-    return originalRef.getHostDomain() + ":" + originalRef.getHostPort();
-  }
-
-  @Override
   protected @Nullable String route(Request request) {
     return null;
   }
@@ -54,11 +48,6 @@ final class RestletHttpAttributesExtractor
   @Override
   protected @Nullable String scheme(Request request) {
     return request.getOriginalRef().getScheme();
-  }
-
-  @Override
-  protected @Nullable String userAgent(Request request) {
-    return request.getClientInfo().getAgent();
   }
 
   @Override

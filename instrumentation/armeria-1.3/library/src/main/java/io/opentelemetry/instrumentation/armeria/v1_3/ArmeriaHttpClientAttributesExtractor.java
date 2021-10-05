@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
-import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.RequestContext;
@@ -33,12 +32,6 @@ final class ArmeriaHttpClientAttributesExtractor
   @Override
   protected String url(RequestContext ctx) {
     return request(ctx).uri().toString();
-  }
-
-  @Override
-  @Nullable
-  protected String userAgent(RequestContext ctx) {
-    return request(ctx).headers().get(HttpHeaderNames.USER_AGENT);
   }
 
   @Override

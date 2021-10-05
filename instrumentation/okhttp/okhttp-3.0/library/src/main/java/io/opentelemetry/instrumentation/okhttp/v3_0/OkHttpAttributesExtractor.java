@@ -31,12 +31,6 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   }
 
   @Override
-  protected @Nullable String userAgent(Request request) {
-    // using lowercase header name intentionally to ensure extraction is not case-sensitive
-    return request.header("user-agent");
-  }
-
-  @Override
   protected List<String> requestHeader(Request request, String name) {
     return request.headers(name);
   }
