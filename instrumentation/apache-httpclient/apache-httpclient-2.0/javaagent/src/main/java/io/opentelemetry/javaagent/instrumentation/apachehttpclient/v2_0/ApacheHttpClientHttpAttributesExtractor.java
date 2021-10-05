@@ -5,8 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
@@ -16,6 +21,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpMethod, HttpMethod> {
+
+  ApacheHttpClientHttpAttributesExtractor() {
+    super(HttpHeadersConfig.capturedClientHeaders());
+  }
 
   @Override
   protected String method(HttpMethod request) {
@@ -28,10 +37,9 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(HttpMethod request) {
-    Header header = request.getRequestHeader("User-Agent");
-    return header != null ? header.getValue() : null;
+  protected List<String> requestHeader(HttpMethod request, String name) {
+    Header header = request.getRequestHeader(name);
+    return header == null ? emptyList() : singletonList(header.getValue());
   }
 
   @Override
@@ -75,6 +83,12 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(HttpMethod request, HttpMethod response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(HttpMethod request, HttpMethod response, String name) {
+    Header header = response.getResponseHeader(name);
+    return header == null ? emptyList() : singletonList(header.getValue());
   }
 
   // mirroring implementation HttpMethodBase.getURI(), to avoid converting to URI and back to String

@@ -68,6 +68,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
         @Advice.Argument(value = 2) Exception failure,
@@ -79,7 +80,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
       }
       scope.close();
 
-      LibertyResponse response = new LibertyResponse(statusCode);
+      LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
       request.setCompleted();
 
       Throwable t = failure != null ? failure : throwable;

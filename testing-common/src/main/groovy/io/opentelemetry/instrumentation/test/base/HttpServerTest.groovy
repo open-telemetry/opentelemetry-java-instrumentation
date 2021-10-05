@@ -578,8 +578,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // netty instrumentation uses this
           "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         } else {
-          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
           "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
           "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
 
@@ -598,8 +598,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
         }
         if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          // "localhost" on linux, "127.0.0.1" on windows
-          "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
+          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+          "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
         }
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "${SemanticAttributes.NET_TRANSPORT}" IP_TCP

@@ -5,12 +5,21 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
+
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import java.util.List;
 import org.apache.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  ApacheHttpClientHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
 
   @Override
   protected String method(ApacheHttpClientRequest request) {
@@ -24,9 +33,8 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(ApacheHttpClientRequest request) {
-    return request.getHeader("User-Agent");
+  protected List<String> requestHeader(ApacheHttpClientRequest request, String name) {
+    return request.getHeader(name);
   }
 
   @Override
@@ -65,5 +73,11 @@ final class ApacheHttpClientHttpAttributesExtractor
   protected Long responseContentLengthUncompressed(
       ApacheHttpClientRequest request, HttpResponse response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(
+      ApacheHttpClientRequest request, HttpResponse response, String name) {
+    return headersToList(response.getHeaders(name));
   }
 }

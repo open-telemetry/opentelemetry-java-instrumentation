@@ -23,6 +23,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<REQUEST, RESPONSE> {
 
+  /**
+   * Create the HTTP client attributes extractor.
+   *
+   * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
+   *     headers should be captured as span attributes.
+   */
+  protected HttpClientAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
+  }
+
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);

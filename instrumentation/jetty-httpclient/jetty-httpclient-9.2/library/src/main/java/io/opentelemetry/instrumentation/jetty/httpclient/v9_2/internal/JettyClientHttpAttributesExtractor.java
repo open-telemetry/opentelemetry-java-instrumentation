@@ -9,7 +9,9 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpF
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -24,6 +26,11 @@ final class JettyClientHttpAttributesExtractor
   private static final Logger logger =
       LoggerFactory.getLogger(JettyClientHttpAttributesExtractor.class);
 
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  JettyClientHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
+
   @Override
   @Nullable
   protected String method(Request request) {
@@ -37,10 +44,8 @@ final class JettyClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
-    return agentField != null ? agentField.getValue() : null;
+  protected List<String> requestHeader(Request request, String name) {
+    return request.getHeaders().getValuesList(name);
   }
 
   @Override
@@ -57,7 +62,6 @@ final class JettyClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
   protected String flavor(Request request, @Nullable Response response) {
 
     if (response == null) {
@@ -82,7 +86,6 @@ final class JettyClientHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
   protected Integer statusCode(Request request, Response response) {
     return response.getStatus();
   }
@@ -103,6 +106,11 @@ final class JettyClientHttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return response.getHeaders().getValuesList(name);
   }
 
   private static Long getLongFromJettyHttpField(HttpField httpField) {

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import java.security.Principal;
+import java.util.List;
 
 /**
  * This interface is used to access methods of ServletContext, HttpServletRequest and
@@ -42,6 +43,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestHeader(REQUEST request, String name);
 
+  List<String> getRequestHeaderValues(REQUEST request, String name);
+
   Iterable<String> getRequestHeaderNames(REQUEST request);
 
   String getRequestServletPath(REQUEST request);
@@ -62,6 +65,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   int getResponseStatus(RESPONSE response);
 
   String getResponseHeader(RESPONSE response, String name);
+
+  List<String> getResponseHeaderValues(RESPONSE response, String name);
 
   boolean isResponseCommitted(RESPONSE response);
 

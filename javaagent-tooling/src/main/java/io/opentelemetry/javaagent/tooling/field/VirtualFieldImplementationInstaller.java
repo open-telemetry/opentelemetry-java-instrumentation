@@ -18,6 +18,6 @@ public interface VirtualFieldImplementationInstaller {
   AgentBuilder.Identified.Extendable rewriteVirtualFieldsCalls(
       AgentBuilder.Identified.Extendable builder);
 
-  /** Installs actual fields in classes referenced by {@link VirtualField} usages. */
-  AgentBuilder.Identified.Extendable installFields(AgentBuilder.Identified.Extendable builder);
+  /** Injects actual fields in classes referenced by {@link VirtualField} usages. */
+  AgentBuilder.Identified.Extendable injectFields(AgentBuilder.Identified.Extendable builder);
 }

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.URI;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import ratpack.handling.Context;
 import ratpack.http.Request;
@@ -16,6 +17,12 @@ import ratpack.server.PublicAddress;
 
 final class RatpackHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
+
+  // TODO: add support for capturing HTTP headers in library instrumentations
+  RatpackHttpAttributesExtractor() {
+    super(CapturedHttpHeaders.empty());
+  }
+
   @Override
   protected String method(Request request) {
     return request.getMethod().getName();
@@ -25,21 +32,6 @@ final class RatpackHttpAttributesExtractor
   protected String target(Request request) {
     // Uri is the path + query string, not a full URL
     return request.getUri();
-  }
-
-  @Override
-  @Nullable
-  protected String host(Request request) {
-    Context ratpackContext = request.get(Context.class);
-    if (ratpackContext == null) {
-      return null;
-    }
-    PublicAddress publicAddress = ratpackContext.get(PublicAddress.class);
-    if (publicAddress == null) {
-      return null;
-    }
-    URI uri = publicAddress.get();
-    return uri.getHost() + ":" + uri.getPort();
   }
 
   @Override
@@ -64,9 +56,8 @@ final class RatpackHttpAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected String userAgent(Request request) {
-    return request.getHeaders().get("user-agent");
+  protected List<String> requestHeader(Request request, String name) {
+    return request.getHeaders().getAll(name);
   }
 
   @Override
@@ -118,5 +109,10 @@ final class RatpackHttpAttributesExtractor
   @Nullable
   protected Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
+  }
+
+  @Override
+  protected List<String> responseHeader(Request request, Response response, String name) {
+    return response.getHeaders().getAll(name);
   }
 }

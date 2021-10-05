@@ -55,7 +55,7 @@ testSets {
 }
 
 tasks {
-  named<Test>("test") {
+  test {
     dependsOn("mojarra12Test")
     dependsOn("mojarra2Test")
   }

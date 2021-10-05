@@ -3,7 +3,7 @@ name: PR build Play images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/play/**'
+      - 'smoke-tests/images/play/**'
       - '.github/workflows/pr-smoke-test-play-images.yml'
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/play/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/play/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build Docker Image
         run: |
@@ -39,4 +39,4 @@ jobs:
           # Play doesn't support Java 16 (or 17) yet
           # https://github.com/playframework/playframework/pull/10819
           ./gradlew jibDockerBuild -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: smoke-tests/play
+        working-directory: smoke-tests/images/play

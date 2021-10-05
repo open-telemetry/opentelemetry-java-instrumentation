@@ -273,14 +273,11 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
                 mockHttpServerAttributes,
-                mockNetAttributes,
+                new ConstantNetPeerIpExtractor<>("2.2.2.2"),
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
             .newServerInstrumenter(new MapGetter());
-
-    when(mockNetAttributes.peerIp(REQUEST, null)).thenReturn("2.2.2.2");
-    when(mockNetAttributes.peerIp(REQUEST, RESPONSE)).thenReturn("2.2.2.2");
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -312,7 +309,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
                 mockHttpServerAttributes,
-                mockNetAttributes,
+                new ConstantNetPeerIpExtractor<>("2.2.2.2"),
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
@@ -321,9 +318,6 @@ class InstrumenterTest {
     Map<String, String> request = new HashMap<>(REQUEST);
     request.remove("Forwarded");
     request.put("X-Forwarded-For", "1.1.1.1");
-
-    when(mockNetAttributes.peerIp(request, null)).thenReturn("2.2.2.2");
-    when(mockNetAttributes.peerIp(request, RESPONSE)).thenReturn("2.2.2.2");
 
     Context context = instrumenter.start(Context.root(), request);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -927,5 +921,35 @@ class InstrumenterTest {
     return LinkData.create(
         SpanContext.create(
             LINK_TRACE_ID, LINK_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
+  }
+
+  private static final class ConstantNetPeerIpExtractor<REQUEST, RESPONSE>
+      extends NetAttributesExtractor<REQUEST, RESPONSE> {
+
+    private final String peerIp;
+
+    private ConstantNetPeerIpExtractor(String peerIp) {
+      this.peerIp = peerIp;
+    }
+
+    @Override
+    public String transport(REQUEST request) {
+      return null;
+    }
+
+    @Override
+    public String peerName(REQUEST request, RESPONSE response) {
+      return null;
+    }
+
+    @Override
+    public Integer peerPort(REQUEST request, RESPONSE response) {
+      return null;
+    }
+
+    @Override
+    public String peerIp(REQUEST request, RESPONSE response) {
+      return peerIp;
+    }
   }
 }

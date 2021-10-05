@@ -57,7 +57,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=false")
   }
 
-  named<Test>("test") {
+  test {
     dependsOn(testStatementSanitizerConfig)
 
     filter {
