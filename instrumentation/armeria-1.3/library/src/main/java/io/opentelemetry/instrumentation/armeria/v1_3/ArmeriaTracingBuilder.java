@@ -10,10 +10,12 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -30,6 +32,8 @@ public final class ArmeriaTracingBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
 
   private final OpenTelemetry openTelemetry;
+  private CapturedHttpHeaders capturedHttpClientHeaders = CapturedHttpHeaders.client(Config.get());
+  private CapturedHttpHeaders capturedHttpServerHeaders = CapturedHttpHeaders.server(Config.get());
 
   private final List<AttributesExtractor<? super RequestContext, ? super RequestLog>>
       additionalExtractors = new ArrayList<>();
@@ -62,11 +66,37 @@ public final class ArmeriaTracingBuilder {
     return this;
   }
 
+  /**
+   * Configure the HTTP client instrumentation to capture chosen HTTP request and response headers
+   * as span attributes.
+   *
+   * @param capturedHttpClientHeaders An instance of {@link CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   */
+  public ArmeriaTracingBuilder captureHttpClientHeaders(
+      CapturedHttpHeaders capturedHttpClientHeaders) {
+    this.capturedHttpClientHeaders = capturedHttpClientHeaders;
+    return this;
+  }
+
+  /**
+   * Configure the HTTP server instrumentation to capture chosen HTTP request and response headers
+   * as span attributes.
+   *
+   * @param capturedHttpServerHeaders An instance of {@link CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   */
+  public ArmeriaTracingBuilder captureHttpServerHeaders(
+      CapturedHttpHeaders capturedHttpServerHeaders) {
+    this.capturedHttpServerHeaders = capturedHttpServerHeaders;
+    return this;
+  }
+
   public ArmeriaTracing build() {
     ArmeriaHttpClientAttributesExtractor clientAttributesExtractor =
-        new ArmeriaHttpClientAttributesExtractor();
+        new ArmeriaHttpClientAttributesExtractor(capturedHttpClientHeaders);
     ArmeriaHttpServerAttributesExtractor serverAttributesExtractor =
-        new ArmeriaHttpServerAttributesExtractor();
+        new ArmeriaHttpServerAttributesExtractor(capturedHttpServerHeaders);
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
         Instrumenter.newBuilder(

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
-import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 
 public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   private final Trie.Builder<IgnoreAllow> ignoredTypesTrie = Trie.newBuilder();

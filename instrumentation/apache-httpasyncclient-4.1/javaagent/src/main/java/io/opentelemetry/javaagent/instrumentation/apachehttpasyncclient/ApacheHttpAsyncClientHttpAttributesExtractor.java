@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpClientRequest.headersToList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -16,10 +15,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpAsyncClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
-
-  ApacheHttpAsyncClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected String method(ApacheHttpClientRequest request) {

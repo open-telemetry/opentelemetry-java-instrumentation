@@ -8,17 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class GoogleHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, HttpResponse> {
-
-  GoogleHttpClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected @Nullable String method(HttpRequest httpRequest) {

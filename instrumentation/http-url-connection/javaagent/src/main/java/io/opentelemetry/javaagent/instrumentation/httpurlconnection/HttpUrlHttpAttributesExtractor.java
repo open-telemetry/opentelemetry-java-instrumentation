@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.List;
@@ -17,10 +16,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpUrlHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpURLConnection, Integer> {
-
-  HttpUrlHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected String method(HttpURLConnection connection) {

@@ -26,11 +26,11 @@ import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskC
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
-import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -132,8 +132,6 @@ public class AgentInstaller {
 
     runBeforeAgentListeners(agentListeners, config);
 
-    FieldBackedImplementationInstaller.resetContextMatchers();
-
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -209,7 +207,8 @@ public class AgentInstaller {
       configurer.configure(config, builder);
     }
 
-    InstrumentedTaskClasses.setIgnoredTaskClasses(builder.buildIgnoredTasksTrie());
+    Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
+    InstrumentedTaskClasses.setIgnoredTaskClassesPredicate(ignoredTasksTrie::contains);
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))

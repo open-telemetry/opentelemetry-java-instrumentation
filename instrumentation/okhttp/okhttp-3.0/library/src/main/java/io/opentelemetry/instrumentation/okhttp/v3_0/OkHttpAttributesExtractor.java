@@ -15,9 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Request, Response> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  OkHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  OkHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

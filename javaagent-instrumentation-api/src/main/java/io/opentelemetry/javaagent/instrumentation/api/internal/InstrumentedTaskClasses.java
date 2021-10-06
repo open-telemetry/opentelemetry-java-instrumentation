@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
+import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ public final class InstrumentedTaskClasses {
         @Override
         protected Boolean computeValue(Class<?> taskClass) {
           // do not instrument ignored task classes
-          if (ignoredTaskClasses.getOrDefault(taskClass.getName(), false)) {
+          if (ignoredTaskClassesPredicate.test(taskClass.getName())) {
             return false;
           }
           // Don't trace runnables from libraries that are packaged inside the agent.
@@ -38,18 +38,18 @@ public final class InstrumentedTaskClasses {
         }
       };
 
-  private static volatile Trie<Boolean> ignoredTaskClasses;
+  private static volatile Predicate<String> ignoredTaskClassesPredicate;
 
   /**
-   * Sets the configured ignored tasks trie. This method is called internally from the agent
+   * Sets the configured ignored tasks predicate. This method is called internally from the agent
    * classloader.
    */
-  public static void setIgnoredTaskClasses(Trie<Boolean> ignoredTasksTrie) {
-    if (InstrumentedTaskClasses.ignoredTaskClasses != null) {
+  public static void setIgnoredTaskClassesPredicate(Predicate<String> ignoredTasksTriePredicate) {
+    if (InstrumentedTaskClasses.ignoredTaskClassesPredicate != null) {
       logger.warn("Ignored task classes were already set earlier; returning.");
       return;
     }
-    InstrumentedTaskClasses.ignoredTaskClasses = ignoredTasksTrie;
+    InstrumentedTaskClasses.ignoredTaskClassesPredicate = ignoredTasksTriePredicate;
   }
 
   /**

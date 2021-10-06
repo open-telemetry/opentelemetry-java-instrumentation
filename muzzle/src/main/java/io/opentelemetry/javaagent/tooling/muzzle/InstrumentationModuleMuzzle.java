@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +47,27 @@ public interface InstrumentationModuleMuzzle {
    */
   List<String> getMuzzleHelperClassNames();
 
-  /** See {@link #getMuzzleHelperClassNames()}. */
-  static List<String> getMuzzleHelperClassNames(InstrumentationModule module) {
-    if (module instanceof InstrumentationModuleMuzzle) {
-      return ((InstrumentationModuleMuzzle) module).getMuzzleHelperClassNames();
-    } else {
-      return Collections.emptyList();
+  /**
+   * Returns a concatenation of {@link #getMuzzleHelperClassNames()} and {@link
+   * InstrumentationModule#getAdditionalHelperClassNames()}.
+   */
+  static List<String> getHelperClassNames(InstrumentationModule module) {
+    List<String> muzzleHelperClassNames =
+        module instanceof InstrumentationModuleMuzzle
+            ? ((InstrumentationModuleMuzzle) module).getMuzzleHelperClassNames()
+            : Collections.emptyList();
+
+    List<String> additionalHelperClassNames = module.getAdditionalHelperClassNames();
+
+    if (additionalHelperClassNames.isEmpty()) {
+      return muzzleHelperClassNames;
     }
+    if (muzzleHelperClassNames.isEmpty()) {
+      return additionalHelperClassNames;
+    }
+
+    List<String> result = new ArrayList<>(muzzleHelperClassNames);
+    result.addAll(additionalHelperClassNames);
+    return result;
   }
 }

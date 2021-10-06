@@ -39,7 +39,7 @@ public final class ReferenceMatcher {
 
   public static ReferenceMatcher of(InstrumentationModule instrumentationModule) {
     return new ReferenceMatcher(
-        InstrumentationModuleMuzzle.getMuzzleHelperClassNames(instrumentationModule),
+        InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule),
         InstrumentationModuleMuzzle.getMuzzleReferences(instrumentationModule),
         instrumentationModule::isHelperClass);
   }

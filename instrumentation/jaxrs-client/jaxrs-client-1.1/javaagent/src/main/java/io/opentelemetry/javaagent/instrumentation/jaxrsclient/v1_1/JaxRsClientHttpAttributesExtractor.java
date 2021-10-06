@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +17,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientRequest, ClientResponse> {
-
-  JaxRsClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected @Nullable String method(ClientRequest httpRequest) {

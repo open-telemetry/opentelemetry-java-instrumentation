@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -17,7 +16,6 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
 
   public ServletHttpAttributesExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
-    super(HttpHeadersConfig.capturedServerHeaders());
     this.accessor = accessor;
   }
 

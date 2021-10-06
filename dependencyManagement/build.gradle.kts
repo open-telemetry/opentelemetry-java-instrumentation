@@ -11,7 +11,10 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
+// IMPORTANT when updating otelVersion, make sure that grpcVersion below is >= the grpc version
+// used by that otel version
 val otelVersion = "1.6.0"
+val grpcVersion = "1.40.1"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -111,7 +114,8 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:1.3-groovy-2.5",
   "org.scala-lang:scala-library:2.11.12",
-  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE"
+  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
+  "io.grpc:grpc-netty-shaded:${grpcVersion}"
 )
 
 javaPlatform {

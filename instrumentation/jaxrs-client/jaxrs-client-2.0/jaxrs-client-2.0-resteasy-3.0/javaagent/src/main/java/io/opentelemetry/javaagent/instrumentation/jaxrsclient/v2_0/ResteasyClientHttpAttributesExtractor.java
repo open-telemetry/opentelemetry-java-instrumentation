@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +17,6 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientInvocation, Response> {
-
-  ResteasyClientHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedClientHeaders());
-  }
 
   @Override
   protected @Nullable String method(ClientInvocation httpRequest) {

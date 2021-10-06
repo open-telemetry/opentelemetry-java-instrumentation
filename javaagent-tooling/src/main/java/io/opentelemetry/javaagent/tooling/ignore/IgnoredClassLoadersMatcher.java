@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
-import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
+import io.opentelemetry.javaagent.tooling.util.Trie;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
