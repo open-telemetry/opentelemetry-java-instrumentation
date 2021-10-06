@@ -18,9 +18,8 @@ import ratpack.server.PublicAddress;
 final class RatpackHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  RatpackHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  RatpackHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

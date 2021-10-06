@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -27,6 +29,11 @@ public final class JettyClientInstrumenterBuilder {
 
   private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
       new ArrayList<>();
+  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
+
+  public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
 
   public JettyClientInstrumenterBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
@@ -34,13 +41,15 @@ public final class JettyClientInstrumenterBuilder {
     return this;
   }
 
-  public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+  public JettyClientInstrumenterBuilder captureHttpHeaders(
+      CapturedHttpHeaders capturedHttpHeaders) {
+    this.capturedHttpHeaders = capturedHttpHeaders;
+    return this;
   }
 
   public Instrumenter<Request, Response> build() {
     HttpClientAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new JettyClientHttpAttributesExtractor();
+        new JettyClientHttpAttributesExtractor(capturedHttpHeaders);
     SpanNameExtractor<Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =

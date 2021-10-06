@@ -16,9 +16,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ApacheHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  ApacheHttpClientHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  ApacheHttpClientHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

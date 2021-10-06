@@ -23,9 +23,8 @@ import org.restlet.util.Series;
 final class RestletHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  RestletHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  RestletHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

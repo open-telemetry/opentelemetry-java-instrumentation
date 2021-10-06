@@ -20,9 +20,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ArmeriaHttpServerAttributesExtractor
     extends HttpServerAttributesExtractor<RequestContext, RequestLog> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  ArmeriaHttpServerAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  ArmeriaHttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override
