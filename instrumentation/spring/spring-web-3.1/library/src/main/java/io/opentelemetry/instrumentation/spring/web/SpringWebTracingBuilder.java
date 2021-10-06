@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.spring.web;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -23,6 +25,7 @@ public final class SpringWebTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<HttpRequest, ClientHttpResponse>> additionalExtractors =
       new ArrayList<>();
+  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
 
   SpringWebTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -39,12 +42,24 @@ public final class SpringWebTracingBuilder {
   }
 
   /**
+   * Configure the instrumentation to capture chosen HTTP request and response headers as span
+   * attributes.
+   *
+   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
+   *     HTTP request and response names.
+   */
+  public SpringWebTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+    this.capturedHttpHeaders = capturedHttpHeaders;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SpringWebTracing} with the settings of this {@link
    * SpringWebTracingBuilder}.
    */
   public SpringWebTracing build() {
     SpringWebHttpAttributesExtractor httpAttributesExtractor =
-        new SpringWebHttpAttributesExtractor();
+        new SpringWebHttpAttributesExtractor(capturedHttpHeaders);
     SpringWebNetAttributesExtractor netAttributesExtractor = new SpringWebNetAttributesExtractor();
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =

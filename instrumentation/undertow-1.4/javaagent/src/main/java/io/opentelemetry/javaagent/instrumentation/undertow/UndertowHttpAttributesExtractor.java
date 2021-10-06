@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.api.config.HttpHeadersConfig;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.util.Collections;
@@ -15,10 +14,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class UndertowHttpAttributesExtractor
     extends HttpServerAttributesExtractor<HttpServerExchange, HttpServerExchange> {
-
-  public UndertowHttpAttributesExtractor() {
-    super(HttpHeadersConfig.capturedServerHeaders());
-  }
 
   @Override
   protected String method(HttpServerExchange exchange) {

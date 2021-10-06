@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHe
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,13 +28,18 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Create the HTTP server attributes extractor.
+   * Creates the HTTP server attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
    *     headers should be captured as span attributes.
    */
   protected HttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
     super(capturedHttpHeaders);
+  }
+
+  /** Creates the HTTP server attributes extractor with default configuration. */
+  protected HttpServerAttributesExtractor() {
+    this(CapturedHttpHeaders.server(Config.get()));
   }
 
   @Override

@@ -19,9 +19,8 @@ import org.springframework.http.client.ClientHttpResponse;
 final class SpringWebHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, ClientHttpResponse> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  SpringWebHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  SpringWebHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

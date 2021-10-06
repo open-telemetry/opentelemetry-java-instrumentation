@@ -8,33 +8,58 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * Represents the configuration that specifies which HTTP request/response headers should be
- * captured as span attributes.
+ * Represents the configuration that specifies which HTTP request and response headers should be
+ * captured as span attributes as described in <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers">HTTP
+ * semantic conventions</a>.
+ *
+ * <p>The HTTP request header values will be captured under the {@code http.request.header.<name>}
+ * attribute key. The HTTP response header values will be captured under the {@code
+ * http.response.header.<name>} attribute key. The {@code <name>} part in the attribute key is the
+ * normalized header name: lowercase, with dashes replaced by underscores.
  */
 @AutoValue
 public abstract class CapturedHttpHeaders {
 
   private static final CapturedHttpHeaders EMPTY = create(emptyList(), emptyList());
 
-  /** Don't capture any HTTP headers as span attributes. */
+  /** Returns a configuration that does not capture any HTTP headers as span attributes. */
   public static CapturedHttpHeaders empty() {
     return EMPTY;
   }
 
   /**
-   * Captures the configured HTTP request and response headers as span attributes as described in <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<name>}
-   * attribute key. The HTTP response header values will be captured under the {@code
-   * http.response.header.<name>} attribute key. The {@code <name>} part in the attribute key is the
-   * normalized header name: lowercase, with dashes replaced by underscores.
+   * Returns a configuration that captures HTTP client request and response headers as configured in
+   * the received {@code config}.
+   */
+  public static CapturedHttpHeaders client(Config config) {
+    return CapturedHttpHeaders.create(
+        config.getList(
+            "otel.instrumentation.common.experimental.capture-http-headers.client.request"),
+        config.getList(
+            "otel.instrumentation.common.experimental.capture-http-headers.client.response"));
+  }
+
+  /**
+   * Returns a configuration that captures HTTP server request and response headers as configured in
+   * the received {@code config}.
+   */
+  public static CapturedHttpHeaders server(Config config) {
+    return CapturedHttpHeaders.create(
+        config.getList(
+            "otel.instrumentation.common.experimental.capture-http-headers.server.request"),
+        config.getList(
+            "otel.instrumentation.common.experimental.capture-http-headers.server.response"));
+  }
+
+  /**
+   * Returns a configuration that captures chosen HTTP request and response headers.
    *
    * @param capturedRequestHeaders A list of HTTP request header names that are to be captured as
    *     span attributes.
