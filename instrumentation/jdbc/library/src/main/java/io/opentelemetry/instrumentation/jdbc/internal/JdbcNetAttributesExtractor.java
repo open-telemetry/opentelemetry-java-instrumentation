@@ -5,33 +5,33 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class JdbcNetAttributesExtractor
-    extends NetServerAttributesExtractor<DbRequest, Void> {
+    extends NetClientAttributesExtractor<DbRequest, Void> {
 
   @Nullable
   @Override
-  public String transport(DbRequest request) {
+  public String transport(DbRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(DbRequest request) {
+  public String peerName(DbRequest request, @Nullable Void unused) {
     return request.getDbInfo().getHost();
   }
 
   @Nullable
   @Override
-  public Integer peerPort(DbRequest request) {
+  public Integer peerPort(DbRequest request, @Nullable Void unused) {
     return request.getDbInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String peerIp(DbRequest request) {
+  public String peerIp(DbRequest request, @Nullable Void unused) {
     return null;
   }
 }

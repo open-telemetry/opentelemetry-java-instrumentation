@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -14,22 +14,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JdkHttpNetAttributesExtractor
-    extends NetServerAttributesExtractor<HttpRequest, HttpResponse<?>> {
+    extends NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> {
 
   private static final Logger logger = LoggerFactory.getLogger(JdkHttpNetAttributesExtractor.class);
 
   @Override
-  public String transport(HttpRequest httpRequest) {
+  public String transport(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(HttpRequest httpRequest) {
+  public @Nullable String peerName(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return httpRequest.uri().getHost();
   }
 
   @Override
-  public @Nullable Integer peerPort(HttpRequest httpRequest) {
+  public @Nullable Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     int port = httpRequest.uri().getPort();
     if (port != -1) {
       return port;
@@ -50,7 +50,7 @@ public class JdkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpRequest httpRequest) {
+  public @Nullable String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return null;
   }
 }

@@ -5,31 +5,31 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OkHttpNetAttributesExtractor
-    extends NetServerAttributesExtractor<Request, Response> {
+    extends NetClientAttributesExtractor<Request, Response> {
   @Override
-  public String transport(Request request) {
+  public String transport(Request request, @Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(Request request) {
+  public @Nullable String peerName(Request request, @Nullable Response response) {
     return request.url().host();
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer peerPort(Request request, @Nullable Response response) {
     return request.url().port();
   }
 
   @Override
-  public @Nullable String peerIp(Request request) {
+  public @Nullable String peerIp(Request request, @Nullable Response response) {
     return null;
   }
 }

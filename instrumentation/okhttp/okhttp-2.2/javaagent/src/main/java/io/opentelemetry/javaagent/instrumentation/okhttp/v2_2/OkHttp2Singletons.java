@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class OkHttp2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-2.2";
@@ -35,7 +35,7 @@ public final class OkHttp2Singletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
+    NetClientAttributesExtractor<Request, Response> netAttributesExtractor =
         new OkHttp2NetAttributesExtractor();
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
