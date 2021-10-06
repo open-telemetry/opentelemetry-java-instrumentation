@@ -45,21 +45,6 @@ public final class SpringWebTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedRequestHeaders A list of HTTP request header names that are to be captured as
-   *     span attributes.
-   * @param capturedResponseHeaders A list of HTTP response header names that are to be captured as
-   *     span attributes.
-   */
-  public SpringWebTracingBuilder captureHttpHeaders(
-      List<String> capturedRequestHeaders, List<String> capturedResponseHeaders) {
-    return captureHttpHeaders(
-        CapturedHttpHeaders.create(capturedRequestHeaders, capturedResponseHeaders));
-  }
-
-  /**
-   * Configure the instrumentation to capture chosen HTTP request and response headers as span
-   * attributes.
-   *
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
