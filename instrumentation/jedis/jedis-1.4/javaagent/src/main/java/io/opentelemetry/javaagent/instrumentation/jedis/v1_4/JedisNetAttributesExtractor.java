@@ -5,30 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JedisNetAttributesExtractor extends NetAttributesServerExtractor<JedisRequest, Void> {
+final class JedisNetAttributesExtractor extends NetAttributesClientExtractor<JedisRequest, Void> {
 
   @Override
   @Nullable
-  public String transport(JedisRequest request) {
+  public String transport(JedisRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public String peerName(JedisRequest request) {
+  public String peerName(JedisRequest request, @Nullable Void unused) {
     return request.getConnection().getHost();
   }
 
   @Override
-  public Integer peerPort(JedisRequest request) {
+  public Integer peerPort(JedisRequest request, @Nullable Void unused) {
     return request.getConnection().getPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(JedisRequest request) {
+  public String peerIp(JedisRequest request, @Nullable Void unused) {
     return null;
   }
 }

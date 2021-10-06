@@ -47,27 +47,12 @@ public abstract class NetAttributesServerExtractor<REQUEST, RESPONSE>
   @Nullable
   public abstract String transport(REQUEST request);
 
-  /**
-   * This method will be called twice: both when the request starts ({@code response} is always null
-   * then) and when the response ends. This way it is possible to capture net attributes in both
-   * phases of processing.
-   */
   @Nullable
   public abstract String peerName(REQUEST request);
 
-  /**
-   * This method will be called twice: both when the request starts ({@code response} is always null
-   * then) and when the response ends. This way it is possible to capture net attributes in both
-   * phases of processing.
-   */
   @Nullable
   public abstract Integer peerPort(REQUEST request);
 
-  /**
-   * This method will be called twice: both when the request starts ({@code response} is always null
-   * then) and when the response ends. This way it is possible to capture net attributes in both
-   * phases of processing.
-   */
   @Nullable
   public abstract String peerIp(REQUEST request);
 }

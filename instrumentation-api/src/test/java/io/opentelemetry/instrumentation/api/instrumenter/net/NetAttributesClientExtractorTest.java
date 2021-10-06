@@ -67,10 +67,15 @@ class NetAttributesClientExtractorTest {
     TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
 
     // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, request);
+
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, request, response, null);
 
     // then
+    assertThat(startAttributes.build()).isEmpty();
+
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
@@ -95,10 +100,15 @@ class NetAttributesClientExtractorTest {
     TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
 
     // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, request);
+
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, request, response, null);
 
     // then
+    assertThat(startAttributes.build()).isEmpty();
+
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_PORT, 42L),

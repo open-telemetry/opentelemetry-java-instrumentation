@@ -46,31 +46,45 @@ class InetSocketAddressNetAttributesServerExtractorTest {
   @Test
   void fullAddress() {
     // given
-    InetSocketAddress address = new InetSocketAddress("github.com", 123);
-    assertThat(address.getAddress().getHostAddress()).isNotNull();
+    InetSocketAddress request = new InetSocketAddress("github.com", 123);
+    assertThat(request.getAddress().getHostAddress()).isNotNull();
+
+    InetSocketAddress response = new InetSocketAddress("api.github.com", 456);
+    assertThat(request.getAddress().getHostAddress()).isNotNull();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, address);
+    extractor.onStart(startAttributes, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, request, response, null);
 
     // then
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_IP, address.getAddress().getHostAddress()),
+            entry(SemanticAttributes.NET_PEER_IP, request.getAddress().getHostAddress()),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
+
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test
   void unresolved() {
     // given
-    InetSocketAddress address = InetSocketAddress.createUnresolved("github.com", 123);
-    assertThat(address.getAddress()).isNull();
+    InetSocketAddress request = InetSocketAddress.createUnresolved("github.com", 123);
+    assertThat(request.getAddress()).isNull();
+
+    InetSocketAddress response = InetSocketAddress.createUnresolved("api.github.com", 456);
+    assertThat(request.getAddress()).isNull();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, address);
+    extractor.onStart(startAttributes, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, request, response, null);
 
     // then
     assertThat(startAttributes.build())
@@ -78,5 +92,7 @@ class InetSocketAddressNetAttributesServerExtractorTest {
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
+
+    assertThat(endAttributes.build()).isEmpty();
   }
 }
