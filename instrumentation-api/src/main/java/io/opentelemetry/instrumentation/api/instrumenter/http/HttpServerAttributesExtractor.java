@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwarded;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwardedFor;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -43,6 +45,7 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, route(request));
+    set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
   @Override
@@ -66,8 +69,7 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String host(REQUEST request) {
-    List<String> values = requestHeader(request, "host");
-    return values.isEmpty() ? null : values.get(0);
+    return firstHeaderValue(requestHeader(request, "host"));
   }
 
   @Nullable
@@ -75,6 +77,26 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   protected abstract String scheme(REQUEST request);
+
+  @Nullable
+  private String clientIp(REQUEST request) {
+    // try Forwarded
+    String forwarded = firstHeaderValue(requestHeader(request, "forwarded"));
+    if (forwarded != null) {
+      forwarded = extractForwarded(forwarded);
+      if (forwarded != null) {
+        return forwarded;
+      }
+    }
+
+    // try X-Forwarded-For
+    forwarded = firstHeaderValue(requestHeader(request, "x-forwarded-for"));
+    if (forwarded != null) {
+      return extractForwardedFor(forwarded);
+    }
+
+    return null;
+  }
 
   // Attributes which are not always available when the request is ready.
 

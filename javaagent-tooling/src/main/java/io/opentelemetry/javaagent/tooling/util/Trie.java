@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.util;
+package io.opentelemetry.javaagent.tooling.util;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -31,6 +31,11 @@ public interface Trie<V> {
    * trie.getOrDefault("abcd", -1)} will return {@code 10}.
    */
   V getOrDefault(CharSequence str, V defaultValue);
+
+  /** Returns {@code true} if this trie contains the prefix {@code str}. */
+  default boolean contains(CharSequence str) {
+    return getOrNull(str) != null;
+  }
 
   interface Builder<V> {
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -55,23 +56,27 @@ class HttpServerAttributesExtractorTest {
 
     @Override
     protected List<String> requestHeader(Map<String, String> request, String name) {
-      return asList(request.get("header." + name).split(","));
+      String values = request.get("header." + name);
+      return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
     protected Long requestContentLength(Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(request.get("requestContentLength"));
+      String value = request.get("requestContentLength");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected Long requestContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(request.get("requestContentLengthUncompressed"));
+      String value = request.get("requestContentLengthUncompressed");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected Integer statusCode(Map<String, String> request, Map<String, String> response) {
-      return Integer.parseInt(response.get("statusCode"));
+      String value = response.get("statusCode");
+      return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
@@ -82,19 +87,22 @@ class HttpServerAttributesExtractorTest {
     @Override
     protected Long responseContentLength(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(response.get("responseContentLength"));
+      String value = response.get("responseContentLength");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected Long responseContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(response.get("responseContentLengthUncompressed"));
+      String value = response.get("responseContentLengthUncompressed");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected List<String> responseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
-      return asList(response.get("header." + name).split(","));
+      String values = response.get("header." + name);
+      return values == null ? emptyList() : asList(values.split(","));
     }
   }
 
@@ -112,6 +120,7 @@ class HttpServerAttributesExtractorTest {
     request.put("serverName", "server");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
+    request.put("header.forwarded", "for=1.1.1.1");
     request.put("header.custom-request-header", "123,456");
 
     Map<String, String> response = new HashMap<>();
@@ -136,6 +145,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
@@ -149,6 +159,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
@@ -162,5 +173,23 @@ class HttpServerAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
+  }
+
+  @Test
+  void extractClientIpFromX_Forwarded_For() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.x-forwarded-for", "1.1.1.1");
+
+    TestHttpServerAttributesExtractor extractor =
+        new TestHttpServerAttributesExtractor(CapturedHttpHeaders.empty());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, request);
+    assertThat(attributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"));
+
+    extractor.onEnd(attributes, request, null, null);
+    assertThat(attributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"));
   }
 }
