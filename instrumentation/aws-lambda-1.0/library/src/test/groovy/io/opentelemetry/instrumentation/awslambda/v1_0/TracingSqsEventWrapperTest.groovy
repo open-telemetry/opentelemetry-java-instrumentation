@@ -42,7 +42,6 @@ class TracingSqsEventWrapperTest extends LibraryInstrumentationSpecification {
     @Override
     Void handleRequest(SQSEvent input, Context context) {
       return null
-      throw new IllegalArgumentException("bad argument")
     }
 
   }

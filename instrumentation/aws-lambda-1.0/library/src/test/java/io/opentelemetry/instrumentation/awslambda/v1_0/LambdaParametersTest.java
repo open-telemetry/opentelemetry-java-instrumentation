@@ -19,7 +19,7 @@ class LambdaParametersTest {
   public void contextOnThird(String one, String two, Context context) {}
 
   @Test
-  public void shouldSetContextOnFirstPosition() throws NoSuchMethodException {
+  void shouldSetContextOnFirstPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
     Method method = getClass().getMethod("onlyContext", Context.class);
@@ -31,7 +31,7 @@ class LambdaParametersTest {
   }
 
   @Test
-  public void shouldSetContextOnTheLastPosition() throws NoSuchMethodException {
+  void shouldSetContextOnTheLastPosition() throws NoSuchMethodException {
     // given
     Context context = mock(Context.class);
     Method method =
