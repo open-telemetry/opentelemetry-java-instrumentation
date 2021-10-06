@@ -48,9 +48,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
-    onEnd(attributes, request, null, null);
-  }
+  protected void onStart(AttributesBuilder attributes, REQUEST request) {}
 
   @Override
   protected void onEnd(
