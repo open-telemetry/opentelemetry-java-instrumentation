@@ -27,14 +27,14 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
-  private final NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
+  private final NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
-    this.netAttributesExtractor = netAttributesExtractor;
+    this.netClientAttributesExtractor = netClientAttributesExtractor;
   }
 
   /**
@@ -56,10 +56,10 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    String peerName = netAttributesExtractor.peerName(request, response);
+    String peerName = netClientAttributesExtractor.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String peerIp = netAttributesExtractor.peerIp(request, response);
+      String peerIp = netClientAttributesExtractor.peerIp(request, response);
       peerService = mapToPeerService(peerIp);
     }
     if (peerService != null) {
