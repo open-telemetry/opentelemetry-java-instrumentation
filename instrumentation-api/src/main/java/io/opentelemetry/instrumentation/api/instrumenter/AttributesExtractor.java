@@ -51,4 +51,9 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
       attributes.put(key, value);
     }
   }
+
+  public static <REQUEST, RESPONSE, T> AttributesExtractor<REQUEST, RESPONSE> constant(
+      AttributeKey<T> attributeKey, T attributeValue) {
+    return new ConstantAttributesExtractor<>(attributeKey, attributeValue);
+  }
 }

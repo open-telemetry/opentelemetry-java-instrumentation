@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
@@ -22,16 +23,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetServerAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ArmeriaTracingBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
 
   private final OpenTelemetry openTelemetry;
+  @Nullable private String peerService;
   private CapturedHttpHeaders capturedHttpClientHeaders = CapturedHttpHeaders.client(Config.get());
   private CapturedHttpHeaders capturedHttpServerHeaders = CapturedHttpHeaders.server(Config.get());
 
@@ -64,6 +68,10 @@ public final class ArmeriaTracingBuilder {
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
+  }
+
+  public void setPeerService(String peerService) {
+    this.peerService = peerService;
   }
 
   /**
@@ -112,11 +120,22 @@ public final class ArmeriaTracingBuilder {
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
+    ArmeriaNetClientAttributesExtractor netAttributesClientExtractor =
+        new ArmeriaNetClientAttributesExtractor();
+
+    if (peerService != null) {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+    } else {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          PeerServiceAttributesExtractor.create(netAttributesClientExtractor));
+    }
+
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(clientAttributesExtractor)))
-        .addAttributesExtractor(new ArmeriaNetClientAttributesExtractor())
+        .addAttributesExtractor(netAttributesClientExtractor)
         .addAttributesExtractor(clientAttributesExtractor)
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
