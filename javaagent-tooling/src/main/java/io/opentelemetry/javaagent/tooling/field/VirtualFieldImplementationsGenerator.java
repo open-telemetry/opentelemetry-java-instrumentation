@@ -154,7 +154,7 @@ final class VirtualFieldImplementationsGenerator {
            * @param name name of the method being visited
            */
           private void generateRealGetMethod(String name) {
-            String getterName = getRealGetterName(fieldTypeName);
+            String getterName = getRealGetterName(typeName, fieldTypeName);
             Label elseLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
@@ -207,7 +207,7 @@ final class VirtualFieldImplementationsGenerator {
            * @param name name of the method being visited
            */
           private void generateRealPutMethod(String name) {
-            String setterName = getRealSetterName(fieldTypeName);
+            String setterName = getRealSetterName(typeName, fieldTypeName);
             Label elseLabel = new Label();
             Label endLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);

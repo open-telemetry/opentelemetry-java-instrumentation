@@ -102,14 +102,14 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
     }
 
     expect:
-    fields.size() == 2
+    fields.size() == 3
     fields.forEach { field ->
       assert Modifier.isPrivate(field.modifiers)
       assert Modifier.isTransient(field.modifiers)
       assert field.synthetic
     }
 
-    interfaces.size() == 2
+    interfaces.size() == 3
     interfaces.forEach { iface ->
       assert iface.synthetic
     }

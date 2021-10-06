@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import library.KeyClass;
+import library.KeyInterface;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,7 +37,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("removeContextCount"), this.getClass().getName() + "$RemoveApiUsageAdvice");
     transformer.applyAdviceToMethod(
-        named("useTwoFields"), this.getClass().getName() + "$UseTwoFieldsAdvice");
+        named("useMultipleFields"), this.getClass().getName() + "$UseMultipleFieldsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -94,15 +95,18 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class UseTwoFieldsAdvice {
+  public static class UseMultipleFieldsAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {
       VirtualField<KeyClass, Context> field1 = VirtualField.find(KeyClass.class, Context.class);
       VirtualField<KeyClass, Integer> field2 = VirtualField.find(KeyClass.class, Integer.class);
+      VirtualField<KeyInterface, Integer> interfaceField =
+          VirtualField.find(KeyInterface.class, Integer.class);
 
       Context context = field1.get(thiz);
       int count = context == null ? 0 : context.count;
       field2.set(thiz, count);
+      interfaceField.set(thiz, count);
     }
   }
 }
