@@ -144,7 +144,8 @@ public abstract class InstrumentationModule implements Ordered {
    * the logs, you may need to override this method and provide fully qualified classes names of
    * helper classes that your instrumentation uses.
    *
-   * <p>These helper classes will be injected into the application classloader.
+   * <p>These helper classes will be injected into the application classloader after automatically
+   * detected ones.
    */
   public List<String> getAdditionalHelperClassNames() {
     return Collections.emptyList();
