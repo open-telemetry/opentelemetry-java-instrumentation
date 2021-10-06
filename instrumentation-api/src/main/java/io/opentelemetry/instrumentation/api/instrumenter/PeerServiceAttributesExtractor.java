@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
 import java.util.Map;
