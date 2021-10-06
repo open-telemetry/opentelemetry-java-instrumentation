@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.apache.dubbo.rpc.Result;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -53,18 +54,25 @@ public final class DubboTracingBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
-    InstrumenterBuilder<DubboRequest, Result> builder =
+    InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(rpcAttributesExtractor)
-            .addAttributesExtractors(attributesExtractors);
+            .addAttributesExtractor(new DubboNetClientAttributesExtractor());
+    InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
+        Instrumenter.<DubboRequest, Result>newBuilder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(new DubboNetServerAttributesExtractor());
+
+    Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
+        .forEach(
+            instrumenter -> {
+              instrumenter
+                  .addAttributesExtractors(rpcAttributesExtractor)
+                  .addAttributesExtractors(attributesExtractors);
+            });
 
     return new DubboTracing(
-        builder
-            .addAttributesExtractor(new DubboNetServerAttributesExtractor())
-            .newServerInstrumenter(new DubboHeadersGetter()),
-        builder
-            .addAttributesExtractor(new DubboNetClientAttributesExtractor())
-            .newClientInstrumenter(new DubboHeadersSetter()));
+        clientInstrumenterBuilder.newClientInstrumenter(new DubboHeadersSetter()),
+        clientInstrumenterBuilder.newServerInstrumenter(new DubboHeadersGetter()));
   }
 }
