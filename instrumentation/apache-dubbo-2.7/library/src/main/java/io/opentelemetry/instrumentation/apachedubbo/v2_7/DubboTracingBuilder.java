@@ -59,20 +59,20 @@ public final class DubboTracingBuilder {
     DubboNetClientAttributesExtractor netClientAttributesExtractor =
         new DubboNetClientAttributesExtractor();
 
-    InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+    InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
+        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
 
-    Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
+    Stream.of(serverInstrumenterBuilder, clientInstrumenterBuilder)
         .forEach(
             instrumenter ->
                 instrumenter
                     .addAttributesExtractors(rpcAttributesExtractor)
                     .addAttributesExtractors(attributesExtractors));
 
-    clientInstrumenterBuilder.addAttributesExtractor(netClientAttributesExtractor);
     serverInstrumenterBuilder.addAttributesExtractor(new DubboNetServerAttributesExtractor());
+    clientInstrumenterBuilder.addAttributesExtractor(netClientAttributesExtractor);
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
@@ -83,7 +83,7 @@ public final class DubboTracingBuilder {
     }
 
     return new DubboTracing(
-        clientInstrumenterBuilder.newClientInstrumenter(new DubboHeadersSetter()),
-        clientInstrumenterBuilder.newServerInstrumenter(new DubboHeadersGetter()));
+        clientInstrumenterBuilder.newServerInstrumenter(new DubboHeadersGetter()),
+        clientInstrumenterBuilder.newClientInstrumenter(new DubboHeadersSetter()));
   }
 }

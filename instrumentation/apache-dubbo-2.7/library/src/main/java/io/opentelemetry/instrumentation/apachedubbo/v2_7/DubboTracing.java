@@ -23,18 +23,18 @@ public final class DubboTracing {
     return new DubboTracingBuilder(openTelemetry);
   }
 
-  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
+  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
 
   DubboTracing(
-      Instrumenter<DubboRequest, Result> clientInstrumenter,
-      Instrumenter<DubboRequest, Result> serverInstrumenter) {
-    this.clientInstrumenter = clientInstrumenter;
+      Instrumenter<DubboRequest, Result> serverInstrumenter,
+      Instrumenter<DubboRequest, Result> clientInstrumenter) {
     this.serverInstrumenter = serverInstrumenter;
+    this.clientInstrumenter = clientInstrumenter;
   }
 
   /** Returns a new Dubbo {@link Filter} that traces Dubbo RPC invocations. */
   public Filter newFilter() {
-    return new TracingFilter(clientInstrumenter, serverInstrumenter);
+    return new TracingFilter(serverInstrumenter, clientInstrumenter);
   }
 }
