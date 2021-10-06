@@ -38,15 +38,18 @@ final class GeneratedVirtualFieldNames {
         + Utils.convertToInnerClassName(fieldTypeName);
   }
 
-  static String getRealFieldName(String typeName) {
-    return "__opentelemetryVirtualField$" + Utils.convertToInnerClassName(typeName);
+  static String getRealFieldName(String typeName, String fieldTypeName) {
+    return "__opentelemetryVirtualField$"
+        + Utils.convertToInnerClassName(typeName)
+        + "$"
+        + Utils.convertToInnerClassName(fieldTypeName);
   }
 
-  static String getRealGetterName(String typeName) {
-    return "get" + getRealFieldName(typeName);
+  static String getRealGetterName(String typeName, String fieldTypeName) {
+    return "get" + getRealFieldName(typeName, fieldTypeName);
   }
 
-  static String getRealSetterName(String typeName) {
-    return "set" + getRealFieldName(typeName);
+  static String getRealSetterName(String typeName, String fieldTypeName) {
+    return "set" + getRealFieldName(typeName, fieldTypeName);
   }
 }
