@@ -23,7 +23,6 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -31,9 +30,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
@@ -47,13 +44,6 @@ public final class TracingOperator {
     return new TracingOperatorBuilder();
   }
 
-  private static final ContextKey<Context> TRACE_CONTEXT_KEY =
-      ContextKey.named("otel-trace-context");
-
-  // have to be re-initialized after hooks are set/reset
-  private static Mono<String> dummyMono = Mono.just("");
-  private static Flux<String> dummyFlux = Flux.just("");
-
   private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   TracingOperator(boolean captureExperimentalSpanAttributes) {
@@ -61,52 +51,6 @@ public final class TracingOperator {
         ReactorAsyncOperationEndStrategy.newBuilder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
-  }
-
-  /** Forces Mono to run in traceContext scope. */
-  static <T> Mono<T> runInScope(Mono<T> publisher, Context tracingContext) {
-    // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
-    // created for this publisher and with current() span that refer to span created here
-    // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return dummyMono
-        .flatMap(i -> publisher)
-        .subscriberContext(ctx -> storeInContext(ctx, tracingContext));
-  }
-
-  /** Forces Flux to run in traceContext scope. */
-  static <T> Flux<T> runInScope(Flux<T> publisher, Context tracingContext) {
-    // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
-    // created for this publisher and with current() span that refer to span created here
-    // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return dummyFlux
-        .flatMap(i -> publisher)
-        .subscriberContext(ctx -> storeInContext(ctx, tracingContext));
-  }
-
-  /**
-   * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
-   * reactor.util.context.Context}.
-   *
-   * @param context Reactor's context to store trace context in.
-   * @param traceContext Trace context to be stored.
-   */
-  public static reactor.util.context.Context storeInContext(
-      reactor.util.context.Context context, Context traceContext) {
-    return context.put(TRACE_CONTEXT_KEY, traceContext);
-  }
-
-  /**
-   * Gets Trace {@link io.opentelemetry.context.Context} from Reactor {@link
-   * reactor.util.context.Context}.
-   *
-   * @param context Reactor's context to get trace context from.
-   * @param defaultTraceContext Default value to be returned if no trace context is found on Reactor
-   *     context.
-   * @return Trace context or default value.
-   */
-  public static Context fromContextOrDefault(
-      reactor.util.context.Context context, Context defaultTraceContext) {
-    return context.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
   /**
@@ -118,16 +62,16 @@ public final class TracingOperator {
   public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-    dummyMono = Mono.just("");
-    dummyFlux = Flux.just("");
+
+    ReactorTracing.enable();
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-    dummyMono = Mono.just("");
-    dummyFlux = Flux.just("");
+
+    ReactorTracing.disable();
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(

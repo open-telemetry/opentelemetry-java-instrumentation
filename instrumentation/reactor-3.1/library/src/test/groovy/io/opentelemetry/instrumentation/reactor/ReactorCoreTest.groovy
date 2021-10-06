@@ -122,6 +122,59 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
     }
   }
 
+
+  def "No tracing before registration"() {
+    when:
+    tracingOperator.resetOnEachOperator()
+
+    def result1 = Mono.fromCallable({ ->
+      assert !Span.current().getSpanContext().isValid() : "current span is not set"
+      return 1
+    })
+      .transform({ i ->
+
+        def beforeSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("before").startSpan()
+
+        return ReactorTracing
+          .runInScope(i,  Context.root().with(beforeSpan))
+          .doOnEach({ signal ->
+            assert !Span.current().getSpanContext().isValid() : "current span is not set"
+          })}).block()
+
+    tracingOperator.registerOnEachOperator()
+    def result2 = Mono.fromCallable({ ->
+      assert Span.current().getSpanContext().isValid() : "current span is set"
+      return 2
+    })
+      .transform({ i ->
+
+        def afterSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("after").startSpan()
+
+        return ReactorTracing
+          .runInScope(i,  Context.root().with(afterSpan))
+          .doOnEach({ signal ->
+            assert Span.current().getSpanContext().isValid() : "current span is set"
+            if (signal.isOnComplete()) {
+              Span.current().end()
+            }
+          })}).block()
+
+    then:
+    result1 == 1
+    result2 == 2
+    and:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "after"
+          hasNoParent()
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
   def traceNonBlocking(def publisher, def spanName) {
     return getDummy(publisher)
       .flatMap({ i -> publisher })
@@ -136,14 +189,14 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       })
       .subscriberContext({ ctx ->
 
-        def parent = TracingOperator.fromContextOrDefault(ctx, Context.current())
+        def parent = ReactorTracing.getOpenTelemetryContext(ctx, Context.current())
 
         def innerSpan = GlobalOpenTelemetry.getTracer("test")
           .spanBuilder(spanName)
           .setParent(parent)
           .startSpan()
 
-        return TracingOperator.storeInContext(ctx, parent.with(innerSpan))
+        return ReactorTracing.storeOpenTelemetryContext(ctx, parent.with(innerSpan))
       })
   }
 
