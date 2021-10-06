@@ -70,6 +70,7 @@ public final class ArmeriaTracingBuilder {
     return this;
   }
 
+  /** Sets the {@code peer.service} attribute for http client spans. */
   public void setPeerService(String peerService) {
     this.peerService = peerService;
   }

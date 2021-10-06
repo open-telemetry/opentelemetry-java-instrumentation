@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtracto
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.dubbo.rpc.Result;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A builder of {@link DubboTracing}. */
 public final class DubboTracingBuilder {
@@ -23,11 +24,17 @@ public final class DubboTracingBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dubbo-2.7";
 
   private final OpenTelemetry openTelemetry;
+  @Nullable private String peerService;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
 
   DubboTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /** Sets the {@code peer.service} attribute for http client spans. */
+  public void setPeerService(String peerService) {
+    this.peerService = peerService;
   }
 
   /**
