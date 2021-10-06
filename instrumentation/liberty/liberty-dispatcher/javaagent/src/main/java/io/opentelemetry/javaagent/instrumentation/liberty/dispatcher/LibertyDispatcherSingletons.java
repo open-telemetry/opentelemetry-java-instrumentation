@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 
 public final class LibertyDispatcherSingletons {
@@ -31,7 +31,7 @@ public final class LibertyDispatcherSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<LibertyRequest, LibertyResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesServerExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
+    NetServerAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
         new LibertyDispatcherNetAttributesExtractor();
 
     INSTRUMENTER =

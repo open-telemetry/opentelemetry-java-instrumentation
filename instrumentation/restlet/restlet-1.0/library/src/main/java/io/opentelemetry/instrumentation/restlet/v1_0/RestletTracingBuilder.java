@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.restlet.data.Request;
@@ -66,7 +66,7 @@ public final class RestletTracingBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesServerExtractor<Request, Response> netAttributesExtractor =
+    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
         new RestletNetAttributesExtractor();
 
     Instrumenter<Request, Response> instrumenter =

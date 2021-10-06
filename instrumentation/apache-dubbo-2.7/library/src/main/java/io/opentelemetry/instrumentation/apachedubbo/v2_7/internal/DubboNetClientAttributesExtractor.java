@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import java.net.InetSocketAddress;
 import org.apache.dubbo.rpc.Result;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class DubboNetClientAttributesExtractor
-    extends InetSocketAddressNetAttributesClientExtractor<DubboRequest, Result> {
+    extends InetSocketAddressNetClientAttributesExtractor<DubboRequest, Result> {
 
   @Override
   public @Nullable InetSocketAddress getAddress(DubboRequest request, @Nullable Result response) {

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
 public class Elasticsearch6TransportNetAttributesExtractor
-    extends InetSocketAddressNetAttributesClientExtractor<ElasticTransportRequest, ActionResponse> {
+    extends InetSocketAddressNetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
   public @Nullable String transport(
       ElasticTransportRequest request, @Nullable ActionResponse response) {

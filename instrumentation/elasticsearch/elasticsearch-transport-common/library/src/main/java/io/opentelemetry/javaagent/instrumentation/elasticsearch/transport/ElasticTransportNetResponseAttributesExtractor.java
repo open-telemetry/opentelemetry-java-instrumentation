@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
 public class ElasticTransportNetResponseAttributesExtractor
-    extends NetAttributesClientExtractor<ElasticTransportRequest, ActionResponse> {
+    extends NetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
   public @Nullable String transport(
       ElasticTransportRequest request, @Nullable ActionResponse response) {

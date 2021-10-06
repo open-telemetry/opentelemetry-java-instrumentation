@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import io.grpc.Status;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesServerExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -14,7 +14,7 @@ import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class GrpcNetServerAttributesExtractor
-    extends InetSocketAddressNetAttributesServerExtractor<GrpcRequest, Status> {
+    extends InetSocketAddressNetServerAttributesExtractor<GrpcRequest, Status> {
   @Override
   @Nullable
   public InetSocketAddress getAddress(GrpcRequest request) {

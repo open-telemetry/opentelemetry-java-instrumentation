@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JedisNetAttributesExtractor extends NetAttributesClientExtractor<JedisRequest, Void> {
+final class JedisNetAttributesExtractor extends NetClientAttributesExtractor<JedisRequest, Void> {
 
   @Override
   @Nullable

@@ -15,38 +15,29 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class NetAttributesClientExtractorTest {
+class NetServerAttributesExtractorTest {
 
-  static class TestNetAttributesClientExtractor
-      extends NetAttributesClientExtractor<Map<String, String>, Map<String, String>> {
+  static class TestNetServerAttributesExtractor
+      extends NetServerAttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String transport(Map<String, String> request, Map<String, String> response) {
-      return response.get("transport");
+    public String transport(Map<String, String> request) {
+      return request.get("transport");
     }
 
     @Override
-    public String peerName(Map<String, String> request, Map<String, String> response) {
-      if (response != null) {
-        return response.get("peerName");
-      }
-      return null;
+    public String peerName(Map<String, String> request) {
+      return request.get("peerName");
     }
 
     @Override
-    public Integer peerPort(Map<String, String> request, Map<String, String> response) {
-      if (response != null) {
-        return Integer.valueOf(response.get("peerPort"));
-      }
-      return null;
+    public Integer peerPort(Map<String, String> request) {
+      return Integer.valueOf(request.get("peerPort"));
     }
 
     @Override
-    public String peerIp(Map<String, String> request, Map<String, String> response) {
-      if (response != null) {
-        return response.get("peerIp");
-      }
-      return null;
+    public String peerIp(Map<String, String> request) {
+      return request.get("peerIp");
     }
   }
 
@@ -64,7 +55,7 @@ class NetAttributesClientExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
+    TestNetServerAttributesExtractor extractor = new TestNetServerAttributesExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -74,13 +65,14 @@ class NetAttributesClientExtractorTest {
     extractor.onEnd(endAttributes, request, response, null);
 
     // then
-    assertThat(startAttributes.build()).isEmpty();
-
-    assertThat(endAttributes.build())
+    assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
+            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
+            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
+
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test
@@ -97,7 +89,7 @@ class NetAttributesClientExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetAttributesClientExtractor extractor = new TestNetAttributesClientExtractor();
+    TestNetServerAttributesExtractor extractor = new TestNetServerAttributesExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -107,11 +99,12 @@ class NetAttributesClientExtractorTest {
     extractor.onEnd(endAttributes, request, response, null);
 
     // then
-    assertThat(startAttributes.build()).isEmpty();
-
-    assertThat(endAttributes.build())
+    assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
+            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
+
+    assertThat(endAttributes.build()).isEmpty();
   }
 }

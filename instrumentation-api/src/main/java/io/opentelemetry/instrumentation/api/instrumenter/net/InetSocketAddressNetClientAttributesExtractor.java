@@ -14,18 +14,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a> from a {@link InetSocketAddress}. Most network libraries will provide access to a
  * {@link InetSocketAddress} so this is a convenient alternative to {@link
- * NetAttributesServerExtractor}. There is no meaning to implement both in the same instrumentation.
+ * NetClientAttributesExtractor}. There is no meaning to implement both in the same instrumentation.
  */
-public abstract class InetSocketAddressNetAttributesServerExtractor<REQUEST, RESPONSE>
-    extends NetAttributesServerExtractor<REQUEST, RESPONSE> {
+public abstract class InetSocketAddressNetClientAttributesExtractor<REQUEST, RESPONSE>
+    extends NetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request);
+  public abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
 
   @Override
   @Nullable
-  public final String peerName(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final String peerName(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -37,8 +37,8 @@ public abstract class InetSocketAddressNetAttributesServerExtractor<REQUEST, RES
 
   @Override
   @Nullable
-  public final Integer peerPort(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -47,8 +47,8 @@ public abstract class InetSocketAddressNetAttributesServerExtractor<REQUEST, RES
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public final String peerIp(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }

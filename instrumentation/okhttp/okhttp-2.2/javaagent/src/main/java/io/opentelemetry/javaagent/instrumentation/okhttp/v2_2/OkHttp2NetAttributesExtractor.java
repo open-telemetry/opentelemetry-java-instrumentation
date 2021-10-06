@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesServerExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OkHttp2NetAttributesExtractor
-    extends NetAttributesServerExtractor<Request, Response> {
+    extends NetServerAttributesExtractor<Request, Response> {
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

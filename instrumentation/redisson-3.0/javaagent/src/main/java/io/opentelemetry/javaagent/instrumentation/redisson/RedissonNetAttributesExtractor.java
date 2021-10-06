@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class RedissonNetAttributesExtractor
-    extends InetSocketAddressNetAttributesClientExtractor<RedissonRequest, Void> {
+    extends InetSocketAddressNetClientAttributesExtractor<RedissonRequest, Void> {
 
   @Override
   public InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {

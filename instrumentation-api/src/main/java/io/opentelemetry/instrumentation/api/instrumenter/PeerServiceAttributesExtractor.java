@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,12 +27,12 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
-  private final NetAttributesClientExtractor<REQUEST, RESPONSE> netAttributesExtractor;
+  private final NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetAttributesClientExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
     this.netAttributesExtractor = netAttributesExtractor;
   }
@@ -42,7 +42,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetAttributesClientExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
     return new PeerServiceAttributesExtractor<>(
         JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesExtractor);
   }

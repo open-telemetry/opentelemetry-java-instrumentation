@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesClientExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpUrlNetAttributesExtractor
-    extends NetAttributesClientExtractor<HttpURLConnection, Integer> {
+    extends NetClientAttributesExtractor<HttpURLConnection, Integer> {
   @Override
   public @Nullable String transport(HttpURLConnection connection, @Nullable Integer status) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
