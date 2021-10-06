@@ -28,4 +28,8 @@ public class KeyClass {
   public void removeContextCount() {
     // implementation replaced with test instrumentation
   }
+
+  public void useTwoFields() {
+    // implementation replaced with test instrumentation
+  }
 }

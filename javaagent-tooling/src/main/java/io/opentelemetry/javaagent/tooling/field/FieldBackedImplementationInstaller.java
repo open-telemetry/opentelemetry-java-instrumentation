@@ -53,8 +53,7 @@ import net.bytebuddy.utility.JavaModule;
  * <em>FieldBackedImplementation$VirtualField$Runnable$RunnableState12345.getVirtualField(Runnable.class,
  * RunnableState.class)</em>
  */
-public final class FieldBackedImplementationInstaller
-    implements VirtualFieldImplementationInstaller {
+final class FieldBackedImplementationInstaller implements VirtualFieldImplementationInstaller {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
@@ -160,13 +159,6 @@ public final class FieldBackedImplementationInstaller
    */
   private static final Set<Map.Entry<String, String>> INSTALLED_VIRTUAL_FIELD_MATCHERS =
       new HashSet<>();
-
-  /** Clear set that prevents multiple matchers for same context class. */
-  public static void resetContextMatchers() {
-    synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
-      INSTALLED_VIRTUAL_FIELD_MATCHERS.clear();
-    }
-  }
 
   @Override
   public AgentBuilder.Identified.Extendable injectFields(

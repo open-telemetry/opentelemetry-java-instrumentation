@@ -35,6 +35,8 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         named("putContextCount"), this.getClass().getName() + "$PutApiUsageAdvice");
     transformer.applyAdviceToMethod(
         named("removeContextCount"), this.getClass().getName() + "$RemoveApiUsageAdvice");
+    transformer.applyAdviceToMethod(
+        named("useTwoFields"), this.getClass().getName() + "$UseTwoFieldsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -88,6 +90,19 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
       VirtualField<KeyClass, Context> virtualField =
           VirtualField.find(KeyClass.class, Context.class);
       virtualField.set(thiz, null);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class UseTwoFieldsAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit(@Advice.This KeyClass thiz) {
+      VirtualField<KeyClass, Context> field1 = VirtualField.find(KeyClass.class, Context.class);
+      VirtualField<KeyClass, Integer> field2 = VirtualField.find(KeyClass.class, Integer.class);
+
+      Context context = field1.get(thiz);
+      int count = context == null ? 0 : context.count;
+      field2.set(thiz, count);
     }
   }
 }
