@@ -19,9 +19,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class SpringWebMvcHttpAttributesExtractor
     extends HttpServerAttributesExtractor<HttpServletRequest, HttpServletResponse> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  SpringWebMvcHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  SpringWebMvcHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override

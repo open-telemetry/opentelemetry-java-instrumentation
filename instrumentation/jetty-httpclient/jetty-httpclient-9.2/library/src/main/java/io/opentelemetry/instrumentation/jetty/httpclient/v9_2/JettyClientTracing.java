@@ -11,22 +11,27 @@ import org.eclipse.jetty.client.HttpClient;
 /** JettyClientTracing, the Entrypoint for tracing Jetty client. */
 public final class JettyClientTracing {
 
-  private final HttpClient httpClient;
-
+  /** Returns a new {@link JettyClientTracing} configured with the given {@link OpenTelemetry}. */
   public static JettyClientTracing create(OpenTelemetry openTelemetry) {
     JettyClientTracingBuilder builder = newBuilder(openTelemetry);
     return builder.build();
   }
 
+  /**
+   * Returns a new {@link JettyClientTracingBuilder} configured with the given {@link
+   * OpenTelemetry}.
+   */
   public static JettyClientTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
     return new JettyClientTracingBuilder(openTelemetry);
   }
 
-  public HttpClient getHttpClient() {
-    return httpClient;
-  }
+  private final HttpClient httpClient;
 
   JettyClientTracing(HttpClient httpClient) {
     this.httpClient = httpClient;
+  }
+
+  public HttpClient getHttpClient() {
+    return httpClient;
   }
 }

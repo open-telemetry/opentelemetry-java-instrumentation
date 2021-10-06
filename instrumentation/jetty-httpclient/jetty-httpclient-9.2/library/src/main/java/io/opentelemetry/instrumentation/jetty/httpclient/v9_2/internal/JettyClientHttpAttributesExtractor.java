@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory;
 
 final class JettyClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, Response> {
+
   private static final Logger logger =
       LoggerFactory.getLogger(JettyClientHttpAttributesExtractor.class);
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  JettyClientHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  JettyClientHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override
