@@ -102,7 +102,7 @@ public final class ArmeriaTracingBuilder {
   }
 
   public ArmeriaTracing build() {
-    ArmeriaHttpClientAttributesExtractor clientAttributesExtractor =
+    ArmeriaHttpClientAttributesExtractor httpClientAttributesExtractor =
         new ArmeriaHttpClientAttributesExtractor(capturedHttpClientHeaders);
     ArmeriaHttpServerAttributesExtractor serverAttributesExtractor =
         new ArmeriaHttpServerAttributesExtractor(capturedHttpServerHeaders);
@@ -111,7 +111,7 @@ public final class ArmeriaTracingBuilder {
         Instrumenter.newBuilder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(clientAttributesExtractor));
+            HttpSpanNameExtractor.create(httpClientAttributesExtractor));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
         Instrumenter.newBuilder(
             openTelemetry,
@@ -121,23 +121,15 @@ public final class ArmeriaTracingBuilder {
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
-    ArmeriaNetClientAttributesExtractor netAttributesClientExtractor =
+    ArmeriaNetClientAttributesExtractor netClientAttributesExtractor =
         new ArmeriaNetClientAttributesExtractor();
-
-    if (peerService != null) {
-      clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
-    } else {
-      clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netAttributesClientExtractor));
-    }
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
-                HttpSpanStatusExtractor.create(clientAttributesExtractor)))
-        .addAttributesExtractor(netAttributesClientExtractor)
-        .addAttributesExtractor(clientAttributesExtractor)
+                HttpSpanStatusExtractor.create(httpClientAttributesExtractor)))
+        .addAttributesExtractor(netClientAttributesExtractor)
+        .addAttributesExtractor(httpClientAttributesExtractor)
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
@@ -146,6 +138,14 @@ public final class ArmeriaTracingBuilder {
         .addAttributesExtractor(new ArmeriaNetServerAttributesExtractor())
         .addAttributesExtractor(serverAttributesExtractor)
         .addRequestMetrics(HttpServerMetrics.get());
+
+    if (peerService != null) {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+    } else {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          PeerServiceAttributesExtractor.create(netClientAttributesExtractor));
+    }
 
     return new ArmeriaTracing(
         clientInstrumenterBuilder.newClientInstrumenter(new ClientRequestContextSetter()),

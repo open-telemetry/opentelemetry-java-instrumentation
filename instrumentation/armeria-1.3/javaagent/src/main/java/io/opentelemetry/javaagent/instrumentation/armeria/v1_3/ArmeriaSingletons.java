@@ -19,7 +19,7 @@ public final class ArmeriaSingletons {
   public static final Function<? super HttpService, ? extends HttpService> SERVER_DECORATOR;
 
   static {
-    ArmeriaTracing tracing = ArmeriaTracing.newBuilder(GlobalOpenTelemetry.get()).build();
+    ArmeriaTracing tracing = ArmeriaTracing.create(GlobalOpenTelemetry.get());
 
     CLIENT_DECORATOR = tracing.newClientDecorator();
     SERVER_DECORATOR = tracing.newServiceDecorator();

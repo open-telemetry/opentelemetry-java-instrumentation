@@ -11,8 +11,10 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetServer
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -54,22 +56,31 @@ public final class DubboTracingBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
+    DubboNetClientAttributesExtractor netClientAttributesExtractor =
+        new DubboNetClientAttributesExtractor();
+
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
-        Instrumenter.<DubboRequest, Result>newBuilder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(new DubboNetClientAttributesExtractor());
+        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
-        Instrumenter.<DubboRequest, Result>newBuilder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(new DubboNetServerAttributesExtractor());
+        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(
-            instrumenter -> {
-              instrumenter
-                  .addAttributesExtractors(rpcAttributesExtractor)
-                  .addAttributesExtractors(attributesExtractors);
-            });
+            instrumenter ->
+                instrumenter
+                    .addAttributesExtractors(rpcAttributesExtractor)
+                    .addAttributesExtractors(attributesExtractors));
+
+    clientInstrumenterBuilder.addAttributesExtractor(netClientAttributesExtractor);
+    serverInstrumenterBuilder.addAttributesExtractor(new DubboNetServerAttributesExtractor());
+
+    if (peerService != null) {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+    } else {
+      clientInstrumenterBuilder.addAttributesExtractor(
+          PeerServiceAttributesExtractor.create(netClientAttributesExtractor));
+    }
 
     return new DubboTracing(
         clientInstrumenterBuilder.newClientInstrumenter(new DubboHeadersSetter()),
