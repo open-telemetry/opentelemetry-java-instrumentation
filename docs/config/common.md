@@ -9,11 +9,9 @@ is the name of a remote service to which a connection is made. It corresponds to
 the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service)
 for the local service.
 
-| System property                      | Environment variable                 | Description                                                                      |
-|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
-| `otel.instrumentation.common.peer-service-mapping` | `OTEL_INSTRUMENTATION_COMMON_PEER_SERVICE_MAPPING` | Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of `<host_or_ip>=<user_assigned_name>` pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. 
-
-For example, if set to `1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api`, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
+| System property                                    | Environment variable                               | Description |
+| -------------------------------------------------- | -------------------------------------------------- | ----------- |
+| `otel.instrumentation.common.peer-service-mapping` | `OTEL_INSTRUMENTATION_COMMON_PEER_SERVICE_MAPPING` | Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of `<host_or_ip>=<user_assigned_name>` pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. For example, if set to `1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api`, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`.
 
 ## DB statement sanitization
 
@@ -27,11 +25,12 @@ Examples:
 * Redis command `HSET map password "secret"` will appear as `HSET map password ?` in the exported
   span.
 
-This behavior is turned on by default for all database instrumentations. Use the following property to disable it:
+This behavior is turned on by default for all database instrumentations. Use the following property
+to disable it:
 
-| System property                                       | Environment variable                                  | Description                                                         |
-|-------------------------------------------------------|-------------------------------------------------------|---------------------------------------------------------------------|
-| `otel.instrumentation.common.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`. |
+| System property                                              | Environment variable                                         | Description |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ----------- |
+| `otel.instrumentation.common.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`.
 
 ## Capturing HTTP request and response headers
 
@@ -48,5 +47,5 @@ You can configure the agent to capture predefined HTTP headers as span attribute
 
 These configuration options are supported by all HTTP client and server instrumentations.
 
-> **Note**: The property/environment variable names listed in the table are still experimental, and thus are
-subject to change.
+> **Note**: The property/environment variable names listed in the table are still experimental,
+> and thus are subject to change.
