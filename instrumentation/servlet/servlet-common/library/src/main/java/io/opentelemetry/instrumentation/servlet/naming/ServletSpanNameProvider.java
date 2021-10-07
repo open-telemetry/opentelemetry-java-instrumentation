@@ -5,34 +5,24 @@
 
 package io.opentelemetry.instrumentation.servlet.naming;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameTwoArgSupplier;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */
-public class ServletSpanNameProvider<REQUEST> {
+public class ServletSpanNameProvider<REQUEST>
+    implements ServerSpanNameTwoArgSupplier<MappingResolver, REQUEST> {
   private final ServletAccessor<REQUEST, ?> servletAccessor;
 
   public ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {
     this.servletAccessor = servletAccessor;
   }
 
-  public String getSpanName(MappingResolver mappingResolver, REQUEST request) {
-    String spanName = getSpanNameOrNull(mappingResolver, request);
-    if (spanName == null) {
-      String contextPath = servletAccessor.getRequestContextPath(request);
-      if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
-        return "HTTP " + servletAccessor.getRequestMethod(request);
-      }
-      return contextPath + "/*";
-    }
-    return spanName;
-  }
-
-  public String getSpanNameOrNull(MappingResolver mappingResolver, REQUEST request) {
-    if (mappingResolver == null) {
-      return null;
-    }
-
+  @Override
+  public @Nullable String get(Context context, MappingResolver mappingResolver, REQUEST request) {
     String servletPath = servletAccessor.getRequestServletPath(request);
     String pathInfo = servletAccessor.getRequestPathInfo(request);
     String mapping = mappingResolver.resolve(servletPath, pathInfo);
@@ -41,11 +31,6 @@ public class ServletSpanNameProvider<REQUEST> {
       return null;
     }
 
-    // prepend context path
-    String contextPath = servletAccessor.getRequestContextPath(request);
-    if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
-      return mapping;
-    }
-    return contextPath + mapping;
+    return ServletContextPath.prepend(context, mapping);
   }
 }
