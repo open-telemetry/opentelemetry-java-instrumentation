@@ -32,7 +32,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
     Integer peerPort = peerPort(request, null);
-    if (peerPort != null) {
+    if (peerPort != null && peerPort > 0) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }
   }
@@ -53,7 +53,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
     Integer peerPort = peerPort(request, response);
-    if (peerPort != null) {
+    if (peerPort != null && peerPort > 0) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }
   }
