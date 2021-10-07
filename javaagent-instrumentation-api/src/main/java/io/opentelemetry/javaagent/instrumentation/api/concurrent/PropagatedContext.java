@@ -44,7 +44,7 @@ public final class PropagatedContext {
     }
   }
 
-  public void clear() {
+  void clear() {
     contextUpdater.set(this, null);
   }
 
