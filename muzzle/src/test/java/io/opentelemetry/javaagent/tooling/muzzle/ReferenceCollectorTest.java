@@ -364,7 +364,10 @@ class ReferenceCollectorTest {
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
         Arguments.of(
             "storing class ref in a local var",
-            VirtualFieldTestClasses.PassingVariableAdvice.class.getName()));
+            VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
+        Arguments.of(
+            "using array type as the field owner type",
+            VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

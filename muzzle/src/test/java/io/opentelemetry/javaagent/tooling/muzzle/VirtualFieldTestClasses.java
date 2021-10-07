@@ -41,6 +41,12 @@ public class VirtualFieldTestClasses {
     }
   }
 
+  public static class UsingArrayAsOwnerAdvice {
+    public static void advice() {
+      VirtualField.find(Key1[].class, Context.class);
+    }
+  }
+
   public static class Key1 {}
 
   public static class Key2 {}

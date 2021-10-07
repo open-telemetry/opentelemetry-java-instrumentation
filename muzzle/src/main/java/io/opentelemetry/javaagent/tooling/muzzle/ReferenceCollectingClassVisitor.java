@@ -467,7 +467,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private class VirtualFieldCollectingMethodVisitor extends MethodVisitor {
     // this data structure will remember last two LDC <class> instructions before
     // VirtualField.find() call
-    private final EvictingQueue<String> lastTwoClassConstants = EvictingQueue.create(2);
+    private final EvictingQueue<Type> lastTwoClassConstants = EvictingQueue.create(2);
 
     VirtualFieldCollectingMethodVisitor(MethodVisitor methodVisitor) {
       super(Opcodes.ASM7, methodVisitor);
@@ -524,14 +524,20 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
         if (lastTwoClassConstants.remainingCapacity() == 0) {
-          String typeName = lastTwoClassConstants.poll();
-          String fieldTypeName = lastTwoClassConstants.poll();
-          virtualFieldMappingsBuilder.register(typeName, fieldTypeName);
+          Type type = lastTwoClassConstants.poll();
+          Type fieldType = lastTwoClassConstants.poll();
+
+          if (type.getSort() == Type.ARRAY) {
+            throw new MuzzleCompilationException(
+                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array type as the field owner type");
+          }
+
+          virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
         } else {
           throw new MuzzleCompilationException(
               "Invalid VirtualField#find(Class, Class) usage: you cannot pass variables,"
                   + " method parameters, compute classes; class references need to be passed"
-                  + " directly to the get() method");
+                  + " directly to the find() method");
         }
       }
 
@@ -559,7 +565,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (value instanceof Type) {
           Type type = (Type) value;
           if (type.getSort() == Type.OBJECT) {
-            lastTwoClassConstants.add(type.getClassName());
+            lastTwoClassConstants.add(type);
             return;
           }
         }
