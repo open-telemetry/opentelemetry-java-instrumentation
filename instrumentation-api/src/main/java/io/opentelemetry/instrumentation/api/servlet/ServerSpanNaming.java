@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Helper container for tracking whether instrumentation should update server span name or not. */
@@ -17,11 +16,6 @@ public final class ServerSpanNaming {
 
   private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-span-naming-key");
-
-  // this is just to support deprecated methods
-  @Deprecated
-  private static final ServerSpanNameSupplier<Supplier<String>> ZERO_ARG_ADAPTER =
-      (context, supplier) -> supplier.get();
 
   public static Context init(Context context, Source initialSource) {
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
@@ -106,12 +100,6 @@ public final class ServerSpanNaming {
         serverSpanNaming.nameLength = name.length();
       }
     }
-  }
-
-  @Deprecated
-  public static void updateServerSpanName(
-      Context context, Source source, Supplier<String> serverSpanName) {
-    updateServerSpanName(context, source, ZERO_ARG_ADAPTER, serverSpanName);
   }
 
   // TODO (trask) migrate the one usage (ServletHttpServerTracer) to ServerSpanNaming.init() once we
