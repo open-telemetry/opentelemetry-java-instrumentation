@@ -35,8 +35,8 @@ to disable it:
 ## Capturing HTTP request and response headers
 
 You can configure the agent to capture predefined HTTP headers as span attributes, according to the
-[semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers)
-. Use the following properties to define which HTTP headers you want to capture:
+[semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers).
+Use the following properties to define which HTTP headers you want to capture:
 
 | System property                                                                 | Environment variable                                                            | Description |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------- |
