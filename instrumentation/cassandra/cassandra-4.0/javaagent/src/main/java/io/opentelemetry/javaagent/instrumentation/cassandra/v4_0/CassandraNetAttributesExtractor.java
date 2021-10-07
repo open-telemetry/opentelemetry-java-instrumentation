@@ -7,17 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class CassandraNetAttributesExtractor
-    extends InetSocketAddressNetAttributesExtractor<CassandraRequest, ExecutionInfo> {
+    extends InetSocketAddressNetClientAttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
   @Nullable
-  public String transport(CassandraRequest request) {
+  public String transport(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     return null;
   }
 

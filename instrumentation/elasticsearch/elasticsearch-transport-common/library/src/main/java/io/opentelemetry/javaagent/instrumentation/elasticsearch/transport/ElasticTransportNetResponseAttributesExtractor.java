@@ -5,20 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-public class ElasticTransportNetAttributesExtractor
-    extends NetAttributesExtractor<ElasticTransportRequest, ActionResponse> {
+public class ElasticTransportNetResponseAttributesExtractor
+    extends NetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
-  public @Nullable String transport(ElasticTransportRequest elasticTransportRequest) {
+  public @Nullable String transport(
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
     return null;
   }
 
   @Override
   public @Nullable String peerName(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getHost();
     }
@@ -27,7 +28,7 @@ public class ElasticTransportNetAttributesExtractor
 
   @Override
   public @Nullable Integer peerPort(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getPort();
     }
@@ -36,7 +37,7 @@ public class ElasticTransportNetAttributesExtractor
 
   @Override
   public @Nullable String peerIp(
-      ElasticTransportRequest elasticTransportRequest, @Nullable ActionResponse response) {
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
     }

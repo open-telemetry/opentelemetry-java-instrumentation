@@ -14,7 +14,7 @@ import static org.mockito.BDDMockito.given;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PeerServiceAttributesExtractorTest {
-  @Mock NetAttributesExtractor<String, String> netAttributesExtractor;
+  @Mock NetClientAttributesExtractor<String, String> netAttributesExtractor;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
@@ -105,8 +105,7 @@ class PeerServiceAttributesExtractorTest {
     underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+    assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
   }
@@ -131,8 +130,7 @@ class PeerServiceAttributesExtractorTest {
     underTest.onEnd(endAttributes, "request", "response", null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "someOtherService"));
+    assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "someOtherService"));
   }

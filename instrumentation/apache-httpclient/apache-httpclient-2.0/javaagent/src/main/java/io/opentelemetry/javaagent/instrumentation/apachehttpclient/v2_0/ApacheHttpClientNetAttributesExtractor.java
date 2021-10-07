@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientNetAttributesExtractor
-    extends NetAttributesExtractor<HttpMethod, HttpMethod> {
+    extends NetClientAttributesExtractor<HttpMethod, HttpMethod> {
 
   @Override
-  public String transport(HttpMethod request) {
+  public String transport(HttpMethod request, @Nullable HttpMethod response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

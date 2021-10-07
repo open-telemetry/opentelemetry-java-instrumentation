@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,14 +27,14 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
 
   private final Map<String, String> peerServiceMapping;
-  private final NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor;
+  private final NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor) {
     this.peerServiceMapping = peerServiceMapping;
-    this.netAttributesExtractor = netAttributesExtractor;
+    this.netClientAttributesExtractor = netClientAttributesExtractor;
   }
 
   /**
@@ -42,15 +42,13 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
     return new PeerServiceAttributesExtractor<>(
         JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesExtractor);
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
-    onEnd(attributes, request, null, null);
-  }
+  protected void onStart(AttributesBuilder attributes, REQUEST request) {}
 
   @Override
   protected void onEnd(
@@ -58,10 +56,10 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    String peerName = netAttributesExtractor.peerName(request, response);
+    String peerName = netClientAttributesExtractor.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String peerIp = netAttributesExtractor.peerIp(request, response);
+      String peerIp = netClientAttributesExtractor.peerIp(request, response);
       peerService = mapToPeerService(peerIp);
     }
     if (peerService != null) {

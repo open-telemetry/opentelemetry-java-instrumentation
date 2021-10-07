@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -120,13 +120,13 @@ public class InstrumenterBenchmark {
   }
 
   static class ConstantNetAttributesExtractor
-      extends InetSocketAddressNetAttributesExtractor<Void, Void> {
+      extends InetSocketAddressNetServerAttributesExtractor<Void, Void> {
 
     private static final InetSocketAddress ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 
     @Override
-    public @Nullable InetSocketAddress getAddress(Void unused, @Nullable Void unused2) {
+    public @Nullable InetSocketAddress getAddress(Void unused) {
       return ADDRESS;
     }
 

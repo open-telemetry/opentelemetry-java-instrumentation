@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request, Response> {
+public class TomcatNetAttributesExtractor extends NetServerAttributesExtractor<Request, Response> {
 
   @Override
   public @Nullable String transport(Request request) {
@@ -20,7 +20,7 @@ public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  public @Nullable String peerName(Request request) {
     /*
     request.action(ActionCode.REQ_HOST_ATTRIBUTE, request);
     return request.remoteHost().toString();
@@ -29,13 +29,13 @@ public class TomcatNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable Integer peerPort(Request request, @Nullable Response response) {
+  public @Nullable Integer peerPort(Request request) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  public @Nullable String peerIp(Request request) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return request.remoteAddr().toString();
   }

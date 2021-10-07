@@ -10,14 +10,13 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
@@ -39,7 +38,7 @@ public final class TomcatInstrumenterBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesExtractor<Request, Response> netAttributesExtractor =
+    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
         new TomcatNetAttributesExtractor();
     AttributesExtractor<Request, Response> additionalAttributeExtractor =
         new TomcatAdditionalAttributesExtractor<>(accessor, servletEntityProvider);
@@ -50,7 +49,6 @@ public final class TomcatInstrumenterBuilder {
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
         .addAttributesExtractor(additionalAttributeExtractor)
         .addContextCustomizer(
             (context, request, attributes) -> {

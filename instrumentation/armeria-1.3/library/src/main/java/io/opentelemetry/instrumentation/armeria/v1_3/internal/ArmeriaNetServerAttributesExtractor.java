@@ -7,14 +7,14 @@ package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class ArmeriaNetAttributesExtractor
-    extends InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
+public final class ArmeriaNetServerAttributesExtractor
+    extends InetSocketAddressNetServerAttributesExtractor<RequestContext, RequestLog> {
 
   @Override
   public String transport(RequestContext ctx) {
@@ -23,7 +23,7 @@ public final class ArmeriaNetAttributesExtractor
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public InetSocketAddress getAddress(RequestContext ctx) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

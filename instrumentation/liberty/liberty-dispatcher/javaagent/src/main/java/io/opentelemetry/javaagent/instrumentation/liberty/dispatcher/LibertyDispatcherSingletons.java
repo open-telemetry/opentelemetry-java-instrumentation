@@ -9,14 +9,13 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 
 public final class LibertyDispatcherSingletons {
@@ -31,7 +30,7 @@ public final class LibertyDispatcherSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<LibertyRequest, LibertyResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
+    NetServerAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
         new LibertyDispatcherNetAttributesExtractor();
 
     INSTRUMENTER =
@@ -40,7 +39,6 @@ public final class LibertyDispatcherSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addContextCustomizer(
                 (context, request, attributes) -> ServerSpanNaming.init(context, CONTAINER))
             .addRequestMetrics(HttpServerMetrics.get())

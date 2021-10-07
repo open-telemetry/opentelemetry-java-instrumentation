@@ -9,14 +9,13 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
@@ -34,7 +33,7 @@ public final class UndertowSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpServerExchange, HttpServerExchange> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
+    NetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
         new UndertowNetAttributesExtractor();
 
     INSTRUMENTER =
@@ -43,7 +42,6 @@ public final class UndertowSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   context = ServerSpanNaming.init(context, CONTAINER);
