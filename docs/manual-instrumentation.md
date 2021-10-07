@@ -111,18 +111,16 @@ option to the `javac` compiler.
 Suppressing `@WithSpan` is useful if you have code that is over-instrumented using `@WithSpan`
 and you want to suppress some of them without modifying the code.
 
-| System property                 | Environment variable            | Purpose                                                                                                                                  |
-|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.instrumentation.opentelemetry-annotations.exclude-methods | OTEL_INSTRUMENTATION_OPENTELEMETRY_ANNOTATIONS_EXCLUDE_METHODS | Suppress `@WithSpan` instrumentation for specific methods.
-Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+| System property                                                  | Environment variable                                             | Purpose |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------- | ------- |
+| `otel.instrumentation.opentelemetry-annotations.exclude-methods` | `OTEL_INSTRUMENTATION_OPENTELEMETRY_ANNOTATIONS_EXCLUDE_METHODS` | Suppress `@WithSpan` instrumentation for specific methods. Format is `my.package.MyClass1[method1,method2];my.package.MyClass2[method3]`
 
 ## Creating spans around methods with otel.instrumentation.methods.include
 This is a way to to create a span around a first-party code method without using `@WithSpan`.
 
-| System property                 | Environment variable            | Purpose                                                                                                                                  |
-|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.instrumentation.methods.include |                                 | Add instrumentation for specific methods in lieu of `@WithSpan`.
-Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+| System property                        | Environment variable                   | Purpose |
+| -------------------------------------- | -------------------------------------- | ------- |
+| `otel.instrumentation.methods.include` | `OTEL_INSTRUMENTATION_METHODS_INCLUDE` | Add instrumentation for specific methods in lieu of `@WithSpan`. Format is `my.package.MyClass1[method1,method2];my.package.MyClass2[method3]`
 
 # Creating spans manually with a Tracer
 
