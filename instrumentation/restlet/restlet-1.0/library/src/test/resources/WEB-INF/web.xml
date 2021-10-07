@@ -1,0 +1,28 @@
+<!DOCTYPE web-app PUBLIC
+  "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+  "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app id="WebApp_ID" version="2.4"
+  xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+                 http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+  <display-name>Restlet test</display-name>
+
+  <servlet>
+    <servlet-name>RestletServlet</servlet-name>
+    <servlet-class>com.noelios.restlet.ext.servlet.ServerServlet</servlet-class>
+    <init-param>
+      <!-- Application class name -->
+      <param-name>org.restlet.application</param-name>
+      <param-value>io.opentelemetry.instrumentation.restlet.v1_0.AbstractServletTest$TestApp
+      </param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>RestletServlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>
