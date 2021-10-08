@@ -14,8 +14,10 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers
+import io.undertow.util.HttpString
 import io.undertow.util.StatusCodes
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -45,6 +47,13 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             exchange.setStatusCode(StatusCodes.FOUND)
             exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.body)
             exchange.endExchange()
+          }
+        }
+        .addExactPath(CAPTURE_HEADERS.rawPath()) { exchange ->
+          controller(CAPTURE_HEADERS) {
+            exchange.setStatusCode(StatusCodes.OK)
+            exchange.getResponseHeaders().put(new HttpString("X-Test-Response"), exchange.getRequestHeaders().getFirst("X-Test-Request"))
+            exchange.getResponseSender().send(CAPTURE_HEADERS.body)
           }
         }
         .addExactPath(ERROR.rawPath()) { exchange ->

@@ -14,7 +14,9 @@ import ratpack.server.RatpackServerSpec
 class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
-    RatpackTracing tracing = RatpackTracing.create(openTelemetry)
+    RatpackTracing tracing = RatpackTracing.newBuilder(openTelemetry)
+      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .build()
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)
     }

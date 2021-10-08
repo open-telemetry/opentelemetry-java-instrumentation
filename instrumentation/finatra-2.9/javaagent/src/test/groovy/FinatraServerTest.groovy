@@ -87,4 +87,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
       SemanticAttributes.HTTP_URL
     ]
   }
+
+  boolean testCapturedHttpHeaders() {
+    false
+  }
 }

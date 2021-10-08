@@ -13,4 +13,9 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   @Override
   void configure(RatpackServerSpec serverSpec) {
   }
+
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
 }

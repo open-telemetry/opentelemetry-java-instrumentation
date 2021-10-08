@@ -59,6 +59,11 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean testPathParam() {
     return true
   }

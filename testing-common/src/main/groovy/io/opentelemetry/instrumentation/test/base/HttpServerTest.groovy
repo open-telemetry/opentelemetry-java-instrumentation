@@ -103,9 +103,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
-  // TODO: enable it everywhere
   boolean testCapturedHttpHeaders() {
-    false
+    true
   }
 
   boolean testErrorBody() {

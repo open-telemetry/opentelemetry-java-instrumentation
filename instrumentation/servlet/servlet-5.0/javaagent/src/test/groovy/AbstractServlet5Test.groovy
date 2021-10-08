@@ -10,6 +10,7 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import jakarta.servlet.Servlet
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -43,6 +44,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, REDIRECT.path, servlet)
     addServlet(context, AUTH_REQUIRED.path, servlet)
     addServlet(context, INDEXED_CHILD.path, servlet)
+    addServlet(context, CAPTURE_HEADERS.path, servlet)
   }
 
   protected ServerEndpoint lastRequest

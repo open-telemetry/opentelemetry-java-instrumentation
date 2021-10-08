@@ -12,6 +12,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import spock.lang.IgnoreIf
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -172,6 +173,7 @@ class JettyServlet5TestForward extends JettyDispatchTest {
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -184,6 +186,11 @@ class JettyServlet5TestInclude extends JettyDispatchTest {
 
   @Override
   boolean testRedirect() {
+    false
+  }
+
+  @Override
+  boolean testCapturedHttpHeaders() {
     false
   }
 
@@ -223,6 +230,7 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 
@@ -250,6 +258,7 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 

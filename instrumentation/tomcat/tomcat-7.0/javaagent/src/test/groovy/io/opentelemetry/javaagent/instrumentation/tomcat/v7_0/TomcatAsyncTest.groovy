@@ -19,6 +19,7 @@ import javax.servlet.ServletException
 import java.nio.file.Files
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -82,6 +83,7 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
     addServlet(context, EXCEPTION.path, servlet)
     addServlet(context, REDIRECT.path, servlet)
     addServlet(context, AUTH_REQUIRED.path, servlet)
+    addServlet(context, CAPTURE_HEADERS.path, servlet)
     addServlet(context, INDEXED_CHILD.path, servlet)
   }
 

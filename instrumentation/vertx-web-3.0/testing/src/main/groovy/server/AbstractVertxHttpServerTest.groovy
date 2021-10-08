@@ -61,6 +61,11 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
       SemanticAttributes.HTTP_URL

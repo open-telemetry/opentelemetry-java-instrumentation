@@ -72,11 +72,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  boolean testCapturedHttpHeaders() {
-    true
-  }
-
-  @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == NOT_FOUND
   }

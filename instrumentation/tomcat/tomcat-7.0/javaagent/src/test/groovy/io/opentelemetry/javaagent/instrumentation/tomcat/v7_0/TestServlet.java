@@ -25,6 +25,9 @@ public class TestServlet extends HttpServlet {
             if (serverEndpoint == HttpServerTest.ServerEndpoint.EXCEPTION) {
               throw new Exception(serverEndpoint.getBody());
             }
+            if (serverEndpoint == HttpServerTest.ServerEndpoint.CAPTURE_HEADERS) {
+              resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
+            }
             resp.getWriter().print(serverEndpoint.getBody());
             if (serverEndpoint == HttpServerTest.ServerEndpoint.REDIRECT) {
               resp.sendRedirect(serverEndpoint.getBody());

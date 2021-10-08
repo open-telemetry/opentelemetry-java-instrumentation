@@ -65,6 +65,11 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }

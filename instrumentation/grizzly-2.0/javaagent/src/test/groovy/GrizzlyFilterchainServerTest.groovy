@@ -65,6 +65,11 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
     false
   }
 
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
   void setUpTransport(FilterChain filterChain) {
     TCPNIOTransportBuilder transportBuilder = TCPNIOTransportBuilder.newInstance()
       .setOptimizedForMultiplexing(true)

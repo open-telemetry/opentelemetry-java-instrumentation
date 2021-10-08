@@ -46,6 +46,11 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
     server.stop()
   }
 
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override

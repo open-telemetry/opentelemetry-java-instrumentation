@@ -5,6 +5,7 @@
 
 package test.filter
 
+
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -55,6 +56,12 @@ class TestController {
   ResponseEntity exception() {
     throw new Exception("This should not be called")
   }
+
+  @RequestMapping("/captureHeaders")
+  ResponseEntity capture_headers() {
+    throw new Exception("This should not be called")
+  }
+
 
   @ExceptionHandler
   ResponseEntity handleException(Throwable throwable) {

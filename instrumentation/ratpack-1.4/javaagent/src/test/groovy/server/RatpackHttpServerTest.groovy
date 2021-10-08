@@ -14,4 +14,9 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements Age
   @Override
   void configure(RatpackServerSpec serverSpec) {
   }
+
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
 }
