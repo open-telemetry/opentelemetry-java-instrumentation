@@ -40,7 +40,7 @@ public abstract class NetClientAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
     Integer peerPort = peerPort(request, response);
-    if (peerPort != null) {
+    if (peerPort != null && peerPort > 0) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }
   }

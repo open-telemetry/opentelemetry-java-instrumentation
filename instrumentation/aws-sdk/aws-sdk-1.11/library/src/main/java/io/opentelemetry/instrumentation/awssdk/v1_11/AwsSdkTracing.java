@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
+import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /**
  * Entrypoint for tracing AWS SDK v1 clients.
@@ -40,10 +42,16 @@ public class AwsSdkTracing {
     return new AwsSdkTracingBuilder(openTelemetry);
   }
 
-  private final AwsSdkClientTracer tracer;
+  private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
 
   AwsSdkTracing(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    tracer = new AwsSdkClientTracer(openTelemetry, captureExperimentalSpanAttributes);
+    requestInstrumenter =
+        AwsSdkInstrumenterFactory.requestInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
+    consumerInstrumenter =
+        AwsSdkInstrumenterFactory.consumerInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
   }
 
   /**
@@ -51,6 +59,6 @@ public class AwsSdkTracing {
    * withRequestHandlers}.
    */
   public RequestHandler2 newRequestHandler() {
-    return new TracingRequestHandler(tracer);
+    return new TracingRequestHandler(requestInstrumenter, consumerInstrumenter);
   }
 }
