@@ -51,12 +51,6 @@ class AwsSdkExperimentalAttributesExtractor extends AttributesExtractor<Request<
     set(attributes, AWS_TABLE_NAME, RequestAccess.getTableName(originalRequest));
   }
 
-  private static void set(AttributesBuilder attributes, AttributeKey<String> key, String value) {
-    if (value != null) {
-      attributes.put(key, value);
-    }
-  }
-
   private static String extractOperationName(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());
   }

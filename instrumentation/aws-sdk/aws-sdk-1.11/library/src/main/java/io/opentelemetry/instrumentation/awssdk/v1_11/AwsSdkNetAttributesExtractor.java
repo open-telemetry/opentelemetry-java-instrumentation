@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class AwsSdkNetAttributesExtractor extends NetAttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkNetAttributesExtractor extends NetClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
-  public String transport(Request<?> request) {
+  public String transport(Request<?> request, @Nullable Response<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

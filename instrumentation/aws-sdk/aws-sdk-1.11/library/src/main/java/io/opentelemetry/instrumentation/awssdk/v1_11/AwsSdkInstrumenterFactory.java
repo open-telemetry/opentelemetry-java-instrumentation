@@ -33,7 +33,7 @@ final class AwsSdkInstrumenterFactory {
               attributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
-  public static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
+  static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
     return createInstrumenter(
@@ -42,7 +42,7 @@ final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory.spanKindExtractor);
   }
 
-  public static Instrumenter<Request<?>, Response<?>> consumerInstrumenter(
+  static Instrumenter<Request<?>, Response<?>> consumerInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
     return createInstrumenter(
