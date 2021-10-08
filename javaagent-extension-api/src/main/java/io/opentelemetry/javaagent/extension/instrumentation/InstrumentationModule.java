@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -134,4 +135,19 @@ public abstract class InstrumentationModule implements Ordered {
 
   /** Returns a list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
+
+  /**
+   * Returns a list of additional instrumentation helper classes, which are not automatically
+   * detected during compile time.
+   *
+   * <p>If your instrumentation module does not apply and you see warnings about missing classes in
+   * the logs, you may need to override this method and provide fully qualified classes names of
+   * helper classes that your instrumentation uses.
+   *
+   * <p>These helper classes will be injected into the application classloader after automatically
+   * detected ones.
+   */
+  public List<String> getAdditionalHelperClassNames() {
+    return Collections.emptyList();
+  }
 }

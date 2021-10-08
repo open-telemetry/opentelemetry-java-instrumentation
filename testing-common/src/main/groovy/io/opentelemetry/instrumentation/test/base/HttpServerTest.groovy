@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -25,6 +26,7 @@ import spock.lang.Unroll
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -35,10 +37,20 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static java.util.Collections.singletonList
 import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
+
+  static final String TEST_REQUEST_HEADER = "X-Test-Request"
+  static final String TEST_RESPONSE_HEADER = "X-Test-Response"
+
+  static CapturedHttpHeaders capturedHttpHeadersForTesting() {
+    CapturedHttpHeaders.create(
+      singletonList(TEST_REQUEST_HEADER),
+      singletonList(TEST_RESPONSE_HEADER))
+  }
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
     switch (endpoint) {
@@ -91,6 +103,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  // TODO: enable it everywhere
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
   boolean testErrorBody() {
     true
   }
@@ -125,6 +142,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
+    CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
 
     // TODO: add tests for the following cases:
     QUERY_PARAM("query?some=query", 200, "some=query"),
@@ -369,6 +387,24 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     method = "GET"
   }
 
+  def "test captured HTTP headers"() {
+    setup:
+    assumeTrue(testCapturedHttpHeaders())
+
+    def request = AggregatedHttpRequest.of(request(CAPTURE_HEADERS, "GET").headers()
+      .toBuilder()
+      .add(TEST_REQUEST_HEADER, "test")
+      .build())
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == CAPTURE_HEADERS.status
+    response.contentUtf8() == CAPTURE_HEADERS.body
+
+    and:
+    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, null, response)
+  }
+
   /*
   This test fires a bunch of parallel request to the fixed backend endpoint.
   That endpoint is supposed to create a new child span in the context of the SERVER span.
@@ -603,6 +639,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
+        if (endpoint == ServerEndpoint.CAPTURE_HEADERS) {
+          "http.request.header.x_test_request" { it == ["test"] }
+          "http.response.header.x_test_response" { it == ["test"] }
         }
       }
     }

@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @see DbAttributesExtractor
  * @see HttpClientAttributesExtractor
- * @see NetAttributesExtractor
+ * @see NetServerAttributesExtractor
  */
 public abstract class AttributesExtractor<REQUEST, RESPONSE> {
   /**
@@ -50,5 +50,14 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
     if (value != null) {
       attributes.put(key, value);
     }
+  }
+
+  /**
+   * Returns an {@link AttributesExtractor} implementation that always extracts the provided
+   * constant value.
+   */
+  public static <REQUEST, RESPONSE, T> AttributesExtractor<REQUEST, RESPONSE> constant(
+      AttributeKey<T> attributeKey, T attributeValue) {
+    return new ConstantAttributesExtractor<>(attributeKey, attributeValue);
   }
 }

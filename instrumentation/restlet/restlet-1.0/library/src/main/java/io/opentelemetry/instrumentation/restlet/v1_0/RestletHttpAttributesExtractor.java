@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.restlet.data.Form;
 import org.restlet.data.Parameter;
 import org.restlet.data.Reference;
 import org.restlet.data.Request;
@@ -23,9 +24,8 @@ import org.restlet.util.Series;
 final class RestletHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
 
-  // TODO: add support for capturing HTTP headers in library instrumentations
-  RestletHttpAttributesExtractor() {
-    super(CapturedHttpHeaders.empty());
+  RestletHttpAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+    super(capturedHttpHeaders);
   }
 
   @Override
@@ -52,7 +52,11 @@ final class RestletHttpAttributesExtractor
 
   @Override
   protected List<String> requestHeader(Request request, String name) {
-    return parametersToList(getHeaders(request).subList(name, /* ignoreCase = */ true));
+    Form headers = getHeaders(request);
+    if (headers == null) {
+      return Collections.emptyList();
+    }
+    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
   }
 
   @Override
@@ -104,7 +108,11 @@ final class RestletHttpAttributesExtractor
 
   @Override
   protected List<String> responseHeader(Request request, Response response, String name) {
-    return parametersToList(getHeaders(response).subList(name, /* ignoreCase = */ true));
+    Form headers = getHeaders(response);
+    if (headers == null) {
+      return Collections.emptyList();
+    }
+    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
   }
 
   // minimize memory overhead by not using streams

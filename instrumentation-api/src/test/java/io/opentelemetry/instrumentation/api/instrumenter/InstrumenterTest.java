@@ -27,7 +27,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
@@ -154,7 +154,7 @@ class InstrumenterTest {
   MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;
 
   @Mock RpcAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
-  @Mock NetAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
+  @Mock NetServerAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
 
   @Test
   void server() {
@@ -668,7 +668,7 @@ class InstrumenterTest {
   }
 
   private static final class ConstantNetPeerIpExtractor<REQUEST, RESPONSE>
-      extends NetAttributesExtractor<REQUEST, RESPONSE> {
+      extends NetServerAttributesExtractor<REQUEST, RESPONSE> {
 
     private final String peerIp;
 
@@ -682,17 +682,17 @@ class InstrumenterTest {
     }
 
     @Override
-    public String peerName(REQUEST request, RESPONSE response) {
+    public String peerName(REQUEST request) {
       return null;
     }
 
     @Override
-    public Integer peerPort(REQUEST request, RESPONSE response) {
+    public Integer peerPort(REQUEST request) {
       return null;
     }
 
     @Override
-    public String peerIp(REQUEST request, RESPONSE response) {
+    public String peerIp(REQUEST request) {
       return peerIp;
     }
   }

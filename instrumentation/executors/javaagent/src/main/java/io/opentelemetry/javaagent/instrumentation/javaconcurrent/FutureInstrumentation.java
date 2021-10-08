@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import java.util.Arrays;
 import java.util.Collection;
@@ -103,10 +104,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
       // is called, one way or another
       VirtualField<Future<?>, PropagatedContext> virtualField =
           VirtualField.find(Future.class, PropagatedContext.class);
-      PropagatedContext propagatedContext = virtualField.get(future);
-      if (propagatedContext != null) {
-        propagatedContext.clear();
-      }
+      ExecutorAdviceHelper.cleanPropagatedContext(virtualField, future);
     }
   }
 }

@@ -72,5 +72,14 @@ public final class ExecutorAdviceHelper {
     }
   }
 
+  /** Clean context attached to the given task. */
+  public static <T> void cleanPropagatedContext(
+      VirtualField<T, PropagatedContext> virtualField, T task) {
+    PropagatedContext propagatedContext = virtualField.get(task);
+    if (propagatedContext != null) {
+      propagatedContext.clear();
+    }
+  }
+
   private ExecutorAdviceHelper() {}
 }

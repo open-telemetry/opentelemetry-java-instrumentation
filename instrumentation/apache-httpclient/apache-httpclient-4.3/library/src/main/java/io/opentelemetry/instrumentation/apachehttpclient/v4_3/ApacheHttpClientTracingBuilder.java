@@ -6,11 +6,13 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -27,6 +29,7 @@ public final class ApacheHttpClientTracingBuilder {
 
   private final List<AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>>
       additionalExtractors = new ArrayList<>();
+  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
 
   ApacheHttpClientTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -44,12 +47,25 @@ public final class ApacheHttpClientTracingBuilder {
   }
 
   /**
+   * Configure the instrumentation to capture chosen HTTP request and response headers as span
+   * attributes.
+   *
+   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
+   *     HTTP request and response names.
+   */
+  public ApacheHttpClientTracingBuilder captureHttpHeaders(
+      CapturedHttpHeaders capturedHttpHeaders) {
+    this.capturedHttpHeaders = capturedHttpHeaders;
+    return this;
+  }
+
+  /**
    * Returns a new {@link ApacheHttpClientTracing} configured with this {@link
    * ApacheHttpClientTracingBuilder}.
    */
   public ApacheHttpClientTracing build() {
     HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
-        new ApacheHttpClientHttpAttributesExtractor();
+        new ApacheHttpClientHttpAttributesExtractor(capturedHttpHeaders);
     SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
@@ -62,6 +78,7 @@ public final class ApacheHttpClientTracingBuilder {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
