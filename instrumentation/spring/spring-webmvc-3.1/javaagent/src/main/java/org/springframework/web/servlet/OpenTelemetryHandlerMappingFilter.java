@@ -53,13 +53,15 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       return;
     }
 
-    if (handlerMappings != null) {
-      Context context = Context.current();
-      ServerSpanNaming.updateServerSpanName(
-          context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
+    try {
+      filterChain.doFilter(request, response);
+    } finally {
+      if (handlerMappings != null) {
+        Context context = Context.current();
+        ServerSpanNaming.updateServerSpanName(
+            context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
+      }
     }
-
-    filterChain.doFilter(request, response);
   }
 
   @Override
