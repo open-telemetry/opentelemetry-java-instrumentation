@@ -367,7 +367,10 @@ class ReferenceCollectorTest {
             VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
         Arguments.of(
             "using array type as the field owner type",
-            VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()));
+            VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
+        Arguments.of(
+            "using primitive type as the field owner type",
+            VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

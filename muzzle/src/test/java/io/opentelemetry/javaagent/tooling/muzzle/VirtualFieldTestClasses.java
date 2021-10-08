@@ -47,6 +47,12 @@ public class VirtualFieldTestClasses {
     }
   }
 
+  public static class UsingPrimitiveAsOwnerAdvice {
+    public static void advice() {
+      VirtualField.find(int.class, Context.class);
+    }
+  }
+
   public static class Key1 {}
 
   public static class Key2 {}

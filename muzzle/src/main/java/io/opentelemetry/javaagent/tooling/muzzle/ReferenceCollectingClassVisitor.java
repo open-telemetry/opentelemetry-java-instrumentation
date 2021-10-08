@@ -527,9 +527,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
           Type type = lastTwoClassConstants.poll();
           Type fieldType = lastTwoClassConstants.poll();
 
-          if (type.getSort() == Type.ARRAY) {
+          if (type.getSort() != Type.OBJECT) {
             throw new MuzzleCompilationException(
-                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array type as the field owner type");
+                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array or prrimitive types as the field owner type");
           }
 
           virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
