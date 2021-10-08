@@ -13,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -67,8 +68,10 @@ public abstract class AbstractQuartzTest {
                                 attrs ->
                                     assertThat(attrs)
                                         .containsEntry(
-                                            "code.namespace", SuccessfulJob.class.getName())
-                                        .containsEntry("code.function", "execute")),
+                                            SemanticAttributes.CODE_NAMESPACE,
+                                            SuccessfulJob.class.getName())
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_FUNCTION, "execute")),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -96,8 +99,11 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfying(
                                 attrs ->
                                     assertThat(attrs)
-                                        .containsEntry("code.namespace", FailingJob.class.getName())
-                                        .containsEntry("code.function", "execute"))));
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_NAMESPACE,
+                                            FailingJob.class.getName())
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_FUNCTION, "execute"))));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {
