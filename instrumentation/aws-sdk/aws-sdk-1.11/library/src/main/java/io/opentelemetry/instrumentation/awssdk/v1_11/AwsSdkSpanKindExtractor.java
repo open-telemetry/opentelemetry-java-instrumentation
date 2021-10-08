@@ -10,7 +10,7 @@ import com.amazonaws.Request;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public class AwsSdkSpanKindExtractor implements SpanKindExtractor<Request<?>> {
+class AwsSdkSpanKindExtractor implements SpanKindExtractor<Request<?>> {
   @Override
   public SpanKind extract(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();

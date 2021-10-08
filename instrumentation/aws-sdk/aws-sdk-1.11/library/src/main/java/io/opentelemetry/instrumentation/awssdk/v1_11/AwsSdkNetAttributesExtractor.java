@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtrac
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AwsSdkNetAttributesExtractor extends NetAttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkNetAttributesExtractor extends NetAttributesExtractor<Request<?>, Response<?>> {
   @Override
   public String transport(Request<?> request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

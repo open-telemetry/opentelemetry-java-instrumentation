@@ -11,11 +11,11 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AwsSdkAttributesExtractor
-    extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
   protected String url(Request<?> request) {
     return request.getEndpoint().toString();

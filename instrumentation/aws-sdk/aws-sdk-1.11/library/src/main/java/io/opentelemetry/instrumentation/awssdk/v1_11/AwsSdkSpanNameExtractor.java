@@ -9,7 +9,7 @@ import com.amazonaws.Request;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
+class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
   private final NamesCache namesCache = new NamesCache();
 
   @Override

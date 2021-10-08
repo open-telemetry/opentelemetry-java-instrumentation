@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.Arrays;
 import java.util.List;
 
-public final class AwsSdkInstrumenterFactory {
+final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
 
   private static final AwsSdkAttributesExtractor attributesExtractor =

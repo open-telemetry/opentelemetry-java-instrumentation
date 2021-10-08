@@ -5,15 +5,26 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_AGENT;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BUCKET_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_ENDPOINT;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_OPERATION;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_URL;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_SERVICE;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STREAM_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_TABLE_NAME;
+
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AwsSdkExperimentalAttributesExtractor
-    extends AttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkExperimentalAttributesExtractor extends AttributesExtractor<Request<?>, Response<?>> {
   private static final String COMPONENT_NAME = "java-aws-sdk";
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
@@ -27,31 +38,22 @@ public class AwsSdkExperimentalAttributesExtractor
 
   @Override
   protected void onStart(AttributesBuilder attributes, Request<?> request) {
-    attributes.put("aws.agent", COMPONENT_NAME);
-    attributes.put("aws.service", request.getServiceName());
-    attributes.put("aws.operation", extractOperationName(request));
-    attributes.put("aws.endpoint", request.getEndpoint().toString());
+    set(attributes, AWS_AGENT, COMPONENT_NAME);
+    set(attributes, AWS_SERVICE, request.getServiceName());
+    set(attributes, AWS_OPERATION, extractOperationName(request));
+    set(attributes, AWS_ENDPOINT, request.getEndpoint().toString());
 
     Object originalRequest = request.getOriginalRequest();
-    String bucketName = RequestAccess.getBucketName(originalRequest);
-    if (bucketName != null) {
-      attributes.put("aws.bucket.name", bucketName);
-    }
-    String queueUrl = RequestAccess.getQueueUrl(originalRequest);
-    if (queueUrl != null) {
-      attributes.put("aws.queue.url", queueUrl);
-    }
-    String queueName = RequestAccess.getQueueName(originalRequest);
-    if (queueName != null) {
-      attributes.put("aws.queue.name", queueName);
-    }
-    String streamName = RequestAccess.getStreamName(originalRequest);
-    if (streamName != null) {
-      attributes.put("aws.stream.name", streamName);
-    }
-    String tableName = RequestAccess.getTableName(originalRequest);
-    if (tableName != null) {
-      attributes.put("aws.table.name", tableName);
+    set(attributes, AWS_BUCKET_NAME, RequestAccess.getBucketName(originalRequest));
+    set(attributes, AWS_QUEUE_URL, RequestAccess.getQueueUrl(originalRequest));
+    set(attributes, AWS_QUEUE_NAME, RequestAccess.getQueueName(originalRequest));
+    set(attributes, AWS_STREAM_NAME, RequestAccess.getStreamName(originalRequest));
+    set(attributes, AWS_TABLE_NAME, RequestAccess.getTableName(originalRequest));
+  }
+
+  private static void set(AttributesBuilder attributes, AttributeKey<String> key, String value) {
+    if (value != null) {
+      attributes.put(key, value);
     }
   }
 
@@ -67,7 +69,7 @@ public class AwsSdkExperimentalAttributesExtractor
       @Nullable Throwable error) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse<?> awsResp = (AmazonWebServiceResponse<?>) response.getAwsResponse();
-      attributes.put("aws.requestId", awsResp.getRequestId());
+      set(attributes, AWS_REQUEST_ID, awsResp.getRequestId());
     }
   }
 }
