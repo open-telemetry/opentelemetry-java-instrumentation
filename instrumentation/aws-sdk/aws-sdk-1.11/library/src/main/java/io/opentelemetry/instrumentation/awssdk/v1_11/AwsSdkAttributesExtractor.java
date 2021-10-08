@@ -17,17 +17,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class AwsSdkAttributesExtractor
     extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
-  protected @Nullable String url(Request<?> request) {
+  protected String url(Request<?> request) {
     return request.getEndpoint().toString();
   }
 
   @Override
   protected @Nullable String flavor(Request<?> request, @Nullable Response<?> response) {
-    return "1.1";
+    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  protected @Nullable String method(Request<?> request) {
+  protected String method(Request<?> request) {
     return request.getHttpMethod().name();
   }
 
@@ -50,7 +50,7 @@ public class AwsSdkAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(Request<?> request, Response<?> response) {
+  protected Integer statusCode(Request<?> request, Response<?> response) {
     return response.getHttpResponse().getStatusCode();
   }
 

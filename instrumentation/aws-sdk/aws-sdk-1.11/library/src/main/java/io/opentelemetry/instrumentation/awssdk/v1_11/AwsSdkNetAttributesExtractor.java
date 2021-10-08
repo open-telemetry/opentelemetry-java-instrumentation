@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AwsSdkNetAttributesExtractor extends NetAttributesExtractor<Request<?>, Response<?>> {
   @Override
-  public @Nullable String transport(Request<?> request) {
+  public String transport(Request<?> request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
@@ -23,7 +23,7 @@ public class AwsSdkNetAttributesExtractor extends NetAttributesExtractor<Request
   }
 
   @Override
-  public @Nullable Integer peerPort(Request<?> request, @Nullable Response<?> response) {
+  public Integer peerPort(Request<?> request, @Nullable Response<?> response) {
     return request.getEndpoint().getPort();
   }
 
