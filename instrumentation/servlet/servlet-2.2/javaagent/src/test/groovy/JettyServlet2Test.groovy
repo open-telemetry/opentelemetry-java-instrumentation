@@ -72,6 +72,12 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
     false
   }
 
+  // servlet 2 does not expose a way to retrieve response headers
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR

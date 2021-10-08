@@ -281,6 +281,10 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
+        if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
+          "http.request.header.x_test_request" { it == ["test"] }
+          "http.response.header.x_test_response" { it == ["test"] }
+        }
       }
     }
   }

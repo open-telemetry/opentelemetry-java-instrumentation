@@ -9,6 +9,7 @@ import ratpack.error.ServerErrorHandler
 import ratpack.exec.Promise
 import ratpack.server.RatpackServer
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -104,6 +105,19 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
             } then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(context.pathTokens.id)
+              }
+            }
+          }
+        }
+        it.prefix(CAPTURE_HEADERS.rawPath()) {
+          it.all { context ->
+            Promise.sync {
+              CAPTURE_HEADERS
+            } then { endpoint ->
+              controller(endpoint) {
+                context.response.status(endpoint.status)
+                context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
+                context.response.send(endpoint.body)
               }
             }
           }

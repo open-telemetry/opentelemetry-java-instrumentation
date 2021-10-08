@@ -11,6 +11,9 @@ import io.opentelemetry.instrumentation.test.LibraryTestTrait
 class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest implements LibraryTestTrait {
   @Override
   ServerBuilder configureServer(ServerBuilder sb) {
-    return sb.decorator(ArmeriaTracing.create(getOpenTelemetry()).newServiceDecorator())
+    return sb.decorator(ArmeriaTracing.newBuilder(getOpenTelemetry())
+      .captureHttpServerHeaders(capturedHttpHeadersForTesting())
+      .build()
+      .newServiceDecorator())
   }
 }

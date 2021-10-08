@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
@@ -25,6 +26,7 @@ import javax.ws.rs.core.Response
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -121,6 +123,10 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
+        if (endpoint == ServerEndpoint.CAPTURE_HEADERS) {
+          "http.request.header.x_test_request" { it == ["test"] }
+          "http.response.header.x_test_response" { it == ["test"] }
+        }
       }
     }
   }
@@ -192,6 +198,17 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     Response path_param(@PathParam("id") int param) {
       controller(PATH_PARAM) {
         Response.status(PATH_PARAM.status).entity(param.toString()).build()
+      }
+    }
+
+    @GET
+    @Path("captureHeaders")
+    Response capture_headers(@HeaderParam("X-Test-Request") String header) {
+      controller(CAPTURE_HEADERS) {
+        Response.status(CAPTURE_HEADERS.status)
+          .header("X-Test-Response", header)
+          .entity(CAPTURE_HEADERS.body)
+          .build()
       }
     }
   }

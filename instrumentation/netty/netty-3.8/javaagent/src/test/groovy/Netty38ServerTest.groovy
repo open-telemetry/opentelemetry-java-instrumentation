@@ -159,6 +159,11 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean testConcurrency() {
     return true
   }

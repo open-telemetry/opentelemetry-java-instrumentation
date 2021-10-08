@@ -17,6 +17,7 @@ import ratpack.server.RatpackServer
 import ratpack.server.RatpackServerSpec
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -87,6 +88,15 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
           it.all { context ->
             controller(PATH_PARAM) {
               context.response.status(PATH_PARAM.status).send(context.pathTokens.id)
+            }
+          }
+        }
+        it.prefix(CAPTURE_HEADERS.rawPath()) {
+          it.all { context ->
+            controller(CAPTURE_HEADERS) {
+              context.response.status(CAPTURE_HEADERS.status)
+              context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
+              context.response.send(CAPTURE_HEADERS.body)
             }
           }
         }
