@@ -30,11 +30,4 @@ class UtilsTest extends Specification {
     result == "io/opentelemetry/javaagent/tooling/UtilsTest"
   }
 
-  def "convertToInnerClassName() makes dollar into dots"() {
-    setup:
-    def result = Utils.convertToInnerClassName("com/example/MyOuter.MyInner")
-    expect:
-    result == 'com/example/MyOuter$MyInner'
-  }
-
 }

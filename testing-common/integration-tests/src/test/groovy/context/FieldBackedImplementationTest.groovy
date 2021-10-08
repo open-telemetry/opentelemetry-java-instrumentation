@@ -63,7 +63,7 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
       if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedImplementationInstaller$VirtualFieldAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$')) {
         hasAccessorInterface = true
         accessorInterfaceIsSynthetic = inter.isSynthetic()
       }
@@ -96,7 +96,7 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
 
     List<Class<?>> interfaces = []
     for (Class iface : KeyClass.getInterfaces()) {
-      if (iface.name.startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedImplementationInstaller$VirtualFieldAccessor')) {
+      if (iface.name.startsWith('io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$')) {
         interfaces.add(iface)
       }
     }
