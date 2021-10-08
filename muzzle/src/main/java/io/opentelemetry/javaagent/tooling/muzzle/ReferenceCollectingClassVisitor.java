@@ -529,7 +529,11 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
           if (type.getSort() != Type.OBJECT) {
             throw new MuzzleCompilationException(
-                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array or prrimitive types as the field owner type");
+                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array or primitive types as the field owner type");
+          }
+          if (fieldType.getSort() != Type.OBJECT && fieldType.getSort() != Type.ARRAY) {
+            throw new MuzzleCompilationException(
+                "Invalid VirtualField#find(Class, Class) usage: you cannot pass primitive types as the field type");
           }
 
           virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
@@ -564,10 +568,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       if (opcode == Opcodes.LDC) {
         if (value instanceof Type) {
           Type type = (Type) value;
-          if (type.getSort() == Type.OBJECT) {
-            lastTwoClassConstants.add(type);
-            return;
-          }
+          lastTwoClassConstants.add(type);
+          return;
         }
       }
 

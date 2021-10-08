@@ -53,6 +53,18 @@ public class VirtualFieldTestClasses {
     }
   }
 
+  public static class UsingArrayAsFieldAdvice {
+    public static void advice() {
+      VirtualField.find(Key1.class, Context[].class);
+    }
+  }
+
+  public static class UsingPrimitiveAsFieldAdvice {
+    public static void advice() {
+      VirtualField.find(Key1.class, int.class);
+    }
+  }
+
   public static class Key1 {}
 
   public static class Key2 {}
