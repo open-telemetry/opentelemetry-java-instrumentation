@@ -83,6 +83,7 @@ final class SqsReceiveMessageRequestAccess {
     }
   }
 
+  @SuppressWarnings("unchecked")
   static List<String> getAttributeNames(AmazonWebServiceRequest request) {
     if (GET_ATTRIBUTE_NAMES == null) {
       return Collections.emptyList();

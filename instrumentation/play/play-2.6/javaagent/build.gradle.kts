@@ -56,7 +56,3 @@ dependencies {
     exclude("org.eclipse.jetty.websocket", "websocket-client")
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-}

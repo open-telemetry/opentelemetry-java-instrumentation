@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
-import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
@@ -19,7 +18,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static org.awaitility.Awaitility.await
 
 abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> implements AgentTestTrait {
   @Override
@@ -48,25 +46,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, AUTH_REQUIRED.path, servlet)
     addServlet(context, INDEXED_CHILD.path, servlet)
     addServlet(context, CAPTURE_HEADERS.path, servlet)
-  }
-
-  def cleanup() {
-    // wait for async request threads to complete
-    await()
-      .atMost(15, TimeUnit.SECONDS)
-      .until({ !isRequestRunning() })
-  }
-
-  static boolean isRequestRunning() {
-    def result = Thread.getAllStackTraces().values().find { stackTrace ->
-      def element = stackTrace.find {
-        return ((it.className == "org.apache.catalina.core.AsyncContextImpl\$RunnableWrapper" && it.methodName == "run")
-          || ((it.className == "org.eclipse.jetty.server.AsyncContinuation\$1" && it.methodName == "run"))
-          || ((it.className == "org.eclipse.jetty.server.AsyncContextState\$1" && it.methodName == "run")))
-      }
-      element != null
-    }
-    return result != null
   }
 
   protected ServerEndpoint lastRequest
