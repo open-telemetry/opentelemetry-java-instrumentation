@@ -21,6 +21,5 @@ final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_TABLE_NAME = stringKey("aws.table.name");
   static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.requestId");
 
-  private AwsExperimentalAttributes() {
-  }
+  private AwsExperimentalAttributes() {}
 }

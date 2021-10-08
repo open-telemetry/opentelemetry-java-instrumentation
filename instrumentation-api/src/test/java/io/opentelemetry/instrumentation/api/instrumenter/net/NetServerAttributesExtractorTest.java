@@ -130,5 +130,4 @@ class NetServerAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build()).isEmpty();
   }
-
 }
