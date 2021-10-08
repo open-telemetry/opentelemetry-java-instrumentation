@@ -55,6 +55,11 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
       .until({ !isRequestRunning() })
   }
 
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
   static boolean isRequestRunning() {
     def result = Thread.getAllStackTraces().values().find { stackTrace ->
       def element = stackTrace.find {
