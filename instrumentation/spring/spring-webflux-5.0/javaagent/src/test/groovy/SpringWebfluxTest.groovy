@@ -23,7 +23,6 @@ import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
 import spock.lang.Unroll
-import util.SpringWebfluxTestUtil
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -62,10 +61,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         }
       })
       .build()
-  }
-
-  def cleanup() {
-    SpringWebfluxTestUtil.waitForRequestsToComplete()
   }
 
   @Unroll
