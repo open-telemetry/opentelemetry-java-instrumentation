@@ -26,5 +26,8 @@ dependencies {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    if (findProperty("testLatestDeps") as Boolean) {
+      jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+    }
   }
 }
