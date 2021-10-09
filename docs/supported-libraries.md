@@ -1,4 +1,3 @@
-
 # Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
@@ -45,6 +44,7 @@ These are the supported libraries and frameworks:
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grails](https://grails.org/)                                                                                                         | 3.0+                           |
+| [GraphQL Java](https://www.graphql-java.com/)                                                                                         | 17.x                           |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.6+                           |
 | [GWT](http://www.gwtproject.org/)                                                                                                     | 2.0+                           |
