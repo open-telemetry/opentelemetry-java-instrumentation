@@ -10,6 +10,7 @@ that can be used if you prefer that over using the Java agent:
 * [AWS SDK 2.2+](../instrumentation/aws-sdk/aws-sdk-2.2/library)
 * [gRPC](../instrumentation/grpc-1.6/library)
 * [Guava](../instrumentation/guava-10.0/library)
+* [GraphQL Java 17](../instrumentation/graphql-java/graphql-java-17/library)
 * [JDBC](../instrumentation/jdbc/library)
 * [Lettuce](../instrumentation/lettuce/lettuce-5.1/library)
 * [Log4j appender](../instrumentation/log4j/log4j-appender-2.16/library)

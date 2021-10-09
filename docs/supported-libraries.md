@@ -1,4 +1,3 @@
-
 # Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
@@ -57,6 +56,7 @@ These are the supported libraries and frameworks:
 | [Geode Client](https://geode.apache.org/)                                                                                         | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                       | 1.19+                          |
 | [Grails](https://grails.org/)                                                                                                     | 3.0+                           |
+| [GraphQL Java](https://www.graphql-java.com/)                                                                                     | 17.x                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                         | 1.6+                           |
 | [Guava ListenableFuture](https://guava.dev/releases/snapshot/api/docs/com/google/common/util/concurrent/ListenableFuture.html)    | 10.0+                          |
 | [GWT](http://www.gwtproject.org/)                                                                                                 | 2.0+                           |
