@@ -43,6 +43,7 @@ public final class QuartzTracingBuilder {
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
 
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
+    instrumenter.addAttributesExtractor(new QuartzCodeAttributesExtractor());
     instrumenter.addAttributesExtractors(additionalExtractors);
 
     return new QuartzTracing(new TracingJobListener(instrumenter.newInstrumenter()));
