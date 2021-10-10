@@ -37,8 +37,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               SUCCESS
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(endpoint.body)
               }
+              context.response.status(endpoint.status).send(endpoint.body)
             }
           }
         }
@@ -49,8 +49,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
             } then {
               controller(INDEXED_CHILD) {
                 INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
-                context.response.status(INDEXED_CHILD.status).send()
               }
+              context.response.status(INDEXED_CHILD.status).send()
             }
           }
         }
@@ -60,8 +60,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               QUERY_PARAM
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(context.request.query)
               }
+              context.response.status(endpoint.status).send(context.request.query)
             }
           }
         }
@@ -71,8 +71,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               REDIRECT
             } then { endpoint ->
               controller(endpoint) {
-                context.redirect(endpoint.body)
               }
+              context.redirect(endpoint.body)
             }
           }
         }
@@ -82,8 +82,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               ERROR
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(endpoint.body)
               }
+              context.response.status(endpoint.status).send(endpoint.body)
             }
           }
         }
@@ -104,8 +104,8 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               PATH_PARAM
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(context.pathTokens.id)
               }
+              context.response.status(endpoint.status).send(context.pathTokens.id)
             }
           }
         }
@@ -115,10 +115,10 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
               CAPTURE_HEADERS
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status)
-                context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
-                context.response.send(endpoint.body)
               }
+              context.response.status(endpoint.status)
+              context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
+              context.response.send(endpoint.body)
             }
           }
         }

@@ -50,8 +50,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
+          ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
         })
       }
       router.route(INDEXED_CHILD.path).handler { ctx ->
@@ -64,8 +64,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             endpoint.collectSpanAttributes { ctx.request().params().get(it) }
-            ctx.response().setStatusCode(endpoint.status).end()
           }
+          ctx.response().setStatusCode(endpoint.status).end()
         })
       }
       router.route(QUERY_PARAM.path).handler { ctx ->
@@ -77,8 +77,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).end(ctx.request().query())
           }
+          ctx.response().setStatusCode(endpoint.status).end(ctx.request().query())
         })
       }
       router.route(REDIRECT.path).handler { ctx ->
@@ -90,8 +90,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body).end()
           }
+          ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body).end()
         })
       }
       router.route(ERROR.path).handler { ctx ->
@@ -103,8 +103,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
+          ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
         })
       }
       router.route(EXCEPTION.path).handler { ctx ->
@@ -130,8 +130,8 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).end(ctx.request().getParam("id"))
           }
+          ctx.response().setStatusCode(endpoint.status).end(ctx.request().getParam("id"))
         })
       }
 

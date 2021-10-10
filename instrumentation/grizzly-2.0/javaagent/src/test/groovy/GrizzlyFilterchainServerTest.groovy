@@ -116,11 +116,13 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
             .header("Content-Length", valueOf(responseParameters.getResponseBody().length))
           responseParameters.fillHeaders(builder)
           HttpResponsePacket responsePacket = builder.build()
+          def response
           controller(responseParameters.getEndpoint()) {
-            ctx.write(HttpContent.builder(responsePacket)
+            response = HttpContent.builder(responsePacket)
               .content(wrap(ctx.getMemoryManager(), responseParameters.getResponseBody()))
-              .build())
+              .build()
           }
+          ctx.write(response)
         }
       }
       return ctx.getStopAction()

@@ -88,6 +88,12 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
+  boolean verifyServerSpanEndTime() {
+    // TODO (trask) see if the play controller instrumentation can be ended before netty server span
+    return false
+  }
+
+  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name "play.request"

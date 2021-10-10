@@ -45,8 +45,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               SUCCESS
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(endpoint.body)
               }
+              context.response.status(endpoint.status).send(endpoint.body)
             }
           }
         }
@@ -57,8 +57,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
             }.fork().then {
               controller(INDEXED_CHILD) {
                 INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
-                context.response.status(INDEXED_CHILD.status).send()
               }
+              context.response.status(INDEXED_CHILD.status).send()
             }
           }
         }
@@ -68,8 +68,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               QUERY_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(context.request.query)
               }
+              context.response.status(endpoint.status).send(context.request.query)
             }
           }
         }
@@ -79,8 +79,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               REDIRECT
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.redirect(endpoint.body)
               }
+              context.redirect(endpoint.body)
             }
           }
         }
@@ -90,8 +90,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               ERROR
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(endpoint.body)
               }
+              context.response.status(endpoint.status).send(endpoint.body)
             }
           }
         }
@@ -112,8 +112,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               PATH_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(context.pathTokens.id)
               }
+              context.response.status(endpoint.status).send(context.pathTokens.id)
             }
           }
         }
@@ -123,10 +123,10 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               CAPTURE_HEADERS
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status)
-                context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
-                context.response.send(endpoint.body)
               }
+              context.response.status(endpoint.status)
+              context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
+              context.response.send(endpoint.body)
             }
           }
         }
@@ -141,8 +141,8 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
               Promise.sync { list.get(0).value }
             } then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(endpoint.body)
               }
+              context.response.status(endpoint.status).send(endpoint.body)
             }
           }
         }
