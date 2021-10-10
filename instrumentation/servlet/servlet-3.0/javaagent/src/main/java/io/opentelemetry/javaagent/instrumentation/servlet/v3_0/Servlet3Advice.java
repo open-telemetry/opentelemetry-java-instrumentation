@@ -36,12 +36,12 @@ public class Servlet3Advice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
-    callDepth.getAndIncrement();
-
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
+
+    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
+    callDepth.getAndIncrement();
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
