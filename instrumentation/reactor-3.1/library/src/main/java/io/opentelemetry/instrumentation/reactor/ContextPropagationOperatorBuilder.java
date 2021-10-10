@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
-public final class TracingOperatorBuilder {
+public final class ContextPropagationOperatorBuilder {
   private boolean captureExperimentalSpanAttributes;
 
-  TracingOperatorBuilder() {}
+  ContextPropagationOperatorBuilder() {}
 
-  public TracingOperatorBuilder setCaptureExperimentalSpanAttributes(
+  public ContextPropagationOperatorBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public TracingOperator build() {
-    return new TracingOperator(captureExperimentalSpanAttributes);
+  public ContextPropagationOperator build() {
+    return new ContextPropagationOperator(captureExperimentalSpanAttributes);
   }
 }

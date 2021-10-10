@@ -17,7 +17,7 @@ import spock.lang.Shared
 
 class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrait {
   @Shared
-  TracingOperator tracingOperator = TracingOperator.create()
+  ContextPropagationOperator tracingOperator = ContextPropagationOperator.create()
 
   def setupSpec() {
     tracingOperator.registerOnEachOperator()
@@ -135,8 +135,8 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
 
         def beforeSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("before").startSpan()
 
-        return ReactorTracing
-          .runInScope(i,  Context.root().with(beforeSpan))
+        return ContextPropagationOperator
+          .runWithContext(i,  Context.root().with(beforeSpan))
           .doOnEach({ signal ->
             assert !Span.current().getSpanContext().isValid() : "current span is not set"
           })}).block()
@@ -150,12 +150,13 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
 
         def afterSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("after").startSpan()
 
-        return ReactorTracing
-          .runInScope(i,  Context.root().with(afterSpan))
+        return ContextPropagationOperator
+          .runWithContext(i,  Context.root().with(afterSpan))
           .doOnEach({ signal ->
             assert Span.current().getSpanContext().isValid() : "current span is set"
             if (signal.isOnComplete()) {
-              Span.current().end()
+              Span.current().end()n
+
             }
           })}).block()
 
@@ -189,14 +190,14 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
       })
       .subscriberContext({ ctx ->
 
-        def parent = ReactorTracing.getOpenTelemetryContext(ctx, Context.current())
+        def parent = ContextPropagationOperator.getOpenTelemetryContext(ctx, Context.current())
 
         def innerSpan = GlobalOpenTelemetry.getTracer("test")
           .spanBuilder(spanName)
           .setParent(parent)
           .startSpan()
 
-        return ReactorTracing.storeOpenTelemetryContext(ctx, parent.with(innerSpan))
+        return ContextPropagationOperator.storeOpenTelemetryContext(ctx, parent.with(innerSpan))
       })
   }
 

@@ -30,23 +30,62 @@ import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
-public final class TracingOperator {
+public final class ContextPropagationOperator {
 
-  public static TracingOperator create() {
+  public static ContextPropagationOperator create() {
     return newBuilder().build();
   }
 
-  public static TracingOperatorBuilder newBuilder() {
-    return new TracingOperatorBuilder();
+  public static ContextPropagationOperatorBuilder newBuilder() {
+    return new ContextPropagationOperatorBuilder();
   }
 
   private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
-  TracingOperator(boolean captureExperimentalSpanAttributes) {
+  private static final Object TRACE_CONTEXT_KEY =
+      new Object() {
+        @Override
+        public String toString() {
+          return "otel-trace-context";
+        }
+      };
+
+  static volatile Mono<String> dummyMono = Mono.just("");
+  static volatile Flux<String> dummyFlux = Flux.just("");
+
+  /**
+   * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
+   * reactor.util.context.Context}.
+   *
+   * @param context Reactor's context to store trace context in.
+   * @param traceContext Trace context to be stored.
+   */
+  public static reactor.util.context.Context storeOpenTelemetryContext(
+      reactor.util.context.Context context, Context traceContext) {
+    return context.put(TRACE_CONTEXT_KEY, traceContext);
+  }
+
+  /**
+   * Gets Trace {@link io.opentelemetry.context.Context} from Reactor {@link
+   * reactor.util.context.Context}.
+   *
+   * @param context Reactor's context to get trace context from.
+   * @param defaultTraceContext Default value to be returned if no trace context is found on Reactor
+   *     context.
+   * @return Trace context or default value.
+   */
+  public static Context getOpenTelemetryContext(
+      reactor.util.context.Context context, Context defaultTraceContext) {
+    return context.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
+  }
+
+  ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {
     this.asyncOperationEndStrategy =
         ReactorAsyncOperationEndStrategy.newBuilder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
@@ -62,21 +101,45 @@ public final class TracingOperator {
   public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-
-    ReactorTracing.enable();
+    resetDummy();
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-
-    ReactorTracing.disable();
+    resetDummy();
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
       ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
     return Operators.lift(new Lifter<>(asyncOperationEndStrategy));
+  }
+
+  /** Forces Mono to run in traceContext scope. */
+  static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
+    // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
+    // (created for this publisher) and with current() span that refers to span created here
+    // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
+    return dummyMono
+        .flatMap(i -> publisher)
+        .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
+  }
+
+  /** Forces Flux to run in traceContext scope. */
+  static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
+    // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
+    // (created for this publisher) and with current() span that refers to span created here
+    // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
+    return dummyFlux
+        .flatMap(i -> publisher)
+        .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
+  }
+
+  private static synchronized void resetDummy() {
+    // have to be reset as they capture async strategy and lift
+    dummyMono = Mono.just("");
+    dummyFlux = Flux.just("");
   }
 
   public static class Lifter<T>

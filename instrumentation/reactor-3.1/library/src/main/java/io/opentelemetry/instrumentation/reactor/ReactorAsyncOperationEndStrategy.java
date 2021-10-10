@@ -60,13 +60,13 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
     if (asyncValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) asyncValue;
 
-      return ReactorTracing.runInScope(mono, context)
+      return ContextPropagationOperator.runWithContext(mono, context)
           .doOnError(notificationConsumer)
           .doOnSuccess(notificationConsumer::onSuccess)
           .doOnCancel(notificationConsumer::onCancel);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) asyncValue);
-      return ReactorTracing.runInScope(flux, context)
+      return ContextPropagationOperator.runWithContext(flux, context)
           .doOnError(notificationConsumer)
           .doOnComplete(notificationConsumer)
           .doOnCancel(notificationConsumer::onCancel);
