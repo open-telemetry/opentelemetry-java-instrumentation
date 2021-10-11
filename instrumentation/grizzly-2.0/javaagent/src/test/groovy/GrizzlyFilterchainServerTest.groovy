@@ -70,6 +70,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
     false
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // SERVER span is ended inside of the controller span below
+    return false
+  }
+
   void setUpTransport(FilterChain filterChain) {
     TCPNIOTransportBuilder transportBuilder = TCPNIOTransportBuilder.newInstance()
       .setOptimizedForMultiplexing(true)
@@ -116,13 +122,11 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
             .header("Content-Length", valueOf(responseParameters.getResponseBody().length))
           responseParameters.fillHeaders(builder)
           HttpResponsePacket responsePacket = builder.build()
-          def response
           controller(responseParameters.getEndpoint()) {
-            response = HttpContent.builder(responsePacket)
+            ctx.write(HttpContent.builder(responsePacket)
               .content(wrap(ctx.getMemoryManager(), responseParameters.getResponseBody()))
-              .build()
+              .build())
           }
-          ctx.write(response)
         }
       }
       return ctx.getStopAction()

@@ -86,6 +86,12 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
+  }
+
+  @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
       SemanticAttributes.HTTP_URL
@@ -105,29 +111,29 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
 
       router.route(SUCCESS.path).handler { ctx ->
         controller(SUCCESS) {
+          ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
         }
-        ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
       }
       router.route(INDEXED_CHILD.path).handler { ctx ->
         controller(INDEXED_CHILD) {
           INDEXED_CHILD.collectSpanAttributes { ctx.request().params().get(it) }
+          ctx.response().setStatusCode(INDEXED_CHILD.status).end()
         }
-        ctx.response().setStatusCode(INDEXED_CHILD.status).end()
       }
       router.route(QUERY_PARAM.path).handler { ctx ->
         controller(QUERY_PARAM) {
+          ctx.response().setStatusCode(QUERY_PARAM.status).end(ctx.request().query())
         }
-        ctx.response().setStatusCode(QUERY_PARAM.status).end(ctx.request().query())
       }
       router.route(REDIRECT.path).handler { ctx ->
         controller(REDIRECT) {
+          ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body).end()
         }
-        ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body).end()
       }
       router.route(ERROR.path).handler { ctx ->
         controller(ERROR) {
+          ctx.response().setStatusCode(ERROR.status).end(ERROR.body)
         }
-        ctx.response().setStatusCode(ERROR.status).end(ERROR.body)
       }
       router.route(EXCEPTION.path).handler { ctx ->
         controller(EXCEPTION) {
@@ -136,8 +142,8 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
       }
       router.route("/path/:id/param").handler { ctx ->
         controller(PATH_PARAM) {
+          ctx.response().setStatusCode(PATH_PARAM.status).end(ctx.request().getParam("id"))
         }
-        ctx.response().setStatusCode(PATH_PARAM.status).end(ctx.request().getParam("id"))
       }
 
       super.@vertx.createHttpServer()

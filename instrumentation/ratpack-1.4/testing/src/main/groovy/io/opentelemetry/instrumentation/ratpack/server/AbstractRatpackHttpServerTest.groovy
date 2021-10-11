@@ -44,37 +44,37 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
         it.prefix(SUCCESS.rawPath()) {
           it.all { context ->
             controller(SUCCESS) {
+              context.response.status(SUCCESS.status).send(SUCCESS.body)
             }
-            context.response.status(SUCCESS.status).send(SUCCESS.body)
           }
         }
         it.prefix(INDEXED_CHILD.rawPath()) {
           it.all { context ->
             controller(INDEXED_CHILD) {
               INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
+              context.response.status(INDEXED_CHILD.status).send()
             }
-            context.response.status(INDEXED_CHILD.status).send()
           }
         }
         it.prefix(QUERY_PARAM.rawPath()) {
           it.all { context ->
             controller(QUERY_PARAM) {
+              context.response.status(QUERY_PARAM.status).send(context.request.query)
             }
-            context.response.status(QUERY_PARAM.status).send(context.request.query)
           }
         }
         it.prefix(REDIRECT.rawPath()) {
           it.all { context ->
             controller(REDIRECT) {
+              context.redirect(REDIRECT.body)
             }
-            context.redirect(REDIRECT.body)
           }
         }
         it.prefix(ERROR.rawPath()) {
           it.all { context ->
             controller(ERROR) {
+              context.response.status(ERROR.status).send(ERROR.body)
             }
-            context.response.status(ERROR.status).send(ERROR.body)
           }
         }
         it.prefix(EXCEPTION.rawPath()) {
@@ -87,17 +87,17 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
         it.prefix("path/:id/param") {
           it.all { context ->
             controller(PATH_PARAM) {
+              context.response.status(PATH_PARAM.status).send(context.pathTokens.id)
             }
-            context.response.status(PATH_PARAM.status).send(context.pathTokens.id)
           }
         }
         it.prefix(CAPTURE_HEADERS.rawPath()) {
           it.all { context ->
             controller(CAPTURE_HEADERS) {
+              context.response.status(CAPTURE_HEADERS.status)
+              context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
+              context.response.send(CAPTURE_HEADERS.body)
             }
-            context.response.status(CAPTURE_HEADERS.status)
-            context.response.headers.set("X-Test-Response", context.request.headers.get("X-Test-Request"))
-            context.response.send(CAPTURE_HEADERS.body)
           }
         }
       }
@@ -136,6 +136,12 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   @Override
   boolean testConcurrency() {
     true
+  }
+
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
   }
 
   @Override

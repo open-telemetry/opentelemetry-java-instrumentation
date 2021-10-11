@@ -39,46 +39,60 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
             new Handler<RoutingContext>() {
               @Override
               public void handle(RoutingContext ctx) {
-                HttpServerTest.controller(SUCCESS, () -> null);
-                end(ctx.response().setStatusCode(SUCCESS.getStatus()), SUCCESS.getBody());
+                HttpServerTest.controller(
+                    SUCCESS,
+                    () -> {
+                      end(ctx.response().setStatusCode(SUCCESS.getStatus()), SUCCESS.getBody());
+                      return null;
+                    });
               }
             });
     router
         .route(INDEXED_CHILD.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  INDEXED_CHILD,
-                  () -> {
-                    INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
-                    return null;
-                  });
-              end(ctx.response().setStatusCode(INDEXED_CHILD.getStatus()));
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    INDEXED_CHILD,
+                    () -> {
+                      INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
+                      end(ctx.response().setStatusCode(INDEXED_CHILD.getStatus()));
+                      return null;
+                    }));
     router
         .route(QUERY_PARAM.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(QUERY_PARAM, () -> null);
-              end(ctx.response().setStatusCode(QUERY_PARAM.getStatus()), ctx.request().query());
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    QUERY_PARAM,
+                    () -> {
+                      end(
+                          ctx.response().setStatusCode(QUERY_PARAM.getStatus()),
+                          ctx.request().query());
+                      return null;
+                    }));
     router
         .route(REDIRECT.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(REDIRECT, () -> null);
-              end(
-                  ctx.response()
-                      .setStatusCode(REDIRECT.getStatus())
-                      .putHeader("location", REDIRECT.getBody()));
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    REDIRECT,
+                    () -> {
+                      end(
+                          ctx.response()
+                              .setStatusCode(REDIRECT.getStatus())
+                              .putHeader("location", REDIRECT.getBody()));
+                      return null;
+                    }));
     router
         .route(ERROR.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(ERROR, () -> null);
-              end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    ERROR,
+                    () -> {
+                      end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
+                      return null;
+                    }));
     router
         .route(EXCEPTION.getPath())
         .handler(
@@ -91,12 +105,15 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
     router
         .route("/path/:id/param")
         .handler(
-            ctx -> {
-              HttpServerTest.controller(PATH_PARAM, () -> null);
-              end(
-                  ctx.response().setStatusCode(PATH_PARAM.getStatus()),
-                  ctx.request().getParam("id"));
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    PATH_PARAM,
+                    () -> {
+                      end(
+                          ctx.response().setStatusCode(PATH_PARAM.getStatus()),
+                          ctx.request().getParam("id"));
+                      return null;
+                    }));
 
     return router;
   }

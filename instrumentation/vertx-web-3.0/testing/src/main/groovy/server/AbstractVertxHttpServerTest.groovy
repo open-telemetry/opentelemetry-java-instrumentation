@@ -66,6 +66,12 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   }
 
   @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
+  }
+
+  @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
       SemanticAttributes.HTTP_URL
