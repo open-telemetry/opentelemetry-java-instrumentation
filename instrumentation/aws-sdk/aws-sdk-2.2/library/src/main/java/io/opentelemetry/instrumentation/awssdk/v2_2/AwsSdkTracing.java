@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -34,11 +37,12 @@ public class AwsSdkTracing {
     return new AwsSdkTracingBuilder(openTelemetry);
   }
 
-  private final AwsSdkHttpClientTracer tracer;
+  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> tracer;
   private final boolean captureExperimentalSpanAttributes;
 
   AwsSdkTracing(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    this.tracer = new AwsSdkHttpClientTracer(openTelemetry);
+    this.tracer =
+        AwsSdkInstrumenterFactory.getInstrumenter(openTelemetry, captureExperimentalSpanAttributes);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
