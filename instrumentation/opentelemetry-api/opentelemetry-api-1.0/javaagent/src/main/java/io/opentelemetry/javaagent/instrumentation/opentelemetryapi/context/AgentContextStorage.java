@@ -267,7 +267,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
     @Override
     public String toString() {
-      return "{agentContext=" + agentContext + ", applicationContext=" + applicationContext + "}";
+      return "AgentContextWrapper{agentContext="
+          + agentContext
+          + ", applicationContext="
+          + applicationContext
+          + "}";
     }
   }
 
