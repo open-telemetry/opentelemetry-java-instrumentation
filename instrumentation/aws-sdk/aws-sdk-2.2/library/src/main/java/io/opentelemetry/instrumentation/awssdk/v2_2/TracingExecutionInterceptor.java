@@ -54,21 +54,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @Override
-  public SdkHttpRequest modifyHttpRequest(
-      Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    SdkHttpRequest httpRequest = context.httpRequest();
-
-    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
-    if (otelContext == null) {
-      return httpRequest;
-    }
-
-    SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
-    return builder.build();
-  }
-
-  @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
 
@@ -99,6 +84,21 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
       populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
     }
+  }
+
+  @Override
+  public SdkHttpRequest modifyHttpRequest(
+      Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    SdkHttpRequest httpRequest = context.httpRequest();
+
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext == null) {
+      return httpRequest;
+    }
+
+    SdkHttpRequest.Builder builder = httpRequest.toBuilder();
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+    return builder.build();
   }
 
   private void populateRequestAttributes(
