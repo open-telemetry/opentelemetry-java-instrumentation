@@ -108,7 +108,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 }

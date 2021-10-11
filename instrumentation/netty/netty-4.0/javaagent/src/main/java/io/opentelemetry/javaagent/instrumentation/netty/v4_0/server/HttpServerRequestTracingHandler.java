@@ -5,23 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyServerSingletons.instrumenter;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.netty.common.server.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
     Channel channel = ctx.channel();
+    Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
+    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(AttributeKeys.SERVER_REQUEST);
 
     if (!(msg instanceof HttpRequest)) {
-      Context serverContext = tracer().getServerContext(channel);
+      Context serverContext = contextAttr.get();
       if (serverContext == null) {
         ctx.fireChannelRead(msg);
       } else {
@@ -32,13 +37,27 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    HttpRequest request = (HttpRequest) msg;
-    Context context = tracer().startSpan(request, channel, channel, "HTTP " + request.getMethod());
+    Context parentContext = contextAttr.get();
+    if (parentContext == null) {
+      parentContext = Context.current();
+    }
+    HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
+
+    if (!instrumenter().shouldStart(parentContext, request)) {
+      ctx.fireChannelRead(msg);
+      return;
+    }
+
+    Context context = instrumenter().start(parentContext, request);
+    contextAttr.set(context);
+    requestAttr.set(request);
+
     try (Scope ignored = context.makeCurrent()) {
       ctx.fireChannelRead(msg);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      // make sure to remove the server context on end() call
+      instrumenter().end(contextAttr.getAndRemove(), requestAttr.getAndRemove(), null, throwable);
       throw throwable;
     }
   }

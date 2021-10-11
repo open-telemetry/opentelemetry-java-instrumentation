@@ -24,7 +24,7 @@ class RatpackRoutesTest extends AbstractRatpackRoutesTest implements AgentTestTr
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 }

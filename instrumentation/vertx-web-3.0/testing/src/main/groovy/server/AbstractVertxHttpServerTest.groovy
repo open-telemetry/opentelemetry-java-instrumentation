@@ -68,7 +68,7 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 

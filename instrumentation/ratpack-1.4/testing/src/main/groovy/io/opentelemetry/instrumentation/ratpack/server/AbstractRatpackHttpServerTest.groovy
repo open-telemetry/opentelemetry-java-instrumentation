@@ -159,7 +159,7 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 }

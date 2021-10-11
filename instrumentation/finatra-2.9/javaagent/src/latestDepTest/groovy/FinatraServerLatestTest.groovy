@@ -100,7 +100,7 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements Agen
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 

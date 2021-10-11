@@ -141,7 +141,7 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_URL
+      SemanticAttributes.NET_PEER_NAME
     ]
   }
 }

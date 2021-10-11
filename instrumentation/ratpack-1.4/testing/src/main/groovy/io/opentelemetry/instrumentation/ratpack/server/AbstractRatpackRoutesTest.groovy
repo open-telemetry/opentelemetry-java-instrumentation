@@ -112,7 +112,8 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
               "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${app.bindPort}/${path}"
             } else {
-              "${SemanticAttributes.HTTP_SCHEME}" "http"
+              // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
+              "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
               "${SemanticAttributes.HTTP_HOST}" "localhost:${app.bindPort}"
               "${SemanticAttributes.HTTP_TARGET}" "/$path"
             }
