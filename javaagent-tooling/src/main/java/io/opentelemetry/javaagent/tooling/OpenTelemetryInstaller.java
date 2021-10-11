@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.metrics.GlobalMeterProvider;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentListener;
@@ -15,7 +17,7 @@ import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesAdapter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +53,14 @@ public class OpenTelemetryInstaller implements AgentListener {
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {
               CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-              CompletableResultCode flushResult = IntervalMetricReader.forceFlushGlobal();
-              CompletableResultCode.ofAll(Arrays.asList(traceResult, flushResult))
+              MeterProvider meterProvider = GlobalMeterProvider.get();
+              final CompletableResultCode metricsResult;
+              if (meterProvider instanceof SdkMeterProvider) {
+                metricsResult = ((SdkMeterProvider) meterProvider).forceFlush();
+              } else {
+                metricsResult = CompletableResultCode.ofSuccess();
+              }
+              CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
                   .join(timeout, unit);
             });
       }
