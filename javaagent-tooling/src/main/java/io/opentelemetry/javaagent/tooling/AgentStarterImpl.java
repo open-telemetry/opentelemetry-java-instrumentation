@@ -39,8 +39,13 @@ public class AgentStarterImpl implements AgentStarter {
     instrumentation.addTransformer(transformer, true);
 
     try {
-      Class<?> c = Class.forName("sun.launcher.LauncherHelper", false, null);
-      instrumentation.retransformClasses(c);
+      Class<?> clazz = Class.forName("sun.launcher.LauncherHelper", false, null);
+      if (transformer.transformed) {
+        // LauncherHelper was loaded and got transformed
+        return transformer.hookInserted;
+      }
+      // LauncherHelper was already loaded before we set up transformer
+      instrumentation.retransformClasses(clazz);
       return transformer.hookInserted;
     } catch (ClassNotFoundException | UnmodifiableClassException ignore) {
       // ignore
@@ -75,6 +80,7 @@ public class AgentStarterImpl implements AgentStarter {
 
   private static class LaunchHelperClassFileTransformer implements ClassFileTransformer {
     boolean hookInserted = false;
+    boolean transformed = false;
 
     @Override
     public byte[] transform(
@@ -86,6 +92,7 @@ public class AgentStarterImpl implements AgentStarter {
       if (!"sun/launcher/LauncherHelper".equals(className)) {
         return null;
       }
+      transformed = true;
       ClassReader cr = new ClassReader(classfileBuffer);
       ClassWriter cw = new ClassWriter(cr, 0);
       ClassVisitor cv =
