@@ -62,9 +62,11 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${port}/listProducts"
+            "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
+            "${SemanticAttributes.HTTP_TARGET.key}" "/listProducts"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -148,9 +150,11 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
+              "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
               "${SemanticAttributes.NET_PEER_PORT.key}" Long
               "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-              "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
+              "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
+              "${SemanticAttributes.HTTP_TARGET.key}" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "${SemanticAttributes.HTTP_METHOD.key}" "GET"
               "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
               "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
