@@ -494,7 +494,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   def "Multiple GETs to delaying route #testName"() {
     setup:
     def requestsCount = 50 // Should be more than 2x CPUs to fish out some bugs
-    def url = "http://localhost:$port$urlPath"
+
     when:
     def responses = (0..requestsCount - 1).collect { client.get(urlPath).aggregate().join() }
 
