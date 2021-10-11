@@ -5,26 +5,30 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.sdk.metrics.data.MetricDataType;
-import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 public class ProcessMetricsTest extends AbstractMetricsTest {
 
   @Test
-  public void test() throws Exception {
+  public void test() {
     ProcessMetrics.registerObservers();
-    IntervalMetricReader intervalMetricReader = createIntervalMetricReader();
 
-    testMetricExporter.waitForData();
-    intervalMetricReader.shutdown();
-
-    verify(
-        "runtime.java.memory", "bytes", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ true);
-    verify(
-        "runtime.java.cpu_time",
-        "seconds",
-        MetricDataType.DOUBLE_GAUGE,
-        /* checkNonZeroValue= */ true);
+    waitAndAssertMetrics(
+        metric ->
+            metric
+                .hasName("runtime.java.memory")
+                .hasUnit("bytes")
+                .hasLongGauge()
+                .points()
+                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
+        metric ->
+            metric
+                .hasName("runtime.java.cpu_time")
+                .hasUnit("seconds")
+                .hasDoubleGauge()
+                .points()
+                .anySatisfy(point -> assertThat(point.getValue()).isPositive()));
   }
 }
