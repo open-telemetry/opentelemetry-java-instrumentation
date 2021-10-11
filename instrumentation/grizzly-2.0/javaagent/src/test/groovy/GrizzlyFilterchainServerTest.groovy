@@ -72,7 +72,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
   @Override
   boolean verifyServerSpanEndTime() {
-    // SERVER span is ended inside of the controller span below
+    // server spans are ended inside of the controller spans
     return false
   }
 

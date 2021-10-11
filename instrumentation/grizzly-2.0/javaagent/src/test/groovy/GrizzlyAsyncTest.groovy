@@ -40,7 +40,7 @@ class GrizzlyAsyncTest extends GrizzlyTest {
 
   @Override
   boolean verifyServerSpanEndTime() {
-    // SERVER span is ended inside of JAX-RS controller span
+    // server spans are ended inside of the JAX-RS controller spans
     return false
   }
 
