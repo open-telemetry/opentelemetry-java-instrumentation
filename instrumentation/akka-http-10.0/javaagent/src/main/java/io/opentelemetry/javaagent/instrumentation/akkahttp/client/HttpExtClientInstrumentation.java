@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.setter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -56,15 +57,14 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       with way of continuing to reusing it.
        */
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      // Request is immutable, so we have to assign new value once we update headers
-      AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-      context = tracer().startSpan(parentContext, request, headers);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
-      request = headers.getRequest();
+      // Request is immutable, so we have to assign new value once we update headers
+      request = setter().inject(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -81,9 +81,10 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (throwable == null) {
-        responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
+        responseFuture.onComplete(
+            new OnCompleteHandler(context, request), thiz.system().dispatcher());
       } else {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
       if (responseFuture != null) {
         responseFuture =
