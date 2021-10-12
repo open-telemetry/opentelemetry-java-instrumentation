@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
@@ -36,6 +39,15 @@ import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> {
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
 
   @Override
   Class<?> expectedExceptionClass() {

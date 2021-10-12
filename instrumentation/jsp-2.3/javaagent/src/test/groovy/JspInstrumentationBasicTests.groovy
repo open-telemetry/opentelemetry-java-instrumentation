@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -96,6 +98,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
           }
         }
         span(1) {
@@ -148,6 +153,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         span(1) {
@@ -196,6 +203,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
           }
         }
         span(1) {
@@ -253,6 +263,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         span(1) {
@@ -315,6 +327,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         span(1) {
@@ -358,6 +372,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         span(1) {
@@ -433,6 +449,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         span(1) {
@@ -477,6 +495,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
       }
