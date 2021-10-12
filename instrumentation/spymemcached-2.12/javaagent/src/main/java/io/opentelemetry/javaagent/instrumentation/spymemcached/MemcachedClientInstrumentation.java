@@ -72,8 +72,11 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
       if (future != null) {
         OperationCompletionListener listener =
-            new OperationCompletionListener(currentContext(), client.getConnection(), methodName);
-        future.addListener(listener);
+            OperationCompletionListener.create(
+                currentContext(), client.getConnection(), methodName);
+        if (listener != null) {
+          future.addListener(listener);
+        }
       }
     }
   }
@@ -99,8 +102,10 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
       if (future != null) {
         GetCompletionListener listener =
-            new GetCompletionListener(currentContext(), client.getConnection(), methodName);
-        future.addListener(listener);
+            GetCompletionListener.create(currentContext(), client.getConnection(), methodName);
+        if (listener != null) {
+          future.addListener(listener);
+        }
       }
     }
   }
@@ -126,8 +131,10 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
       if (future != null) {
         BulkGetCompletionListener listener =
-            new BulkGetCompletionListener(currentContext(), client.getConnection(), methodName);
-        future.addListener(listener);
+            BulkGetCompletionListener.create(currentContext(), client.getConnection(), methodName);
+        if (listener != null) {
+          future.addListener(listener);
+        }
       }
     }
   }
@@ -145,7 +152,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      return new SyncCompletionListener(currentContext(), client.getConnection(), methodName);
+      return SyncCompletionListener.create(currentContext(), client.getConnection(), methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -153,7 +160,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         @Advice.Enter SyncCompletionListener listener,
         @Advice.Thrown Throwable thrown,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.decrementAndGet() > 0 || listener == null) {
         return;
       }
 
