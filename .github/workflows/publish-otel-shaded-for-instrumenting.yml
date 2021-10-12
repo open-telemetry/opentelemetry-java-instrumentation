@@ -1,0 +1,38 @@
+name: Publish OTel Shaded for Instrumenting
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version of OTel API to shade and publish
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Build and publish artifacts
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: jdk11
+          remote-build-cache-proxy-enabled: false
+          arguments: :opentelemetry-api-shaded-for-instrumenting:publishToSonatype closeAndReleaseSonatypeStagingRepository --stacktrace
+          properties:
+            release.version=${{ github.event.inputs.version }}
+            shadedOtelVersion=${{ github.event.inputs.version }}
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+          GRGIT_USER: ${{ github.actor }}
+          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
