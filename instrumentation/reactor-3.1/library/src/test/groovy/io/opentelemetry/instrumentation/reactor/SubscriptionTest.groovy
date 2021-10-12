@@ -10,7 +10,7 @@ import spock.lang.Shared
 
 class SubscriptionTest extends AbstractSubscriptionTest implements LibraryTestTrait {
   @Shared
-  TracingOperator tracingOperator = TracingOperator.create()
+  ContextPropagationOperator tracingOperator = ContextPropagationOperator.create()
 
   def setupSpec() {
     tracingOperator.registerOnEachOperator()

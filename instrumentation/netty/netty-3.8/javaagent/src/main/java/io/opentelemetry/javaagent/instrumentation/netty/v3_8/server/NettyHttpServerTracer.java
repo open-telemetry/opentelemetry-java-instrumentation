@@ -10,7 +10,6 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,7 +18,7 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class NettyHttpServerTracer
-    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, ChannelTraceContext> {
+    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Void> {
   private static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   public static NettyHttpServerTracer tracer() {
@@ -42,13 +41,11 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected void attachServerContext(Context context, ChannelTraceContext channelTraceContext) {
-    channelTraceContext.setContext(context);
-  }
+  protected void attachServerContext(Context context, Void unused) {}
 
   @Override
-  public Context getServerContext(ChannelTraceContext channelTraceContext) {
-    return channelTraceContext.getContext();
+  public Context getServerContext(Void unused) {
+    return null;
   }
 
   @Override

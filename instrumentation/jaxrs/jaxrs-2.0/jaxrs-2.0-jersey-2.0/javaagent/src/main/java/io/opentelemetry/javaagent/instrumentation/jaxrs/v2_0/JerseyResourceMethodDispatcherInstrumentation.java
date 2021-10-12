@@ -41,7 +41,7 @@ public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstru
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(1) Request request) {
-      JerseyTracingUtil.updateServerSpanName(request);
+      JerseySpanName.INSTANCE.updateServerSpanName(request);
     }
   }
 }

@@ -41,7 +41,7 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
 
       String name =
           VirtualField.find(ResourceMethodInvoker.class, String.class).get(resourceInvoker);
-      ResteasyTracingUtil.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);
+      ResteasySpanName.INSTANCE.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);
     }
   }
 }

@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -25,7 +24,6 @@ import io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.HttpServerTr
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.codec.http.HttpClientCodec;
@@ -67,35 +65,28 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
    * currently implemented.
    */
   public static class ChannelPipelineAdviceUtil {
-    public static void wrapHandler(
-        VirtualField<Channel, ChannelTraceContext> virtualField,
-        ChannelPipeline pipeline,
-        ChannelHandler handler) {
+    public static void wrapHandler(ChannelPipeline pipeline, ChannelHandler handler) {
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
-        pipeline.addLast(
-            HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(virtualField));
+        pipeline.addLast(HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler());
       } else if (handler instanceof HttpRequestDecoder) {
         pipeline.addLast(
-            HttpServerRequestTracingHandler.class.getName(),
-            new HttpServerRequestTracingHandler(virtualField));
+            HttpServerRequestTracingHandler.class.getName(), new HttpServerRequestTracingHandler());
       } else if (handler instanceof HttpResponseEncoder) {
         pipeline.addLast(
             HttpServerResponseTracingHandler.class.getName(),
-            new HttpServerResponseTracingHandler(virtualField));
+            new HttpServerResponseTracingHandler());
       } else
       // Client pipeline handlers
       if (handler instanceof HttpClientCodec) {
-        pipeline.addLast(
-            HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(virtualField));
+        pipeline.addLast(HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
       } else if (handler instanceof HttpRequestEncoder) {
         pipeline.addLast(
-            HttpClientRequestTracingHandler.class.getName(),
-            new HttpClientRequestTracingHandler(virtualField));
+            HttpClientRequestTracingHandler.class.getName(), new HttpClientRequestTracingHandler());
       } else if (handler instanceof HttpResponseDecoder) {
         pipeline.addLast(
             HttpClientResponseTracingHandler.class.getName(),
-            new HttpClientResponseTracingHandler(virtualField));
+            new HttpClientResponseTracingHandler());
       }
     }
   }
@@ -127,10 +118,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      VirtualField<Channel, ChannelTraceContext> virtualField =
-          VirtualField.find(Channel.class, ChannelTraceContext.class);
-
-      ChannelPipelineAdviceUtil.wrapHandler(virtualField, pipeline, handler);
+      ChannelPipelineAdviceUtil.wrapHandler(pipeline, handler);
     }
   }
 
@@ -161,10 +149,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      VirtualField<Channel, ChannelTraceContext> virtualField =
-          VirtualField.find(Channel.class, ChannelTraceContext.class);
-
-      ChannelPipelineAdviceUtil.wrapHandler(virtualField, pipeline, handler);
+      ChannelPipelineAdviceUtil.wrapHandler(pipeline, handler);
     }
   }
 }

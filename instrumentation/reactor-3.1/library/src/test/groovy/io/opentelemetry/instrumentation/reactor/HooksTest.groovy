@@ -15,7 +15,7 @@ class HooksTest extends LibraryInstrumentationSpecification {
 
   def "can reset out hooks"() {
     setup:
-    def underTest = TracingOperator.create()
+    def underTest = ContextPropagationOperator.create()
     AtomicReference<CoreSubscriber> subscriber = new AtomicReference<>()
 
     when: "no hook registered"
