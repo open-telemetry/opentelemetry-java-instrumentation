@@ -25,7 +25,8 @@ public final class CxfSpanName implements ServerSpanNameSupplier<String> {
     Context context = Context.current();
     String jaxrsName = calculateJaxrsName(context, exchange);
 
-    ServerSpanNaming.updateServerSpanName(context, ServerSpanNaming.Source.JAXRS, this, jaxrsName);
+    ServerSpanNaming.updateServerSpanName(
+        context, ServerSpanNaming.Source.NESTED_CONTROLLER, this, jaxrsName);
 
     return JaxrsContextPath.init(context, jaxrsName);
   }

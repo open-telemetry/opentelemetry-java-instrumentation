@@ -113,8 +113,9 @@ public final class ServerSpanNaming {
     FILTER(2, /* useFirst= */ false),
     SERVLET(3),
     CONTROLLER(4),
-    // JaxRS allows for nested paths and we want to select the longest one
-    JAXRS(5, false);
+    // Some frameworks, e.g. JaxRS, allow for nested controller/paths and we want to select the
+    // longest one
+    NESTED_CONTROLLER(5, false);
 
     private final int order;
     private final boolean useFirst;

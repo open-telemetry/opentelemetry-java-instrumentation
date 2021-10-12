@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.JAXRS;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.NESTED_CONTROLLER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
@@ -20,7 +20,7 @@ public final class ResteasySpanName implements ServerSpanNameSupplier<String> {
 
   public void updateServerSpanName(Context context, String name) {
     if (name != null) {
-      ServerSpanNaming.updateServerSpanName(context, JAXRS, this, name);
+      ServerSpanNaming.updateServerSpanName(context, NESTED_CONTROLLER, this, name);
     }
   }
 

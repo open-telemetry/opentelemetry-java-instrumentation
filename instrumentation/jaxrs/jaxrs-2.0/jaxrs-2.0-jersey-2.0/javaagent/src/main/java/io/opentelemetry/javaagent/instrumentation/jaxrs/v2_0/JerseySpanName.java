@@ -24,7 +24,8 @@ public class JerseySpanName implements ServerSpanNameSupplier<Request> {
 
   public void updateServerSpanName(Request request) {
     Context context = Context.current();
-    ServerSpanNaming.updateServerSpanName(context, ServerSpanNaming.Source.JAXRS, this, request);
+    ServerSpanNaming.updateServerSpanName(
+        context, ServerSpanNaming.Source.NESTED_CONTROLLER, this, request);
   }
 
   @Override
