@@ -124,7 +124,10 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         if (!foundField) {
           cv.visitField(
               // Field should be transient to avoid being serialized with the object.
-              Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC,
+              Opcodes.ACC_PRIVATE
+                  | Opcodes.ACC_VOLATILE
+                  | Opcodes.ACC_TRANSIENT
+                  | Opcodes.ACC_SYNTHETIC,
               fieldName,
               fieldType.getDescriptor(),
               null,
