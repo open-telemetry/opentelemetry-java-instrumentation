@@ -9,6 +9,7 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -25,7 +26,6 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -62,6 +62,21 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
+
+  // this override is needed because dropwizard reports peer ip as the client ip
+  @Override
+  String peerIp(ServerEndpoint endpoint) {
+    TEST_CLIENT_IP
+  }
+
+  @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     endpoint != NOT_FOUND
   }
@@ -93,41 +108,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)
-    }
-  }
-
-  // this override is needed because dropwizard reports peer ip as the client ip
-  @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      name expectedServerSpanName(endpoint)
-      kind SERVER
-      if (endpoint.errored) {
-        status StatusCode.ERROR
-      }
-      if (parentID != null) {
-        traceId traceID
-        parentSpanId parentID
-      } else {
-        hasNoParent()
-      }
-      attributes {
-        // dropwizard reports peer ip as the client ip
-        "${SemanticAttributes.NET_PEER_IP.key}" TEST_CLIENT_IP
-        "${SemanticAttributes.NET_PEER_PORT.key}" Long
-        "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-        "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
-        "${SemanticAttributes.HTTP_METHOD.key}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
-        "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-        if (endpoint == ServerEndpoint.CAPTURE_HEADERS) {
-          "http.request.header.x_test_request" { it == ["test"] }
-          "http.response.header.x_test_response" { it == ["test"] }
-        }
-      }
     }
   }
 

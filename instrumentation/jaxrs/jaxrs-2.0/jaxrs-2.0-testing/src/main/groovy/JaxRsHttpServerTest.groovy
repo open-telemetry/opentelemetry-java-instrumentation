@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -188,6 +191,14 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   }
 
   @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
+
+  @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
@@ -281,6 +292,9 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
+        "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }

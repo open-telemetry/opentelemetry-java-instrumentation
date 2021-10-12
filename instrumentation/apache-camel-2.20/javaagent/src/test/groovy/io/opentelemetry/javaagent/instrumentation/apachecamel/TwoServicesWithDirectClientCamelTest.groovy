@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -131,6 +133,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
           }
         }
         it.span(5) {

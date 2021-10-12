@@ -49,12 +49,10 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   protected @Nullable Long requestContentLength(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    /*
     int contentLength = accessor.getRequestContentLength(requestContext.request());
     if (contentLength > -1) {
       return (long) contentLength;
     }
-     */
     return null;
   }
 
@@ -98,8 +96,7 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   protected @Nullable Long responseContentLength(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext) {
-    /*
-    String contentLength = servletAccessor.getResponseHeader(responseContext.response(), "Content-Length");
+    String contentLength = accessor.getResponseHeader(responseContext.response(), "Content-Length");
     if (contentLength != null) {
       try {
         return Long.valueOf(contentLength);
@@ -107,7 +104,6 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
         // ignore
       }
     }
-     */
     return null;
   }
 
@@ -135,7 +131,6 @@ public class ServletHttpAttributesExtractor<REQUEST, RESPONSE>
   protected @Nullable String serverName(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    // return servletAccessor.getRequestServerName(requestContext.request());
-    return null;
+    return accessor.getRequestServerName(requestContext.request());
   }
 }
