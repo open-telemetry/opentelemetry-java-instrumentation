@@ -81,7 +81,6 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
       scope.close();
 
       LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
-      request.setCompleted();
 
       Throwable t = failure != null ? failure : throwable;
       instrumenter().end(context, request, response, t);

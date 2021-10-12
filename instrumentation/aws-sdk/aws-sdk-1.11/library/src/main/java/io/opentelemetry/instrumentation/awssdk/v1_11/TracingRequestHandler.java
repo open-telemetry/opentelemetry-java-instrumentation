@@ -10,8 +10,9 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.extension.aws.AwsXrayPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -21,30 +22,27 @@ final class TracingRequestHandler extends RequestHandler2 {
   static final HandlerContextKey<Context> CONTEXT =
       new HandlerContextKey<>(Context.class.getName());
 
-  private final AwsSdkClientTracer tracer;
+  private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
 
-  TracingRequestHandler(AwsSdkClientTracer tracer) {
-    this.tracer = tracer;
+  TracingRequestHandler(
+      Instrumenter<Request<?>, Response<?>> requestInstrumenter,
+      Instrumenter<Request<?>, Response<?>> consumerInstrumenter) {
+    this.requestInstrumenter = requestInstrumenter;
+    this.consumerInstrumenter = consumerInstrumenter;
   }
 
   @Override
   public void beforeRequest(Request<?> request) {
-    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    SpanKind kind = (isSqsProducer(originalRequest) ? SpanKind.PRODUCER : SpanKind.CLIENT);
-
     Context parentContext = Context.current();
-    if (!tracer.shouldStartSpan(parentContext)) {
+    if (!requestInstrumenter.shouldStart(parentContext, request)) {
       return;
     }
-    Context context = tracer.startSpan(kind, parentContext, request);
-    request.addHandlerContext(CONTEXT, context);
-  }
+    Context context = requestInstrumenter.start(parentContext, request);
 
-  private static boolean isSqsProducer(AmazonWebServiceRequest request) {
-    return request
-        .getClass()
-        .getName()
-        .equals("com.amazonaws.services.sqs.model.SendMessageRequest");
+    AwsXrayPropagator.getInstance().inject(context, request, AwsSdkInjectAdapter.INSTANCE);
+
+    request.addHandlerContext(CONTEXT, context);
   }
 
   @Override
@@ -79,8 +77,8 @@ final class TracingRequestHandler extends RequestHandler2 {
   private void createConsumerSpan(Object message, Request<?> request, Response<?> response) {
     Context parentContext =
         SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    Context context = tracer.startSpan(SpanKind.CONSUMER, parentContext, request);
-    tracer.end(context, response);
+    Context context = consumerInstrumenter.start(parentContext, request);
+    consumerInstrumenter.end(context, request, response, null);
   }
 
   @Override
@@ -95,10 +93,6 @@ final class TracingRequestHandler extends RequestHandler2 {
       return;
     }
     request.addHandlerContext(CONTEXT, null);
-    if (error == null) {
-      tracer.end(context, response);
-    } else {
-      tracer.endExceptionally(context, response, error);
-    }
+    requestInstrumenter.end(context, request, response, error);
   }
 }

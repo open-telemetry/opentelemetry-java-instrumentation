@@ -49,7 +49,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
 
       String name =
           VirtualField.find(ResourceLocatorInvoker.class, String.class).get(resourceInvoker);
-      ResteasyTracingUtil.updateServerSpanName(currentContext, name);
+      ResteasySpanName.INSTANCE.updateServerSpanName(currentContext, name);
 
       // subresource locator returns a resources class that may have @Path annotations
       // append current path to jax-rs context path so that it would be present in the final path

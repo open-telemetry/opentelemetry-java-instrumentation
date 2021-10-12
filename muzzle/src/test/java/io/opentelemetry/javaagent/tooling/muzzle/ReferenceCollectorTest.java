@@ -29,6 +29,7 @@ import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
+import net.bytebuddy.jar.asm.Type;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -364,7 +365,31 @@ class ReferenceCollectorTest {
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
         Arguments.of(
             "storing class ref in a local var",
-            VirtualFieldTestClasses.PassingVariableAdvice.class.getName()));
+            VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
+        Arguments.of(
+            "using array type as the field owner type",
+            VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
+        Arguments.of(
+            "using primitive type as the field owner type",
+            VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()),
+        Arguments.of(
+            "using primitive type as the field type",
+            VirtualFieldTestClasses.UsingPrimitiveAsFieldAdvice.class.getName()));
+  }
+
+  @Test
+  public void shouldCollectArrayVirtualField() {
+    ReferenceCollector collector = new ReferenceCollector(s -> false);
+    collector.collectReferencesFromAdvice(
+        VirtualFieldTestClasses.UsingArrayAsFieldAdvice.class.getName());
+    collector.prune();
+
+    VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
+    assertThat(virtualFieldMappings.entrySet())
+        .containsExactly(
+            entry(
+                VirtualFieldTestClasses.Key1.class.getName(),
+                Type.getType(Context[].class).getClassName()));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

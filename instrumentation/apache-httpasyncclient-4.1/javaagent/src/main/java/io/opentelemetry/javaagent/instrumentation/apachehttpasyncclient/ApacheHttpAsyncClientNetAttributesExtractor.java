@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpAsyncClientNetAttributesExtractor
-    extends NetAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
+    extends NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
-  public String transport(ApacheHttpClientRequest request) {
+  public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Helper container for tracking whether instrumentation should update server span name or not. */
@@ -17,11 +16,6 @@ public final class ServerSpanNaming {
 
   private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-span-naming-key");
-
-  // this is just to support deprecated methods
-  @Deprecated
-  private static final ServerSpanNameSupplier<Supplier<String>> ZERO_ARG_ADAPTER =
-      (context, supplier) -> supplier.get();
 
   public static Context init(Context context, Source initialSource) {
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
@@ -108,25 +102,6 @@ public final class ServerSpanNaming {
     }
   }
 
-  @Deprecated
-  public static void updateServerSpanName(
-      Context context, Source source, Supplier<String> serverSpanName) {
-    updateServerSpanName(context, source, ZERO_ARG_ADAPTER, serverSpanName);
-  }
-
-  // TODO (trask) migrate the one usage (ServletHttpServerTracer) to ServerSpanNaming.init() once we
-  // migrate to new Instrumenters (see
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814#discussion_r617351334
-  // for the challenge with doing this now in the current Tracer structure, at least without some
-  // bigger changes, which we want to avoid in the Tracers as they are already deprecated)
-  @Deprecated
-  public static void updateSource(Context context, Source source) {
-    ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
-    if (serverSpanNaming != null && source.order > serverSpanNaming.updatedBySource.order) {
-      serverSpanNaming.updatedBySource = source;
-    }
-  }
-
   private boolean isBetterName(String name) {
     return name.length() > nameLength;
   }
@@ -137,7 +112,10 @@ public final class ServerSpanNaming {
     // filter that is called
     FILTER(2, /* useFirst= */ false),
     SERVLET(3),
-    CONTROLLER(4);
+    CONTROLLER(4),
+    // Some frameworks, e.g. JaxRS, allow for nested controller/paths and we want to select the
+    // longest one
+    NESTED_CONTROLLER(5, false);
 
     private final int order;
     private final boolean useFirst;

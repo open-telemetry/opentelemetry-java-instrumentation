@@ -7,15 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class GoogleHttpClientNetAttributesExtractor
-    extends NetAttributesExtractor<HttpRequest, HttpResponse> {
+    extends NetClientAttributesExtractor<HttpRequest, HttpResponse> {
 
   @Override
-  public String transport(HttpRequest request) {
+  public String transport(HttpRequest request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

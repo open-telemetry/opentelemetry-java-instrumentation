@@ -25,6 +25,11 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean testConcurrency() {
     return true
   }

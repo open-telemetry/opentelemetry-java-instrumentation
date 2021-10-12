@@ -5,7 +5,7 @@
 
 package library;
 
-public class KeyClass {
+public class KeyClass implements KeyInterface {
   public boolean isInstrumented() {
     // implementation replaced with test instrumentation
     return false;
@@ -26,6 +26,10 @@ public class KeyClass {
   }
 
   public void removeContextCount() {
+    // implementation replaced with test instrumentation
+  }
+
+  public void useMultipleFields() {
     // implementation replaced with test instrumentation
   }
 }

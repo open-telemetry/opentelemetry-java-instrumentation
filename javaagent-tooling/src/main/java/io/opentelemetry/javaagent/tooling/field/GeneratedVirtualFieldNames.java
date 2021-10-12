@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
-import io.opentelemetry.javaagent.tooling.Utils;
-
 final class GeneratedVirtualFieldNames {
 
   /**
@@ -15,38 +13,46 @@ final class GeneratedVirtualFieldNames {
    * 'isolating' (or 'module') classloaders like jboss and osgi see injected classes. This works
    * because we instrument those classloaders to load everything inside bootstrap packages.
    */
-  static final String DYNAMIC_CLASSES_PACKAGE =
-      "io.opentelemetry.javaagent.bootstrap.instrumentation.context.";
+  static final String DYNAMIC_CLASSES_PACKAGE = "io.opentelemetry.javaagent.bootstrap.field.";
 
   private GeneratedVirtualFieldNames() {}
 
   static String getVirtualFieldImplementationClassName(String typeName, String fieldTypeName) {
     return DYNAMIC_CLASSES_PACKAGE
-        + FieldBackedImplementationInstaller.class.getSimpleName()
-        + "$VirtualField$"
-        + Utils.convertToInnerClassName(typeName)
+        + "VirtualFieldImpl$"
+        + sanitizeClassName(typeName)
         + "$"
-        + Utils.convertToInnerClassName(fieldTypeName);
+        + sanitizeClassName(fieldTypeName);
   }
 
   static String getFieldAccessorInterfaceName(String typeName, String fieldTypeName) {
     return DYNAMIC_CLASSES_PACKAGE
-        + FieldBackedImplementationInstaller.class.getSimpleName()
-        + "$VirtualFieldAccessor$"
-        + Utils.convertToInnerClassName(typeName)
+        + "VirtualFieldAccessor$"
+        + sanitizeClassName(typeName)
         + "$"
-        + Utils.convertToInnerClassName(fieldTypeName);
+        + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealFieldName(String typeName) {
-    return "__opentelemetryVirtualField$" + Utils.convertToInnerClassName(typeName);
+  static String getRealFieldName(String typeName, String fieldTypeName) {
+    return "__opentelemetryVirtualField$"
+        + sanitizeClassName(typeName)
+        + "$"
+        + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealGetterName(String typeName) {
-    return "get" + getRealFieldName(typeName);
+  static String getRealGetterName(String typeName, String fieldTypeName) {
+    return "get" + getRealFieldName(typeName, fieldTypeName);
   }
 
-  static String getRealSetterName(String typeName) {
-    return "set" + getRealFieldName(typeName);
+  static String getRealSetterName(String typeName, String fieldTypeName) {
+    return "set" + getRealFieldName(typeName, fieldTypeName);
+  }
+
+  private static String sanitizeClassName(String className) {
+    className = className.replace('.', '$');
+    if (className.endsWith("[]")) {
+      className = className.replace('[', '_').replace(']', '_');
+    }
+    return className;
   }
 }

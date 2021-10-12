@@ -17,7 +17,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase {
 
-  static class TestApiGatewayHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+  static class TestApiGatewayEventHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     @Override
     APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
@@ -32,13 +32,50 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
     }
   }
 
+  static class TestApiGatewayStringHandler implements RequestHandler<String, String> {
+
+    @Override
+    String handleRequest(String input, Context context) {
+      if (input == "hello") {
+        return "world"
+      }
+      throw new IllegalStateException("bad request")
+    }
+  }
+
+  static class TestApiGatewayIntegerHandler implements RequestHandler<Integer, String> {
+
+    @Override
+    String handleRequest(Integer input, Context context) {
+      if (input == 1) {
+        return "world"
+      }
+      throw new IllegalStateException("bad request")
+    }
+  }
+
+  static class CustomType {
+    String key, value
+  }
+
+  static class TestApiGatewayCustomTypeHandler implements RequestHandler<CustomType, String> {
+
+    @Override
+    String handleRequest(CustomType input, Context context) {
+      if (input.key == "hello") {
+        return "Hello "+input.value
+      }
+      throw new IllegalStateException("bad request")
+    }
+  }
+
   def propagationHeaders() {
     return Collections.singletonMap("traceparent", "00-4fd0b6131f19f39af59518d127b0cafe-0000000000000456-01")
   }
 
-  def "handler traced with trace propagation"() {
+  def "event handler traced with trace propagation"() {
     given:
-    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor)
+    setLambda(TestApiGatewayEventHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor, TracingRequestApiGatewayWrapper.&map)
 
     def headers = ImmutableMap.builder()
       .putAll(propagationHeaders())
@@ -81,9 +118,9 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
     }
   }
 
-  def "test empty request & response"() {
+  def "event handler test empty request & response"() {
     given:
-    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor)
+    setLambda(TestApiGatewayEventHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor, TracingRequestApiGatewayWrapper.&map)
 
     def input = new APIGatewayProxyRequestEvent()
       .withBody("empty")
@@ -93,6 +130,90 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
     then:
     result.body == null
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name("my_function")
+          kind SERVER
+          attributes {
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+          }
+        }
+      }
+    }
+  }
+
+  def "string handler test request"() {
+    given:
+    setLambda(TestApiGatewayStringHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor, TracingRequestApiGatewayWrapper.&map)
+
+    def input = new APIGatewayProxyRequestEvent()
+      .withBody("\"hello\"")
+
+    when:
+    APIGatewayProxyResponseEvent result = wrapper.handleRequest(input, context)
+
+    then:
+    result.body == "\"world\""
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name("my_function")
+          kind SERVER
+          attributes {
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+          }
+        }
+      }
+    }
+  }
+
+  def "integer handler test request"() {
+    given:
+    setLambda(TestApiGatewayIntegerHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor, TracingRequestApiGatewayWrapper.&map)
+
+    def input = new APIGatewayProxyRequestEvent()
+      .withBody("1")
+
+    when:
+    APIGatewayProxyResponseEvent result = wrapper.handleRequest(input, context)
+
+    then:
+    result.body == "\"world\""
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name("my_function")
+          kind SERVER
+          attributes {
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+          }
+        }
+      }
+    }
+  }
+
+  def "custom type handler test request"() {
+    given:
+    setLambda(TestApiGatewayCustomTypeHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper.metaClass.&invokeConstructor, TracingRequestApiGatewayWrapper.&map)
+
+    def input = new APIGatewayProxyRequestEvent()
+      .withBody("{\"key\":\"hello\", \"value\":\"General Kenobi\"}")
+
+    when:
+    APIGatewayProxyResponseEvent result = wrapper.handleRequest(input, context)
+
+    then:
+    result.body == "\"Hello General Kenobi\""
     assertTraces(1) {
       trace(0, 1) {
         span(0) {

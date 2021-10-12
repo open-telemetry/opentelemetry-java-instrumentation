@@ -63,7 +63,7 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
       if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedImplementationInstaller$VirtualFieldAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$')) {
         hasAccessorInterface = true
         accessorInterfaceIsSynthetic = inter.isSynthetic()
       }
@@ -83,6 +83,36 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
     keyClass                | keyClassName             | shouldModifyStructure
     KeyClass                | keyClass.getSimpleName() | true
     UntransformableKeyClass | keyClass.getSimpleName() | false
+  }
+
+  def "multiple fields are injected"() {
+    setup:
+    List<Field> fields = []
+    for (Field field : KeyClass.getDeclaredFields()) {
+      if (field.getName().startsWith("__opentelemetry")) {
+        fields.add(field)
+      }
+    }
+
+    List<Class<?>> interfaces = []
+    for (Class iface : KeyClass.getInterfaces()) {
+      if (iface.name.startsWith('io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$')) {
+        interfaces.add(iface)
+      }
+    }
+
+    expect:
+    fields.size() == 3
+    fields.forEach { field ->
+      assert Modifier.isPrivate(field.modifiers)
+      assert Modifier.isTransient(field.modifiers)
+      assert field.synthetic
+    }
+
+    interfaces.size() == 3
+    interfaces.forEach { iface ->
+      assert iface.synthetic
+    }
   }
 
   def "correct api usage stores state in map"() {

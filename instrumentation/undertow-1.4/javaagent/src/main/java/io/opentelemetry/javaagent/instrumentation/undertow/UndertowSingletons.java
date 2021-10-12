@@ -15,11 +15,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.undertow.server.HttpServerExchange;
 
 public final class UndertowSingletons {
@@ -34,7 +33,7 @@ public final class UndertowSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpServerExchange, HttpServerExchange> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
+    NetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
         new UndertowNetAttributesExtractor();
 
     INSTRUMENTER =
@@ -43,7 +42,6 @@ public final class UndertowSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   context = ServerSpanNaming.init(context, CONTAINER);

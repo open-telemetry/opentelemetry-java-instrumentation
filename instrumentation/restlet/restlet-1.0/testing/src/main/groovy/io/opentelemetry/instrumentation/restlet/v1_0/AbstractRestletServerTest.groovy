@@ -15,6 +15,7 @@ import org.restlet.Restlet
 import org.restlet.Router
 import org.restlet.Server
 import org.restlet.VirtualHost
+import org.restlet.data.Form
 import org.restlet.data.MediaType
 import org.restlet.data.Protocol
 import org.restlet.data.Request
@@ -22,6 +23,7 @@ import org.restlet.data.Response
 import org.restlet.data.Status
 import org.restlet.util.Template
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -117,6 +119,20 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
         controller(PATH_PARAM) {
           response.setEntity(PATH_PARAM.getBody(), MediaType.TEXT_PLAIN)
           response.setStatus(Status.valueOf(PATH_PARAM.getStatus()), PATH_PARAM.getBody())
+        }
+      }
+    })
+
+    attachAndWrap("/captureHeaders", new Restlet() {
+      @Override
+      void handle(Request request, Response response) {
+        controller(CAPTURE_HEADERS) {
+          Form requestHeaders = request.getAttributes().get("org.restlet.http.headers")
+          Form responseHeaders = response.getAttributes().computeIfAbsent("org.restlet.http.headers", { new Form() })
+          responseHeaders.add("X-Test-Response", requestHeaders.getValues("X-Test-Request"))
+
+          response.setEntity(CAPTURE_HEADERS.getBody(), MediaType.TEXT_PLAIN)
+          response.setStatus(Status.valueOf(CAPTURE_HEADERS.getStatus()), CAPTURE_HEADERS.getBody())
         }
       }
     })

@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.nio.charset.StandardCharsets
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
@@ -107,6 +108,11 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
               break
             case REDIRECT:
               resp.sendRedirect(endpoint.body)
+              break
+            case CAPTURE_HEADERS:
+              resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"))
+              resp.status = endpoint.status
+              resp.writer.print(endpoint.body)
               break
             case ERROR:
               resp.sendError(endpoint.status, endpoint.body)

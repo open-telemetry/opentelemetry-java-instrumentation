@@ -79,11 +79,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   public Context updateContext(
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
-    ServerSpanNaming.updateServerSpanName(
-        context,
-        servlet ? SERVLET : FILTER,
-        () -> spanNameProvider.getSpanNameOrNull(mappingResolver, request));
-    return addServletContextPath(context, request);
+    Context result = addServletContextPath(context, request);
+    if (mappingResolver != null) {
+      ServerSpanNaming.updateServerSpanName(
+          result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
+    }
+    return result;
   }
 
   /*

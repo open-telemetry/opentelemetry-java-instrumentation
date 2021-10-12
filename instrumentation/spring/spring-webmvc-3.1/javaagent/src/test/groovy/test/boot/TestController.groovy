@@ -11,11 +11,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.servlet.view.RedirectView
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
@@ -69,6 +71,15 @@ class TestController {
   ResponseEntity exception() {
     HttpServerTest.controller(EXCEPTION) {
       throw new Exception(EXCEPTION.body)
+    }
+  }
+
+  @RequestMapping("/captureHeaders")
+  ResponseEntity capture_headers(@RequestHeader("X-Test-Request") String testRequestHeader) {
+    HttpServerTest.controller(CAPTURE_HEADERS) {
+      ResponseEntity.ok()
+        .header("X-Test-Response", testRequestHeader)
+        .body(CAPTURE_HEADERS.body)
     }
   }
 

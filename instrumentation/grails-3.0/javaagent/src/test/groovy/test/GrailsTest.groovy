@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.context.ConfigurableApplicationContext
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -141,6 +142,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
         name "TestController.query"
       } else if (endpoint == PATH_PARAM) {
         name "TestController.path"
+      } else if (endpoint == CAPTURE_HEADERS) {
+        name "TestController.captureHeaders"
       } else if (endpoint == NOT_FOUND) {
         name "ResourceHttpRequestHandler.handleRequest"
       } else {

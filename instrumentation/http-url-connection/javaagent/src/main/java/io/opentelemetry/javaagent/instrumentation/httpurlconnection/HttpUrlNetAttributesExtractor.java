@@ -5,29 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class HttpUrlNetAttributesExtractor extends NetAttributesExtractor<HttpURLConnection, Integer> {
+class HttpUrlNetAttributesExtractor
+    extends NetClientAttributesExtractor<HttpURLConnection, Integer> {
   @Override
-  public @Nullable String transport(HttpURLConnection connection) {
+  public @Nullable String transport(HttpURLConnection connection, @Nullable Integer status) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public String peerName(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public String peerName(HttpURLConnection connection, @Nullable Integer status) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public Integer peerPort(HttpURLConnection connection, @Nullable Integer status) {
     return connection.getURL().getPort();
   }
 
   @Override
-  public @Nullable String peerIp(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public @Nullable String peerIp(HttpURLConnection connection, @Nullable Integer status) {
     return null;
   }
 }

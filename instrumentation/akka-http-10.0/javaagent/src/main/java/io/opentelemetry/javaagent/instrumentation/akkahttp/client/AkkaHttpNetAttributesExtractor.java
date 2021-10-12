@@ -7,13 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class AkkaHttpNetAttributesExtractor extends NetAttributesExtractor<HttpRequest, HttpResponse> {
+class AkkaHttpNetAttributesExtractor
+    extends NetClientAttributesExtractor<HttpRequest, HttpResponse> {
   @Override
-  public @Nullable String transport(HttpRequest httpRequest) {
+  public String transport(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

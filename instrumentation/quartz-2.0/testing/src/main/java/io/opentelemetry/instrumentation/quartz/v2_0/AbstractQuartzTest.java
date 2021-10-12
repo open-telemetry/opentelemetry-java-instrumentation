@@ -5,14 +5,15 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,7 +64,14 @@ public abstract class AbstractQuartzTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasStatus(StatusData.unset())
-                            .hasAttributes(Attributes.empty()),
+                            .hasAttributesSatisfying(
+                                attrs ->
+                                    assertThat(attrs)
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_NAMESPACE,
+                                            SuccessfulJob.class.getName())
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_FUNCTION, "execute")),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -88,7 +96,14 @@ public abstract class AbstractQuartzTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("Bad job"))
-                            .hasAttributes(Attributes.empty())));
+                            .hasAttributesSatisfying(
+                                attrs ->
+                                    assertThat(attrs)
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_NAMESPACE,
+                                            FailingJob.class.getName())
+                                        .containsEntry(
+                                            SemanticAttributes.CODE_FUNCTION, "execute"))));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {

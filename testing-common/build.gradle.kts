@@ -25,6 +25,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
+  api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")
 
@@ -48,7 +49,6 @@ dependencies {
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-extension-annotations")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
-  implementation(project(":instrumentation-api"))
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")

@@ -16,11 +16,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -39,7 +38,7 @@ public final class TomcatInstrumenterBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetAttributesExtractor<Request, Response> netAttributesExtractor =
+    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
         new TomcatNetAttributesExtractor();
     AttributesExtractor<Request, Response> additionalAttributeExtractor =
         new TomcatAdditionalAttributesExtractor<>(accessor, servletEntityProvider);
@@ -50,7 +49,6 @@ public final class TomcatInstrumenterBuilder {
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
         .addAttributesExtractor(additionalAttributeExtractor)
         .addContextCustomizer(
             (context, request, attributes) -> {

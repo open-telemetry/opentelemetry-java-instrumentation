@@ -9,6 +9,7 @@ import grails.artefact.Controller
 import grails.web.Action
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
@@ -62,6 +63,14 @@ class TestController implements Controller {
   def path() {
     HttpServerTest.controller(PATH_PARAM) {
       render params.id
+    }
+  }
+
+  @Action
+  def captureHeaders() {
+    HttpServerTest.controller(CAPTURE_HEADERS) {
+      response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"))
+      render CAPTURE_HEADERS.body
     }
   }
 }

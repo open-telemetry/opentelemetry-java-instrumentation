@@ -128,6 +128,11 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean testConcurrency() {
     return true
   }

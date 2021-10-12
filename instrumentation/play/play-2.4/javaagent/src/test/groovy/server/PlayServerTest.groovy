@@ -78,6 +78,11 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
+
+  @Override
   boolean testConcurrency() {
     return true
   }

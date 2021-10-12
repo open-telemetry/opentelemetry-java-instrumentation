@@ -52,17 +52,6 @@ public class Utils {
   }
 
   /**
-   * Convert class name to a format that can be used as part of inner class name by replacing all
-   * '.'s with '$'s.
-   *
-   * @param className class named to be converted
-   * @return converted name
-   */
-  public static String convertToInnerClassName(String className) {
-    return className.replace('.', '$');
-  }
-
-  /**
    * Get method definition for given {@link TypeDefinition} and method name.
    *
    * @param type type
