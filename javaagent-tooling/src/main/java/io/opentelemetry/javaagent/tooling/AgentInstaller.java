@@ -214,7 +214,7 @@ public class AgentInstaller {
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
-        .ignore(nameStartsWith("io.opentelemetry.javaagent."), Objects::isNull)
+        .or(nameStartsWith("io.opentelemetry.javaagent."), Objects::isNull)
         .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()));
   }
 
