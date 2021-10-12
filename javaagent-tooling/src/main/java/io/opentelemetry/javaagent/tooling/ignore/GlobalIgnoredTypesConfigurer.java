@@ -55,10 +55,14 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // clojure
     builder.ignoreClass("clojure.").ignoreClass("$fn__");
 
-    // this is to exclude javaagent helper classes that are injected into other class loaders
-    // "io.opentelemetry.javaagent" classes in the bootstrap class loader are excluded elsewhere
-    // and all classes in the AgentClassLoader are excluded elsewhere
+    // all classes in the AgentClassLoader are ignored separately
+    // this is used to ignore agent classes that are in the bootstrap class loader
+    // the reason not to use "io.opentelemetry.javaagent." is so that javaagent instrumentation
+    // tests under "io.opentelemetry.javaagent." will still be instrumented
+    builder.ignoreClass("io.opentelemetry.javaagent.bootstrap.");
+    builder.ignoreClass("io.opentelemetry.javaagent.instrumentation.api.");
     builder.ignoreClass("io.opentelemetry.javaagent.shaded.");
+    builder.ignoreClass("io.opentelemetry.javaagent.slf4j.");
 
     builder
         .ignoreClass("java.")
