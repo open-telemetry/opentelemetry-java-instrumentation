@@ -102,6 +102,11 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+              "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            }
+            // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
@@ -131,12 +136,6 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             }
             if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
               "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            }
-            if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-              "${SemanticAttributes.NET_PEER_NAME}" "localhost"
-            }
-            if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-              "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
             }
           }
         }

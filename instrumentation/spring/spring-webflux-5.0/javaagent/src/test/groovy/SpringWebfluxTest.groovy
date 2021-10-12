@@ -78,7 +78,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -142,7 +142,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -226,7 +226,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -288,7 +288,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           status ERROR
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -329,7 +329,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -375,7 +375,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           status ERROR
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -436,7 +436,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -465,7 +465,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+            "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -509,7 +509,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             kind SERVER
             hasNoParent()
             attributes {
-              "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+              "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
               "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
               "${SemanticAttributes.NET_PEER_PORT.key}" Long
               "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
