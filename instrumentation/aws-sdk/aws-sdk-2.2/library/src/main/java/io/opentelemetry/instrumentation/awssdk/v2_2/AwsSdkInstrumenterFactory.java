@@ -16,7 +16,7 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkInstrumenterFactory {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
   static final AwsSdkAttributesExtractor attributesExtractor = new AwsSdkAttributesExtractor();
   private static final AwsSdkNetAttributesExtractor netAttributesExtractor =
       new AwsSdkNetAttributesExtractor();
@@ -31,9 +31,7 @@ final class AwsSdkInstrumenterFactory {
           Arrays.asList(
               attributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
 
-  //  private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
-  //
-  static Instrumenter<ExecutionAttributes, SdkHttpResponse> getInstrumenter(
+  static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
     return Instrumenter.<ExecutionAttributes, SdkHttpResponse>newBuilder(

@@ -42,7 +42,8 @@ public class AwsSdkTracing {
 
   AwsSdkTracing(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
     this.tracer =
-        AwsSdkInstrumenterFactory.getInstrumenter(openTelemetry, captureExperimentalSpanAttributes);
+        AwsSdkInstrumenterFactory.createInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 

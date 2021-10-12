@@ -39,8 +39,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   static final ExecutionAttribute<SdkHttpRequest> SDK_HTTP_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkHttpRequest");
 
-  static final String COMPONENT_NAME = "java-aws-sdk";
-
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final FieldMapper fieldMapper;
