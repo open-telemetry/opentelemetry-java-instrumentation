@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.functionTracer;
-import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.messageTracer;
+import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.messageInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -63,13 +63,16 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       functionContext = functionTracer().startSpan(context, SpanKind.SERVER, arg);
       functionScope = functionContext.makeCurrent();
       if (arg instanceof SQSEvent) {
-        messageContext = messageTracer().startSpan(functionContext, (SQSEvent) arg);
-        messageScope = messageContext.makeCurrent();
+        if (messageInstrumenter().shouldStart(functionContext, (SQSEvent) arg)) {
+          messageContext = messageInstrumenter().start(functionContext, (SQSEvent) arg);
+          messageScope = messageContext.makeCurrent();
+        }
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
         @Advice.Local("otelFunctionScope") Scope functionScope,
@@ -78,11 +81,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
       if (messageScope != null) {
         messageScope.close();
-        if (throwable != null) {
-          messageTracer().endExceptionally(messageContext, throwable);
-        } else {
-          messageTracer().end(messageContext);
-        }
+        messageInstrumenter().end(messageContext, (SQSEvent) arg, null, throwable);
       }
 
       functionScope.close();
