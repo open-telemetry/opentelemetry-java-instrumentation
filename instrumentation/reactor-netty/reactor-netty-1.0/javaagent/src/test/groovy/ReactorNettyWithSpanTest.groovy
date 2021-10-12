@@ -46,6 +46,7 @@ class ReactorNettyWithSpanTest extends InstrumentationSpecification implements A
     })
 
     def getResponse = new TracedWithSpan().mono(
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4348
       // our HTTP server is synchronous, i.e. it returns Mono.just with response
       // which is not supported by TracingSubscriber - it does not instrument scalar calls
       // so we delay here to fake async http request and let Reactor context instrumentation work
