@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.test;
+package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
 import javax.jws.WebService;
 
