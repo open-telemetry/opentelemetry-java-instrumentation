@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
@@ -212,6 +214,7 @@ public class AgentInstaller {
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
+        .ignore(nameStartsWith("io.opentelemetry.javaagent."), Objects::isNull)
         .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()));
   }
 

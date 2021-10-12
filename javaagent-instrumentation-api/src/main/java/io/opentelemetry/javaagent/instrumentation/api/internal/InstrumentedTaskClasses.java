@@ -22,7 +22,8 @@ public final class InstrumentedTaskClasses {
         @Override
         protected Boolean computeValue(Class<?> taskClass) {
           // do not instrument ignored task classes
-          if (ignoredTaskClassesPredicate.test(taskClass.getName())) {
+          String taskClassName = taskClass.getName();
+          if (ignoredTaskClassesPredicate.test(taskClassName)) {
             return false;
           }
           // Don't trace runnables from libraries that are packaged inside the agent.
@@ -32,6 +33,10 @@ public final class InstrumentedTaskClasses {
           ClassLoader taskClassLoader = taskClass.getClassLoader();
           if (taskClassLoader != null
               && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+            return false;
+          }
+          // Don't trace runnables that the agent packages inside the bootstrap loader
+          if (taskClassLoader == null && taskClassName.startsWith("io.opentelemetry.javaagent.")) {
             return false;
           }
           return true;

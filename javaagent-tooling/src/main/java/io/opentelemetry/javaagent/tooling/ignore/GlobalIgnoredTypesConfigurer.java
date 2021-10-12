@@ -55,8 +55,6 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // clojure
     builder.ignoreClass("clojure.").ignoreClass("$fn__");
 
-    builder.ignoreClass("io.opentelemetry.javaagent.");
-
     builder
         .ignoreClass("java.")
         .allowClass("java.net.URL")
