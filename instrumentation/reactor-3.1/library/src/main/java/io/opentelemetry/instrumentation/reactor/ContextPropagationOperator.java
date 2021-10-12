@@ -56,8 +56,8 @@ public final class ContextPropagationOperator {
         }
       };
 
-  static volatile Mono<String> dummyMono = Mono.just("");
-  static volatile Flux<String> dummyFlux = Flux.just("");
+  private static volatile Mono<String> dummyMono = Mono.just("");
+  private static volatile Flux<String> dummyFlux = Flux.just("");
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
