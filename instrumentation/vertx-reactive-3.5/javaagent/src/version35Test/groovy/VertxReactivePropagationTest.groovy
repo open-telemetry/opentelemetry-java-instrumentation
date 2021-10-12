@@ -62,7 +62,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || "localhost" }
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
@@ -150,7 +150,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || "localhost" }
+              "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
               "${SemanticAttributes.NET_PEER_PORT.key}" Long
               "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
               "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
