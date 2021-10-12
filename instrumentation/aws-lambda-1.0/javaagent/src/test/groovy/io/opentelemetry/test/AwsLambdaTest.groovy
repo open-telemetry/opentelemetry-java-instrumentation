@@ -11,10 +11,6 @@ import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestH
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess
 
-/**
- * Note: this has to stay outside of 'io.opentelemetry.javaagent' package to be considered for
- * instrumentation
- */
 class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {
 
   def cleanup() {

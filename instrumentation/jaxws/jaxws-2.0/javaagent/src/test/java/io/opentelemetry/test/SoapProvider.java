@@ -7,10 +7,6 @@ package io.opentelemetry.test;
 
 import javax.xml.ws.Provider;
 
-/**
- * Note: this has to stay outside of 'io.opentelemetry.javaagent' package to be considered for
- * instrumentation
- */
 public class SoapProvider implements Provider<SoapProvider.Message> {
 
   @Override
