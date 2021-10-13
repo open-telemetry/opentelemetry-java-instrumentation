@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
@@ -23,7 +23,7 @@ public final class SessionMethodUtils {
   public static final Set<String> SCOPE_ONLY_METHODS =
       new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
 
-  public static <TARGET, ENTITY> Context startSpanFrom(
+  public static <TARGET> Context startSpanFrom(
       VirtualField<TARGET, Context> virtualField,
       TARGET spanKey,
       String operationName,
@@ -31,7 +31,7 @@ public final class SessionMethodUtils {
     return startSpanFrom(virtualField, spanKey, () -> operationName, entityName);
   }
 
-  private static <TARGET, ENTITY> Context startSpanFrom(
+  private static <TARGET> Context startSpanFrom(
       VirtualField<TARGET, Context> virtualField,
       TARGET spanKey,
       Supplier<String> operationNameSupplier,
@@ -42,7 +42,19 @@ public final class SessionMethodUtils {
       return null; // No state found. We aren't in a Session.
     }
 
-    return tracer().startSpan(sessionContext, operationNameSupplier.get(), entityName);
+    return startSpanFrom(sessionContext, operationNameSupplier.get(), entityName);
+  }
+
+  public static Context startSpanFrom(
+      Context sessionContext, String operationName, String entityName) {
+    return instrumenter().start(sessionContext, spanNameForOperation(operationName, entityName));
+  }
+
+  private static String spanNameForOperation(String operationName, String entityName) {
+    if (entityName != null) {
+      return operationName + " " + entityName;
+    }
+    return operationName;
   }
 
   public static <TARGET> Context startSpanFromQuery(
@@ -65,16 +77,11 @@ public final class SessionMethodUtils {
   }
 
   public static void end(@Nullable Context context, Throwable throwable) {
-
     if (context == null) {
       return;
     }
 
-    if (throwable != null) {
-      tracer().endExceptionally(context, throwable);
-    } else {
-      tracer().end(context);
-    }
+    instrumenter().end(context, null, null, throwable);
   }
 
   // Copies a span from the given Session VirtualField into the targetVirtualField. Used to
