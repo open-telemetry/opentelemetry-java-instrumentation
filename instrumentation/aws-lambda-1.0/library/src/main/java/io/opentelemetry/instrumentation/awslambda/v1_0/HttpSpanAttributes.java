@@ -8,34 +8,31 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_URL;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.common.AttributesBuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 final class HttpSpanAttributes {
-  static void onRequest(SpanBuilder span, APIGatewayProxyRequestEvent request) {
+  static void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String httpMethod = request.getHttpMethod();
     if (httpMethod != null) {
-      span.setAttribute(HTTP_METHOD, httpMethod);
+      attributes.put(HTTP_METHOD, httpMethod);
     }
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
     String userAgent = headers.get("user-agent");
     if (userAgent != null) {
-      span.setAttribute(HTTP_USER_AGENT, userAgent);
+      attributes.put(HTTP_USER_AGENT, userAgent);
     }
     String url = getHttpUrl(request, headers);
     if (!url.isEmpty()) {
-      span.setAttribute(HTTP_URL, url);
+      attributes.put(HTTP_URL, url);
     }
   }
 
@@ -69,13 +66,6 @@ final class HttpSpanAttributes {
       // Ignore
     }
     return str.toString();
-  }
-
-  static void onResponse(Span span, APIGatewayProxyResponseEvent response) {
-    Integer statusCode = response.getStatusCode();
-    if (statusCode != null) {
-      span.setAttribute(HTTP_STATUS_CODE, statusCode);
-    }
   }
 
   private HttpSpanAttributes() {}

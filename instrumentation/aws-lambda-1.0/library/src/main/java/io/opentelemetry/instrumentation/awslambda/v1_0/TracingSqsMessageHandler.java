@@ -54,7 +54,8 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
   /**
    * Creates a new {@link TracingSqsMessageHandler} which flushes the provided {@link
    * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
-   * invocation, and traces using the provided {@link AwsLambdaTracer}.
+   * invocation, and traces using the provided {@code Instrumenter<SQSEvent, Void>} and {@code
+   * Instrumenter<SQSMessage, Void>}.
    */
   protected TracingSqsMessageHandler(
       OpenTelemetrySdk openTelemetrySdk,

@@ -8,16 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenterFactory;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaIntrumenterFactory;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer;
 
 public final class AwsLambdaInstrumentationHelper {
 
-  private static final AwsLambdaTracer FUNCTION_TRACER =
-      new AwsLambdaTracer(GlobalOpenTelemetry.get());
+  private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
+      AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
 
-  public static AwsLambdaTracer functionTracer() {
-    return FUNCTION_TRACER;
+  public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
+    return FUNCTION_INSTRUMENTER;
   }
 
   private static final Instrumenter<SQSEvent, Void> MESSAGE_TRACER =

@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -21,7 +20,7 @@ public final class ParentContextExtractor {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 
-  static Context extract(Map<String, String> headers, BaseTracer tracer) {
+  static Context extract(Map<String, String> headers, AwsLambdaFunctionInstrumenter instrumenter) {
     Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
@@ -29,7 +28,7 @@ public final class ParentContextExtractor {
     }
     if (!isValidAndSampled(parentContext)) {
       // try http
-      parentContext = fromHttpHeaders(headers, tracer);
+      parentContext = fromHttpHeaders(headers, instrumenter);
     }
     return parentContext;
   }
@@ -43,8 +42,9 @@ public final class ParentContextExtractor {
     return (parentSpanContext.isValid() && parentSpanContext.isSampled());
   }
 
-  private static Context fromHttpHeaders(Map<String, String> headers, BaseTracer tracer) {
-    return tracer.extract(lowercaseMap(headers), MapGetter.INSTANCE);
+  private static Context fromHttpHeaders(
+      Map<String, String> headers, AwsLambdaFunctionInstrumenter instrumenter) {
+    return instrumenter.extract(lowercaseMap(headers), MapGetter.INSTANCE);
   }
 
   // lower-case map getter used for extraction
