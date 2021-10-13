@@ -1,5 +1,5 @@
 ---
-title: {{ env.GITHUB_WORKFLOW }} #{{ env.GITHUB_RUN_NUMBER }} failed
+title: "{{ env.GITHUB_WORKFLOW }} #{{ env.GITHUB_RUN_NUMBER }} failed"
 assignees: open-telemetry/java-instrumentation-maintainers
 labels: bug, area:build, priority:p1
 ---
