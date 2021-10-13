@@ -35,7 +35,11 @@ public class BlockWrapper implements Block {
     if (delegate instanceof BlockWrapper) {
       return delegate;
     }
+    Context context = Context.current();
+    if (context == Context.root()) {
+      return delegate;
+    }
     logger.debug("Wrapping block {}", delegate);
-    return new BlockWrapper(delegate, Context.current());
+    return new BlockWrapper(delegate, context);
   }
 }

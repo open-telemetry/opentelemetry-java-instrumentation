@@ -35,7 +35,11 @@ public class ActionWrapper<T> implements Action<T> {
     if (delegate instanceof ActionWrapper) {
       return delegate;
     }
+    Context context = Context.current();
+    if (context == Context.root()) {
+      return delegate;
+    }
     logger.debug("Wrapping action task {}", delegate);
-    return new ActionWrapper(delegate, Context.current());
+    return new ActionWrapper(delegate, context);
   }
 }
