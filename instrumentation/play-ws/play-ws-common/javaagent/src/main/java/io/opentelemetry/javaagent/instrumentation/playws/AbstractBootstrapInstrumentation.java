@@ -33,6 +33,8 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
   public static class DisablePropagationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter() {
+      // Prevent context from leaking by running this method under root context.
+      // Root context is not propagated by executor instrumentation.
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
         return Java8BytecodeBridge.rootContext().makeCurrent();
       }
