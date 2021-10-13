@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -56,8 +57,7 @@ public final class ContextPropagationOperator {
         }
       };
 
-  private static volatile Mono<String> dummyMono = Mono.just("");
-  private static volatile Flux<String> dummyFlux = Flux.just("");
+  private static volatile boolean enabled = false;
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
@@ -101,14 +101,14 @@ public final class ContextPropagationOperator {
   public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-    resetDummy();
+    enabled = true;
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-    resetDummy();
+    enabled = false;
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
@@ -118,28 +118,30 @@ public final class ContextPropagationOperator {
 
   /** Forces Mono to run in traceContext scope. */
   static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
+    if (!enabled) {
+      return publisher;
+    }
+
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return dummyMono
+    return ScalarPropagatingMono.INSTANCE
         .flatMap(i -> publisher)
         .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
   }
 
   /** Forces Flux to run in traceContext scope. */
   static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
+    if (!enabled) {
+      return publisher;
+    }
+
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return dummyFlux
+    return ScalarPropagatingFlux.INSTANCE
         .flatMap(i -> publisher)
         .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
-  }
-
-  private static synchronized void resetDummy() {
-    // have to be reset as they capture async strategy and lift
-    dummyMono = Mono.just("");
-    dummyFlux = Flux.just("");
   }
 
   public static class Lifter<T>
@@ -160,6 +162,44 @@ public final class ContextPropagationOperator {
         return sub;
       }
       return new TracingSubscriber<>(sub, sub.currentContext());
+    }
+  }
+
+  static void subscribeInActiveSpan(CoreSubscriber<? super Object> actual, Object value) {
+    Context tracingContextInReactor =
+        ContextPropagationOperator.getOpenTelemetryContext(actual.currentContext(), null);
+    if (tracingContextInReactor == null || tracingContextInReactor == Context.current()) {
+      actual.onSubscribe(Operators.scalarSubscription(actual, value));
+    } else {
+      try (Scope ignored = tracingContextInReactor.makeCurrent()) {
+        actual.onSubscribe(Operators.scalarSubscription(actual, value));
+      }
+    }
+  }
+
+  static class ScalarPropagatingMono extends Mono<Object> {
+    public static final Mono<Object> INSTANCE = new ScalarPropagatingMono();
+
+    private final Object value = new Object();
+
+    private ScalarPropagatingMono() {}
+
+    @Override
+    public void subscribe(CoreSubscriber<? super Object> actual) {
+      subscribeInActiveSpan(actual, value);
+    }
+  }
+
+  static class ScalarPropagatingFlux extends Flux<Object> {
+    public static final Flux<Object> INSTANCE = new ScalarPropagatingFlux();
+
+    private final Object value = new Object();
+
+    private ScalarPropagatingFlux() {}
+
+    @Override
+    public void subscribe(CoreSubscriber<? super Object> actual) {
+      subscribeInActiveSpan(actual, value);
     }
   }
 }

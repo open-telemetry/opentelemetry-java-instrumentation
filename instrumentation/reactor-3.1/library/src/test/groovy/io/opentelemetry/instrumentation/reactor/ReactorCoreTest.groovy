@@ -155,8 +155,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
           .doOnEach({ signal ->
             assert Span.current().getSpanContext().isValid() : "current span is set"
             if (signal.isOnComplete()) {
-              Span.current().end()n
-
+              Span.current().end()
             }
           })}).block()
 
@@ -203,9 +202,9 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
 
   def getDummy(def publisher) {
     if (publisher instanceof Mono) {
-      return Mono.just("")
+      return ContextPropagationOperator.ScalarPropagatingMono.INSTANCE;
     } else if (publisher instanceof Flux) {
-      return  Flux.just("")
+      return ContextPropagationOperator.ScalarPropagatingFlux.INSTANCE;
     }
 
     throw new IllegalStateException("Unknown publisher")
