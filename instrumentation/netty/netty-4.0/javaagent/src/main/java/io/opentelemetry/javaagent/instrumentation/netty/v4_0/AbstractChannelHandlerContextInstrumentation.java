@@ -15,8 +15,8 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.netty.common.server.NettyServerErrorHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -59,7 +59,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
           channelContext.channel().attr(AttributeKeys.SERVER_CONTEXT);
       Context serverContext = serverContextAttr.get();
       if (serverContext != null) {
-        NettyHttpServerTracer.tracer().onException(serverContext, throwable);
+        NettyServerErrorHandler.onError(serverContext, throwable);
       }
     }
   }

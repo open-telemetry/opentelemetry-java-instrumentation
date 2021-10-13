@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.error.ServerErrorHandler
 import ratpack.handling.Context
 import ratpack.server.RatpackServer
@@ -154,12 +153,5 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
   }
 }

@@ -5,10 +5,9 @@
 
 package server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -83,13 +82,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   @Override
   boolean testConcurrency() {
     return true
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
   }
 
   protected Class<AbstractVerticle> verticle() {

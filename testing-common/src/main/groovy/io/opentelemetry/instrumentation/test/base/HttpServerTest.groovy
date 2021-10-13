@@ -605,8 +605,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
       attributes {
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
+        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+        "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == address.host }
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == peerIp(endpoint) } // Optional
+
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
@@ -617,7 +623,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // netty instrumentation uses this
           "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         } else {
-          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
+          "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
           "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
           "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
         }
@@ -625,12 +632,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
         } else {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
         } else {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
@@ -639,13 +648,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-          "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-        }
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
         }
         if (endpoint == ServerEndpoint.CAPTURE_HEADERS) {
           "http.request.header.x_test_request" { it == ["test"] }
@@ -663,8 +665,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       childOf((SpanData) parent)
       attributes {
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+        }
+        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+        "${SemanticAttributes.NET_PEER_NAME.key}" { (it == null || it == address.host) }
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == peerIp(endpoint) } // Optional
+
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
         "${SemanticAttributes.HTTP_METHOD.key}" "GET"
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
@@ -676,19 +684,22 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
         } else {
           "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
+          "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
           "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
         }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
         } else {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
         } else {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
@@ -697,12 +708,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
-        }
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
         }
       }
     }

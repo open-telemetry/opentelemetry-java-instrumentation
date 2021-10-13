@@ -7,12 +7,10 @@ import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
 import com.twitter.util.Closable
 import com.twitter.util.Duration
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeUnit
 
@@ -79,13 +77,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
       attributes {
       }
     }
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
   }
 
   boolean testCapturedHttpHeaders() {
