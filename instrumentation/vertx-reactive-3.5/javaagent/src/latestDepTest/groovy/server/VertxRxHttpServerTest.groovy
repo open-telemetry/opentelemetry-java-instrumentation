@@ -84,6 +84,12 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
     return true
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
+  }
+
   protected Class<AbstractVerticle> verticle() {
     return VertxReactiveWebServer
   }

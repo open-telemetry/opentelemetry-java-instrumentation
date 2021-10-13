@@ -135,6 +135,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean verifyServerSpanEndTime() {
+    return true
+  }
+
   List<AttributeKey<?>> extraAttributes() {
     []
   }
@@ -506,6 +510,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       (0..size - 1).each {
         trace(it, spanCount) {
           def spanIndex = 0
+          if (verifyServerSpanEndTime() && spanCount > 1) {
+            (1..spanCount - 1).each { index ->
+              assert it.span(0).endEpochNanos - it.span(index).endEpochNanos >= 0
+            }
+          }
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint)
           if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)

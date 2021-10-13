@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -32,7 +33,9 @@ public class TomcatHelper<REQUEST, RESPONSE> {
   }
 
   public Context start(Context parentContext, Request request) {
-    return instrumenter.start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
+    request.setAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE, context);
+    return context;
   }
 
   public void end(

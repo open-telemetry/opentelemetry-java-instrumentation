@@ -35,6 +35,12 @@ class DropwizardAsyncTest extends DropwizardTest {
     AsyncServiceResource
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the JAX-RS controller spans
+    return false
+  }
+
   static class AsyncTestApp extends Application<Configuration> {
     @Override
     void initialize(Bootstrap<Configuration> bootstrap) {

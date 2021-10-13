@@ -70,6 +70,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
     false
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
+  }
+
   void setUpTransport(FilterChain filterChain) {
     TCPNIOTransportBuilder transportBuilder = TCPNIOTransportBuilder.newInstance()
       .setOptimizedForMultiplexing(true)
