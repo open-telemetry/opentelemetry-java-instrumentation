@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+  api("io.opentelemetry:opentelemetry-sdk-extension-logging")
+
   library("org.apache.logging.log4j:log4j-core:2.13.2")
 
   // Library instrumentation cannot be applied to 2.13.2 due to a bug in Log4J. The agent works

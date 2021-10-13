@@ -5,6 +5,8 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
+  api("io.opentelemetry:opentelemetry-sdk-extension-logging")
+
   api("org.apache.logging.log4j:log4j-core:2.7")
 
   implementation("com.google.guava:guava")
