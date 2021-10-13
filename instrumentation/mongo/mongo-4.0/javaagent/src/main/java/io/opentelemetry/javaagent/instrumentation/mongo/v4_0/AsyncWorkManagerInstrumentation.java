@@ -36,6 +36,8 @@ public class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter() {
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
+        // Prevent context from leaking by running this method under root context.
+        // Root context is not propagated by executor instrumentation.
         return Java8BytecodeBridge.rootContext().makeCurrent();
       }
       return null;
