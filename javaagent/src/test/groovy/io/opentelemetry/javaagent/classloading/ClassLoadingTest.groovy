@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.classloading
 
+import io.opentelemetry.javaagent.ClassToInstrument
+import io.opentelemetry.javaagent.ClassToInstrumentChild
 import io.opentelemetry.javaagent.util.GcUtils
-import io.opentelemetry.test.ClassToInstrument
-import io.opentelemetry.test.ClassToInstrumentChild
 import spock.lang.Specification
 
 import java.lang.ref.WeakReference

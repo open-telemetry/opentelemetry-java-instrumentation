@@ -59,17 +59,19 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         return null;
       }
 
-      VirtualField<Channel, ChannelTraceContext> virtualField =
-          VirtualField.find(Channel.class, ChannelTraceContext.class);
+      VirtualField<Channel, NettyConnectionContext> virtualField =
+          VirtualField.find(Channel.class, NettyConnectionContext.class);
 
-      ChannelTraceContext channelTraceContext =
-          virtualField.computeIfNull(future.getChannel(), ChannelTraceContext.FACTORY);
-      Context parentContext = channelTraceContext.getConnectionContext();
+      NettyConnectionContext connectionContext = virtualField.get(future.getChannel());
+      if (connectionContext == null) {
+        return null;
+      }
+      Context parentContext = connectionContext.get();
       if (parentContext == null) {
         return null;
       }
       Scope parentScope = parentContext.makeCurrent();
-      if (channelTraceContext.createConnectionSpan()) {
+      if (connectionContext.createConnectionSpan()) {
         tracer().connectionFailure(parentContext, future.getChannel(), cause);
       }
       return parentScope;

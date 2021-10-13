@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -15,17 +16,13 @@ public class TomcatNetAttributesExtractor extends NetServerAttributesExtractor<R
 
   @Override
   public @Nullable String transport(Request request) {
-    // return SemanticAttributes.NetTransportValues.IP_TCP;
-    return null;
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   public @Nullable String peerName(Request request) {
-    /*
     request.action(ActionCode.REQ_HOST_ATTRIBUTE, request);
     return request.remoteHost().toString();
-     */
-    return null;
   }
 
   @Override

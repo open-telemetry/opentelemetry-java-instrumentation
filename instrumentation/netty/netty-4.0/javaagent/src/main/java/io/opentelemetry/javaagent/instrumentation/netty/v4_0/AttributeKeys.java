@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.netty.common.server.HttpRequestAndChannel;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -26,6 +27,9 @@ public class AttributeKeys {
   // this is the context that has the server span
   public static final AttributeKey<Context> SERVER_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".server-context");
+
+  public static final AttributeKey<HttpRequestAndChannel> SERVER_REQUEST =
+      attributeKey(AttributeKeys.class.getName() + ".http-server-request");
 
   public static final AttributeKey<Context> CLIENT_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".client-context");

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.test
+package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
@@ -11,10 +11,6 @@ import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestH
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess
 
-/**
- * Note: this has to stay outside of 'io.opentelemetry.javaagent' package to be considered for
- * instrumentation
- */
 class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {
 
   def cleanup() {

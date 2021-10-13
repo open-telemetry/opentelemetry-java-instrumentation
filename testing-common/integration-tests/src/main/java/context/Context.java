@@ -5,10 +5,6 @@
 
 package context;
 
-import java.util.function.Supplier;
-
 public class Context {
-  public static final Supplier<Context> FACTORY = Context::new;
-
   public int count = 0;
 }

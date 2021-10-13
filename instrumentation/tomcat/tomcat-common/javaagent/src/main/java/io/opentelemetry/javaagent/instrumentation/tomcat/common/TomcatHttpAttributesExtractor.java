@@ -44,11 +44,8 @@ public class TomcatHttpAttributesExtractor
 
   @Override
   protected @Nullable Long requestContentLength(Request request, @Nullable Response response) {
-    /*
     long contentLength = request.getContentLengthLong();
     return contentLength != -1 ? contentLength : null;
-     */
-    return null;
   }
 
   @Override
@@ -76,11 +73,8 @@ public class TomcatHttpAttributesExtractor
 
   @Override
   protected @Nullable Long responseContentLength(Request request, Response response) {
-    /*
     long contentLength = response.getContentLengthLong();
     return contentLength != -1 ? contentLength : null;
-     */
-    return null;
   }
 
   @Override
@@ -100,7 +94,6 @@ public class TomcatHttpAttributesExtractor
 
   @Override
   protected @Nullable String serverName(Request request, @Nullable Response response) {
-    // return request.serverName().toString();
-    return null;
+    return request.serverName().toString();
   }
 }

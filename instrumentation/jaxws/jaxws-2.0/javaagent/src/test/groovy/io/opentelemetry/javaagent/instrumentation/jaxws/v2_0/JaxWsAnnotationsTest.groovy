@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.test.SoapProvider
 
 class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
 
@@ -21,7 +20,7 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SoapProvider.invoke"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.test.SoapProvider"
+            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider"
             "${SemanticAttributes.CODE_FUNCTION.key}" "invoke"
           }
         }

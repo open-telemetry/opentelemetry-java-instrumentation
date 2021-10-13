@@ -18,6 +18,9 @@ muzzle {
 }
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   compileOnly("io.netty:netty:3.8.0.Final")
 
   testLibrary("io.netty:netty:3.8.0.Final")

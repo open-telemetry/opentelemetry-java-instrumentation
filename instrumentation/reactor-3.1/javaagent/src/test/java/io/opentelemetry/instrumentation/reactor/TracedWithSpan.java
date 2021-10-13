@@ -16,6 +16,11 @@ public class TracedWithSpan {
   }
 
   @WithSpan
+  public Mono<String> outer(Mono<String> inner) {
+    return mono(inner);
+  }
+
+  @WithSpan
   public Flux<String> flux(Flux<String> flux) {
     return flux;
   }
