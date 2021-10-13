@@ -52,10 +52,10 @@ public class HttpJspPageInstrumentationSingletons {
   private HttpJspPageInstrumentationSingletons() {}
 
   private static class RenderAttributesExtractor
-      extends AttributesExtractor<HttpServletRequest, Void> {
+      implements AttributesExtractor<HttpServletRequest, Void> {
 
     @Override
-    protected void onStart(AttributesBuilder attributes, HttpServletRequest request) {
+    public void onStart(AttributesBuilder attributes, HttpServletRequest request) {
       if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         return;
       }
@@ -79,7 +79,7 @@ public class HttpJspPageInstrumentationSingletons {
     }
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         HttpServletRequest httpServletRequest,
         @Nullable Void unused,

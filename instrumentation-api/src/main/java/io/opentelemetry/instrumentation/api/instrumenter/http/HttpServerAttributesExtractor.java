@@ -43,7 +43,7 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);
 
     set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request));
@@ -55,7 +55,7 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

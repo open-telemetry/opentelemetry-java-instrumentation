@@ -12,9 +12,9 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaProducerAdditionalAttributesExtractor
-    extends AttributesExtractor<ProducerRecord<?, ?>, Void> {
+    implements AttributesExtractor<ProducerRecord<?, ?>, Void> {
   @Override
-  protected void onStart(AttributesBuilder attributes, ProducerRecord<?, ?> producerRecord) {
+  public void onStart(AttributesBuilder attributes, ProducerRecord<?, ?> producerRecord) {
     Integer partition = producerRecord.partition();
     if (partition != null) {
       set(attributes, SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition.longValue());
@@ -25,7 +25,7 @@ public final class KafkaProducerAdditionalAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       ProducerRecord<?, ?> producerRecord,
       @Nullable Void unused,

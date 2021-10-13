@@ -12,9 +12,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerAdditionalAttributesExtractor
-    extends AttributesExtractor<ConsumerRecord<?, ?>, Void> {
+    implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {
   @Override
-  protected void onStart(AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord) {
+  public void onStart(AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord) {
     set(
         attributes,
         SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -25,7 +25,7 @@ public final class KafkaConsumerAdditionalAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       ConsumerRecord<?, ?> consumerRecord,
       @Nullable Void unused,

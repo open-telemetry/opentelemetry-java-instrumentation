@@ -13,13 +13,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class StatusCodeExtractor
-    extends AttributesExtractor<HttpServletRequest, HttpServletResponse> {
+    implements AttributesExtractor<HttpServletRequest, HttpServletResponse> {
 
   @Override
-  protected void onStart(AttributesBuilder attributes, HttpServletRequest httpServletRequest) {}
+  public void onStart(AttributesBuilder attributes, HttpServletRequest httpServletRequest) {}
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       HttpServletRequest httpServletRequest,
       @Nullable HttpServletResponse response,
