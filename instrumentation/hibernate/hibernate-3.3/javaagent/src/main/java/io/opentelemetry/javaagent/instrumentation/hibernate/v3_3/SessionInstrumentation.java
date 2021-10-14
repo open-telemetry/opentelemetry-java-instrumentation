@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getEntityName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -115,11 +115,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
       if (sessionContext == null) {
         return;
       }
-      if (throwable != null) {
-        tracer().endExceptionally(sessionContext, throwable);
-      } else {
-        tracer().end(sessionContext);
-      }
+      instrumenter().end(sessionContext, null, null, throwable);
     }
   }
 
@@ -160,7 +156,8 @@ public class SessionInstrumentation implements TypeInstrumentation {
       if (!SCOPE_ONLY_METHODS.contains(name)) {
         String entityName =
             getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
-        spanContext = tracer().startSpan(sessionContext, "Session." + name, entityName);
+        spanContext =
+            SessionMethodUtils.startSpanFrom(sessionContext, "Session." + name, entityName);
         scope = spanContext.makeCurrent();
       } else {
         scope = sessionContext.makeCurrent();
