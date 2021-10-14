@@ -202,9 +202,9 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
 
   def getDummy(def publisher) {
     if (publisher instanceof Mono) {
-      return ContextPropagationOperator.ScalarPropagatingMono.INSTANCE;
+      return ContextPropagationOperator.ScalarPropagatingMono.INSTANCE
     } else if (publisher instanceof Flux) {
-      return ContextPropagationOperator.ScalarPropagatingFlux.INSTANCE;
+      return ContextPropagationOperator.ScalarPropagatingFlux.INSTANCE
     }
 
     throw new IllegalStateException("Unknown publisher")
