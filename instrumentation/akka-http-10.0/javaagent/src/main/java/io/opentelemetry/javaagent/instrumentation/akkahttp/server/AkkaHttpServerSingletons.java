@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
@@ -26,6 +27,7 @@ public class AkkaHttpServerSingletons {
                 unused -> "akka.request")
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
+            .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(new AkkaHttpServerHeaders());
   }
 

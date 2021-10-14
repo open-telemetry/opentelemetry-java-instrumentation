@@ -66,13 +66,4 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
     return null
   }
 
-  def "singleRequest exception trace"() {
-    when:
-    // Passing null causes NPE in singleRequest
-    Http.get(system).singleRequest(null, materializer)
-
-    then:
-    thrown NullPointerException
-    assertTraces(0) {}
-  }
 }
