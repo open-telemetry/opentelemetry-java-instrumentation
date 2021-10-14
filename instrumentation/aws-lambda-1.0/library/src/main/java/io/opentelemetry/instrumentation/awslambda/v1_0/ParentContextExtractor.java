@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-public final class ParentContextExtractor {
+final class ParentContextExtractor {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 

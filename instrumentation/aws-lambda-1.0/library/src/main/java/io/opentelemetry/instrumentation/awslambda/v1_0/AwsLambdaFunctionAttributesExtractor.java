@@ -8,21 +8,17 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.FAAS_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_EXECUTION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class AwsLambdaFunctionAttributesExtractor extends AttributesExtractor<AwsLambdaRequest, Object> {
+class AwsLambdaFunctionAttributesExtractor
+    implements AttributesExtractor<AwsLambdaRequest, Object> {
 
   @Nullable private static final MethodHandle GET_FUNCTION_ARN;
 
@@ -43,37 +39,19 @@ class AwsLambdaFunctionAttributesExtractor extends AttributesExtractor<AwsLambda
   private volatile String accountId;
 
   @Override
-  protected void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
-    setAttributes(attributes, request.getAwsContext(), request.getInput());
-  }
-
-  @Override
-  protected void onEnd(
-      AttributesBuilder attributes,
-      AwsLambdaRequest request,
-      @Nullable Object response,
-      @Nullable Throwable error) {
-    if (response instanceof APIGatewayProxyResponseEvent) {
-      Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
-      if (statusCode != null) {
-        attributes.put(HTTP_STATUS_CODE, statusCode);
-      }
-    }
-  }
-
-  private void setAttributes(AttributesBuilder attributes, Context context, Object input) {
-    setCommonAttributes(attributes, context);
-    if (input instanceof APIGatewayProxyRequestEvent) {
-      attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
-      HttpSpanAttributes.onRequest(attributes, (APIGatewayProxyRequestEvent) input);
-    }
-  }
-
-  private void setCommonAttributes(AttributesBuilder attributes, Context context) {
+  public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
+    Context context = request.getAwsContext();
     set(attributes, FAAS_EXECUTION, context.getAwsRequestId());
     set(attributes, FAAS_ID, getFunctionArn(context));
     set(attributes, CLOUD_ACCOUNT_ID, getAccountId(getFunctionArn(context)));
   }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      AwsLambdaRequest request,
+      @Nullable Object response,
+      @Nullable Throwable error) {}
 
   @Nullable
   private static String getFunctionArn(Context context) {

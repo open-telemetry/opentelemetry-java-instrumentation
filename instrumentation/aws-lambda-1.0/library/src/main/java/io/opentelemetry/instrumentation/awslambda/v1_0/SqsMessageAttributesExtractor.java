@@ -11,9 +11,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class SqsMessageAttributesExtractor extends AttributesExtractor<SQSMessage, Void> {
+class SqsMessageAttributesExtractor implements AttributesExtractor<SQSMessage, Void> {
   @Override
-  protected void onStart(AttributesBuilder attributes, SQSMessage message) {
+  public void onStart(AttributesBuilder attributes, SQSMessage message) {
     attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
     attributes.put(SemanticAttributes.MESSAGING_OPERATION, "process");
     attributes.put(SemanticAttributes.MESSAGING_MESSAGE_ID, message.getMessageId());
@@ -21,7 +21,7 @@ class SqsMessageAttributesExtractor extends AttributesExtractor<SQSMessage, Void
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       SQSMessage message,
       @Nullable Void unused,

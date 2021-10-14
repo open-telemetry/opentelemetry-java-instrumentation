@@ -75,22 +75,23 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   public final O handleRequest(I input, Context context) {
     AwsLambdaRequest request = AwsLambdaRequest.create(context, input, getHeaders(input));
     io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
-    if (instrumenter.shouldStart(parentContext, request)) {
-      io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
-      Throwable error = null;
-      O output = null;
-      try (Scope ignored = otelContext.makeCurrent()) {
-        output = doHandleRequest(input, context);
-        return output;
-      } catch (Throwable t) {
-        error = t;
-        throw t;
-      } finally {
-        instrumenter.end(otelContext, request, output, error);
-        LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
-      }
-    } else {
+
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return doHandleRequest(input, context);
+    }
+
+    io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
+    Throwable error = null;
+    O output = null;
+    try (Scope ignored = otelContext.makeCurrent()) {
+      output = doHandleRequest(input, context);
+      return output;
+    } catch (Throwable t) {
+      error = t;
+      throw t;
+    } finally {
+      instrumenter.end(otelContext, request, output, error);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 

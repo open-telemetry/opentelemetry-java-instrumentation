@@ -7,33 +7,39 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_URL;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class HttpSpanAttributes {
-  static void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
-    String httpMethod = request.getHttpMethod();
-    if (httpMethod != null) {
-      attributes.put(HTTP_METHOD, httpMethod);
+final class APIGatewayProxyAttributesExtractor
+    implements AttributesExtractor<AwsLambdaRequest, Object> {
+  @Override
+  public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
+    if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
+      set(attributes, FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
+      onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
+  }
+
+  void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
+    set(attributes, HTTP_METHOD, request.getHttpMethod());
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
-    String userAgent = headers.get("user-agent");
-    if (userAgent != null) {
-      attributes.put(HTTP_USER_AGENT, userAgent);
-    }
-    String url = getHttpUrl(request, headers);
-    if (!url.isEmpty()) {
-      attributes.put(HTTP_URL, url);
-    }
+    set(attributes, HTTP_USER_AGENT, headers.get("user-agent"));
+    set(attributes, HTTP_URL, getHttpUrl(request, headers));
   }
 
   private static String getHttpUrl(
@@ -65,8 +71,22 @@ final class HttpSpanAttributes {
     } catch (UnsupportedEncodingException ignored) {
       // Ignore
     }
-    return str.toString();
+    return str.length() == 0 ? null : str.toString();
   }
 
-  private HttpSpanAttributes() {}
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      AwsLambdaRequest request,
+      @Nullable Object response,
+      @Nullable Throwable error) {
+    if (response instanceof APIGatewayProxyResponseEvent) {
+      Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
+      if (statusCode != null) {
+        attributes.put(HTTP_STATUS_CODE, statusCode);
+      }
+    }
+  }
+
+  APIGatewayProxyAttributesExtractor() {}
 }

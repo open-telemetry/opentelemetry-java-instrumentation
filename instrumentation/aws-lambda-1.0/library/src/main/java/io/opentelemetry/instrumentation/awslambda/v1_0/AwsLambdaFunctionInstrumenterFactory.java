@@ -19,7 +19,9 @@ public class AwsLambdaFunctionInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
-            .addAttributesExtractors(new AwsLambdaFunctionAttributesExtractor())
+            .addAttributesExtractors(
+                new AwsLambdaFunctionAttributesExtractor(),
+                new APIGatewayProxyAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 

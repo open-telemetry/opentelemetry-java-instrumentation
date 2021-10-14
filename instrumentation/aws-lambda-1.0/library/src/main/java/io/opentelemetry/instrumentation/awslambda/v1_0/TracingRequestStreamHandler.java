@@ -70,20 +70,21 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
         AwsLambdaRequest.create(context, proxyRequest, proxyRequest.getHeaders());
     io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
 
-    if (instrumenter.shouldStart(parentContext, request)) {
-      io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
-      try (Scope ignored = otelContext.makeCurrent()) {
-        doHandleRequest(
-            proxyRequest.freshStream(),
-            new OutputStreamWrapper(output, otelContext, request, openTelemetrySdk),
-            context);
-      } catch (Throwable t) {
-        instrumenter.end(otelContext, request, null, t);
-        LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
-        throw t;
-      }
-    } else {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       doHandleRequest(proxyRequest.freshStream(), output, context);
+      return;
+    }
+
+    io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
+    try (Scope ignored = otelContext.makeCurrent()) {
+      doHandleRequest(
+          proxyRequest.freshStream(),
+          new OutputStreamWrapper(output, otelContext, request, openTelemetrySdk),
+          context);
+    } catch (Throwable t) {
+      instrumenter.end(otelContext, request, null, t);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      throw t;
     }
   }
 
