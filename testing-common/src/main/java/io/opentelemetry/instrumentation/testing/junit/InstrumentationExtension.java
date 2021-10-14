@@ -11,6 +11,7 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 public abstract class InstrumentationExtension
     implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback {
-  private static final long DEFAULT_TRACE_WAIT_TIMEOUT_SECONDS = 20;
 
   private final InstrumentationTestRunner testRunner;
 
@@ -48,9 +48,7 @@ public abstract class InstrumentationExtension
   @Override
   public void afterEach(ExtensionContext context) throws Exception {
     ContextStorage storage = ContextStorage.get();
-    if (storage instanceof AutoCloseable) {
-      ((AutoCloseable) storage).close();
-    }
+    ContextStorageCloser.close(storage);
   }
 
   @Override
