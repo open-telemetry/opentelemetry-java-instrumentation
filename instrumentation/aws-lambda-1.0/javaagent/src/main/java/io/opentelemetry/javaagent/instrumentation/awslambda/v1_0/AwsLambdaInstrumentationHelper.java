@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenter;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenterFactory;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaIntrumenterFactory;
+import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaSqsInstrumenterFactory;
 
 public final class AwsLambdaInstrumentationHelper {
 
@@ -22,7 +22,7 @@ public final class AwsLambdaInstrumentationHelper {
   }
 
   private static final Instrumenter<SQSEvent, Void> MESSAGE_TRACER =
-      AwsLambdaIntrumenterFactory.forEvent(GlobalOpenTelemetry.get());
+      AwsLambdaSqsInstrumenterFactory.forEvent(GlobalOpenTelemetry.get());
 
   public static Instrumenter<SQSEvent, Void> messageInstrumenter() {
     return MESSAGE_TRACER;

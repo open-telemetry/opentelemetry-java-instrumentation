@@ -11,11 +11,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public class AwsLambdaIntrumenterFactory {
+public class AwsLambdaSqsInstrumenterFactory {
 
   public static Instrumenter<SQSEvent, Void> forEvent(OpenTelemetry openTelemetry) {
     return Instrumenter.<SQSEvent, Void>newBuilder(
-            openTelemetry, "io.opentelemetry.aws-lambda-1.0", AwsLambdaIntrumenterFactory::spanName)
+            openTelemetry, "io.opentelemetry.aws-lambda-1.0", AwsLambdaSqsInstrumenterFactory::spanName)
         .addAttributesExtractors(new SqsEventAttributesExtractor())
         .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
