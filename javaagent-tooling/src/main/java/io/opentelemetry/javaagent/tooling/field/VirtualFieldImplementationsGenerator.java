@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -125,9 +124,6 @@ final class VirtualFieldImplementationsGenerator {
               return null;
             } else if ("realPut".equals(name)) {
               generateRealPutMethod(name);
-              return null;
-            } else if ("realSynchronizeInstance".equals(name)) {
-              generateRealSynchronizeInstanceMethod(name);
               return null;
             } else {
               return super.visitMethod(access, name, descriptor, signature, exceptions);
@@ -247,53 +243,6 @@ final class VirtualFieldImplementationsGenerator {
             mv.visitEnd();
           }
 
-          /**
-           * Provides implementation for {@code realSynchronizeInstance} method that looks like
-           * below.
-           *
-           * <blockquote>
-           *
-           * <pre>
-           * private Object realSynchronizeInstance(final Object key) {
-           *   if (key instanceof $accessorInterfaceInternalName) {
-           *     return key;
-           *   } else {
-           *     return mapSynchronizeInstance(key);
-           *   }
-           * }
-           * </pre>
-           *
-           * </blockquote>
-           *
-           * @param name name of the method being visited
-           */
-          private void generateRealSynchronizeInstanceMethod(String name) {
-            MethodVisitor mv = getMethodVisitor(name);
-            mv.visitCode();
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            mv.visitTypeInsn(Opcodes.INSTANCEOF, accessorInterfaceInternalName);
-            Label elseLabel = new Label();
-            mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            mv.visitInsn(Opcodes.ARETURN);
-            mv.visitLabel(elseLabel);
-            if (frames) {
-              mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-            }
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            mv.visitMethodInsn(
-                Opcodes.INVOKESPECIAL,
-                instrumentedTypeInternalName,
-                "mapSynchronizeInstance",
-                Utils.getMethodDefinition(instrumentedType, "mapSynchronizeInstance")
-                    .getDescriptor(),
-                /* isInterface= */ false);
-            mv.visitInsn(Opcodes.ARETURN);
-            mv.visitMaxs(0, 0);
-            mv.visitEnd();
-          }
-
           private MethodVisitor getMethodVisitor(String methodName) {
             return cv.visitMethod(
                 Opcodes.ACC_PRIVATE,
@@ -329,23 +278,6 @@ final class VirtualFieldImplementationsGenerator {
     }
 
     @Override
-    public Object computeIfNull(Object object, Supplier<Object> fieldValueSupplier) {
-      Object existingContext = realGet(object);
-      if (null != existingContext) {
-        return existingContext;
-      }
-      synchronized (realSynchronizeInstance(object)) {
-        existingContext = realGet(object);
-        if (null != existingContext) {
-          return existingContext;
-        }
-        Object context = fieldValueSupplier.get();
-        realPut(object, context);
-        return context;
-      }
-    }
-
-    @Override
     public void set(Object object, Object fieldValue) {
       realPut(object, fieldValue);
     }
@@ -359,11 +291,6 @@ final class VirtualFieldImplementationsGenerator {
       // to be generated
     }
 
-    private Object realSynchronizeInstance(Object key) {
-      // to be generated
-      return null;
-    }
-
     private Object mapGet(Object key) {
       return map.get(key);
     }
@@ -374,10 +301,6 @@ final class VirtualFieldImplementationsGenerator {
       } else {
         map.put(key, value);
       }
-    }
-
-    private Object mapSynchronizeInstance(Object key) {
-      return map;
     }
 
     public static VirtualField getVirtualField(Class keyClass, Class contextClass) {

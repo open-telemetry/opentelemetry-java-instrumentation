@@ -38,6 +38,12 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     false
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the JAX-RS controller spans
+    return false
+  }
+
   @Path("/")
   static class AsyncServiceResource {
     private ExecutorService executor = Executors.newSingleThreadExecutor()

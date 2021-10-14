@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.field;
 
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
-import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -47,12 +46,4 @@ public abstract class VirtualField<T, F> {
 
   /** Sets the new value of this virtual field. */
   public abstract void set(T object, @Nullable F fieldValue);
-
-  /**
-   * Sets the new value of this virtual field if the current value is {@code null}.
-   *
-   * @return The old field value if it was present, or the result of evaluating passed {@code
-   *     fieldValueSupplier}.
-   */
-  public abstract F computeIfNull(T object, Supplier<F> fieldValueSupplier);
 }

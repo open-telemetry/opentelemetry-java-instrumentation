@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
@@ -20,14 +21,12 @@ public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public @Nullable String transport(ServletRequestContext<REQUEST> requestContext) {
-    // return SemanticAttributes.NetTransportValues.IP_TCP;
-    return null;
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   public @Nullable String peerName(ServletRequestContext<REQUEST> requestContext) {
-    // return accessor.getRequestRemoteHost(requestContext.request());
-    return null;
+    return accessor.getRequestRemoteHost(requestContext.request());
   }
 
   @Override

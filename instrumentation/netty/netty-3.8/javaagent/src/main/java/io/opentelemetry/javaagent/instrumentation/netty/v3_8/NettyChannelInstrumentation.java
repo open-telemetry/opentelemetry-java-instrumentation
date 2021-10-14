@@ -50,15 +50,16 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This Channel channel) {
       Context context = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(context);
-      if (span.getSpanContext().isValid()) {
-        VirtualField<Channel, ChannelTraceContext> virtualField =
-            VirtualField.find(Channel.class, ChannelTraceContext.class);
-
-        if (virtualField.computeIfNull(channel, ChannelTraceContext.FACTORY).getConnectionContext()
-            == null) {
-          virtualField.get(channel).setConnectionContext(context);
-        }
+      if (!span.getSpanContext().isValid()) {
+        return;
       }
+
+      VirtualField<Channel, NettyConnectionContext> virtualField =
+          VirtualField.find(Channel.class, NettyConnectionContext.class);
+      if (virtualField.get(channel) != null) {
+        return;
+      }
+      virtualField.set(channel, new NettyConnectionContext(context));
     }
   }
 }

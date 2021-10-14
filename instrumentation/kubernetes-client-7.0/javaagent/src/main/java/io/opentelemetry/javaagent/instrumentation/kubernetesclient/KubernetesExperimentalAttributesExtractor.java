@@ -12,9 +12,9 @@ import okhttp3.Request;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 class KubernetesExperimentalAttributesExtractor
-    extends AttributesExtractor<Request, ApiResponse<?>> {
+    implements AttributesExtractor<Request, ApiResponse<?>> {
   @Override
-  protected void onStart(AttributesBuilder attributes, Request request) {
+  public void onStart(AttributesBuilder attributes, Request request) {
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     attributes
         .put("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
@@ -22,7 +22,7 @@ class KubernetesExperimentalAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       Request request,
       @Nullable ApiResponse<?> apiResponse,

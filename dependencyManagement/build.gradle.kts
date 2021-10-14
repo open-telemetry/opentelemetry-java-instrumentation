@@ -13,8 +13,8 @@ rootProject.extra["versions"] = dependencyVersions
 
 // IMPORTANT when updating otelVersion, make sure that grpcVersion below is >= the grpc version
 // used by that otel version
-val otelVersion = "1.6.0"
-val grpcVersion = "1.40.1"
+val otelVersion = "1.7.0"
+val grpcVersion = "1.41.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -107,7 +107,7 @@ val DEPENDENCIES = listOf(
   "commons-validator:commons-validator:1.7",
   "info.solidsoft.spock:spock-global-unroll:0.5.1",
   "io.netty:netty:3.10.6.Final",
-  "org.assertj:assertj-core:3.19.0",
+  "org.assertj:assertj-core:3.21.0",
   "org.awaitility:awaitility:4.1.0",
   "org.checkerframework:checker-qual:3.14.0",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",

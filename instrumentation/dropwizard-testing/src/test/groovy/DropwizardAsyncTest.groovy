@@ -7,7 +7,6 @@ import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
-
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -34,6 +33,12 @@ class DropwizardAsyncTest extends DropwizardTest {
 
   Class testResource() {
     AsyncServiceResource
+  }
+
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the JAX-RS controller spans
+    return false
   }
 
   static class AsyncTestApp extends Application<Configuration> {

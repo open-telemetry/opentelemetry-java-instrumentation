@@ -17,10 +17,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class CassandraAttributesExtractor
-    extends AttributesExtractor<CassandraRequest, ExecutionInfo> {
+    implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
-  protected void onStart(AttributesBuilder attributes, CassandraRequest request) {
+  public void onStart(AttributesBuilder attributes, CassandraRequest request) {
     set(
         attributes,
         SemanticAttributes.DB_CASSANDRA_KEYSPACE,
@@ -28,7 +28,7 @@ final class CassandraAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       CassandraRequest request,
       @Nullable ExecutionInfo executionInfo,

@@ -40,7 +40,7 @@ public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Exchange exchange, @Advice.Local("otelScope") Scope scope) {
-      Context context = CxfTracingUtil.updateServerSpanName(exchange);
+      Context context = CxfSpanName.INSTANCE.updateServerSpanName(exchange);
       if (context != null) {
         scope = context.makeCurrent();
       }

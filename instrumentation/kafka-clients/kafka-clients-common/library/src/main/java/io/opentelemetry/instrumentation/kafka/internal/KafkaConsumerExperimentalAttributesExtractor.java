@@ -16,7 +16,7 @@ import org.apache.kafka.common.record.TimestampType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerExperimentalAttributesExtractor
-    extends AttributesExtractor<ConsumerRecord<?, ?>, Void> {
+    implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {
 
   private static final AttributeKey<Long> KAFKA_OFFSET = longKey("kafka.offset");
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
@@ -30,7 +30,7 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord) {
+  public void onStart(AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord) {
     set(attributes, KAFKA_OFFSET, consumerRecord.offset());
 
     // don't record a duration if the message was sent from an old Kafka client
@@ -46,7 +46,7 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       ConsumerRecord<?, ?> consumerRecord,
       @Nullable Void unused,

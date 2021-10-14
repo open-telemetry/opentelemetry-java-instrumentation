@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -96,6 +98,8 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT.key" Long
+            "${SemanticAttributes.HTTP_SERVER_NAME}" String
+            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
           }
         }
         it.span(3) {

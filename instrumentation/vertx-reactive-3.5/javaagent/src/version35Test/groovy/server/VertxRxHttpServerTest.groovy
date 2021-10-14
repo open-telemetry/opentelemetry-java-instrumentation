@@ -5,10 +5,9 @@
 
 package server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
 import io.vertx.core.Vertx
@@ -86,10 +85,9 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
   }
 
   protected Class<AbstractVerticle> verticle() {

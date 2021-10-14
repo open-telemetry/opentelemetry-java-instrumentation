@@ -13,14 +13,14 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ExperimentalAttributesExtractor extends AttributesExtractor<HystrixRequest, Void> {
+final class ExperimentalAttributesExtractor implements AttributesExtractor<HystrixRequest, Void> {
   private static final AttributeKey<String> HYSTRIX_COMMAND = stringKey("hystrix.command");
   private static final AttributeKey<String> HYSTRIX_GROUP = stringKey("hystrix.group");
   private static final AttributeKey<Boolean> HYSTRIX_CIRCUIT_OPEN =
       booleanKey("hystrix.circuit_open");
 
   @Override
-  protected void onStart(AttributesBuilder attributes, HystrixRequest hystrixRequest) {
+  public void onStart(AttributesBuilder attributes, HystrixRequest hystrixRequest) {
     String commandName = hystrixRequest.command().getCommandKey().name();
     String groupName = hystrixRequest.command().getCommandGroup().name();
     boolean circuitOpen = hystrixRequest.command().isCircuitBreakerOpen();
@@ -31,7 +31,7 @@ final class ExperimentalAttributesExtractor extends AttributesExtractor<HystrixR
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       HystrixRequest hystrixRequest,
       @Nullable Void unused,

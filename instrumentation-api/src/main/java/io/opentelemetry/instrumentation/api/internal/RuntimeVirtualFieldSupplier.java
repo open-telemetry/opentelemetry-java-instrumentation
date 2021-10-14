@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,11 +69,6 @@ public final class RuntimeVirtualFieldSupplier {
       } else {
         cache.put(object, fieldValue);
       }
-    }
-
-    @Override
-    public F computeIfNull(T object, Supplier<F> fieldValueSupplier) {
-      return cache.computeIfAbsent(object, k -> fieldValueSupplier.get());
     }
   }
 

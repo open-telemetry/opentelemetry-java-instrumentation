@@ -43,8 +43,17 @@ public final class ExecutorAdviceHelper {
    */
   public static <T> PropagatedContext attachContextToTask(
       Context context, VirtualField<T, PropagatedContext> virtualField, T task) {
-    PropagatedContext propagatedContext =
-        virtualField.computeIfNull(task, PropagatedContext.FACTORY);
+
+    // note that this is not an atomic operation and one PropagatedContext may overwrite another if
+    // the task is submitted to >1 executors at roughly the same time; but we're perfectly fine with
+    // that happening - in the event of this happening one of those tasks would lose the original
+    // context anyway
+    PropagatedContext propagatedContext = virtualField.get(task);
+    if (propagatedContext == null) {
+      propagatedContext = new PropagatedContext();
+      virtualField.set(task, propagatedContext);
+    }
+
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
       context =
           ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace(), task);

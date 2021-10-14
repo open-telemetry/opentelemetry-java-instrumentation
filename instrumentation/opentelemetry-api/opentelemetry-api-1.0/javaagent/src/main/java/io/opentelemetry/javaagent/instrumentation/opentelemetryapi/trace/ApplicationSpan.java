@@ -153,6 +153,11 @@ class ApplicationSpan implements Span {
   }
 
   @Override
+  public String toString() {
+    return "ApplicationSpan{agentSpan=" + agentSpan + '}';
+  }
+
+  @Override
   public int hashCode() {
     return agentSpan.hashCode();
   }

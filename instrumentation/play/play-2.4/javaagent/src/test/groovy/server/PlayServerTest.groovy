@@ -5,13 +5,12 @@
 
 package server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -88,6 +87,12 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
+  }
+
+  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name "play.request"
@@ -103,12 +108,5 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
   }
 }

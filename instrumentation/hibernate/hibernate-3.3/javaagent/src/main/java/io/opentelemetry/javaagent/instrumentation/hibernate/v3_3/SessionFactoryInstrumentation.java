@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -57,7 +57,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
     public static void openSession(@Advice.Return Object session) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Context context = tracer().startSpan(parentContext, "Session");
+      Context context = instrumenter().start(parentContext, "Session");
 
       if (session instanceof Session) {
         VirtualField<Session, Context> virtualField =

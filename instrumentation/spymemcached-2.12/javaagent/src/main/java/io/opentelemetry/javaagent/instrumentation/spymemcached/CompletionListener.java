@@ -12,7 +12,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import net.spy.memcached.MemcachedConnection;
 
 public abstract class CompletionListener<T> {
 
@@ -28,9 +27,8 @@ public abstract class CompletionListener<T> {
   private final Context context;
   private final SpymemcachedRequest request;
 
-  protected CompletionListener(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    request = SpymemcachedRequest.create(connection, methodName);
+  protected CompletionListener(Context parentContext, SpymemcachedRequest request) {
+    this.request = request;
     context = instrumenter().start(parentContext, request);
   }
 
