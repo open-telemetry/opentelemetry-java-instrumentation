@@ -42,10 +42,9 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
   Server startServer(int port) {
 
     component = new Component()
-    def server = component.getServers().add(Protocol.HTTP, port)
-
     host = component.getDefaultHost()
-    attachRestlets()
+    def server = setupServer(component)
+    setupRouting()
 
     component.start()
 
@@ -61,7 +60,11 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
     host.attach(path, wrapRestlet(restlet, path))
   }
 
-  def attachRestlets() {
+  Server setupServer(Component component) {
+    return component.getServers().add(Protocol.HTTP, port)
+  }
+
+  void setupRouting() {
 
     def defaultRouter = wrapRestlet(new Router(host.getContext()), "/*")
     host.attach("/", defaultRouter).setMatchingMode(Template.MODE_STARTS_WITH)
@@ -178,6 +181,8 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
     }
   }
 
-  abstract Restlet wrapRestlet(Restlet restlet, String path)
+  Restlet wrapRestlet(Restlet restlet, String path) {
+    return restlet
+  }
 
 }

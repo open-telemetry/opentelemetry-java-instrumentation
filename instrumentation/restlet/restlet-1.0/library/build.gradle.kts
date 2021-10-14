@@ -10,9 +10,6 @@ repositories {
 
 dependencies {
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   library("org.restlet:org.restlet:1.1.5")
   library("com.noelios.restlet:com.noelios.restlet:1.1.5")
 
