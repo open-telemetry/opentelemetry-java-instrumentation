@@ -17,10 +17,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * it is more convenient to use {@link InetSocketAddressNetServerAttributesExtractor}.
  */
 public abstract class NetServerAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
 
     String peerIp = peerIp(request);
@@ -38,7 +38,7 @@ public abstract class NetServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

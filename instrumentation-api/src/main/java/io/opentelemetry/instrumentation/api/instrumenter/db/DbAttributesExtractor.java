@@ -20,9 +20,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * specification.
  */
 public abstract class DbAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.DB_SYSTEM, system(request));
     set(attributes, SemanticAttributes.DB_USER, user(request));
     set(attributes, SemanticAttributes.DB_NAME, name(request));
@@ -32,7 +32,7 @@ public abstract class DbAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

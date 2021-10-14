@@ -42,14 +42,14 @@ public class JspCompilationContextInstrumentationSingletons {
   private JspCompilationContextInstrumentationSingletons() {}
 
   private static class CompilationAttributesExtractor
-      extends AttributesExtractor<JspCompilationContext, Void> {
+      implements AttributesExtractor<JspCompilationContext, Void> {
 
     @Override
-    protected void onStart(
+    public void onStart(
         AttributesBuilder attributes, JspCompilationContext jspCompilationContext) {}
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         JspCompilationContext jspCompilationContext,
         @Nullable Void unused,

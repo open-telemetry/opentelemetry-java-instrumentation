@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * attributes</a> that are common to client and server instrumentations.
  */
 public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final CapturedHttpHeaders capturedHttpHeaders;
 
@@ -31,7 +31,7 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.HTTP_METHOD, method(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
@@ -44,7 +44,7 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

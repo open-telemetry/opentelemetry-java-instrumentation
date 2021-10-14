@@ -73,16 +73,16 @@ class InstrumenterTest {
               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   static class AttributesExtractor1
-      extends AttributesExtractor<Map<String, String>, Map<String, String>> {
+      implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
       attributes.put("req1", request.get("req1"));
       attributes.put("req2", request.get("req2"));
     }
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         Map<String, String> request,
         Map<String, String> response,
@@ -93,16 +93,16 @@ class InstrumenterTest {
   }
 
   static class AttributesExtractor2
-      extends AttributesExtractor<Map<String, String>, Map<String, String>> {
+      implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
       attributes.put("req3", request.get("req3"));
       attributes.put("req2", request.get("req2_2"));
     }
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         Map<String, String> request,
         Map<String, String> response,

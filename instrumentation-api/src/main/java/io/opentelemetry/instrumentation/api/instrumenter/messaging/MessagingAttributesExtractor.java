@@ -20,11 +20,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * best compliance with the OpenTelemetry specification.
  */
 public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
   public static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.MESSAGING_SYSTEM, system(request));
     set(attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind(request));
     boolean isTemporaryDestination = temporaryDestination(request);
@@ -53,7 +53,7 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

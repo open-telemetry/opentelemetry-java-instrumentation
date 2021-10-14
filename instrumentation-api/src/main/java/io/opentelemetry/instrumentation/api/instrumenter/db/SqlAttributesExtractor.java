@@ -26,7 +26,7 @@ public abstract class SqlAttributesExtractor<REQUEST, RESPONSE>
     extends DbAttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);
     AttributeKey<String> dbTable = dbTableAttribute();
     if (dbTable != null) {

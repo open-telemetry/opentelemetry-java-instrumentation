@@ -17,7 +17,8 @@ import java.security.Principal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
+    implements AttributesExtractor<
+        ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get().getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
@@ -29,11 +30,11 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(
+  public void onStart(
       AttributesBuilder attributes, ServletRequestContext<REQUEST> requestContext) {}
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
