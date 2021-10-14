@@ -5,7 +5,7 @@
 
 package io.opententelemetry.instrumentation.restlet.v1_0.spring
 
-class SpringBeanRouterTest extends AbstractSpringTest {
+class SpringBeanRouterTest extends AbstractSpringServerLibraryTest {
   @Override
   String getConfigurationName() {
     return "springBeanRouterConf.xml"

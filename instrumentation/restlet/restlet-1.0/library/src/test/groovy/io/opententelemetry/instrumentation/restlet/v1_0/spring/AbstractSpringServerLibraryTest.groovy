@@ -14,7 +14,7 @@ import org.restlet.Route
 import org.restlet.Router
 import org.restlet.util.RouteList
 
-abstract class AbstractSpringTest extends AbstractSpringServerTest implements LibraryTestTrait {
+abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest implements LibraryTestTrait {
   @Override
   Restlet wrapRestlet(Restlet restlet, String path) {
 
