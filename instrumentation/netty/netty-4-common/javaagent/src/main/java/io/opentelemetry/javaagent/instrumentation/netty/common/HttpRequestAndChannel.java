@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.server;
+package io.opentelemetry.javaagent.instrumentation.netty.common;
 
 import com.google.auto.value.AutoValue;
 import io.netty.channel.Channel;
