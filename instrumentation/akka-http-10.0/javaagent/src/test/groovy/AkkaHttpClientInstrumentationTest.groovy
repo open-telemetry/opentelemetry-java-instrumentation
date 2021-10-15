@@ -18,9 +18,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
@@ -69,23 +66,4 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
     return null
   }
 
-  def "singleRequest exception trace"() {
-    when:
-    // Passing null causes NPE in singleRequest
-    Http.get(system).singleRequest(null, materializer)
-
-    then:
-    def e = thrown NullPointerException
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          hasNoParent()
-          name "HTTP request"
-          kind CLIENT
-          status ERROR
-          errorEvent(NullPointerException, e.getMessage())
-        }
-      }
-    }
-  }
 }
