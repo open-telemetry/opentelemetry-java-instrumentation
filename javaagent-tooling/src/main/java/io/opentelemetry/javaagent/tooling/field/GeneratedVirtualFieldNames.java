@@ -41,14 +41,10 @@ final class GeneratedVirtualFieldNames {
   }
 
   static String getRealGetterName(String typeName, String fieldTypeName) {
-    // it's important for the get and set methods to not look like normal getters/setters, otherwise
-    // reflection frameworks (e.g. spring-beans) may interpret them as properties
     return "__get" + getRealFieldName(typeName, fieldTypeName);
   }
 
   static String getRealSetterName(String typeName, String fieldTypeName) {
-    // it's important for the get and set methods to not look like normal getters/setters, otherwise
-    // reflection frameworks (e.g. spring-beans) may interpret them as properties
     return "__set" + getRealFieldName(typeName, fieldTypeName);
   }
 
