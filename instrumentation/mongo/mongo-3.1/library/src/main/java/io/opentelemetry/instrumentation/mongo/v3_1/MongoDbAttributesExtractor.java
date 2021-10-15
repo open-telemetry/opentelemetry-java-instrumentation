@@ -45,7 +45,7 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   }
 
   @Override
-  protected @Nullable String system(CommandStartedEvent event) {
+  protected String system(CommandStartedEvent event) {
     return SemanticAttributes.DbSystemValues.MONGODB;
   }
 
@@ -77,7 +77,7 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   }
 
   @Override
-  protected @Nullable String statement(CommandStartedEvent event) {
+  protected String statement(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 

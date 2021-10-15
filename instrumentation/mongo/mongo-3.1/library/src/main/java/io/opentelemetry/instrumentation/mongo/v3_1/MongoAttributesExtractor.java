@@ -32,10 +32,10 @@ class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEven
   @Nullable
   String collectionName(CommandStartedEvent event) {
     if (event.getCommandName().equals("getMore")) {
-      if (event.getCommand().containsKey("collection")) {
-        BsonValue collectionValue = event.getCommand().get("collection");
+      BsonValue collectionValue = event.getCommand().get("collection");
+      if (collectionValue != null) {
         if (collectionValue.isString()) {
-          return event.getCommand().getString("collection").getValue();
+          return collectionValue.asString().getValue();
         }
       }
     } else if (COMMANDS_WITH_COLLECTION_NAME_AS_VALUE.contains(event.getCommandName())) {
