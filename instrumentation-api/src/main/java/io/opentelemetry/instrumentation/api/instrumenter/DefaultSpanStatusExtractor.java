@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import javax.annotation.Nullable;
 
@@ -15,7 +16,7 @@ final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
 
   @Override
   public StatusCode extract(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+      REQUEST request, @Nullable RESPONSE response, SpanKind kind, @Nullable Throwable error) {
     if (error != null) {
       return StatusCode.ERROR;
     }

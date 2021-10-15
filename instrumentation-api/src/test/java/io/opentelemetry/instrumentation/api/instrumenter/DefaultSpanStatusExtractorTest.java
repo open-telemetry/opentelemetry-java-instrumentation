@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class DefaultSpanStatusExtractorTest {
   void noException() {
     assertThat(
             SpanStatusExtractor.getDefault()
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
+                .extract(Collections.emptyMap(), Collections.emptyMap(), SpanKind.SERVER, null))
         .isEqualTo(StatusCode.UNSET);
   }
 
@@ -28,6 +29,7 @@ class DefaultSpanStatusExtractorTest {
                 .extract(
                     Collections.emptyMap(),
                     Collections.emptyMap(),
+                    SpanKind.SERVER,
                     new IllegalStateException("test")))
         .isEqualTo(StatusCode.ERROR);
   }

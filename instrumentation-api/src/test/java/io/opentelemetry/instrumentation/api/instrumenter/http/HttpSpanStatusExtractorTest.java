@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import java.util.Collections;
@@ -26,13 +27,22 @@ class HttpSpanStatusExtractorTest {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
-  void hasStatus(int statusCode) {
+  void clientSpanHasStatus(int statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
-
     assertThat(
             HttpSpanStatusExtractor.create(extractor)
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
-        .isEqualTo(HttpStatusConverter.statusFromHttpStatus(statusCode));
+                .extract(Collections.emptyMap(), Collections.emptyMap(), SpanKind.CLIENT, null))
+        .isEqualTo(HttpStatusConverter.statusFromHttpStatus(statusCode, SpanKind.CLIENT));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
+  void serverSpanHasStatus(int statusCode) {
+    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    assertThat(
+            HttpSpanStatusExtractor.create(extractor)
+                .extract(Collections.emptyMap(), Collections.emptyMap(), SpanKind.SERVER, null))
+        .isEqualTo(HttpStatusConverter.statusFromHttpStatus(statusCode, SpanKind.SERVER));
   }
 
   @ParameterizedTest
@@ -44,7 +54,10 @@ class HttpSpanStatusExtractorTest {
     assertThat(
             HttpSpanStatusExtractor.create(extractor)
                 .extract(
-                    Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
+                    Collections.emptyMap(),
+                    Collections.emptyMap(),
+                    SpanKind.SERVER,
+                    new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);
   }
 
@@ -54,7 +67,7 @@ class HttpSpanStatusExtractorTest {
 
     assertThat(
             HttpSpanStatusExtractor.create(extractor)
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
+                .extract(Collections.emptyMap(), Collections.emptyMap(), SpanKind.SERVER, null))
         .isEqualTo(StatusCode.UNSET);
   }
 
@@ -65,7 +78,10 @@ class HttpSpanStatusExtractorTest {
     assertThat(
             HttpSpanStatusExtractor.create(extractor)
                 .extract(
-                    Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
+                    Collections.emptyMap(),
+                    Collections.emptyMap(),
+                    SpanKind.SERVER,
+                    new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);
   }
 }

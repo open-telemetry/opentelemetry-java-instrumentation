@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
@@ -38,16 +39,17 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
+  public StatusCode extract(
+      REQUEST request, @Nullable RESPONSE response, SpanKind kind, @Nullable Throwable error) {
     if (response != null) {
       Integer statusCode = attributesExtractor.statusCode(request, response);
       if (statusCode != null) {
-        StatusCode statusCodeObj = HttpStatusConverter.statusFromHttpStatus(statusCode);
+        StatusCode statusCodeObj = HttpStatusConverter.statusFromHttpStatus(statusCode, kind);
         if (statusCodeObj == StatusCode.ERROR) {
           return statusCodeObj;
         }
       }
     }
-    return SpanStatusExtractor.getDefault().extract(request, response, error);
+    return SpanStatusExtractor.getDefault().extract(request, response, kind, error);
   }
 }
