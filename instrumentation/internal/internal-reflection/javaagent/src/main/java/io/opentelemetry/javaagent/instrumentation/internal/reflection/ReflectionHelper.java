@@ -22,7 +22,7 @@ public final class ReflectionHelper {
     }
     List<Field> result = new ArrayList<>(fields.length);
     for (Field field : fields) {
-      // FieldBackedProvider marks added fields as synthetic
+      // virtual fields are marked as synthetic
       if (field.isSynthetic() && field.getName().startsWith("__opentelemetryVirtualField$")) {
         continue;
       }
@@ -32,13 +32,20 @@ public final class ReflectionHelper {
   }
 
   public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
-    if (methods.length == 0
-        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+    if (methods.length == 0) {
+      return methods;
+    } else if (containingClass.isInterface()
+        && containingClass.isSynthetic()
+        && containingClass.getName().contains("VirtualFieldAccessor$")) {
+      // hide all methods from virtual field accessor interfaces
+      return new Method[0];
+    } else if (!VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
       return methods;
     }
     List<Method> result = new ArrayList<>(methods.length);
     for (Method method : methods) {
-      // FieldBackedProvider marks added method as synthetic
+      // virtual field accessor methods are marked as synthetic
       if (method.isSynthetic()
           && (method.getName().startsWith("get__opentelemetryVirtualField$")
               || method.getName().startsWith("set__opentelemetryVirtualField$"))) {

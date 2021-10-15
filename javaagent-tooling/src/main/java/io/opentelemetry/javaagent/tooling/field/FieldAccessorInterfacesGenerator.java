@@ -54,10 +54,17 @@ final class FieldAccessorInterfacesGenerator {
         .makeInterface()
         .merge(SyntheticState.SYNTHETIC)
         .name(getFieldAccessorInterfaceName(typeName, fieldTypeName))
-        .defineMethod(getRealGetterName(typeName, fieldTypeName), fieldTypeDesc, Visibility.PUBLIC)
+        .defineMethod(
+            getRealGetterName(typeName, fieldTypeName),
+            fieldTypeDesc,
+            Visibility.PUBLIC,
+            SyntheticState.SYNTHETIC)
         .withoutCode()
         .defineMethod(
-            getRealSetterName(typeName, fieldTypeName), TypeDescription.VOID, Visibility.PUBLIC)
+            getRealSetterName(typeName, fieldTypeName),
+            TypeDescription.VOID,
+            Visibility.PUBLIC,
+            SyntheticState.SYNTHETIC)
         .withParameter(fieldTypeDesc, "value")
         .withoutCode()
         .make();
