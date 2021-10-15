@@ -20,15 +20,15 @@ import java.util.Collections;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-public final class KafkaInstrumenterBuilder {
+public final class KafkaInstrumenterFactory {
 
-  public static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
+  public static Instrumenter<ProducerRecord<?, ?>, Void> createProducerInstrumenter(
       String instrumentationName) {
-    return buildProducerInstrumenter(
+    return createProducerInstrumenter(
         instrumentationName, GlobalOpenTelemetry.get(), Collections.emptyList());
   }
 
-  public static Instrumenter<ProducerRecord<?, ?>, Void> buildProducerInstrumenter(
+  public static Instrumenter<ProducerRecord<?, ?>, Void> createProducerInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       Iterable<AttributesExtractor<ProducerRecord<?, ?>, Void>> extractors) {
@@ -44,13 +44,13 @@ public final class KafkaInstrumenterBuilder {
         .newInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  public static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
+  public static Instrumenter<ReceivedRecords, Void> createConsumerReceiveInstrumenter(
       String instrumentationName) {
-    return buildConsumerReceiveInstrumenter(
+    return createConsumerReceiveInstrumenter(
         instrumentationName, GlobalOpenTelemetry.get(), Collections.emptyList());
   }
 
-  public static Instrumenter<ReceivedRecords, Void> buildConsumerReceiveInstrumenter(
+  public static Instrumenter<ReceivedRecords, Void> createConsumerReceiveInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       Iterable<AttributesExtractor<ReceivedRecords, Void>> extractors) {
@@ -67,16 +67,16 @@ public final class KafkaInstrumenterBuilder {
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerProcessInstrumenter(
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> createConsumerProcessInstrumenter(
       String instrumentationName) {
-    return buildConsumerOperationInstrumenter(
+    return createConsumerOperationInstrumenter(
         instrumentationName,
         GlobalOpenTelemetry.get(),
         MessageOperation.PROCESS,
         Collections.emptyList());
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> buildConsumerOperationInstrumenter(
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> createConsumerOperationInstrumenter(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       MessageOperation operation,
@@ -108,5 +108,5 @@ public final class KafkaInstrumenterBuilder {
     }
   }
 
-  private KafkaInstrumenterBuilder() {}
+  private KafkaInstrumenterFactory() {}
 }

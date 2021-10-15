@@ -24,11 +24,11 @@ import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtra
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-public final class TomcatInstrumenterBuilder {
+public final class TomcatInstrumenterFactory {
 
-  private TomcatInstrumenterBuilder() {}
+  private TomcatInstrumenterFactory() {}
 
-  public static <REQUEST, RESPONSE> Instrumenter<Request, Response> newInstrumenter(
+  public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
       String instrumentationName,
       ServletAccessor<REQUEST, RESPONSE> accessor,
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider) {
