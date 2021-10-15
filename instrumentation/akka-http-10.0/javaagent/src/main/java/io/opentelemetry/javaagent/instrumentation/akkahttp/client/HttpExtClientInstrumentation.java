@@ -57,7 +57,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       with way of continuing to reusing it.
        */
       Context parentContext = currentContext();
-      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 

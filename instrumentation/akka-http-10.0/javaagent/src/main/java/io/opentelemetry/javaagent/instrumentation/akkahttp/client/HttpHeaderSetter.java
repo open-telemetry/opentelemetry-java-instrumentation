@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+
 import akka.http.javadsl.model.headers.RawHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
@@ -31,7 +32,7 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
 
   public HttpRequest inject(HttpRequest original) {
     AkkaHttpHeaders carrier = new AkkaHttpHeaders(original);
-    contextPropagators.getTextMapPropagator().inject(Context.current(), carrier, this);
+    contextPropagators.getTextMapPropagator().inject(currentContext(), carrier, this);
     return carrier.getRequest();
   }
 
