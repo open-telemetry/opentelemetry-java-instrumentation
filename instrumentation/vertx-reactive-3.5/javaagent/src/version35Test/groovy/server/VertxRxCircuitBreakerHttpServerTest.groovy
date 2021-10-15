@@ -12,6 +12,7 @@ import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -134,7 +135,21 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
         })
       }
-
+      router.route(CAPTURE_HEADERS.path).handler { ctx ->
+        breaker.executeCommand({ future ->
+          future.complete(CAPTURE_HEADERS)
+        }, {
+          if (it.failed()) {
+            throw it.cause()
+          }
+          HttpServerTest.ServerEndpoint endpoint = it.result()
+          controller(endpoint) {
+            ctx.response().setStatusCode(endpoint.status)
+              .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
+              .end(endpoint.body)
+          }
+        })
+      }
 
       super.@vertx.createHttpServer()
         .requestHandler { router.accept(it) }
