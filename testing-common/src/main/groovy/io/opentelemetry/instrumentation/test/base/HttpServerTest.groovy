@@ -628,15 +628,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_FLAVOR.key}" { it == "1.1" || it == "2.0" }
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
-          // netty instrumentation uses this
-          "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        } else {
-          // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
-          "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
-          "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
-          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
-        }
+        "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
+        // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
+        "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
+        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
@@ -658,7 +653,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "${SemanticAttributes.HTTP_SERVER_NAME}" String
         }
-        if (endpoint == ServerEndpoint.CAPTURE_HEADERS) {
+        if (endpoint == CAPTURE_HEADERS) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
         }
@@ -688,15 +683,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
-          // netty instrumentation uses this
-          "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
-        } else {
-          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-          // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
-          "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
-          "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
-        }
+        "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
+        // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
+        "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
+        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long

@@ -66,6 +66,22 @@ class FinatraController extends Controller {
     )
   }
 
+  any(CAPTURE_HEADERS.getPath) { request: Request =>
+    controller(
+      CAPTURE_HEADERS,
+      new Closure[Response](null) {
+        override def call(): Response = {
+          response
+            .ok(CAPTURE_HEADERS.getBody)
+            .header(
+              "X-Test-Response",
+              request.headerMap.get("X-Test-Request").get
+            )
+        }
+      }
+    )
+  }
+
   any("/path/:id/param") { request: Request =>
     controller(
       PATH_PARAM,

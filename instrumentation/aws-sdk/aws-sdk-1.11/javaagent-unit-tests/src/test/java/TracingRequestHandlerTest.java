@@ -25,7 +25,13 @@ class TracingRequestHandlerTest {
   }
 
   private static Request<SendMessageRequest> request() {
-    Request<SendMessageRequest> request = new DefaultRequest<>(new SendMessageRequest(), "test");
+    // Using a subclass of SendMessageRequest because for SendMessageRequest instrumentation
+    // creates PRODUCER span, for others CLIENT span. We need to use CLIENT spans for
+    // runWithClientSpan in shouldNotSetScopeAndNotFailIfClientSpanAlreadyPresent to work.
+    class CustomSendMessageRequest extends SendMessageRequest {}
+
+    Request<SendMessageRequest> request =
+        new DefaultRequest<>(new CustomSendMessageRequest(), "test");
     request.setEndpoint(URI.create("http://test.uri"));
     return request;
   }
@@ -61,5 +67,8 @@ class TracingRequestHandlerTest {
     // then - no exception and scope not set
     assertThat(request.getHandlerContext(TracingRequestHandler.SCOPE)).isNotNull();
     underTest.afterResponse(request, response(request));
+
+    // cleanup
+    underTest.afterError(request, null, null);
   }
 }

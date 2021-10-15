@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambda.v1_0.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +30,8 @@ public class ParentContextExtractorTest {
   private static final OpenTelemetry OTEL =
       OpenTelemetry.propagating(ContextPropagators.create(B3Propagator.injectingSingleHeader()));
 
-  private static final AwsLambdaTracer TRACER = new AwsLambdaTracer(OTEL);
+  private static final AwsLambdaFunctionInstrumenter INSTRUMENTER =
+      AwsLambdaFunctionInstrumenterFactory.createInstrumenter(OTEL);
 
   @Test
   public void shouldUseHttpIfAwsParentNotSampled() {
@@ -48,7 +49,7 @@ public class ParentContextExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
 
     // when
-    Context context = ParentContextExtractor.extract(headers, TRACER);
+    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();
@@ -74,7 +75,7 @@ public class ParentContextExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
 
     // when
-    Context context = ParentContextExtractor.extract(headers, TRACER);
+    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();
@@ -97,7 +98,7 @@ public class ParentContextExtractorTest {
             "true");
 
     // when
-    Context context = ParentContextExtractor.extract(headers, TRACER);
+    Context context = ParentContextExtractor.extract(headers, INSTRUMENTER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();
