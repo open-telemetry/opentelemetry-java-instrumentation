@@ -41,11 +41,11 @@ final class GeneratedVirtualFieldNames {
   }
 
   static String getRealGetterName(String typeName, String fieldTypeName) {
-    return "get" + getRealFieldName(typeName, fieldTypeName);
+    return "__get" + getRealFieldName(typeName, fieldTypeName);
   }
 
   static String getRealSetterName(String typeName, String fieldTypeName) {
-    return "set" + getRealFieldName(typeName, fieldTypeName);
+    return "__set" + getRealFieldName(typeName, fieldTypeName);
   }
 
   private static String sanitizeClassName(String className) {

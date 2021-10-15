@@ -39,7 +39,7 @@ class GeneratedVirtualFieldNamesTest {
   @Test
   void setter() {
     assertEquals(
-        "set__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
+        "__set__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
         GeneratedVirtualFieldNames.getRealSetterName(
             getType(Runnable.class).getClassName(), getType(String[].class).getClassName()));
   }
@@ -47,7 +47,7 @@ class GeneratedVirtualFieldNamesTest {
   @Test
   void getter() {
     assertEquals(
-        "get__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
+        "__get__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
         GeneratedVirtualFieldNames.getRealGetterName(
             getType(Runnable.class).getClassName(), getType(String[].class).getClassName()));
   }

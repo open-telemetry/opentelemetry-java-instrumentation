@@ -47,8 +47,8 @@ public final class ReflectionHelper {
     for (Method method : methods) {
       // virtual field accessor methods are marked as synthetic
       if (method.isSynthetic()
-          && (method.getName().startsWith("get__opentelemetryVirtualField$")
-              || method.getName().startsWith("set__opentelemetryVirtualField$"))) {
+          && (method.getName().startsWith("__get__opentelemetryVirtualField$")
+              || method.getName().startsWith("__set__opentelemetryVirtualField$"))) {
         continue;
       }
       result.add(method);
