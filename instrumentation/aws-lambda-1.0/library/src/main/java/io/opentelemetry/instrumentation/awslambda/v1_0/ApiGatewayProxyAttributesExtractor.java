@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class APIGatewayProxyAttributesExtractor
+final class ApiGatewayProxyAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
   @Override
   public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
@@ -88,5 +88,5 @@ final class APIGatewayProxyAttributesExtractor
     }
   }
 
-  APIGatewayProxyAttributesExtractor() {}
+  ApiGatewayProxyAttributesExtractor() {}
 }

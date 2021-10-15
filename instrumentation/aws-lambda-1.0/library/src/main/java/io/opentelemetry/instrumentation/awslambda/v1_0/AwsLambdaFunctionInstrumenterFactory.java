@@ -21,7 +21,7 @@ public class AwsLambdaFunctionInstrumenterFactory {
                 AwsLambdaFunctionInstrumenterFactory::spanName)
             .addAttributesExtractors(
                 new AwsLambdaFunctionAttributesExtractor(),
-                new APIGatewayProxyAttributesExtractor())
+                new ApiGatewayProxyAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
