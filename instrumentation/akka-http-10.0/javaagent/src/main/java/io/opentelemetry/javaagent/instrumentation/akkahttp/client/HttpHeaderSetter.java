@@ -32,7 +32,7 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
 
   public HttpRequest inject(HttpRequest original) {
     AkkaHttpHeaders carrier = new AkkaHttpHeaders(original);
-    contextPropagators.getTextMapPropagator().inject(currentContext(), carrier, this);
+    contextPropagators.getTextMapPropagator().inject(Context.current(), carrier, this);
     return carrier.getRequest();
   }
 
