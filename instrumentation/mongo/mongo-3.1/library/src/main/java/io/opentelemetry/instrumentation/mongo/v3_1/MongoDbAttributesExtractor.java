@@ -5,26 +5,17 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static java.util.Arrays.asList;
-
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -32,72 +23,44 @@ import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class MongoClientTracer
-    extends DatabaseClientTracer<CommandStartedEvent, BsonDocument, String> {
+class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEvent, Void> {
+
+  @Nullable private static final Method IS_TRUNCATED_METHOD;
+  private static final String HIDDEN_CHAR = "?";
+
+  static {
+    IS_TRUNCATED_METHOD =
+        Arrays.stream(JsonWriter.class.getMethods())
+            .filter(method -> method.getName().equals("isTruncated"))
+            .findFirst()
+            .orElse(null);
+  }
 
   private final int maxNormalizedQueryLength;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  MongoClientTracer(OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
-    super(openTelemetry, NetPeerAttributes.INSTANCE);
+  MongoDbAttributesExtractor(int maxNormalizedQueryLength) {
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
 
   @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.mongo-3.1";
+  protected @Nullable String system(CommandStartedEvent event) {
+    return SemanticAttributes.DbSystemValues.MONGODB;
   }
 
   @Override
-  // TODO(anuraaga): Migrate off of StringWriter to avoid synchronization.
-  @SuppressWarnings("JdkObsolete")
-  protected String sanitizeStatement(BsonDocument command) {
-    StringWriter stringWriter = new StringWriter(128);
-    // jsonWriterSettings is generally not null but could be due to security manager or unknown
-    // API incompatibilities, which we can't detect by Muzzle because we use reflection.
-    JsonWriter jsonWriter =
-        jsonWriterSettings != null
-            ? new JsonWriter(stringWriter, jsonWriterSettings)
-            : new JsonWriter(stringWriter);
-    writeScrubbed(command, jsonWriter, /* isRoot= */ true);
-    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
-    // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    StringBuffer buf = stringWriter.getBuffer();
-    if (buf.length() <= maxNormalizedQueryLength) {
-      return buf.toString();
-    }
-    return buf.substring(0, maxNormalizedQueryLength);
+  protected @Nullable String user(CommandStartedEvent event) {
+    return null;
   }
 
   @Override
-  protected String spanName(
-      CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
-    return conventionSpanName(dbName(event), event.getCommandName(), collectionName(event));
-  }
-
-  @Override
-  protected String dbSystem(CommandStartedEvent event) {
-    return DbSystemValues.MONGODB;
-  }
-
-  @Override
-  protected void onConnection(SpanBuilder span, CommandStartedEvent event) {
-    String collection = collectionName(event);
-    if (collection != null) {
-      span.setAttribute(SemanticAttributes.DB_MONGODB_COLLECTION, collection);
-    }
-    super.onConnection(span, event);
-  }
-
-  @Override
-  protected String dbName(CommandStartedEvent event) {
+  protected @Nullable String name(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
   @Override
-  @Nullable
-  protected String dbConnectionString(CommandStartedEvent event) {
+  protected @Nullable String connectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();
@@ -114,36 +77,33 @@ final class MongoClientTracer
   }
 
   @Override
-  @Nullable
-  protected InetSocketAddress peerAddress(CommandStartedEvent event) {
-    if (event.getConnectionDescription() != null
-        && event.getConnectionDescription().getServerAddress() != null) {
-      return event.getConnectionDescription().getServerAddress().getSocketAddress();
-    } else {
-      return null;
-    }
+  protected @Nullable String statement(CommandStartedEvent event) {
+    return sanitizeStatement(event.getCommand());
   }
 
   @Override
-  protected String dbStatement(
-      CommandStartedEvent event, BsonDocument command, String sanitizedStatement) {
-    return sanitizedStatement;
-  }
-
-  @Override
-  protected String dbOperation(
-      CommandStartedEvent event, BsonDocument command, String sanitizedStatement) {
+  protected @Nullable String operation(CommandStartedEvent event) {
     return event.getCommandName();
   }
 
-  @Nullable private static final Method IS_TRUNCATED_METHOD;
-
-  static {
-    IS_TRUNCATED_METHOD =
-        Arrays.stream(JsonWriter.class.getMethods())
-            .filter(method -> method.getName().equals("isTruncated"))
-            .findFirst()
-            .orElse(null);
+  // TODO(anuraaga): Migrate off of StringWriter to avoid synchronization.
+  // accessible to tests
+  String sanitizeStatement(BsonDocument command) {
+    StringWriter stringWriter = new StringWriter(128);
+    // jsonWriterSettings is generally not null but could be due to security manager or unknown
+    // API incompatibilities, which we can't detect by Muzzle because we use reflection.
+    JsonWriter jsonWriter =
+        jsonWriterSettings != null
+            ? new JsonWriter(stringWriter, jsonWriterSettings)
+            : new JsonWriter(stringWriter);
+    writeScrubbed(command, jsonWriter, /* isRoot= */ true);
+    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
+    // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
+    StringBuffer buf = stringWriter.getBuffer();
+    if (buf.length() <= maxNormalizedQueryLength) {
+      return buf.toString();
+    }
+    return buf.substring(0, maxNormalizedQueryLength);
   }
 
   @Nullable
@@ -199,8 +159,6 @@ final class MongoClientTracer
     return settings;
   }
 
-  private static final String HIDDEN_CHAR = "?";
-
   private static boolean writeScrubbed(BsonDocument origin, JsonWriter writer, boolean isRoot) {
     writer.writeStartDocument();
     boolean firstField = true;
@@ -253,42 +211,5 @@ final class MongoClientTracer
         return false;
       }
     }
-  }
-
-  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
-      new HashSet<>(
-          asList(
-              "aggregate",
-              "count",
-              "distinct",
-              "mapReduce",
-              "geoSearch",
-              "delete",
-              "find",
-              "killCursors",
-              "findAndModify",
-              "insert",
-              "update",
-              "create",
-              "drop",
-              "createIndexes",
-              "listIndexes"));
-
-  @Nullable
-  private static String collectionName(CommandStartedEvent event) {
-    if (event.getCommandName().equals("getMore")) {
-      if (event.getCommand().containsKey("collection")) {
-        BsonValue collectionValue = event.getCommand().get("collection");
-        if (collectionValue.isString()) {
-          return event.getCommand().getString("collection").getValue();
-        }
-      }
-    } else if (COMMANDS_WITH_COLLECTION_NAME_AS_VALUE.contains(event.getCommandName())) {
-      BsonValue commandValue = event.getCommand().get(event.getCommandName());
-      if (commandValue != null && commandValue.isString()) {
-        return commandValue.asString().getValue();
-      }
-    }
-    return null;
   }
 }
