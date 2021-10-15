@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMerg
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.bytebuddy.jar.asm.Type;
+import org.objectweb.asm.Type;
 
 /**
  * Represents a reference to a field used in the instrumentation advice or helper class code. Part

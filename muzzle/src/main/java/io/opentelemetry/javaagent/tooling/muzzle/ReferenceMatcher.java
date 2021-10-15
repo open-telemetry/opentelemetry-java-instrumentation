@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
+import org.objectweb.asm.Type;
 
 /** Matches a set of references against a classloader. */
 public final class ReferenceMatcher {

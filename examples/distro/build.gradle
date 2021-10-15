@@ -17,8 +17,7 @@ subprojects {
     ]
 
     deps = [
-      bytebuddy           : "net.bytebuddy:byte-buddy:${versions.bytebuddy}",
-      bytebuddyagent      : "net.bytebuddy:byte-buddy-agent:${versions.bytebuddy}",
+      bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
       autoservice         : [
         "com.google.auto.service:auto-service:1.0-rc7",
         "com.google.auto:auto-common:0.8",
