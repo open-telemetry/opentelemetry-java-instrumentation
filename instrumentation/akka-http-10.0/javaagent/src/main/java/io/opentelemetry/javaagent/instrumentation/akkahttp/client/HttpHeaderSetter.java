@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-
 import akka.http.javadsl.model.headers.RawHeader;
 import akka.http.scaladsl.model.HttpRequest;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
