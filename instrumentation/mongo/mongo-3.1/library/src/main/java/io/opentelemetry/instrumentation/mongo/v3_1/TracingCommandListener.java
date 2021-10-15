@@ -48,7 +48,7 @@ final class TracingCommandListener implements CommandListener {
   @Override
   public void commandFailed(CommandFailedEvent event) {
     Context context = contextMap.remove(event.getRequestId());
-    CommandStartedEvent request = requestMap.get(event.getRequestId());
+    CommandStartedEvent request = requestMap.remove(event.getRequestId());
     if (context != null && request != null) {
       instrumenter.end(context, request, null, event.getThrowable());
     }
