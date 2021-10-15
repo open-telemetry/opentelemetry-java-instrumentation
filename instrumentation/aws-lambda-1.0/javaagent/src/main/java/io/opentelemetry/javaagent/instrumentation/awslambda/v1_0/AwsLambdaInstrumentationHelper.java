@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenter;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaFunctionInstrumenterFactory;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaSqsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaSqsInstrumenterFactory;
 
 public final class AwsLambdaInstrumentationHelper {
 

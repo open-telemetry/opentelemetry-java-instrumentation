@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambda.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
+import static io.opentelemetry.instrumentation.awslambda.v1_0.internal.MapUtils.lowercaseMap;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;

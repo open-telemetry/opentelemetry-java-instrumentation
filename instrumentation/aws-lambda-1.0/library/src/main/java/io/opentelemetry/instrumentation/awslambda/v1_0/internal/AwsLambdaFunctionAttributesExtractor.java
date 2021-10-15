@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambda.v1_0.internal;
 
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.FAAS_ID;
@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaRequest;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
