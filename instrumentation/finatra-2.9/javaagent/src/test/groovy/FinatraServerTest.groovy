@@ -78,8 +78,4 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
       }
     }
   }
-
-  boolean testCapturedHttpHeaders() {
-    false
-  }
 }

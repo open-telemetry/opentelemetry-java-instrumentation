@@ -13,9 +13,4 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest impl
   @Override
   void configure(RatpackServerSpec serverSpec) {
   }
-
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
 }

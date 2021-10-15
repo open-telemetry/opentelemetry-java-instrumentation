@@ -59,11 +59,6 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   }
 
   @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
-  @Override
   boolean verifyServerSpanEndTime() {
     // server spans are ended inside of the controller spans
     return false
