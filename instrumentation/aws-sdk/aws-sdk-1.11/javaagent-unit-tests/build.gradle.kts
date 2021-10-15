@@ -11,7 +11,3 @@ dependencies {
 
   testImplementation("org.assertj:assertj-core")
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=false")
-}
