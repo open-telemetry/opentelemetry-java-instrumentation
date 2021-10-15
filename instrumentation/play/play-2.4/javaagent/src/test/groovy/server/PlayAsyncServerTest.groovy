@@ -13,6 +13,7 @@ import play.server.Server
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -52,6 +53,14 @@ class PlayAsyncServerTest extends PlayServerTest {
         CompletableFuture.supplyAsync({
           controller(REDIRECT) {
             Results.found(REDIRECT.getBody())
+          }
+        }, HttpExecution.defaultContext())
+      } as Supplier)
+        .GET(CAPTURE_HEADERS.getPath()).routeAsync({
+        CompletableFuture.supplyAsync({
+          controller(CAPTURE_HEADERS) {
+            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+              .withHeader("X-Test-Response", request().getHeader("X-Test-Request"))
           }
         }, HttpExecution.defaultContext())
       } as Supplier)

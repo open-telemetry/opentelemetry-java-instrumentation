@@ -101,6 +101,21 @@ public abstract class ServerTestController {
         });
   }
 
+  @GetMapping("/captureHeaders")
+  public Mono<String> capture_headers(ServerHttpRequest request, ServerHttpResponse response) {
+    ServerEndpoint endpoint = ServerEndpoint.CAPTURE_HEADERS;
+
+    return wrapControllerMethod(
+        endpoint,
+        () -> {
+          setStatus(response, endpoint);
+          response
+              .getHeaders()
+              .set("X-Test-Response", request.getHeaders().getFirst("X-Test-Request"));
+          return endpoint.getBody();
+        });
+  }
+
   protected abstract <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Callable<T> handler);
 
   private static void setStatus(ServerHttpResponse response, ServerEndpoint endpoint) {
