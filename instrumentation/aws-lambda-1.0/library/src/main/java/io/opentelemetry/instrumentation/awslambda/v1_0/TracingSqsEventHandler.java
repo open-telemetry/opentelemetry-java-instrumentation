@@ -8,12 +8,15 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaSqsInstrumenterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 
 public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEvent, Void> {
 
-  private final AwsLambdaMessageTracer tracer;
+  private final Instrumenter<SQSEvent, Void> instrumenter;
 
   /**
    * Creates a new {@link TracingSqsEventHandler} which traces using the provided {@link
@@ -29,36 +32,39 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
    * invocation.
    */
   protected TracingSqsEventHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
-    this(openTelemetrySdk, flushTimeout, new AwsLambdaMessageTracer(openTelemetrySdk));
+    this(
+        openTelemetrySdk, flushTimeout, AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk));
   }
 
   /**
    * Creates a new {@link TracingSqsEventHandler} which flushes the provided {@link
    * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
-   * invocation, and traces using the provided {@link AwsLambdaTracer}.
+   * invocation, and traces using the provided {@link AwsLambdaFunctionInstrumenter}.
    */
   protected TracingSqsEventHandler(
-      OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaMessageTracer tracer) {
+      OpenTelemetrySdk openTelemetrySdk,
+      Duration flushTimeout,
+      Instrumenter<SQSEvent, Void> instrumenter) {
     super(openTelemetrySdk, flushTimeout);
-    this.tracer = tracer;
+    this.instrumenter = instrumenter;
   }
 
   @Override
   public Void doHandleRequest(SQSEvent event, Context context) {
     io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.current();
-    io.opentelemetry.context.Context otelContext = tracer.startSpan(parentContext, event);
-    Throwable error = null;
-    try (Scope ignored = otelContext.makeCurrent()) {
-      handleEvent(event, context);
-    } catch (Throwable t) {
-      error = t;
-      throw t;
-    } finally {
-      if (error != null) {
-        tracer.endExceptionally(otelContext, error);
-      } else {
-        tracer.end(otelContext);
+    if (instrumenter.shouldStart(parentContext, event)) {
+      io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, event);
+      Throwable error = null;
+      try (Scope ignored = otelContext.makeCurrent()) {
+        handleEvent(event, context);
+      } catch (Throwable t) {
+        error = t;
+        throw t;
+      } finally {
+        instrumenter.end(otelContext, event, null, error);
       }
+    } else {
+      handleEvent(event, context);
     }
     return null;
   }
@@ -68,9 +74,4 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
    * processing of incoming SQS messages.
    */
   protected abstract void handleEvent(SQSEvent event, Context context);
-
-  // We use in SQS message handler too.
-  AwsLambdaMessageTracer getTracer() {
-    return tracer;
-  }
 }

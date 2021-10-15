@@ -6,6 +6,9 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
   // First version to includes support for SQSEvent, currently the most popular message queue used
   // with lambda.

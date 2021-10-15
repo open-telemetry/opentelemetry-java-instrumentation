@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambda.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.awslambda.v1_0.HeadersFactory.ofStream;
+import static io.opentelemetry.instrumentation.awslambda.v1_0.internal.HeadersFactory.ofStream;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayInputStream;
@@ -17,7 +17,7 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-abstract class ApiGatewayProxyRequest {
+public abstract class ApiGatewayProxyRequest {
 
   // TODO(anuraaga): We should create a RequestFactory type of class instead of evaluating this
   // for every request.
@@ -34,7 +34,7 @@ abstract class ApiGatewayProxyRequest {
             fields.iterator().next());
   }
 
-  static ApiGatewayProxyRequest forStream(InputStream source) throws IOException {
+  public static ApiGatewayProxyRequest forStream(InputStream source) throws IOException {
 
     if (noHttpPropagationNeeded()) {
       return new NoopRequest(source);
@@ -48,12 +48,12 @@ abstract class ApiGatewayProxyRequest {
   }
 
   @Nullable
-  Map<String, String> getHeaders() throws IOException {
+  public Map<String, String> getHeaders() throws IOException {
     Map<String, String> headers = ofStream(freshStream());
     return (headers == null ? Collections.emptyMap() : headers);
   }
 
-  abstract InputStream freshStream() throws IOException;
+  public abstract InputStream freshStream() throws IOException;
 
   private static class NoopRequest extends ApiGatewayProxyRequest {
 
@@ -64,12 +64,12 @@ abstract class ApiGatewayProxyRequest {
     }
 
     @Override
-    InputStream freshStream() {
+    public InputStream freshStream() {
       return stream;
     }
 
     @Override
-    Map<String, String> getHeaders() {
+    public Map<String, String> getHeaders() {
       return Collections.emptyMap();
     }
   }
@@ -84,7 +84,7 @@ abstract class ApiGatewayProxyRequest {
     }
 
     @Override
-    InputStream freshStream() throws IOException {
+    public InputStream freshStream() throws IOException {
 
       inputStream.reset();
       inputStream.mark(Integer.MAX_VALUE);
@@ -101,7 +101,7 @@ abstract class ApiGatewayProxyRequest {
     }
 
     @Override
-    InputStream freshStream() {
+    public InputStream freshStream() {
       return new ByteArrayInputStream(data);
     }
   }
