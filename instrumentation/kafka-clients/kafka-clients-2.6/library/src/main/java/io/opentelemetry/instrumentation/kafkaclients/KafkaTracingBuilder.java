@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterBuilder;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,9 +43,9 @@ public final class KafkaTracingBuilder {
   public KafkaTracing build() {
     return new KafkaTracing(
         openTelemetry,
-        KafkaInstrumenterBuilder.buildProducerInstrumenter(
+        KafkaInstrumenterFactory.createProducerInstrumenter(
             INSTRUMENTATION_NAME, openTelemetry, producerAttributesExtractors),
-        KafkaInstrumenterBuilder.buildConsumerOperationInstrumenter(
+        KafkaInstrumenterFactory.createConsumerOperationInstrumenter(
             INSTRUMENTATION_NAME,
             openTelemetry,
             MessageOperation.RECEIVE,
