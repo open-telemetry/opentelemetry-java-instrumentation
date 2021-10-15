@@ -40,8 +40,8 @@ public final class ReflectionHelper {
     for (Method method : methods) {
       // FieldBackedProvider marks added method as synthetic
       if (method.isSynthetic()
-          && (method.getName().startsWith("get__opentelemetryVirtualField$")
-              || method.getName().startsWith("set__opentelemetryVirtualField$"))) {
+          && (method.getName().startsWith("__get__opentelemetryVirtualField$")
+              || method.getName().startsWith("__set__opentelemetryVirtualField$"))) {
         continue;
       }
       result.add(method);
