@@ -1,21 +1,21 @@
 ----------------------------------------------------------
- Run at Thu Oct 14 05:10:01 UTC 2021
+ Run at Fri Oct 15 05:08:31 UTC 2021
  release : compares the latest stable release to no agent
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :            latest             none
-Avg. CPU (user)     :         0.5225825       0.53215325
-Max. CPU (user)     :        0.64179105             0.85
-Startup time (ms)   :             19239            20279
-Total allocated MB  :          13984.47          9668.20
-Heap (min)          :          63438840         48470016
-Heap (max)          :         330268664        272864312
-Thread switch rate  :           30478.0        29932.406
-GC time             :        2236295005       2449345326
-Req. mean           :             12.46            11.86
-Req. p95            :             38.69            37.12
-Iter. mean          :            171.10           161.72
-Iter. p95           :            261.79           259.12
-Net read avg (bps)  :        4807056.00       5047244.00
-Net write avg (bps) :       24995418.00       7245425.00
-Peak threads        :                47               42
+Avg. CPU (user)     :         0.5495718       0.55918986
+Max. CPU (user)     :        0.67171717             0.79
+Startup time (ms)   :             16515            16009
+Total allocated MB  :          13918.86          9412.54
+Heap (min)          :          64792576         53477376
+Heap (max)          :         314531840        268519528
+Thread switch rate  :         33728.164         37551.51
+GC time             :        1975080624       1919861909
+Req. mean           :             10.28            10.15
+Req. p95            :             31.63            31.40
+Iter. mean          :            139.49           136.27
+Iter. p95           :            217.66           224.67
+Net read avg (bps)  :        5928444.00       6013748.00
+Net write avg (bps) :       30787317.00       8508005.00
+Peak threads        :                46               40
