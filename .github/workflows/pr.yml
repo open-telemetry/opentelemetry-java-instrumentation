@@ -277,11 +277,11 @@ jobs:
         run: ./gradlew publishToMavenLocal -x javadoc
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --stacktrace
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --stacktrace
         working-directory: examples/extension
 
   accept-pr:
