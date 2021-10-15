@@ -158,6 +158,11 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     false
   }
 
+  @Override
+  boolean testReadTimeout() {
+    true
+  }
+
   def "test connection reuse and second request with lazy execute"() {
     setup:
     //Create a simple Netty pipeline

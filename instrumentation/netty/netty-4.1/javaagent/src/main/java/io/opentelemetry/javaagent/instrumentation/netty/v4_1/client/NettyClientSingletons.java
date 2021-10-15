@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClien
 
 public final class NettyClientSingletons {
 
-  static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+  public static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
       AttributeKey.valueOf(NettyClientSingletons.class, "http-client-request");
   static final AttributeKey<HttpResponse> HTTP_RESPONSE =
       AttributeKey.valueOf(NettyClientSingletons.class, "http-client-response");

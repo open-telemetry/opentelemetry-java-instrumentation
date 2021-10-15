@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyCommonNetAttributesExtractor;
 
 public final class NettyServerInstrumenterFactory {
 
@@ -27,7 +28,7 @@ public final class NettyServerInstrumenterFactory {
             HttpSpanNameExtractor.create(httpAttributesExtractor))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
         .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(new NettyNetServerAttributesExtractor())
+        .addAttributesExtractor(new NettyCommonNetAttributesExtractor())
         .addRequestMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(new HttpRequestHeadersGetter());
   }

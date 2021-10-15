@@ -154,5 +154,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
 
     // these tests will pass, but they don't really test anything since REQUEST is Void
     options.disableTestReusedRequest();
+
+    options.enableTestReadTimeout();
   }
 }

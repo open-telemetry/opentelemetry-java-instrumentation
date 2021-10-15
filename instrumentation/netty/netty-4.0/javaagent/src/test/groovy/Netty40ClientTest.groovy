@@ -139,4 +139,9 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   boolean testHttps() {
     false
   }
+
+  @Override
+  boolean testReadTimeout() {
+    true
+  }
 }
