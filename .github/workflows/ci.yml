@@ -275,6 +275,10 @@ jobs:
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew publishToMavenLocal -x javadoc
 
+      - name: Local publish gradle plugin
+        run: ../gradlew publishToMavenLocal -x javadoc
+        working-directory: gradle-plugins
+
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/distro
