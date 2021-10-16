@@ -33,7 +33,6 @@ ext {
 }
 
 repositories {
-  mavenLocal()
   mavenCentral()
   maven {
     name = "sonatype"
