@@ -15,9 +15,16 @@ repositories {
   mavenCentral()
 }
 
+val bbGradlePlugin by configurations.creating
+configurations.named("compileOnly") {
+  extendsFrom(bbGradlePlugin)
+}
+
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.20") {
+  // we need to use byte buddy variant that does not shade asm
+  // for this we extract byte buddy gradle plugin inside our plugin
+  bbGradlePlugin("net.bytebuddy:byte-buddy-gradle-plugin:1.11.20") {
     exclude("net.bytebuddy:byte-buddy")
   }
   implementation("net.bytebuddy:byte-buddy-dep:1.11.20")
@@ -74,5 +81,16 @@ nexusPublishing {
 tasks {
   publishPlugins {
     enabled = !version.toString().contains("SNAPSHOT")
+  }
+
+  val extractBbGradlePlugin by registering(Copy::class) {
+    from(zipTree(bbGradlePlugin.files.first { it.name.contains("byte-buddy-gradle-plugin") })) {
+      exclude("META-INF/**")
+    }
+    into("build/classes/java/main")
+  }
+
+  compileJava {
+    dependsOn(extractBbGradlePlugin)
   }
 }
