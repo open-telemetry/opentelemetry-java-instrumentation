@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -15,8 +16,8 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.common.server.NettyServerErrorHandler;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHandler;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,20 +47,22 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
 
     @Advice.OnMethodEnter
     public static void onEnter(
-        @Advice.This ChannelHandlerContext channelContext,
-        @Advice.Argument(0) Throwable throwable) {
-      Attribute<Context> clientContextAttr =
-          channelContext.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-      Context clientContext = clientContextAttr.get();
+        @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
+
+      Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+      Context clientContext = contextAttr.get();
       if (clientContext != null) {
-        NettyHttpClientTracer.tracer().endExceptionally(clientContext, throwable);
+        ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).remove();
+        contextAttr.remove();
+        HttpRequestAndChannel request =
+            ctx.channel().attr(AttributeKeys.CLIENT_REQUEST).getAndRemove();
+        instrumenter().end(clientContext, request, null, throwable);
         return;
       }
-      Attribute<Context> serverContextAttr =
-          channelContext.channel().attr(AttributeKeys.SERVER_CONTEXT);
-      Context serverContext = serverContextAttr.get();
+
+      Context serverContext = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
       if (serverContext != null) {
-        NettyServerErrorHandler.onError(serverContext, throwable);
+        NettyErrorHandler.onError(serverContext, throwable);
       }
     }
   }

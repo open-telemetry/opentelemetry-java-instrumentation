@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.server;
+package io.opentelemetry.javaagent.instrumentation.netty.common;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class NettyNetServerAttributesExtractor
+public final class NettyCommonNetAttributesExtractor
     extends InetSocketAddressNetServerAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
 
   @Override

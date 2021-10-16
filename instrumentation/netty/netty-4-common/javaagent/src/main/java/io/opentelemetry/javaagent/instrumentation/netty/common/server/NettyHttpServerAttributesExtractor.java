@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
