@@ -73,10 +73,13 @@ public class ActionInstrumentation implements TypeInstrumentation {
       tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
 
       scope.close();
-      // span finished in RequestCompleteCallback
       if (throwable == null) {
-        responseFuture.onComplete(
-            new RequestCompleteCallback(context), ((Action<?>) thisAction).executionContext());
+        // span is finished when future completes
+        // not using responseFuture.onComplete() because that doesn't guarantee this handler span
+        // will be completed before the server span completes
+        responseFuture =
+            ResponseFutureWrapper.wrap(
+                responseFuture, context, ((Action<?>) thisAction).executionContext());
       } else {
         tracer().endExceptionally(context, throwable);
       }
