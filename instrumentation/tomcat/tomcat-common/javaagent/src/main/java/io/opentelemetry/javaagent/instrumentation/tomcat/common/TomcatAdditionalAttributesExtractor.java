@@ -10,9 +10,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.security.Principal;
+import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatAdditionalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<Request, Response> {

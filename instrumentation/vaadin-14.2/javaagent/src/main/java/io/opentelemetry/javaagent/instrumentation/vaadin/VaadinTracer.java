@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class VaadinTracer extends BaseTracer {
   private static final ContextKey<VaadinServiceContext> SERVICE_CONTEXT_KEY =

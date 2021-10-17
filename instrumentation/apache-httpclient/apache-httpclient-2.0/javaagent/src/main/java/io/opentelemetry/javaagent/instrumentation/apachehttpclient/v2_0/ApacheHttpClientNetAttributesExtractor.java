@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientNetAttributesExtractor
     extends NetClientAttributesExtractor<HttpMethod, HttpMethod> {
@@ -20,19 +20,22 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(HttpMethod request, @Nullable HttpMethod response) {
+  @Nullable
+  public String peerName(HttpMethod request, @Nullable HttpMethod response) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getHost() : null;
   }
 
   @Override
-  public @Nullable Integer peerPort(HttpMethod request, @Nullable HttpMethod response) {
+  @Nullable
+  public Integer peerPort(HttpMethod request, @Nullable HttpMethod response) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }
 
   @Override
-  public @Nullable String peerIp(HttpMethod request, @Nullable HttpMethod response) {
+  @Nullable
+  public String peerIp(HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 }

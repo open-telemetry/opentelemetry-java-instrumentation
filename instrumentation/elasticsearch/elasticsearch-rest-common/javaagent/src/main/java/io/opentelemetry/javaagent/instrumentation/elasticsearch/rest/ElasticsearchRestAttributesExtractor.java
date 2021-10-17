@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestAttributesExtractor extends DbAttributesExtractor<String, Response> {
@@ -17,27 +17,32 @@ final class ElasticsearchRestAttributesExtractor extends DbAttributesExtractor<S
   }
 
   @Override
-  protected @Nullable String user(String operation) {
+  @Nullable
+  protected String user(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(String operation) {
+  @Nullable
+  protected String name(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String connectionString(String operation) {
+  @Nullable
+  protected String connectionString(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String statement(String operation) {
+  @Nullable
+  protected String statement(String operation) {
     return null;
   }
 
   @Override
-  protected @Nullable String operation(String operation) {
+  @Nullable
+  protected String operation(String operation) {
     return operation;
   }
 }

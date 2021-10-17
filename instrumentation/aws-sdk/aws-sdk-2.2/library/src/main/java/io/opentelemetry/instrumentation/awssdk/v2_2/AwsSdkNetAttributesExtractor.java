@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
@@ -20,7 +20,8 @@ class AwsSdkNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(
+  @Nullable
+  public String peerName(
       ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
@@ -35,7 +36,8 @@ class AwsSdkNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  @Nullable
+  public String peerIp(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return null;
   }
 }

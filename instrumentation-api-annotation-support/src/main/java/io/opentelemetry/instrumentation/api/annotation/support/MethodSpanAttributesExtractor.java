@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
 public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>

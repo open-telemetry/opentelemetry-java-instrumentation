@@ -9,7 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 

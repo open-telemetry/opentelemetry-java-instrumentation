@@ -11,8 +11,8 @@ import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import javax.annotation.Nullable;
 import okhttp3.Request;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class KubernetesHttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, ApiResponse<?>> {
@@ -32,14 +32,16 @@ class KubernetesHttpAttributesExtractor
     return request.headers(name);
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long requestContentLength(
+  protected Long requestContentLength(
       Request request, @Nullable ApiResponse<?> apiResponse) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  protected Long requestContentLengthUncompressed(
       Request request, @Nullable ApiResponse<?> apiResponse) {
     return null;
   }
@@ -54,13 +56,15 @@ class KubernetesHttpAttributesExtractor
     return apiResponse.getStatusCode();
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long responseContentLength(Request request, ApiResponse<?> apiResponse) {
+  protected Long responseContentLength(Request request, ApiResponse<?> apiResponse) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  protected Long responseContentLengthUncompressed(
       Request request, ApiResponse<?> apiResponse) {
     return null;
   }

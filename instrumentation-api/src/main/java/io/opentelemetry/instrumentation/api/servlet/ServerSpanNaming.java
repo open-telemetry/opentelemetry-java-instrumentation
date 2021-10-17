@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Helper container for tracking whether instrumentation should update server span name or not. */
 public final class ServerSpanNaming {
@@ -141,7 +141,8 @@ public final class ServerSpanNaming {
     }
 
     @Override
-    public @Nullable String get(
+    @Nullable
+    public String get(
         Context context, T arg, ServerSpanNameSupplier<T> serverSpanNameSupplier) {
       return serverSpanNameSupplier.get(context, arg);
     }

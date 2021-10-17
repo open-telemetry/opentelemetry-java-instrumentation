@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.context.Context;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class NettyConnectionContext {
   private Context connectionContext;

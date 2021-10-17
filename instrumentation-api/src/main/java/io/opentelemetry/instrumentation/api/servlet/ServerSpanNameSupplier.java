@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 @FunctionalInterface
 public interface ServerSpanNameSupplier<T> {

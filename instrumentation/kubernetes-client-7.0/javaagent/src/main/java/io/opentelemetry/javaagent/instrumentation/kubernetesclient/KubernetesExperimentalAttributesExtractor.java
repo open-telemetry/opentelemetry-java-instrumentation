@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import javax.annotation.Nullable;
 import okhttp3.Request;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class KubernetesExperimentalAttributesExtractor
     implements AttributesExtractor<Request, ApiResponse<?>> {

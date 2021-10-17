@@ -9,12 +9,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class ServletSpanNameExtractor<REQUEST, RESPONSE>
     implements SpanNameExtractor<ServletRequestContext<REQUEST>> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
-  private final @Nullable Function<ServletRequestContext<REQUEST>, MappingResolver>
+  @Nullable
+  private final  Function<ServletRequestContext<REQUEST>, MappingResolver>
       mappingResolverFunction;
 
   public ServletSpanNameExtractor(
@@ -24,7 +25,8 @@ public class ServletSpanNameExtractor<REQUEST, RESPONSE>
     this.mappingResolverFunction = mappingResolverFunction;
   }
 
-  private @Nullable String route(ServletRequestContext<REQUEST> requestContext) {
+  @Nullable
+  private String route(ServletRequestContext<REQUEST> requestContext) {
     if (mappingResolverFunction == null) {
       return null;
     }

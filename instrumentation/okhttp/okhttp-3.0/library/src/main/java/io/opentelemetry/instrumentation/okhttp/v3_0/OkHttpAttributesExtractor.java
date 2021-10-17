@@ -9,9 +9,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import javax.annotation.Nullable;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Request, Response> {
 
@@ -35,19 +35,22 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   }
 
   @Override
-  protected @Nullable Long requestContentLength(Request request, @Nullable Response response) {
+  @Nullable
+  protected Long requestContentLength(Request request, @Nullable Response response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       Request request, @Nullable Response response) {
     return null;
   }
 
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
-  protected @Nullable String flavor(Request request, @Nullable Response response) {
+  @Nullable
+  protected String flavor(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -72,12 +75,14 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
   }
 
   @Override
-  protected @Nullable Long responseContentLength(Request request, Response response) {
+  @Nullable
+  protected Long responseContentLength(Request request, Response response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
+  @Nullable
+  protected Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
   }
 

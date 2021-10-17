@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisRequest, Void> {
   @Override

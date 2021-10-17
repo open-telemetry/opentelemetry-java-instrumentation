@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.client.AbstractVertxClie
 import io.vertx.core.http.HttpClientRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class VertxClientTracer extends AbstractVertxClientTracer {
   private static final VertxClientTracer TRACER = new VertxClientTracer();

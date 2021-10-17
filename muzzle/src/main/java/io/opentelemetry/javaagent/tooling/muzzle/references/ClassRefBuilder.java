@@ -13,8 +13,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.bytebuddy.jar.asm.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The builder of {@link ClassRef}.

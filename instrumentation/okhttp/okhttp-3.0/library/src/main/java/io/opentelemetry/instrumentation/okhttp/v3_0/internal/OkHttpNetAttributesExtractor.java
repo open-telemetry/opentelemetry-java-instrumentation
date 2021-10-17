@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OkHttpNetAttributesExtractor
     extends NetClientAttributesExtractor<Request, Response> {
@@ -19,7 +19,8 @@ public final class OkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  @Nullable
+  public String peerName(Request request, @Nullable Response response) {
     return request.url().host();
   }
 
@@ -29,7 +30,8 @@ public final class OkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  @Nullable
+  public String peerIp(Request request, @Nullable Response response) {
     return null;
   }
 }

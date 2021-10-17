@@ -13,7 +13,7 @@ import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
@@ -22,7 +22,8 @@ class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>
   }
 
   @Override
-  protected @Nullable String flavor(Request<?> request, @Nullable Response<?> response) {
+  @Nullable
+  protected String flavor(Request<?> request, @Nullable Response<?> response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
@@ -38,13 +39,15 @@ class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       Request<?> request, @Nullable Response<?> response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       Request<?> request, @Nullable Response<?> response) {
     return null;
   }
@@ -55,12 +58,14 @@ class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>
   }
 
   @Override
-  protected @Nullable Long responseContentLength(Request<?> request, Response<?> response) {
+  @Nullable
+  protected Long responseContentLength(Request<?> request, Response<?> response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       Request<?> request, Response<?> response) {
     return null;
   }

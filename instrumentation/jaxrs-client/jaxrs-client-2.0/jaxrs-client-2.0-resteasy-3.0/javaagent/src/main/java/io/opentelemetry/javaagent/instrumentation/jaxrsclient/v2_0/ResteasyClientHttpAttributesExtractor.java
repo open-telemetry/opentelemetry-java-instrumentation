@@ -11,15 +11,16 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientInvocation, Response> {
 
   @Override
-  protected @Nullable String method(ClientInvocation httpRequest) {
+  @Nullable
+  protected String method(ClientInvocation httpRequest) {
     return httpRequest.getMethod();
   }
 
@@ -42,13 +43,15 @@ final class ResteasyClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       ClientInvocation httpRequest, @Nullable Response httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       ClientInvocation httpRequest, @Nullable Response httpResponse) {
     return null;
   }
@@ -59,19 +62,22 @@ final class ResteasyClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(ClientInvocation httpRequest, Response httpResponse) {
+  @Nullable
+  protected Integer statusCode(ClientInvocation httpRequest, Response httpResponse) {
     return httpResponse.getStatus();
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       ClientInvocation httpRequest, Response httpResponse) {
     int length = httpResponse.getLength();
     return length != -1 ? (long) length : null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       ClientInvocation httpRequest, Response httpResponse) {
     return null;
   }

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.trace.StatusCode;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {

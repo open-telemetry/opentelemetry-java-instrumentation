@@ -10,9 +10,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaBatchProcessAttributesExtractor
     extends MessagingAttributesExtractor<ConsumerRecords<?, ?>, Void> {
@@ -32,8 +32,9 @@ public final class KafkaBatchProcessAttributesExtractor
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String destination(ConsumerRecords<?, ?> records) {
+  protected String destination(ConsumerRecords<?, ?> records) {
     Set<String> topics =
         records.partitions().stream().map(TopicPartition::topic).collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
@@ -45,38 +46,45 @@ public final class KafkaBatchProcessAttributesExtractor
     return false;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String protocol(ConsumerRecords<?, ?> records) {
+  protected String protocol(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String protocolVersion(ConsumerRecords<?, ?> records) {
+  protected String protocolVersion(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String url(ConsumerRecords<?, ?> records) {
+  protected String url(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String conversationId(ConsumerRecords<?, ?> records) {
+  protected String conversationId(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long messagePayloadSize(ConsumerRecords<?, ?> records) {
+  protected Long messagePayloadSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
+  protected Long messagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String messageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
+  protected String messageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
     return null;
   }
 }

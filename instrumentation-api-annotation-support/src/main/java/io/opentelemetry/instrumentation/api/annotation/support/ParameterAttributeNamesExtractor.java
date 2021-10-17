@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Extractor for the attribute names for the parameters of a traced method. */
 @FunctionalInterface

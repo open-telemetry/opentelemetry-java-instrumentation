@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class CouchbaseQuerySanitizer {
   @Nullable private static final Class<?> QUERY_CLASS;

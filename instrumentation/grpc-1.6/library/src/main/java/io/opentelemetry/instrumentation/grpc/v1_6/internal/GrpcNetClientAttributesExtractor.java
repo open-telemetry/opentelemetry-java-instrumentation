@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class GrpcNetClientAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<GrpcRequest, Status> {

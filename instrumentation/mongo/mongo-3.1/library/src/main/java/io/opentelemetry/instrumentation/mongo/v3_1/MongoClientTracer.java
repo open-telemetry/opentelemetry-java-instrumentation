@@ -25,12 +25,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class MongoClientTracer
     extends DatabaseClientTracer<CommandStartedEvent, BsonDocument, String> {

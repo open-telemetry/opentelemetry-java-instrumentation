@@ -18,8 +18,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A builder of {@link DubboTracing}. */
 public final class DubboTracingBuilder {

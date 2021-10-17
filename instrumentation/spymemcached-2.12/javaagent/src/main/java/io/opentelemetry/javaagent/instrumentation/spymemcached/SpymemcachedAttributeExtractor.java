@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class SpymemcachedAttributeExtractor
     extends DbAttributesExtractor<SpymemcachedRequest, Object> {
@@ -16,27 +16,32 @@ public class SpymemcachedAttributeExtractor
   }
 
   @Override
-  protected @Nullable String user(SpymemcachedRequest spymemcachedRequest) {
+  @Nullable
+  protected String user(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(SpymemcachedRequest spymemcachedRequest) {
+  @Nullable
+  protected String name(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String connectionString(SpymemcachedRequest spymemcachedRequest) {
+  @Nullable
+  protected String connectionString(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String statement(SpymemcachedRequest spymemcachedRequest) {
+  @Nullable
+  protected String statement(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String operation(SpymemcachedRequest spymemcachedRequest) {
+  @Nullable
+  protected String operation(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.dbOperation();
   }
 }

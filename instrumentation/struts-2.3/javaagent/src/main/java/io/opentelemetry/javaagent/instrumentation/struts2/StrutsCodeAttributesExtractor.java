@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class StrutsCodeAttributesExtractor extends CodeAttributesExtractor<ActionInvocation, Void> {
 
@@ -22,12 +22,14 @@ public class StrutsCodeAttributesExtractor extends CodeAttributesExtractor<Actio
   }
 
   @Override
-  protected @Nullable String filePath(ActionInvocation actionInvocation) {
+  @Nullable
+  protected String filePath(ActionInvocation actionInvocation) {
     return null;
   }
 
   @Override
-  protected @Nullable Long lineNumber(ActionInvocation actionInvocation) {
+  @Nullable
+  protected Long lineNumber(ActionInvocation actionInvocation) {
     return null;
   }
 }

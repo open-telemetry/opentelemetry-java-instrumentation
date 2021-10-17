@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 import org.apache.http.client.methods.HttpRequestWrapper;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 enum HttpHeaderSetter implements TextMapSetter<HttpRequestWrapper> {
   INSTANCE;

@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpC
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {

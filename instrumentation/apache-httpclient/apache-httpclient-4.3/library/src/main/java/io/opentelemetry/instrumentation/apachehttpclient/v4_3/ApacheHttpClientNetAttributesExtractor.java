@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientNetAttributesExtractor
     extends NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {

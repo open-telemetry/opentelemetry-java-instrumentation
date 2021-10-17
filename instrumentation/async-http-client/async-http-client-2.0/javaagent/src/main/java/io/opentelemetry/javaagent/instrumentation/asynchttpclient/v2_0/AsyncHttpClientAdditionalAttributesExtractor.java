@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.netty.request.NettyRequest;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AsyncHttpClientAdditionalAttributesExtractor
     implements AttributesExtractor<RequestContext, Response> {

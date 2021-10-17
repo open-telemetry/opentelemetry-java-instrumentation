@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** JDBC driver for OpenTelemetry. */
 public final class OpenTelemetryDriver implements Driver {

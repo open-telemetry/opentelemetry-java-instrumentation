@@ -8,6 +8,7 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   implementation(project(":instrumentation-api"))
   implementation("org.slf4j:slf4j-api")
+  implementation("com.google.code.findbugs:jsr305:3.0.2")
 
   testImplementation(project(":testing-common"))
   testImplementation("org.mockito:mockito-core")
