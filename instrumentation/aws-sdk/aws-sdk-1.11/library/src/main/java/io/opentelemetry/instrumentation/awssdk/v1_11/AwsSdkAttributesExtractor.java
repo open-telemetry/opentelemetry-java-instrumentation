@@ -40,8 +40,7 @@ class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>
 
   @Override
   @Nullable
-  protected Long requestContentLength(
-      Request<?> request, @Nullable Response<?> response) {
+  protected Long requestContentLength(Request<?> request, @Nullable Response<?> response) {
     return null;
   }
 
@@ -65,8 +64,7 @@ class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>
 
   @Override
   @Nullable
-  protected Long responseContentLengthUncompressed(
-      Request<?> request, Response<?> response) {
+  protected Long responseContentLengthUncompressed(Request<?> request, Response<?> response) {
     return null;
   }
 

@@ -36,8 +36,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
   private final Instrumenter<REQUEST, RESPONSE> instrumenter;
   private final Class<RESPONSE> responseType;
   private final Class<?> asyncType;
-  @Nullable
-  private final AsyncOperationEndStrategy asyncOperationEndStrategy;
+  @Nullable private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private AsyncOperationEndSupport(
       Instrumenter<REQUEST, RESPONSE> instrumenter,

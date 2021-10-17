@@ -58,8 +58,7 @@ final class GoogleHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(
-      HttpRequest httpRequest, HttpResponse httpResponse) {
+  protected Long responseContentLength(HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }
 

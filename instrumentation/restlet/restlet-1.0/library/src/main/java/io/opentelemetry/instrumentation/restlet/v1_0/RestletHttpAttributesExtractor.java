@@ -70,8 +70,7 @@ final class RestletHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(
-      Request request, @Nullable Response response) {
+  protected Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
     return null;
   }
 

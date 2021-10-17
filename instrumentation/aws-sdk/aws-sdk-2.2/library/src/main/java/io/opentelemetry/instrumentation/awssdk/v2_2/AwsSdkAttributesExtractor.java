@@ -26,8 +26,7 @@ class AwsSdkAttributesExtractor
 
   @Override
   @Nullable
-  protected String flavor(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  protected String flavor(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 

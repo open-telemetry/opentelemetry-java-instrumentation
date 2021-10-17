@@ -34,8 +34,7 @@ class KubernetesHttpAttributesExtractor
 
   @Nullable
   @Override
-  protected Long requestContentLength(
-      Request request, @Nullable ApiResponse<?> apiResponse) {
+  protected Long requestContentLength(Request request, @Nullable ApiResponse<?> apiResponse) {
     return null;
   }
 
@@ -64,8 +63,7 @@ class KubernetesHttpAttributesExtractor
 
   @Nullable
   @Override
-  protected Long responseContentLengthUncompressed(
-      Request request, ApiResponse<?> apiResponse) {
+  protected Long responseContentLengthUncompressed(Request request, ApiResponse<?> apiResponse) {
     return null;
   }
 

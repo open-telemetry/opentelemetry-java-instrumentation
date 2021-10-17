@@ -14,9 +14,9 @@ import javax.annotation.Nullable;
 public class ServletSpanNameExtractor<REQUEST, RESPONSE>
     implements SpanNameExtractor<ServletRequestContext<REQUEST>> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+
   @Nullable
-  private final  Function<ServletRequestContext<REQUEST>, MappingResolver>
-      mappingResolverFunction;
+  private final Function<ServletRequestContext<REQUEST>, MappingResolver> mappingResolverFunction;
 
   public ServletSpanNameExtractor(
       ServletAccessor<REQUEST, RESPONSE> accessor,

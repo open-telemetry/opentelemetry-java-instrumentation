@@ -69,8 +69,7 @@ final class ResteasyClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(
-      ClientInvocation httpRequest, Response httpResponse) {
+  protected Long responseContentLength(ClientInvocation httpRequest, Response httpResponse) {
     int length = httpResponse.getLength();
     return length != -1 ? (long) length : null;
   }

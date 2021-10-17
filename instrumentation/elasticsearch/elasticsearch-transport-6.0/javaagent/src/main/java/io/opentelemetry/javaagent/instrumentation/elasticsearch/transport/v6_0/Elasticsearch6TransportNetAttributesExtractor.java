@@ -15,8 +15,7 @@ public class Elasticsearch6TransportNetAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
   @Nullable
-  public String transport(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String transport(ElasticTransportRequest request, @Nullable ActionResponse response) {
     return null;
   }
 

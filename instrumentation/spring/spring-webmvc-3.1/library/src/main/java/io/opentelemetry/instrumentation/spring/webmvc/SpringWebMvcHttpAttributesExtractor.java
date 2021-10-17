@@ -64,8 +64,7 @@ final class SpringWebMvcHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(
-      HttpServletRequest request, HttpServletResponse response) {
+  protected Long responseContentLength(HttpServletRequest request, HttpServletResponse response) {
     return null;
   }
 
@@ -114,8 +113,7 @@ final class SpringWebMvcHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String serverName(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
+  protected String serverName(HttpServletRequest request, @Nullable HttpServletResponse response) {
     return null;
   }
 }

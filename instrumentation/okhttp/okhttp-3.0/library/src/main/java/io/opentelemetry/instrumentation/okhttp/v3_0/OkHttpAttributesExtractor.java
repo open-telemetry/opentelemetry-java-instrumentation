@@ -42,8 +42,7 @@ final class OkHttpAttributesExtractor extends HttpClientAttributesExtractor<Requ
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(
-      Request request, @Nullable Response response) {
+  protected Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
     return null;
   }
 

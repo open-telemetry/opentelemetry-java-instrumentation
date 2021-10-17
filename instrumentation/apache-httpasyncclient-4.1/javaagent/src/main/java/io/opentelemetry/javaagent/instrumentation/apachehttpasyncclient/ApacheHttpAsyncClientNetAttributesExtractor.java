@@ -20,8 +20,7 @@ final class ApacheHttpAsyncClientNetAttributesExtractor
 
   @Override
   @Nullable
-  public String peerName(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public String peerName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getPeerName();
   }
 

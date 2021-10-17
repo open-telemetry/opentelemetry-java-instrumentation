@@ -35,8 +35,7 @@ class HttpUrlHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long requestContentLength(
-      HttpURLConnection connection, @Nullable Integer statusCode) {
+  protected Long requestContentLength(HttpURLConnection connection, @Nullable Integer statusCode) {
     return null;
   }
 

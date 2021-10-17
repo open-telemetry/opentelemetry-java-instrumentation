@@ -21,8 +21,7 @@ final class AsyncHttpClientNetAttributesExtractor
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(
-      RequestContext request, @Nullable Response response) {
+  public InetSocketAddress getAddress(RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

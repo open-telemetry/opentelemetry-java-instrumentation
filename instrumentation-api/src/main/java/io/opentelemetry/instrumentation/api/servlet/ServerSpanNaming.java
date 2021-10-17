@@ -142,8 +142,7 @@ public final class ServerSpanNaming {
 
     @Override
     @Nullable
-    public String get(
-        Context context, T arg, ServerSpanNameSupplier<T> serverSpanNameSupplier) {
+    public String get(Context context, T arg, ServerSpanNameSupplier<T> serverSpanNameSupplier) {
       return serverSpanNameSupplier.get(context, arg);
     }
   }

@@ -11,10 +11,10 @@ import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinit
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

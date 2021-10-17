@@ -53,8 +53,7 @@ public class TomcatHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(
-      Request request, @Nullable Response response) {
+  protected Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
     return null;
   }
 

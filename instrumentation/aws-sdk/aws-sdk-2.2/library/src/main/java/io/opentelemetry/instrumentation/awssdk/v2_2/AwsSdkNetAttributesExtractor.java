@@ -21,8 +21,7 @@ class AwsSdkNetAttributesExtractor
 
   @Override
   @Nullable
-  public String peerName(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  public String peerName(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.host();

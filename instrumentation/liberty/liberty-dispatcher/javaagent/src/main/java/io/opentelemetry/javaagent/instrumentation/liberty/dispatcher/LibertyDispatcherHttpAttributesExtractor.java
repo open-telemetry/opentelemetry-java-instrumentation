@@ -52,8 +52,7 @@ public class LibertyDispatcherHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Integer statusCode(
-      LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
+  protected Integer statusCode(LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return libertyResponse.getStatus();
   }
 

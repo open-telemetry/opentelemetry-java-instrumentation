@@ -21,8 +21,7 @@ final class JaxRsClientNetAttributesExtractor
 
   @Override
   @Nullable
-  public String peerName(
-      ClientRequestContext request, @Nullable ClientResponseContext response) {
+  public String peerName(ClientRequestContext request, @Nullable ClientResponseContext response) {
     return request.getUri().getHost();
   }
 
@@ -37,8 +36,7 @@ final class JaxRsClientNetAttributesExtractor
 
   @Override
   @Nullable
-  public String peerIp(
-      ClientRequestContext request, @Nullable ClientResponseContext response) {
+  public String peerIp(ClientRequestContext request, @Nullable ClientResponseContext response) {
     return null;
   }
 }

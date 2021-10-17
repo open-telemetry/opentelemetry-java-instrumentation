@@ -58,8 +58,7 @@ public class UndertowHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(
-      HttpServerExchange exchange, HttpServerExchange unused) {
+  protected Long responseContentLength(HttpServerExchange exchange, HttpServerExchange unused) {
     long responseContentLength = exchange.getResponseContentLength();
     return responseContentLength != -1 ? responseContentLength : null;
   }
@@ -103,8 +102,7 @@ public class UndertowHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String serverName(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  protected String serverName(HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return null;
   }
 }

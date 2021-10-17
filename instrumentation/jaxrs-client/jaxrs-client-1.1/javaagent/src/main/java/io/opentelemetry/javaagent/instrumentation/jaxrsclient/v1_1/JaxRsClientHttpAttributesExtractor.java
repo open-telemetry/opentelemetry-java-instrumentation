@@ -69,8 +69,7 @@ final class JaxRsClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(
-      ClientRequest httpRequest, ClientResponse httpResponse) {
+  protected Long responseContentLength(ClientRequest httpRequest, ClientResponse httpResponse) {
     int length = httpResponse.getLength();
     return length != -1 ? (long) length : null;
   }

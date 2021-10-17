@@ -79,8 +79,7 @@ final class SpringMessagingAttributesExtractor
 
   @Override
   @Nullable
-  protected String messageId(
-      MessageWithChannel messageWithChannel, @Nullable Void unused) {
+  protected String messageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
   }
 }

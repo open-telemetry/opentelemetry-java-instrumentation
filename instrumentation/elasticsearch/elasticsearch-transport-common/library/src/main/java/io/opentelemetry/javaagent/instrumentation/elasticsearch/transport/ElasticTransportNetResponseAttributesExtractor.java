@@ -13,15 +13,13 @@ public class ElasticTransportNetResponseAttributesExtractor
     extends NetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
   @Nullable
-  public String transport(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String transport(ElasticTransportRequest request, @Nullable ActionResponse response) {
     return null;
   }
 
   @Override
   @Nullable
-  public String peerName(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String peerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getHost();
     }
@@ -30,8 +28,7 @@ public class ElasticTransportNetResponseAttributesExtractor
 
   @Override
   @Nullable
-  public Integer peerPort(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public Integer peerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getPort();
     }
@@ -40,8 +37,7 @@ public class ElasticTransportNetResponseAttributesExtractor
 
   @Override
   @Nullable
-  public String peerIp(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String peerIp(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
     }
