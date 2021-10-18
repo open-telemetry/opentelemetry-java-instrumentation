@@ -100,7 +100,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HttpCodecFilter.handleRead"
+    return "HTTP GET"
   }
 
   static class ExceptionHttpHandler extends HttpHandler {

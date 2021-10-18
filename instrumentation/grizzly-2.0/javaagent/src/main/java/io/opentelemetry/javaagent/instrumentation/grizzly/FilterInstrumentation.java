@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -61,7 +60,7 @@ public class FilterInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context context = tracer().getServerContext(ctx);
+      Context context = GrizzlyStateStorage.getContext(ctx);
       if (context != null) {
         scope = context.makeCurrent();
       }
