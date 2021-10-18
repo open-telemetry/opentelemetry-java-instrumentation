@@ -30,7 +30,7 @@ public final class NettyClientInstrumenterFactory {
             GlobalOpenTelemetry.get(),
             instrumentationName,
             HttpSpanNameExtractor.create(httpClientAttributesExtractor))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesExtractor))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.createClient(httpClientAttributesExtractor))
         .addAttributesExtractor(httpClientAttributesExtractor)
         .addAttributesExtractor(new NettyCommonNetAttributesExtractor())
         // TODO: add peer extractor attributes once Net*AttributesExtractors are refactored
