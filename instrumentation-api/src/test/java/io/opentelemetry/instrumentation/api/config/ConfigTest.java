@@ -54,10 +54,7 @@ class ConfigTest {
   @Test
   void shouldGetInt() {
     Config config =
-        Config.builder()
-            .addProperty("prop.int", "12")
-            .addProperty("prop.wrong", "twelve")
-            .build();
+        Config.builder().addProperty("prop.int", "12").addProperty("prop.wrong", "twelve").build();
 
     assertEquals(12, config.getInt("prop.int"));
     assertEquals(12, config.getInt("prop.int", 1000));
@@ -76,10 +73,7 @@ class ConfigTest {
   @Test
   void shouldGetLong() {
     Config config =
-        Config.builder()
-            .addProperty("prop.long", "12")
-            .addProperty("prop.wrong", "twelve")
-            .build();
+        Config.builder().addProperty("prop.long", "12").addProperty("prop.wrong", "twelve").build();
 
     assertEquals(12, config.getLong("prop.long"));
     assertEquals(12, config.getLong("prop.long", 1000));
