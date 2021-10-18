@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import javax.annotation.Nullable;
 
@@ -26,6 +25,5 @@ public interface SpanStatusExtractor<REQUEST, RESPONSE> {
   }
 
   /** Returns the {@link StatusCode}. */
-  StatusCode extract(
-      REQUEST request, @Nullable RESPONSE response, SpanKind kind, @Nullable Throwable error);
+  StatusCode extract(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

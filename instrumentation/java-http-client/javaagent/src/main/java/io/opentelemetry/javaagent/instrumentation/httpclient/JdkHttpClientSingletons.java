@@ -27,7 +27,7 @@ public class JdkHttpClientSingletons {
     SpanNameExtractor<HttpRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpRequest, HttpResponse<?>> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
     JdkHttpNetAttributesExtractor netAttributesExtractor = new JdkHttpNetAttributesExtractor();
 
     INSTRUMENTER =

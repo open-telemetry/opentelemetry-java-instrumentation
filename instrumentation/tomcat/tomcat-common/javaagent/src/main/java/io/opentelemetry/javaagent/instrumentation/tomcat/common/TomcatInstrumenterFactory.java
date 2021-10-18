@@ -37,7 +37,7 @@ public final class TomcatInstrumenterFactory {
     SpanNameExtractor<Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+        HttpSpanStatusExtractor.createServer(httpAttributesExtractor);
     NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
         new TomcatNetAttributesExtractor();
     AttributesExtractor<Request, Response> additionalAttributeExtractor =

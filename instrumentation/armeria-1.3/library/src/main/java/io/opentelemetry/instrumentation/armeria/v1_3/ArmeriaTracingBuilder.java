@@ -127,14 +127,14 @@ public final class ArmeriaTracingBuilder {
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
-                HttpSpanStatusExtractor.create(httpClientAttributesExtractor)))
+                HttpSpanStatusExtractor.createClient(httpClientAttributesExtractor)))
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(httpClientAttributesExtractor)
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
-                HttpSpanStatusExtractor.create(serverAttributesExtractor)))
+                HttpSpanStatusExtractor.createServer(serverAttributesExtractor)))
         .addAttributesExtractor(new ArmeriaNetServerAttributesExtractor())
         .addAttributesExtractor(serverAttributesExtractor)
         .addRequestMetrics(HttpServerMetrics.get());

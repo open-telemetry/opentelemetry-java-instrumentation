@@ -34,7 +34,7 @@ public final class OkHttp2Singletons {
     SpanNameExtractor<Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
     NetClientAttributesExtractor<Request, Response> netAttributesExtractor =
         new OkHttp2NetAttributesExtractor();
 

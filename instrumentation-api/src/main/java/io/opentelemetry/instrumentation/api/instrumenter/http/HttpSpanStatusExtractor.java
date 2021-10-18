@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
@@ -20,36 +19,49 @@ import javax.annotation.Nullable;
 public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {
 
+  private final HttpStatusConverter statusConverter;
+
   /**
    * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
    * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
    */
-  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> createClient(
       HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    return new HttpSpanStatusExtractor<>(attributesExtractor);
+    return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.CLIENT);
+  }
+
+  /**
+   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
+   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * default status} otherwise.
+   */
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> createServer(
+      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+    return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.SERVER);
   }
 
   private final HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE>
       attributesExtractor;
 
   private HttpSpanStatusExtractor(
-      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor,
+      HttpStatusConverter statusConverter) {
     this.attributesExtractor = attributesExtractor;
+    this.statusConverter = statusConverter;
   }
 
   @Override
-  public StatusCode extract(
-      REQUEST request, @Nullable RESPONSE response, SpanKind kind, @Nullable Throwable error) {
+  public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
     if (response != null) {
       Integer statusCode = attributesExtractor.statusCode(request, response);
       if (statusCode != null) {
-        StatusCode statusCodeObj = HttpStatusConverter.statusFromHttpStatus(statusCode, kind);
+        StatusCode statusCodeObj = statusConverter.statusFromHttpStatus(statusCode);
         if (statusCodeObj == StatusCode.ERROR) {
           return statusCodeObj;
         }
       }
     }
-    return SpanStatusExtractor.getDefault().extract(request, response, kind, error);
+    return SpanStatusExtractor.getDefault().extract(request, response, error);
   }
 }

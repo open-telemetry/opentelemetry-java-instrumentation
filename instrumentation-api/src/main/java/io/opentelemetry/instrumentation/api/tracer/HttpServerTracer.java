@@ -272,7 +272,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static void setStatus(Span span, int status) {
     span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-    StatusCode statusCode = HttpStatusConverter.serverStatusFromHttpStatus(status);
+    StatusCode statusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(status);
     if (statusCode != StatusCode.UNSET) {
       span.setStatus(statusCode);
     }
