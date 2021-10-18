@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.api.caching;
 
 import java.util.Set;
 import java.util.concurrent.Executor;
-import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
 
 interface CaffeineCache<K, V> extends Cache<K, V> {
 
@@ -18,9 +18,9 @@ interface CaffeineCache<K, V> extends Cache<K, V> {
 
     void weakValues();
 
-    void maximumSize(@NonNegative long maximumSize);
+    void maximumSize(@Nonnegative long maximumSize);
 
-    void executor(@NonNull Executor executor);
+    void executor(@Nonnull Executor executor);
 
     Cache<K, V> build();
   }

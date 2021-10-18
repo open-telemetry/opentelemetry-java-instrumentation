@@ -9,8 +9,8 @@ import io.opentelemetry.instrumentation.api.internal.shaded.caffeine3.cache.Caff
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
-import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
 
 final class Caffeine3Cache<K, V> implements CaffeineCache<K, V> {
 
@@ -78,12 +78,12 @@ final class Caffeine3Cache<K, V> implements CaffeineCache<K, V> {
     }
 
     @Override
-    public void maximumSize(@NonNegative long maximumSize) {
+    public void maximumSize(@Nonnegative long maximumSize) {
       caffeine.maximumSize(maximumSize);
     }
 
     @Override
-    public void executor(@NonNull Executor executor) {
+    public void executor(@Nonnull Executor executor) {
       caffeine.executor(executor);
     }
 
