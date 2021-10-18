@@ -264,7 +264,7 @@ final class VirtualFieldImplementationsGenerator {
   @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
   static final class VirtualFieldImplementationTemplate extends VirtualField<Object, Object> {
     private static final VirtualFieldImplementationTemplate INSTANCE =
-        new VirtualFieldImplementationTemplate(Cache.newBuilder().setWeakKeys().build());
+        new VirtualFieldImplementationTemplate(Cache.builder().setWeakKeys().build());
 
     private final Cache<Object, Object> map;
 

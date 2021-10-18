@@ -34,7 +34,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void postStaticInitializer() {
-      ContextPropagationOperator.newBuilder()
+      ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(
               Config.get()
                   .getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))

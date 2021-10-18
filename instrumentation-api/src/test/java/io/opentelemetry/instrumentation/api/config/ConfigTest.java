@@ -33,7 +33,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 class ConfigTest {
   @Test
   void shouldGetString() {
-    Config config = Config.newBuilder().addProperty("prop.string", "some text").build();
+    Config config = Config.builder().addProperty("prop.string", "some text").build();
 
     assertEquals("some text", config.getString("prop.string"));
     assertEquals("some text", config.getString("prop.string", "default"));
@@ -43,7 +43,7 @@ class ConfigTest {
 
   @Test
   void shouldGetBoolean() {
-    Config config = Config.newBuilder().addProperty("prop.boolean", "true").build();
+    Config config = Config.builder().addProperty("prop.boolean", "true").build();
 
     assertTrue(config.getBoolean("prop.boolean"));
     assertTrue(config.getBoolean("prop.boolean", false));
@@ -54,10 +54,7 @@ class ConfigTest {
   @Test
   void shouldGetInt() {
     Config config =
-        Config.newBuilder()
-            .addProperty("prop.int", "12")
-            .addProperty("prop.wrong", "twelve")
-            .build();
+        Config.builder().addProperty("prop.int", "12").addProperty("prop.wrong", "twelve").build();
 
     assertEquals(12, config.getInt("prop.int"));
     assertEquals(12, config.getInt("prop.int", 1000));
@@ -68,7 +65,7 @@ class ConfigTest {
 
   @Test
   void shouldFailOnInvalidInt() {
-    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+    Config config = Config.builder().addProperty("prop.wrong", "twelve").build();
 
     assertThrows(ConfigParsingException.class, () -> config.getInt("prop.wrong"));
   }
@@ -76,10 +73,7 @@ class ConfigTest {
   @Test
   void shouldGetLong() {
     Config config =
-        Config.newBuilder()
-            .addProperty("prop.long", "12")
-            .addProperty("prop.wrong", "twelve")
-            .build();
+        Config.builder().addProperty("prop.long", "12").addProperty("prop.wrong", "twelve").build();
 
     assertEquals(12, config.getLong("prop.long"));
     assertEquals(12, config.getLong("prop.long", 1000));
@@ -90,7 +84,7 @@ class ConfigTest {
 
   @Test
   void shouldFailOnInvalidLong() {
-    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve").build();
+    Config config = Config.builder().addProperty("prop.wrong", "twelve").build();
 
     assertThrows(ConfigParsingException.class, () -> config.getLong("prop.wrong"));
   }
@@ -98,7 +92,7 @@ class ConfigTest {
   @Test
   void shouldGetDouble() {
     Config config =
-        Config.newBuilder()
+        Config.builder()
             .addProperty("prop.double", "12.345")
             .addProperty("prop.wrong", "twelve point something")
             .build();
@@ -112,7 +106,7 @@ class ConfigTest {
 
   @Test
   void shouldFailOnInvalidDouble() {
-    Config config = Config.newBuilder().addProperty("prop.wrong", "twelve point something").build();
+    Config config = Config.builder().addProperty("prop.wrong", "twelve point something").build();
 
     assertThrows(ConfigParsingException.class, () -> config.getDouble("prop.wrong"));
   }
@@ -120,7 +114,7 @@ class ConfigTest {
   @Test
   void shouldGetDuration_defaultUnit() {
     Config config =
-        Config.newBuilder()
+        Config.builder()
             .addProperty("prop.duration", "5000")
             .addProperty("prop.wrong", "hundred days")
             .build();
@@ -134,32 +128,32 @@ class ConfigTest {
 
   @Test
   void shouldFailOnInvalidDuration() {
-    Config config = Config.newBuilder().addProperty("prop.wrong", "hundred days").build();
+    Config config = Config.builder().addProperty("prop.wrong", "hundred days").build();
 
     assertThrows(ConfigParsingException.class, () -> config.getDuration("prop.wrong"));
   }
 
   @Test
   void shouldGetDuration_variousUnits() {
-    Config config = Config.newBuilder().addProperty("prop.duration", "100ms").build();
+    Config config = Config.builder().addProperty("prop.duration", "100ms").build();
     assertEquals(Duration.ofMillis(100), config.getDuration("prop.duration"));
 
-    config = Config.newBuilder().addProperty("prop.duration", "100s").build();
+    config = Config.builder().addProperty("prop.duration", "100s").build();
     assertEquals(Duration.ofSeconds(100), config.getDuration("prop.duration"));
 
-    config = Config.newBuilder().addProperty("prop.duration", "100m").build();
+    config = Config.builder().addProperty("prop.duration", "100m").build();
     assertEquals(Duration.ofMinutes(100), config.getDuration("prop.duration"));
 
-    config = Config.newBuilder().addProperty("prop.duration", "100h").build();
+    config = Config.builder().addProperty("prop.duration", "100h").build();
     assertEquals(Duration.ofHours(100), config.getDuration("prop.duration"));
 
-    config = Config.newBuilder().addProperty("prop.duration", "100d").build();
+    config = Config.builder().addProperty("prop.duration", "100d").build();
     assertEquals(Duration.ofDays(100), config.getDuration("prop.duration"));
   }
 
   @Test
   void shouldGetList() {
-    Config config = Config.newBuilder().addProperty("prop.list", "one, two ,three").build();
+    Config config = Config.builder().addProperty("prop.list", "one, two ,three").build();
 
     assertEquals(asList("one", "two", "three"), config.getList("prop.list"));
     assertEquals(
@@ -172,7 +166,7 @@ class ConfigTest {
   @Test
   void shouldGetMap() {
     Config config =
-        Config.newBuilder()
+        Config.builder()
             .addProperty("prop.map", "one=1, two=2")
             .addProperty("prop.wrong", "one=1, but not two!")
             .addProperty("prop.trailing", "one=1,")
@@ -191,7 +185,7 @@ class ConfigTest {
 
   @Test
   void shouldFailOnInvalidMap() {
-    Config config = Config.newBuilder().addProperty("prop.wrong", "one=1, but not two!").build();
+    Config config = Config.builder().addProperty("prop.wrong", "one=1, but not two!").build();
 
     assertThrows(ConfigParsingException.class, () -> config.getMap("prop.wrong"));
   }
@@ -199,7 +193,7 @@ class ConfigTest {
   @ParameterizedTest
   @ArgumentsSource(AgentDebugParams.class)
   void shouldCheckIfAgentDebugModeIsEnabled(String propertyValue, boolean expected) {
-    Config config = Config.newBuilder().addProperty("otel.javaagent.debug", propertyValue).build();
+    Config config = Config.builder().addProperty("otel.javaagent.debug", propertyValue).build();
 
     assertEquals(expected, config.isAgentDebugEnabled());
   }
@@ -217,7 +211,7 @@ class ConfigTest {
   void shouldCheckIfInstrumentationIsEnabled(
       List<String> names, boolean defaultEnabled, boolean expected) {
     Config config =
-        Config.newBuilder()
+        Config.builder()
             .addProperty("otel.instrumentation.order.enabled", "true")
             .addProperty("otel.instrumentation.test-prop.enabled", "true")
             .addProperty("otel.instrumentation.disabled-prop.enabled", "false")

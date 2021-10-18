@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 public interface Trie<V> {
 
   /** Start building a trie. */
-  static <V> Builder<V> newBuilder() {
+  static <V> Builder<V> builder() {
     return new TrieImpl.BuilderImpl<>();
   }
 

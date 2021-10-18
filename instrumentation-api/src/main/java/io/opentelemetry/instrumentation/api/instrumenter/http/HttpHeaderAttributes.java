@@ -12,9 +12,9 @@ import java.util.List;
 final class HttpHeaderAttributes {
 
   private static final Cache<String, AttributeKey<List<String>>> requestKeysCache =
-      Cache.newBuilder().setMaximumSize(32).build();
+      Cache.builder().setMaximumSize(32).build();
   private static final Cache<String, AttributeKey<List<String>>> responseKeysCache =
-      Cache.newBuilder().setMaximumSize(32).build();
+      Cache.builder().setMaximumSize(32).build();
 
   static AttributeKey<List<String>> requestAttributeKey(String headerName) {
     return requestKeysCache.computeIfAbsent(headerName, n -> createKey("request", n));

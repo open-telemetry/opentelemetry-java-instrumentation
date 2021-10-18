@@ -26,7 +26,7 @@ class ReactorAsyncOperationEndStrategyTest extends Specification {
 
   def underTest = ReactorAsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = ReactorAsyncOperationEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = ReactorAsyncOperationEndStrategy.builder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 

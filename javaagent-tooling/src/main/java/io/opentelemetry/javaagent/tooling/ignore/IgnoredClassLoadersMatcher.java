@@ -18,7 +18,7 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
 
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
   private static final Cache<ClassLoader, Boolean> skipCache =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
 
   private final Trie<IgnoreAllow> ignoredClassLoaders;
 

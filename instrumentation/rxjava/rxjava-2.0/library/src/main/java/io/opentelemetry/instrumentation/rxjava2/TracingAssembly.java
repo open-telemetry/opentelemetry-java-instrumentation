@@ -97,10 +97,10 @@ public final class TracingAssembly {
   private static boolean enabled;
 
   public static TracingAssembly create() {
-    return newBuilder().build();
+    return builder().build();
   }
 
-  public static TracingAssemblyBuilder newBuilder() {
+  public static TracingAssemblyBuilder builder() {
     return new TracingAssemblyBuilder();
   }
 
@@ -249,7 +249,7 @@ public final class TracingAssembly {
 
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     asyncOperationEndStrategy =
-        RxJava2AsyncOperationEndStrategy.newBuilder()
+        RxJava2AsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
 

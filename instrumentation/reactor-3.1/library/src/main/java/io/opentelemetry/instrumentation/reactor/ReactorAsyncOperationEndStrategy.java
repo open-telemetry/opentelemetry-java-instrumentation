@@ -23,10 +23,10 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
       AttributeKey.booleanKey("reactor.canceled");
 
   public static ReactorAsyncOperationEndStrategy create() {
-    return newBuilder().build();
+    return builder().build();
   }
 
-  public static ReactorAsyncOperationEndStrategyBuilder newBuilder() {
+  public static ReactorAsyncOperationEndStrategyBuilder builder() {
     return new ReactorAsyncOperationEndStrategyBuilder();
   }
 

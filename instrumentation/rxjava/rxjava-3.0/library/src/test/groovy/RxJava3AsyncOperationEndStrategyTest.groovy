@@ -39,7 +39,7 @@ class RxJava3AsyncOperationEndStrategyTest extends Specification {
 
   def underTest = RxJava3AsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = RxJava3AsyncOperationEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = RxJava3AsyncOperationEndStrategy.builder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 

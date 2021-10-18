@@ -40,10 +40,10 @@ import reactor.core.publisher.Operators;
 public final class ContextPropagationOperator {
 
   public static ContextPropagationOperator create() {
-    return newBuilder().build();
+    return builder().build();
   }
 
-  public static ContextPropagationOperatorBuilder newBuilder() {
+  public static ContextPropagationOperatorBuilder builder() {
     return new ContextPropagationOperatorBuilder();
   }
 
@@ -87,7 +87,7 @@ public final class ContextPropagationOperator {
 
   ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {
     this.asyncOperationEndStrategy =
-        ReactorAsyncOperationEndStrategy.newBuilder()
+        ReactorAsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
   }

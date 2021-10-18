@@ -31,8 +31,7 @@ import net.bytebuddy.pool.TypePool;
 /** Matches a set of references against a classloader. */
 public final class ReferenceMatcher {
 
-  private final Cache<ClassLoader, Boolean> mismatchCache =
-      Cache.newBuilder().setWeakKeys().build();
+  private final Cache<ClassLoader, Boolean> mismatchCache = Cache.builder().setWeakKeys().build();
   private final Map<String, ClassRef> references;
   private final Set<String> helperClassNames;
   private final HelperClassPredicate helperClassPredicate;

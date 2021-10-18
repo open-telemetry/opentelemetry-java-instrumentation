@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class HelperResources {
 
   private static final Cache<ClassLoader, Map<String, URL>> RESOURCES =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
 
   /** Registers the {@code payload} to be available to instrumentation at {@code path}. */
   public static void register(ClassLoader classLoader, String path, URL url) {

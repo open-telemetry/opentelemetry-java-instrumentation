@@ -32,7 +32,7 @@ public final class ConfigInitializer {
 
   // visible for testing
   static Config create(Properties spiConfiguration, Properties configurationFile) {
-    return Config.newBuilder()
+    return Config.builder()
         .readProperties(spiConfiguration)
         .readProperties(configurationFile)
         .readEnvironmentVariables()

@@ -59,7 +59,7 @@ public class HelperInjector implements Transformer {
       };
 
   private static final Cache<Class<?>, Boolean> injectedClasses =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
 
   private final String requestingName;
 
@@ -70,7 +70,7 @@ public class HelperInjector implements Transformer {
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
 
