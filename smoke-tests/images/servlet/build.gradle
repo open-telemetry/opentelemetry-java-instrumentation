@@ -38,14 +38,13 @@ def linuxTargets = [
     [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
   ],
   "tomcat" : [
-    [version: ["7.0.109"], vm: ["hotspot"], jdk: ["8"], args: [tagSuffix: ""]],
-    [version: ["7.0.109"], vm: ["openj9"], jdk: ["8"], args: [tagSuffix: "-adoptopenjdk-openj9"]],
-    [version: ["8.5.71", "9.0.53"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [tagSuffix: ""]],
-    // 8.5.70 and 9.0.52 are the latest tomcat images published with openj9 (and there's no openj9 image for jdk 17)
-    [version: ["8.5.70", "9.0.52"], vm: ["openj9"], jdk: ["8", "11"], args: [tagSuffix: "-adoptopenjdk-openj9"]],
-    [version: ["10.0.11"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [tagSuffix: ""], war: "servlet-5.0"],
-    // 10.0.8 is the latest tomcat image published with openj9 (and there's no openj9 image for jdk 17)
-    [version: ["10.0.8"], vm: ["openj9"], jdk: ["8", "11"], args: [tagSuffix: "-adoptopenjdk-openj9"], war: "servlet-5.0"]
+    [version: ["7.0.109"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
+    [version: ["8.5.71"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "8"]],
+    [version: ["8.5.71"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
+    [version: ["9.0.53"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "9"]],
+    [version: ["9.0.53"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
+    [version: ["10.0.11"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
+    [version: ["10.0.11"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "10"], war: "servlet-5.0"]
   ],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot"], jdk: ["8"]],
@@ -79,15 +78,7 @@ def windowsTargets = [
     [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"],
     [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
   ],
-  "tomcat" : [
-    [version: ["7.0.109"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
-    [version: ["8.5.71"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "8"]],
-    [version: ["8.5.70"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
-    [version: ["9.0.53"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "9"]],
-    [version: ["9.0.52"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
-    [version: ["10.0.11"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
-    [version: ["10.0.8"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "10"], war: "servlet-5.0"]
-  ],
+  "tomcat" : linuxTargets["tomcat"],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
@@ -108,7 +99,7 @@ def windowsTargets = [
 createDockerTasks(buildLinuxTestImagesTask, linuxTargets, false)
 createDockerTasks(buildWindowsTestImagesTask, windowsTargets, true)
 
-def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, isWindows = false) {
+def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, boolean isWindows, String extraTag) {
   // Using separate build directory for different war files allows using the same app.war filename
   def dockerWorkingDir = new File(project.buildDir, "docker-$warProject")
   def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
@@ -125,17 +116,12 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
     }
   }
 
-  def extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
   def vmSuffix = vm == "hotspot" ? "" : "-$vm"
   def image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   def jdkImage
   if (vm == "hotspot") {
-    if (jdk == "15") {
-      jdkImage = "adoptopenjdk:${jdk}-hotspot"
-    } else {
-      jdkImage = "eclipse-temurin:${jdk}"
-    }
+    jdkImage = "eclipse-temurin:${jdk}"
   } else if (vm == "openj9") {
     jdkImage = "adoptopenjdk:${jdk}-openj9"
   } else {
@@ -161,6 +147,7 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 }
 
 def createDockerTasks(Task parentTask, targets, isWindows) {
+  String extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
   Set<String> resultImages = []
   targets.each { server, matrices ->
     def smokeTestServer = findProperty('smokeTestServer')
@@ -175,7 +162,7 @@ def createDockerTasks(Task parentTask, targets, isWindows) {
       entry.version.forEach { version ->
         entry.vm.forEach { vm ->
           entry.jdk.forEach { jdk ->
-            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))
+            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows, extraTag))
           }
         }
       }
