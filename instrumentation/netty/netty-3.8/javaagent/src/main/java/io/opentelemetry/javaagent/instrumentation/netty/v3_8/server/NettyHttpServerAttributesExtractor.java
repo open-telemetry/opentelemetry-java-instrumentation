@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.jboss.netty.handler.codec.http.HttpResponse;

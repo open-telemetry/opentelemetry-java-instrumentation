@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyConnectionContext;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequestContexts;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -22,8 +22,8 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
   private static final VirtualField<Channel, NettyConnectionContext> connectionContextField =
       VirtualField.find(Channel.class, NettyConnectionContext.class);
-  private static final VirtualField<Channel, NettyRequestContexts> requestContextsField =
-      VirtualField.find(Channel.class, NettyRequestContexts.class);
+  private static final VirtualField<Channel, NettyClientRequestAndContexts> requestContextsField =
+      VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) {
@@ -42,18 +42,22 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       parentContext = Context.current();
     }
 
-    if (!tracer().shouldStartSpan(parentContext)) {
+    HttpRequestAndChannel request =
+        HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
+    if (!instrumenter().shouldStart(parentContext, request)) {
       ctx.sendDownstream(event);
       return;
     }
 
-    Context context = tracer().startSpan(parentContext, ctx, (HttpRequest) message);
-    requestContextsField.set(ctx.getChannel(), NettyRequestContexts.create(parentContext, context));
+    Context context = instrumenter().start(parentContext, request);
+    requestContextsField.set(
+        ctx.getChannel(), NettyClientRequestAndContexts.create(parentContext, context, request));
 
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(event);
+      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      instrumenter().end(context, request, null, throwable);
       throw throwable;
     }
   }

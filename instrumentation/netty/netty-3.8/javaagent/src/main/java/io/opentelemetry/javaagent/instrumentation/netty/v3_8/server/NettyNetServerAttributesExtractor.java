@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
