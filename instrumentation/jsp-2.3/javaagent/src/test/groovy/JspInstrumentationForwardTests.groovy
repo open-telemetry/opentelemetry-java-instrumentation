@@ -20,6 +20,7 @@ import java.nio.file.Files
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.api.trace.StatusCode.UNSET
 
 class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
@@ -425,7 +426,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
           kind SERVER
-          status ERROR
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
