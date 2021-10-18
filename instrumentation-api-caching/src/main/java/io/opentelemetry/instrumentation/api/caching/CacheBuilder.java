@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.caching;
 
 import java.util.concurrent.Executor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** A builder of {@link Cache}. */
 public final class CacheBuilder {

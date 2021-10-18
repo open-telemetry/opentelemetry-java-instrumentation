@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.field;
 
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Represents a "virtual" field of type {@code F} that is added to type {@code T} in the runtime.

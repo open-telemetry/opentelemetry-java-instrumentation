@@ -19,7 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
 // base-class

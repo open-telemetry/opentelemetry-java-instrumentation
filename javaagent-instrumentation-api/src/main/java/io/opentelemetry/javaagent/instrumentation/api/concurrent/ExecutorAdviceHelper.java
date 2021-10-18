@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 import java.util.concurrent.ExecutorService;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Advice helper methods for concurrent executor (e.g. {@link ExecutorService}) instrumentations.

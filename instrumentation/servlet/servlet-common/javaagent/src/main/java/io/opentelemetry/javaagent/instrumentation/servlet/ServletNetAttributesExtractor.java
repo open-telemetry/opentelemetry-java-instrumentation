@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
     extends NetServerAttributesExtractor<
@@ -20,22 +20,26 @@ public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public @Nullable String transport(ServletRequestContext<REQUEST> requestContext) {
+  @Nullable
+  public String transport(ServletRequestContext<REQUEST> requestContext) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(ServletRequestContext<REQUEST> requestContext) {
+  @Nullable
+  public String peerName(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemoteHost(requestContext.request());
   }
 
   @Override
-  public @Nullable Integer peerPort(ServletRequestContext<REQUEST> requestContext) {
+  @Nullable
+  public Integer peerPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemotePort(requestContext.request());
   }
 
   @Override
-  public @Nullable String peerIp(ServletRequestContext<REQUEST> requestContext) {
+  @Nullable
+  public String peerIp(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemoteAddr(requestContext.request());
   }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class GrpcExtractAdapter implements TextMapGetter<GrpcRequest> {
 

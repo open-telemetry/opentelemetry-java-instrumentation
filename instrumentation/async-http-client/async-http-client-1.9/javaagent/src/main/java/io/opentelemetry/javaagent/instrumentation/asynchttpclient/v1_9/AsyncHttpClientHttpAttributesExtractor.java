@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class AsyncHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, Response> {

@@ -39,8 +39,8 @@ import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
+import javax.annotation.Nullable;
 import org.checkerframework.checker.lock.qual.GuardedBy;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Subscriber;
 
 /**

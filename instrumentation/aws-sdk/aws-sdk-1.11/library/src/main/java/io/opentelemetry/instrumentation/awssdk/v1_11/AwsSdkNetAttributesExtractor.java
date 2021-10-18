@@ -9,7 +9,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AwsSdkNetAttributesExtractor extends NetClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
@@ -18,7 +18,8 @@ class AwsSdkNetAttributesExtractor extends NetClientAttributesExtractor<Request<
   }
 
   @Override
-  public @Nullable String peerName(Request<?> request, @Nullable Response<?> response) {
+  @Nullable
+  public String peerName(Request<?> request, @Nullable Response<?> response) {
     return request.getEndpoint().getHost();
   }
 
@@ -28,7 +29,8 @@ class AwsSdkNetAttributesExtractor extends NetClientAttributesExtractor<Request<
   }
 
   @Override
-  public @Nullable String peerIp(Request<?> request, @Nullable Response<?> response) {
+  @Nullable
+  public String peerIp(Request<?> request, @Nullable Response<?> response) {
     return null;
   }
 }

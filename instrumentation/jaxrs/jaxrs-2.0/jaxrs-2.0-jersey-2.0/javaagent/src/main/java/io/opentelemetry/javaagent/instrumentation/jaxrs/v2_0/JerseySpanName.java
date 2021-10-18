@@ -12,9 +12,9 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 
@@ -29,7 +29,8 @@ public class JerseySpanName implements ServerSpanNameSupplier<Request> {
   }
 
   @Override
-  public @Nullable String get(Context context, Request request) {
+  @Nullable
+  public String get(Context context, Request request) {
     ContainerRequest containerRequest = (ContainerRequest) request;
     UriInfo uriInfo = containerRequest.getUriInfo();
     ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;

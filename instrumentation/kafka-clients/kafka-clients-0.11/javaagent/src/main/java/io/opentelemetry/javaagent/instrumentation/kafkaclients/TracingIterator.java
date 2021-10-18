@@ -14,8 +14,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterator<K, V>
     implements Iterator<ConsumerRecord<K, V>>,

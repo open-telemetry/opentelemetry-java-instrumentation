@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.ws;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class SpringWsCodeAttributesExtractor
     extends CodeAttributesExtractor<SpringWsRequest, Void> {
@@ -22,12 +22,14 @@ public class SpringWsCodeAttributesExtractor
   }
 
   @Override
-  protected @Nullable String filePath(SpringWsRequest request) {
+  @Nullable
+  protected String filePath(SpringWsRequest request) {
     return null;
   }
 
   @Override
-  protected @Nullable Long lineNumber(SpringWsRequest request) {
+  @Nullable
+  protected Long lineNumber(SpringWsRequest request) {
     return null;
   }
 }

@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

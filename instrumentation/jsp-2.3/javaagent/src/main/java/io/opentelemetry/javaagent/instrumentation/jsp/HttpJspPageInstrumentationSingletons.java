@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.annotation.Nullable;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.LoggerFactory;
 
 public class HttpJspPageInstrumentationSingletons {

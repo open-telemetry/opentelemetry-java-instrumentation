@@ -11,7 +11,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class ExperimentalAttributesExtractor implements AttributesExtractor<HystrixRequest, Void> {
   private static final AttributeKey<String> HYSTRIX_COMMAND = stringKey("hystrix.command");

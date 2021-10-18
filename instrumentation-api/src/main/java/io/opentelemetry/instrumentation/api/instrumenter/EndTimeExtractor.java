@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import java.time.Instant;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of the end time of response processing. An {@link EndTimeExtractor} should always use

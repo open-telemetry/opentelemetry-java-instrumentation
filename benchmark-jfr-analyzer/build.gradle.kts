@@ -7,3 +7,7 @@ tasks.withType<JavaCompile>().configureEach {
     release.set(11)
   }
 }
+
+dependencies {
+  implementation("com.google.code.findbugs:jsr305:3.0.2")
+}

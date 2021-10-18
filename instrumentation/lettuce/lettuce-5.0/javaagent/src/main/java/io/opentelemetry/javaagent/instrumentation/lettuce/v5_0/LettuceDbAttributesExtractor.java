@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class LettuceDbAttributesExtractor
     extends DbAttributesExtractor<RedisCommand<?, ?, ?>, Void> {

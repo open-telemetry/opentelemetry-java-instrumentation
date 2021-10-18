@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.jaxrs;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Helper container for storing context path for jax-rs requests. Jax-rs context path is the path
@@ -22,7 +22,8 @@ public final class JaxrsContextPath {
 
   private JaxrsContextPath() {}
 
-  public static @Nullable Context init(Context context, String path) {
+  @Nullable
+  public static Context init(Context context, String path) {
     if (path == null || path.isEmpty() || "/".equals(path)) {
       return null;
     }

@@ -11,7 +11,7 @@ import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class JdkHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, HttpResponse<?>> {
@@ -32,13 +32,15 @@ class JdkHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
     return null;
   }
@@ -57,13 +59,14 @@ class JdkHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpRequest httpRequest, HttpResponse<?> httpResponse) {
+  @Nullable
+  protected Long responseContentLength(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequest httpRequest, HttpResponse<?> httpResponse) {
     return null;
   }

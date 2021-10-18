@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class CouchbaseAttributesExtractor extends DbAttributesExtractor<CouchbaseRequest, Void> {
   @Override
@@ -16,27 +16,32 @@ final class CouchbaseAttributesExtractor extends DbAttributesExtractor<Couchbase
   }
 
   @Override
-  protected @Nullable String user(CouchbaseRequest couchbaseRequest) {
+  @Nullable
+  protected String user(CouchbaseRequest couchbaseRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(CouchbaseRequest couchbaseRequest) {
+  @Nullable
+  protected String name(CouchbaseRequest couchbaseRequest) {
     return couchbaseRequest.bucket();
   }
 
   @Override
-  protected @Nullable String connectionString(CouchbaseRequest couchbaseRequest) {
+  @Nullable
+  protected String connectionString(CouchbaseRequest couchbaseRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String statement(CouchbaseRequest couchbaseRequest) {
+  @Nullable
+  protected String statement(CouchbaseRequest couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
   @Override
-  protected @Nullable String operation(CouchbaseRequest couchbaseRequest) {
+  @Nullable
+  protected String operation(CouchbaseRequest couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }

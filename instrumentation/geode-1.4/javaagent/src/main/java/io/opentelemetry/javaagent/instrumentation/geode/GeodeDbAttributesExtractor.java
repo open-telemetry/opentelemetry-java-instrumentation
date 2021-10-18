@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class GeodeDbAttributesExtractor extends DbAttributesExtractor<GeodeRequest, Void> {
   @Override

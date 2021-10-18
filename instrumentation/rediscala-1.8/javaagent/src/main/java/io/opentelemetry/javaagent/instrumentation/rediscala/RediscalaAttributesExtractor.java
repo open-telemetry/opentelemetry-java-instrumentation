@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Locale;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import redis.RedisCommand;
 
 final class RediscalaAttributesExtractor extends DbAttributesExtractor<RedisCommand<?, ?>, Void> {
@@ -19,22 +19,26 @@ final class RediscalaAttributesExtractor extends DbAttributesExtractor<RedisComm
   }
 
   @Override
-  protected @Nullable String user(RedisCommand<?, ?> redisCommand) {
+  @Nullable
+  protected String user(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(RedisCommand<?, ?> redisCommand) {
+  @Nullable
+  protected String name(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  protected @Nullable String connectionString(RedisCommand<?, ?> redisCommand) {
+  @Nullable
+  protected String connectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  protected @Nullable String statement(RedisCommand<?, ?> redisCommand) {
+  @Nullable
+  protected String statement(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 

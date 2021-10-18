@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameTwoArgSupplier;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */
 public class ServletSpanNameProvider<REQUEST>
@@ -22,7 +22,8 @@ public class ServletSpanNameProvider<REQUEST>
   }
 
   @Override
-  public @Nullable String get(Context context, MappingResolver mappingResolver, REQUEST request) {
+  @Nullable
+  public String get(Context context, MappingResolver mappingResolver, REQUEST request) {
     String servletPath = servletAccessor.getRequestServletPath(request);
     String pathInfo = servletAccessor.getRequestPathInfo(request);
     String mapping = mappingResolver.resolve(servletPath, pathInfo);

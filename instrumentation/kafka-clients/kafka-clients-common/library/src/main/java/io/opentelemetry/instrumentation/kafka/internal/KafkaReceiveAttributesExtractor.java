@@ -10,8 +10,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaReceiveAttributesExtractor
     extends MessagingAttributesExtractor<ReceivedRecords, Void> {
@@ -32,7 +32,8 @@ public final class KafkaReceiveAttributesExtractor
   }
 
   @Override
-  protected @Nullable String destination(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected String destination(ReceivedRecords receivedRecords) {
     Set<String> topics =
         receivedRecords.records().partitions().stream()
             .map(TopicPartition::topic)
@@ -47,37 +48,44 @@ public final class KafkaReceiveAttributesExtractor
   }
 
   @Override
-  protected @Nullable String protocol(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected String protocol(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable String protocolVersion(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected String protocolVersion(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable String url(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected String url(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable String conversationId(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected String conversationId(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadSize(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected Long messagePayloadSize(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
+  @Nullable
+  protected Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
-  protected @Nullable String messageId(ReceivedRecords receivedRecords, @Nullable Void unused) {
+  @Nullable
+  protected String messageId(ReceivedRecords receivedRecords, @Nullable Void unused) {
     return null;
   }
 }

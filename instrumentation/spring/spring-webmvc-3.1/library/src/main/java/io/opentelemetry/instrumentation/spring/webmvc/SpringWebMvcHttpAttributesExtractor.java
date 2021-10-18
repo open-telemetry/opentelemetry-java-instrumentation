@@ -12,9 +12,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class SpringWebMvcHttpAttributesExtractor
     extends HttpServerAttributesExtractor<HttpServletRequest, HttpServletResponse> {
@@ -24,7 +24,8 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String method(HttpServletRequest request) {
+  @Nullable
+  protected String method(HttpServletRequest request) {
     return request.getMethod();
   }
 
@@ -35,36 +36,41 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable String flavor(HttpServletRequest request) {
+  @Nullable
+  protected String flavor(HttpServletRequest request) {
     return request.getProtocol();
   }
 
   @Override
-  protected @Nullable Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
+  @Nullable
+  protected Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
     // set in StatusCodeExtractor
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpServletRequest request, HttpServletResponse response) {
+  @Nullable
+  protected Long responseContentLength(HttpServletRequest request, HttpServletResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpServletRequest request, HttpServletResponse response) {
     return null;
   }
@@ -83,7 +89,8 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(HttpServletRequest request) {
+  @Nullable
+  protected String target(HttpServletRequest request) {
     String target = request.getRequestURI();
     String queryString = request.getQueryString();
     if (queryString != null) {
@@ -93,18 +100,20 @@ final class SpringWebMvcHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(HttpServletRequest request) {
+  @Nullable
+  protected String route(HttpServletRequest request) {
     return null;
   }
 
   @Override
-  protected @Nullable String scheme(HttpServletRequest request) {
+  @Nullable
+  protected String scheme(HttpServletRequest request) {
     return request.getScheme();
   }
 
   @Override
-  protected @Nullable String serverName(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
+  @Nullable
+  protected String serverName(HttpServletRequest request, @Nullable HttpServletResponse response) {
     return null;
   }
 }

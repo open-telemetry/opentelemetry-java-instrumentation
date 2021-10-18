@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class RequestAccess {
 

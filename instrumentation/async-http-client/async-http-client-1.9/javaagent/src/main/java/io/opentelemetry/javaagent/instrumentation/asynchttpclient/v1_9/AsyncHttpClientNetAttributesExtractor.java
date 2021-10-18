@@ -9,7 +9,7 @@ import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class AsyncHttpClientNetAttributesExtractor
     extends NetClientAttributesExtractor<Request, Response> {

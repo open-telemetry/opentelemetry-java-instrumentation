@@ -9,8 +9,8 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingIterable<K, V>
     implements Iterable<ConsumerRecord<K, V>>,

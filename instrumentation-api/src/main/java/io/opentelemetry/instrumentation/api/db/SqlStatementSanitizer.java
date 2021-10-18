@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetric
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)

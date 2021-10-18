@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class LibertyDispatcherNetAttributesExtractor
     extends NetServerAttributesExtractor<LibertyRequest, LibertyResponse> {
@@ -18,17 +18,20 @@ public class LibertyDispatcherNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(LibertyRequest libertyRequest) {
+  @Nullable
+  public String peerName(LibertyRequest libertyRequest) {
     return libertyRequest.peerName();
   }
 
   @Override
-  public @Nullable Integer peerPort(LibertyRequest libertyRequest) {
+  @Nullable
+  public Integer peerPort(LibertyRequest libertyRequest) {
     return libertyRequest.getServerPort();
   }
 
   @Override
-  public @Nullable String peerIp(LibertyRequest libertyRequest) {
+  @Nullable
+  public String peerIp(LibertyRequest libertyRequest) {
     return libertyRequest.peerIp();
   }
 }

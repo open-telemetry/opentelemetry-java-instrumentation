@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import javax.annotation.Nullable;
 import javax.jms.JMSException;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

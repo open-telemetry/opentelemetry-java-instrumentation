@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
 final class NettyHttpServerAttributesExtractor
@@ -24,13 +24,15 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
@@ -41,13 +43,15 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
@@ -73,17 +77,20 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(HttpRequestAndChannel requestAndChannel) {
+  @Nullable
+  protected String route(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String scheme(HttpRequestAndChannel requestAndChannel) {
+  @Nullable
+  protected String scheme(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String serverName(
+  @Nullable
+  protected String serverName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }

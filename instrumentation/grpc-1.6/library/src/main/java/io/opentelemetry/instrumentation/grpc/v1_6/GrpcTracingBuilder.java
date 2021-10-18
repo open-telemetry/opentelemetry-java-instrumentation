@@ -18,7 +18,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTracing}. */
 public final class GrpcTracingBuilder {

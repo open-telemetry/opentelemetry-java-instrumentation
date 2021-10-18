@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class JdbcNetAttributesExtractor
     extends NetClientAttributesExtractor<DbRequest, Void> {

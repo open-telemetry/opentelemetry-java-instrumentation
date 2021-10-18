@@ -9,9 +9,9 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaHeadersGetter implements TextMapGetter<Headers> {
   @Override

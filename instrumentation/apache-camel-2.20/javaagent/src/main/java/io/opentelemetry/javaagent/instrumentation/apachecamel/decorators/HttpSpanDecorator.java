@@ -30,9 +30,9 @@ import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpSpanDecorator extends BaseSpanDecorator {
 

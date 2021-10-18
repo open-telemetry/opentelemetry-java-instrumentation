@@ -21,7 +21,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AwsSdkExperimentalAttributesExtractor
     implements AttributesExtractor<Request<?>, Response<?>> {

@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
@@ -25,8 +25,8 @@ class AwsSdkAttributesExtractor
   }
 
   @Override
-  protected @Nullable String flavor(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  @Nullable
+  protected String flavor(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
@@ -46,13 +46,15 @@ class AwsSdkAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return null;
   }
@@ -63,13 +65,15 @@ class AwsSdkAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return null;
   }

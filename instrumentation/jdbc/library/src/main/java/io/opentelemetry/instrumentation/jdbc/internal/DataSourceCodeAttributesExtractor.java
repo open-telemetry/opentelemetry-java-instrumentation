@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class DataSourceCodeAttributesExtractor extends CodeAttributesExtractor<DataSource, Void> {
 
@@ -22,12 +22,14 @@ final class DataSourceCodeAttributesExtractor extends CodeAttributesExtractor<Da
   }
 
   @Override
-  protected @Nullable String filePath(DataSource dataSource) {
+  @Nullable
+  protected String filePath(DataSource dataSource) {
     return null;
   }
 
   @Override
-  protected @Nullable Long lineNumber(DataSource dataSource) {
+  @Nullable
+  protected Long lineNumber(DataSource dataSource) {
     return null;
   }
 }

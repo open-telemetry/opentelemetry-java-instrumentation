@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import java.time.Duration;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

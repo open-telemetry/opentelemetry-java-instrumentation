@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class JaxrsCodeAttributesExtractor extends CodeAttributesExtractor<HandlerData, Void> {
   @Override
@@ -20,12 +20,14 @@ public class JaxrsCodeAttributesExtractor extends CodeAttributesExtractor<Handle
   }
 
   @Override
-  protected @Nullable String filePath(HandlerData handlerData) {
+  @Nullable
+  protected String filePath(HandlerData handlerData) {
     return null;
   }
 
   @Override
-  protected @Nullable Long lineNumber(HandlerData handlerData) {
+  @Nullable
+  protected Long lineNumber(HandlerData handlerData) {
     return null;
   }
 }

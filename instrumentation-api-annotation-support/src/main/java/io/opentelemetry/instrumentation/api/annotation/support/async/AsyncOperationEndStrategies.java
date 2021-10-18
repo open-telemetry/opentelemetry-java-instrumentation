@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support.async;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** A global registry of {@link AsyncOperationEndStrategy} implementations. */
 public abstract class AsyncOperationEndStrategies {

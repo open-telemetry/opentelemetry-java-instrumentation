@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Helper container for Context attributes for transferring certain information between servlet

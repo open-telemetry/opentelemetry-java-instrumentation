@@ -10,8 +10,8 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingList<K, V> extends TracingIterable<K, V> implements List<ConsumerRecord<K, V>> {
   private final List<ConsumerRecord<K, V>> delegate;

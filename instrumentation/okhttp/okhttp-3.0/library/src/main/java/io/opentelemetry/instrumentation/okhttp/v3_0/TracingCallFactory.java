@@ -11,13 +11,13 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okio.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class TracingCallFactory implements Call.Factory {
 
