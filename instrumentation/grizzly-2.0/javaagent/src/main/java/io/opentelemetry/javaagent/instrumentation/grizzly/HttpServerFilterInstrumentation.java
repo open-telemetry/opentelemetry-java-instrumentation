@@ -49,7 +49,8 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
       Context context = GrizzlyStateStorage.removeContext(ctx);
       HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
       if (context != null && request != null) {
-        instrumenter().end(context, request, response, null);
+        Throwable error = GrizzlyExceptionHolder.getOrDefault(context, null);
+        instrumenter().end(context, request, response, error);
       }
     }
   }
