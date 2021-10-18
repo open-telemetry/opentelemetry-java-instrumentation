@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy;
 public final class InstrumentationHelper {
   static {
     asyncOperationEndStrategy =
-        GuavaAsyncOperationEndStrategy.newBuilder()
+        GuavaAsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(
                 Config.get()
                     .getBoolean("otel.instrumentation.guava.experimental-span-attributes", false))

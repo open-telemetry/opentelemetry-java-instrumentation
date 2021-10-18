@@ -16,7 +16,7 @@ class TrieTest {
   @Test
   void shouldMatchExactString() {
     Trie<Integer> trie =
-        Trie.<Integer>newBuilder().put("abc", 0).put("abcd", 10).put("abcde", 20).build();
+        Trie.<Integer>builder().put("abc", 0).put("abcd", 10).put("abcde", 20).build();
 
     assertNull(trie.getOrNull("ab"));
     assertFalse(trie.contains("ab"));
@@ -29,7 +29,7 @@ class TrieTest {
   @Test
   void shouldReturnLastMatchedValue() {
     Trie<Integer> trie =
-        Trie.<Integer>newBuilder().put("abc", 0).put("abcde", 10).put("abcdfgh", 20).build();
+        Trie.<Integer>builder().put("abc", 0).put("abcde", 10).put("abcdfgh", 20).build();
 
     assertNull(trie.getOrNull("ababababa"));
     assertEquals(0, trie.getOrNull("abcd"));
@@ -39,14 +39,14 @@ class TrieTest {
 
   @Test
   void shouldOverwritePreviousValue() {
-    Trie<Integer> trie = Trie.<Integer>newBuilder().put("abc", 0).put("abc", 12).build();
+    Trie<Integer> trie = Trie.<Integer>builder().put("abc", 0).put("abc", 12).build();
 
     assertEquals(12, trie.getOrNull("abc"));
   }
 
   @Test
   void shouldReturnDefaultValueWhenNotMatched() {
-    Trie<Integer> trie = Trie.<Integer>newBuilder().put("abc", 42).build();
+    Trie<Integer> trie = Trie.<Integer>builder().put("abc", 42).build();
 
     assertEquals(-1, trie.getOrDefault("acdc", -1));
   }

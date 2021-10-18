@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 public interface Cache<K, V> {
 
   /** Returns a new {@link CacheBuilder} to configure a {@link Cache}. */
-  static CacheBuilder newBuilder() {
+  static CacheBuilder builder() {
     return new CacheBuilder();
   }
 

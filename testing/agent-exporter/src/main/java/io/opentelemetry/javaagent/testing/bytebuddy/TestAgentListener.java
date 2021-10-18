@@ -47,7 +47,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
   }
 
   private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
-    Config config = Config.newBuilder().build();
+    Config config = Config.builder().build();
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         SafeServiceLoader.loadOrdered(IgnoredTypesConfigurer.class)) {

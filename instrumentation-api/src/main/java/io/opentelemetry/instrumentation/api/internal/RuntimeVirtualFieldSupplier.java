@@ -55,7 +55,7 @@ public final class RuntimeVirtualFieldSupplier {
   }
 
   private static final class CacheBasedVirtualField<T, F> extends VirtualField<T, F> {
-    private final Cache<T, F> cache = Cache.newBuilder().setWeakKeys().build();
+    private final Cache<T, F> cache = Cache.builder().setWeakKeys().build();
 
     @Override
     @Nullable

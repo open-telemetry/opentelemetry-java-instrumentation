@@ -20,7 +20,7 @@ public final class SqlStatementSanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.newBuilder().setMaximumSize(1000).build();
+      Cache.builder().setMaximumSize(1000).build();
 
   public static SqlStatementInfo sanitize(@Nullable String statement) {
     if (!isStatementSanitizationEnabled() || statement == null) {

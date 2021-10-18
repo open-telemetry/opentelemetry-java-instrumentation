@@ -32,7 +32,7 @@ import net.bytebuddy.pool.TypePool;
 public final class ReferenceMatcher {
 
   private final Cache<ClassLoader, Boolean> mismatchCache =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
   private final Map<String, ClassRef> references;
   private final Set<String> helperClassNames;
   private final HelperClassPredicate helperClassPredicate;
