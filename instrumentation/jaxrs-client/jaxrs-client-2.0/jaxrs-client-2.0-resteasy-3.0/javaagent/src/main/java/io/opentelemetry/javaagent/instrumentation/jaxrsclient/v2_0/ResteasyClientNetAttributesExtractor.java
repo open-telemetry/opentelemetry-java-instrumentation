@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientNetAttributesExtractor
@@ -20,7 +20,8 @@ final class ResteasyClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(ClientInvocation request, @Nullable Response response) {
+  @Nullable
+  public String peerName(ClientInvocation request, @Nullable Response response) {
     return request.getUri().getHost();
   }
 
@@ -34,7 +35,8 @@ final class ResteasyClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(ClientInvocation request, @Nullable Response response) {
+  @Nullable
+  public String peerIp(ClientInvocation request, @Nullable Response response) {
     return null;
   }
 }

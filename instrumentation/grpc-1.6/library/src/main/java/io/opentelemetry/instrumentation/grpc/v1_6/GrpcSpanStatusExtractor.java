@@ -10,7 +10,7 @@ import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status> {
   @Override

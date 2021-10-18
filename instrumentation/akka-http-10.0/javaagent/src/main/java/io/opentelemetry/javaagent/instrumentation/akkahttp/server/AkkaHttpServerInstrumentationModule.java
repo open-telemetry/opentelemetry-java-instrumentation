@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.errorResponse;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.Collections.singletonList;
 
 import akka.http.scaladsl.model.HttpRequest;
@@ -41,13 +43,17 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, null, "akka.request");
-      try (Scope ignored = ctx.makeCurrent()) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return userHandler.apply(request);
+      }
+      Context context = instrumenter().start(parentContext, request);
+      try (Scope ignored = context.makeCurrent()) {
         HttpResponse response = userHandler.apply(request);
-        tracer().end(ctx, response);
+        instrumenter().end(context, request, response, null);
         return response;
       } catch (Throwable t) {
-        tracer().endExceptionally(ctx, t);
+        instrumenter().end(context, request, errorResponse(), t);
         throw t;
       }
     }
@@ -66,28 +72,32 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, null, "akka.request");
-      try (Scope ignored = ctx.makeCurrent()) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return userHandler.apply(request);
+      }
+      Context context = instrumenter().start(parentContext, request);
+      try (Scope ignored = context.makeCurrent()) {
         return userHandler
             .apply(request)
             .transform(
                 new AbstractFunction1<HttpResponse, HttpResponse>() {
                   @Override
                   public HttpResponse apply(HttpResponse response) {
-                    tracer().end(ctx, response);
+                    instrumenter().end(context, request, response, null);
                     return response;
                   }
                 },
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
                   public Throwable apply(Throwable t) {
-                    tracer().endExceptionally(ctx, t);
+                    instrumenter().end(context, request, errorResponse(), t);
                     return t;
                   }
                 },
                 executionContext);
       } catch (Throwable t) {
-        tracer().endExceptionally(ctx, t);
+        instrumenter().end(context, request, null, t);
         throw t;
       }
     }

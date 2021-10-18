@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a

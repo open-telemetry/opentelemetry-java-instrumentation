@@ -34,9 +34,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,

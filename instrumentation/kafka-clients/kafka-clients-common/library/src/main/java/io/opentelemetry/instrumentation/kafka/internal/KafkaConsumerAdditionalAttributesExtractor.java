@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerAdditionalAttributesExtractor
     implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {

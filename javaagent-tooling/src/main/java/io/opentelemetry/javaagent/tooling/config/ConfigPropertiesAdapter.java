@@ -12,7 +12,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class ConfigPropertiesAdapter implements ConfigProperties {
   private final Config config;

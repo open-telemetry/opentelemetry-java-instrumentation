@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.web.method.HandlerMethod;
 
 public class ExperimentalAttributesExtractor implements AttributesExtractor<Object, Void> {

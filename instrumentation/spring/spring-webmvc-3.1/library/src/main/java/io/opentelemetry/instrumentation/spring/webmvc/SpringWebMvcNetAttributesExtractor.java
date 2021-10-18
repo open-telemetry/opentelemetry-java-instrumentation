@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.spring.webmvc;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class SpringWebMvcNetAttributesExtractor
     extends NetServerAttributesExtractor<HttpServletRequest, HttpServletResponse> {
@@ -19,7 +19,8 @@ final class SpringWebMvcNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(HttpServletRequest request) {
+  @Nullable
+  public String peerName(HttpServletRequest request) {
     return request.getRemoteHost();
   }
 
@@ -29,7 +30,8 @@ final class SpringWebMvcNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpServletRequest request) {
+  @Nullable
+  public String peerIp(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
 }

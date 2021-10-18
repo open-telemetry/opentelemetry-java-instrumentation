@@ -16,7 +16,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 // TODO In search for a better home package
 

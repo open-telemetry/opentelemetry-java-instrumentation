@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class SpanNames {
 

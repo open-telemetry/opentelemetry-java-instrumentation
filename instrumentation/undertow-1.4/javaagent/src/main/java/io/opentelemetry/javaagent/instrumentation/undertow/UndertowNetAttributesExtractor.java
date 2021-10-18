@@ -9,13 +9,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNe
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.undertow.server.HttpServerExchange;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class UndertowNetAttributesExtractor
     extends InetSocketAddressNetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(HttpServerExchange exchange) {
+  @Nullable
+  public InetSocketAddress getAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 

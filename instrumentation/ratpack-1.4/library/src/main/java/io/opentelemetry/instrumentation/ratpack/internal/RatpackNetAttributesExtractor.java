@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.ratpack.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import ratpack.http.Request;
 import ratpack.http.Response;
 

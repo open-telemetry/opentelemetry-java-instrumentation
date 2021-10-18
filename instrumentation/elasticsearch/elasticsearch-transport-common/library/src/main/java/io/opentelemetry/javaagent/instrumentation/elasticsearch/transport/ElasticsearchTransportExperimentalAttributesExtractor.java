@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.IndicesRequest;
 import org.elasticsearch.action.bulk.BulkShardResponse;

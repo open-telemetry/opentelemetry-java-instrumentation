@@ -10,7 +10,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Marker;
 
 final class LoggingEventWrapper implements ILoggingEvent {

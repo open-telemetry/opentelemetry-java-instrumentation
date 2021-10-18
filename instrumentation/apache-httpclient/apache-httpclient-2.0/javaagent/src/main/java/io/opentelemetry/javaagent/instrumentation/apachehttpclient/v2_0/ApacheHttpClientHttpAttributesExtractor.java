@@ -11,12 +11,12 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.StatusLine;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpMethod, HttpMethod> {

@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Reflective access to aws-sdk-java-sqs class ReceiveMessageRequest.

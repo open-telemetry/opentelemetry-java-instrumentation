@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.servlet.naming;
 
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import java.util.Collection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public abstract class ServletMappingResolverFactory implements MappingResolver.Factory {
 

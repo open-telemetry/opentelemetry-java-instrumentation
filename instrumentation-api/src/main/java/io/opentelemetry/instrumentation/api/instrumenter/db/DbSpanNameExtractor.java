@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
   /**

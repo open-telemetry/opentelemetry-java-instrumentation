@@ -106,10 +106,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [
-      SemanticAttributes.HTTP_HOST,
       SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
       SemanticAttributes.NET_PEER_NAME,
       SemanticAttributes.NET_TRANSPORT
     ]

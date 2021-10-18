@@ -10,13 +10,14 @@ import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class GoogleHttpClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, HttpResponse> {
 
   @Override
-  protected @Nullable String method(HttpRequest httpRequest) {
+  @Nullable
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getRequestMethod();
   }
 
@@ -31,13 +32,15 @@ final class GoogleHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
@@ -48,18 +51,20 @@ final class GoogleHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(HttpRequest httpRequest, HttpResponse httpResponse) {
+  @Nullable
+  protected Integer statusCode(HttpRequest httpRequest, HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpRequest httpRequest, HttpResponse httpResponse) {
+  @Nullable
+  protected Long responseContentLength(HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }

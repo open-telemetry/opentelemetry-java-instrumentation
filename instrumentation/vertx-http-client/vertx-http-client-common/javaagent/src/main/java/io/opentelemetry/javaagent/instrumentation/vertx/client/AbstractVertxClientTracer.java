@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public abstract class AbstractVertxClientTracer
     extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse> {

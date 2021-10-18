@@ -12,7 +12,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpF
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;

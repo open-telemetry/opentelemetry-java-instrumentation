@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.netty.common.server.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.server.NettyServerInstrumenterFactory;
 
 public final class NettyServerSingletons {

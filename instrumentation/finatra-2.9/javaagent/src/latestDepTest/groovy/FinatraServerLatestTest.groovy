@@ -94,8 +94,4 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements Agen
       }
     }
   }
-
-  boolean testCapturedHttpHeaders() {
-    false
-  }
 }

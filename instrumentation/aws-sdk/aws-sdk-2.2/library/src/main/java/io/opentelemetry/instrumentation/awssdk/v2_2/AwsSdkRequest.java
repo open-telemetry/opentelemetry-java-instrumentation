@@ -15,7 +15,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
 /**

@@ -11,7 +11,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMerg
 import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeSet;
 
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Represents a reference to a class used in the instrumentation advice or helper class code (or the

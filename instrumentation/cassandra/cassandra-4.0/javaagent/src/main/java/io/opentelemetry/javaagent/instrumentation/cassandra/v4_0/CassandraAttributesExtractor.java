@@ -14,7 +14,7 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {

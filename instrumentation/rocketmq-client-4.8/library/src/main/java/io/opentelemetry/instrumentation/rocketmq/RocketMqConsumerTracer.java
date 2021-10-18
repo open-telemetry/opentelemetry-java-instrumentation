@@ -15,8 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class RocketMqConsumerTracer extends BaseTracer {
 

@@ -42,13 +42,13 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

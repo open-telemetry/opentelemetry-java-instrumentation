@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequestContexts;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -19,35 +18,40 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandler {
 
-  private static final VirtualField<Channel, NettyRequestContexts> requestContextsField =
-      VirtualField.find(Channel.class, NettyRequestContexts.class);
+  private static final VirtualField<Channel, NettyServerRequestAndContext> requestAndContextField =
+      VirtualField.find(Channel.class, NettyServerRequestAndContext.class);
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) {
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
-      NettyRequestContexts requestContexts = requestContextsField.get(ctx.getChannel());
-      if (requestContexts == null) {
+      NettyServerRequestAndContext requestAndContext = requestAndContextField.get(ctx.getChannel());
+      if (requestAndContext == null) {
         ctx.sendUpstream(event);
       } else {
-        try (Scope ignored = requestContexts.context().makeCurrent()) {
+        try (Scope ignored = requestAndContext.context().makeCurrent()) {
           ctx.sendUpstream(event);
         }
       }
       return;
     }
 
-    HttpRequest request = (HttpRequest) message;
+    Context parentContext = Context.current();
+    HttpRequestAndChannel request =
+        HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
+    if (!instrumenter().shouldStart(parentContext, request)) {
+      ctx.sendUpstream(event);
+    }
 
-    Context context =
-        tracer().startSpan(request, ctx.getChannel(), null, "HTTP " + request.getMethod());
-    requestContextsField.set(ctx.getChannel(), NettyRequestContexts.create(null, context));
+    Context context = instrumenter().start(parentContext, request);
+    requestAndContextField.set(
+        ctx.getChannel(), NettyServerRequestAndContext.create(request, context));
 
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendUpstream(event);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      instrumenter().end(context, request, null, throwable);
       throw throwable;
     }
   }

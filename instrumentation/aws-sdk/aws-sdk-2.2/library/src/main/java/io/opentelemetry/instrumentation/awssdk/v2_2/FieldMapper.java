@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.api.trace.Span;
 import java.util.List;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.utils.StringUtils;

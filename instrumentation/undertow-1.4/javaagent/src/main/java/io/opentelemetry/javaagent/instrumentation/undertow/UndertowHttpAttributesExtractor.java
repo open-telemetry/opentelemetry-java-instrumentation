@@ -10,7 +10,7 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.util.Collections;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class UndertowHttpAttributesExtractor
     extends HttpServerAttributesExtractor<HttpServerExchange, HttpServerExchange> {
@@ -27,14 +27,16 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     long requestContentLength = exchange.getRequestContentLength();
     return requestContentLength != -1 ? requestContentLength : null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return null;
   }
@@ -55,14 +57,15 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpServerExchange exchange, HttpServerExchange unused) {
+  @Nullable
+  protected Long responseContentLength(HttpServerExchange exchange, HttpServerExchange unused) {
     long responseContentLength = exchange.getResponseContentLength();
     return responseContentLength != -1 ? responseContentLength : null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpServerExchange exchange, HttpServerExchange unused) {
     return null;
   }
@@ -75,7 +78,8 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(HttpServerExchange exchange) {
+  @Nullable
+  protected String target(HttpServerExchange exchange) {
     String requestPath = exchange.getRequestPath();
     String queryString = exchange.getQueryString();
     if (requestPath != null && queryString != null && !queryString.isEmpty()) {
@@ -85,18 +89,20 @@ public class UndertowHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String scheme(HttpServerExchange exchange) {
+  @Nullable
+  protected String scheme(HttpServerExchange exchange) {
     return exchange.getRequestScheme();
   }
 
   @Override
-  protected @Nullable String route(HttpServerExchange exchange) {
+  @Nullable
+  protected String route(HttpServerExchange exchange) {
     return null;
   }
 
   @Override
-  protected @Nullable String serverName(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  @Nullable
+  protected String serverName(HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return null;
   }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest, Void> {
 

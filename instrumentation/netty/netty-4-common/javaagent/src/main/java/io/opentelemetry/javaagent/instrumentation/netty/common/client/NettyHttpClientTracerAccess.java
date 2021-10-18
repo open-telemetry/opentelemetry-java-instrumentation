@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NettyHttpClientTracerAccess {
-  private static final AtomicReference<AbstractNettyHttpClientTracer<?>>
+  private static final AtomicReference<AbstractNettyHttpClientTracer>
       nettyHttpClientTracerReference = new AtomicReference<>();
 
-  public static AbstractNettyHttpClientTracer<?> getTracer() {
+  public static AbstractNettyHttpClientTracer getTracer() {
     return nettyHttpClientTracerReference.get();
   }
 
-  public static void setTracer(AbstractNettyHttpClientTracer<?> tracer) {
+  public static void setTracer(AbstractNettyHttpClientTracer tracer) {
     nettyHttpClientTracerReference.compareAndSet(null, tracer);
   }
 }

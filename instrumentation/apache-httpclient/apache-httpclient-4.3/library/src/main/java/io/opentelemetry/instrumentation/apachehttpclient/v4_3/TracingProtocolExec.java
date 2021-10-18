@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.io.IOException;
+import javax.annotation.Nullable;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -23,7 +24,6 @@ import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.RedirectLocations;
 import org.apache.http.impl.execchain.ClientExecChain;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class TracingProtocolExec implements ClientExecChain {
 

@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.W
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.ClassNames;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 

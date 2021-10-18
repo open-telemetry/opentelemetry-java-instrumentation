@@ -35,5 +35,18 @@ class ReflectionTest extends AgentInstrumentationSpecification {
       }
     }
     methodFound == false
+
+    and:
+    def interfaceClass = TestClass.getInterfaces().find {
+      it.getName().contains("VirtualFieldAccessor\$")
+    }
+    interfaceClass != null
+    def interfaceMethodFound = false
+    for (Method method : interfaceClass.getDeclaredMethods()) {
+      if (method.getName().contains("__opentelemetry")) {
+        interfaceMethodFound = true
+      }
+    }
+    interfaceMethodFound == false
   }
 }

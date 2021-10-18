@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Accessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper;
-import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrumenterFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.coyote.Request;
@@ -18,7 +18,7 @@ import org.apache.coyote.Response;
 public final class Tomcat7Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-7.0";
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      TomcatInstrumenterBuilder.newInstrumenter(
+      TomcatInstrumenterFactory.create(
           INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE, Tomcat7ServletEntityProvider.INSTANCE);
   private static final TomcatHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new TomcatHelper<>(

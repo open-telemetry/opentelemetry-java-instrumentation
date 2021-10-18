@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
   INSTANCE;
@@ -43,7 +43,8 @@ public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
   }
 
   @Override
-  public @Nullable String[] extract(Method method, Parameter[] parameters) {
+  @Nullable
+  public String[] extract(Method method, Parameter[] parameters) {
     String[] attributeNames = new String[parameters.length];
     for (int i = 0; i < parameters.length; i++) {
       attributeNames[i] = attributeName(parameters[i]);

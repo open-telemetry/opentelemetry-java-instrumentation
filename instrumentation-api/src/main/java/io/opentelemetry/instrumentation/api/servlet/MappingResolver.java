@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Helper class for finding a mapping that matches current request from a collection of mappings.

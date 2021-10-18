@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class GrpcRpcAttributesExtractor extends RpcAttributesExtractor<GrpcRequest, Status> {
   @Override

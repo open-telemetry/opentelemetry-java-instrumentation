@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.io.IOException;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
@@ -29,7 +29,8 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String url(HttpRequest httpRequest) {
+  @Nullable
+  protected String url(HttpRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
 
@@ -39,19 +40,22 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable String flavor(
+  @Nullable
+  protected String flavor(
       HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
@@ -66,13 +70,15 @@ final class SpringWebHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
     return null;
   }

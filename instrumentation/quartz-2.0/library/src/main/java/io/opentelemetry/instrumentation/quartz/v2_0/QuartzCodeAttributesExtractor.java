@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.quartz.JobExecutionContext;
 
 public class QuartzCodeAttributesExtractor

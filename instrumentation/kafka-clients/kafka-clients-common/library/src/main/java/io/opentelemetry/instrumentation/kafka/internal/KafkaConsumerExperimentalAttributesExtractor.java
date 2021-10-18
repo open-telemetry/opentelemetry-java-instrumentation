@@ -11,9 +11,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerExperimentalAttributesExtractor
     implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {

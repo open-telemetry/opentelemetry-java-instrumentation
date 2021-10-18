@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.security.Principal;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<

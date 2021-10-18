@@ -19,8 +19,8 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
-import io.opentelemetry.javaagent.instrumentation.netty.common.server.HttpRequestAndChannel;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import javax.annotation.Nullable;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 

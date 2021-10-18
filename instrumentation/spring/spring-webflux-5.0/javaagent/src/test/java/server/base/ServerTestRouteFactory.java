@@ -84,6 +84,20 @@ public abstract class ServerTestRouteFactory {
                       Span.current()
                           .setAttribute(
                               "test.request.id", Long.parseLong(request.queryParam("id").get())));
+            })
+        .andRoute(
+            GET("/captureHeaders"),
+            request -> {
+              ServerEndpoint endpoint = ServerEndpoint.CAPTURE_HEADERS;
+
+              return respond(
+                  endpoint,
+                  ServerResponse.status(endpoint.getStatus())
+                      .header(
+                          "X-Test-Response",
+                          request.headers().asHttpHeaders().getFirst("X-Test-Request")),
+                  null,
+                  null);
             });
   }
 

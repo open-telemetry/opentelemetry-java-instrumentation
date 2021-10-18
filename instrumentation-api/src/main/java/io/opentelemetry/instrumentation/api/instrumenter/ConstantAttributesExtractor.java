@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class ConstantAttributesExtractor<REQUEST, RESPONSE, T>
     implements AttributesExtractor<REQUEST, RESPONSE> {
