@@ -20,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 import javax.annotation.Nullable;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
@@ -87,6 +88,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       Channel channel, @Nullable HttpResponse response, @Nullable Throwable error) {
     Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndRemove();
     HttpRequestAndChannel request = channel.attr(NettyServerSingletons.HTTP_REQUEST).getAndRemove();
+    error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter().end(context, request, response, error);
   }
 }

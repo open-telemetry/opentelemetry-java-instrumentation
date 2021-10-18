@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.Netty
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -35,7 +36,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
               requestAndContexts.context(),
               requestAndContexts.request(),
               (HttpResponse) msg.getMessage(),
-              null);
+              NettyErrorHolder.getOrDefault(requestAndContexts.context(), null));
       requestContextsField.set(ctx.getChannel(), null);
     }
 
