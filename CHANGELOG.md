@@ -1,5 +1,85 @@
 # Changelog
 
+## Version 1.7.0 - 2021-10-19
+
+### 📈 Enhancements
+
+- Change the default javaagent artifact to have exporters, introduce new `-slim` artifact,
+  and deprecate the `-all` artifact
+  ([#4106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4106))
+- Support jlinked images without jdk.unsupported module
+  ([#4154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4154))
+  ([#4124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4124))
+- Added experimental option to suppress messaging receive spans
+  ([#4187](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4187))
+  ([#4204](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4204))
+- Refine 404 handling in Restlet instrumentation
+  ([#4206](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4206))
+- Remove dynamo db.name attribute
+  ([#4208](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4208))
+- Remove capturing http.url in server instrumentation in favor of http.scheme, http.host
+  and http.target
+  ([#4209](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4209))
+- Intern db info to reduce memory consumption
+  ([#4263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4263))
+- Better JAX-RS async cancel handling
+  ([#4279](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4279))
+- Extract HTTP request/response headers as span attributes
+  ([#4237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4237),
+   [#4309](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4309),
+   [#4320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4320),
+   [#4321](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4321),
+   [#4328](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4328),
+   [#4395](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4395))
+- Support kafka streams 3
+  ([#4236](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4236))
+- AWS lambda - improvements in custom type handling in wrappers, SQS event wrapper added
+  ([#4254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4254))
+- Add code attributes to quartz spans
+  ([#4332](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4332))
+- Collect more attributes from servlet instrumenter
+  ([#4356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4356))
+- Allow reactor instrumentation to pick up spans from reactor context
+  ([#4159](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4159))
+- Hide virtual field accessor interface methods from reflection
+  ([#4390](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4390))
+
+### 🛠️ Bug fixes
+
+- Fix spring context reload issue
+  ([#4051](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4051))
+- Remove incorrect lettuce db.statement attribute
+  ([#4160](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4160))
+- Fix tomcat async spans
+  ([#4339](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4339))
+
+### 🧰 Tooling
+
+- Add start/end time to RequestListener
+  ([#4155](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4155))
+- Add context customizer hook to Instrumenter API
+  ([#4167](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4167))
+- Transform lambda classes
+  ([#4182](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4182))
+- Separate HTTP client/server AttributesExtractors
+  ([#4195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4195))
+- Introduce muzzle-specific interface to InstrumentationModule
+  ([#4207](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4207))
+- Make it possible to use InstrumentationContext (now VirtualField) from library instrumentation
+  ([#4218](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4218))
+- Add functionality to generate API changes
+  ([#4285](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4285))
+- Split NetAttributesExtractor into NetClientAttributesExtractor and NetServerAttributesExtractor
+  ([#4287](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4287))
+- Back VirtualField with a volatile field
+  ([#4355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4355))
+- Convert AttributesExtractor to interface
+  ([#4363](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4363))
+- Rename some *InstrumenterBuilder classes to *InstrumenterFactory
+  ([#4391](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4391))
+- rename `newBuilder()` to `builder()`
+  ([#4407](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4407))
+
 ## Version 1.6.2 - 2021-09-30
 
 ### 🛠️ Bug fixes
