@@ -5,19 +5,18 @@
 
 package io.opentelemetry.instrumentation.mongo.testing
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
-
-import java.util.concurrent.atomic.AtomicInteger
-
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
@@ -377,9 +376,9 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   def mongoSpan(TraceAssert trace, int index,
                 String operation, String collection,
                 String dbName, Object parentSpan,
-                Closure<Boolean> statementEval, Throwable exception = null) {
+                Closure<Boolean> statementEval) {
     trace.span(index) {
-      name { operation + " " + dbName + "." + collection }
+      name operation + " " + dbName + "." + collection
       kind CLIENT
       if (parentSpan == null) {
         hasNoParent()
