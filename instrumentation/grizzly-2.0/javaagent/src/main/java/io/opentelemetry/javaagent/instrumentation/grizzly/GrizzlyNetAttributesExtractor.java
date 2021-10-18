@@ -6,20 +6,22 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
 final class GrizzlyNetAttributesExtractor
     extends NetServerAttributesExtractor<HttpRequestPacket, HttpResponsePacket> {
 
+  @Nullable
   @Override
-  public @Nullable String transport(HttpRequestPacket request) {
+  public String transport(HttpRequestPacket request) {
     return null;
   }
 
+  @Nullable
   @Override
-  public @Nullable String peerName(HttpRequestPacket request) {
+  public String peerName(HttpRequestPacket request) {
     return request.getRemoteHost();
   }
 
@@ -28,8 +30,9 @@ final class GrizzlyNetAttributesExtractor
     return request.getRemotePort();
   }
 
+  @Nullable
   @Override
-  public @Nullable String peerIp(HttpRequestPacket request) {
+  public String peerIp(HttpRequestPacket request) {
     return request.getRemoteAddress();
   }
 }

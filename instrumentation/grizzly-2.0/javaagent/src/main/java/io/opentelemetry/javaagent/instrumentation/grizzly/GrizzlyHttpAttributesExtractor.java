@@ -10,7 +10,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
@@ -28,14 +28,16 @@ final class GrizzlyHttpAttributesExtractor
     return value == null ? emptyList() : singletonList(value);
   }
 
+  @Nullable
   @Override
   protected Long requestContentLength(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  protected Long requestContentLengthUncompressed(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return null;
   }
@@ -45,13 +47,15 @@ final class GrizzlyHttpAttributesExtractor
     return response.getStatus();
   }
 
+  @Nullable
   @Override
   protected Long responseContentLength(HttpRequestPacket request, HttpResponsePacket response) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  protected Long responseContentLengthUncompressed(
       HttpRequestPacket request, HttpResponsePacket response) {
     return null;
   }
@@ -72,8 +76,9 @@ final class GrizzlyHttpAttributesExtractor
     return flavor;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String target(HttpRequestPacket request) {
+  protected String target(HttpRequestPacket request) {
     String target = request.getRequestURI();
     String queryString = request.getQueryString();
     if (queryString != null) {
@@ -82,8 +87,9 @@ final class GrizzlyHttpAttributesExtractor
     return target;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String route(HttpRequestPacket request) {
+  protected String route(HttpRequestPacket request) {
     return null;
   }
 
@@ -92,9 +98,9 @@ final class GrizzlyHttpAttributesExtractor
     return request.isSecure() ? "https" : "http";
   }
 
+  @Nullable
   @Override
-  protected @Nullable String serverName(
-      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
+  protected String serverName(HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return null;
   }
 }

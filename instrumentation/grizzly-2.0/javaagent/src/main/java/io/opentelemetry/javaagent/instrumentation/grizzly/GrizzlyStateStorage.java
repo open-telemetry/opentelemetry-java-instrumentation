@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 
 import io.opentelemetry.context.Context;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
