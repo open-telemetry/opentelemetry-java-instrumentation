@@ -47,7 +47,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
       Context context = GrizzlyStateStorage.removeContext(ctx);
       HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
       if (context != null && request != null) {
-        Throwable error = GrizzlyExceptionHolder.getOrDefault(context, throwable);
+        Throwable error = GrizzlyErrorHolder.getOrDefault(context, throwable);
         instrumenter().end(context, request, null, error);
       }
     }

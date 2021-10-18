@@ -33,7 +33,7 @@ public final class GrizzlySingletons {
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> {
-                  context = GrizzlyExceptionHolder.init(context);
+                  context = GrizzlyErrorHolder.init(context);
                   return ServerSpanNaming.init(context, ServerSpanNaming.Source.CONTAINER);
                 })
             .newServerInstrumenter(new HttpRequestHeadersGetter());
