@@ -16,12 +16,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEvent, Void> {
 
@@ -50,17 +50,20 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   }
 
   @Override
-  protected @Nullable String user(CommandStartedEvent event) {
+  @Nullable
+  protected String user(CommandStartedEvent event) {
     return null;
   }
 
   @Override
-  protected @Nullable String name(CommandStartedEvent event) {
+  @Nullable
+  protected String name(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
   @Override
-  protected @Nullable String connectionString(CommandStartedEvent event) {
+  @Nullable
+  protected String connectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();
@@ -82,7 +85,8 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   }
 
   @Override
-  protected @Nullable String operation(CommandStartedEvent event) {
+  @Nullable
+  protected String operation(CommandStartedEvent event) {
     return event.getCommandName();
   }
 
