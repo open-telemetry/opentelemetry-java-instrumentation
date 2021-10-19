@@ -106,6 +106,10 @@ public List<String> getAdditionalHelperClassNames() {
 }
 ```
 
+The order of the class names returned by this method matters - if you have several helper classes
+extending one another then you'll want to return the base class first. For example, if you have a
+`B extends A` class the list should contain `A` first and `B` second.
+
 These helper classes will be injected into the application classloader after those provided by the
 muzzle codegen plugin.
 
