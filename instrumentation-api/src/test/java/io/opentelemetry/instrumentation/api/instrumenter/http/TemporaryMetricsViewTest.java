@@ -18,16 +18,24 @@ public class TemporaryMetricsViewTest {
 
   @Test
   public void shouldApplyDurationView() {
-    Attributes attributes =
+    Attributes startAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_METHOD, "GET")
             .put(SemanticAttributes.HTTP_URL, "http://somehost/high/cardinality/12345")
             .put(SemanticAttributes.NET_PEER_NAME, "somehost")
             .build();
 
-    OpenTelemetryAssertions.assertThat(applyDurationView(attributes))
+    Attributes endAttributes =
+        Attributes.builder()
+            .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
+            .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
+            .build();
+
+    OpenTelemetryAssertions.assertThat(applyDurationView(startAttributes, endAttributes))
         .containsOnly(
-            attributeEntry("http.method", "GET"), attributeEntry("net.peer.name", "somehost"));
+            attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
+            attributeEntry(SemanticAttributes.NET_PEER_NAME.getKey(), "somehost2"),
+            attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
 
   @Test
