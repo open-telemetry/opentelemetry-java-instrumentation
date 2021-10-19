@@ -53,9 +53,7 @@ def linuxTargets = [
     [version: ["8.0.6"], vm: ["openj9"], jdk: ["8", "11"], dockerfile: "tomee-custom"]
   ],
   "payara" : [
-    [version: ["5.2020.6"], vm: ["hotspot"], jdk: ["8"], args: [tagSuffix: ""]],
-    [version: ["5.2020.6"], vm: ["hotspot"], jdk: ["11"], args: [tagSuffix: "-jdk11"]],
-    [version: ["5.2020.6"], vm: ["openj9"], jdk: ["8", "11"], dockerfile: "payara-custom-5.2020.6"]
+    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -83,9 +81,7 @@ def windowsTargets = [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
   ],
-  "payara" : [
-    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
-  ],
+  "payara" : linuxTargets["payara"],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
