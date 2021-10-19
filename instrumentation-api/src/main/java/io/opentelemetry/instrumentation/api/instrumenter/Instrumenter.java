@@ -201,7 +201,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
-    SpanKind kind = spanKindExtractor.extract(request);
     StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
     if (statusCode != StatusCode.UNSET) {
       span.setStatus(statusCode);
