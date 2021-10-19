@@ -13,8 +13,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.bson.BsonValue;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
   @Override
