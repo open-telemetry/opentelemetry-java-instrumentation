@@ -21,10 +21,10 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.6.0",
-    opentelemetryAlpha         : "1.6.0-alpha",
-    opentelemetryJavaagent     : "1.7.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.7.0-alpha-SNAPSHOT",
+    opentelemetry              : "1.7.0",
+    opentelemetryAlpha         : "1.7.0-alpha",
+    opentelemetryJavaagent     : "1.8.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "1.8.0-alpha-SNAPSHOT",
   ]
 
   deps = [
