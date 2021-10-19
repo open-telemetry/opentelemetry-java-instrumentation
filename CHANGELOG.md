@@ -75,7 +75,7 @@
   ([#4355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4355))
 - Convert AttributesExtractor to interface
   ([#4363](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4363))
-- Rename some *InstrumenterBuilder classes to *InstrumenterFactory
+- Rename some `*InstrumenterBuilder` classes to `*InstrumenterFactory`
   ([#4391](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4391))
 - rename `newBuilder()` to `builder()`
   ([#4407](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4407))
