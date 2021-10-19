@@ -29,13 +29,13 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
 def linuxTargets = [
-  "jetty"  : [
-    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"]],
-    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"]],
-    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"]],
-    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"]],
-    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], war: "servlet-5.0"],
-    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], war: "servlet-5.0"]
+  "jetty" : [
+    [version: ["9.4.39"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [sourceVersion: "9.4.39.v20210325"]],
+    [version: ["9.4.39"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.39.v20210325"]],
+    [version: ["10.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "10.0.7"]],
+    [version: ["10.0.7"], vm: ["openj9"], jdk: ["11", "16"], args: [sourceVersion: "10.0.7"]],
+    [version: ["11.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"],
+    [version: ["11.0.7"], vm: ["openj9"], jdk: ["11", "16"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"]
   ],
   "tomcat" : [
     [version: ["7.0.109"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
@@ -70,14 +70,7 @@ def linuxTargets = [
 ]
 
 def windowsTargets = [
-  "jetty"  : [
-    [version: ["9.4.35"], vm: ["hotspot"], jdk: ["8", "11", "16", "17"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["9.4.35"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["10.0.0"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
-    [version: ["10.0.0"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]],
-    [version: ["11.0.1"], vm: ["hotspot"], jdk: ["11", "16", "17"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"],
-    [version: ["11.0.1"], vm: ["openj9"], jdk: ["11", "16"], dockerfile: "jetty-split", args: [sourceVersion: "11.0.1"], war: "servlet-5.0"]
-  ],
+  "jetty"  : linuxTargets["jetty"],
   "tomcat" : linuxTargets["tomcat"],
   "tomee"  : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
