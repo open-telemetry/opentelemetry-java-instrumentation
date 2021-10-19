@@ -17,23 +17,24 @@ Muzzle has two phases:
 
 ### Compile-time reference collection
 
-The compile-time reference collection and code generation process is implemented using a ByteBuddy
-plugin (called `MuzzleCodeGenerationPlugin`).
+The compile-time reference collection and code generation process is implemented using a Gradle
+plugin ([`io.opentelemetry.instrumentation.muzzle-generation`](https://plugins.gradle.org/plugin/io.opentelemetry.instrumentation.muzzle-generation)).
 
-For each instrumentation module the ByteBuddy plugin first applies `InstrumentationModuleMuzzle`
-interface to it and then proceeds to implement all methods from that interface by generating the
-required bytecode.
-It collects symbols referring to both internal and third party APIs used by the currently processed module's type
-instrumentations (`InstrumentationModule#typeInstrumentations()`). The reference collection process
-starts from advice classes (values of the map returned by the
-`TypeInstrumentation#transformers()` method) and traverses the class graph until it encounters a
-reference to a non-instrumentation class (determined by `InstrumentationClassPredicate` and
-the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references,
-the collection process also builds a graph of dependencies between internal instrumentation helper
+For each instrumentation module the code generation plugin first applies
+the `InstrumentationModuleMuzzle` interface to it and then proceeds to implement all methods from
+that interface by generating the required bytecode.
+It collects symbols referring to both internal and third party APIs used by the currently processed
+module's type instrumentations (`InstrumentationModule#typeInstrumentations()`). The reference
+collection process starts from advice classes (collected by calling the
+`TypeInstrumentation#transform(TypeTransformer)` method) and traverses the class graph until it
+encounters a reference to a non-instrumentation class (determined by `InstrumentationClassPredicate`
+and the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references, the
+collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
 injected to the application classloader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
 Muzzle also automatically generates the `InstrumentationModuleMuzzle#registerMuzzleVirtualFields()`
-method. All collected references are then used to generate an `InstrumentationModuleMuzzle#getMuzzleReferences` method.
+method. All collected references are then used to generate
+an `InstrumentationModuleMuzzle#getMuzzleReferences` method.
 
 If your `InstrumentationModule` subclass defines a method with exact same signature as a method
 from `InstrumentationModuleMuzzle`, the muzzle compile plugin will not override your code:
@@ -57,12 +58,13 @@ once for the whole instrumentation module.
 
 The source code of the runtime muzzle matcher is located in the `muzzle` module.
 
-## Muzzle gradle plugin
+## `muzzle-check` gradle plugin
 
-The muzzle gradle plugin allows to perform the runtime reference matching process against different
-third party library versions, when the project is built.
+The [`muzzle-check`](https://plugins.gradle.org/plugin/io.opentelemetry.instrumentation.muzzle-check)
+gradle plugin allows to perform the runtime reference matching process against different third party
+library versions, when the project is built.
 
-Muzzle gradle plugin is just an additional utility for enhanced build-time checking
+The `muzzle-check` gradle plugin is just an additional utility for enhanced build-time checking
 to alert us when there are breaking changes in the underlying third party library
 that will cause the instrumentation not to get applied.
 **Even without using it muzzle reference matching is _always_ active in runtime**,
@@ -88,25 +90,25 @@ Example:
 muzzle {
   // it is expected that muzzle fails the runtime check for this component
   fail {
-    group = "commons-httpclient"
-    module = "commons-httpclient"
+    group.set("commons-httpclient")
+    module.set("commons-httpclient")
     // versions from this range are checked
-    versions = "[,4.0)"
+    versions.set("[,4.0)")
     // this version is not checked by muzzle
-    skip('3.1-jenkins-1')
+    skip("3.1-jenkins-1")
   }
   // it is expected that muzzle passes the runtime check for this component
   pass {
-    group = 'org.springframework'
-    module = 'spring-webmvc'
-    versions = "[3.1.0.RELEASE,]"
+    group.set("org.springframework")
+    module.set("spring-webmvc")
+    versions.set("[3.1.0.RELEASE,]")
     // except these versions
-    skip('1.2.1', '1.2.2', '1.2.3', '1.2.4')
-    skip('3.2.1.RELEASE')
+    skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
+    skip("3.2.1.RELEASE")
     // this dependency will be added to the classpath when muzzle check is run
-    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
+    extraDependency("javax.servlet:javax.servlet-api:3.0.1")
     // verify that all other versions - [,3.1.0.RELEASE) in this case - fail the muzzle runtime check
-    assertInverse = true
+    assertInverse.set(true)
   }
 }
 ```
@@ -131,10 +133,10 @@ library. Expecting muzzle check failures from some library versions is a way to 
 instrumentation will not be applied to them in the runtime - and won't break anything in the
 instrumented application.
 
-The easiest way it can be done is by adding `assertInverse = true` to the `pass` muzzle
+The easiest way it can be done is by adding `assertInverse.set(true)` to the `pass` muzzle
 directive. The plugin will add an implicit `fail` directive that contains all other versions of the
 instrumented library.
-It is worth using `assertInverse = true` by default when writing instrumentation modules, even for
+It is worth using `assertInverse.set(true)` by default when writing instrumentation modules, even for
 very old library versions. The muzzle plugin will ensure that those old versions won't be
 accidentally instrumented when we know that the instrumentation will not work properly for them.
 Having a `fail` directive forces the authors of the instrumentation module to properly specify
