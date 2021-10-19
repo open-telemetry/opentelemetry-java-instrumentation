@@ -89,6 +89,9 @@ class HttpClientMetricsTest {
                                               attributeEntry("http.host", "host"),
                                               attributeEntry("http.method", "GET"),
                                               attributeEntry("http.scheme", "https"),
+                                              attributeEntry("http.flavor", "2.0"),
+                                              attributeEntry("http.server_name", "server"),
+                                              attributeEntry("http.status_code", 200),
                                               attributeEntry("net.host.name", "localhost"),
                                               attributeEntry("net.host.port", 1234L))));
             });
