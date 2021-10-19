@@ -31,6 +31,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   Call.Factory client = createCallFactory(
     new OkHttpClient.Builder()
       .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .readTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
       .protocols(Arrays.asList(Protocol.HTTP_1_1))
       .retryOnConnectionFailure(false))
 
@@ -74,6 +75,11 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   }
 
   @Override
+  boolean testReadTimeout() {
+    true
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_HOST,
@@ -85,6 +91,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
     switch (uri.toString()) {
       case "http://localhost:61/":
       case "https://192.0.2.1/":
+      case resolveAddress("/read-timeout").toString():
         attributes.remove(SemanticAttributes.HTTP_FLAVOR)
     }
 
