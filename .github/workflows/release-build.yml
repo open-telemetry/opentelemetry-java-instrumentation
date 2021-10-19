@@ -122,9 +122,13 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Local publish
+      - name: Local publish of artifacts
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Local publish of gradle plugins
+        run: ../gradlew publishToMavenLocal -x javadoc
+        working-directory: gradle-plugins
 
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
@@ -154,7 +158,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: assemble final closeAndReleaseSonatypeStagingRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: assemble final closeAndReleaseSonatypeStagingRepository --stacktrace
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -162,6 +166,14 @@ jobs:
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+
+        # TODO (trask) cache gradle wrapper?
+      - name: Build and publish gradle plugins
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        run: ../gradlew build publishPlugins
+        working-directory: gradle-plugins
 
       - name: Create Release
         id: create_release

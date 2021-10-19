@@ -85,10 +85,6 @@ fun artifactPrefix(p: Project, archivesBaseName: String): String {
   return "opentelemetry-"
 }
 
-rootProject.tasks.named("release").configure {
-  finalizedBy(tasks["publishToSonatype"])
-}
-
 // Sign only if we have a key to do so
 val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
 // Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of

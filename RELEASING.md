@@ -15,6 +15,15 @@ next _minor_ release version. This means version `vX.(Y+1).0-SNAPSHOT`.
 
 ## Starting the Release
 
+Before making the release:
+
+* Update `CHANGELOG.md`
+* Update the version (remove `-SNAPSHOT`) in these files:
+  * build.gradle.kts
+  * gradle-plugins/build.gradle.kts
+  * examples/distro/build.gradle
+  * examples/extension/build.gradle
+
 Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
 
 You will see a button that says "Run workflow". Press the button, enter the version number you want
@@ -22,6 +31,14 @@ to release in the input field that pops up, and then press "Run workflow".
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
+
+After making the release:
+
+* Update the version (bump and add `-SNAPSHOT`) in these files:
+  * build.gradle.kts
+  * gradle-plugins/build.gradle.kts
+  * examples/distro/build.gradle
+  * examples/extension/build.gradle
 
 ## Announcement
 

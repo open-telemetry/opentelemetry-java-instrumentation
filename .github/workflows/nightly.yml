@@ -271,9 +271,13 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Local publish
+      - name: Local publish of artifacts
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Local publish of gradle plugins
+        run: ../gradlew publishToMavenLocal -x javadoc
+        working-directory: gradle-plugins
 
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
