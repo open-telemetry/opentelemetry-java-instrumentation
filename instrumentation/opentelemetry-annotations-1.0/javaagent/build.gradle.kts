@@ -19,7 +19,7 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation-api-annotation-support"))
-  testImplementation("net.bytebuddy:byte-buddy:${versions["net.bytebuddy"]}")
+  testImplementation("net.bytebuddy:byte-buddy")
 }
 
 tasks {

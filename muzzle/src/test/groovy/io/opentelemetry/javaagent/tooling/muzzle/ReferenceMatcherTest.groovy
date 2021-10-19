@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
 import muzzle.TestClasses.MethodBodyAdvice
-import net.bytebuddy.jar.asm.Type
+import org.objectweb.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll

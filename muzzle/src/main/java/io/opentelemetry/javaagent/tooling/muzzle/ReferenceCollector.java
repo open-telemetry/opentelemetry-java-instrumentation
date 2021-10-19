@@ -36,7 +36,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.jar.asm.ClassReader;
+import org.objectweb.asm.ClassReader;
 
 /**
  * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
