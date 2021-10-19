@@ -22,14 +22,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpSpanStatusExtractorTest {
-  @Mock private HttpCommonAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
+  @Mock
+  private HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> serverExtractor;
+
+  @Mock
+  private HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> clientExtractor;
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 500, 501, 600, 601})
   void hasServerStatus(int statusCode) {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(serverExtractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
     assertThat(
-            HttpSpanStatusExtractor.createServer(extractor)
+            HttpSpanStatusExtractor.create(serverExtractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode));
   }
@@ -37,9 +41,9 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatus(int statusCode) {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(clientExtractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(clientExtractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode));
   }
@@ -47,11 +51,11 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasServerStatusAndException(int statusCode) {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(serverExtractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
     // Presence of exception has no effect.
     assertThat(
-            HttpSpanStatusExtractor.createServer(extractor)
+            HttpSpanStatusExtractor.create(serverExtractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);
@@ -60,11 +64,11 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatusAndException(int statusCode) {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(clientExtractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
     // Presence of exception has no effect.
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(clientExtractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);
@@ -72,29 +76,31 @@ class HttpSpanStatusExtractorTest {
 
   @Test
   void hasNoStatus_fallsBackToDefault_unset() {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(clientExtractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(serverExtractor.statusCode(anyMap(), anyMap())).thenReturn(null);
 
     assertThat(
-            HttpSpanStatusExtractor.createServer(extractor)
+            HttpSpanStatusExtractor.create(serverExtractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(StatusCode.UNSET);
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(clientExtractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(StatusCode.UNSET);
   }
 
   @Test
   void hasNoStatus_fallsBackToDefault_error() {
-    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(clientExtractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(serverExtractor.statusCode(anyMap(), anyMap())).thenReturn(null);
 
     StatusCode serverStatusCode =
-        HttpSpanStatusExtractor.createServer(extractor)
+        HttpSpanStatusExtractor.create(serverExtractor)
             .extract(Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException());
     assertThat(serverStatusCode).isEqualTo(StatusCode.ERROR);
 
     StatusCode clientStatusCode =
-        HttpSpanStatusExtractor.createClient(extractor)
+        HttpSpanStatusExtractor.create(clientExtractor)
             .extract(Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException());
     assertThat(clientStatusCode).isEqualTo(StatusCode.ERROR);
   }

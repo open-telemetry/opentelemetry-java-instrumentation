@@ -28,7 +28,7 @@ public class PlayWsClientSingletons {
     SpanNameExtractor<? super Request> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     PlayWsClientNetAttributesExtractor netAttributesExtractor =
         new PlayWsClientNetAttributesExtractor();
 

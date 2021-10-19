@@ -28,7 +28,7 @@ public class GoogleHttpClientSingletons {
     SpanNameExtractor<? super HttpRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpRequest, ? super HttpResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     GoogleHttpClientNetAttributesExtractor netAttributesExtractor =
         new GoogleHttpClientNetAttributesExtractor();
 

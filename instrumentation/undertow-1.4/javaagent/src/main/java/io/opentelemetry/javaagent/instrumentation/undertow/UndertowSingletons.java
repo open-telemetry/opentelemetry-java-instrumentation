@@ -32,7 +32,7 @@ public final class UndertowSingletons {
     SpanNameExtractor<HttpServerExchange> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpServerExchange, HttpServerExchange> spanStatusExtractor =
-        HttpSpanStatusExtractor.createServer(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     NetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
         new UndertowNetAttributesExtractor();
 

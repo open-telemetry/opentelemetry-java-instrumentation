@@ -26,8 +26,8 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
    */
-  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> createClient(
-      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.CLIENT);
   }
 
@@ -36,8 +36,8 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
    */
-  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> createServer(
-      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+      HttpServerAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.SERVER);
   }
 

@@ -67,7 +67,7 @@ public final class OkHttpTracingBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.createServer(httpAttributesExtractor))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)

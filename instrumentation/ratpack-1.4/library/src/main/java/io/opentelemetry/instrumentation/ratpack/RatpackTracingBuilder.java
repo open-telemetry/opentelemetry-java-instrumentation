@@ -66,7 +66,7 @@ public final class RatpackTracingBuilder {
         Instrumenter.newBuilder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes));
 
-    builder.setSpanStatusExtractor(HttpSpanStatusExtractor.createServer(httpAttributes));
+    builder.setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes));
     builder.addAttributesExtractor(netAttributes);
     builder.addAttributesExtractor(httpAttributes);
     builder.addAttributesExtractors(additionalExtractors);

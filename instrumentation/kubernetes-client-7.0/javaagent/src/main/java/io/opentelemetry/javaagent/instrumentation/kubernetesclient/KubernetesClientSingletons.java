@@ -38,7 +38,7 @@ public class KubernetesClientSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.createClient(httpAttributesExtractor))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(new KubernetesNetAttributesExtractor());
 

@@ -27,7 +27,7 @@ public final class NettyServerInstrumenterFactory {
             GlobalOpenTelemetry.get(),
             instrumentationName,
             HttpSpanNameExtractor.create(httpAttributesExtractor))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.createServer(httpAttributesExtractor))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(new NettyCommonNetAttributesExtractor())
         .addRequestMetrics(HttpServerMetrics.get())

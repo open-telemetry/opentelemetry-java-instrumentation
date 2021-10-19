@@ -31,7 +31,7 @@ public class ResteasyClientSingletons {
     SpanNameExtractor<? super ClientInvocation> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClientInvocation, ? super Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ResteasyClientNetAttributesExtractor netAttributesExtractor =
         new ResteasyClientNetAttributesExtractor();
 

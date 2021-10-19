@@ -22,14 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpClientSpanStatusExtractorTest {
-  @Mock private HttpCommonAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
+  @Mock private HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasStatus(int statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode));
   }
@@ -41,7 +41,7 @@ class HttpClientSpanStatusExtractorTest {
 
     // Presence of exception has no effect.
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(extractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);
@@ -52,7 +52,7 @@ class HttpClientSpanStatusExtractorTest {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
 
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(StatusCode.UNSET);
   }
@@ -62,7 +62,7 @@ class HttpClientSpanStatusExtractorTest {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
 
     assertThat(
-            HttpSpanStatusExtractor.createClient(extractor)
+            HttpSpanStatusExtractor.create(extractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);

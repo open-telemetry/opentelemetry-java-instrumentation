@@ -57,7 +57,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
           httpAttributesExtractor) {
 
     SpanStatusExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-        spanStatusExtractor = HttpSpanStatusExtractor.createServer(httpAttributesExtractor);
+        spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ServletNetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor =
         new ServletNetAttributesExtractor<>(accessor);
     ServletErrorCauseExtractor<REQUEST, RESPONSE> errorCauseExtractor =

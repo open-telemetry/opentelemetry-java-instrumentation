@@ -29,7 +29,7 @@ public final class LibertyDispatcherSingletons {
     SpanNameExtractor<LibertyRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<LibertyRequest, LibertyResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.createServer(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     NetServerAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
         new LibertyDispatcherNetAttributesExtractor();
 

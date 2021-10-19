@@ -69,7 +69,7 @@ public final class ApacheHttpClientTracingBuilder {
     SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.createClient(httpAttributesExtractor);
+        HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
         new ApacheHttpClientNetAttributesExtractor();
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
