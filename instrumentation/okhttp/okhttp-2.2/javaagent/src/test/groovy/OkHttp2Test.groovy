@@ -25,6 +25,7 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
 
   def setupSpec() {
     client.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    client.setReadTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   @Override
@@ -69,6 +70,7 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
     switch (uri.toString()) {
       case "http://localhost:61/":
       case "https://192.0.2.1/":
+      case resolveAddress("/read-timeout").toString():
         attributes.remove(SemanticAttributes.HTTP_FLAVOR)
     }
 
@@ -78,5 +80,10 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   @Override
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }

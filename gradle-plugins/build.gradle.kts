@@ -9,15 +9,24 @@ plugins {
 }
 
 group = "io.opentelemetry.instrumentation"
-version = "0.8.0-SNAPSHOT"
+version = "0.8.0"
 
 repositories {
   mavenCentral()
 }
 
+val bbGradlePlugin by configurations.creating
+configurations.named("compileOnly") {
+  extendsFrom(bbGradlePlugin)
+}
+
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.18")
+  // we need to use byte buddy variant that does not shade asm
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.20") {
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+  }
+  implementation("net.bytebuddy:byte-buddy-dep:1.11.20")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")

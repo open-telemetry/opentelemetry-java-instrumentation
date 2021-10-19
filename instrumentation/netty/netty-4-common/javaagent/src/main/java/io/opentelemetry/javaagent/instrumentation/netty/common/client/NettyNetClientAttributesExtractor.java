@@ -10,13 +10,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNe
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class NettyNetClientAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(
+  @Nullable
+  public InetSocketAddress getAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().remoteAddress();
     if (address instanceof InetSocketAddress) {
@@ -26,7 +27,8 @@ final class NettyNetClientAttributesExtractor
   }
 
   @Override
-  public @Nullable String transport(
+  @Nullable
+  public String transport(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }

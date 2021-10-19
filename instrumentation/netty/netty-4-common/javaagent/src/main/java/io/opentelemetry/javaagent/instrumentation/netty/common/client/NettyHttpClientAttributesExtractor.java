@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndCha
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class NettyHttpClientAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
@@ -33,7 +33,8 @@ final class NettyHttpClientAttributesExtractor
   }
 
   @Override
-  protected @Nullable String url(HttpRequestAndChannel requestAndChannel) {
+  @Nullable
+  protected String url(HttpRequestAndChannel requestAndChannel) {
     try {
       String hostHeader = getHost(requestAndChannel);
       String target = requestAndChannel.request().getUri();
@@ -75,13 +76,15 @@ final class NettyHttpClientAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
@@ -92,13 +95,15 @@ final class NettyHttpClientAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }

@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaRequest;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AwsLambdaFunctionAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {

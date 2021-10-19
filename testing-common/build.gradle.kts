@@ -41,7 +41,6 @@ dependencies {
 
   implementation("com.google.guava:guava")
   implementation("net.bytebuddy:byte-buddy")
-  implementation("net.bytebuddy:byte-buddy-agent")
   implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
   implementation("org.slf4j:log4j-over-slf4j")

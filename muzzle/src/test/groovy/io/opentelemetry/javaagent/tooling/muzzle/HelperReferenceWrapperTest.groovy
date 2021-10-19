@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
 import muzzle.HelperReferenceWrapperTestClasses
-import net.bytebuddy.jar.asm.Type
+import org.objectweb.asm.Type
 import net.bytebuddy.pool.TypePool
 import spock.lang.Shared
 import spock.lang.Specification

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyCommonNetAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 
 public final class NettyServerInstrumenterFactory {
 
@@ -33,6 +34,7 @@ public final class NettyServerInstrumenterFactory {
         .addRequestMetrics(HttpServerMetrics.get())
         .addContextCustomizer(
             (context, request, attributes) -> {
+              context = NettyErrorHolder.init(context);
               // netty is not exactly a "container", but it's the best match out of these
               return ServerSpanNaming.init(context, ServerSpanNaming.Source.CONTAINER);
             })

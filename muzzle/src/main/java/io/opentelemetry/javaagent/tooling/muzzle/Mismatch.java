@@ -15,7 +15,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
-import net.bytebuddy.jar.asm.Type;
+import org.objectweb.asm.Type;
 
 /**
  * A mismatch between a {@link ClassRef} and a runtime class.

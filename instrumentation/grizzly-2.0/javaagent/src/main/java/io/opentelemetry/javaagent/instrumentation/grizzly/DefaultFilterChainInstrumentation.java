@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlySingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,6 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
+import org.glassfish.grizzly.http.HttpRequestPacket;
 
 public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
 
@@ -43,9 +44,11 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onFail(
         @Advice.Argument(0) FilterChainContext ctx, @Advice.Argument(1) Throwable throwable) {
-      Context context = tracer().getServerContext(ctx);
-      if (context != null) {
-        tracer().endExceptionally(context, throwable);
+      Context context = GrizzlyStateStorage.removeContext(ctx);
+      HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
+      if (context != null && request != null) {
+        Throwable error = GrizzlyErrorHolder.getOrDefault(context, throwable);
+        instrumenter().end(context, request, null, error);
       }
     }
   }

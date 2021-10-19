@@ -15,9 +15,9 @@ import java.net.URLConnection;
 import java.security.Permission;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import net.bytebuddy.jar.asm.ClassReader;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.commons.ClassRemapper;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.commons.ClassRemapper;
 
 public class RemappingUrlConnection extends URLConnection {
   // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching

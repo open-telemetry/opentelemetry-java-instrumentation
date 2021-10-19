@@ -30,7 +30,11 @@ import javax.annotation.Nullable;
  *     and HTTP flavor.
  * @param <STORAGE> - Implementation specific storage type for attaching/getting the server context.
  *     Use Void if your subclass does not have an implementation specific storage need.
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.http the HTTP semantic
+ *     convention utilities package} instead.
  */
+@Deprecated
 public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent

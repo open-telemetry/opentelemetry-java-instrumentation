@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class ExtractAdapter implements TextMapGetter<HttpRequestPacket> {
-  public static final ExtractAdapter GETTER = new ExtractAdapter();
+final class HttpRequestHeadersGetter implements TextMapGetter<HttpRequestPacket> {
 
   @Override
   public Iterable<String> keys(HttpRequestPacket request) {

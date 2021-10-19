@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AkkaHttpNetAttributesExtractor
     extends NetClientAttributesExtractor<HttpRequest, HttpResponse> {
@@ -29,7 +29,8 @@ class AkkaHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  @Nullable
+  public String peerIp(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
 }

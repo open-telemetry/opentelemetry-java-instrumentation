@@ -212,6 +212,6 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HttpCodecFilter.handleRead"
+    return "HTTP GET"
   }
 }
