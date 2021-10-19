@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class AkkaHttpClientAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequest, HttpResponse> {
@@ -35,13 +35,15 @@ class AkkaHttpClientAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return null;
   }
@@ -52,13 +54,14 @@ class AkkaHttpClientAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
-      HttpRequest httpRequest, HttpResponse httpResponse) {
+  @Nullable
+  protected Long responseContentLength(HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }

@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import scala.Option;
 
 class AkkaHttpServerAttributesExtractor
@@ -27,13 +27,14 @@ class AkkaHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
-      HttpRequest request, @Nullable HttpResponse httpResponse) {
+  @Nullable
+  protected Long requestContentLength(HttpRequest request, @Nullable HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return null;
   }
@@ -44,13 +45,14 @@ class AkkaHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(HttpRequest request, HttpResponse httpResponse) {
+  @Nullable
+  protected Long responseContentLength(HttpRequest request, HttpResponse httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
-      HttpRequest request, HttpResponse httpResponse) {
+  @Nullable
+  protected Long responseContentLengthUncompressed(HttpRequest request, HttpResponse httpResponse) {
     return null;
   }
 
@@ -76,7 +78,8 @@ class AkkaHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(HttpRequest request) {
+  @Nullable
+  protected String route(HttpRequest request) {
     return null;
   }
 
@@ -86,7 +89,8 @@ class AkkaHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String serverName(HttpRequest request, @Nullable HttpResponse httpResponse) {
+  @Nullable
+  protected String serverName(HttpRequest request, @Nullable HttpResponse httpResponse) {
     return null;
   }
 }

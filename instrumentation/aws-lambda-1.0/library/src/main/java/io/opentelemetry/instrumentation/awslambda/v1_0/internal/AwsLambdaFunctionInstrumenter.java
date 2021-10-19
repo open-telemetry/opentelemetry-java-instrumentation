@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaRequest;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class AwsLambdaFunctionInstrumenter {
 

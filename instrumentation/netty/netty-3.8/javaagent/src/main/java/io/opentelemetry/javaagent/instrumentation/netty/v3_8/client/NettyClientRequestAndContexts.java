@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 @AutoValue
 abstract class NettyClientRequestAndContexts {
