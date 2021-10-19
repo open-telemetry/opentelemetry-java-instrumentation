@@ -29,7 +29,8 @@ final class NettyClientSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.netty-3.8",
                 HttpSpanNameExtractor.create(httpClientAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.createClient(httpClientAttributesExtractor))
+            .setSpanStatusExtractor(
+                HttpSpanStatusExtractor.createClient(httpClientAttributesExtractor))
             .addAttributesExtractor(httpClientAttributesExtractor)
             .addAttributesExtractor(netClientAttributesExtractor)
             .addAttributesExtractor(
