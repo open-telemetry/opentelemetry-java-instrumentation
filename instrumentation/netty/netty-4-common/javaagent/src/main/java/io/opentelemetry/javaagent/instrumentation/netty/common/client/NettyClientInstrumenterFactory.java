@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyCommonNetAttributesExtractor;
 
 public final class NettyClientInstrumenterFactory {
 
@@ -35,13 +34,6 @@ public final class NettyClientInstrumenterFactory {
             HttpSpanNameExtractor.create(httpClientAttributesExtractor))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesExtractor))
         .addAttributesExtractor(httpClientAttributesExtractor)
-        // in case of netty client instrumentation we're using 2 net attributes extractors:
-        // 1. the common one will extract net attributes on start of the operation; in case of
-        // timeouts or other connection issues netty may return null when calling
-        // Channel.remoteAddress() at the end of processing
-        // 2. the client one will extract full net attributes at the end of processing - it should
-        // be the fully resolved address at this point in time
-        .addAttributesExtractor(new NettyCommonNetAttributesExtractor())
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
         .addRequestMetrics(HttpClientMetrics.get())
