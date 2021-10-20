@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse
 import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.api.trace.StatusCode.UNSET
 
 abstract class AbstractServlet5MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
@@ -50,9 +49,6 @@ abstract class AbstractServlet5MappingTest<SERVER, CONTEXT> extends AgentInstrum
           kind SpanKind.SERVER
           if (!success && response.status().code() >= 500) {
             status ERROR
-          }
-          else {
-            status UNSET
           }
         }
         if (!success) {
