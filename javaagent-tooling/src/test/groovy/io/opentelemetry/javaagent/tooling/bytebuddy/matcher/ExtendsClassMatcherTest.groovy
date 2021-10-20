@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling
 import net.bytebuddy.description.type.TypeDescription
-import net.bytebuddy.jar.asm.Opcodes
+import org.objectweb.asm.Opcodes
 import spock.lang.Shared
 import spock.lang.Specification
 

@@ -13,7 +13,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  api("net.bytebuddy:byte-buddy")
+  api("net.bytebuddy:byte-buddy-dep")
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":instrumentation-api"))

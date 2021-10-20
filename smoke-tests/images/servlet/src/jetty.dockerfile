@@ -1,23 +1,24 @@
-ARG version
 ARG jdkImage
 
-FROM jetty:${version}-jre11-slim as jetty
+# Unzip in a separate container so that zip file layer is not part of final image
+FROM ${jdkImage} as builder
+ARG sourceVersion
+
+ADD https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${sourceVersion}/jetty-home-${sourceVersion}.tar.gz /server.tgz
+RUN tar xf server.tgz && mv jetty-home-${sourceVersion} /server
 
 FROM ${jdkImage}
-ENV JETTY_HOME /usr/local/jetty
-ENV JETTY_BASE /var/lib/jetty
-ENV TMPDIR /tmp/jetty
-ENV PATH $JETTY_HOME/bin:$PATH
-
-COPY --from=jetty $JETTY_HOME $JETTY_HOME
-COPY --from=jetty $JETTY_BASE $JETTY_BASE
-COPY --from=jetty $TMPDIR $TMPDIR
+COPY --from=builder /server /server
+ENV JETTY_HOME=/server
+ENV JETTY_BASE=/base
+RUN mkdir $JETTY_BASE && \
+  cd $JETTY_BASE && \
+  # depending on Jetty version one of the following commands should succeed
+  java -jar /server/start.jar --add-module=ext,server,jsp,resources,deploy,jstl,websocket,http || \
+  java -jar /server/start.jar --add-to-start=ext,server,jsp,resources,deploy,jstl,websocket,http
 
 WORKDIR $JETTY_BASE
-COPY --from=jetty docker-entrypoint.sh generate-jetty-start.sh /
+
+CMD ["java","-jar","/server/start.jar"]
 
 COPY app.war $JETTY_BASE/webapps/
-
-EXPOSE 8080
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["java","-jar","/usr/local/jetty/start.jar"]

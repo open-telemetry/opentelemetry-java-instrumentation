@@ -91,6 +91,28 @@ All classes referenced by service providers defined in the `helperResourceNames(
 treated as helper classes: they'll be checked for invalid references and automatically injected into
 the application classloader.
 
+### `getAdditionalHelperClassNames()`
+
+If you don't use the [muzzle gradle plugins](muzzle.md), or have a specific scenario that requires
+providing the helper classes by hand (e.g. an unusual SPI implementation), you can override
+the `getAdditionalHelperClassNames()` method to provide a list of additional helper classes that
+should be injected to the application classloader when the instrumentation is applied.
+
+```java
+public List<String> getAdditionalHelperClassNames() {
+  return Arrays.asList(
+      "org.my.library.instrumentation.SomeHelper",
+      "org.my.library.instrumentation.AnotherHelper");
+}
+```
+
+The order of the class names returned by this method matters - if you have several helper classes
+extending one another then you'll want to return the base class first. For example, if you have a
+`B extends A` class the list should contain `A` first and `B` second.
+
+These helper classes will be injected into the application classloader after those provided by the
+muzzle codegen plugin.
+
 ### `classLoaderMatcher()`
 
 Different versions of the same library often need completely different instrumentations:

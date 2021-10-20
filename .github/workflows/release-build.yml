@@ -187,7 +187,7 @@ jobs:
 
         # TODO (trask) delete this after the 1.7.0 release
       - name: Upload Release Asset (backwards compatible "all" artifact)
-        id: upload-release-asset
+        id: upload-release-asset-backwards-compatible
         uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

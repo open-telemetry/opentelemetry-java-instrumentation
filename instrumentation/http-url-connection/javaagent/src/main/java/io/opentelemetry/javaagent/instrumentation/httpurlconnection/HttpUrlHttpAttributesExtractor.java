@@ -72,6 +72,7 @@ class HttpUrlHttpAttributesExtractor
   @Override
   protected List<String> responseHeader(
       HttpURLConnection connection, Integer statusCode, String name) {
-    return emptyList();
+    String value = connection.getHeaderField(name);
+    return value == null ? emptyList() : singletonList(value);
   }
 }

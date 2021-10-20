@@ -14,7 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
-import net.bytebuddy.jar.asm.Type;
+import org.objectweb.asm.Type;
 
 /**
  * The builder of {@link ClassRef}.

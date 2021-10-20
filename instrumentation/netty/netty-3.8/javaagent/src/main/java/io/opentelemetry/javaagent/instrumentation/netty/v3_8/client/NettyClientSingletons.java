@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesEx
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -35,6 +36,8 @@ final class NettyClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
+            .addContextCustomizer(
+                (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .newClientInstrumenter(new HttpRequestHeadersSetter());
   }
 
