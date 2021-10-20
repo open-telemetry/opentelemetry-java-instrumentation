@@ -28,7 +28,7 @@ tasks.create("pushMatrix", DockerPushImage) {
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
-def linuxTargets = [
+def targets = [
   "jetty" : [
     [version: ["9.4.39"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [sourceVersion: "9.4.39.v20210325"]],
     [version: ["9.4.39"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.39.v20210325"]],
@@ -60,32 +60,16 @@ def linuxTargets = [
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
-    // there's no openj9 image for jdk 17
     [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
     // running configure.sh is failing while building the image with Java 17
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"]]
-  ]
-]
-
-def windowsTargets = [
-  "jetty"  : linuxTargets["jetty"],
-  "tomcat" : linuxTargets["tomcat"],
-  "tomee"  : linuxTargets["tomee"],
-  "payara" : linuxTargets["payara"],
-  "wildfly": [
-    [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
-  ],
-  "liberty": [
     [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
   ]
 ]
 
-createDockerTasks(buildLinuxTestImagesTask, linuxTargets, false)
-createDockerTasks(buildWindowsTestImagesTask, windowsTargets, true)
+createDockerTasks(buildLinuxTestImagesTask, targets, false)
+createDockerTasks(buildWindowsTestImagesTask, targets, true)
 
 def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, boolean isWindows, String extraTag) {
   // Using separate build directory for different war files allows using the same app.war filename
