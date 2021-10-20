@@ -66,7 +66,7 @@ dependencies {
 
   implementation(project(":instrumentation:jsf:jsf-common:library"))
 
-  testImplementation(project(":instrumentation:jsf:jsf-testing-common"))
+  testImplementation(project(":instrumentation:jsf:jsf-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
