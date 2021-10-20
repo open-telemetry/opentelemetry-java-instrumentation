@@ -8,7 +8,7 @@ import org.eclipse.jetty.webapp.WebAppContext
 
 import static org.eclipse.jetty.util.resource.Resource.newResource
 
-class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Server> {
+abstract class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Server> {
 
   @Override
   Server startServer(int port) {
