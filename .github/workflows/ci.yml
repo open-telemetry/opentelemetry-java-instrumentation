@@ -276,6 +276,7 @@ jobs:
         run: ./gradlew publishToMavenLocal -x javadoc
 
       - name: Local publish of gradle plugins
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ../gradlew publishToMavenLocal -x javadoc
         working-directory: gradle-plugins
 

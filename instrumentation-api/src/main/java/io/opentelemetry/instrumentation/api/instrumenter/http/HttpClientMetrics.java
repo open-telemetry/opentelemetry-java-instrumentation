@@ -76,7 +76,7 @@ public final class HttpClientMetrics implements RequestListener {
     }
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyDurationView(state.startAttributes()));
+        applyDurationView(state.startAttributes(), endAttributes));
   }
 
   @AutoValue
