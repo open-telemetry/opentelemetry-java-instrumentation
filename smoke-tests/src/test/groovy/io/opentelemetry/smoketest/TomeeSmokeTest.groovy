@@ -7,12 +7,22 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-@AppServer(version = "7.0.0", jdk = "8")
-@AppServer(version = "7.0.0", jdk = "8-openj9")
-@AppServer(version = "8.0.6", jdk = "8")
-@AppServer(version = "8.0.6", jdk = "8-openj9")
-@AppServer(version = "8.0.6", jdk = "11")
-@AppServer(version = "8.0.6", jdk = "11-openj9")
+@AppServer(version = "7.0.9", jdk = "8")
+@AppServer(version = "7.0.9", jdk = "8-openj9")
+@AppServer(version = "7.1.4", jdk = "8")
+@AppServer(version = "7.1.4", jdk = "8-openj9")
+@AppServer(version = "8.0.8", jdk = "8")
+@AppServer(version = "8.0.8", jdk = "8-openj9")
+@AppServer(version = "8.0.8", jdk = "11")
+@AppServer(version = "8.0.8", jdk = "11-openj9")
+@AppServer(version = "8.0.8", jdk = "17")
+@AppServer(version = "8.0.8", jdk = "16-openj9")
+@AppServer(version = "9.0.0-M7", jdk = "8")
+@AppServer(version = "9.0.0-M7", jdk = "8-openj9")
+@AppServer(version = "9.0.0-M7", jdk = "11")
+@AppServer(version = "9.0.0-M7", jdk = "11-openj9")
+@AppServer(version = "9.0.0-M7", jdk = "17")
+@AppServer(version = "9.0.0-M7", jdk = "16-openj9")
 class TomeeSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
