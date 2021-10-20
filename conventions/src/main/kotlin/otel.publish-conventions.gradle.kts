@@ -20,7 +20,7 @@ publishing {
       }
 
       if (findProperty("otel.stable") != "true") {
-        val versionParts = version.split('-').toMutableList()
+        val versionParts = version.toString().split('-').toMutableList()
         versionParts[0] += "-alpha"
         version = versionParts.joinToString("-")
       }

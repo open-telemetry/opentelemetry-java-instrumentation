@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "io.opentelemetry.instrumentation"
-version = "1.8.0-SNAPSHOT"
+version = "1.8.0-alpha-SNAPSHOT"
 
 repositories {
   mavenCentral()
