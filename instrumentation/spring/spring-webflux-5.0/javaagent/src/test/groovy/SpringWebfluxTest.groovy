@@ -85,6 +85,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -233,6 +234,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -295,6 +297,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/notfoundgreet"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 404
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -336,6 +339,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/echo"
             "${SemanticAttributes.HTTP_METHOD.key}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 202
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -382,6 +386,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -443,6 +448,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/double-greet-redirect"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 307
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -472,6 +478,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/double-greet"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -516,6 +523,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "${SemanticAttributes.HTTP_TARGET}" urlPath
               "${SemanticAttributes.HTTP_METHOD.key}" "GET"
               "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+              "${SemanticAttributes.HTTP_SCHEME.key}" "http"
               "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
               "${SemanticAttributes.HTTP_USER_AGENT.key}" String
             }
