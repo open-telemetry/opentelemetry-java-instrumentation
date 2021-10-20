@@ -111,7 +111,7 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onResponse"() {
     setup:
     def tracer = newTracer()
-    def statusCode = status != null ? HttpStatusConverter.statusFromHttpStatus(status) : null
+    def statusCode = status != null ? HttpStatusConverter.CLIENT.statusFromHttpStatus(status) : null
 
     when:
     tracer.onResponse(span, resp)
