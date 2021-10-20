@@ -19,8 +19,7 @@ Before making the release:
 
 * Update `CHANGELOG.md`
 * Update the version (remove `-SNAPSHOT`) in these files:
-  * build.gradle.kts
-  * gradle-plugins/build.gradle.kts
+  * version.gradle.kts
   * examples/distro/build.gradle
   * examples/extension/build.gradle
 
@@ -35,8 +34,7 @@ and pushes a git tag with the version number.
 After making the release:
 
 * Update the version (bump and add `-SNAPSHOT`) in these files:
-  * build.gradle.kts
-  * gradle-plugins/build.gradle.kts
+  * version.gradle.kts
   * examples/distro/build.gradle
   * examples/extension/build.gradle
 
