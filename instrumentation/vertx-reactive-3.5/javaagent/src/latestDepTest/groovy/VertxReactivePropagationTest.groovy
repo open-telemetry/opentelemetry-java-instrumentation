@@ -68,6 +68,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
             "${SemanticAttributes.HTTP_TARGET.key}" "/listProducts"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
@@ -157,6 +158,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "${SemanticAttributes.HTTP_TARGET.key}" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "${SemanticAttributes.HTTP_METHOD.key}" "GET"
               "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+              "${SemanticAttributes.HTTP_SCHEME.key}" "http"
               "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
               "${SemanticAttributes.HTTP_USER_AGENT.key}" String
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId

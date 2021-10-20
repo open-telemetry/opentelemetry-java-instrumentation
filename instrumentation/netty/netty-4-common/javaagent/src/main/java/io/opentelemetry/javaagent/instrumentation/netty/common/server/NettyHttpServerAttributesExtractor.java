@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
@@ -13,6 +14,21 @@ import javax.annotation.Nullable;
 
 final class NettyHttpServerAttributesExtractor
     extends HttpServerAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
+
+  private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
+
+  @SuppressWarnings("unchecked")
+  private static Class<? extends ChannelHandler> getSslHandlerClass() {
+    try {
+      return (Class<? extends ChannelHandler>)
+          Class.forName(
+              "io.netty.handler.ssl.SslHandler",
+              false,
+              NettyHttpServerAttributesExtractor.class.getClassLoader());
+    } catch (ClassNotFoundException exception) {
+      return null;
+    }
+  }
 
   @Override
   protected String method(HttpRequestAndChannel requestAndChannel) {
@@ -84,9 +100,9 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  @Nullable
   protected String scheme(HttpRequestAndChannel requestAndChannel) {
-    return null;
+    boolean isHttps = requestAndChannel.channel().pipeline().get(sslHandlerClass) != null;
+    return isHttps ? "https" : "http";
   }
 
   @Override
