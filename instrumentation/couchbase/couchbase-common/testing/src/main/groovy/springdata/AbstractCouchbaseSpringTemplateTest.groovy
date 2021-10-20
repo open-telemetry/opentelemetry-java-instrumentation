@@ -42,8 +42,8 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
     couchbaseCluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
     memcacheCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
-    ClusterManager couchbaseManager = couchbaseCluster.clusterManager(USERNAME, PASSWORD)
-    ClusterManager memcacheManager = memcacheCluster.clusterManager(USERNAME, PASSWORD)
+    ClusterManager couchbaseManager = couchbaseCluster.clusterManager(AbstractCouchbaseTest.USERNAME, AbstractCouchbaseTest.PASSWORD)
+    ClusterManager memcacheManager = memcacheCluster.clusterManager(AbstractCouchbaseTest.USERNAME, AbstractCouchbaseTest.PASSWORD)
 
     Bucket bucketCouchbase = couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
     Bucket bucketMemcache = memcacheCluster.openBucket(bucketMemcache.name(), bucketMemcache.password())
