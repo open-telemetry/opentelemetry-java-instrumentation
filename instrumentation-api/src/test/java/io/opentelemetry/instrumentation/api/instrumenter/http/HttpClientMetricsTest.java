@@ -38,7 +38,6 @@ class HttpClientMetricsTest {
             .put("net.host.port", 1234)
             .build();
 
-    // Currently ignored.
     Attributes responseAttributes =
         Attributes.builder()
             .put("http.flavor", "2.0")
