@@ -35,7 +35,7 @@ dependencies {
 
   implementation(project(":instrumentation:play-ws:play-ws-common:javaagent"))
 
-  testImplementation(project(":instrumentation:play-ws:play-ws-testing"))
+  testImplementation(project(":instrumentation:play-ws:play-ws-common:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
