@@ -68,6 +68,25 @@ def targets = [
   ]
 ]
 
+tasks.register("printSmokeTestsConfigurations") {
+  linuxTargets.each { server, matrices ->
+    def smokeTestServer = findProperty('smokeTestServer')
+    if (smokeTestServer != null && server != smokeTestServer) {
+      return
+    }
+    println server
+    matrices.forEach { entry ->
+      entry.version.forEach { version ->
+        entry.jdk.forEach { jdk ->
+          entry.vm.forEach { vm ->
+            println "@AppServer(version = \"$version\", jdk = \"$jdk${vm == 'hotspot' ? '' : '-openj9'}\")"
+          }
+        }
+      }
+    }
+  }
+}
+
 createDockerTasks(buildLinuxTestImagesTask, targets, false)
 createDockerTasks(buildWindowsTestImagesTask, targets, true)
 
