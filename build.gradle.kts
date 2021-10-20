@@ -8,9 +8,7 @@ plugins {
   id("otel.spotless-conventions")
 }
 
-allprojects {
-  version = "1.8.0-SNAPSHOT"
-}
+apply(from = "version.gradle.kts")
 
 nexusPublishing {
   packageGroup.set("io.opentelemetry")

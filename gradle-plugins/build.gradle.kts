@@ -9,7 +9,8 @@ plugins {
 }
 
 group = "io.opentelemetry.instrumentation"
-version = "1.8.0-alpha-SNAPSHOT"
+
+apply(from = "../version.gradle.kts")
 
 repositories {
   mavenCentral()
