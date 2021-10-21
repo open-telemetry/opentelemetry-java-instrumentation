@@ -15,8 +15,6 @@ tasks.withType<ShadowJar>().configureEach {
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-  relocate("javax.annotation", "io.opentelemetry.javaagent.shaded.javax.annotation")
-
   // prevents conflict with library instrumentation
   relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation")
 
