@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common;
+package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public final class NettyCommonNetAttributesExtractor
+final class NettyNetServerAttributesExtractor
     extends InetSocketAddressNetServerAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
 
   @Override
@@ -23,7 +24,7 @@ public final class NettyCommonNetAttributesExtractor
   @Override
   @Nullable
   public InetSocketAddress getAddress(HttpRequestAndChannel requestAndChannel) {
-    SocketAddress address = requestAndChannel.channel().remoteAddress();
+    SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
