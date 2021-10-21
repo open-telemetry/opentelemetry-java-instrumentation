@@ -83,7 +83,7 @@ tasks.register("printSmokeTestsConfigurations") {
         entry.jdk.forEach { jdk ->
           entry.vm.forEach { vm ->
             println "@AppServer(version = \"$version\", jdk = \"$jdk${vm == 'hotspot' ? '' : '-openj9'}\")"
-            println "class ${serverName}${majorVersion}Jdk${jdk}${vm == 'hotspot' ? '' : 'openj9'} extends ${serverName}SmokeTest {"
+            println "class ${serverName}${majorVersion}Jdk${jdk}${vm == 'hotspot' ? '' : 'Openj9'} extends ${serverName}SmokeTest {"
             println "}"
           }
         }

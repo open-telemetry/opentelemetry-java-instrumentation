@@ -22,13 +22,13 @@ class Jetty9Jdk11 extends JettySmokeTest {
 class Jetty9Jdk17 extends JettySmokeTest {
 }
 @AppServer(version = "9.4.39", jdk = "8-openj9")
-class Jetty9Jdk8openj9 extends JettySmokeTest {
+class Jetty9Jdk8Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "9.4.39", jdk = "11-openj9")
-class Jetty9Jdk11openj9 extends JettySmokeTest {
+class Jetty9Jdk11Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "9.4.39", jdk = "16-openj9")
-class Jetty9Jdk16openj9 extends JettySmokeTest {
+class Jetty9Jdk16Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "10.0.7", jdk = "11")
 class Jetty10Jdk11 extends JettySmokeTest {
@@ -37,10 +37,10 @@ class Jetty10Jdk11 extends JettySmokeTest {
 class Jetty10Jdk17 extends JettySmokeTest {
 }
 @AppServer(version = "10.0.7", jdk = "11-openj9")
-class Jetty10Jdk11openj9 extends JettySmokeTest {
+class Jetty10Jdk11Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "10.0.7", jdk = "16-openj9")
-class Jetty10Jdk16openj9 extends JettySmokeTest {
+class Jetty10Jdk16Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "11.0.7", jdk = "11")
 class Jetty11Jdk11 extends JettySmokeTest {
@@ -49,8 +49,8 @@ class Jetty11Jdk11 extends JettySmokeTest {
 class Jetty11Jdk17 extends JettySmokeTest {
 }
 @AppServer(version = "11.0.7", jdk = "11-openj9")
-class Jetty11Jdk11openj9 extends JettySmokeTest {
+class Jetty11Jdk11Openj9 extends JettySmokeTest {
 }
 @AppServer(version = "11.0.7", jdk = "16-openj9")
-class Jetty11Jdk16openj9 extends JettySmokeTest {
+class Jetty11Jdk16Openj9 extends JettySmokeTest {
 }

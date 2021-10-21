@@ -47,11 +47,11 @@ abstract class GlassFishSmokeTest extends AppServerTest {
 class GlassFish5Jdk8 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "8-openj9")
-class GlassFish5Jdk8openj9 extends GlassFishSmokeTest {
+class GlassFish5Jdk8Openj9 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "11")
 class GlassFish5Jdk11 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "11-openj9")
-class GlassFish5Jdk11openj9 extends GlassFishSmokeTest {
+class GlassFish5Jdk11Openj9 extends GlassFishSmokeTest {
 }
