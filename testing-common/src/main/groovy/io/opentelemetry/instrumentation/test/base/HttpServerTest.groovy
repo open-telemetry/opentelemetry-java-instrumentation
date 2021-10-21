@@ -131,10 +131,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
-  boolean testConcurrency() {
-    true
-  }
-
   boolean verifyServerSpanEndTime() {
     return true
   }
@@ -426,7 +422,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def "high concurrency test"() {
     setup:
-    assumeTrue(testConcurrency())
     int count = 100
     def endpoint = INDEXED_CHILD
 
