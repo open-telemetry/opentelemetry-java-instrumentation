@@ -16,18 +16,10 @@ public class CapturedHttpHeadersTestConfigSource implements ConfigPropertySource
   @Override
   public Map<String, String> getProperties() {
     Map<String, String> testConfig = new HashMap<>();
-    testConfig.put(
-        "otel.instrumentation.common.experimental.capture-http-headers.client.request",
-        "X-Test-Request");
-    testConfig.put(
-        "otel.instrumentation.common.experimental.capture-http-headers.client.response",
-        "X-Test-Response");
-    testConfig.put(
-        "otel.instrumentation.common.experimental.capture-http-headers.server.request",
-        "X-Test-Request");
-    testConfig.put(
-        "otel.instrumentation.common.experimental.capture-http-headers.server.response",
-        "X-Test-Response");
+    testConfig.put("otel.instrumentation.http.capture-headers.client.request", "X-Test-Request");
+    testConfig.put("otel.instrumentation.http.capture-headers.client.response", "X-Test-Response");
+    testConfig.put("otel.instrumentation.http.capture-headers.server.request", "X-Test-Request");
+    testConfig.put("otel.instrumentation.http.capture-headers.server.response", "X-Test-Response");
     return testConfig;
   }
 }
