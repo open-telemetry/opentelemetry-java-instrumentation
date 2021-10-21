@@ -51,7 +51,7 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
 
       Context context = CURRENT_RABBIT_CONTEXT.get();
       if (context != null && command.getMethod() != null) {
-        RabbitTracer.onCommand(Java8BytecodeBridge.spanFromContext(context), command);
+        RabbitInstrumenterHelper.onCommand(Java8BytecodeBridge.spanFromContext(context), command);
       }
     }
   }
