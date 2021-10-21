@@ -37,16 +37,16 @@ agent instrumentation.
 Refer to some of our existing instrumentations for examples of the folder structure, for example:
 [aws-sdk-2.2](../../instrumentation/aws-sdk/aws-sdk-2.2).
 
-When writing new instrumentation, create a directory inside `instrumentation` that corresponds to the
-instrumented library and the oldest version being targeted. Ideally an old version of the library is
-targeted in a way that the instrumentation applies to a large range of versions, but this may be
-restricted by the interception APIs provided by the library.
+When writing new instrumentation, create a directory inside `instrumentation` that corresponds to
+the instrumented library and the oldest version being targeted. Ideally an old version of the
+library is targeted in a way that the instrumentation applies to a large range of versions, but this
+may be restricted by the interception APIs provided by the library.
 
-Within the subfolder, create three folders `library` (skip if library instrumentation is not possible),
-`javaagent`, and `testing`.
+Within the subfolder, create three folders `library` (skip if library instrumentation is not
+possible),`javaagent`, and `testing`.
 
-For example, if you are targeting the RPC framework `yarpc` at version `1.0`, you would have a directory tree like
-the following:
+For example, if you are targeting the RPC framework `yarpc` at version `1.0`, you would have a
+directory tree like the following:
 
 ```
 instrumentation ->
@@ -82,9 +82,9 @@ plugins {
 The `otel.library-instrumentation` gradle plugin will apply all the default settings and configure
 build tooling for the library instrumentation module.
 
-By convention, OpenTelemetry library instrumentations are centered
-around `*Tracing` and `*TracingBuilder` classes. These two are usually the only public classes in
-the whole module. Keep the amount of public classes and methods as small as possible.
+By convention, OpenTelemetry library instrumentations are centered around `*Tracing`
+and `*TracingBuilder` classes. These two are usually the only public classes in the whole module.
+Keep the amount of public classes and methods as small as possible.
 
 Start by creating a `YarpcTracing` class:
 
@@ -111,14 +111,14 @@ public final class YarpcTracing {
 
 By convention, the `YarpcTracing` class exposes the `create()` and `builder()` methods as the only
 way of constructing a new instance; the constructor must be kept package-private (at most). Most of
-the configuration/construction logic happens in the builder class. Don't expose any
-other way of creating a new instance other than using the builder.
+the configuration/construction logic happens in the builder class. Don't expose any other way of
+creating a new instance other than using the builder.
 
-The `newTracingInterceptor()` method listed in the example code returns an implementation of one
-of the library interfaces which add the telemetry. This part might look different for
-every instrumented library: some of them expose interceptor/listener interfaces that can be easily
-plugged into the library, some other have a library interface that you can use to implement a
-decorator that emits telemetry when used.
+The `newTracingInterceptor()` method listed in the example code returns an implementation of one of
+the library interfaces which add the telemetry. This part might look different for every
+instrumented library: some of them expose interceptor/listener interfaces that can be easily plugged
+into the library, some other have a library interface that you can use to implement a decorator that
+emits telemetry when used.
 
 Consider the following builder class:
 
@@ -139,8 +139,8 @@ The builder must have a package-private constructor, so that the only way of cre
 calling the `YarpcTracing#builder()` method and a public `build()` method that will return a new,
 properly configured `YarpcTracing` instance.
 
-The library instrumentation builders can contain configuration settings that let you
-customize the behavior of the instrumentation. Most of these knobs are used to configure the
+The library instrumentation builders can contain configuration settings that let you customize the
+behavior of the instrumentation. Most of these options are used to configure the
 underlying `Instrumenter` instance that's used to encapsulate the whole telemetry generation
 process.
 
@@ -168,24 +168,24 @@ dependencies {
 }
 ```
 
-Tests in the `testing` module describe scenarios that apply to both library and
-javaagent instrumentations, the only difference being how the instrumented library is
-initialized. In a library instrumentation test, there will be code calling into the instrumentation
-API, while in a javaagent instrumentation test it will generally use the underlying library
-API as is and just rely on the javaagent to apply all the necessary bytecode changes automatically.
+Tests in the `testing` module describe scenarios that apply to both library and javaagent
+instrumentations, the only difference being how the instrumented library is initialized. In a
+library instrumentation test, there will be code calling into the instrumentation API, while in a
+javaagent instrumentation test it will generally use the underlying library API as is and just rely
+on the javaagent to apply all the necessary bytecode changes automatically.
 
-You can use either JUnit 5 (recommended) or Spock to test the instrumentation. Start by
-creating an abstract class with an abstract method, for example `configure()`, that returns
-the instrumented object, such as a client, server, or the main class of the instrumented library. Then,
-depending on the chosen test library, go to the [JUnit](#junit) or [Spock](#spock) section.
+You can use either JUnit 5 (recommended) or Spock to test the instrumentation. Start by creating an
+abstract class with an abstract method, for example `configure()`, that returns the instrumented
+object, such as a client, server, or the main class of the instrumented library. Then, depending on
+the chosen test library, go to the [JUnit](#junit) or [Spock](#spock) section.
 
 After writing some tests, return to the `library` package and make sure it has
 a `testImplementation` dependency on the `testing` submodule. Then, create a test class that extends
 the abstract test class from `testing`. You should implement the abstract `configure()` method to
 initialize the library using the exposed mechanism to register interceptors/listeners, perhaps a
-method like `registerInterceptor`. You can also wrap the object with the instrumentation decorator. Make sure
-that a testing strategy is applied depending on the test library you use. Both expose a way
-to specify whether you're running a library or javaagent test. If the tests pass, the library
+method like `registerInterceptor`. You can also wrap the object with the instrumentation decorator.
+Make sure that a testing strategy is applied depending on the test library you use. Both expose a
+way to specify whether you're running a library or javaagent test. If the tests pass, the library
 instrumentation is working.
 
 ### JUnit
@@ -193,8 +193,8 @@ instrumentation is working.
 The `testing-common` module exposes several JUnit extensions that facilitate writing instrumentation
 tests. In particular, we'll take a look at `LibraryInstrumentationExtension`
 , `AgentInstrumentationExtension`, and their parent class `InstrumentationExtension`. The extension
-class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`, that
-you can use in your test cases to verify that the correct telemetry has been produced.
+class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`,
+that you can use in your test cases to verify that the correct telemetry has been produced.
 
 Consider the following abstract test case class:
 
@@ -212,9 +212,9 @@ public abstract class AbstractYarpcTest {
 }
 ```
 
-In addition to the `configure()` method mentioned earlier, you have to add an
-additional `testing()` method that returns an `InstrumentationExtension` and is supposed to be
-implemented by the extending class.
+In addition to the `configure()` method mentioned earlier, you have to add an additional `testing()`
+method that returns an `InstrumentationExtension` and is supposed to be implemented by the extending
+class.
 
 The library instrumentation class would look like the following:
 
@@ -236,15 +236,15 @@ class LibraryYarpcTest extends AbstractYarpcTest {
 }
 ```
 
-You can use the `@RegisterExtension` annotation to make sure that the instrumentation
-extension gets picked up by JUnit. Then, return the same extension instance in the `testing()`
-method implementation so that it's used in all test scenarios implemented in the abstract class.
+You can use the `@RegisterExtension` annotation to make sure that the instrumentation extension gets
+picked up by JUnit. Then, return the same extension instance in the `testing()` method
+implementation so that it's used in all test scenarios implemented in the abstract class.
 
 ### Spock
 
-The `testing-common` module contains some utilities that facilitate writing Spock instrumentation tests,
-such as the `InstrumentationSpecification` base class and
-the `LibraryTestTrait` and `AgentTestTrait` traits.
+The `testing-common` module contains some utilities that facilitate writing Spock instrumentation
+tests, such as the `InstrumentationSpecification` base class and the `LibraryTestTrait`
+and `AgentTestTrait` traits.
 
 Consider the following abstract test class extending `InstrumentationSpecification`:
 
@@ -259,8 +259,8 @@ abstract class AbstractYarpcTest extends InstrumentationSpecification {
 }
 ```
 
-The `InstrumentationSpecification` class contains abstract methods that are implemented by one
-of our test traits in the actual test class. For example:
+The `InstrumentationSpecification` class contains abstract methods that are implemented by one of
+our test traits in the actual test class. For example:
 
 ```groovy
 class LibraryYarpcTest extends AbstractYarpcTest implements LibraryTestTrait {
@@ -278,8 +278,8 @@ Now that you have working and tested library instrumentation, implement the java
 instrumentation so that the users of the agent do not have to modify their apps to enable telemetry
 for the library.
 
-Start with the gradle file to make sure that the `javaagent` submodule has
-a dependency on the `library` submodule and a test dependency on the `testing` submodule.
+Start with the gradle file to make sure that the `javaagent` submodule has a dependency on
+the `library` submodule and a test dependency on the `testing` submodule.
 
 ```kotlin
 plugins {
@@ -296,18 +296,18 @@ dependencies {
 All javaagent instrumentation modules should also have the muzzle plugins configured. You can read
 more about how to set this up properly in the [muzzle docs](muzzle.md#muzzle-check-gradle-plugin).
 
-Javaagent instrumentation defines matching classes for which bytecode is generated. You often
-match against the class you used in the test for library instrumentation, for example the builder of
-a client. You can also match against the method that creates the builder, for example its
-constructor. Agent instrumentation can inject bytecode to be run after the constructor returns,
-which would invoke, for example,`registerInterceptor` and initialize the instrumentation. Often, the code
-inside the bytecode decorator is identical to the one in the test you wrote above, because the agent
-does the work for initializing the instrumentation library, so a user doesn't have to. You can find
-a detailed explanation of how to implement a javaagent instrumentation
+Javaagent instrumentation defines matching classes for which bytecode is generated. You often match
+against the class you used in the test for library instrumentation, for example the builder of a
+client. You can also match against the method that creates the builder, for example its constructor.
+Agent instrumentation can inject bytecode to be run after the constructor returns, which would
+invoke, for example,`registerInterceptor` and initialize the instrumentation. Often, the code inside
+the bytecode decorator is identical to the one in the test you wrote above, because the agent does
+the work for initializing the instrumentation library, so a user doesn't have to. You can find a
+detailed explanation of how to implement a javaagent instrumentation
 [here](writing-instrumentation-module.md).
 
-Next, add tests for the agent instrumentation. You want to ensure that
-the instrumentation works without the user knowing about the instrumentation.
+Next, add tests for the agent instrumentation. You want to ensure that the instrumentation works
+without the user knowing about the instrumentation.
 
 Create a test that extends the base class you wrote earlier but does nothing in the `configure()`
 method. Unlike the library instrumentation, the javaagent instrumentation is supposed to work
@@ -316,25 +316,25 @@ the `AgentInstrumentationExtension` or implement the `AgentTestingTrait`, and tr
 this class. All tests should pass.
 
 Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
-javaagent, with the instrumentation being loaded as an extension. This is done to perform
-the same bytecode instrumentation as when the agent is run against a normal app, and means that the
-javaagent instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and
-will not be directly accessible in your test code. Make sure not to use the classes from the
-javaagent instrumentation in your test code. If for some reason you need to write unit tests for the
-javaagent code, see [this section](#writing-java-agent-unit-tests).
+javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
+bytecode instrumentation as when the agent is run against a normal app, and means that the javaagent
+instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not
+be directly accessible in your test code. Make sure not to use the classes from the javaagent
+instrumentation in your test code. If for some reason you need to write unit tests for the javaagent
+code, see [this section](#writing-java-agent-unit-tests).
 
 ## Additional considerations regarding instrumentations
 
 ### Instrumenting code that is not available as a Maven dependency
 
-If an instrumented server or library jar isn't available in any public Maven repository you can create
-a module with stub classes that defines only the methods that you need to write the
+If an instrumented server or library jar isn't available in any public Maven repository you can
+create a module with stub classes that defines only the methods that you need to write the
 instrumentation. Methods in these stub classes can just `throw new UnsupportedOperationException()`;
 these classes are only used to compile the advice classes and won't be packaged into the agent.
 During runtime, real classes from instrumented server or library will be used.
 
-Start by creating a module called `compile-stub` and add a `build.gradle.kts` file with the following
-content:
+Start by creating a module called `compile-stub` and add a `build.gradle.kts` file with the
+following content:
 
 ```kotlin
 plugins {
@@ -353,7 +353,8 @@ Now you can use your stub classes inside the javaagent instrumentation.
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation
-classes directly because of classloader reasons.
+classes directly because of classloader separation - the javaagent classes are hidden and not
+accessible from the instrumented application code.
 
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
 is no need to write unit tests that directly access the javaagent instrumentation classes.
