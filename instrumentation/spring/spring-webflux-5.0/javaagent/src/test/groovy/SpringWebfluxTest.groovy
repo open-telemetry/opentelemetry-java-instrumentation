@@ -150,6 +150,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
