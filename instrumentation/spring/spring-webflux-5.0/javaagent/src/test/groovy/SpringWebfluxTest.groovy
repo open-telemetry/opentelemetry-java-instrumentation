@@ -27,6 +27,7 @@ import spock.lang.Unroll
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.api.trace.StatusCode.UNSET
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -286,7 +287,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "/**"
           kind SERVER
           hasNoParent()
-          status ERROR
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"

@@ -171,7 +171,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     final String fragment
     final int status
     final String body
-    final Boolean errored
 
     ServerEndpoint(String uri, int status, String body) {
       this.uriObj = URI.create(uri)
@@ -180,7 +179,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       this.fragment = uriObj.fragment
       this.status = status
       this.body = body
-      this.errored = status >= 400
     }
 
     String getPath() {
@@ -594,7 +592,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      if (endpoint.errored) {
+      if (endpoint.status >= 500) {
         status StatusCode.ERROR
       }
       if (parentID != null) {

@@ -211,7 +211,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       Integer status = status(response);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+        StatusCode statusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(status);
         if (statusCode != StatusCode.UNSET) {
           span.setStatus(statusCode);
         }

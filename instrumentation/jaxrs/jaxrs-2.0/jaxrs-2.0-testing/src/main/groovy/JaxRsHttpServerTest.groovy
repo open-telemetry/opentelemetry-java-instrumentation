@@ -241,7 +241,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     serverSpan(trace, index, traceID, parentID, method,
       endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
-      endpoint.errored,
       endpoint.status,
       endpoint.query)
   }
@@ -254,7 +253,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     serverSpan(trace, index, null, null, "GET",
       rawUrl.path,
       rawUrl.toURI(),
-      statusCode >= 500,
       statusCode,
       null)
   }
@@ -266,13 +264,12 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
                   String method,
                   String path,
                   URI fullUrl,
-                  boolean isError,
                   int statusCode,
                   String query) {
     trace.span(index) {
       name path
       kind SERVER
-      if (isError) {
+      if (statusCode >= 500) {
         status ERROR
       }
       if (parentID != null) {

@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.api.tracer
 import io.opentelemetry.api.trace.StatusCode
 import spock.lang.Specification
 
-class HttpStatusConverterTest extends Specification {
+class HttpServerStatusConverterTest extends Specification {
 
   def "test HTTP #httpStatus to OTel #expectedStatus"() {
     when:
-    def status = HttpStatusConverter.statusFromHttpStatus(httpStatus)
+    def status = HttpStatusConverter.SERVER.statusFromHttpStatus(httpStatus)
 
     then:
     status == expectedStatus
@@ -46,34 +46,34 @@ class HttpStatusConverterTest extends Specification {
     307        | StatusCode.UNSET
     308        | StatusCode.UNSET
 
-    400        | StatusCode.ERROR
-    401        | StatusCode.ERROR
-    403        | StatusCode.ERROR
-    404        | StatusCode.ERROR
-    405        | StatusCode.ERROR
-    406        | StatusCode.ERROR
-    407        | StatusCode.ERROR
-    408        | StatusCode.ERROR
-    409        | StatusCode.ERROR
-    410        | StatusCode.ERROR
-    411        | StatusCode.ERROR
-    412        | StatusCode.ERROR
-    413        | StatusCode.ERROR
-    414        | StatusCode.ERROR
-    415        | StatusCode.ERROR
-    416        | StatusCode.ERROR
-    417        | StatusCode.ERROR
-    418        | StatusCode.ERROR
-    421        | StatusCode.ERROR
-    422        | StatusCode.ERROR
-    423        | StatusCode.ERROR
-    424        | StatusCode.ERROR
-    425        | StatusCode.ERROR
-    426        | StatusCode.ERROR
-    428        | StatusCode.ERROR
-    429        | StatusCode.ERROR
-    431        | StatusCode.ERROR
-    451        | StatusCode.ERROR
+    400        | StatusCode.UNSET
+    401        | StatusCode.UNSET
+    403        | StatusCode.UNSET
+    404        | StatusCode.UNSET
+    405        | StatusCode.UNSET
+    406        | StatusCode.UNSET
+    407        | StatusCode.UNSET
+    408        | StatusCode.UNSET
+    409        | StatusCode.UNSET
+    410        | StatusCode.UNSET
+    411        | StatusCode.UNSET
+    412        | StatusCode.UNSET
+    413        | StatusCode.UNSET
+    414        | StatusCode.UNSET
+    415        | StatusCode.UNSET
+    416        | StatusCode.UNSET
+    417        | StatusCode.UNSET
+    418        | StatusCode.UNSET
+    421        | StatusCode.UNSET
+    422        | StatusCode.UNSET
+    423        | StatusCode.UNSET
+    424        | StatusCode.UNSET
+    425        | StatusCode.UNSET
+    426        | StatusCode.UNSET
+    428        | StatusCode.UNSET
+    429        | StatusCode.UNSET
+    431        | StatusCode.UNSET
+    451        | StatusCode.UNSET
 
     500        | StatusCode.ERROR
     501        | StatusCode.ERROR
