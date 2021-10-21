@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
@@ -24,7 +25,7 @@ class RockerMqProducerAttributeExtractor
 
   @Override
   protected String destinationKind(SendMessageContext sendMessageContext) {
-    return "topic";
+    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
