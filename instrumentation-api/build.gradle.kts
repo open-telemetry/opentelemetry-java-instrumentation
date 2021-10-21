@@ -30,7 +30,6 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-api-metrics")
   implementation("org.slf4j:slf4j-api")
-  implementation("com.google.code.findbugs:jsr305:3.0.2")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
