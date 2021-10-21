@@ -8,9 +8,6 @@ sourceSets {
   main {
     val caffeine2ShadedDeps = project(":instrumentation-api-caching:caffeine2")
     output.dir(caffeine2ShadedDeps.file("build/extracted/shadow"), "builtBy" to ":instrumentation-api-caching:caffeine2:extractShadowJar")
-
-    val caffeine3ShadedDeps = project(":instrumentation-api-caching:caffeine3")
-    output.dir(caffeine3ShadedDeps.file("build/extracted/shadow"), "builtBy" to ":instrumentation-api-caching:caffeine3:extractShadowJar")
   }
 }
 

@@ -26,7 +26,7 @@ final class Caffeine3Cache<K, V> implements CaffeineCache<K, V> {
     try {
       Caffeine.class.getName();
       return true;
-    } catch (UnsupportedClassVersionError exception) {
+    } catch (UnsupportedClassVersionError | NoClassDefFoundError exception) {
       // caffeine 3 requires jdk 11
       return false;
     }
