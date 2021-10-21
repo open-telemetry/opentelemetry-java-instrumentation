@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
+import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 /** Entrypoint for tracing RocketMq producers or consumers. */
@@ -27,7 +29,7 @@ public final class RocketMqTracing {
   private final boolean propagationEnabled;
 
   private final RocketMqConsumerTracer rocketMqConsumerTracer;
-  private final RocketMqProducerTracer rocketMqProducerTracer;
+  private final Instrumenter<SendMessageContext, SendMessageContext> rocketMqProducerInstrumenter;
 
   RocketMqTracing(
       OpenTelemetry openTelemetry,
@@ -37,8 +39,8 @@ public final class RocketMqTracing {
     rocketMqConsumerTracer =
         new RocketMqConsumerTracer(
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
-    rocketMqProducerTracer =
-        new RocketMqProducerTracer(openTelemetry, captureExperimentalSpanAttributes);
+    rocketMqProducerInstrumenter =
+        RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, captureExperimentalSpanAttributes);
   }
 
   /**
@@ -54,6 +56,6 @@ public final class RocketMqTracing {
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
    */
   public SendMessageHook newTracingSendMessageHook() {
-    return new TracingSendMessageHookImpl(rocketMqProducerTracer, propagationEnabled);
+    return new TracingSendMessageHookImpl(rocketMqProducerInstrumenter, propagationEnabled);
   }
 }
