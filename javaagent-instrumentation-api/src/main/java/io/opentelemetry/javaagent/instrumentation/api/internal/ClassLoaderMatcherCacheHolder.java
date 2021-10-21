@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.internal;
 
+import io.opentelemetry.api.internal.GuardedBy;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.checkerframework.checker.lock.qual.GuardedBy;
 
 /**
  * A holder of all ClassLoaderMatcher caches. We store them in the bootstrap classloader so that

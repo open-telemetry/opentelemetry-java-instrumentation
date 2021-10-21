@@ -22,6 +22,7 @@
 
 package io.opentelemetry.instrumentation.rxjava3;
 
+import io.opentelemetry.api.internal.GuardedBy;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
@@ -40,7 +41,6 @@ import io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import javax.annotation.Nullable;
-import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.reactivestreams.Subscriber;
 
 /**
