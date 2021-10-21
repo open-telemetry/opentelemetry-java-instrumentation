@@ -20,8 +20,6 @@ val shadowInclude by configurations.creating {
 }
 
 dependencies {
-  implementation("com.google.code.findbugs:jsr305:3.0.2")
-
   compileOnly(project(":instrumentation-api-caching:caffeine2", configuration = "shadow"))
   compileOnly(project(":instrumentation-api-caching:caffeine3", configuration = "shadow"))
 
