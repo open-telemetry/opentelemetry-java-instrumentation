@@ -18,7 +18,7 @@ import javax.ws.rs.ext.Provider
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.api.trace.StatusCode.UNSET
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 @Unroll
@@ -77,7 +77,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           name parentSpanName != null ? parentSpanName : "test.span"
           kind SERVER
           if (runsOnServer() && abortNormal) {
-            status ERROR
+            status UNSET
           }
         }
         span(1) {
