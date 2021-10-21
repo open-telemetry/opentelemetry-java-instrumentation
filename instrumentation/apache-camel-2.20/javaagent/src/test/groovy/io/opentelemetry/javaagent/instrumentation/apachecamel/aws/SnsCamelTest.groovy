@@ -25,6 +25,7 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
 
     // TODO: def (queueUrl, topicArn) fails to compile, switch back when this is fixed in spock
+    // https://github.com/spockframework/spock/pull/1333
     // def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
     Tuple tuple = setupTestInfrastructure(queueName, topicName)
     def queueUrl = tuple.get(0)
@@ -66,6 +67,7 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
 
     // TODO: def (queueUrl, topicArn) fails to compile, switch back when this is fixed in spock
+    // https://github.com/spockframework/spock/pull/1333
     // def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
     Tuple tuple = setupTestInfrastructure(queueName, topicName)
     def queueUrl = tuple.get(0)

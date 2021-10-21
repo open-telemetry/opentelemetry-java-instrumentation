@@ -496,6 +496,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     // TODO: def (Statement statement, ResultSet rs) fails to compile, switch back when this is fixed in spock
+    // https://github.com/spockframework/spock/pull/1333
     // def (Statement statement, ResultSet rs) = runWithSpan("parent") {
     Tuple tuple = runWithSpan("parent") {
       if (prepareStatement) {
