@@ -94,7 +94,6 @@ dependencies {
 
   components.all<NettyAlignmentRule>()
 
-
   compileOnly("com.google.code.findbugs:jsr305")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
