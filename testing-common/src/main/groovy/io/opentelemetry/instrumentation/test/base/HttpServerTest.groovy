@@ -132,7 +132,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   boolean testConcurrency() {
-    false
+    true
   }
 
   boolean verifyServerSpanEndTime() {
@@ -160,7 +160,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
     AUTH_ERROR("basicsecured/endpoint", 401, null),
-    INDEXED_CHILD("child", 200, null),
+    INDEXED_CHILD("child", 200, ""),
 
     public static final String ID_ATTRIBUTE_NAME = "test.request.id"
     public static final String ID_PARAMETER_NAME = "id"

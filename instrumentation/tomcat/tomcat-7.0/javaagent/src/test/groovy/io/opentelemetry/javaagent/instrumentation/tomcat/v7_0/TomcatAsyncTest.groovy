@@ -115,11 +115,6 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
-  boolean testConcurrency() {
-    return true
-  }
-
-  @Override
   Class<?> expectedExceptionClass() {
     ServletException
   }

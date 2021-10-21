@@ -20,6 +20,7 @@ import javax.ws.rs.ext.ExceptionMapper
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -94,6 +95,15 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
     Response error() {
       controller(ERROR) {
         Response.status(ERROR.status).entity(ERROR.body).build()
+      }
+    }
+
+    @GET
+    @Path("child")
+    Response exception(@QueryParam("id") String id) {
+      controller(INDEXED_CHILD) {
+        INDEXED_CHILD.collectSpanAttributes { it == "id" ? id : null }
+        Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build()
       }
     }
   }
