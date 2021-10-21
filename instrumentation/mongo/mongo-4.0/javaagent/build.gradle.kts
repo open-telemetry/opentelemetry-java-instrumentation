@@ -19,7 +19,7 @@ dependencies {
   testLibrary("org.mongodb:mongodb-driver-sync:4.0.0")
   testLibrary("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 
-  testImplementation(project(":instrumentation:mongo:mongo-testing"))
+  testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
   testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:1.50.5")
 }
 
