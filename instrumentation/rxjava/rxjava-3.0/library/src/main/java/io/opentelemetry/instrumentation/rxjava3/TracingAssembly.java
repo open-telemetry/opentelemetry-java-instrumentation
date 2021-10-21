@@ -22,10 +22,10 @@
 
 package io.opentelemetry.instrumentation.rxjava3;
 
-import io.opentelemetry.api.internal.GuardedBy;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Flowable;

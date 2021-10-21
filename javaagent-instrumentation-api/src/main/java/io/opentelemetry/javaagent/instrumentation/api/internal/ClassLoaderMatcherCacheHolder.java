@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.internal;
 
-import io.opentelemetry.api.internal.GuardedBy;
 import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
