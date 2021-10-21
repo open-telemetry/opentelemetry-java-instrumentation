@@ -183,11 +183,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.recordException(error);
     }
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    UnsafeAttributes attributes = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributesBuilder, request, response, error);
+      extractor.onEnd(attributes, request, response, error);
     }
-    Attributes attributes = attributesBuilder;
     span.setAllAttributes(attributes);
 
     Instant endTime = null;

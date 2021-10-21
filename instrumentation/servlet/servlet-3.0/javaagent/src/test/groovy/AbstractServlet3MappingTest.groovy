@@ -48,7 +48,7 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrum
         span(0) {
           name getContextPath() + spanName
           kind SpanKind.SERVER
-          if (!success) {
+          if (!success && response.status().code() >= 500) {
             status ERROR
           }
         }

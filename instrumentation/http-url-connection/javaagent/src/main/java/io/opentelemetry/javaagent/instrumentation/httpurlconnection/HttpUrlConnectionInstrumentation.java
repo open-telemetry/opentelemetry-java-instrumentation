@@ -169,7 +169,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       if (httpUrlState != null) {
         Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, returnValue);
-        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(returnValue);
+        StatusCode statusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(returnValue);
         if (statusCode != StatusCode.UNSET) {
           span.setStatus(statusCode);
         }
