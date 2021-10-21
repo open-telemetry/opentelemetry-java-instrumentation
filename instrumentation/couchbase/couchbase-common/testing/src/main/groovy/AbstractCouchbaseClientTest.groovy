@@ -37,7 +37,7 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
 
     environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
-    manager = cluster.clusterManager(USERNAME, PASSWORD)
+    manager = cluster.clusterManager(AbstractCouchbaseTest.USERNAME, AbstractCouchbaseTest.PASSWORD)
     type = bucketSettings.type().name()
   }
 

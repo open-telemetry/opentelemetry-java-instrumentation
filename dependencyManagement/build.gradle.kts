@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "io.netty:netty:3.10.6.Final",
   "org.assertj:assertj-core:3.21.0",
   "org.awaitility:awaitility:4.1.0",
-  "org.checkerframework:checker-qual:3.14.0",
+  "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.0-groovy-2.5",

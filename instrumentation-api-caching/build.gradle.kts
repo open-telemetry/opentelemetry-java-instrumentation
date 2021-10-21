@@ -20,11 +20,10 @@ val shadowInclude by configurations.creating {
 }
 
 dependencies {
-  implementation("com.google.code.findbugs:jsr305:3.0.2")
-
   compileOnly(project(":instrumentation-api-caching:caffeine2", configuration = "shadow"))
   compileOnly(project(":instrumentation-api-caching:caffeine3", configuration = "shadow"))
 
+  compileOnly("org.checkerframework:checker-qual:3.14.0")
   compileOnly("com.blogspot.mydailyjava:weak-lock-free")
   shadowInclude("com.blogspot.mydailyjava:weak-lock-free")
 }

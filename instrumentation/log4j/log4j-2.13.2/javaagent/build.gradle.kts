@@ -25,7 +25,7 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-2.13.2:library"))
 
-  testImplementation(project(":instrumentation:log4j:log4j-2-testing"))
+  testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
 }
 
 tasks {

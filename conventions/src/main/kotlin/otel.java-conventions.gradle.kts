@@ -94,7 +94,7 @@ dependencies {
 
   components.all<NettyAlignmentRule>()
 
-  compileOnly("org.checkerframework:checker-qual")
+  compileOnly("com.google.code.findbugs:jsr305")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
