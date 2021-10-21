@@ -158,6 +158,7 @@ public final class TracingAssembly {
     }
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableParallel() {
     oldOnParallelAssembly = RxJavaPlugins.getOnParallelAssembly();
@@ -167,6 +168,7 @@ public final class TracingAssembly {
             parallelFlowable -> new TracingParallelFlowable(parallelFlowable, Context.current())));
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void enableCompletable() {
     oldOnCompletableSubscribe = RxJavaPlugins.getOnCompletableSubscribe();
     RxJavaPlugins.setOnCompletableSubscribe(
@@ -180,6 +182,7 @@ public final class TracingAssembly {
             }));
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableFlowable() {
     oldOnFlowableSubscribe = RxJavaPlugins.getOnFlowableSubscribe();
@@ -199,6 +202,7 @@ public final class TracingAssembly {
             }));
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableObservable() {
     if (TracingObserver.canEnable()) {
@@ -215,6 +219,7 @@ public final class TracingAssembly {
     }
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableSingle() {
     oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
@@ -229,6 +234,7 @@ public final class TracingAssembly {
             }));
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableMaybe() {
     oldOnMaybeSubscribe = RxJavaPlugins.getOnMaybeSubscribe();
@@ -256,31 +262,37 @@ public final class TracingAssembly {
     AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableParallel() {
     RxJavaPlugins.setOnParallelAssembly(oldOnParallelAssembly);
     oldOnParallelAssembly = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableCompletable() {
     RxJavaPlugins.setOnCompletableSubscribe(oldOnCompletableSubscribe);
     oldOnCompletableSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableFlowable() {
     RxJavaPlugins.setOnFlowableSubscribe(oldOnFlowableSubscribe);
     oldOnFlowableSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableSingle() {
     RxJavaPlugins.setOnSingleSubscribe(oldOnSingleSubscribe);
     oldOnSingleSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void disableMaybe() {
     RxJavaPlugins.setOnMaybeSubscribe(
