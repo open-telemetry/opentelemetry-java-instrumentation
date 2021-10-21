@@ -10,7 +10,7 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 
 import javax.persistence.ParameterMode
@@ -62,7 +62,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
       call.getOutputs()
     } catch (Exception exception) {
       // ignore failures on hibernate 6 where this functionality has not been implemented yet
-      Assume.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
+      Assumptions.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
       throw exception
     }
   }
@@ -127,7 +127,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
 
     ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
     def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
-    Assume.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
+    Assumptions.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
     parameterRegistration.bindValue(420L)
     try {
       callProcedure(call)

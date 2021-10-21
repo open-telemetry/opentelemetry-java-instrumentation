@@ -33,8 +33,14 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
   protected WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller)
 
   def setupSpec() {
+    setupServer()
+
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest))
     marshaller.afterPropertiesSet()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
   }
 
   @Override

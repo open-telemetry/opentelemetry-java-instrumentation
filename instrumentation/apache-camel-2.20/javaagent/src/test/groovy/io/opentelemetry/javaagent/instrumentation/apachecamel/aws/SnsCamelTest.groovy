@@ -24,7 +24,11 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     String queueName = "snsCamelTest"
     def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
 
-    def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
+    // TODO: def (queueUrl, topicArn) fails to compile, switch back when this is fixed in spock
+    // def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
+    Tuple tuple = setupTestInfrastructure(queueName, topicName)
+    def queueUrl = tuple.get(0)
+    def topicArn = tuple.get(1)
     waitAndClearSetupTraces(queueUrl, queueName)
 
     when:
@@ -61,7 +65,11 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     String queueName = "snsCamelTest"
     def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
 
-    def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
+    // TODO: def (queueUrl, topicArn) fails to compile, switch back when this is fixed in spock
+    // def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
+    Tuple tuple = setupTestInfrastructure(queueName, topicName)
+    def queueUrl = tuple.get(0)
+    def topicArn = tuple.get(1)
     waitAndClearSetupTraces(queueUrl, queueName)
 
     when:

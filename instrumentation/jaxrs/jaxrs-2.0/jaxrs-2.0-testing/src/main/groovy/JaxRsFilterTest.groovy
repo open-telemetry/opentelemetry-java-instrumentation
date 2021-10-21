@@ -5,7 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -51,7 +51,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
   }
 
   def "test #resource, #abortNormal, #abortPrematch"() {
-    Assume.assumeTrue(!abortPrematch || testAbortPrematch())
+    Assumptions.assumeTrue(!abortPrematch || testAbortPrematch())
 
     given:
     simpleRequestFilter.abort = abortNormal

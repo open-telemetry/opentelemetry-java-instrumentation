@@ -18,7 +18,7 @@ val grpcVersion = "1.41.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
-val groovyVersion = "2.5.11"
+val groovyVersion = "2.5.14"
 
 rootProject.extra["caffeine2Version"] = "2.9.2"
 rootProject.extra["caffeine3Version"] = "3.0.4"
@@ -105,14 +105,14 @@ val DEPENDENCIES = listOf(
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
-  "info.solidsoft.spock:spock-global-unroll:0.5.1",
   "io.netty:netty:3.10.6.Final",
   "org.assertj:assertj-core:3.21.0",
   "org.awaitility:awaitility:4.1.0",
   "org.checkerframework:checker-qual:3.14.0",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:1.3-groovy-2.5",
+  "org.spockframework:spock-core:2.0-groovy-2.5",
+  "org.spockframework:spock-junit4:2.0-groovy-2.5",
   "org.scala-lang:scala-library:2.11.12",
   "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
   "io.grpc:grpc-netty-shaded:${grpcVersion}"

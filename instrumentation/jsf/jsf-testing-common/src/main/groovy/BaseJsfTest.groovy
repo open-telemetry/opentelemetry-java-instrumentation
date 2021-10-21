@@ -27,6 +27,14 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class BaseJsfTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
+
   @Override
   Server startServer(int port) {
     String jsfVersion = getJsfVersion()

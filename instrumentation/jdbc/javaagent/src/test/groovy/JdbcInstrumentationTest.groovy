@@ -495,15 +495,19 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
       connection = driver.connect(jdbcUrl, null)
     }
 
-    def (Statement statement, ResultSet rs) = runWithSpan("parent") {
+    // TODO: def (Statement statement, ResultSet rs) fails to compile, switch back when this is fixed in spock
+    // def (Statement statement, ResultSet rs) = runWithSpan("parent") {
+    Tuple tuple = runWithSpan("parent") {
       if (prepareStatement) {
-        def statement = connection.prepareStatement(query)
-        return new Tuple(statement, statement.executeQuery())
+        def stmt = connection.prepareStatement(query)
+        return new Tuple(stmt, stmt.executeQuery())
       }
 
-      def statement = connection.createStatement()
-      return new Tuple(statement, statement.executeQuery(query))
+      def stmt = connection.createStatement()
+      return new Tuple(stmt, stmt.executeQuery(query))
     }
+    Statement statement = tuple.get(0)
+    ResultSet rs = tuple.get(1)
 
     then:
     rs.next()

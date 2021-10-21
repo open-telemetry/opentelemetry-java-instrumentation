@@ -7,13 +7,7 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-@AppServer(version = "20.0.0.12", jdk = "8")
-@AppServer(version = "20.0.0.12", jdk = "8-openj9")
-@AppServer(version = "20.0.0.12", jdk = "11")
-@AppServer(version = "20.0.0.12", jdk = "11-openj9")
-@AppServer(version = "20.0.0.12", jdk = "16")
-@AppServer(version = "20.0.0.12", jdk = "16-openj9")
-class LibertySmokeTest extends AppServerTest {
+abstract class LibertySmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-liberty"
@@ -23,4 +17,23 @@ class LibertySmokeTest extends AppServerTest {
   protected TargetWaitStrategy getWaitStrategy() {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*server is ready to run a smarter planet.*")
   }
+}
+
+@AppServer(version = "20.0.0.12", jdk = "8")
+class Liberty20Jdk8 extends LibertySmokeTest {
+}
+@AppServer(version = "20.0.0.12", jdk = "8-openj9")
+class Liberty20Jdk8openj9 extends LibertySmokeTest {
+}
+@AppServer(version = "20.0.0.12", jdk = "11")
+class Liberty20Jdk11 extends LibertySmokeTest {
+}
+@AppServer(version = "20.0.0.12", jdk = "11-openj9")
+class Liberty20Jdk11openj9 extends LibertySmokeTest {
+}
+@AppServer(version = "20.0.0.12", jdk = "16")
+class Liberty20Jdk16 extends LibertySmokeTest {
+}
+@AppServer(version = "20.0.0.12", jdk = "16-openj9")
+class Liberty20Jdk16openj9 extends LibertySmokeTest {
 }

@@ -38,13 +38,21 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.util.Collections.singletonList
-import static org.junit.Assume.assumeTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   static final String TEST_REQUEST_HEADER = "X-Test-Request"
   static final String TEST_RESPONSE_HEADER = "X-Test-Response"
+
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
 
   static CapturedHttpHeaders capturedHttpHeadersForTesting() {
     CapturedHttpHeaders.create(

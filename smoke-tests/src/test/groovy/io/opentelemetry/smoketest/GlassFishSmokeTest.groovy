@@ -7,11 +7,7 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-@AppServer(version = "5.2020.6", jdk = "8")
-@AppServer(version = "5.2020.6", jdk = "8-openj9")
-@AppServer(version = "5.2020.6", jdk = "11")
-@AppServer(version = "5.2020.6", jdk = "11-openj9")
-class GlassFishSmokeTest extends AppServerTest {
+abstract class GlassFishSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-payara"
@@ -45,4 +41,17 @@ class GlassFishSmokeTest extends AppServerTest {
   boolean testRequestWebInfWebXml() {
     false
   }
+}
+
+@AppServer(version = "5.2020.6", jdk = "8")
+class GlassFish5Jdk8 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2020.6", jdk = "8-openj9")
+class GlassFish5Jdk8openj9 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2020.6", jdk = "11")
+class GlassFish5Jdk11 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2020.6", jdk = "11-openj9")
+class GlassFish5Jdk11openj9 extends GlassFishSmokeTest {
 }

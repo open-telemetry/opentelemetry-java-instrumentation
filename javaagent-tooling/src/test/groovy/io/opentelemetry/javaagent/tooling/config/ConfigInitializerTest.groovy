@@ -5,15 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling.config
 
-
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
-import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
+import spock.util.environment.RestoreSystemProperties
 
+@RestoreSystemProperties
 class ConfigInitializerTest extends Specification {
-  @Rule
-  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
+
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
