@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -5,8 +10,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
-class RockerMqProducerAttributeExtractor extends
-    MessagingAttributesExtractor<SendMessageContext, SendMessageContext> {
+class RockerMqProducerAttributeExtractor
+    extends MessagingAttributesExtractor<SendMessageContext, SendMessageContext> {
   @Override
   public MessageOperation operation() {
     return MessageOperation.SEND;
@@ -70,8 +75,7 @@ class RockerMqProducerAttributeExtractor extends
 
   @Nullable
   @Override
-  protected String messageId(SendMessageContext request,
-      @Nullable SendMessageContext response) {
+  protected String messageId(SendMessageContext request, @Nullable SendMessageContext response) {
     return response == null ? null : response.getSendResult().getMsgId();
   }
 }

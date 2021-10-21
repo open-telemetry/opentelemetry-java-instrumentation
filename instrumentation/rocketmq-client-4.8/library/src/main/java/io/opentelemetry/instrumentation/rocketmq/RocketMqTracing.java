@@ -26,21 +26,19 @@ public final class RocketMqTracing {
     return new RocketMqTracingBuilder(openTelemetry);
   }
 
-  private final boolean propagationEnabled;
-
-  private final RocketMqConsumerTracer rocketMqConsumerTracer;
+  private final RocketMqConsumerInstrumenter rocketMqConsumerTracer;
   private final Instrumenter<SendMessageContext, SendMessageContext> rocketMqProducerInstrumenter;
 
   RocketMqTracing(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
-    this.propagationEnabled = propagationEnabled;
     rocketMqConsumerTracer =
-        new RocketMqConsumerTracer(
+        RocketMqInstrumenterFactory.createConsumerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
     rocketMqProducerInstrumenter =
-        RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, captureExperimentalSpanAttributes);
+        RocketMqInstrumenterFactory.createProducerInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
   }
 
   /**
@@ -56,6 +54,6 @@ public final class RocketMqTracing {
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
    */
   public SendMessageHook newTracingSendMessageHook() {
-    return new TracingSendMessageHookImpl(rocketMqProducerInstrumenter, propagationEnabled);
+    return new TracingSendMessageHookImpl(rocketMqProducerInstrumenter);
   }
 }

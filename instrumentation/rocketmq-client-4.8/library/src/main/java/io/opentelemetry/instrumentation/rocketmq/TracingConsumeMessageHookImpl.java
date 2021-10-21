@@ -11,10 +11,10 @@ import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 
 final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
 
-  private final RocketMqConsumerTracer tracer;
+  private final RocketMqConsumerInstrumenter instrumenter;
 
-  TracingConsumeMessageHookImpl(RocketMqConsumerTracer tracer) {
-    this.tracer = tracer;
+  TracingConsumeMessageHookImpl(RocketMqConsumerInstrumenter instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
   @Override
@@ -27,7 +27,7 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    Context otelContext = tracer.startSpan(Context.current(), context.getMsgList());
+    Context otelContext = instrumenter.startSpan(Context.current(), context.getMsgList());
 
     // it's safe to store the scope in the rocketMq trace context, both before() and after() methods
     // are always called from the same thread; see:
@@ -44,7 +44,7 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context.getMqTraceContext() instanceof ContextAndScope) {
       ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
       contextAndScope.close();
-      tracer.end(contextAndScope.getContext());
+      instrumenter.end(contextAndScope.getContext(), context.getMsgList());
     }
   }
 }
