@@ -12,21 +12,21 @@
     <property name="attachments">
       <map>
         <entry key="/success"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$SuccessResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$SuccessResource"/>
         <entry key="/error-status"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$ErrorResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ErrorResource"/>
         <entry key="/exception"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$ExceptionResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ExceptionResource"/>
         <entry key="/query"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$QueryParamResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$QueryParamResource"/>
         <entry key="/path/{id}/param"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$PathParamResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$PathParamResource"/>
         <entry key="/redirect"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$RedirectResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$RedirectResource"/>
         <entry key="/captureHeaders"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$CaptureHeadersResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$CaptureHeadersResource"/>
         <entry key="/child"
-          value="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$IndexedChildResource"/>
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$IndexedChildResource"/>
       </map>
     </property>
   </bean>

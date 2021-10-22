@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v1_0
 
-import io.opentelemetry.instrumentation.restlet.v1_0.AbstractRestletServerTest
+
+import io.opentelemetry.instrumentation.restlet.v1_0.AbstractServletServerTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 
-class RestletServerTest extends AbstractRestletServerTest implements AgentTestTrait {
+class ServletServerTest extends AbstractServletServerTest implements AgentTestTrait {
 
 }
