@@ -71,11 +71,6 @@ abstract class AbstractServletServerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  boolean testConcurrency() {
-    true
-  }
-
-  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
