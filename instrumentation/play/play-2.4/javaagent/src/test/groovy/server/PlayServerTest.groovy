@@ -83,7 +83,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "play.request"
+      name endpoint.getPath()
       kind INTERNAL
       if (endpoint == EXCEPTION) {
         status StatusCode.ERROR
@@ -95,6 +95,6 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
+    return endpoint.getPath();
   }
 }
