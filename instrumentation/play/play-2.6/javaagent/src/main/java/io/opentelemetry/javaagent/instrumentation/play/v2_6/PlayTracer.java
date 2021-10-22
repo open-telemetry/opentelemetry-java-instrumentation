@@ -64,6 +64,10 @@ public class PlayTracer extends BaseTracer {
       if (defOption != null && !defOption.isEmpty()) {
         String path = defOption.get().path();
         span.updateName(path);
+      } else {
+        if (request != null) {
+          span.updateName(request.path());
+        }
       }
     }
   }

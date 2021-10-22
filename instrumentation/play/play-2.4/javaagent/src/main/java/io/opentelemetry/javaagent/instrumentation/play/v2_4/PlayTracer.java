@@ -23,6 +23,8 @@ public class PlayTracer extends BaseTracer {
       if (!pathOption.isEmpty()) {
         String path = pathOption.get();
         span.updateName(path);
+      } else {
+        span.updateName(request.path());
       }
     }
   }
