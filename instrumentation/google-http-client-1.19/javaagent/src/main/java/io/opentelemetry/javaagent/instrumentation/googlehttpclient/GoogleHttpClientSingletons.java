@@ -33,7 +33,7 @@ public class GoogleHttpClientSingletons {
         new GoogleHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse>newBuilder(
+        Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

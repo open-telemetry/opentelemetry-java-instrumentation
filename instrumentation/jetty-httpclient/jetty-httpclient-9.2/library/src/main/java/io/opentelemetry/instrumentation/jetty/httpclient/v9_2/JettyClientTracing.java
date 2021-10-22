@@ -13,7 +13,7 @@ public final class JettyClientTracing {
 
   /** Returns a new {@link JettyClientTracing} configured with the given {@link OpenTelemetry}. */
   public static JettyClientTracing create(OpenTelemetry openTelemetry) {
-    JettyClientTracingBuilder builder = newBuilder(openTelemetry);
+    JettyClientTracingBuilder builder = builder(openTelemetry);
     return builder.build();
   }
 
@@ -21,7 +21,7 @@ public final class JettyClientTracing {
    * Returns a new {@link JettyClientTracingBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static JettyClientTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static JettyClientTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new JettyClientTracingBuilder(openTelemetry);
   }
 

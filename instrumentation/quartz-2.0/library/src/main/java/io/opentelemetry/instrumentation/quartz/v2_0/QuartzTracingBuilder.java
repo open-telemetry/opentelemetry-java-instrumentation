@@ -40,7 +40,7 @@ public final class QuartzTracingBuilder {
   /** Returns a new {@link QuartzTracing} with the settings of this {@link QuartzTracingBuilder}. */
   public QuartzTracing build() {
     InstrumenterBuilder<JobExecutionContext, Void> instrumenter =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
 
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
     instrumenter.addAttributesExtractor(new QuartzCodeAttributesExtractor());

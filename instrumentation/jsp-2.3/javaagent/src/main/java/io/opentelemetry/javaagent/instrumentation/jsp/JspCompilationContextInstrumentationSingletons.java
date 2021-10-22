@@ -23,7 +23,7 @@ public class JspCompilationContextInstrumentationSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<JspCompilationContext, Void>newBuilder(
+        Instrumenter.<JspCompilationContext, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
                 JspCompilationContextInstrumentationSingletons::spanNameOnCompile)

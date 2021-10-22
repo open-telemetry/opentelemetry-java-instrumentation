@@ -33,7 +33,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       new HandlerContextKey<>(Scope.class.getName());
 
   public static final RequestHandler2 tracingHandler =
-      AwsSdkTracing.newBuilder(GlobalOpenTelemetry.get())
+      AwsSdkTracing.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               Config.get()
                   .getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false))

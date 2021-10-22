@@ -23,7 +23,7 @@ public final class NettyServerInstrumenterFactory {
     final NettyHttpServerAttributesExtractor httpAttributesExtractor =
         new NettyHttpServerAttributesExtractor();
 
-    return Instrumenter.<HttpRequestAndChannel, HttpResponse>newBuilder(
+    return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             HttpSpanNameExtractor.create(httpAttributesExtractor))

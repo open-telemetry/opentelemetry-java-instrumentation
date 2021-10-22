@@ -33,7 +33,7 @@ public final class LettuceSingletons {
         DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<RedisCommand<?, ?, ?>, Void>newBuilder(
+        Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
@@ -41,7 +41,7 @@ public final class LettuceSingletons {
     LettuceConnectNetAttributesExtractor connectNetAttributesExtractor =
         new LettuceConnectNetAttributesExtractor();
     CONNECT_INSTRUMENTER =
-        Instrumenter.<RedisURI, Void>newBuilder(
+        Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(connectNetAttributesExtractor)
             .addAttributesExtractor(

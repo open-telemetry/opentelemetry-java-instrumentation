@@ -37,7 +37,7 @@ import org.openjdk.jmh.annotations.Warmup;
 public class InstrumenterBenchmark {
 
   private static final Instrumenter<Void, Void> INSTRUMENTER =
-      Instrumenter.<Void, Void>newBuilder(
+      Instrumenter.<Void, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesExtractor.INSTANCE))

@@ -66,9 +66,9 @@ public final class GrpcTracingBuilder {
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(

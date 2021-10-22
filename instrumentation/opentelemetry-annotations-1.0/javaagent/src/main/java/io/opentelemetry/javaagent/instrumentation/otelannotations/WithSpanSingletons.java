@@ -33,13 +33,13 @@ public final class WithSpanSingletons {
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {
-    return Instrumenter.newBuilder(
+    return Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
         .newInstrumenter(WithSpanSingletons::spanKindFromMethod);
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
-    return Instrumenter.newBuilder(
+    return Instrumenter.builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             WithSpanSingletons::spanNameFromMethodRequest)

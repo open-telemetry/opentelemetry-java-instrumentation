@@ -54,7 +54,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * different library versions it's easy to find out which instrumentations produced the telemetry
    * data.
    */
-  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> newBuilder(
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {

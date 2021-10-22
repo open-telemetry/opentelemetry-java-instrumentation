@@ -66,7 +66,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         additionalAttributesExtractor = new ServletAdditionalAttributesExtractor<>(accessor);
 
     InstrumenterBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> builder =
-        Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>newBuilder(
+        Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .setErrorCauseExtractor(errorCauseExtractor)

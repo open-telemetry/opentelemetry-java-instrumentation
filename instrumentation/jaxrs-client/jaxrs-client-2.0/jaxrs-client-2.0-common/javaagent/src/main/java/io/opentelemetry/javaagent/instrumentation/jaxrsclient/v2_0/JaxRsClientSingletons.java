@@ -35,7 +35,7 @@ public class JaxRsClientSingletons {
         new JaxRsClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ClientRequestContext, ClientResponseContext>newBuilder(
+        Instrumenter.<ClientRequestContext, ClientResponseContext>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .setErrorCauseExtractor(

@@ -14,7 +14,7 @@ import org.springframework.batch.core.JobExecution;
 public class JobSingletons {
 
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER =
-      Instrumenter.<JobExecution, Void>newBuilder(
+      Instrumenter.<JobExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName)
           .newInstrumenter();
 

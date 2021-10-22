@@ -36,7 +36,7 @@ public final class KafkaInstrumenterFactory {
     SpanNameExtractor<ProducerRecord<?, ?>> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    return Instrumenter.<ProducerRecord<?, ?>, Void>newBuilder(
+    return Instrumenter.<ProducerRecord<?, ?>, Void>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractors(extractors)
@@ -58,7 +58,7 @@ public final class KafkaInstrumenterFactory {
     SpanNameExtractor<ReceivedRecords> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    return Instrumenter.<ReceivedRecords, Void>newBuilder(
+    return Instrumenter.<ReceivedRecords, Void>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractors(extractors)
@@ -87,7 +87,7 @@ public final class KafkaInstrumenterFactory {
         MessagingSpanNameExtractor.create(attributesExtractor);
 
     InstrumenterBuilder<ConsumerRecord<?, ?>, Void> builder =
-        Instrumenter.<ConsumerRecord<?, ?>, Void>newBuilder(
+        Instrumenter.<ConsumerRecord<?, ?>, Void>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new KafkaConsumerAdditionalAttributesExtractor())

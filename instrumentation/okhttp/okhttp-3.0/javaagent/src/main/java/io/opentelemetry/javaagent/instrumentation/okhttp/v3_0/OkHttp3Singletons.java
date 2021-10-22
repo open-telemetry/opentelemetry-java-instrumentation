@@ -16,7 +16,7 @@ public final class OkHttp3Singletons {
 
   @SuppressWarnings("deprecation") // we're still using the interceptor on its own for now
   public static final Interceptor TRACING_INTERCEPTOR =
-      OkHttpTracing.newBuilder(GlobalOpenTelemetry.get())
+      OkHttpTracing.builder(GlobalOpenTelemetry.get())
           .addAttributesExtractor(
               PeerServiceAttributesExtractor.create(new OkHttpNetAttributesExtractor()))
           .build()

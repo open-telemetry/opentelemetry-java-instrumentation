@@ -25,7 +25,7 @@ public class HttpUrlConnectionSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<HttpURLConnection, Integer>newBuilder(
+        Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.http-url-connection",
                 spanNameExtractor)

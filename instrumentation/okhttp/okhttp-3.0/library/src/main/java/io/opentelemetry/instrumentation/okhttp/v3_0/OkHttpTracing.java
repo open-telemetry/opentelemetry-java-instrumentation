@@ -20,11 +20,11 @@ public final class OkHttpTracing {
 
   /** Returns a new {@link OkHttpTracing} configured with the given {@link OpenTelemetry}. */
   public static OkHttpTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link OkHttpTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static OkHttpTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static OkHttpTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new OkHttpTracingBuilder(openTelemetry);
   }
 
