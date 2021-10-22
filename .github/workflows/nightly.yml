@@ -35,7 +35,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
-        run: ../gradlew build --stacktrace
+        run: ../gradlew build
         working-directory: gradle-plugins
 
   test:
@@ -106,7 +106,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDeps:
     runs-on: ubuntu-latest
@@ -143,7 +143,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestLatestDeps=true --stacktrace
+        run: ./gradlew test -PtestLatestDeps=true
 
   smoke-test:
     runs-on: ${{ matrix.os }}
