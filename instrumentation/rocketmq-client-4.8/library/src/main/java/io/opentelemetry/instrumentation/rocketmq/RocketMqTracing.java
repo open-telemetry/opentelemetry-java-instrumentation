@@ -26,14 +26,14 @@ public final class RocketMqTracing {
     return new RocketMqTracingBuilder(openTelemetry);
   }
 
-  private final RocketMqConsumerInstrumenter rocketMqConsumerTracer;
+  private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
   private final Instrumenter<SendMessageContext, SendMessageContext> rocketMqProducerInstrumenter;
 
   RocketMqTracing(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
-    rocketMqConsumerTracer =
+    rocketMqConsumerInstrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
     rocketMqProducerInstrumenter =
@@ -46,7 +46,7 @@ public final class RocketMqTracing {
    * org.apache.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl#registerConsumeMessageHook(ConsumeMessageHook)}.
    */
   public ConsumeMessageHook newTracingConsumeMessageHook() {
-    return new TracingConsumeMessageHookImpl(rocketMqConsumerTracer);
+    return new TracingConsumeMessageHookImpl(rocketMqConsumerInstrumenter);
   }
 
   /**

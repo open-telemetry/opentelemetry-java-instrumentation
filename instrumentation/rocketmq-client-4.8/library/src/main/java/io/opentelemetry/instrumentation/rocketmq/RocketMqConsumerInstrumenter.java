@@ -14,22 +14,22 @@ final class RocketMqConsumerInstrumenter {
 
   private final Instrumenter<MessageExt, MessageExt> singleProcessInstrumenter;
   private final Instrumenter<MessageExt, MessageExt> batchProcessInstrumenter;
-  private final Instrumenter<Void, Void> receiveInstrumenter;
+  private final Instrumenter<Void, Void> batchReceiveInstrumenter;
 
   RocketMqConsumerInstrumenter(
       Instrumenter<MessageExt, MessageExt> singleProcessInstrumenter,
       Instrumenter<MessageExt, MessageExt> batchProcessInstrumenter,
-      Instrumenter<Void, Void> receiveInstrumenter) {
+      Instrumenter<Void, Void> batchReceiveInstrumenter) {
     this.singleProcessInstrumenter = singleProcessInstrumenter;
     this.batchProcessInstrumenter = batchProcessInstrumenter;
-    this.receiveInstrumenter = receiveInstrumenter;
+    this.batchReceiveInstrumenter = batchReceiveInstrumenter;
   }
 
-  Context startSpan(Context parentContext, List<MessageExt> msgs) {
+  Context start(Context parentContext, List<MessageExt> msgs) {
     if (msgs.size() == 1) {
       return singleProcessInstrumenter.start(parentContext, msgs.get(0));
     } else {
-      Context rootContext = receiveInstrumenter.start(parentContext, null);
+      Context rootContext = batchReceiveInstrumenter.start(parentContext, null);
       for (MessageExt message : msgs) {
         createChildSpan(rootContext, message);
       }
@@ -46,7 +46,7 @@ final class RocketMqConsumerInstrumenter {
     if (msgs.size() == 1) {
       singleProcessInstrumenter.end(context, msgs.get(0), null, null);
     } else {
-      receiveInstrumenter.end(context, null, null, null);
+      batchReceiveInstrumenter.end(context, null, null, null);
     }
   }
 }

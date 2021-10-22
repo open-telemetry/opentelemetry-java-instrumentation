@@ -58,7 +58,7 @@ class RocketMqInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
 
-    InstrumenterBuilder<Void, Void> receiveInstrumenterBuilder =
+    InstrumenterBuilder<Void, Void> batchReceiveInstrumenterBuilder =
         Instrumenter.<Void, Void>newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnReceive)
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
@@ -69,7 +69,7 @@ class RocketMqInstrumenterFactory {
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, false),
         createProcessInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, true),
-        receiveInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysConsumer()));
+        batchReceiveInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysConsumer()));
   }
 
   private static Instrumenter<MessageExt, MessageExt> createProcessInstrumenter(
