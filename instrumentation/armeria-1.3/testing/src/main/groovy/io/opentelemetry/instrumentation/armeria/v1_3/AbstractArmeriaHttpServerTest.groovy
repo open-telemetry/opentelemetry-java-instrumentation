@@ -28,6 +28,7 @@ import java.util.function.Function
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -94,6 +95,13 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
     sb.service("/path/:id/param") { ctx, req ->
       controller(PATH_PARAM) {
         HttpResponse.of(HttpStatus.valueOf(PATH_PARAM.status), MediaType.PLAIN_TEXT_UTF_8, ctx.pathParam("id"))
+      }
+    }
+
+    sb.service("/child") { ctx, req ->
+      controller(INDEXED_CHILD) {
+        INDEXED_CHILD.collectSpanAttributes { QueryParams.fromQueryString(ctx.query()).get(it) }
+        HttpResponse.of(HttpStatus.valueOf(INDEXED_CHILD.status), MediaType.PLAIN_TEXT_UTF_8, INDEXED_CHILD.body)
       }
     }
 

@@ -131,10 +131,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
-  boolean testConcurrency() {
-    false
-  }
-
   boolean verifyServerSpanEndTime() {
     return true
   }
@@ -160,7 +156,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
     AUTH_ERROR("basicsecured/endpoint", 401, null),
-    INDEXED_CHILD("child", 200, null),
+    INDEXED_CHILD("child", 200, ""),
 
     public static final String ID_ATTRIBUTE_NAME = "test.request.id"
     public static final String ID_PARAMETER_NAME = "id"
@@ -426,7 +422,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def "high concurrency test"() {
     setup:
-    assumeTrue(testConcurrency())
     int count = 100
     def endpoint = INDEXED_CHILD
 

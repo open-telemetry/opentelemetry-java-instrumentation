@@ -20,6 +20,7 @@ import org.springframework.web.servlet.view.RedirectView
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -88,6 +89,15 @@ class TestController {
   String path_param(@PathVariable("id") int id) {
     HttpServerTest.controller(PATH_PARAM) {
       id
+    }
+  }
+
+  @RequestMapping("/child")
+  @ResponseBody
+  String indexed_child(@RequestParam("id") String id) {
+    HttpServerTest.controller(INDEXED_CHILD) {
+      INDEXED_CHILD.collectSpanAttributes { it == "id" ? id : null }
+      INDEXED_CHILD.body
     }
   }
 

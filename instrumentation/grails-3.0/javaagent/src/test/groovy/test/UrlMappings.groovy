@@ -15,6 +15,7 @@ class UrlMappings {
     "/exception"(controller: 'test', action: 'exception')
     "/path/$id/param"(controller: 'test', action: 'path')
     "/captureHeaders"(controller: 'test', action: 'captureHeaders')
+    "/child"(controller: 'test', action: 'child')
 
     "500"(controller: 'error')
     "404"(controller: 'error', action: 'notFound')
