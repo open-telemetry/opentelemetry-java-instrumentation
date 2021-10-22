@@ -96,7 +96,7 @@ class ReferenceMatcherTest extends Specification {
     cl.count == countAfterFirstMatch
   }
 
-  def "matching ref #referenceName #referenceFlags against #classToCheck produces #expectedMismatches"() {
+  def "matching ref #referenceName #referenceFlag against #classToCheck produces #expectedMismatches"() {
     setup:
     def ref = ClassRef.newBuilder(referenceName)
       .addFlag(referenceFlag)

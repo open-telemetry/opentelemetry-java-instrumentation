@@ -9,9 +9,8 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.jsoup:jsoup:1.13.1")
 
-  val arquillianVersion = "1.4.0.Final"
-  implementation("org.jboss.arquillian.junit:arquillian-junit-container:$arquillianVersion")
+  val arquillianVersion = "1.7.0.Alpha10"
+  implementation("org.jboss.arquillian.junit5:arquillian-junit5-container:$arquillianVersion")
   implementation("org.jboss.arquillian.protocol:arquillian-protocol-servlet:$arquillianVersion")
-  implementation("org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1")
   api("org.jboss.shrinkwrap:shrinkwrap-impl-base:1.2.6")
 }

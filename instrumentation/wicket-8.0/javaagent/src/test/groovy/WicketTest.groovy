@@ -20,6 +20,14 @@ import javax.servlet.DispatcherType
 
 class WicketTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
+
   @Override
   Server startServer(int port) {
     def server = new Server(port)

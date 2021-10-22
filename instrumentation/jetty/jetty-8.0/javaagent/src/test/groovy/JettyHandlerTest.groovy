@@ -31,8 +31,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 
 class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
-  @Shared
-  ErrorHandler errorHandler = new ErrorHandler() {
+  static ErrorHandler errorHandler = new ErrorHandler() {
     @Override
     protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
       Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")

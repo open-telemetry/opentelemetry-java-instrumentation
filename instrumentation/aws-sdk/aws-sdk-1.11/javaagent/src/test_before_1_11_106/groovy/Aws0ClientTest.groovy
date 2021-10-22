@@ -129,17 +129,17 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
     request.request().headers().get("traceparent") == null
 
     where:
-    service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                                   | body
-    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
-    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
-    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
+    service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                    | body
+    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { c -> c.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); c.createBucket("testbucket") } | ""
+    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { c -> c.getObject("someBucket", "someKey") }                                                                           | ""
+    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { c -> c.allocateAddress() }                                                                                            | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
                <publicIp>192.0.2.1</publicIp>
                <domain>standard</domain>
             </AllocateAddressResponse>
             """
-    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
+    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("${server.httpUri()}") | [:]                               | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                            | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
