@@ -31,7 +31,7 @@ public class JdkHttpClientSingletons {
     JdkHttpNetAttributesExtractor netAttributesExtractor = new JdkHttpNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse<?>>newBuilder(
+        Instrumenter.<HttpRequest, HttpResponse<?>>builder(
                 GlobalOpenTelemetry.get(), "io.opentelemetry.java-http-client", spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

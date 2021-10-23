@@ -48,7 +48,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   public TracingExecutionInterceptor() {
     delegate =
-        AwsSdkTracing.newBuilder(GlobalOpenTelemetry.get())
+        AwsSdkTracing.builder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
             .build()
             .newExecutionInterceptor();

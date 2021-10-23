@@ -34,7 +34,7 @@ public class KubernetesClientSingletons {
         request -> KubernetesRequestDigest.parse(request).toString();
 
     InstrumenterBuilder<Request, ApiResponse<?>> instrumenterBuilder =
-        Instrumenter.<Request, ApiResponse<?>>newBuilder(
+        Instrumenter.<Request, ApiResponse<?>>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 spanNameExtractor)

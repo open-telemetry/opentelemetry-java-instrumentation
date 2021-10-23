@@ -21,7 +21,7 @@ public final class MethodSingletons {
     SpanNameExtractor<Method> spanName = SpanNames::fromMethod;
 
     INSTRUMENTER =
-        Instrumenter.<Method, Void>newBuilder(
+        Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .newInstrumenter(SpanKindExtractor.alwaysInternal());
   }

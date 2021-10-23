@@ -64,7 +64,7 @@ public final class SpringWebMvcTracingBuilder {
         new SpringWebMvcHttpAttributesExtractor(capturedHttpHeaders);
 
     Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter =
-        Instrumenter.<HttpServletRequest, HttpServletResponse>newBuilder(
+        Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesExtractor))

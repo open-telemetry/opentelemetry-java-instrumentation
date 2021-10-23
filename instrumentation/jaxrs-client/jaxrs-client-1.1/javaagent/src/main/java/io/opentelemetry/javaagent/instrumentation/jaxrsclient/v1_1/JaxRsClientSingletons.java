@@ -33,7 +33,7 @@ public class JaxRsClientSingletons {
         new JaxRsClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ClientRequest, ClientResponse>newBuilder(
+        Instrumenter.<ClientRequest, ClientResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

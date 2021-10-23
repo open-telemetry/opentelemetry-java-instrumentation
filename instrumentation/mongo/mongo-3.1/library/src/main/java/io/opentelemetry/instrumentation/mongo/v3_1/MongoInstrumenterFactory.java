@@ -26,7 +26,7 @@ class MongoInstrumenterFactory {
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
         new MongoSpanNameExtractor(dbAttributesExtractor, attributesExtractor);
 
-    return Instrumenter.<CommandStartedEvent, Void>newBuilder(
+    return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, "io.opentelemetry.mongo-3.1", spanNameExtractor)
         .addAttributesExtractor(dbAttributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)

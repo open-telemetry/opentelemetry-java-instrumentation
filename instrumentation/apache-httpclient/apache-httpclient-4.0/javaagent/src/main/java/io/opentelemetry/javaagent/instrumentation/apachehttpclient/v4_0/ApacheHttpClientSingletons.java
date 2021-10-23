@@ -32,7 +32,7 @@ public final class ApacheHttpClientSingletons {
         new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ApacheHttpClientRequest, HttpResponse>newBuilder(
+        Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

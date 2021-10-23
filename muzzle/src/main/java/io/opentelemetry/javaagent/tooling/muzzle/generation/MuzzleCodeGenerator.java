@@ -213,7 +213,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       /*
        * public Map<String, ClassRef> getMuzzleReferences() {
        *   Map<String, ClassRef> references = new HashMap<>(...);
-       *   references.put("reference class name", ClassRef.newBuilder(...)
+       *   references.put("reference class name", ClassRef.builder(...)
        *       ...
        *       .build());
        *   return references;
@@ -242,7 +242,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
                 referenceType.getInternalName(),
-                "newBuilder",
+                "builder",
                 Type.getMethodDescriptor(referenceBuilderType, stringType),
                 /* isInterface= */ false);
             // stack: map, className, builder

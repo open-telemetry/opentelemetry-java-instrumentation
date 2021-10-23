@@ -36,7 +36,7 @@ public class ResteasyClientSingletons {
         new ResteasyClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ClientInvocation, Response>newBuilder(
+        Instrumenter.<ClientInvocation, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .setErrorCauseExtractor(

@@ -60,9 +60,9 @@ public final class DubboTracingBuilder {
         new DubboNetClientAttributesExtractor();
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
 
     Stream.of(serverInstrumenterBuilder, clientInstrumenterBuilder)
         .forEach(

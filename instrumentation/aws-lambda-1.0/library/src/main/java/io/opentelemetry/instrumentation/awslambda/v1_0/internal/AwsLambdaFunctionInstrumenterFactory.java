@@ -16,7 +16,7 @@ public class AwsLambdaFunctionInstrumenterFactory {
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)

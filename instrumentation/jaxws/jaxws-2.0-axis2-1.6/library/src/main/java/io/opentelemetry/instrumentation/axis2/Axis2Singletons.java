@@ -16,7 +16,7 @@ public class Axis2Singletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<Axis2Request, Void>newBuilder(
+        Instrumenter.<Axis2Request, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();

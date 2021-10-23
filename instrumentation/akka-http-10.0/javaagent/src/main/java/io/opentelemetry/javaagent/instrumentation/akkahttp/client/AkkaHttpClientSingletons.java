@@ -27,7 +27,7 @@ public class AkkaHttpClientSingletons {
         new AkkaHttpClientAttributesExtractor();
     AkkaHttpNetAttributesExtractor netAttributesExtractor = new AkkaHttpNetAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse>newBuilder(
+        Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 AkkaHttpUtil.instrumentationName(),
                 HttpSpanNameExtractor.create(httpAttributesExtractor))

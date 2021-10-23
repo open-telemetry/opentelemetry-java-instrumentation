@@ -18,7 +18,7 @@ public final class HystrixSingletons {
 
   static {
     InstrumenterBuilder<HystrixRequest, Void> builder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HystrixRequest::spanName);
 
     if (Config.get()

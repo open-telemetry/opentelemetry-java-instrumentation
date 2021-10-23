@@ -50,11 +50,11 @@ public final class KafkaTracing {
 
   /** Returns a new {@link KafkaTracing} configured with the given {@link OpenTelemetry}. */
   public static KafkaTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link KafkaTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static KafkaTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static KafkaTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new KafkaTracingBuilder(openTelemetry);
   }
 

@@ -16,7 +16,7 @@ public final class GrailsSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<HandlerData, Void>newBuilder(
+        Instrumenter.<HandlerData, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HandlerData::spanName)
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();

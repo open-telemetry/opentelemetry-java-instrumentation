@@ -14,13 +14,13 @@ public final class RocketMqTracing {
 
   /** Returns a new {@link RocketMqTracing} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link RocketMqTracingBuilder} configured with the given {@link OpenTelemetry}.
    */
-  public static RocketMqTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static RocketMqTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new RocketMqTracingBuilder(openTelemetry);
   }
 

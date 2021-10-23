@@ -21,7 +21,7 @@ public class AkkaHttpServerSingletons {
     AkkaHttpServerAttributesExtractor httpAttributesExtractor =
         new AkkaHttpServerAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse>newBuilder(
+        Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 AkkaHttpUtil.instrumentationName(),
                 unused -> "akka.request")

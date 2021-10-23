@@ -17,13 +17,13 @@ public final class SpringWebTracing {
 
   /** Returns a new {@link SpringWebTracing} configured with the given {@link OpenTelemetry}. */
   public static SpringWebTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link SpringWebTracingBuilder} configured with the given {@link OpenTelemetry}.
    */
-  public static SpringWebTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static SpringWebTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebTracingBuilder(openTelemetry);
   }
 
