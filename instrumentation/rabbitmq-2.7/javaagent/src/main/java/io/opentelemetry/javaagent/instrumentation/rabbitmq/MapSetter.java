@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.Map;
 
-enum MapSetter implements TextMapSetter<Map<String, Object>> {
+public enum MapSetter implements TextMapSetter<Map<String, Object>> {
   INSTANCE;
 
   @Override
