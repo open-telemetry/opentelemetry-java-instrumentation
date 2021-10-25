@@ -23,7 +23,7 @@ public class ServletContextPathTest {
   }
 
   @Test
-  public void shouldNowResultInDuplicateSlash() {
+  public void shouldNotResultInDuplicateSlash() {
     Context contextWithEmptyPath = ServletContextPath.init(Context.root(), p -> p, "");
     Context contextWithPath = ServletContextPath.init(Context.root(), p -> p, "/context");
 
