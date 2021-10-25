@@ -27,19 +27,26 @@ final class RocketMqConsumerInstrumenter {
 
   Context start(Context parentContext, List<MessageExt> msgs) {
     if (msgs.size() == 1) {
-      return singleProcessInstrumenter.start(parentContext, msgs.get(0));
-    } else {
-      Context rootContext = batchReceiveInstrumenter.start(parentContext, null);
-      for (MessageExt message : msgs) {
-        createChildSpan(rootContext, message);
+      if (singleProcessInstrumenter.shouldStart(parentContext, msgs.get(0))) {
+        return singleProcessInstrumenter.start(parentContext, msgs.get(0));
       }
-      return rootContext;
+    } else {
+      if (batchReceiveInstrumenter.shouldStart(parentContext, null)) {
+        Context rootContext = batchReceiveInstrumenter.start(parentContext, null);
+        for (MessageExt message : msgs) {
+          createChildSpan(rootContext, message);
+        }
+        return rootContext;
+      }
     }
+    return parentContext;
   }
 
   private void createChildSpan(Context parentContext, MessageExt msg) {
-    Context context = batchProcessInstrumenter.start(parentContext, msg);
-    batchProcessInstrumenter.end(context, msg, null, null);
+    if (batchProcessInstrumenter.shouldStart(parentContext, msg)) {
+      Context context = batchProcessInstrumenter.start(parentContext, msg);
+      batchProcessInstrumenter.end(context, msg, null, null);
+    }
   }
 
   void end(Context context, List<MessageExt> msgs) {
