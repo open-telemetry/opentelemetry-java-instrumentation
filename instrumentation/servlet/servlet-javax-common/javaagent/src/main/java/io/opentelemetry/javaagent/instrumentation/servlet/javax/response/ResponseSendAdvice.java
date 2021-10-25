@@ -32,8 +32,10 @@ public class ResponseSendAdvice {
     Context parentContext = Java8BytecodeBridge.currentContext();
     // Don't want to generate a new top-level span
     if (Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-      context = instrumenter().start(parentContext, method);
-      scope = context.makeCurrent();
+      if (instrumenter().shouldStart(parentContext, method)) {
+        context = instrumenter().start(parentContext, method);
+        scope = context.makeCurrent();
+      }
     }
   }
 
