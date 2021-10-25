@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.client;
+package io.opentelemetry.javaagent.instrumentation.netty.common;
 
 import com.google.auto.value.AutoValue;
 import java.net.SocketAddress;
@@ -16,8 +16,8 @@ public abstract class NettyConnectRequest {
     return new AutoValue_NettyConnectRequest(Timer.start(), remoteAddress);
   }
 
-  abstract Timer timer();
+  public abstract Timer timer();
 
   @Nullable
-  abstract SocketAddress remoteAddressOnStart();
+  public abstract SocketAddress remoteAddressOnStart();
 }
