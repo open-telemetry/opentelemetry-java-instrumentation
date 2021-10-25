@@ -1,9 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
+import com.google.cloud.tools.jib.gradle.JibTask
 
 plugins {
   id("com.github.jk1.dependency-license-report")
+  id("com.google.cloud.tools.jib")
 
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -228,6 +230,15 @@ tasks {
     dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
   }
 
+  jar {
+    // We only use the shadow jar artifacts.
+    enabled = false
+  }
+
+  withType<JibTask>().configureEach {
+    dependsOn(shadowJar)
+  }
+
   withType<Test>().configureEach {
     dependsOn(shadowJar)
     inputs.file(shadowJar.get().archiveFile)
@@ -299,4 +310,22 @@ fun ShadowJar.excludeBootstrapJars() {
     exclude(project(":javaagent-bootstrap"))
     exclude(project(":javaagent-instrumentation-api"))
   }
+}
+
+jib {
+  to {
+    image = "ghcr.io/opentelemetry-java-instrumentation/javaagent-base:$version"
+    if (!version.toString().endsWith("-SNAPSHOT")) {
+      tags = setOf("ghcr.io/opentelemetry-java-instrumentation/javaagent-base:latest")
+    }
+  }
+  from {
+    image = "azul/zulu-openjdk-alpine:17-jre-headless"
+  }
+  container {
+    appRoot = "/opentelemetry"
+    setEntrypoint("INHERIT")
+    environment = mapOf("JAVA_TOOL_OPTIONS" to "-javaagent:/opentelemetry/classpath/opentelemetry-javaagent-$version.jar")
+  }
+  containerizingMode = "packaged"
 }
