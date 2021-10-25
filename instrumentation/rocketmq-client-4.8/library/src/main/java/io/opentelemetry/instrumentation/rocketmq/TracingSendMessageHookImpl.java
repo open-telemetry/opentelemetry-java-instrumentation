@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
-import static io.opentelemetry.instrumentation.rocketmq.TextMapInjectAdapter.SETTER;
-
 import io.opentelemetry.context.Context;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -34,7 +32,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     Context otelContext =
         tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
     if (propagationEnabled) {
-      tracer.inject(otelContext, context.getMessage().getProperties(), SETTER);
+      tracer.inject(otelContext, context.getMessage().getProperties(), MapSetter.INSTANCE);
     }
     context.setMqTraceContext(otelContext);
   }

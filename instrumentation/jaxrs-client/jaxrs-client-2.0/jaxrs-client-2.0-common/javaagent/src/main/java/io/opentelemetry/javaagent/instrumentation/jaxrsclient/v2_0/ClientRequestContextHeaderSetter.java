@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.ws.rs.client.ClientRequestContext;
 
-public final class InjectAdapter implements TextMapSetter<ClientRequestContext> {
-
-  public static final InjectAdapter SETTER = new InjectAdapter();
+enum ClientRequestContextHeaderSetter implements TextMapSetter<ClientRequestContext> {
+  INSTANCE;
 
   @Override
   public void set(ClientRequestContext carrier, String key, String value) {

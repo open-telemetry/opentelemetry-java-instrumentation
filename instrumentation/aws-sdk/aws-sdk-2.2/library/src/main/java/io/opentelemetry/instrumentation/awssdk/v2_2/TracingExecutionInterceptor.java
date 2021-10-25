@@ -101,7 +101,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
     return builder.build();
   }
 

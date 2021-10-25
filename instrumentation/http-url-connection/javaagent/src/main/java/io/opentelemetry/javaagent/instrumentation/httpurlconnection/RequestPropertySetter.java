@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.net.HttpURLConnection;
 
-public class HeadersInjectAdapter implements TextMapSetter<HttpURLConnection> {
-
-  public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
+enum RequestPropertySetter implements TextMapSetter<HttpURLConnection> {
+  INSTANCE;
 
   @Override
   public void set(HttpURLConnection carrier, String key, String value) {

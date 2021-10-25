@@ -155,7 +155,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        tracer().inject(context, headers, TextMapInjectAdapter.SETTER);
+        tracer().inject(context, headers, MapSetter.INSTANCE);
 
         props =
             new AMQP.BasicProperties(

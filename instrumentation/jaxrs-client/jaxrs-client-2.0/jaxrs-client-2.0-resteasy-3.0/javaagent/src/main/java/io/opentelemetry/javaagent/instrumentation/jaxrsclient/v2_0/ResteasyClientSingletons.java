@@ -50,7 +50,7 @@ public class ResteasyClientSingletons {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new ResteasyInjectAdapter());
+            .newClientInstrumenter(ClientInvocationHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<ClientInvocation, Response> instrumenter() {

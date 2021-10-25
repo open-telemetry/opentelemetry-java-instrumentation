@@ -8,9 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import software.amazon.awssdk.http.SdkHttpRequest;
 
-final class AwsSdkInjectAdapter implements TextMapSetter<SdkHttpRequest.Builder> {
-
-  static final AwsSdkInjectAdapter INSTANCE = new AwsSdkInjectAdapter();
+enum RequestHeaderSetter implements TextMapSetter<SdkHttpRequest.Builder> {
+  INSTANCE;
 
   @Override
   public void set(SdkHttpRequest.Builder builder, String name, String value) {
