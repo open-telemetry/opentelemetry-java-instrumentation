@@ -115,9 +115,9 @@ the configuration/construction logic happens in the builder class. Don't expose 
 creating a new instance other than using the builder.
 
 The `newTracingInterceptor()` method listed in the example code returns an implementation of one of
-the library interfaces which add the telemetry. This part might look different for every
+the library interfaces which adds the telemetry. This part might look different for every
 instrumented library: some of them expose interceptor/listener interfaces that can be easily plugged
-into the library, some other have a library interface that you can use to implement a decorator that
+into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
 
 Consider the following builder class:
@@ -299,7 +299,7 @@ more about how to set this up properly in the [muzzle docs](muzzle.md#muzzle-che
 Javaagent instrumentation defines matching classes for which bytecode is generated. You often match
 against the class you used in the test for library instrumentation, for example the builder of a
 client. You can also match against the method that creates the builder, for example its constructor.
-Agent instrumentation can inject bytecode to be run after the constructor returns, which would
+Agent instrumentation can inject bytecode to be run before the constructor returns, which would
 invoke, for example,`registerInterceptor` and initialize the instrumentation. Often, the code inside
 the bytecode decorator is identical to the one in the test you wrote above, because the agent does
 the work for initializing the instrumentation library, so a user doesn't have to. You can find a
@@ -345,7 +345,7 @@ plugins {
 In the `javaagent` module add a `compileOnly` dependency to the newly created stub module:
 
 ```kotlin
-compileOnly(project(":instrumentation:xxx:compile-stub"))
+compileOnly(project(":instrumentation:yarpc-1.0:compile-stub"))
 ```
 
 Now you can use your stub classes inside the javaagent instrumentation.
