@@ -5,26 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettyTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectInstrumenter;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
-import java.net.SocketAddress;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
 import reactor.core.publisher.Mono;
 
 public class ConnectionWrapper {
 
   public static Mono<Channel> wrap(
-      Context context, Context parentContext, SocketAddress remoteAddress, Mono<Channel> mono) {
-    return mono.doOnError(
-            throwable -> {
-              tracer().endConnectionSpan(context, parentContext, remoteAddress, null, throwable);
-            })
-        .doOnSuccess(
-            channel -> {
-              if (context != null) {
-                tracer().endConnectionSpan(context, parentContext, remoteAddress, channel, null);
-              }
-            });
+      Context context, NettyConnectRequest request, Mono<Channel> mono) {
+    return mono.doOnError(error -> connectInstrumenter().end(context, request, null, error))
+        .doOnSuccess(channel -> connectInstrumenter().end(context, request, channel, null));
   }
 }
