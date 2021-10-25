@@ -52,18 +52,19 @@ public final class ServletContextPath {
 
   /**
    * Returns a concatenation of a servlet context path stored in the given {@code context} and a
-   * given {@code spanName}.
-   *
-   * <p>If there is no servlet path stored in the context, returns {@code spanName}. Servlet context
-   * path and span name are concatenated verbatim without any attempt to ensure proper usage of path
-   * separators. The latter is the responsibility of the caller of this method.
+   * given {@code spanName}. If there is no servlet path stored in the context, returns {@code
+   * spanName}.
    */
   public static String prepend(Context context, String spanName) {
     ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
     if (servletContextPath != null) {
       String value = servletContextPath.contextPath;
       if (value != null) {
-        return value + spanName;
+        if (spanName == null || spanName.isEmpty()) {
+          return value;
+        } else {
+          return value + (spanName.startsWith("/") ? spanName : ("/" + spanName));
+        }
       }
     }
 
