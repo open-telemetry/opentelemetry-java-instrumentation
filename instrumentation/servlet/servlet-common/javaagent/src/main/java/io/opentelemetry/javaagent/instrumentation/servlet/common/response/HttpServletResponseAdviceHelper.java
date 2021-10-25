@@ -7,19 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.response;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.lang.reflect.Method;
 
 public class HttpServletResponseAdviceHelper {
   public static void stopSpan(
-      BaseTracer tracer, Throwable throwable, Context context, Scope scope) {
-    if (context != null) {
+      Instrumenter<Method, Void> instrumenter,
+      Throwable throwable,
+      Context context,
+      Scope scope,
+      Method request) {
+    if (scope != null) {
       scope.close();
 
-      if (throwable != null) {
-        tracer.endExceptionally(context, throwable);
-      } else {
-        tracer.end(context);
-      }
+      instrumenter.end(context, request, null, throwable);
     }
   }
 }
