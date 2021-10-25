@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
@@ -13,12 +14,15 @@ import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConne
 
 public final class NettyClientSingletons {
 
+  private static final boolean alwaysCreateConnectSpan =
+      Config.get().getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
+
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
   private static final NettyConnectInstrumenter CONNECT_INSTRUMENTER;
 
   static {
     NettyClientInstrumenterFactory factory =
-        new NettyClientInstrumenterFactory("io.opentelemetry.netty-4.0");
+        new NettyClientInstrumenterFactory("io.opentelemetry.netty-4.0", alwaysCreateConnectSpan);
     INSTRUMENTER = factory.createHttpInstrumenter();
     CONNECT_INSTRUMENTER = factory.createConnectInstrumenter();
   }

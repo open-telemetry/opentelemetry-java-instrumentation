@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -19,13 +18,13 @@ import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndCha
 
 public final class NettyClientInstrumenterFactory {
 
-  private static final boolean alwaysCreateConnectSpan =
-      Config.get().getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
-
   private final String instrumentationName;
+  private final boolean alwaysCreateConnectSpan;
 
-  public NettyClientInstrumenterFactory(String instrumentationName) {
+  public NettyClientInstrumenterFactory(
+      String instrumentationName, boolean alwaysCreateConnectSpan) {
     this.instrumentationName = instrumentationName;
+    this.alwaysCreateConnectSpan = alwaysCreateConnectSpan;
   }
 
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter() {
