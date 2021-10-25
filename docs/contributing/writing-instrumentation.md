@@ -184,9 +184,9 @@ a `testImplementation` dependency on the `testing` submodule. Then, create a tes
 the abstract test class from `testing`. You should implement the abstract `configure()` method to
 initialize the library using the exposed mechanism to register interceptors/listeners, perhaps a
 method like `registerInterceptor`. You can also wrap the object with the instrumentation decorator.
-Make sure that a testing strategy is applied depending on the test library you use. Both expose a
-way to specify whether you're running a library or javaagent test. If the tests pass, the library
-instrumentation is working.
+Make sure that the test class is marked as a library instrumentation test. Both JUnit and Spock test
+utilities expose a way to specify whether you're running a library or javaagent test. If the tests
+pass, the library instrumentation is working.
 
 ### JUnit
 
