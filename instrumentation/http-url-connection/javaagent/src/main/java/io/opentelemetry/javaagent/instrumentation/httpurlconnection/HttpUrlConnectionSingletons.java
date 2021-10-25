@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.RequestPropertySetter.INSTANCE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -32,7 +32,7 @@ public class HttpUrlConnectionSingletons {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
-            .newClientInstrumenter(SETTER);
+            .newClientInstrumenter(INSTANCE);
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersSetter.INSTANCE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -81,7 +81,7 @@ class SpringWebfluxHttpClientTracer
 
   @Override
   protected TextMapSetter<ClientRequest.Builder> getSetter() {
-    return SETTER;
+    return INSTANCE;
   }
 
   @Override

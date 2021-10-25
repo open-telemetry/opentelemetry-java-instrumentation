@@ -15,12 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// TODO should this class implement TextMapSetter at all?
 /** Context propagation is initiated via {@link HttpHeadersInstrumentation}. */
-public class HttpHeadersInjectAdapter implements TextMapSetter<HttpRequest> {
+public class HttpHeadersSetter implements TextMapSetter<HttpRequest> {
 
   private final ContextPropagators contextPropagators;
 
-  public HttpHeadersInjectAdapter(ContextPropagators contextPropagators) {
+  public HttpHeadersSetter(ContextPropagators contextPropagators) {
     this.contextPropagators = contextPropagators;
   }
 

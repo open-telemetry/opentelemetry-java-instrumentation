@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.Map;
 
-public class TextMapInjectAdapter implements TextMapSetter<Map<String, Object>> {
-
-  public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
+enum MapSetter implements TextMapSetter<Map<String, Object>> {
+  INSTANCE;
 
   @Override
   public void set(Map<String, Object> carrier, String key, String value) {

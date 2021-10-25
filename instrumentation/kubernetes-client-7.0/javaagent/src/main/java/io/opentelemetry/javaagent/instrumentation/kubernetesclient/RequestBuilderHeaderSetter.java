@@ -11,9 +11,8 @@ import okhttp3.Request;
 
 /** Helper class to inject span context into request headers. */
 // TODO(anuraaga): Figure out a way to avoid copying this from okhttp instrumentation.
-final class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builder> {
-
-  static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
+enum RequestBuilderHeaderSetter implements TextMapSetter<Request.Builder> {
+  INSTANCE;
 
   @Override
   public void set(@Nullable Request.Builder carrier, String key, String value) {

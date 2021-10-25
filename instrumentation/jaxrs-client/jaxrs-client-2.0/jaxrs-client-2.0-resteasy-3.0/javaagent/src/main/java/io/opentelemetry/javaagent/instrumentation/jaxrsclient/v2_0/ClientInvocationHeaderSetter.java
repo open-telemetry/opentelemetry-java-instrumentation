@@ -9,9 +9,8 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.ws.rs.core.MultivaluedMap;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
-public final class ResteasyInjectAdapter implements TextMapSetter<ClientInvocation> {
-
-  public static final ResteasyInjectAdapter SETTER = new ResteasyInjectAdapter();
+enum ClientInvocationHeaderSetter implements TextMapSetter<ClientInvocation> {
+  INSTANCE;
 
   @Override
   public void set(ClientInvocation carrier, String key, String value) {

@@ -40,7 +40,7 @@ public class JaxRsClientSingletons {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new InjectAdapter());
+            .newClientInstrumenter(ClientRequestHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<ClientRequest, ClientResponse> instrumenter() {

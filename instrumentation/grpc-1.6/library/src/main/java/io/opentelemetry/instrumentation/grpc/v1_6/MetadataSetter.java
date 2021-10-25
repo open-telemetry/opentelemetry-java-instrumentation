@@ -8,9 +8,8 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class GrpcInjectAdapter implements TextMapSetter<Metadata> {
-
-  static final GrpcInjectAdapter SETTER = new GrpcInjectAdapter();
+enum MetadataSetter implements TextMapSetter<Metadata> {
+  INSTANCE;
 
   @Override
   public void set(Metadata carrier, String key, String value) {
