@@ -133,7 +133,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
-      TargetWaitStrategy waitStrategy) {
+      TargetWaitStrategy waitStrategy,
+      String[] cmd) {
     stopTarget();
 
     if (!imageExists(targetImageName)) {
@@ -148,17 +149,21 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     target =
         startContainer(
             targetImageName,
-            command ->
-                command
-                    .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
-                    .withHostConfig(
-                        HostConfig.newHostConfig()
-                            .withAutoRemove(true)
-                            .withNetworkMode(natNetworkId)
-                            .withPortBindings(
-                                new PortBinding(
-                                    new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
-                    .withEnv(environment),
+            command -> {
+              command
+                  .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
+                  .withHostConfig(
+                      HostConfig.newHostConfig()
+                          .withAutoRemove(true)
+                          .withNetworkMode(natNetworkId)
+                          .withPortBindings(
+                              new PortBinding(
+                                  new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
+                  .withEnv(environment);
+              if (cmd != null) {
+                command.withCmd(cmd);
+              }
+            },
             containerId -> {
               try (InputStream agentFileStream = new FileInputStream(agentPath)) {
                 copyFileToContainer(
