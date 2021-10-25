@@ -314,7 +314,8 @@ fun ShadowJar.excludeBootstrapJars() {
 
 jib {
   to {
-    image = "ghcr.io/opentelemetry-java-instrumentation/javaagent-base:$version"
+    val imageVersion = if (version.toString().endsWith("-SNAPSHOT")) "alpha" else version.toString()
+    image = "ghcr.io/opentelemetry-java-instrumentation/javaagent-base:$imageVersion"
     if (!version.toString().endsWith("-SNAPSHOT")) {
       tags = setOf("ghcr.io/opentelemetry-java-instrumentation/javaagent-base:latest")
     }
