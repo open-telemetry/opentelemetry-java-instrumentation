@@ -202,7 +202,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -266,7 +266,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
@@ -319,7 +319,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -381,7 +381,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     })
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
@@ -431,7 +431,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     redisFuture.get()
 
     then:
-    conds.await()
+    conds.await(10)
     completedExceptionally == true
     thrown Exception
     assertTraces(1) {
@@ -473,7 +473,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     asyncCommands.flushCommands()
 
     then:
-    conds.await()
+    conds.await(10)
     cancelSuccess == true
     assertTraces(1) {
       trace(0, 3) {
