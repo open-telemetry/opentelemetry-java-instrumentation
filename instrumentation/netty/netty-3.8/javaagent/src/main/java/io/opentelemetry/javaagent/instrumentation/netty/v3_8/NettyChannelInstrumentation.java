@@ -83,13 +83,15 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelRequest") NettyConnectRequest request) {
 
-      if (request == null || !connectInstrumenter().shouldStart(parentContext, request)) {
+      if (request == null) {
         return;
       }
 
       if (error != null) {
-        Context context = connectInstrumenter().start(parentContext, request);
-        connectInstrumenter().end(context, request, null, error);
+        if (connectInstrumenter().shouldStart(parentContext, request)) {
+          Context context = connectInstrumenter().start(parentContext, request);
+          connectInstrumenter().end(context, request, null, error);
+        }
       } else {
         channelFuture.addListener(new ConnectionListener(parentContext, request));
       }

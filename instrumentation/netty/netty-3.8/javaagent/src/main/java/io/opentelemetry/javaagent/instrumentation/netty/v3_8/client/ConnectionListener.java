@@ -25,7 +25,7 @@ public final class ConnectionListener implements ChannelFutureListener {
   @Override
   public void operationComplete(ChannelFuture future) {
     Throwable cause = future.getCause();
-    if (cause != null) {
+    if (cause != null && connectInstrumenter().shouldStart(parentContext, request)) {
       Context context = connectInstrumenter().start(parentContext, request);
       connectInstrumenter().end(context, request, future.getChannel(), cause);
     }
