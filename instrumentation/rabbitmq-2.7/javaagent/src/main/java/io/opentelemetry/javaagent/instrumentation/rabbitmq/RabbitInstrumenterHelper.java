@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -15,6 +16,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 
 public class RabbitInstrumenterHelper {
+  static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get().getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
@@ -34,7 +36,7 @@ public class RabbitInstrumenterHelper {
       span.setAttribute(SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY, routingKey);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      span.setAttribute("rabbitmq.command", "basic.publish");
+      span.setAttribute(RABBITMQ_COMMAND, "basic.publish");
     }
   }
 
@@ -58,11 +60,11 @@ public class RabbitInstrumenterHelper {
       span.updateName(name);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      span.setAttribute("rabbitmq.command", name);
+      span.setAttribute(RABBITMQ_COMMAND, name);
     }
   }
 
-  public void inject(Context context, Map<String, Object> headers, TextMapInjectAdapter setter) {
+  public void inject(Context context, Map<String, Object> headers, MapSetter setter) {
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, setter);
   }
 }

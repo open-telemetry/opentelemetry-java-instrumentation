@@ -8,19 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import com.google.auto.value.AutoValue;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.GetResponse;
+import java.time.Instant;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ReceiveRequest {
 
   public static ReceiveRequest create(
-      String queue, long startTime, GetResponse response, Connection connection) {
-    return new AutoValue_ReceiveRequest(queue, startTime, response, connection);
+      String queue, Timer timer, GetResponse response, Connection connection) {
+    return new AutoValue_ReceiveRequest(queue, timer, response, connection);
   }
 
   public abstract String getQueue();
 
-  public abstract long getStartTime();
+  public abstract Timer getTimer();
 
   @Nullable
   public abstract GetResponse getResponse();
@@ -30,5 +31,13 @@ public abstract class ReceiveRequest {
   String spanName() {
     String queue = getQueue();
     return (queue.startsWith("amq.gen-") ? "<generated>" : queue) + " receive";
+  }
+
+  Instant startTime() {
+    return getTimer().startTime();
+  }
+
+  Instant now() {
+    return getTimer().now();
   }
 }

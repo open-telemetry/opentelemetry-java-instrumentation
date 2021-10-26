@@ -44,7 +44,7 @@ public class RabbitSingletons {
   }
 
   private static Instrumenter<ChannelAndMethod, Void> createChanneInstrumenter() {
-    return Instrumenter.<ChannelAndMethod, Void>newBuilder(
+    return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractors(
             new RabbitChannelAttributesExtractor(), new RabbitChannelNetAttributesExtractor())
@@ -61,9 +61,10 @@ public class RabbitSingletons {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
 
-    return Instrumenter.<ReceiveRequest, GetResponse>newBuilder(
+    return Instrumenter.<ReceiveRequest, GetResponse>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
+        .setTimeExtractors(ReceiveRequest::startTime, (request, response, error) -> request.now())
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
@@ -75,7 +76,7 @@ public class RabbitSingletons {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }
 
-    return Instrumenter.<DeliveryRequest, Void>newBuilder(
+    return Instrumenter.<DeliveryRequest, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
         .newConsumerInstrumenter(TextMapExtractAdapter.GETTER);

@@ -60,6 +60,12 @@ public class TracedDelegatingConsumer implements Consumer {
       throws IOException {
     Context parentContext = Context.current();
     DeliveryRequest request = DeliveryRequest.create(queue, envelope, properties, body);
+
+    if (!deliverInstrumenter().shouldStart(parentContext, request)) {
+      delegate.handleDelivery(consumerTag, envelope, properties, body);
+      return;
+    }
+
     Context context = deliverInstrumenter().start(parentContext, request);
 
     try (Scope ignored = context.makeCurrent()) {

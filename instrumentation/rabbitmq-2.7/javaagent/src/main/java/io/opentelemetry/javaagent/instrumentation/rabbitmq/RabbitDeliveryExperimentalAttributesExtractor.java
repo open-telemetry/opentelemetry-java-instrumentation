@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitInstrumenterHelper.RABBITMQ_COMMAND;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -13,8 +15,6 @@ import javax.annotation.Nullable;
 
 class RabbitDeliveryExperimentalAttributesExtractor
     implements AttributesExtractor<DeliveryRequest, Void> {
-  private static final AttributeKey<String> RABBITMQ_COMMAND =
-      AttributeKey.stringKey("rabbitmq.command");
   private static final AttributeKey<Long> RABBITMQ_QUEUE_TIME =
       AttributeKey.longKey("rabbitmq.record.queue_time_ms");
 

@@ -188,27 +188,29 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelGetAdvice {
 
     @Advice.OnMethodEnter
-    public static long takeTimestamp(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void takeTimestamp(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelTimer") Timer timer) {
       callDepth = CallDepth.forClass(Channel.class);
       callDepth.getAndIncrement();
-      return System.currentTimeMillis();
+      timer = Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
-        @Advice.Enter long startTime,
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelTimer") Timer timer) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       ReceiveRequest request =
-          ReceiveRequest.create(queue, startTime, response, channel.getConnection());
+          ReceiveRequest.create(queue, timer, response, channel.getConnection());
       if (!receiveInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
