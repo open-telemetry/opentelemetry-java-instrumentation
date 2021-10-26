@@ -6,17 +6,16 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 final class TracingSendMessageHookImpl implements SendMessageHook {
 
-  private final RocketMqProducerTracer tracer;
-  private final boolean propagationEnabled;
+  private final Instrumenter<SendMessageContext, Void> instrumenter;
 
-  TracingSendMessageHookImpl(RocketMqProducerTracer tracer, boolean propagationEnabled) {
-    this.tracer = tracer;
-    this.propagationEnabled = propagationEnabled;
+  TracingSendMessageHookImpl(Instrumenter<SendMessageContext, Void> instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
   @Override
@@ -29,23 +28,21 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null) {
       return;
     }
-    Context otelContext =
-        tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
-    if (propagationEnabled) {
-      tracer.inject(otelContext, context.getMessage().getProperties(), MapSetter.INSTANCE);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, context)) {
+      return;
     }
-    context.setMqTraceContext(otelContext);
+    context.setMqTraceContext(instrumenter.start(parentContext, context));
   }
 
   @Override
   public void sendMessageAfter(SendMessageContext context) {
-    if (context == null || context.getMqTraceContext() == null || context.getSendResult() == null) {
+    if (context == null) {
       return;
     }
     if (context.getMqTraceContext() instanceof Context) {
       Context otelContext = (Context) context.getMqTraceContext();
-      tracer.afterProduce(otelContext, context.getSendResult());
-      tracer.end(otelContext);
+      instrumenter.end(otelContext, context, null, null);
     }
   }
 }
