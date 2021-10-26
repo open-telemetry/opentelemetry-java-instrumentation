@@ -245,7 +245,7 @@ jobs:
 
       - name: Run muzzle
         # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.5.0
+        uses: nick-invision/retry@v2.5.1
         with:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
