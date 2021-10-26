@@ -230,11 +230,11 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     String successStr = "KEY MISSING"
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
-      String apply(String res, Throwable throwable) {
+      String apply(String res, Throwable error) {
         runWithSpan("callback1") {
           conds.evaluate {
             assert res == null
-            assert throwable == null
+            assert error == null
           }
         }
         return (res == null ? successStr : res)
@@ -295,7 +295,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     def conds = new AsyncConditions()
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
-      void accept(String keyRetrieved, Throwable throwable) {
+      void accept(String keyRetrieved, Throwable error) {
         runWithSpan("callback") {
           conds.evaluate {
             assert keyRetrieved != null
@@ -353,9 +353,9 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("TESTHM")
         hmGetAllFuture.exceptionally(new Function<Throwable, Map<String, String>>() {
           @Override
-          Map<String, String> apply(Throwable throwable) {
-            println("unexpected:" + throwable.toString())
-            throwable.printStackTrace()
+          Map<String, String> apply(Throwable error) {
+            println("unexpected:" + error.toString())
+            error.printStackTrace()
             assert false
             return null
           }
@@ -406,13 +406,13 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     RedisFuture redisFuture = asyncCommands.del("key1", "key2")
     boolean completedExceptionally = ((AsyncCommand) redisFuture).completeExceptionally(new IllegalStateException("TestException"))
     redisFuture.exceptionally({
-      throwable ->
+      error ->
         conds.evaluate {
-          assert throwable != null
-          assert throwable instanceof IllegalStateException
-          assert throwable.getMessage() == "TestException"
+          assert error != null
+          assert error instanceof IllegalStateException
+          assert error.getMessage() == "TestException"
         }
-        throw throwable
+        throw error
     })
 
     when:
@@ -448,11 +448,11 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
       asyncCommands.sadd("SKEY", "1", "2")
     }
     redisFuture.whenCompleteAsync({
-      res, throwable ->
+      res, error ->
         runWithSpan("callback") {
           conds.evaluate {
-            assert throwable != null
-            assert throwable instanceof CancellationException
+            assert error != null
+            assert error instanceof CancellationException
           }
         }
     })

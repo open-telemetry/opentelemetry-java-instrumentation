@@ -14,7 +14,7 @@ public class HibernateSingletons {
 
   static {
     INSTANCE =
-        Instrumenter.<String, Void>newBuilder(
+        Instrumenter.<String, Void>builder(
                 GlobalOpenTelemetry.get(), "io.opentelemetry.hibernate-common", s -> s)
             .newInstrumenter();
   }

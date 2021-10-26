@@ -16,7 +16,7 @@ public class CxfSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<CxfRequest, Void>newBuilder(
+        Instrumenter.<CxfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();

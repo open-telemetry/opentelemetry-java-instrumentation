@@ -35,7 +35,7 @@ dependencies {
 
   library("com.couchbase.client:java-client:2.0.0")
 
-  testImplementation(project(":instrumentation:couchbase:couchbase-testing"))
+  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.+")
   latestDepTestLibrary("com.couchbase.client:java-client:2.+")

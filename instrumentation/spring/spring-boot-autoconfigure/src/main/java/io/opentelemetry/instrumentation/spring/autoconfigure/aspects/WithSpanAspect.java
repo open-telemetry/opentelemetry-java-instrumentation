@@ -43,7 +43,7 @@ public class WithSpanAspect {
         new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
 
     instrumenter =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.newInstance(
                     JoinPointRequest::method,

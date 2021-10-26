@@ -81,4 +81,19 @@ class FinatraController extends Controller {
       }
     )
   }
+
+  any(INDEXED_CHILD.getPath) { request: Request =>
+    controller(
+      INDEXED_CHILD,
+      new Closure[Response](null) {
+        override def call(): Response = {
+          INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+            override def getParameter(name: String): String =
+              request.getParam(name)
+          })
+          response.ok(INDEXED_CHILD.getBody)
+        }
+      }
+    )
+  }
 }

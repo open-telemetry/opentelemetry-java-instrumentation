@@ -24,7 +24,7 @@ public final class RedissonSingletons {
     SpanNameExtractor<RedissonRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<RedissonRequest, Void>newBuilder(
+        Instrumenter.<RedissonRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)

@@ -30,11 +30,12 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static org.junit.Assume.assumeTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> {
@@ -323,11 +324,6 @@ class TomcatServlet5TestAsync extends TomcatServlet5Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }
 
 class TomcatServlet5TestFakeAsync extends TomcatServlet5Test {
@@ -341,11 +337,6 @@ class TomcatServlet5TestFakeAsync extends TomcatServlet5Test {
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
   }
 }
 
@@ -371,6 +362,7 @@ class TomcatServlet5TestForward extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -410,6 +402,7 @@ class TomcatServlet5TestInclude extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -435,6 +428,7 @@ class TomcatServlet5TestDispatchImmediate extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 }
@@ -456,6 +450,7 @@ class TomcatServlet5TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 

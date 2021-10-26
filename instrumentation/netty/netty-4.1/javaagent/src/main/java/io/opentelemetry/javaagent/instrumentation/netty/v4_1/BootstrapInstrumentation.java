@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.tracer;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.ConnectionCompleteListener;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,21 +31,8 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), BootstrapInstrumentation.class.getName() + "$InitAdvice");
-    transformer.applyAdviceToMethod(
         named("doResolveAndConnect").and(takesArgument(0, SocketAddress.class)),
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class InitAdvice {
-    @Advice.OnMethodEnter
-    public static void enter() {
-      // Ensure that tracer is initialized. Connection failure handling is initialized in the static
-      // initializer of tracer which needs to be run before an attempt is made to establish
-      // connection.
-      tracer();
-    }
   }
 
   public static class ConnectAdvice {
@@ -53,31 +40,38 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     public static void startConnect(
         @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
+        @Advice.Local("otelRequest") NettyConnectRequest request,
         @Advice.Local("otelScope") Scope scope) {
-      parentContext = Java8BytecodeBridge.currentContext();
-      context = tracer().startConnectionSpan(parentContext, remoteAddress);
-      if (context != null) {
-        scope = context.makeCurrent();
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = NettyConnectRequest.create(remoteAddress);
+
+      if (!connectInstrumenter().shouldStart(parentContext, request)) {
+        return;
       }
+
+      context = connectInstrumenter().start(parentContext, request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
+        @Advice.Local("otelRequest") NettyConnectRequest request,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
+
+      if (scope == null) {
+        return;
       }
+      scope.close();
 
       if (throwable != null) {
-        tracer().endConnectionSpan(context, parentContext, remoteAddress, null, throwable);
+        connectInstrumenter().end(context, request, null, throwable);
       } else {
-        channelFuture.addListener(new ConnectionCompleteListener(context, parentContext));
+        channelFuture.addListener(
+            new ConnectionCompleteListener(connectInstrumenter(), context, request));
       }
     }
   }

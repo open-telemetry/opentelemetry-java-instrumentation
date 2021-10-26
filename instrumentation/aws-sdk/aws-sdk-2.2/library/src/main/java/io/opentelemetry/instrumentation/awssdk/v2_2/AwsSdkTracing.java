@@ -29,11 +29,11 @@ public class AwsSdkTracing {
 
   /** Returns a new {@link AwsSdkTracing} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link AwsSdkTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static AwsSdkTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static AwsSdkTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new AwsSdkTracingBuilder(openTelemetry);
   }
 

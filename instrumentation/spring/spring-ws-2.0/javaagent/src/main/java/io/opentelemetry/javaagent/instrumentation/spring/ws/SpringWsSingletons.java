@@ -20,7 +20,7 @@ public class SpringWsSingletons {
     CodeAttributesExtractor<SpringWsRequest, Void> codeAttributes =
         new SpringWsCodeAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<SpringWsRequest, Void>newBuilder(
+        Instrumenter.<SpringWsRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributes))

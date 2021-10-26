@@ -25,7 +25,7 @@ public class ChunkSingletons {
 
   static {
     InstrumenterBuilder<ChunkContextAndBuilder, Void> instrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName);
 
     if (shouldCreateRootSpanForChunk()) {

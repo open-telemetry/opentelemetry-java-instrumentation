@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.test.base
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue
+
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -18,8 +20,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import static org.junit.Assume.assumeTrue
 
 @Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {

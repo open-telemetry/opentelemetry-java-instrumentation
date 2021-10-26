@@ -40,7 +40,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     }
     Context context = requestInstrumenter.start(parentContext, request);
 
-    AwsXrayPropagator.getInstance().inject(context, request, AwsSdkInjectAdapter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
 
     request.addHandlerContext(CONTEXT, context);
   }

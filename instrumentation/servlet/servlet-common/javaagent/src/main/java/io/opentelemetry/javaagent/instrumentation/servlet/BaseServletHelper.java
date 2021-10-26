@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 import java.util.function.Function;
@@ -65,12 +64,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   public Context getServerContext(REQUEST request) {
-    Object context = accessor.getRequestAttribute(request, HttpServerTracer.CONTEXT_ATTRIBUTE);
+    Object context = accessor.getRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   private void attachServerContext(Context context, REQUEST request) {
-    accessor.setRequestAttribute(request, HttpServerTracer.CONTEXT_ATTRIBUTE, context);
+    accessor.setRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE, context);
   }
 
   public void recordException(Context context, Throwable throwable) {

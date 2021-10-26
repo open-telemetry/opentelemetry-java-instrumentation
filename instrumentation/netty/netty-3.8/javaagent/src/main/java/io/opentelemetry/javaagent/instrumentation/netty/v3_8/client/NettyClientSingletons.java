@@ -26,7 +26,7 @@ final class NettyClientSingletons {
         new NettyNetClientAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequestAndChannel, HttpResponse>newBuilder(
+        Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.netty-3.8",
                 HttpSpanNameExtractor.create(httpClientAttributesExtractor))

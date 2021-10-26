@@ -39,7 +39,7 @@ class RocketMqInstrumenterFactory {
       boolean propagationEnabled) {
 
     InstrumenterBuilder<SendMessageContext, SendMessageContext> instrumenterBuilder =
-        Instrumenter.<SendMessageContext, SendMessageContext>newBuilder(
+        Instrumenter.<SendMessageContext, SendMessageContext>builder(
                 openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnProduce)
             .addAttributesExtractor(producerAttributesExtractor);
     if (captureExperimentalSpanAttributes) {
@@ -47,7 +47,7 @@ class RocketMqInstrumenterFactory {
     }
 
     if (propagationEnabled) {
-      return instrumenterBuilder.newProducerInstrumenter(TextMapInjectAdapter.SETTER);
+      return instrumenterBuilder.newProducerInstrumenter(MapSetter.INSTANCE);
     } else {
       return instrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysProducer());
     }
@@ -59,7 +59,7 @@ class RocketMqInstrumenterFactory {
       boolean propagationEnabled) {
 
     InstrumenterBuilder<Void, Void> batchReceiveInstrumenterBuilder =
-        Instrumenter.<Void, Void>newBuilder(
+        Instrumenter.<Void, Void>builder(
                 openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnReceive)
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
             .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"));
@@ -79,7 +79,7 @@ class RocketMqInstrumenterFactory {
       boolean batch) {
 
     InstrumenterBuilder<MessageExt, MessageExt> builder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnConsume);
 
     builder.addAttributesExtractor(consumerAttributesExtractor);

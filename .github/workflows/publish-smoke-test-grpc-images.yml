@@ -46,9 +46,9 @@ jobs:
         run: |
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Pushing to tag $TAG"
-          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=16 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
         working-directory: smoke-tests/images/grpc
 
   issue:

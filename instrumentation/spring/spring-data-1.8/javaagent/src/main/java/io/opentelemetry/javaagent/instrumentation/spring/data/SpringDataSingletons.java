@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 public final class SpringDataSingletons {
 
   private static final Instrumenter<Method, Void> INSTRUMENTER =
-      Instrumenter.<Method, Void>newBuilder(
+      Instrumenter.<Method, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.spring-data-1.8", SpanNames::fromMethod)
           .newInstrumenter();
 

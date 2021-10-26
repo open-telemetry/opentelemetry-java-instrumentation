@@ -14,7 +14,7 @@ import org.springframework.batch.core.StepExecution;
 public class StepSingletons {
 
   private static final Instrumenter<StepExecution, Void> INSTRUMENTER =
-      Instrumenter.<StepExecution, Void>newBuilder(
+      Instrumenter.<StepExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), StepSingletons::spanName)
           .newInstrumenter();
 

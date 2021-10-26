@@ -19,14 +19,14 @@ public final class ApacheHttpClientTracing {
    * Returns a new {@link ApacheHttpClientTracing} configured with the given {@link OpenTelemetry}.
    */
   public static ApacheHttpClientTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link ApacheHttpClientTracingBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static ApacheHttpClientTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static ApacheHttpClientTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new ApacheHttpClientTracingBuilder(openTelemetry);
   }
 

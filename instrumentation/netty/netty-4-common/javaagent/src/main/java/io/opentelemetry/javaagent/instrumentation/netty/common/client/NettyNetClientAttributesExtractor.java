@@ -19,7 +19,7 @@ final class NettyNetClientAttributesExtractor
   @Nullable
   public InetSocketAddress getAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.channel().remoteAddress();
+    SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

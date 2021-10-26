@@ -23,7 +23,7 @@ public final class CouchbaseSingletons {
         new CouchbaseSpanNameExtractor(DbSpanNameExtractor.create(couchbaseAttributesExtractor));
 
     INSTRUMENTER =
-        Instrumenter.<CouchbaseRequest, Void>newBuilder(
+        Instrumenter.<CouchbaseRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(couchbaseAttributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());

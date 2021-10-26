@@ -8,6 +8,7 @@ package server
 import play.BuiltInComponents
 import play.Mode
 import play.libs.concurrent.HttpExecution
+import play.mvc.Controller
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -17,8 +18,10 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.function.Supplier
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -68,6 +71,27 @@ class PlayAsyncServerTest extends PlayServerTest {
         CompletableFuture.supplyAsync({
           controller(EXCEPTION) {
             throw new Exception(EXCEPTION.getBody())
+          }
+        }, execContext)
+      } as Supplier)
+        .GET(CAPTURE_HEADERS.getPath()).routeAsync({
+        def request = Controller.request()
+        def response = Controller.response()
+        CompletableFuture.supplyAsync({
+          controller(CAPTURE_HEADERS) {
+            request.header("X-Test-Request").ifPresent({ value ->
+              response.setHeader("X-Test-Response", value)
+            })
+            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+          }
+        }, execContext)
+      } as Supplier)
+        .GET(INDEXED_CHILD.getPath()).routeAsync({
+        String id = Controller.request().getQueryString("id")
+        CompletableFuture.supplyAsync({
+          controller(INDEXED_CHILD) {
+            INDEXED_CHILD.collectSpanAttributes { name -> name == "id" ? id : null }
+            Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody())
           }
         }, execContext)
       } as Supplier)

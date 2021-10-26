@@ -16,11 +16,11 @@ public final class MongoTracing {
 
   /** Returns a new {@link MongoTracing} configured with the given {@link OpenTelemetry}. */
   public static MongoTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link MongoTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static MongoTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static MongoTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new MongoTracingBuilder(openTelemetry);
   }
 

@@ -37,7 +37,7 @@ import spock.lang.Unroll
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-import static org.junit.Assume.assumeTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {

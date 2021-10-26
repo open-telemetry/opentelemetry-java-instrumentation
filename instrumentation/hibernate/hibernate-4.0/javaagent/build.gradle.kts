@@ -26,9 +26,18 @@ testSets {
 }
 
 tasks {
+  val version5Test by existing(Test::class)
+  val version6Test by existing(Test::class) {
+    filter {
+      // version6 doesn't have all the tests that older versions have
+      // this here prevents failure when running a test that is missing from version6 from ide
+      isFailOnNoMatchingTests = false
+    }
+  }
+
   test {
-    dependsOn("version5Test")
-    dependsOn("version6Test")
+    dependsOn(version5Test)
+    dependsOn(version6Test)
   }
 }
 

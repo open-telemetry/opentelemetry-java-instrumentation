@@ -11,7 +11,7 @@ import io.netty.channel.epoll.EpollSocketChannel
 import io.netty.channel.kqueue.KQueue
 import io.netty.channel.kqueue.KQueueEventLoopGroup
 import io.netty.channel.kqueue.KQueueSocketChannel
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 
 // netty client test with epoll/kqueue native library
 class Netty41NativeClientTest extends Netty41ClientTest {
@@ -27,7 +27,7 @@ class Netty41NativeClientTest extends Netty41ClientTest {
     }
 
     // skip test when native library was not found
-    Assume.assumeTrue("Native library was not found", false)
+    Assumptions.assumeTrue(false, "Native library was not found")
     return super.buildEventLoopGroup()
   }
 

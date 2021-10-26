@@ -159,7 +159,7 @@ class InstrumenterTest {
   @Test
   void server() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
@@ -203,7 +203,7 @@ class InstrumenterTest {
   @Test
   void server_error() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .newServerInstrumenter(new MapGetter());
@@ -227,7 +227,7 @@ class InstrumenterTest {
   @Test
   void server_parent() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .newServerInstrumenter(new MapGetter());
@@ -268,7 +268,7 @@ class InstrumenterTest {
   @Test
   void server_http() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
                 mockHttpServerAttributes,
@@ -303,7 +303,7 @@ class InstrumenterTest {
   @Test
   void client() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
@@ -348,7 +348,7 @@ class InstrumenterTest {
   @Test
   void client_error() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .newClientInstrumenter(Map::put);
@@ -373,7 +373,7 @@ class InstrumenterTest {
   @Test
   void client_parent() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .newClientInstrumenter(Map::put);
@@ -413,7 +413,7 @@ class InstrumenterTest {
   void shouldStartSpanWithGivenStartTime() {
     // given
     Instrumenter<Instant, Instant> instrumenter =
-        Instrumenter.<Instant, Instant>newBuilder(
+        Instrumenter.<Instant, Instant>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .setTimeExtractors(request -> request, (request, response, error) -> response)
             .newInstrumenter();
@@ -438,7 +438,7 @@ class InstrumenterTest {
   void shouldNotAddInvalidLink() {
     // given
     Instrumenter<String, String> instrumenter =
-        Instrumenter.<String, String>newBuilder(
+        Instrumenter.<String, String>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> spanLinks.addLink(SpanContext.getInvalid()))
@@ -462,7 +462,7 @@ class InstrumenterTest {
     // given
     ContextKey<String> testKey = ContextKey.named("test");
     Instrumenter<String, String> instrumenter =
-        Instrumenter.<String, String>newBuilder(
+        Instrumenter.<String, String>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .addContextCustomizer(
                 (context, request, attributes) -> context.with(testKey, "testVal"))
@@ -653,7 +653,7 @@ class InstrumenterTest {
       boolean enableInstrumentation,
       AttributesExtractor<Map<String, String>, Map<String, String>>... attributeExtractors) {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(attributeExtractors)
             .enableInstrumentationTypeSuppression(enableInstrumentation);

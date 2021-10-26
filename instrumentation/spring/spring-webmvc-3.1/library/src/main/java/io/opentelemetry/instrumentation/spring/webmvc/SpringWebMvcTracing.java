@@ -16,14 +16,14 @@ public final class SpringWebMvcTracing {
 
   /** Returns a new {@link SpringWebMvcTracing} configured with the given {@link OpenTelemetry}. */
   public static SpringWebMvcTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link SpringWebMvcTracingBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static SpringWebMvcTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static SpringWebMvcTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebMvcTracingBuilder(openTelemetry);
   }
 

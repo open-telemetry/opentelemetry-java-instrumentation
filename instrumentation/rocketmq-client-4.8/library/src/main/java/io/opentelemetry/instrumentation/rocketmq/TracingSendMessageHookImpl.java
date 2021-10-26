@@ -33,6 +33,11 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context otelContext = instrumenter.start(parentContext, context);
+//    Context otelContext =
+//        tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
+//    if (propagationEnabled) {
+//      tracer.inject(otelContext, context.getMessage().getProperties(), MapSetter.INSTANCE);
+//    }
     context.setMqTraceContext(otelContext);
   }
 

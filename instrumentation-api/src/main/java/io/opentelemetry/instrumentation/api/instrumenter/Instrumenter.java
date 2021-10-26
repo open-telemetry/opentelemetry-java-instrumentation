@@ -54,7 +54,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * different library versions it's easy to find out which instrumentations produced the telemetry
    * data.
    */
-  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> newBuilder(
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
@@ -183,11 +183,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.recordException(error);
     }
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    UnsafeAttributes attributes = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributesBuilder, request, response, error);
+      extractor.onEnd(attributes, request, response, error);
     }
-    Attributes attributes = attributesBuilder;
     span.setAllAttributes(attributes);
 
     Instant endTime = null;

@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -104,11 +105,6 @@ class JettyServlet5TestSync extends JettyServlet5Test {
   Class<Servlet> servlet() {
     TestServlet5.Sync
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -129,11 +125,6 @@ class JettyServlet5TestAsync extends JettyServlet5Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -148,11 +139,6 @@ class JettyServlet5TestFakeAsync extends JettyServlet5Test {
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
   }
 }
 
@@ -174,6 +160,7 @@ class JettyServlet5TestForward extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -209,6 +196,7 @@ class JettyServlet5TestInclude extends JettyDispatchTest {
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -231,6 +219,7 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 
@@ -259,6 +248,7 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 

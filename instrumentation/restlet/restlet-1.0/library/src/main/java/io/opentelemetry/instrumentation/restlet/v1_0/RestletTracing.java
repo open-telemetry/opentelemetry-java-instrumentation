@@ -16,13 +16,13 @@ public final class RestletTracing {
 
   /** Returns a new {@link RestletTracing} configured with the given {@link OpenTelemetry}. */
   public static RestletTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link RestletTracingBuilder} configured with the given {@link OpenTelemetry}.
    */
-  public static RestletTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static RestletTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new RestletTracingBuilder(openTelemetry);
   }
 

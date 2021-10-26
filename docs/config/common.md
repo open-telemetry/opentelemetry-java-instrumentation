@@ -38,12 +38,12 @@ You can configure the agent to capture predefined HTTP headers as span attribute
 [semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers).
 Use the following properties to define which HTTP headers you want to capture:
 
-| System property                                                                 | Environment variable                                                            | Description |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------- |
-| `otel.instrumentation.common.experimental.capture-http-headers.client.request`  | `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CAPTURE_HTTP_HEADERS_CLIENT_REQUEST`  | A comma-separated list of HTTP header names. HTTP client instrumentations will capture HTTP request header values for all configured header names.
-| `otel.instrumentation.common.experimental.capture-http-headers.client.response` | `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CAPTURE_HTTP_HEADERS_CLIENT_RESPONSE` | A comma-separated list of HTTP header names. HTTP client instrumentations will capture HTTP response header values for all configured header names.
-| `otel.instrumentation.common.experimental.capture-http-headers.server.request`  | `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CAPTURE_HTTP_HEADERS_SERVER_REQUEST`  | A comma-separated list of HTTP header names. HTTP server instrumentations will capture HTTP request header values for all configured header names.
-| `otel.instrumentation.common.experimental.capture-http-headers.server.response` | `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CAPTURE_HTTP_HEADERS_SERVER_RESPONSE` | A comma-separated list of HTTP header names. HTTP server instrumentations will capture HTTP response header values for all configured header names.
+| System property                                             | Environment variable                                        | Description |
+| ----------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
+| `otel.instrumentation.http.capture-headers.client.request`  | `OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_CLIENT_REQUEST`  | A comma-separated list of HTTP header names. HTTP client instrumentations will capture HTTP request header values for all configured header names.
+| `otel.instrumentation.http.capture-headers.client.response` | `OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_CLIENT_RESPONSE` | A comma-separated list of HTTP header names. HTTP client instrumentations will capture HTTP response header values for all configured header names.
+| `otel.instrumentation.http.capture-headers.server.request`  | `OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST`  | A comma-separated list of HTTP header names. HTTP server instrumentations will capture HTTP request header values for all configured header names.
+| `otel.instrumentation.http.capture-headers.server.response` | `OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE` | A comma-separated list of HTTP header names. HTTP server instrumentations will capture HTTP response header values for all configured header names.
 
 These configuration options are supported by all HTTP client and server instrumentations.
 

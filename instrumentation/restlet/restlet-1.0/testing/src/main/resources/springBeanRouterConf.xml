@@ -10,20 +10,20 @@
   <bean name="testRouter" class="org.restlet.ext.spring.SpringBeanRouter"/>
 
   <bean name="/success" scope="prototype" id="successResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$SuccessResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$SuccessResource"/>
   <bean name="/error-status" scope="prototype" id="errorResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$ErrorResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ErrorResource"/>
   <bean name="/exception" scope="prototype" id="exceptionResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$ExceptionResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ExceptionResource"/>
   <bean name="/query" scope="prototype" id="queryParamResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$QueryParamResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$QueryParamResource"/>
   <bean name="/path/{id}/param" scope="prototype" id="pathParamResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$PathParamResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$PathParamResource"/>
   <bean name="/redirect" scope="prototype" id="redirectResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$RedirectResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$RedirectResource"/>
   <bean name="/captureHeaders" scope="prototype" id="captureHeadersResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$CaptureHeadersResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$CaptureHeadersResource"/>
   <bean name="/child" scope="prototype" id="indexedChildResource"
-    class="io.opentelemetry.instrumentation.restlet.v1_0.spring.AbstractSpringServerTest$IndexedChildResource"/>
+    class="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$IndexedChildResource"/>
 
 </beans>
