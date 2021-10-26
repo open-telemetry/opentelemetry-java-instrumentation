@@ -62,6 +62,12 @@ class TestController {
     throw new Exception("This should not be called")
   }
 
+  @RequestMapping("/child")
+  @ResponseBody
+  ResponseEntity indexed_child(@RequestParam("id") String id) {
+    throw new Exception("This should not be called")
+  }
+
 
   @ExceptionHandler
   ResponseEntity handleException(Throwable throwable) {

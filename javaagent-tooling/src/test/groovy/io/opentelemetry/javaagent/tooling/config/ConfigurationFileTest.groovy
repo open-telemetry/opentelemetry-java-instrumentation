@@ -7,18 +7,20 @@ package io.opentelemetry.javaagent.tooling.config
 
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
-import org.junit.contrib.java.lang.system.RestoreSystemProperties
-import org.junit.rules.TemporaryFolder
+import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.TempDir
+import spock.util.environment.RestoreSystemProperties
 
+@RestoreSystemProperties
 class ConfigurationFileTest extends Specification {
 
   @Rule
-  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
-  @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
-  @Rule
-  public final TemporaryFolder tmpFolder = new TemporaryFolder()
+
+  @TempDir
+  @Shared
+  public File tmpDir
 
   def "should use env property"() {
     given:
@@ -80,7 +82,7 @@ class ConfigurationFileTest extends Specification {
   }
 
   def createFile(String name, String contents) {
-    def file = tmpFolder.newFile(name)
+    def file = new File(tmpDir, name)
     file.write(contents)
     return file.getAbsolutePath()
   }

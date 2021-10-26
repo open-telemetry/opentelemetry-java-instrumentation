@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -14,6 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class Servlet3InstrumentationModule extends InstrumentationModule {
@@ -21,6 +23,11 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
 
   public Servlet3InstrumentationModule() {
     super("servlet", "servlet-3.0");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("javax.servlet.ServletRegistration");
   }
 
   @Override

@@ -23,7 +23,7 @@ public final class GeodeSingletons {
     SpanNameExtractor<GeodeRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<GeodeRequest, Void>newBuilder(
+        Instrumenter.<GeodeRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());

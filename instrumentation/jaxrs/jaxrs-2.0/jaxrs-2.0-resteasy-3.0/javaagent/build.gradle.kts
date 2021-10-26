@@ -34,7 +34,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   testLibrary("org.jboss.resteasy:resteasy-undertow:3.0.4.Final") {

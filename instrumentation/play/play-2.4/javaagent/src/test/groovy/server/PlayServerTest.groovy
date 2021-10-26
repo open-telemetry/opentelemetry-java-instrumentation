@@ -84,11 +84,6 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
-  boolean testConcurrency() {
-    return true
-  }
-
-  @Override
   boolean verifyServerSpanEndTime() {
     // server spans are ended inside of the controller spans
     return false

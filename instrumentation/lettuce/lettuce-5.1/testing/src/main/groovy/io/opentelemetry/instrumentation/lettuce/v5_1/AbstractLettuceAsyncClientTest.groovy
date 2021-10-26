@@ -93,6 +93,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
   def cleanup() {
     connection.close()
+    redisClient.shutdown()
     redisServer.stop()
   }
 
@@ -124,6 +125,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
     cleanup:
     connection.close()
+    testConnectionClient.shutdown()
   }
 
   def "connect exception inside the connection future"() {
@@ -141,6 +143,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     thrown ExecutionException
     // Lettuce tracing does not trace connect
     assertTraces(0) {}
+
+    cleanup:
+    testConnectionClient.shutdown()
   }
 
   def "set command using Future get with timeout"() {
@@ -194,7 +199,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 2 + (testCallback() ? 1 : 0)) {
         span(0) {
@@ -267,7 +272,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 2 + (testCallback() ? 2 : 0)) {
         span(0) {
@@ -330,7 +335,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 2 + (testCallback() ? 1 : 0)) {
         span(0) {
@@ -402,7 +407,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     })
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(2) {
       trace(0, 1) {
         span(0) {

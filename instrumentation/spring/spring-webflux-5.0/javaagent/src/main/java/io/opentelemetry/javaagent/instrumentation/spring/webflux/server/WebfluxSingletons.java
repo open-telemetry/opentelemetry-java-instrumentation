@@ -18,7 +18,7 @@ public final class WebfluxSingletons {
 
   static {
     InstrumenterBuilder<Object, Void> builder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new WebfluxSpanNameExtractor());
 
     if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {

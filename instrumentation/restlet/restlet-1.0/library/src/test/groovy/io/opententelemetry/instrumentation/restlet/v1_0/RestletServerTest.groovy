@@ -14,8 +14,8 @@ import org.restlet.Restlet
 class RestletServerTest extends AbstractRestletServerTest implements LibraryTestTrait {
 
   @Override
-  Restlet wrapRestlet(Restlet restlet, String path){
-    RestletTracing tracing = RestletTracing.newBuilder(openTelemetry)
+  Restlet wrapRestlet(Restlet restlet, String path) {
+    RestletTracing tracing = RestletTracing.builder(openTelemetry)
       .captureHttpHeaders(capturedHttpHeadersForTesting())
       .build()
 

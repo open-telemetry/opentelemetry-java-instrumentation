@@ -15,11 +15,11 @@ public final class DubboTracing {
 
   /** Returns a new {@link DubboTracing} configured with the given {@link OpenTelemetry}. */
   public static DubboTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link DubboTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static DubboTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static DubboTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new DubboTracingBuilder(openTelemetry);
   }
 

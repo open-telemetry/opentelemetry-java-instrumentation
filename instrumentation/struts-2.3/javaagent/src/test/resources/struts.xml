@@ -32,6 +32,8 @@
     <action name="exception" class="io.opentelemetry.struts.GreetingAction" method="exception"/>
     <action name="/path/{id}/param" class="io.opentelemetry.struts.GreetingAction"
       method="path_param"/>
+    <action name="child" class="io.opentelemetry.struts.GreetingAction" method="indexed_child"/>
+    <action name="captureHeaders" class="io.opentelemetry.struts.GreetingAction" method="capture_headers"/>
     <action name="dispatch" class="io.opentelemetry.struts.GreetingAction" method="dispatch_servlet"/>
   </package>
 

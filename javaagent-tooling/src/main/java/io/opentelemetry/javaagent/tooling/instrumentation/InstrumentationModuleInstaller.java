@@ -98,7 +98,8 @@ public final class InstrumentationModuleInstaller {
                   new LoggingFailSafeMatcher<>(
                       moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()),
                       "Instrumentation class loader matcher unexpected exception: "
-                          + typeInstrumentation.classLoaderOptimization()))
+                          + moduleClassLoaderMatcher.and(
+                              typeInstrumentation.classLoaderOptimization())))
               .and(NOT_DECORATOR_MATCHER)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())

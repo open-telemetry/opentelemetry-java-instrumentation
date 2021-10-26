@@ -16,7 +16,7 @@ public class MetroSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<MetroRequest, Void>newBuilder(
+        Instrumenter.<MetroRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, MetroRequest::spanName)
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();

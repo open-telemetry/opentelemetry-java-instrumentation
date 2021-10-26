@@ -19,14 +19,14 @@ public final class SpringIntegrationTracing {
    * Returns a new {@link SpringIntegrationTracing} configured with the given {@link OpenTelemetry}.
    */
   public static SpringIntegrationTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link SpringIntegrationTracingBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static SpringIntegrationTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static SpringIntegrationTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringIntegrationTracingBuilder(openTelemetry);
   }
 

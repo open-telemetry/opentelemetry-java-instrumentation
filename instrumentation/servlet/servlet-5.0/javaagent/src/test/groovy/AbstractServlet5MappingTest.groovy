@@ -18,6 +18,14 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class AbstractServlet5MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
+
   abstract void addServlet(CONTEXT context, String path, Class<Servlet> servlet)
 
   protected void setupServlets(CONTEXT context) {

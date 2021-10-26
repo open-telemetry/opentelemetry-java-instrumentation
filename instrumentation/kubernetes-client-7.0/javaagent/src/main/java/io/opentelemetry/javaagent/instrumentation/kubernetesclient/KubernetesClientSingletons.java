@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
-import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.RequestBuilderInjectAdapter.SETTER;
 
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -34,7 +33,7 @@ public class KubernetesClientSingletons {
         request -> KubernetesRequestDigest.parse(request).toString();
 
     InstrumenterBuilder<Request, ApiResponse<?>> instrumenterBuilder =
-        Instrumenter.<Request, ApiResponse<?>>newBuilder(
+        Instrumenter.<Request, ApiResponse<?>>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 spanNameExtractor)
@@ -58,7 +57,9 @@ public class KubernetesClientSingletons {
   }
 
   public static void inject(Context context, Request.Builder requestBuilder) {
-    CONTEXT_PROPAGATORS.getTextMapPropagator().inject(context, requestBuilder, SETTER);
+    CONTEXT_PROPAGATORS
+        .getTextMapPropagator()
+        .inject(context, requestBuilder, RequestBuilderHeaderSetter.INSTANCE);
   }
 
   private KubernetesClientSingletons() {}

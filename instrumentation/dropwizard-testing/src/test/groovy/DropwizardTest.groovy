@@ -29,6 +29,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -178,6 +179,15 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     Response path_param(@PathParam("id") int param) {
       controller(PATH_PARAM) {
         Response.status(PATH_PARAM.status).entity(param.toString()).build()
+      }
+    }
+
+    @GET
+    @Path("child")
+    Response indexed_child(@QueryParam("id") String param) {
+      controller(INDEXED_CHILD) {
+        INDEXED_CHILD.collectSpanAttributes { it == "id" ? param : null }
+        Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build()
       }
     }
 

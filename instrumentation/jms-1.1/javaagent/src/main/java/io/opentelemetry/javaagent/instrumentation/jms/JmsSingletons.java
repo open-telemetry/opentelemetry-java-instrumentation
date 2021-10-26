@@ -29,7 +29,7 @@ public final class JmsSingletons {
     SpanNameExtractor<MessageWithDestination> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+    return Instrumenter.<MessageWithDestination, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .newProducerInstrumenter(new MessagePropertySetter());
@@ -42,7 +42,7 @@ public final class JmsSingletons {
         MessagingSpanNameExtractor.create(attributesExtractor);
 
     // MessageConsumer does not do context propagation
-    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+    return Instrumenter.<MessageWithDestination, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .setTimeExtractors(
@@ -57,7 +57,7 @@ public final class JmsSingletons {
     SpanNameExtractor<MessageWithDestination> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    return Instrumenter.<MessageWithDestination, Void>newBuilder(
+    return Instrumenter.<MessageWithDestination, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .newConsumerInstrumenter(new MessagePropertyGetter());

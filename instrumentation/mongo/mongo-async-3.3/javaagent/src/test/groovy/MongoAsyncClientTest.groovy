@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
-import org.junit.AssumptionViolatedException
+import org.opentest4j.TestAbortedException
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -168,12 +168,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
 
   @Override
   MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    throw new AssumptionViolatedException("not tested on async")
+    throw new TestAbortedException("not tested on async")
   }
 
   @Override
   void getMore(MongoCollection<Document> collection) {
-    throw new AssumptionViolatedException("not tested on async")
+    throw new TestAbortedException("not tested on async")
   }
 
   @Override

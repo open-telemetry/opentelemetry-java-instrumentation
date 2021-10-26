@@ -30,13 +30,13 @@ public final class RatpackTracing {
 
   /** Returns a new {@link RatpackTracing} configured with the given {@link OpenTelemetry}. */
   public static RatpackTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link RatpackTracingBuilder} configured with the given {@link OpenTelemetry}.
    */
-  public static RatpackTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static RatpackTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new RatpackTracingBuilder(openTelemetry);
   }
 

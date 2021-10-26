@@ -27,7 +27,7 @@ public class HttpJspPageInstrumentationSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<HttpServletRequest, Void>newBuilder(
+        Instrumenter.<HttpServletRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
                 HttpJspPageInstrumentationSingletons::spanNameOnRender)

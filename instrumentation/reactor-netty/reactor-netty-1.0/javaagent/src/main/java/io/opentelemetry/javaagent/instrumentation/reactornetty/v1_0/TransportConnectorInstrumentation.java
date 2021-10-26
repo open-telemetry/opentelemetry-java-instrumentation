@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettyTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,31 +41,35 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     public static void startConnect(
         @Advice.Argument(1) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
+        @Advice.Local("otelRequest") NettyConnectRequest request,
         @Advice.Local("otelScope") Scope scope) {
-      parentContext = Java8BytecodeBridge.currentContext();
-      context = tracer().startConnectionSpan(parentContext, remoteAddress);
-      if (context != null) {
-        scope = context.makeCurrent();
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = NettyConnectRequest.create(remoteAddress);
+      if (!connectInstrumenter().shouldStart(parentContext, request)) {
+        return;
       }
+
+      context = connectInstrumenter().start(parentContext, request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(1) SocketAddress remoteAddress,
         @Advice.Return(readOnly = false) Mono<Channel> mono,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
+        @Advice.Local("otelRequest") NettyConnectRequest request,
         @Advice.Local("otelScope") Scope scope) {
+
       if (scope != null) {
         scope.close();
       }
 
       if (throwable != null) {
-        tracer().endConnectionSpan(context, parentContext, remoteAddress, null, throwable);
+        connectInstrumenter().end(context, request, null, throwable);
       } else {
-        mono = ConnectionWrapper.wrap(context, parentContext, remoteAddress, mono);
+        mono = ConnectionWrapper.wrap(context, request, mono);
       }
     }
   }

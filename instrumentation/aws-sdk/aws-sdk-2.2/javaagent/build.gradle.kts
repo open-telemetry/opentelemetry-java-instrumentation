@@ -22,6 +22,9 @@ dependencies {
   // Make sure these don't add HTTP headers
   testImplementation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+
+  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:+")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
 }
 
 tasks.withType<Test>().configureEach {

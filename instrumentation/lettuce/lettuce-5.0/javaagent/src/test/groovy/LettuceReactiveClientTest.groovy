@@ -89,7 +89,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -124,7 +124,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     reactiveCommands.get("TESTKEY").subscribe { res -> conds.evaluate { assert res == "TESTVAL" } }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -160,7 +160,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -201,7 +201,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 1) {
         span(0) {

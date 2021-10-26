@@ -52,6 +52,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
   }
 
   def cleanup() {
+    redisClient.shutdown()
     redisServer.stop()
   }
 

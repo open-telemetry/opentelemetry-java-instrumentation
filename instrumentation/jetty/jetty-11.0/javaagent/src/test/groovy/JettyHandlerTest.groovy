@@ -22,6 +22,7 @@ import spock.lang.Shared
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -29,8 +30,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 
 class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
-  @Shared
-  ErrorHandler errorHandler = new ErrorHandler() {
+  static ErrorHandler errorHandler = new ErrorHandler() {
     @Override
     protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
       Throwable th = (Throwable) request.getAttribute("jakarta.servlet.error.exception")
@@ -113,6 +113,11 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
           break
         case EXCEPTION:
           throw new Exception(endpoint.body)
+        case INDEXED_CHILD:
+          INDEXED_CHILD.collectSpanAttributes {name -> request.getParameter(name) }
+          response.status = endpoint.status
+          response.writer.print(endpoint.body)
+          break
         default:
           response.status = NOT_FOUND.status
           response.writer.print(NOT_FOUND.body)

@@ -23,7 +23,7 @@ public final class GrizzlySingletons {
     GrizzlyNetAttributesExtractor netAttributesExtractor = new GrizzlyNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequestPacket, HttpResponsePacket>newBuilder(
+        Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.0",
                 HttpSpanNameExtractor.create(httpAttributesExtractor))

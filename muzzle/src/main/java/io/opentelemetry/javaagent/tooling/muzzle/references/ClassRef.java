@@ -48,7 +48,7 @@ public final class ClassRef {
   }
 
   /** Start building a new {@linkplain ClassRef reference}. */
-  public static ClassRefBuilder newBuilder(String className) {
+  public static ClassRefBuilder builder(String className) {
     return new ClassRefBuilder(className);
   }
 

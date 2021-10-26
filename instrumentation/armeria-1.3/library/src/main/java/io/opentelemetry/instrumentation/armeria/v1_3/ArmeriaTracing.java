@@ -19,10 +19,10 @@ public final class ArmeriaTracing {
 
   /** Returns a new {@link ArmeriaTracing} configured with the given {@link OpenTelemetry}. */
   public static ArmeriaTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
-  public static ArmeriaTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static ArmeriaTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new ArmeriaTracingBuilder(openTelemetry);
   }
 

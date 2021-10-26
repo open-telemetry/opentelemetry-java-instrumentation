@@ -13,7 +13,7 @@ import org.springframework.scheduling.support.ScheduledMethodRunnable;
 public final class SpringSchedulingSingletons {
 
   private static final Instrumenter<Runnable, Void> INSTRUMENTER =
-      Instrumenter.<Runnable, Void>newBuilder(
+      Instrumenter.<Runnable, Void>builder(
               GlobalOpenTelemetry.get(),
               "io.opentelemetry.spring-scheduling-3.1",
               SpringSchedulingSingletons::extractSpanName)

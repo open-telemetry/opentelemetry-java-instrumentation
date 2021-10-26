@@ -51,6 +51,8 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   }
 
   def setupSpec() {
+    setupServer()
+
     Testcontainers.exposeHostPorts(port)
 
     browser = new BrowserWebDriverContainer<>()
@@ -62,6 +64,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   }
 
   def cleanupSpec() {
+    cleanupServer()
     browser?.stop()
   }
 

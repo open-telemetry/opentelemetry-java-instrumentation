@@ -34,7 +34,7 @@ final class AwsSdkInstrumenterFactory {
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
-    return Instrumenter.<ExecutionAttributes, SdkHttpResponse>newBuilder(
+    return Instrumenter.<ExecutionAttributes, SdkHttpResponse>builder(
             openTelemetry, INSTRUMENTATION_NAME, AwsSdkInstrumenterFactory::spanName)
         .addAttributesExtractors(
             captureExperimentalSpanAttributes

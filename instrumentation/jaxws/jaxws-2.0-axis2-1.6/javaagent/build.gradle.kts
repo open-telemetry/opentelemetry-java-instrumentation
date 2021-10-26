@@ -31,7 +31,7 @@ dependencies {
   testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-local:$axis2Version")
 
-  testImplementation(project(":instrumentation:jaxws:jaxws-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxws:jaxws-2.0-common-testing"))
 
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))

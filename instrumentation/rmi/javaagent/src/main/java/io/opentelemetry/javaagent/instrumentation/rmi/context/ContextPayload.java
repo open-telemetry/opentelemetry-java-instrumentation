@@ -25,7 +25,7 @@ public class ContextPayload {
 
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
-  public static final InjectAdapter SETTER = new InjectAdapter();
+  public static final ContextPayloadSetter SETTER = ContextPayloadSetter.INSTANCE;
 
   public ContextPayload() {
     context = new HashMap<>();
@@ -74,7 +74,9 @@ public class ContextPayload {
     }
   }
 
-  public static class InjectAdapter implements TextMapSetter<ContextPayload> {
+  enum ContextPayloadSetter implements TextMapSetter<ContextPayload> {
+    INSTANCE;
+
     @Override
     public void set(ContextPayload carrier, String key, String value) {
       carrier.getSpanContext().put(key, value);

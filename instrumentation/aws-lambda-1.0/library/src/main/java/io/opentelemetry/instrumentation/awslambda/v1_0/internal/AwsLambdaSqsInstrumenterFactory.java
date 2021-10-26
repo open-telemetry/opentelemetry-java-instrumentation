@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 public class AwsLambdaSqsInstrumenterFactory {
 
   public static Instrumenter<SQSEvent, Void> forEvent(OpenTelemetry openTelemetry) {
-    return Instrumenter.<SQSEvent, Void>newBuilder(
+    return Instrumenter.<SQSEvent, Void>builder(
             openTelemetry,
             "io.opentelemetry.aws-lambda-1.0",
             AwsLambdaSqsInstrumenterFactory::spanName)
@@ -24,7 +24,7 @@ public class AwsLambdaSqsInstrumenterFactory {
   }
 
   public static Instrumenter<SQSMessage, Void> forMessage(OpenTelemetry openTelemetry) {
-    return Instrumenter.<SQSMessage, Void>newBuilder(
+    return Instrumenter.<SQSMessage, Void>builder(
             openTelemetry,
             "io.opentelemetry.aws-lambda-1.0",
             message -> message.getEventSource() + " process")
