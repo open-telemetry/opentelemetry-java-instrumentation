@@ -37,8 +37,7 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
       JavaModule javaModule,
       boolean b,
       DynamicType dynamicType) {
-    if (JavaModule.isSupported()
-        && javaModule != JavaModule.UNSUPPORTED
+    if (javaModule != JavaModule.UNSUPPORTED
         && javaModule.isNamed()
         && !javaModule.canRead(agentBootstrapModule)) {
       logger.debug("Adding module read from {} to {}", javaModule, agentBootstrapModule);
