@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.animalsniffer-conventions")
 }
 
 val grpcVersion = "1.6.0"

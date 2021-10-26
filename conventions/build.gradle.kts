@@ -44,6 +44,7 @@ dependencies {
   implementation("org.ow2.asm:asm-tree:9.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
   implementation("org.gradle:test-retry-gradle-plugin:1.2.1")
+  implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.3")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.20")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
