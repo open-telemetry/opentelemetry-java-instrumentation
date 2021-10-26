@@ -12,13 +12,13 @@ import org.apache.rocketmq.common.message.MessageExt;
 
 final class RocketMqConsumerInstrumenter {
 
-  private final Instrumenter<MessageExt, MessageExt> singleProcessInstrumenter;
-  private final Instrumenter<MessageExt, MessageExt> batchProcessInstrumenter;
+  private final Instrumenter<MessageExt, Void> singleProcessInstrumenter;
+  private final Instrumenter<MessageExt, Void> batchProcessInstrumenter;
   private final Instrumenter<Void, Void> batchReceiveInstrumenter;
 
   RocketMqConsumerInstrumenter(
-      Instrumenter<MessageExt, MessageExt> singleProcessInstrumenter,
-      Instrumenter<MessageExt, MessageExt> batchProcessInstrumenter,
+      Instrumenter<MessageExt, Void> singleProcessInstrumenter,
+      Instrumenter<MessageExt, Void> batchProcessInstrumenter,
       Instrumenter<Void, Void> batchReceiveInstrumenter) {
     this.singleProcessInstrumenter = singleProcessInstrumenter;
     this.batchProcessInstrumenter = batchProcessInstrumenter;

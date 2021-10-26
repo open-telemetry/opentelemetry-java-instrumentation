@@ -27,7 +27,7 @@ public final class RocketMqTracing {
   }
 
   private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
-  private final Instrumenter<SendMessageContext, SendMessageContext> rocketMqProducerInstrumenter;
+  private final Instrumenter<SendMessageContext, Void> rocketMqProducerInstrumenter;
 
   RocketMqTracing(
       OpenTelemetry openTelemetry,

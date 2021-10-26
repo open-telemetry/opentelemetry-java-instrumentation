@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
 class RockerMqProducerExperimentalAttributeExtractor
-    implements AttributesExtractor<SendMessageContext, SendMessageContext> {
+    implements AttributesExtractor<SendMessageContext, Void> {
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_TAGS =
       AttributeKey.stringKey("messaging.rocketmq.tags");
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_BROKER_ADDRESS =
@@ -30,13 +30,13 @@ class RockerMqProducerExperimentalAttributeExtractor
   public void onEnd(
       AttributesBuilder attributes,
       SendMessageContext request,
-      @Nullable SendMessageContext response,
+      @Nullable Void unused,
       @Nullable Throwable error) {
-    if (response != null && response.getSendResult() != null) {
+    if (request.getSendResult() != null) {
       set(
           attributes,
           MESSAGING_ROCKETMQ_SEND_RESULT,
-          response.getSendResult().getSendStatus().name());
+          request.getSendResult().getSendStatus().name());
     }
   }
 }

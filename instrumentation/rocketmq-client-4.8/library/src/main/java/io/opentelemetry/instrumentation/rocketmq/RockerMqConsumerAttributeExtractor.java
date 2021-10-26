@@ -11,8 +11,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
-class RockerMqConsumerAttributeExtractor
-    extends MessagingAttributesExtractor<MessageExt, MessageExt> {
+class RockerMqConsumerAttributeExtractor extends MessagingAttributesExtractor<MessageExt, Void> {
   @Override
   public MessageOperation operation() {
     return MessageOperation.PROCESS;
@@ -75,7 +74,7 @@ class RockerMqConsumerAttributeExtractor
 
   @Nullable
   @Override
-  protected String messageId(MessageExt request, @Nullable MessageExt response) {
+  protected String messageId(MessageExt request, @Nullable Void unused) {
     return request.getMsgId();
   }
 }

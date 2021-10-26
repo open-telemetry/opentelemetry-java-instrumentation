@@ -33,13 +33,13 @@ class RocketMqInstrumenterFactory {
       experimentalConsumerAttributesExtractor =
           new RockerMqConsumerExperimentalAttributeExtractor();
 
-  static Instrumenter<SendMessageContext, SendMessageContext> createProducerInstrumenter(
+  static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
 
-    InstrumenterBuilder<SendMessageContext, SendMessageContext> instrumenterBuilder =
-        Instrumenter.<SendMessageContext, SendMessageContext>builder(
+    InstrumenterBuilder<SendMessageContext, Void> instrumenterBuilder =
+        Instrumenter.<SendMessageContext, Void>builder(
                 openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnProduce)
             .addAttributesExtractor(producerAttributesExtractor);
     if (captureExperimentalSpanAttributes) {
@@ -72,13 +72,13 @@ class RocketMqInstrumenterFactory {
         batchReceiveInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysConsumer()));
   }
 
-  private static Instrumenter<MessageExt, MessageExt> createProcessInstrumenter(
+  private static Instrumenter<MessageExt, Void> createProcessInstrumenter(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled,
       boolean batch) {
 
-    InstrumenterBuilder<MessageExt, MessageExt> builder =
+    InstrumenterBuilder<MessageExt, Void> builder =
         Instrumenter.builder(
             openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnConsume);
 

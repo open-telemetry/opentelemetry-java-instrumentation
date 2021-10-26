@@ -12,9 +12,9 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 
 final class TracingSendMessageHookImpl implements SendMessageHook {
 
-  private final Instrumenter<SendMessageContext, SendMessageContext> instrumenter;
+  private final Instrumenter<SendMessageContext, Void> instrumenter;
 
-  TracingSendMessageHookImpl(Instrumenter<SendMessageContext, SendMessageContext> instrumenter) {
+  TracingSendMessageHookImpl(Instrumenter<SendMessageContext, Void> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -32,13 +32,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (!instrumenter.shouldStart(parentContext, context)) {
       return;
     }
-    Context otelContext = instrumenter.start(parentContext, context);
-//    Context otelContext =
-//        tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
-//    if (propagationEnabled) {
-//      tracer.inject(otelContext, context.getMessage().getProperties(), MapSetter.INSTANCE);
-//    }
-    context.setMqTraceContext(otelContext);
+    context.setMqTraceContext(instrumenter.start(parentContext, context));
   }
 
   @Override
@@ -48,7 +42,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     }
     if (context.getMqTraceContext() instanceof Context) {
       Context otelContext = (Context) context.getMqTraceContext();
-      instrumenter.end(otelContext, context, context, null);
+      instrumenter.end(otelContext, context, null, null);
     }
   }
 }

@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
 class RockerMqConsumerExperimentalAttributeExtractor
-    implements AttributesExtractor<MessageExt, MessageExt> {
+    implements AttributesExtractor<MessageExt, Void> {
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_TAGS =
       AttributeKey.stringKey("messaging.rocketmq.tags");
   private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_ID =
@@ -43,6 +43,6 @@ class RockerMqConsumerExperimentalAttributeExtractor
   public void onEnd(
       AttributesBuilder attributes,
       MessageExt consumeMessageContext,
-      @Nullable MessageExt consumeMessageContext2,
+      @Nullable Void unused,
       @Nullable Throwable error) {}
 }

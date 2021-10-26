@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
 class RockerMqProducerAttributeExtractor
-    extends MessagingAttributesExtractor<SendMessageContext, SendMessageContext> {
+    extends MessagingAttributesExtractor<SendMessageContext, Void> {
   @Override
   public MessageOperation operation() {
     return MessageOperation.SEND;
@@ -76,7 +76,7 @@ class RockerMqProducerAttributeExtractor
 
   @Nullable
   @Override
-  protected String messageId(SendMessageContext request, @Nullable SendMessageContext response) {
-    return response == null ? null : response.getSendResult().getMsgId();
+  protected String messageId(SendMessageContext request, @Nullable Void unused) {
+    return request.getSendResult().getMsgId();
   }
 }
