@@ -36,21 +36,4 @@ tasks {
   javadoc {
     enabled = false
   }
-
-  val extractShadowJar by registering(Copy::class) {
-    dependsOn(shadowJar)
-
-    // replace caffeine class with our patched version
-    from(zipTree(shadowJar.get().archiveFile)) {
-      exclude("io/opentelemetry/instrumentation/api/internal/shaded/caffeine3/cache/BoundedLocalCache\$PerformCleanupTask.class")
-      exclude("META-INF/**")
-    }
-    from(patch.output) {
-      include("io/opentelemetry/instrumentation/api/internal/shaded/caffeine3/cache/BoundedLocalCache\$PerformCleanupTask.class")
-    }
-
-    into("build/extracted/shadow")
-    // prevents empty com/github/benmanes/caffeine/cache path from ending up in instrumentation-api
-    includeEmptyDirs = false
-  }
 }
