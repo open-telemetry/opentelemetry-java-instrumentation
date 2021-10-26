@@ -17,7 +17,15 @@ final class Vertx4HttpAttributesExtractor extends AbstractVertxHttpAttributesExt
   @Nullable
   @Override
   protected String url(HttpClientRequest request) {
-    return request.absoluteURI();
+    String uri = request.getURI();
+    if (!isAbsolute(uri)) {
+      uri = request.absoluteURI();
+    }
+    return uri;
+  }
+
+  private static boolean isAbsolute(String uri) {
+    return uri.startsWith("http://") || uri.startsWith("https://");
   }
 
   @Override
