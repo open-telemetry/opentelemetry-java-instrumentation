@@ -187,7 +187,7 @@ public ElementMatcher<? super TypeDescription> typeMatcher() {
 ### Define the actual code transformations with the `transform(TypeTransformer)` method
 
 This method describes what transformations should be applied to the
-matched type. The type interface `TypeTransformer`, implemented internally by the agent, 
+matched type. The interface `TypeTransformer`, implemented internally by the agent, 
 defines a set of available transformations that you can apply:
 
 * `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` lets you apply
@@ -216,7 +216,7 @@ public void transform(TypeTransformer transformer) {
 For matching built-in Java types you can use the `takesArgument(0, String.class)` form. Classes
 originating from the instrumented library need to be matched using the `named()` matcher.
 
-Implementations of `TypeInstrumentation` often implement advice classes as static inner
+Implementations of `TypeInstrumentation` often embed advice classes as static inner
 classes. These classes are referred to by name when applying advice classes to methods in
 the `transform()` method.
 
@@ -236,7 +236,7 @@ the `transform()` method.
 Advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes. 
 
-Unfortunately many standard practices do not apply to Advice classes:
+Unfortunately many standard practices do not apply to advice classes:
 
 * If they're inner classes, they MUST be static.
 * They MUST only contain static methods.
