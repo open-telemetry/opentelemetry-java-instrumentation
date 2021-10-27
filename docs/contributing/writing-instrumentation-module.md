@@ -186,7 +186,7 @@ public ElementMatcher<? super TypeDescription> typeMatcher() {
 
 ### Define the actual code transformations with the `transform(TypeTransformer)` method
 
-The `TypeInstrumentation` method describes what transformations should be applied to the
+This method describes what transformations should be applied to the
 matched type. The type interface `TypeTransformer`, implemented internally by the agent, 
 defines a set of available transformations that you can apply:
 
