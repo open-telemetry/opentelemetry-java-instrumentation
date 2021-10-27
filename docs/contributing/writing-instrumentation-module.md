@@ -1,4 +1,4 @@
-# Writie an `InstrumentationModule` step by step
+# Write an `InstrumentationModule` step by step
 
 The `InstrumentationModule` is the central piece of any OpenTelemetry "javaagent" instrumentation. There
 are many conventions that our javaagent uses, many pitfalls, and not so obvious patterns that one has to
