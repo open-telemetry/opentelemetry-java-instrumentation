@@ -162,7 +162,7 @@ public ElementMatcher<TypeDescription> typeMatcher() {
 }
 ```
 
-### The `classLoaderOptimization()` method
+### Make the agent faster by implementing `classLoaderOptimization()` method
 
 When you need to instrument all classes that implement a particular interface, or all classes that
 are annotated with a particular annotation, implement the `classLoaderOptimization()` method. 
