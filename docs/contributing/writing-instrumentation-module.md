@@ -42,7 +42,7 @@ public MyLibraryInstrumentationModule() {
 For detailed information on `InstrumentationModule` names, see the
 `InstrumentationModule#InstrumentationModule(String, String...)` Javadoc.
 
-### The `order()` method
+### Change the order of applying instrumentation modules using the `order()` method
 
 To apply instrumentations in a specific order you can override the `order()`
 method to specify an order, like in the following snippet:
