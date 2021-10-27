@@ -139,7 +139,7 @@ public List<TypeInstrumentation> typeInstrumentations() {
 }
 ```
 
-## The `TypeInstrumentation` class
+## Describe the changes applied to a type using `TypeInstrumentation` class
 
 A `TypeInstrumentation` describe the changes that need to be made to a single type. Depending
 on the instrumented library, they might only make sense in conjunction with other type 
