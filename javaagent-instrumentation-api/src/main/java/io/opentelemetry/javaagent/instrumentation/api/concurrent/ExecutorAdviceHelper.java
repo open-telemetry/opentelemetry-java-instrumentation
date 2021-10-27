@@ -52,6 +52,14 @@ public final class ExecutorAdviceHelper {
     if (propagatedContext == null) {
       propagatedContext = new PropagatedContext();
       virtualField.set(task, propagatedContext);
+    } else {
+      Context propagated = propagatedContext.get();
+      // if task already has the requested context then we might be inside a nested call to execute
+      // where an outer call already attached state
+      if (propagated != null
+          && (propagated == context || ContextPropagationDebug.unwrap(propagated) == context)) {
+        return null;
+      }
     }
 
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
