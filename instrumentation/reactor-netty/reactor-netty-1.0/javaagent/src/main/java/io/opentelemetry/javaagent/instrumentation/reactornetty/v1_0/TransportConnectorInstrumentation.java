@@ -15,7 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

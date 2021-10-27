@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
 import javax.annotation.Nullable;
 
 public interface NettyConnectInstrumenter {

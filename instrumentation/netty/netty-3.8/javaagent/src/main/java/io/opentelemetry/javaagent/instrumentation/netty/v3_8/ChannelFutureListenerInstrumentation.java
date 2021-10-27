@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -70,11 +69,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
       if (parentContext == null) {
         return null;
       }
-      Scope parentScope = parentContext.makeCurrent();
-      if (connectionContext.createConnectionSpan()) {
-        tracer().connectionFailure(parentContext, future.getChannel(), cause);
-      }
-      return parentScope;
+      return parentContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
 import reactor.core.publisher.Mono;
 
 public class ConnectionWrapper {

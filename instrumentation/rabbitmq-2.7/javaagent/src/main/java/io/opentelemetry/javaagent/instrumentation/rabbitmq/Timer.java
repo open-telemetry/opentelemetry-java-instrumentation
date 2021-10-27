@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.client;
+package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import java.time.Instant;
 
-final class Timer {
+public final class Timer {
 
-  static Timer start() {
+  public static Timer start() {
     return new Timer(Instant.now(), System.nanoTime());
   }
 
@@ -21,11 +21,11 @@ final class Timer {
     this.startNanoTime = startNanoTime;
   }
 
-  Instant startTime() {
+  public Instant startTime() {
     return startTime;
   }
 
-  Instant now() {
+  public Instant now() {
     long durationNanos = System.nanoTime() - startNanoTime;
     return startTime().plusNanos(durationNanos);
   }
