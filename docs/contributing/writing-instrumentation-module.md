@@ -324,7 +324,7 @@ the `javaagent-instrumentation-api` artifact has a class `Java8BytecodeBridge` w
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 
-### Associate context classes with instrumented library classes
+### Associate instrumentation classes with instrumented library classes
 
 Sometimes there is a need to associate some context class with an instrumented library class, and
 the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
