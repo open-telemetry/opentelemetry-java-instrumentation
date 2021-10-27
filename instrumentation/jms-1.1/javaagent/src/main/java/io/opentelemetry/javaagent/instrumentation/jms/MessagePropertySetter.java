@@ -15,7 +15,7 @@ enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
 
   private static final Logger logger = LoggerFactory.getLogger(MessagePropertySetter.class);
 
-  private static final String DASH = "__dash__";
+  static final String DASH = "__dash__";
 
   @Override
   public void set(MessageWithDestination carrier, String key, String value) {

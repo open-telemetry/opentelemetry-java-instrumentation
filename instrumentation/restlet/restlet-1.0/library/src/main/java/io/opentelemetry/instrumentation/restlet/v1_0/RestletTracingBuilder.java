@@ -76,7 +76,7 @@ public final class RestletTracingBuilder {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
-            .newServerInstrumenter(new RestletHeadersGetter());
+            .newServerInstrumenter(RestletHeadersGetter.INSTANCE);
 
     return new RestletTracing(instrumenter);
   }

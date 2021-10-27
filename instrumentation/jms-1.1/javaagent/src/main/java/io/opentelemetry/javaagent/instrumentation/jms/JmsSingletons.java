@@ -60,7 +60,7 @@ public final class JmsSingletons {
     return Instrumenter.<MessageWithDestination, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
-        .newConsumerInstrumenter(new MessagePropertyGetter());
+        .newConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

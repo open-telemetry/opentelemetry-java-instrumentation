@@ -24,7 +24,7 @@ public class ContextPayload {
   private static final Logger logger = LoggerFactory.getLogger(ContextPayload.class);
 
   private final Map<String, String> context;
-  public static final ExtractAdapter GETTER = new ExtractAdapter();
+  public static final ContextPayloadGetter GETTER = ContextPayloadGetter.INSTANCE;
   public static final ContextPayloadSetter SETTER = ContextPayloadSetter.INSTANCE;
 
   public ContextPayload() {
@@ -62,7 +62,9 @@ public class ContextPayload {
     out.writeObject(context);
   }
 
-  public static class ExtractAdapter implements TextMapGetter<ContextPayload> {
+  enum ContextPayloadGetter implements TextMapGetter<ContextPayload> {
+    INSTANCE;
+
     @Override
     public Iterable<String> keys(ContextPayload contextPayload) {
       return contextPayload.getSpanContext().keySet();

@@ -71,6 +71,6 @@ public final class RatpackTracingBuilder {
     builder.addAttributesExtractor(httpAttributes);
     builder.addAttributesExtractors(additionalExtractors);
 
-    return new RatpackTracing(builder.newServerInstrumenter(new RatpackGetter()));
+    return new RatpackTracing(builder.newServerInstrumenter(RatpackGetter.INSTANCE));
   }
 }

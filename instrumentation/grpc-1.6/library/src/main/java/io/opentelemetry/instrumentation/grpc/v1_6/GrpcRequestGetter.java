@@ -9,9 +9,8 @@ import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
-final class GrpcExtractAdapter implements TextMapGetter<GrpcRequest> {
-
-  static final GrpcExtractAdapter GETTER = new GrpcExtractAdapter();
+enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(GrpcRequest request) {

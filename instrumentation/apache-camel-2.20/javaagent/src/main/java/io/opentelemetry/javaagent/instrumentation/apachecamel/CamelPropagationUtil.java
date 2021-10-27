@@ -48,9 +48,8 @@ final class CamelPropagationUtil {
         .inject(context, exchangeHeaders, MapSetter.INSTANCE);
   }
 
-  private static class MapGetter implements TextMapGetter<Map<String, Object>> {
-
-    private static final MapGetter INSTANCE = new MapGetter();
+  private enum MapGetter implements TextMapGetter<Map<String, Object>> {
+    INSTANCE;
 
     @Override
     public Iterable<String> keys(Map<String, Object> map) {

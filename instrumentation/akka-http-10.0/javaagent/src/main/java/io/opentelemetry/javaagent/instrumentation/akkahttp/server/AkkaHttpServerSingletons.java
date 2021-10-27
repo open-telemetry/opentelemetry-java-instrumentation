@@ -28,7 +28,7 @@ public class AkkaHttpServerSingletons {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(new AkkaHttpServerHeaders());
+            .newServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
