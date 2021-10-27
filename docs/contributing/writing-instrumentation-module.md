@@ -110,7 +110,7 @@ extending one another, you'll want to return the base class first. For example, 
 `B extends A` class, the list should contain `A` first and `B` second. The helper classes are 
 injected into the application classloader after those provided by the muzzle codegen plugin.
 
-### The `classLoaderMatcher()` method
+### Restrict the criteria for applying the instrumentation by extending the `classLoaderMatcher()` method
 
 Different versions of the same library often need completely different instrumentations:
 for example, servlet 3 introduces several new async classes that need to be instrumented to produce
