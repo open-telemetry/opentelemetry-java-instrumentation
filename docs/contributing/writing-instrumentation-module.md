@@ -9,7 +9,7 @@ that may affect your instrumentation. In addition to this file, we suggest readi
 `InstrumentationModule` and `TypeInstrumentation` Javadocs, as they often provide more detailed
 explanations of how to use a particular method and why it works the way it does.
 
-## The `InstrumentationModule`
+## The centerpiece of each javaagent instrumentation: `InstrumentationModule`
 
 An `InstrumentationModule` describes a set of individual `TypeInstrumentation` that need to be
 applied together to correctly instrument a specific library. Type instrumentations grouped in a
