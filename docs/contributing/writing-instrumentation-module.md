@@ -336,7 +336,7 @@ VirtualField<Runnable, Context> virtualField =
 ```
 
 A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many 
-bytecode tweaks to optimize the data. Because of this, retrieving a `VirtualField` instance is rather
+bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
 limited: the `VirtualField#get()` method must receive class references as its parameters; it won't 
 work with variables, method params, etc. Both the key class and the context class must be known at
 compile time for it to work.
