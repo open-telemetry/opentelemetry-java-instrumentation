@@ -84,6 +84,6 @@ public final class DubboTracingBuilder {
 
     return new DubboTracing(
         serverInstrumenterBuilder.newServerInstrumenter(new DubboHeadersGetter()),
-        clientInstrumenterBuilder.newClientInstrumenter(new DubboHeadersSetter()));
+        clientInstrumenterBuilder.newClientInstrumenter(DubboHeadersSetter.INSTANCE));
   }
 }

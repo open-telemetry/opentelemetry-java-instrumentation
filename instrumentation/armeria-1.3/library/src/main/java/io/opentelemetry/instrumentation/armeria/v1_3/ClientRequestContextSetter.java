@@ -9,7 +9,8 @@ import com.linecorp.armeria.client.ClientRequestContext;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-final class ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
+enum ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
+  INSTANCE;
 
   @Override
   public void set(@Nullable ClientRequestContext carrier, String key, String value) {

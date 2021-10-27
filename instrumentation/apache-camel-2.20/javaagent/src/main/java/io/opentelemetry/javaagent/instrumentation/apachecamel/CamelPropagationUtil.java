@@ -64,9 +64,8 @@ final class CamelPropagationUtil {
     }
   }
 
-  private static class MapSetter implements TextMapSetter<Map<String, Object>> {
-
-    private static final MapSetter INSTANCE = new MapSetter();
+  private enum MapSetter implements TextMapSetter<Map<String, Object>> {
+    INSTANCE;
 
     @Override
     public void set(Map<String, Object> carrier, String key, String value) {

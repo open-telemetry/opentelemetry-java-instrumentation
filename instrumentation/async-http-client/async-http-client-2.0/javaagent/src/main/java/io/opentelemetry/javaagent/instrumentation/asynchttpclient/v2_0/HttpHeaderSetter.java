@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-public class HttpHeaderSetter implements TextMapSetter<RequestContext> {
+enum HttpHeaderSetter implements TextMapSetter<RequestContext> {
+  INSTANCE;
 
   @Override
   public void set(RequestContext carrier, String key, String value) {
