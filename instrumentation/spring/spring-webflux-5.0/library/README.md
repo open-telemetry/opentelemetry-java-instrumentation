@@ -1,6 +1,6 @@
 # Manual Instrumentation for Spring Webflux
 
-Provides OpenTelemetry instrumentation for Spring's WebClient.
+Provides OpenTelemetry instrumentation for Spring's `WebClient`.
 
 ## Quickstart
 
@@ -10,8 +10,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 5.0`
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 0.8.0`
-
+`Minimum version: 1.8.0`
 
 For Maven add to your `pom.xml`:
 
@@ -60,17 +59,18 @@ implementation("org.springframework:spring-webflux:SPRING_VERSION")
 
 ### Features
 
-#### WebClientTracingFilter
+#### `SpringWebfluxTracing`
 
-WebClientTracingFilter adds OpenTelemetry client spans to requests sent using WebClient by implementing the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html)
+`SpringWebfluxTracing` emits client span for each request sent using `WebClient` by implementing
+the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html)
 interface. An example is shown below:
 
 ##### Usage
 
 ```java
 
-import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxTracing;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -81,12 +81,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
    @Bean
-   public WebClient.Builder webClient(Tracer tracer) {
+   public WebClient.Builder webClient(OpenTelemetry openTelemetry) {
 
       WebClient webClient = WebClient.create();
-      WebClientTracingFilter webClientTracingFilter = new WebClientTracingFilter(tracer);
+      SpringWebfluxTracing instrumentation = SpringWebfluxTracing.create(openTelemetry);
 
-      return webClient.mutate().filter(webClientTracingFilter);
+      return webClient.mutate().filter(instrumentation::addClientTracingFilter);
    }
 }
 ```
