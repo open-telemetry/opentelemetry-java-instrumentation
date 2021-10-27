@@ -6,10 +6,12 @@
 package client
 
 import io.netty.channel.ChannelOption
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
@@ -76,6 +78,13 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   @Override
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    return attributes
   }
 
   @Override
