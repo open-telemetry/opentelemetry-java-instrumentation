@@ -57,7 +57,7 @@ public int order() {
 The higher the value returned by `order()` the later the instrumentation module is applied.
 Default value is `0`.
 
-### The `isHelperClass()` method
+### Tell the agent which classes are a part of the instrumentation by overriding the `isHelperClass()` method
 
 The OpenTelemetry javaagent picks up helper classes used in the instrumentation/advice classes and
 injects them into the application classpath. The agent can automatically find those classes that 
