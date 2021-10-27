@@ -90,7 +90,7 @@ All classes referenced by service providers defined in the `helperResourceNames(
 as helper classes: they're checked for invalid references and automatically injected into the 
 application classloader.
 
-### The `getAdditionalHelperClassNames()` method
+### Inject additional instrumentation helper classes manually with the `getAdditionalHelperClassNames()` method
 
 If you don't use the [muzzle gradle plugins](muzzle.md), or are in a scenario that requires
 providing the helper classes manually (for example, an unusual SPI implementation), you can
