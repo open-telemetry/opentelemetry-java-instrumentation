@@ -6,6 +6,9 @@ on:
   push:
     paths:
       - 'gradle/wrapper/**'
+    branches:
+      - main
+      - v*
 
 jobs:
   validation:
