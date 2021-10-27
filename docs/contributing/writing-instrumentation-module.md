@@ -151,7 +151,7 @@ class MyTypeInstrumentation implements TypeInstrumentation {
 }
 ```
 
-### The `typeMatcher()` method
+### Define which Java types should qualify for instrumentation by overriding the `typeMatcher()` method
 
 A type instrumentation needs to declare what class (or classes) are going to be instrumented:
 
