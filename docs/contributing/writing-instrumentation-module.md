@@ -127,7 +127,7 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 The above example skips instrumenting the application code if it does not contain the class 
 introduced in the version covered by your instrumentation.
 
-### The `typeInstrumentations()` method
+### Define instrumented types with the `typeInstrumentations()` method
 
 As last step, an `InstrumentationModule` implementation must provide at least one
 `TypeInstrumentation` implementation. A module with no type instrumentations does nothing.
