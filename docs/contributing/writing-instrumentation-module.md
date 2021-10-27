@@ -231,7 +231,7 @@ the `transform()` method.
 > by the agent's class loader, and this string concatenation is an optimization that prevents
 > the actual advice class from being loaded into the agent's class loader.
 
-## The special Advice classes
+## Use advice classes to write code that will get injected to the instrumented library classes
 
 Advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes. 
