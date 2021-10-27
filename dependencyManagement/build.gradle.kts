@@ -57,7 +57,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "io.prometheus",
-    "0.11.0",
+    "0.12.0",
     listOf("simpleclient", "simpleclient_common", "simpleclient_httpserver")
   ),
   DependencySet(
