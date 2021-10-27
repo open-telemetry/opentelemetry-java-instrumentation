@@ -13,8 +13,8 @@ explanations of how to use a particular method and why it works the way it does.
 
 An `InstrumentationModule` describes a set of individual `TypeInstrumentation` that need to be
 applied together to correctly instrument a specific library. Type instrumentations grouped in a
-module share helper classes, [muzzle runtime checks](muzzle.md), and applicable classloader criteria.
-They can also be enabled or disabled together.
+module share helper classes, [muzzle runtime checks](muzzle.md), and applicable classloader criteria,
+and can only be enabled or disabled as a set.
 
 The OpenTelemetry javaagent finds all modules by using Java's `ServiceLoader` API. To make your
 instrumentation visible, make sure that a proper `META-INF/services/` file is present in
@@ -30,8 +30,8 @@ class MyLibraryInstrumentationModule extends InstrumentationModule {
 
 An `InstrumentationModule` needs to have at least one name. The user of the javaagent can
 [suppress a chosen instrumentation](../suppressing-instrumentation.md) by referring to it by one of
-its names. The instrumentation module names use `kebab-case`. The first instrumentation name must be
-the same as the gradle module name, excluding the version suffix if present.
+its names. The instrumentation module names use `kebab-case`. The main instrumentation name, which
+is the first one, must be the same as the gradle module name, excluding the version suffix if present.
 
 ```java
 public MyLibraryInstrumentationModule() {
