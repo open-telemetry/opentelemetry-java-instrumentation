@@ -24,7 +24,7 @@ final class SpringWebfluxHttpAttributesExtractor
 
   // rawStatusCode() method was introduced in webflux 5.1
   // prior to this method, the best we can get is HttpStatus enum, which only covers standard status
-  // codes (see usage above)
+  // codes (see usage below)
   private static MethodHandle findRawStatusCode() {
     try {
       return MethodHandles.publicLookup()
