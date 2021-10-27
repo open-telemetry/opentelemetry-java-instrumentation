@@ -9,7 +9,6 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.vertx.core.http.HttpClientRequest;
 
 public class HttpRequestHeaderSetter implements TextMapSetter<HttpClientRequest> {
-  static final HttpRequestHeaderSetter INSTANCE = new HttpRequestHeaderSetter();
 
   @Override
   public void set(HttpClientRequest carrier, String key, String value) {

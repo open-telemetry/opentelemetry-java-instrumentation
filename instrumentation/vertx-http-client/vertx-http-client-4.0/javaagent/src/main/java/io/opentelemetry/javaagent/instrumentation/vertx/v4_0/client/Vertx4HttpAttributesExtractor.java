@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 
 final class Vertx4HttpAttributesExtractor extends AbstractVertxHttpAttributesExtractor {
 
-  @Nullable
   @Override
   protected String url(HttpClientRequest request) {
     String uri = request.getURI();
