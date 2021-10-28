@@ -5,7 +5,7 @@ are many conventions that our javaagent uses, many pitfalls, and not so obvious 
 follow when implementing a module.
 
 Here we describe how a javaagent instrumentation can be implemented and document the main aspects
-that may affect your instrumentation. In addition to this file, we suggest reading the 
+that may affect your instrumentation. In addition to this file, we suggest reading the
 `InstrumentationModule` and `TypeInstrumentation` Javadocs, as they often provide more detailed
 explanations of how to use a particular method and why it works the way it does.
 
@@ -60,7 +60,7 @@ Default value is `0`.
 ### Tell the agent which classes are a part of the instrumentation by overriding the `isHelperClass()` method
 
 The OpenTelemetry javaagent picks up helper classes used in the instrumentation/advice classes and
-injects them into the application classpath. The agent can automatically find those classes that 
+injects them into the application classpath. The agent can automatically find those classes that
 follow our package conventions, but it is also possible to explicitly tell which packages/classes
 are supposed to be treated as helper classes by implementing `isHelperClass(String)`:
 
@@ -87,7 +87,7 @@ public List<String> helperResourceNames() {
 ```
 
 All classes referenced by service providers defined in the `helperResourceNames()` method are treated
-as helper classes: they're checked for invalid references and automatically injected into the 
+as helper classes: they're checked for invalid references and automatically injected into the
 application classloader.
 
 ### Inject additional instrumentation helper classes manually with the `getAdditionalHelperClassNames()` method
@@ -107,7 +107,7 @@ public List<String> getAdditionalHelperClassNames() {
 
 The order of the class names returned by this method matters: if you have several helper classes
 extending one another, you'll want to return the base class first. For example, if you have a
-`B extends A` class, the list should contain `A` first and `B` second. The helper classes are 
+`B extends A` class, the list should contain `A` first and `B` second. The helper classes are
 injected into the application classloader after those provided by the muzzle codegen plugin.
 
 ### Restrict the criteria for applying the instrumentation by extending the `classLoaderMatcher()` method
@@ -124,7 +124,7 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
 }
 ```
 
-The above example skips instrumenting the application code if it does not contain the class 
+The above example skips instrumenting the application code if it does not contain the class
 introduced in the version covered by your instrumentation.
 
 ### Define instrumented types with the `typeInstrumentations()` method
@@ -142,7 +142,7 @@ public List<TypeInstrumentation> typeInstrumentations() {
 ## Describe the changes applied to a type using `TypeInstrumentation` class
 
 A `TypeInstrumentation` describe the changes that need to be made to a single type. Depending
-on the instrumented library, they might only make sense in conjunction with other type 
+on the instrumented library, they might only make sense in conjunction with other type
 instrumentations, grouped together in a module.
 
 ```java
@@ -165,9 +165,9 @@ public ElementMatcher<TypeDescription> typeMatcher() {
 ### Make the agent faster by implementing `classLoaderOptimization()` method
 
 When you need to instrument all classes that implement a particular interface, or all classes that
-are annotated with a particular annotation, implement the `classLoaderOptimization()` method. 
-Matching classes by their name is quite fast, but inspecting the actual bytecode (for example, 
-implements, has annotation, has method, etc.) is a rather expensive operation. 
+are annotated with a particular annotation, implement the `classLoaderOptimization()` method.
+Matching classes by their name is quite fast, but inspecting the actual bytecode (for example,
+implements, has annotation, has method, etc.) is a rather expensive operation.
 
 The matcher returned by the `classLoaderOptimization()` method makes the `TypeInstrumentation`
 significantly faster when instrumenting applications that do not contain the library:
@@ -187,7 +187,7 @@ public ElementMatcher<? super TypeDescription> typeMatcher() {
 ### Define the actual code transformations with the `transform(TypeTransformer)` method
 
 This method describes what transformations should be applied to the
-matched type. The interface `TypeTransformer`, implemented internally by the agent, 
+matched type. The interface `TypeTransformer`, implemented internally by the agent,
 defines a set of available transformations that you can apply:
 
 * `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` lets you apply
@@ -221,7 +221,7 @@ classes. These classes are referred to by name when applying advice classes to m
 the `transform()` method.
 
 > You might have noticed in the example above that the advice class is being referenced as follows:
-> 
+>
 > ```java
 > this.getClass().getName() + "$MethodAdvice"
 > ```
@@ -234,7 +234,7 @@ the `transform()` method.
 ## Use advice classes to write code that will get injected to the instrumented library classes
 
 Advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
-the instrumented library class files. You should not treat them as ordinary, plain Java classes. 
+the instrumented library class files. You should not treat them as ordinary, plain Java classes.
 
 Unfortunately many standard practices do not apply to advice classes:
 
@@ -265,7 +265,7 @@ public static class MethodAdvice {
 }
 ```
 
-Include the `suppress = Throwable.class` property in `@Advice`-annotated methods. Exceptions 
+Include the `suppress = Throwable.class` property in `@Advice`-annotated methods. Exceptions
 thrown by the advice methods get caught and handled by a special `ExceptionHandler` that the
 OpenTelemetry javaagent defines. The handler makes sure to properly log all unexpected
 exceptions.
@@ -335,8 +335,8 @@ VirtualField<Runnable, Context> virtualField =
     VirtualField.get(Runnable.class, Context.class);
 ```
 
-A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many 
+A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
 bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
-limited: the `VirtualField#get()` method must receive class references as its parameters; it won't 
+limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
 work with variables, method params, etc. Both the owner class and the field class must be known at
 compile time for it to work.
