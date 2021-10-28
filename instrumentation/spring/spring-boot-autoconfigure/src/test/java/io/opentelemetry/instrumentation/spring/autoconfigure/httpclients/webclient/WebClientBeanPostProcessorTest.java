@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,10 +86,7 @@ class WebClientBeanPostProcessorTest {
         .mutate()
         .filters(
             functions ->
-                assertThat(
-                        functions.stream()
-                            .filter(wctf -> wctf instanceof WebClientTracingFilter)
-                            .count())
+                assertThat(functions.stream().filter(wctf -> isOtelExchangeFilter(wctf)).count())
                     .isEqualTo(1));
 
     verify(openTelemetryProvider).getIfUnique();
@@ -110,10 +107,7 @@ class WebClientBeanPostProcessorTest {
         .mutate()
         .filters(
             functions ->
-                assertThat(
-                        functions.stream()
-                            .filter(wctf -> wctf instanceof WebClientTracingFilter)
-                            .count())
+                assertThat(functions.stream().filter(wctf -> isOtelExchangeFilter(wctf)).count())
                     .isEqualTo(0));
 
     verify(openTelemetryProvider).getIfUnique();
@@ -135,12 +129,13 @@ class WebClientBeanPostProcessorTest {
 
     webClientBuilder.filters(
         functions ->
-            assertThat(
-                    functions.stream()
-                        .filter(wctf -> wctf instanceof WebClientTracingFilter)
-                        .count())
+            assertThat(functions.stream().filter(wctf -> isOtelExchangeFilter(wctf)).count())
                 .isEqualTo(1));
 
     verify(openTelemetryProvider, times(3)).getIfUnique();
+  }
+
+  private static boolean isOtelExchangeFilter(ExchangeFilterFunction wctf) {
+    return wctf.getClass().getName().startsWith("io.opentelemetry.instrumentation");
   }
 }

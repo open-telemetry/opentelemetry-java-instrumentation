@@ -48,4 +48,8 @@ public final class PropagatedContext {
   Context getAndClear() {
     return contextUpdater.getAndSet(this, null);
   }
+
+  Context get() {
+    return contextUpdater.get(this);
+  }
 }

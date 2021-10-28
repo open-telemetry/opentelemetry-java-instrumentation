@@ -141,6 +141,9 @@ public class AgentInstaller {
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
             .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
+    if (JavaModule.isSupported()) {
+      agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
+    }
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
@@ -287,7 +290,7 @@ public class AgentInstaller {
         int amount, List<Class<?>> types, Map<List<Class<?>>, Throwable> failures) {}
   }
 
-  static class TransformLoggingListener implements AgentBuilder.Listener {
+  static class TransformLoggingListener extends AgentBuilder.Listener.Adapter {
 
     private static final TransformSafeLogger logger =
         TransformSafeLogger.getLogger(TransformLoggingListener.class);
@@ -317,21 +320,6 @@ public class AgentInstaller {
         DynamicType dynamicType) {
       logger.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
-
-    @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {}
-
-    @Override
-    public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
-
-    @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   /**
@@ -388,30 +376,7 @@ public class AgentInstaller {
     }
   }
 
-  private static class ClassLoadListener implements AgentBuilder.Listener {
-    @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {}
-
-    @Override
-    public void onTransformation(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b,
-        DynamicType dynamicType) {}
-
-    @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b) {}
-
-    @Override
-    public void onError(
-        String s, ClassLoader classLoader, JavaModule javaModule, boolean b, Throwable throwable) {}
-
+  private static class ClassLoadListener extends AgentBuilder.Listener.Adapter {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {

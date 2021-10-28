@@ -5,10 +5,12 @@
 
 package client
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClientOptions
@@ -74,6 +76,15 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   boolean testHttps() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    attributes.remove(SemanticAttributes.NET_PEER_NAME)
+    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    return attributes
   }
 
   @Override
