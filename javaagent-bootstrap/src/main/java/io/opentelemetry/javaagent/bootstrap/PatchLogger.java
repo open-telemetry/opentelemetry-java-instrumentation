@@ -314,7 +314,11 @@ public class PatchLogger {
   }
 
   public void logp(
-      Level level, String sourceClass, String sourceMethod, Throwable thrown, Supplier<String> msgSupplier) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      Throwable thrown,
+      Supplier<String> msgSupplier) {
     log(level, thrown, msgSupplier);
   }
 
