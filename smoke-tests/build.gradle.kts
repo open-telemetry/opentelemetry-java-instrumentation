@@ -56,12 +56,12 @@ tasks {
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
     val suites = mapOf(
-      "glassfish" to listOf("**/GlassFishSmokeTest.*"),
-      "jetty" to listOf("**/JettySmokeTest.*"),
-      "liberty" to listOf("**/LibertySmokeTest.*", "**/LibertyServletOnlySmokeTest.*"),
-      "tomcat" to listOf("**/TomcatSmokeTest.*"),
-      "tomee" to listOf("**/TomeeSmokeTest.*"),
-      "wildfly" to listOf("**/WildflySmokeTest.*")
+      "glassfish" to listOf("**/GlassFish*.*"),
+      "jetty" to listOf("**/Jetty*.*"),
+      "liberty" to listOf("**/Liberty*.*"),
+      "tomcat" to listOf("**/Tomcat*.*"),
+      "tomee" to listOf("**/Tomee*.*"),
+      "wildfly" to listOf("**/Wildfly*.*")
     )
 
     val smokeTestSuite: String? by project

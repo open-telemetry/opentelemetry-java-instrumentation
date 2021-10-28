@@ -23,7 +23,7 @@ public final class JdbcSingletons {
     JdbcNetAttributesExtractor netAttributesExtractor = new JdbcNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<DbRequest, Void>newBuilder(
+        Instrumenter.<DbRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)

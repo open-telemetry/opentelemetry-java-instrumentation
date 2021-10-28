@@ -94,7 +94,7 @@ dependencies {
 
   components.all<NettyAlignmentRule>()
 
-  compileOnly("org.checkerframework:checker-qual")
+  compileOnly("com.google.code.findbugs:jsr305")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
@@ -102,12 +102,24 @@ dependencies {
   testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 
   testImplementation("org.objenesis:objenesis")
-  testImplementation("org.spockframework:spock-core")
+  testImplementation("org.spockframework:spock-core") {
+    // exclude optional dependencies
+    exclude(group = "cglib", module = "cglib-nodep")
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+    exclude(group = "org.junit.platform", module = "junit-platform-testkit")
+    exclude(group = "org.jetbrains", module = "annotations")
+    exclude(group = "org.objenesis", module = "objenesis")
+    exclude(group = "org.ow2.asm", module = "asm")
+  }
+  testImplementation("org.spockframework:spock-junit4") {
+    // spock-core is already added as dependency
+    // exclude it here to avoid pulling in optional dependencies
+    exclude(group = "org.spockframework", module = "spock-core")
+  }
   testImplementation("ch.qos.logback:logback-classic")
   testImplementation("org.slf4j:log4j-over-slf4j")
   testImplementation("org.slf4j:jcl-over-slf4j")
   testImplementation("org.slf4j:jul-to-slf4j")
-  testImplementation("info.solidsoft.spock:spock-global-unroll")
   testImplementation("com.github.stefanbirkner:system-rules")
 }
 

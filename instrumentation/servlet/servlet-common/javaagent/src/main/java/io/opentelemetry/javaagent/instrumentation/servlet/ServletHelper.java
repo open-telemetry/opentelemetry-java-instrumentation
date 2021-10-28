@@ -15,6 +15,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       ServletHelper.class.getName() + ".AsyncListener";
   private static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
       ServletHelper.class.getName() + ".AsyncListenerResponse";
+  public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
 
   public ServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,

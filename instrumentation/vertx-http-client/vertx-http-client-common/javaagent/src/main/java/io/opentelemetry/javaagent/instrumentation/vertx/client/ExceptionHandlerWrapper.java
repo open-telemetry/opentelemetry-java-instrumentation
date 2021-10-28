@@ -7,28 +7,30 @@ package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
 
 public class ExceptionHandlerWrapper implements Handler<Throwable> {
-  private final AbstractVertxClientTracer tracer;
+  private final Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter;
   private final HttpClientRequest request;
   private final VirtualField<HttpClientRequest, Contexts> virtualField;
   private final Handler<Throwable> handler;
 
   private ExceptionHandlerWrapper(
-      AbstractVertxClientTracer tracer,
+      Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter,
       HttpClientRequest request,
       VirtualField<HttpClientRequest, Contexts> virtualField,
       Handler<Throwable> handler) {
-    this.tracer = tracer;
+    this.instrumenter = instrumenter;
     this.request = request;
     this.virtualField = virtualField;
     this.handler = handler;
   }
 
   public static Handler<Throwable> wrap(
-      AbstractVertxClientTracer tracer,
+      Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter,
       HttpClientRequest request,
       VirtualField<HttpClientRequest, Contexts> virtualField,
       Handler<Throwable> handler) {
@@ -36,7 +38,7 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
       return handler;
     }
 
-    return new ExceptionHandlerWrapper(tracer, request, virtualField, handler);
+    return new ExceptionHandlerWrapper(instrumenter, request, virtualField, handler);
   }
 
   @Override
@@ -47,7 +49,7 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
       return;
     }
 
-    tracer.endExceptionally(contexts.context, throwable);
+    instrumenter.end(contexts.context, request, null, throwable);
 
     try (Scope ignored = contexts.parentContext.makeCurrent()) {
       callHandler(throwable);

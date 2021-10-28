@@ -53,7 +53,7 @@ public class TracingInterceptor implements Interceptor {
     Request.Builder requestBuilder = request.newBuilder();
     propagators
         .getTextMapPropagator()
-        .inject(context, requestBuilder, RequestBuilderInjectAdapter.SETTER);
+        .inject(context, requestBuilder, RequestBuilderHeaderSetter.INSTANCE);
     return requestBuilder.build();
   }
 }

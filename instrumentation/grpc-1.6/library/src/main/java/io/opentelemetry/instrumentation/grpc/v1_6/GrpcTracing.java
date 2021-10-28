@@ -17,11 +17,11 @@ public final class GrpcTracing {
 
   /** Returns a new {@link GrpcTracing} configured with the given {@link OpenTelemetry}. */
   public static GrpcTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link GrpcTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static GrpcTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static GrpcTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new GrpcTracingBuilder(openTelemetry);
   }
 

@@ -63,7 +63,7 @@ public final class RatpackTracingBuilder {
         new RatpackHttpAttributesExtractor(capturedHttpHeaders);
 
     InstrumenterBuilder<Request, Response> builder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes));
 
     builder.setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes));

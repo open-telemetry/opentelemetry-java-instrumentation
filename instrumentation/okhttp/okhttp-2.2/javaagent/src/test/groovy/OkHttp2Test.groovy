@@ -22,10 +22,13 @@ import java.util.concurrent.TimeUnit
 class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   @Shared
   def client = new OkHttpClient()
+  @Shared
+  def clientWithReadTimeout = new OkHttpClient()
 
   def setupSpec() {
     client.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-    client.setReadTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    clientWithReadTimeout.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    clientWithReadTimeout.setReadTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   @Override
@@ -40,12 +43,12 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
 
   @Override
   int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
-    return client.newCall(request).execute().code()
+    return getClient(uri).newCall(request).execute().code()
   }
 
   @Override
   void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    client.newCall(request).enqueue(new Callback() {
+    getClient(uri).newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Request req, IOException e) {
         requestResult.complete(e)
@@ -56,6 +59,13 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
         requestResult.complete(response.code())
       }
     })
+  }
+
+  OkHttpClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
   }
 
   @Override

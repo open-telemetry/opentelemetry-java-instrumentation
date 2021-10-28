@@ -24,7 +24,7 @@ public final class DataSourceSingletons {
         CodeSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<DataSource, Void>newBuilder(
+        Instrumenter.<DataSource, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter();

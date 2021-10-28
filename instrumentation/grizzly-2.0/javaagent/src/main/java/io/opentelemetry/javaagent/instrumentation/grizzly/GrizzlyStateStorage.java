@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -15,6 +13,7 @@ import org.glassfish.grizzly.http.HttpRequestPacket;
 public final class GrizzlyStateStorage {
 
   private static final String REQUEST_ATTRIBUTE = GrizzlyStateStorage.class.getName() + ".request";
+  private static final String CONTEXT_ATTRIBUTE = GrizzlyStateStorage.class.getName() + ".context";
 
   public static void attachContextAndRequest(
       FilterChainContext filterChainContext, Context context, HttpRequestPacket request) {

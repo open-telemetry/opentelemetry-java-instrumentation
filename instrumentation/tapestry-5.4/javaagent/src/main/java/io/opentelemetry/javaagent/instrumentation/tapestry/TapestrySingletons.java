@@ -18,7 +18,7 @@ public class TapestrySingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<TapestryRequest, Void>newBuilder(
+        Instrumenter.<TapestryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, TapestryRequest::spanName)
             .setErrorCauseExtractor(
                 error -> {

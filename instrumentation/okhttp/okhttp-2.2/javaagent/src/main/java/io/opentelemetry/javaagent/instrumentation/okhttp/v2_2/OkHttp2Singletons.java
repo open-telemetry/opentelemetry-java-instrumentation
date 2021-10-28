@@ -41,7 +41,7 @@ public final class OkHttp2Singletons {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
     INSTRUMENTER =
-        Instrumenter.<Request, Response>newBuilder(
+        Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

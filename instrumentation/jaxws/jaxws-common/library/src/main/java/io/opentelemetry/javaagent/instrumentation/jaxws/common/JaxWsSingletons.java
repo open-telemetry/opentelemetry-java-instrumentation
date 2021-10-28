@@ -22,7 +22,7 @@ public class JaxWsSingletons {
     CodeAttributesExtractor<JaxWsRequest, Void> codeAttributes = new JaxWsCodeAttributesExtractor();
     SPAN_NAME_EXTRACTOR = CodeSpanNameExtractor.create(codeAttributes);
     INSTRUMENTER =
-        Instrumenter.<JaxWsRequest, Void>newBuilder(
+        Instrumenter.<JaxWsRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JaxWsRequest::spanName)
             .addAttributesExtractor(codeAttributes)
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())

@@ -108,12 +108,12 @@ public final class ArmeriaTracingBuilder {
         new ArmeriaHttpServerAttributesExtractor(capturedHttpServerHeaders);
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(httpClientAttributesExtractor));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(serverAttributesExtractor));

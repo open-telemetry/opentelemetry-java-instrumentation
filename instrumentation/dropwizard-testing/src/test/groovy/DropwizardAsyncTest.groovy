@@ -20,6 +20,7 @@ import java.util.concurrent.Executors
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -110,11 +111,20 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("path/{id}/param")
-    Response path_param(@PathParam("id") int param, @Suspended final AsyncResponse asyncResponse) {
+    void path_param(@PathParam("id") int param, @Suspended final AsyncResponse asyncResponse) {
       executor.execute {
         controller(PATH_PARAM) {
           asyncResponse.resume(Response.status(PATH_PARAM.status).entity(param.toString()).build())
         }
+      }
+    }
+
+    @GET
+    @Path("child")
+    void indexed_child(@QueryParam("id") String param, @Suspended final AsyncResponse asyncResponse) {
+      controller(INDEXED_CHILD) {
+        INDEXED_CHILD.collectSpanAttributes { it == "id" ? param : null }
+        asyncResponse.resume(Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build())
       }
     }
 

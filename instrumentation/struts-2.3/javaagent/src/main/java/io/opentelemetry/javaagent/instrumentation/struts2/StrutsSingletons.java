@@ -21,7 +21,7 @@ public class StrutsSingletons {
     CodeAttributesExtractor<ActionInvocation, Void> codeAttributes =
         new StrutsCodeAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<ActionInvocation, Void>newBuilder(
+        Instrumenter.<ActionInvocation, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributes))

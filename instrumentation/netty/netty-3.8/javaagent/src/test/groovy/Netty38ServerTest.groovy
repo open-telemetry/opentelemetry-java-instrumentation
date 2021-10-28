@@ -163,9 +163,4 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }

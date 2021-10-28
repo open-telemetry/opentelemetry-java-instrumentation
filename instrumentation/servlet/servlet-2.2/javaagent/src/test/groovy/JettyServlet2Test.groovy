@@ -19,6 +19,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -51,6 +52,7 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
     servletContext.addServlet(TestServlet2.Sync, ERROR.path)
     servletContext.addServlet(TestServlet2.Sync, EXCEPTION.path)
     servletContext.addServlet(TestServlet2.Sync, AUTH_REQUIRED.path)
+    servletContext.addServlet(TestServlet2.Sync, INDEXED_CHILD.path)
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()

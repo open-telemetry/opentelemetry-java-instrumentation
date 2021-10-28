@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.CONTEXT_ATTRIBUTE;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

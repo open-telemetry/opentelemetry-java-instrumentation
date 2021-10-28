@@ -26,7 +26,7 @@ dependencies {
   // a couple of test attribute verifications don't pass until 3.8.0
   library("org.mongodb:mongo-java-driver:3.8.0")
 
-  testImplementation(project(":instrumentation:mongo:mongo-testing"))
+  testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
 }
 
 tasks {

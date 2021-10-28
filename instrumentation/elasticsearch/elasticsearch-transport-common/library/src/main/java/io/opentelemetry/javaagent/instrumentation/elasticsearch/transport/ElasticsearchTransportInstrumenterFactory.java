@@ -28,7 +28,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
         new ElasticsearchTransportAttributesExtractor();
 
     InstrumenterBuilder<ElasticTransportRequest, ActionResponse> instrumenterBuilder =
-        Instrumenter.<ElasticTransportRequest, ActionResponse>newBuilder(
+        Instrumenter.<ElasticTransportRequest, ActionResponse>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
                 DbSpanNameExtractor.create(attributesExtractor))

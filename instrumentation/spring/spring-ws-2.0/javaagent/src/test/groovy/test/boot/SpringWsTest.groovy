@@ -35,8 +35,14 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
   private Jaxb2Marshaller marshaller = new Jaxb2Marshaller()
 
   def setupSpec() {
+    setupServer()
+
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest))
     marshaller.afterPropertiesSet()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
   }
 
   @Override

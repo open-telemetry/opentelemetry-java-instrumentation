@@ -85,6 +85,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
   def cleanup() {
     connection.close()
+    redisClient.shutdown()
     redisServer.stop()
   }
 
@@ -102,6 +103,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
     cleanup:
     connection.close()
+    testConnectionClient.shutdown()
   }
 
   def "connect exception"() {
@@ -116,6 +118,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
     thrown RedisConnectionException
     // Lettuce tracing does not trace connect
     assertTraces(0) {}
+
+    cleanup:
+    testConnectionClient.shutdown()
   }
 
   def "set command"() {
@@ -178,6 +183,10 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         }
       }
     }
+
+    cleanup:
+    connection.close()
+    testConnectionClient.shutdown()
   }
 
   def "get command"() {

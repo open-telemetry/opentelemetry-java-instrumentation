@@ -77,10 +77,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     Span span = Span.fromContext(otelContext);
 
-    AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(context.request());
-    if (awsSdkRequest != null) {
-      executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
-      populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
+    try {
+      AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(context.request());
+      if (awsSdkRequest != null) {
+        executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
+        populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
+      }
+    } catch (Throwable throwable) {
+      instrumenter.end(otelContext, executionAttributes, null, throwable);
+      clearAttributes(executionAttributes);
+      throw throwable;
     }
   }
 
@@ -95,7 +101,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
     return builder.build();
   }
 

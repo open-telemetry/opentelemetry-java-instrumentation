@@ -67,7 +67,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, getWaitStrategy())
+    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, getWaitStrategy(), getCommand())
   }
 
   protected abstract String getTargetImage(String jdk)
@@ -77,6 +77,10 @@ abstract class SmokeTest extends Specification {
   }
 
   protected TargetWaitStrategy getWaitStrategy() {
+    return null
+  }
+
+  protected String[] getCommand() {
     return null
   }
 

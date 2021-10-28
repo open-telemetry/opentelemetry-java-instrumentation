@@ -24,7 +24,7 @@ public final class RediscalaSingletons {
         DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<RedisCommand<?, ?>, Void>newBuilder(
+        Instrumenter.<RedisCommand<?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());

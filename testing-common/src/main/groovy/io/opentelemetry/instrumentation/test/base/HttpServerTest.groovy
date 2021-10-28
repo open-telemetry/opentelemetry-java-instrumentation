@@ -38,13 +38,21 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.util.Collections.singletonList
-import static org.junit.Assume.assumeTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   static final String TEST_REQUEST_HEADER = "X-Test-Request"
   static final String TEST_RESPONSE_HEADER = "X-Test-Response"
+
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
 
   static CapturedHttpHeaders capturedHttpHeadersForTesting() {
     CapturedHttpHeaders.create(
@@ -131,10 +139,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
-  boolean testConcurrency() {
-    false
-  }
-
   boolean verifyServerSpanEndTime() {
     return true
   }
@@ -160,7 +164,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
     AUTH_ERROR("basicsecured/endpoint", 401, null),
-    INDEXED_CHILD("child", 200, null),
+    INDEXED_CHILD("child", 200, ""),
 
     public static final String ID_ATTRIBUTE_NAME = "test.request.id"
     public static final String ID_PARAMETER_NAME = "id"
@@ -426,7 +430,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def "high concurrency test"() {
     setup:
-    assumeTrue(testConcurrency())
     int count = 100
     def endpoint = INDEXED_CHILD
 

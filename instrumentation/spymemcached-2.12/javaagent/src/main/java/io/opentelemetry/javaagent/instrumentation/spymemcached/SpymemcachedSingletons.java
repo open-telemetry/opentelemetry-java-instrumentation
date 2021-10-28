@@ -24,7 +24,7 @@ public final class SpymemcachedSingletons {
         DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.newBuilder(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
+        Instrumenter.builder(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

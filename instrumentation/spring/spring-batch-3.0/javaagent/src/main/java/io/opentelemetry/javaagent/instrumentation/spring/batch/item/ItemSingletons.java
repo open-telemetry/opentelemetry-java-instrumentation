@@ -20,7 +20,7 @@ public class ItemSingletons {
   static final String ITEM_OPERATION_PROCESS = "ItemProcess";
 
   private static final Instrumenter<String, Void> INSTRUMENTER =
-      Instrumenter.<String, Void>newBuilder(
+      Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
           .newInstrumenter();
 

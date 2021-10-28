@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -71,6 +72,14 @@ class TestController implements Controller {
     HttpServerTest.controller(CAPTURE_HEADERS) {
       response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"))
       render CAPTURE_HEADERS.body
+    }
+  }
+
+  @Action
+  def child() {
+    HttpServerTest.controller(INDEXED_CHILD) {
+      INDEXED_CHILD.collectSpanAttributes({name -> name == "id" ? params.id : null })
+      render INDEXED_CHILD.body
     }
   }
 }

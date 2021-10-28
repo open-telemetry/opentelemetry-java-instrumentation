@@ -69,17 +69,22 @@ def targets = [
 ]
 
 tasks.register("printSmokeTestsConfigurations") {
-  linuxTargets.each { server, matrices ->
+  targets.each { server, matrices ->
     def smokeTestServer = findProperty('smokeTestServer')
     if (smokeTestServer != null && server != smokeTestServer) {
       return
     }
     println server
+    def serverName = String.valueOf(Character.toUpperCase(server.charAt(0))) + server.substring(1)
     matrices.forEach { entry ->
       entry.version.forEach { version ->
+        def dotIndex = version.indexOf('.')
+        def majorVersion = dotIndex != -1 ? version.substring(0, dotIndex) : version
         entry.jdk.forEach { jdk ->
           entry.vm.forEach { vm ->
             println "@AppServer(version = \"$version\", jdk = \"$jdk${vm == 'hotspot' ? '' : '-openj9'}\")"
+            println "class ${serverName}${majorVersion}Jdk${jdk}${vm == 'hotspot' ? '' : 'Openj9'} extends ${serverName}SmokeTest {"
+            println "}"
           }
         }
       }

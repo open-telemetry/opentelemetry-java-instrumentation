@@ -221,13 +221,13 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     closure.call(channel)
 
     then:
-    def throwable = thrown(exception)
+    def error = thrown(exception)
 
     and:
 
     assertTraces(1) {
       trace(0, 1) {
-        rabbitSpan(it, null, null, operation, command, null, null, throwable, errorMsg)
+        rabbitSpan(it, null, null, operation, command, null, null, error, errorMsg)
       }
     }
 

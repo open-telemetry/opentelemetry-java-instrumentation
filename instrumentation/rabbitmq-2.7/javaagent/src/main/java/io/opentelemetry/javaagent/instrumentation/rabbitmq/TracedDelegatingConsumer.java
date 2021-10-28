@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.deliverInstrumenter;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
@@ -58,14 +58,22 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
-    Context context = tracer().startDeliverySpan(queue, envelope, properties, body);
+    Context parentContext = Context.current();
+    DeliveryRequest request = DeliveryRequest.create(queue, envelope, properties, body);
+
+    if (!deliverInstrumenter().shouldStart(parentContext, request)) {
+      delegate.handleDelivery(consumerTag, envelope, properties, body);
+      return;
+    }
+
+    Context context = deliverInstrumenter().start(parentContext, request);
 
     try (Scope ignored = context.makeCurrent()) {
       // Call delegate.
       delegate.handleDelivery(consumerTag, envelope, properties, body);
-      tracer().end(context);
+      deliverInstrumenter().end(context, request, null, null);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      deliverInstrumenter().end(context, request, null, throwable);
       throw throwable;
     }
   }

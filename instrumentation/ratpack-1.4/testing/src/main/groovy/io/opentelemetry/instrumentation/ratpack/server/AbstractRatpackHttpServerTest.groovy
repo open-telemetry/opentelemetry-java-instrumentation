@@ -133,11 +133,6 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   }
 
   @Override
-  boolean testConcurrency() {
-    true
-  }
-
-  @Override
   boolean verifyServerSpanEndTime() {
     // server spans are ended inside of the controller spans
     return false

@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -119,6 +120,10 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
               break
             case EXCEPTION:
               throw new Exception(endpoint.body)
+            case INDEXED_CHILD:
+              INDEXED_CHILD.collectSpanAttributes { name -> req.getParameter(name) }
+              resp.writer.print(endpoint.body)
+              break
             default:
               chain.doFilter(request, response)
           }

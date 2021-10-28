@@ -23,6 +23,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -155,6 +156,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
         name "TestController.path"
       } else if (endpoint == CAPTURE_HEADERS) {
         name "TestController.captureHeaders"
+      } else if (endpoint == INDEXED_CHILD) {
+        name "TestController.child"
       } else if (endpoint == NOT_FOUND) {
         name "ResourceHttpRequestHandler.handleRequest"
       } else {

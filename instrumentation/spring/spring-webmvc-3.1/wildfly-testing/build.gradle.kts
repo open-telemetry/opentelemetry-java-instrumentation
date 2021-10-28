@@ -13,10 +13,9 @@ dependencies {
   appLibrary("org.springframework:spring-webmvc:3.1.0.RELEASE")
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
 
-  val arquillianVersion = "1.4.0.Final"
-  testImplementation("org.jboss.arquillian.junit:arquillian-junit-container:$arquillianVersion")
-  testImplementation("org.jboss.arquillian.protocol:arquillian-protocol-servlet:$arquillianVersion")
-  testImplementation("org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1")
+  val arquillianVersion = "1.7.0.Alpha10"
+  implementation("org.jboss.arquillian.junit5:arquillian-junit5-container:$arquillianVersion")
+  implementation("org.jboss.arquillian.protocol:arquillian-protocol-servlet:$arquillianVersion")
   testImplementation("org.jboss.shrinkwrap:shrinkwrap-impl-base:1.2.6")
 
   testRuntimeOnly("org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final")

@@ -171,6 +171,9 @@ class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       def target = req.servletPath.replace("/dispatch", "")
+      if (req.queryString != null) {
+        target += "?" + req.queryString
+      }
       req.startAsync().dispatch(target)
     }
   }
@@ -180,6 +183,9 @@ class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       def target = req.servletPath.replace("/dispatch", "")
+      if (req.queryString != null) {
+        target += "?" + req.queryString
+      }
       def context = req.startAsync()
       context.start {
         context.dispatch(target)

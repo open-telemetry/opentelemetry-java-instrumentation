@@ -7,21 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
-import java.util.Map;
 
-public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>> {
+public class TextMapExtractAdapter implements TextMapGetter<DeliveryRequest> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 
   @Override
-  public Iterable<String> keys(Map<String, Object> carrier) {
-    return carrier != null ? carrier.keySet() : Collections.emptyList();
+  public Iterable<String> keys(DeliveryRequest carrier) {
+    return carrier != null
+        ? carrier.getProperties().getHeaders().keySet()
+        : Collections.emptyList();
   }
 
   @Override
-  public String get(Map<String, Object> carrier, String key) {
+  public String get(DeliveryRequest carrier, String key) {
     if (carrier != null) {
-      Object obj = carrier.get(key);
+      Object obj = carrier.getProperties().getHeaders().get(key);
       return obj == null ? null : obj.toString();
     } else {
       return null;
