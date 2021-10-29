@@ -248,7 +248,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: assemble final closeAndReleaseSonatypeStagingRepository -Prelease.version=${{ github.event.inputs.version }}
+          arguments: assemble final closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -256,6 +256,14 @@ jobs:
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+
+        # TODO (trask) cache gradle wrapper?
+      - name: Build and publish gradle plugins
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        run: ../gradlew build publishPlugins
+        working-directory: gradle-plugins
 
       - name: Push cherry-picked changes to the release branch
         run: git push

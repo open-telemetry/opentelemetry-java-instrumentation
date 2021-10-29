@@ -12,8 +12,8 @@ plugins {
    */
   id "com.github.johnrengelman.shadow" version "6.1.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "0.8.0"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "0.8.0"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.8.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.8.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
