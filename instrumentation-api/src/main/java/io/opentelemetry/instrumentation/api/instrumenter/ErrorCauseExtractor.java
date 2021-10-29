@@ -10,7 +10,9 @@ package io.opentelemetry.instrumentation.api.instrumenter;
  * exceptions with a framework exception, generally for propagating checked exceptions across
  * unchecked boundaries, it is recommended to override this to unwrap back to the user exception.
  */
+@FunctionalInterface
 public interface ErrorCauseExtractor {
+
   Throwable extractCause(Throwable error);
 
   /**
