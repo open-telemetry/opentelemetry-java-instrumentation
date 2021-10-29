@@ -25,8 +25,6 @@
     <a href="CONTRIBUTING.md">Contributing<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="docs/scope.md">Scope<a/>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="docs/ga-requirements.md">Roadmap<a/>
   </strong>
 </p>
 
@@ -42,7 +40,6 @@
 * [Manually instrumenting](#manually-instrumenting)
 * [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
-* [Roadmap to 1.0 (GA)](#roadmap-to-10-ga)
 * [Contributing](#contributing)
 
 ## About
@@ -136,10 +133,6 @@ To turn on the agent's internal debug logging:
 
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
-
-## Roadmap to 1.0 (GA)
-
-See [GA Requirements](docs/ga-requirements.md)
 
 ## Contributing
 
