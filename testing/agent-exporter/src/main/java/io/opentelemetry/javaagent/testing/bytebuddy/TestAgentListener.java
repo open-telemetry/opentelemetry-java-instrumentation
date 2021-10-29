@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesCo
 import io.opentelemetry.javaagent.tooling.ignore.GlobalIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.MuzzleFailureCounter;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,6 +71,10 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   public static int getInstrumentationErrorCount() {
     return INSTANCE.instrumentationErrorCount.get();
+  }
+
+  public static int getAndResetMuzzleFailureCount() {
+    return MuzzleFailureCounter.getAndReset();
   }
 
   public static List<String> getIgnoredButTransformedClassNames() {
