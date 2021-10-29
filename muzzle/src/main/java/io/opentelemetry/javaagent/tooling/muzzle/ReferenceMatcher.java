@@ -51,7 +51,8 @@ public final class ReferenceMatcher {
   }
 
   /**
-   * Matcher used by ByteBuddy. Fails fast and only caches empty results, or complete results
+   * Matcher used by ByteBuddy. Caller is expected to cache the result if this method is called
+   * multiple times for given class loader.
    *
    * @param loader Classloader to validate against (cannot be {@code null}, must pass "bootstrap
    *     proxy" instead of bootstrap class loader)
@@ -68,7 +69,7 @@ public final class ReferenceMatcher {
   }
 
   /**
-   * Loads the full list of mismatches. Used in debug contexts only
+   * Loads the full list of mismatches. Used in debug contexts only.
    *
    * @param loader Classloader to validate against (cannot be {@code null}, must pass "bootstrap *
    *     proxy" instead of bootstrap class loader)
