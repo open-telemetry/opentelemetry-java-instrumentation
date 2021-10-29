@@ -361,7 +361,7 @@ WHITESPACE        = [ \t\r\n]+
       }
 
   // here is where the actual sanitization happens
-  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOUBLE_QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
           builder.append('?');
           if (isOverLimit()) return YYEOF;
       }
