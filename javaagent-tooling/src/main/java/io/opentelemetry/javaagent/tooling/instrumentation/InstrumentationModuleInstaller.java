@@ -174,10 +174,8 @@ public final class InstrumentationModuleInstaller {
       return isMatch;
     }
 
-    // ReferenceMatcher internally caches the muzzle check results per classloader, that's why we
-    // keep its instance in a field
-    // it is lazily created to avoid unnecessarily loading the muzzle references from the module
-    // during the agent setup
+    // ReferenceMatcher is lazily created to avoid unnecessarily loading the muzzle references from
+    // the module during the agent setup
     private ReferenceMatcher getReferenceMatcher() {
       if (initialized.compareAndSet(false, true)) {
         referenceMatcher = ReferenceMatcher.of(instrumentationModule);
