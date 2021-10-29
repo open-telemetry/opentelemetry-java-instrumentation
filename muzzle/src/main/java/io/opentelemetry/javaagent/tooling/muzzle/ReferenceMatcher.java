@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
@@ -31,7 +30,6 @@ import org.objectweb.asm.Type;
 /** Matches a set of references against a classloader. */
 public final class ReferenceMatcher {
 
-  private final Cache<ClassLoader, Boolean> mismatchCache = Cache.builder().setWeakKeys().build();
   private final Map<String, ClassRef> references;
   private final Set<String> helperClassNames;
   private final HelperClassPredicate helperClassPredicate;
@@ -55,16 +53,11 @@ public final class ReferenceMatcher {
   /**
    * Matcher used by ByteBuddy. Fails fast and only caches empty results, or complete results
    *
-   * @param userClassLoader Classloader to validate against (cannot be {@code null}, must pass
-   *     "bootstrap proxy" instead of bootstrap class loader)
+   * @param loader Classloader to validate against (cannot be {@code null}, must pass "bootstrap
+   *     proxy" instead of bootstrap class loader)
    * @return true if all references match the classpath of loader
    */
-  public boolean matches(ClassLoader userClassLoader) {
-    return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
-  }
-
-  // loader cannot be null, must pass "bootstrap proxy" instead of bootstrap class loader
-  private boolean doesMatch(ClassLoader loader) {
+  public boolean matches(ClassLoader loader) {
     TypePool typePool = createTypePool(loader);
     for (ClassRef reference : references.values()) {
       if (!checkMatch(reference, typePool, loader).isEmpty()) {

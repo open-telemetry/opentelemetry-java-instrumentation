@@ -125,8 +125,7 @@ public final class InstrumentationModuleInstaller {
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final Cache<ClassLoader, Boolean> matchingResult =
-        Cache.builder().setWeakKeys().build();
+    private final Cache<ClassLoader, Boolean> matchCache = Cache.builder().setWeakKeys().build();
     private volatile ReferenceMatcher referenceMatcher;
 
     private MuzzleMatcher(InstrumentationModule instrumentationModule) {
@@ -140,16 +139,14 @@ public final class InstrumentationModuleInstaller {
         JavaModule module,
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain) {
-      ReferenceMatcher muzzle = getReferenceMatcher();
       if (classLoader == BOOTSTRAP_LOADER) {
         classLoader = Utils.getBootstrapProxy();
       }
+      return matchCache.computeIfAbsent(classLoader, this::doesMatch);
+    }
 
-      Boolean cachedResult = matchingResult.get(classLoader);
-      if (cachedResult != null) {
-        return cachedResult.booleanValue();
-      }
-
+    private boolean doesMatch(ClassLoader classLoader) {
+      ReferenceMatcher muzzle = getReferenceMatcher();
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
@@ -173,8 +170,6 @@ public final class InstrumentationModuleInstaller {
               classLoader);
         }
       }
-
-      matchingResult.put(classLoader, isMatch);
 
       return isMatch;
     }
