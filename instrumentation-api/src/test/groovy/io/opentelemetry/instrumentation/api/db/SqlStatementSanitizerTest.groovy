@@ -83,6 +83,9 @@ class SqlStatementSanitizerTest extends Specification {
 
     // hibernate/jpa query language
     "FROM TABLE WHERE FIELD=1234"                                              | "FROM TABLE WHERE FIELD=?"
+
+    // Double-quoted identifier names should not be sanitized
+    "SELECT * FROM \"TABLE\" WHERE FIELD = ''"                                     | "SELECT * FROM \"TABLE\" WHERE FIELD = ?"
   }
 
   @Unroll
