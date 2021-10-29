@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -124,6 +125,8 @@ public final class InstrumentationModuleInstaller {
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final Cache<ClassLoader, Boolean> matchingResult =
+        Cache.builder().setWeakKeys().build();
     private volatile ReferenceMatcher referenceMatcher;
 
     private MuzzleMatcher(InstrumentationModule instrumentationModule) {
@@ -141,6 +144,12 @@ public final class InstrumentationModuleInstaller {
       if (classLoader == BOOTSTRAP_LOADER) {
         classLoader = Utils.getBootstrapProxy();
       }
+
+      Boolean cachedResult = matchingResult.get(classLoader);
+      if (cachedResult != null) {
+        return cachedResult.booleanValue();
+      }
+
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
@@ -164,6 +173,8 @@ public final class InstrumentationModuleInstaller {
               classLoader);
         }
       }
+
+      matchingResult.put(classLoader, isMatch);
 
       return isMatch;
     }
