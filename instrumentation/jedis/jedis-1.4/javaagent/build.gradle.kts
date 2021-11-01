@@ -17,6 +17,9 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
+
   // Jedis 3.0 has API changes that prevent instrumentation from applying
   latestDepTestLibrary("redis.clients:jedis:2.+")
 }
