@@ -35,7 +35,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew build -x instrumentation:couchbase:couchbase-2.0:javaagent-unit-tests
 
       - name: Upload deadlock detector artifacts if any
         if: always()
@@ -122,7 +122,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -x instrumentation:couchbase:couchbase-2.0:javaagent-unit-tests -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
       - name: Upload deadlock detector artifacts if any
         if: always()
