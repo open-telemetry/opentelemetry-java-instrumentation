@@ -195,8 +195,9 @@ class SunMiscUnsafeGenerator {
     addMethod("arrayIndexScale", int.class, Class.class);
     addMethod("addressSize", int.class);
     addMethod("pageSize", int.class);
-    addMethod("defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     addMethod("getLoadAverage", int.class, double[].class, int.class);
+    // defineAnonymousClass was removed in jdk17
+    addOptionalMethod("defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     // this method is missing from internal unsafe in some jdk11 versions
     addOptionalMethod("invokeCleaner", void.class, ByteBuffer.class);
   }
