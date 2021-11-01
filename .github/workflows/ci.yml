@@ -333,4 +333,3 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         run: ../gradlew build publishToSonatype
         working-directory: gradle-plugins
-        run: ./gradlew snapshot
