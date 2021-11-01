@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -124,6 +125,7 @@ public final class InstrumentationModuleInstaller {
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final Cache<ClassLoader, Boolean> matchCache = Cache.builder().setWeakKeys().build();
     private volatile ReferenceMatcher referenceMatcher;
 
     private MuzzleMatcher(InstrumentationModule instrumentationModule) {
@@ -137,10 +139,14 @@ public final class InstrumentationModuleInstaller {
         JavaModule module,
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain) {
-      ReferenceMatcher muzzle = getReferenceMatcher();
       if (classLoader == BOOTSTRAP_LOADER) {
         classLoader = Utils.getBootstrapProxy();
       }
+      return matchCache.computeIfAbsent(classLoader, this::doesMatch);
+    }
+
+    private boolean doesMatch(ClassLoader classLoader) {
+      ReferenceMatcher muzzle = getReferenceMatcher();
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
@@ -168,10 +174,8 @@ public final class InstrumentationModuleInstaller {
       return isMatch;
     }
 
-    // ReferenceMatcher internally caches the muzzle check results per classloader, that's why we
-    // keep its instance in a field
-    // it is lazily created to avoid unnecessarily loading the muzzle references from the module
-    // during the agent setup
+    // ReferenceMatcher is lazily created to avoid unnecessarily loading the muzzle references from
+    // the module during the agent setup
     private ReferenceMatcher getReferenceMatcher() {
       if (initialized.compareAndSet(false, true)) {
         referenceMatcher = ReferenceMatcher.of(instrumentationModule);
