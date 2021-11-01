@@ -33,6 +33,7 @@ class HttpClientMetricsTest {
         Attributes.builder()
             .put("http.method", "GET")
             .put("http.host", "host")
+            .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
@@ -85,14 +86,12 @@ class HttpClientMetricsTest {
                                           .hasSum(150 /* millis */)
                                           .attributes()
                                           .containsOnly(
-                                              attributeEntry("http.host", "host"),
-                                              attributeEntry("http.method", "GET"),
                                               attributeEntry("http.scheme", "https"),
+                                              attributeEntry("http.host", "host"),
+                                              attributeEntry("http.target", "/"),
+                                              attributeEntry("http.method", "GET"),
                                               attributeEntry("http.flavor", "2.0"),
-                                              attributeEntry("http.server_name", "server"),
-                                              attributeEntry("http.status_code", 200),
-                                              attributeEntry("net.host.name", "localhost"),
-                                              attributeEntry("net.host.port", 1234L))));
+                                              attributeEntry("http.status_code", 200))));
             });
 
     listener.end(context2, responseAttributes, nanos(300));
