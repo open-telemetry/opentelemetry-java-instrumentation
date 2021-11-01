@@ -38,7 +38,8 @@ public class TemporaryMetricsViewTest {
 
     OpenTelemetryAssertions.assertThat(applyClientDurationView(startAttributes, endAttributes))
         .containsOnly(
-            attributeEntry(SemanticAttributes.HTTP_URL.getKey(), "https://somehost/high/cardinality/12345"),
+            attributeEntry(
+                SemanticAttributes.HTTP_URL.getKey(), "https://somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
@@ -123,7 +124,6 @@ public class TemporaryMetricsViewTest {
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
 
-
   @Test
   public void shouldApplyServerDurationView_hostIdentity() {
     Attributes startAttributes =
@@ -150,7 +150,8 @@ public class TemporaryMetricsViewTest {
         .containsOnly(
             attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
             attributeEntry(SemanticAttributes.HTTP_HOST.getKey(), "somehost"),
-            attributeEntry(SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
+            attributeEntry(
+                SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
@@ -180,7 +181,8 @@ public class TemporaryMetricsViewTest {
         .containsOnly(
             attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
             attributeEntry(SemanticAttributes.HTTP_SERVER_NAME.getKey(), "somehost"),
-            attributeEntry(SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
+            attributeEntry(
+                SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
@@ -209,7 +211,8 @@ public class TemporaryMetricsViewTest {
             attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
             attributeEntry(SemanticAttributes.NET_HOST_NAME.getKey(), "somehost"),
             attributeEntry(SemanticAttributes.NET_HOST_PORT.getKey(), 443),
-            attributeEntry(SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
+            attributeEntry(
+                SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
@@ -234,7 +237,8 @@ public class TemporaryMetricsViewTest {
 
     OpenTelemetryAssertions.assertThat(applyServerDurationView(startAttributes, endAttributes))
         .containsOnly(
-            attributeEntry(SemanticAttributes.HTTP_URL.getKey(), "https://somehost/high/cardinality/12345"),
+            attributeEntry(
+                SemanticAttributes.HTTP_URL.getKey(), "https://somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }

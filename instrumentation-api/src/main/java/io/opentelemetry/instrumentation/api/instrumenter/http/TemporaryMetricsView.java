@@ -22,7 +22,6 @@ final class TemporaryMetricsView {
 
   private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
 
-
   private static Set<AttributeKey> buildDurationAlwaysInclude() {
     // the list of included metrics is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
@@ -57,7 +56,8 @@ final class TemporaryMetricsView {
       fullSet.add(SemanticAttributes.HTTP_SCHEME);
       fullSet.add(SemanticAttributes.HTTP_HOST);
       fullSet.add(SemanticAttributes.HTTP_TARGET);
-    } else if (containsAttribute(SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
+    } else if (containsAttribute(
+        SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
       // Use http.scheme, net.peer.name, net.peer.port and http.target
       fullSet.add(SemanticAttributes.HTTP_SCHEME);
       fullSet.add(SemanticAttributes.NET_PEER_NAME);
@@ -76,7 +76,8 @@ final class TemporaryMetricsView {
     return filtered.build();
   }
 
-  private static <T> boolean containsAttribute(AttributeKey<T> key, Attributes startAttributes, Attributes endAttributes) {
+  private static <T> boolean containsAttribute(
+      AttributeKey<T> key, Attributes startAttributes, Attributes endAttributes) {
     return startAttributes.get(key) != null || endAttributes.get(key) != null;
   }
 
@@ -89,12 +90,14 @@ final class TemporaryMetricsView {
       fullSet.add(SemanticAttributes.HTTP_SCHEME);
       fullSet.add(SemanticAttributes.HTTP_HOST);
       fullSet.add(SemanticAttributes.HTTP_TARGET);
-    } else if (containsAttribute(SemanticAttributes.HTTP_SERVER_NAME, startAttributes, endAttributes)) {
+    } else if (containsAttribute(
+        SemanticAttributes.HTTP_SERVER_NAME, startAttributes, endAttributes)) {
       // Use http.scheme, http.server_name, net.host.port, http.target
       fullSet.add(SemanticAttributes.HTTP_SCHEME);
       fullSet.add(SemanticAttributes.HTTP_SERVER_NAME);
       fullSet.add(SemanticAttributes.HTTP_TARGET);
-    } else if (containsAttribute(SemanticAttributes.NET_HOST_NAME, startAttributes, endAttributes)) {
+    } else if (containsAttribute(
+        SemanticAttributes.NET_HOST_NAME, startAttributes, endAttributes)) {
       // Use http.scheme, net.host.name, net.host.port, http.target
       fullSet.add(SemanticAttributes.HTTP_SCHEME);
       fullSet.add(SemanticAttributes.NET_HOST_NAME);
