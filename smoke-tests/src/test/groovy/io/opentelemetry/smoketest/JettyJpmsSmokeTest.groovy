@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 // jetty test with java module system
-@AppServer(version = "11.0.7", jdk = "11")
 abstract class JettyJpmsSmokeTest extends AppServerTest {
 
   @Override
