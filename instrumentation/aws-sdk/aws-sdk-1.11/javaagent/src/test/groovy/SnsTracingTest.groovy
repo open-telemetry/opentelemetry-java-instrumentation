@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import spock.lang.Ignore
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
