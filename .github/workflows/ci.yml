@@ -323,7 +323,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew snapshot
+        run: ./gradlew assemble publishToSonatype
 
       - name: Build and publish gradle plugin snapshots
         env:
