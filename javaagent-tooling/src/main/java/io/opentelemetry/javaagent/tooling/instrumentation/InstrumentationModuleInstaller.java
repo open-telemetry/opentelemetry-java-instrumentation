@@ -150,6 +150,7 @@ public final class InstrumentationModuleInstaller {
       boolean isMatch = muzzle.matches(classLoader);
 
       if (!isMatch) {
+        MuzzleFailureCounter.inc();
         if (muzzleLogger.isWarnEnabled()) {
           muzzleLogger.warn(
               "Instrumentation skipped, mismatched references were found: {} [class {}] on {}",
