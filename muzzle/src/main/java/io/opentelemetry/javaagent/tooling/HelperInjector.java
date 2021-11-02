@@ -71,7 +71,7 @@ public class HelperInjector implements Transformer {
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
       Cache.builder().setWeakKeys().build();
-  private final Cache<ClassLoader, Boolean> resourceInjectedClassLoaders =
+  private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders =
       Cache.builder().setWeakKeys().build();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
@@ -153,14 +153,14 @@ public class HelperInjector implements Transformer {
     }
 
     if (classLoader != null && helpersSource != null && !helperResources.isEmpty()) {
-      injectHelperResource(classLoader);
+      injectHelperResources(classLoader);
     }
 
     return builder;
   }
 
-  private void injectHelperResource(ClassLoader classLoader) {
-    resourceInjectedClassLoaders.computeIfAbsent(
+  private void injectHelperResources(ClassLoader classLoader) {
+    resourcesInjectedClassLoaders.computeIfAbsent(
         classLoader,
         cl -> {
           for (HelperResource helperResource : helperResources) {
