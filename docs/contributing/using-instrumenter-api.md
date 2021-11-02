@@ -15,8 +15,7 @@ various extractors that can enhance or modify the telemetry data.
 The first method, which needs to be called before any other `Instrumenter` method,
 is `shouldStart()`. It determines whether the operation should be instrumented for telemetry or not.
 The `Instrumenter` framework implements several suppression rules that prevent generating duplicate
-telemetry; for example the same HTTP server request will always emit exactly one HTTP `SERVER` span,
-not more.
+telemetry; for example the same HTTP server request always produces a single HTTP `SERVER` span.
 
 The `shouldStart()` method accepts the current OpenTelemetry `Context` and the instrumented
 library `REQUEST` type. Consider the following example:
