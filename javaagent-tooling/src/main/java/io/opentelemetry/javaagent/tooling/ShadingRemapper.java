@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import java.util.Map;
 import java.util.TreeMap;
-import net.bytebuddy.jar.asm.commons.Remapper;
+import org.objectweb.asm.commons.Remapper;
 
 public class ShadingRemapper extends Remapper {
   public static class Rule {

@@ -14,7 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public abstract class Config {
   @Nullable private static volatile Config instance = null;
 
   /** Start building a new {@link Config} instance. */
-  public static ConfigBuilder newBuilder() {
+  public static ConfigBuilder builder() {
     return new ConfigBuilder();
   }
 
@@ -68,7 +68,7 @@ public abstract class Config {
       // this should only happen in library instrumentation
       //
       // no need to synchronize because worst case is creating instance more than once
-      instance = newBuilder().readEnvironmentVariables().readSystemProperties().build();
+      instance = builder().readEnvironmentVariables().readSystemProperties().build();
     }
     return instance;
   }

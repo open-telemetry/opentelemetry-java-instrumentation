@@ -81,7 +81,7 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady()
 
     when:
-    def observer = client.conversation(new StreamObserver<Helloworld.Response>() {
+    def observer2 = client.conversation(new StreamObserver<Helloworld.Response>() {
       @Override
       void onNext(Helloworld.Response value) {
         clientReceived << value.message
@@ -99,9 +99,9 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
 
     clientRange.each {
       def message = Helloworld.Response.newBuilder().setMessage("call $it").build()
-      observer.onNext(message)
+      observer2.onNext(message)
     }
-    observer.onCompleted()
+    observer2.onCompleted()
 
     then:
     assertTraces(1) {

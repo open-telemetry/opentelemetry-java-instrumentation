@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +24,14 @@ public class JdkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  @Nullable
+  public String peerName(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return httpRequest.uri().getHost();
   }
 
   @Override
-  public @Nullable Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  @Nullable
+  public Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     int port = httpRequest.uri().getPort();
     if (port != -1) {
       return port;
@@ -50,7 +52,8 @@ public class JdkHttpNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  @Nullable
+  public String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return null;
   }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a

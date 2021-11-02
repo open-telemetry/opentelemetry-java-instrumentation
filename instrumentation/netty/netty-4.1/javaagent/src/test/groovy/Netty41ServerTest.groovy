@@ -30,6 +30,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -59,7 +60,8 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
           pipeline.addLast([
             channelRead0       : { ctx, msg ->
               if (msg instanceof HttpRequest) {
-                def uri = URI.create((msg as HttpRequest).uri())
+                def request = msg as HttpRequest
+                def uri = URI.create(request.uri())
                 ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
                 ctx.write controller(endpoint) {
                   ByteBuf content = null
@@ -83,6 +85,11 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
                       content = Unpooled.EMPTY_BUFFER
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       response.headers().set(HttpHeaderNames.LOCATION, endpoint.body)
+                      break
+                    case CAPTURE_HEADERS:
+                      content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
+                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                      response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"))
                       break
                     case EXCEPTION:
                       throw new Exception(endpoint.body)
@@ -123,15 +130,5 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
-  }
-
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
   }
 }

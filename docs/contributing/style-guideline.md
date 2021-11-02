@@ -102,7 +102,7 @@ Local variables should only be declared `final` if they are not initialized inli
 [Note: this section is aspirational, as opposed to a reflection of the current codebase]
 
 All parameters and fields which can be `null` should be annotated with `@Nullable`
-(specifically `org.checkerframework.checker.nullness.qual.Nullable`, which is included by the
+(specifically `javax.annotation.Nullable`, which is included by the
 `otel.java-conventions` gradle plugin as a `compileOnly` dependency).
 
 There is no need to use `@NonNull`, as this is the default, which should be declared in a

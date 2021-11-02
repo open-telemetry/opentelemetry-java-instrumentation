@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
+import java.util.function.Supplier;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -61,28 +62,66 @@ public class PatchLogger {
     slf4jLogger.error(msg);
   }
 
+  public void severe(Supplier<String> msgSupplier) {
+    if (slf4jLogger.isErrorEnabled()) {
+      slf4jLogger.error(msgSupplier.get());
+    }
+  }
+
   public void warning(String msg) {
     slf4jLogger.warn(msg);
+  }
+
+  public void warning(Supplier<String> msgSupplier) {
+    if (slf4jLogger.isWarnEnabled()) {
+      slf4jLogger.warn(msgSupplier.get());
+    }
   }
 
   public void info(String msg) {
     slf4jLogger.info(msg);
   }
 
+  public void info(Supplier<String> msgSupplier) {
+    if (slf4jLogger.isInfoEnabled()) {
+      slf4jLogger.info(msgSupplier.get());
+    }
+  }
+
   public void config(String msg) {
     slf4jLogger.info(msg);
+  }
+
+  public void config(Supplier<String> msgSupplier) {
+    info(msgSupplier);
   }
 
   public void fine(String msg) {
     slf4jLogger.debug(msg);
   }
 
+  public void fine(Supplier<String> msgSupplier) {
+    if (slf4jLogger.isDebugEnabled()) {
+      slf4jLogger.debug(msgSupplier.get());
+    }
+  }
+
   public void finer(String msg) {
     slf4jLogger.trace(msg);
   }
 
+  public void finer(Supplier<String> msgSupplier) {
+    if (slf4jLogger.isTraceEnabled()) {
+      slf4jLogger.trace(msgSupplier.get());
+    }
+  }
+
   public void finest(String msg) {
     slf4jLogger.trace(msg);
+  }
+
+  public void finest(Supplier<String> msgSupplier) {
+    finer(msgSupplier);
   }
 
   public void log(LogRecord record) {
@@ -186,6 +225,40 @@ public class PatchLogger {
     }
   }
 
+  public void log(Level level, Supplier<String> msgSupplier) {
+    if (!isLoggable(level)) {
+      return;
+    }
+    if (level.intValue() >= Level.SEVERE.intValue()) {
+      slf4jLogger.error(msgSupplier.get());
+    } else if (level.intValue() >= Level.WARNING.intValue()) {
+      slf4jLogger.warn(msgSupplier.get());
+    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+      slf4jLogger.info(msgSupplier.get());
+    } else if (level.intValue() >= Level.FINE.intValue()) {
+      slf4jLogger.debug(msgSupplier.get());
+    } else {
+      slf4jLogger.trace(msgSupplier.get());
+    }
+  }
+
+  public void log(Level level, Throwable thrown, Supplier<String> msgSupplier) {
+    if (!isLoggable(level)) {
+      return;
+    }
+    if (level.intValue() >= Level.SEVERE.intValue()) {
+      slf4jLogger.error(msgSupplier.get(), thrown);
+    } else if (level.intValue() >= Level.WARNING.intValue()) {
+      slf4jLogger.warn(msgSupplier.get(), thrown);
+    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+      slf4jLogger.info(msgSupplier.get(), thrown);
+    } else if (level.intValue() >= Level.FINE.intValue()) {
+      slf4jLogger.debug(msgSupplier.get(), thrown);
+    } else {
+      slf4jLogger.trace(msgSupplier.get(), thrown);
+    }
+  }
+
   public boolean isLoggable(Level level) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       return slf4jLogger.isErrorEnabled();
@@ -233,6 +306,20 @@ public class PatchLogger {
   public void logp(
       Level level, String sourceClass, String sourceMethod, String msg, Throwable thrown) {
     log(level, msg, thrown);
+  }
+
+  public void logp(
+      Level level, String sourceClass, String sourceMethod, Supplier<String> msgSupplier) {
+    log(level, msgSupplier);
+  }
+
+  public void logp(
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      Throwable thrown,
+      Supplier<String> msgSupplier) {
+    log(level, thrown, msgSupplier);
   }
 
   public void logrb(

@@ -17,7 +17,7 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -37,7 +37,7 @@ import org.openjdk.jmh.annotations.Warmup;
 public class InstrumenterBenchmark {
 
   private static final Instrumenter<Void, Void> INSTRUMENTER =
-      Instrumenter.<Void, Void>newBuilder(
+      Instrumenter.<Void, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesExtractor.INSTANCE))
@@ -66,12 +66,14 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    protected @Nullable String method(Void unused) {
+    @Nullable
+    protected String method(Void unused) {
       return "GET";
     }
 
     @Override
-    protected @Nullable String url(Void unused) {
+    @Nullable
+    protected String url(Void unused) {
       return "https://opentelemetry.io/benchmark";
     }
 
@@ -84,32 +86,38 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    protected @Nullable Long requestContentLength(Void unused, @Nullable Void unused2) {
+    @Nullable
+    protected Long requestContentLength(Void unused, @Nullable Void unused2) {
       return 100L;
     }
 
     @Override
-    protected @Nullable Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
+    @Nullable
+    protected Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
       return null;
     }
 
     @Override
-    protected @Nullable String flavor(Void unused, @Nullable Void unused2) {
+    @Nullable
+    protected String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
 
     @Override
-    protected @Nullable Integer statusCode(Void unused, Void unused2) {
+    @Nullable
+    protected Integer statusCode(Void unused, Void unused2) {
       return 200;
     }
 
     @Override
-    protected @Nullable Long responseContentLength(Void unused, Void unused2) {
+    @Nullable
+    protected Long responseContentLength(Void unused, Void unused2) {
       return 100L;
     }
 
     @Override
-    protected @Nullable Long responseContentLengthUncompressed(Void unused, Void unused2) {
+    @Nullable
+    protected Long responseContentLengthUncompressed(Void unused, Void unused2) {
       return null;
     }
 
@@ -126,12 +134,14 @@ public class InstrumenterBenchmark {
         InetSocketAddress.createUnresolved("localhost", 8080);
 
     @Override
-    public @Nullable InetSocketAddress getAddress(Void unused) {
+    @Nullable
+    public InetSocketAddress getAddress(Void unused) {
       return ADDRESS;
     }
 
     @Override
-    public @Nullable String transport(Void unused) {
+    @Nullable
+    public String transport(Void unused) {
       return SemanticAttributes.NetTransportValues.IP_TCP;
     }
   }

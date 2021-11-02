@@ -28,11 +28,20 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   abstract Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder)
 
   @Shared
-  Call.Factory client = createCallFactory(
-    new OkHttpClient.Builder()
+  Call.Factory client = createCallFactory(getClientBuilder(false))
+  @Shared
+  Call.Factory clientWithReadTimeout = createCallFactory(getClientBuilder(true))
+
+  OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
+    OkHttpClient.Builder builder = new OkHttpClient.Builder()
       .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
       .protocols(Arrays.asList(Protocol.HTTP_1_1))
-      .retryOnConnectionFailure(false))
+      .retryOnConnectionFailure(false)
+    if (withReadTimeout) {
+      builder.readTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    }
+    return builder
+  }
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -45,7 +54,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
   @Override
   int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
-    def response = client.newCall(request).execute()
+    def response = getClient(uri).newCall(request).execute()
     response.body().withCloseable {
       return response.code()
     }
@@ -53,7 +62,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
   @Override
   void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    client.newCall(request).enqueue(new Callback() {
+    getClient(uri).newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Call call, IOException e) {
         requestResult.complete(e)
@@ -68,9 +77,21 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
     })
   }
 
+  Call.Factory getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
+  }
+
   @Override
   boolean testCircularRedirects() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Override
@@ -85,6 +106,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
     switch (uri.toString()) {
       case "http://localhost:61/":
       case "https://192.0.2.1/":
+      case resolveAddress("/read-timeout").toString():
         attributes.remove(SemanticAttributes.HTTP_FLAVOR)
     }
 

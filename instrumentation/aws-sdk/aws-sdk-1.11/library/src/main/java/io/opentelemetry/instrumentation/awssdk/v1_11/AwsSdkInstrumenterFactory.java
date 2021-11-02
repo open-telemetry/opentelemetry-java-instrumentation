@@ -53,7 +53,7 @@ final class AwsSdkInstrumenterFactory {
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       SpanKindExtractor<Request<?>> kindExtractor) {
-    return Instrumenter.<Request<?>, Response<?>>newBuilder(
+    return Instrumenter.<Request<?>, Response<?>>builder(
             openTelemetry, INSTRUMENTATION_NAME, spanName)
         .addAttributesExtractors(
             captureExperimentalSpanAttributes

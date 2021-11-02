@@ -27,6 +27,7 @@ import spock.lang.Unroll
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.api.trace.StatusCode.UNSET
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -85,6 +86,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -149,6 +151,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -233,6 +236,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -286,7 +290,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "/**"
           kind SERVER
           hasNoParent()
-          status ERROR
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_NAME}" { it == null || it == "localhost" }
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -295,6 +299,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/notfoundgreet"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 404
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -336,6 +341,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/echo"
             "${SemanticAttributes.HTTP_METHOD.key}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 202
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -382,6 +388,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" urlPath
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -443,6 +450,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/double-greet-redirect"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 307
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -472,6 +480,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_TARGET}" "/double-greet"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key}" String
           }
@@ -516,6 +525,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "${SemanticAttributes.HTTP_TARGET}" urlPath
               "${SemanticAttributes.HTTP_METHOD.key}" "GET"
               "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+              "${SemanticAttributes.HTTP_SCHEME.key}" "http"
               "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
               "${SemanticAttributes.HTTP_USER_AGENT.key}" String
             }

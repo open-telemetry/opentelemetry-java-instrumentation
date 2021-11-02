@@ -7,13 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ratpack.func.Action;
 
 public class ActionWrapper<T> implements Action<T> {
-
-  private static final Logger logger = LoggerFactory.getLogger(ActionWrapper.class);
 
   private final Action<T> delegate;
   private final Context parentContext;
@@ -35,7 +31,11 @@ public class ActionWrapper<T> implements Action<T> {
     if (delegate instanceof ActionWrapper) {
       return delegate;
     }
-    logger.debug("Wrapping action task {}", delegate);
-    return new ActionWrapper(delegate, Context.current());
+    Context context = Context.current();
+    if (context == Context.root()) {
+      // Skip wrapping, there is no need to propagate root context.
+      return delegate;
+    }
+    return new ActionWrapper(delegate, context);
   }
 }

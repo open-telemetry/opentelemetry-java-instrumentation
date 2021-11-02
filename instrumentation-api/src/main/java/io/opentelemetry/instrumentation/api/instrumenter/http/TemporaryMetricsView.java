@@ -52,17 +52,22 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  static Attributes applyDurationView(Attributes attributes) {
-    return applyView(attributes, durationView);
+  static Attributes applyDurationView(Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, durationView);
+    applyView(filtered, endAttributes, durationView);
+    return filtered.build();
   }
 
   static Attributes applyActiveRequestsView(Attributes attributes) {
-    return applyView(attributes, activeRequestsView);
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, attributes, activeRequestsView);
+    return filtered.build();
   }
 
   @SuppressWarnings("unchecked")
-  private static Attributes applyView(Attributes attributes, Set<AttributeKey> view) {
-    AttributesBuilder filtered = Attributes.builder();
+  private static void applyView(
+      AttributesBuilder filtered, Attributes attributes, Set<AttributeKey> view) {
     attributes.forEach(
         (BiConsumer<AttributeKey, Object>)
             (key, value) -> {
@@ -70,7 +75,6 @@ final class TemporaryMetricsView {
                 filtered.put(key, value);
               }
             });
-    return filtered.build();
   }
 
   private TemporaryMetricsView() {}

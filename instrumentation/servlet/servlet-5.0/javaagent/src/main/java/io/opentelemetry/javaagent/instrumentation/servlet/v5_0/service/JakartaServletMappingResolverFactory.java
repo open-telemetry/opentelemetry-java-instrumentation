@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.servlet.naming.ServletMappingResolverFac
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class JakartaServletMappingResolverFactory extends ServletMappingResolverFactory {
   private final ServletConfig servletConfig;

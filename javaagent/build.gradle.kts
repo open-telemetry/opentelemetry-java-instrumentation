@@ -58,6 +58,7 @@ val licenseReportDependencies by configurations.creating {
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
+  bootstrapLibs(project(":instrumentation-api-caching:caffeine3", configuration = "shadow"))
   bootstrapLibs(project(":javaagent-bootstrap"))
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")

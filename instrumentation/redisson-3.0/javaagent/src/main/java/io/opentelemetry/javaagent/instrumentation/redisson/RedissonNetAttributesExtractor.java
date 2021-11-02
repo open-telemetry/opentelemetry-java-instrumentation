@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class RedissonNetAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<RedissonRequest, Void> {

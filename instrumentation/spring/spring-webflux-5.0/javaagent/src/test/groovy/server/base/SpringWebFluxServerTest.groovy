@@ -57,16 +57,6 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
   }
 
   @Override
-  boolean testConcurrency() {
-    return true
-  }
-
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
-  @Override
   Class<?> expectedExceptionClass() {
     return IllegalStateException
   }

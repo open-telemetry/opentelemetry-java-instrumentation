@@ -18,7 +18,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTracing}. */
 public final class GrpcTracingBuilder {
@@ -66,9 +66,9 @@ public final class GrpcTracingBuilder {
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(

@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -26,7 +26,7 @@ public abstract class SqlAttributesExtractor<REQUEST, RESPONSE>
     extends DbAttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     super.onStart(attributes, request);
     AttributeKey<String> dbTable = dbTableAttribute();
     if (dbTable != null) {

@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
-import org.junit.AssumptionViolatedException
+import org.opentest4j.TestAbortedException
 import spock.lang.Shared
 
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait {
@@ -45,7 +45,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    throw new AssumptionViolatedException("not tested on 4.0")
+    throw new TestAbortedException("not tested on 4.0")
   }
 
   @Override

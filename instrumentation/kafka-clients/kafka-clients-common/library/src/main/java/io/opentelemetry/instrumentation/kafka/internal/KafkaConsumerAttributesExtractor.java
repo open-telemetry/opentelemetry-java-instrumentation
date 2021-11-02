@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaConsumerAttributesExtractor
     extends MessagingAttributesExtractor<ConsumerRecord<?, ?>, Void> {
@@ -46,22 +46,26 @@ public final class KafkaConsumerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String protocol(ConsumerRecord<?, ?> consumerRecord) {
+  @Nullable
+  protected String protocol(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String protocolVersion(ConsumerRecord<?, ?> consumerRecord) {
+  @Nullable
+  protected String protocolVersion(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String url(ConsumerRecord<?, ?> consumerRecord) {
+  @Nullable
+  protected String url(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String conversationId(ConsumerRecord<?, ?> consumerRecord) {
+  @Nullable
+  protected String conversationId(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
@@ -71,12 +75,14 @@ public final class KafkaConsumerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
+  @Nullable
+  protected Long messagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String messageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
+  @Nullable
+  protected String messageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
     return null;
   }
 }

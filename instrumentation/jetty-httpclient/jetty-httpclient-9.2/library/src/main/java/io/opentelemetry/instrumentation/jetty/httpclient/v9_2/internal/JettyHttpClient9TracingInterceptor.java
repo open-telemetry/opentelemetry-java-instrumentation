@@ -14,7 +14,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
@@ -136,7 +136,9 @@ public class JettyHttpClient9TracingInterceptor
     if (this.context != null) {
       Span span = Span.fromContext(this.context);
       HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, agentField.getValue());
+      if (agentField != null) {
+        span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, agentField.getValue());
+      }
     }
   }
 

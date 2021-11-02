@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +55,11 @@ public final class RuntimeVirtualFieldSupplier {
   }
 
   private static final class CacheBasedVirtualField<T, F> extends VirtualField<T, F> {
-    private final Cache<T, F> cache = Cache.newBuilder().setWeakKeys().build();
+    private final Cache<T, F> cache = Cache.builder().setWeakKeys().build();
 
     @Override
-    public @Nullable F get(T object) {
+    @Nullable
+    public F get(T object) {
       return cache.get(object);
     }
 

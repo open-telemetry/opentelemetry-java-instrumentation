@@ -10,9 +10,9 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.GetFuture;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class GetCompletionListener extends CompletionListener<GetFuture<?>>
     implements net.spy.memcached.internal.GetCompletionListener {

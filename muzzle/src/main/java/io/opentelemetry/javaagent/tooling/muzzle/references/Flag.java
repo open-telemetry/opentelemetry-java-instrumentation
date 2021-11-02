@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.references;
 
-import net.bytebuddy.jar.asm.Opcodes;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Expected flag (or lack of flag) on a class, method or field reference.

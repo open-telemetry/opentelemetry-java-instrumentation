@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class HttpUrlHttpAttributesExtractor
     extends HttpClientAttributesExtractor<HttpURLConnection, Integer> {
@@ -34,13 +34,14 @@ class HttpUrlHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
-      HttpURLConnection connection, @Nullable Integer statusCode) {
+  @Nullable
+  protected Long requestContentLength(HttpURLConnection connection, @Nullable Integer statusCode) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpURLConnection connection, @Nullable Integer response) {
     return null;
   }
@@ -56,12 +57,14 @@ class HttpUrlHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(HttpURLConnection connection, Integer statusCode) {
+  @Nullable
+  protected Long responseContentLength(HttpURLConnection connection, Integer statusCode) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpURLConnection connection, Integer statusCode) {
     return null;
   }
@@ -69,6 +72,7 @@ class HttpUrlHttpAttributesExtractor
   @Override
   protected List<String> responseHeader(
       HttpURLConnection connection, Integer statusCode, String name) {
-    return emptyList();
+    String value = connection.getHeaderField(name);
+    return value == null ? emptyList() : singletonList(value);
   }
 }

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -17,13 +17,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * it is more convenient to use {@link InetSocketAddressNetClientAttributesExtractor}.
  */
 public abstract class NetClientAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {}
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {}
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

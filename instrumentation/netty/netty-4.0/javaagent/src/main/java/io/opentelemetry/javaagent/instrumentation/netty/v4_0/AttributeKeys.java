@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.common.server.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -36,6 +37,12 @@ public class AttributeKeys {
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".client-parent-context");
+
+  public static final AttributeKey<HttpRequestAndChannel> CLIENT_REQUEST =
+      attributeKey(AttributeKeys.class.getName() + ".http-client-request");
+
+  public static final AttributeKey<HttpResponse> CLIENT_RESPONSE =
+      attributeKey(AttributeKeys.class.getName() + ".http-client-response");
 
   /**
    * Generate an attribute key or reuse the one existing in the global app map. This implementation

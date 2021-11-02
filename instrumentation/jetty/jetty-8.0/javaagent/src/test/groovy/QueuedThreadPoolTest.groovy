@@ -7,7 +7,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 
-import static org.junit.Assume.assumeTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
 

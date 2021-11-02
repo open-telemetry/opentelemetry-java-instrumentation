@@ -154,11 +154,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     setup:
     def url = resolveAddress("/success").toURL()
     HttpURLConnection connection = runWithSpan("someTrace") {
-      HttpURLConnection connection = url.openConnection()
-      connection.setRequestProperty("Connection", "close")
+      HttpURLConnection con = url.openConnection()
+      con.setRequestProperty("Connection", "close")
       assert Span.current().getSpanContext().isValid()
-      assert connection.getResponseCode() == STATUS
-      return connection
+      assert con.getResponseCode() == STATUS
+      return con
     }
 
     expect:

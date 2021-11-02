@@ -38,10 +38,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.rnorth.ducttape.TimeoutException;
 import org.rnorth.ducttape.ratelimits.RateLimiter;
 import org.rnorth.ducttape.ratelimits.RateLimiterBuilder;
@@ -133,7 +133,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
-      TargetWaitStrategy waitStrategy) {
+      TargetWaitStrategy waitStrategy,
+      String[] cmd) {
     stopTarget();
 
     if (!imageExists(targetImageName)) {
@@ -148,17 +149,21 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     target =
         startContainer(
             targetImageName,
-            command ->
-                command
-                    .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
-                    .withHostConfig(
-                        HostConfig.newHostConfig()
-                            .withAutoRemove(true)
-                            .withNetworkMode(natNetworkId)
-                            .withPortBindings(
-                                new PortBinding(
-                                    new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
-                    .withEnv(environment),
+            command -> {
+              command
+                  .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
+                  .withHostConfig(
+                      HostConfig.newHostConfig()
+                          .withAutoRemove(true)
+                          .withNetworkMode(natNetworkId)
+                          .withPortBindings(
+                              new PortBinding(
+                                  new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
+                  .withEnv(environment);
+              if (cmd != null) {
+                command.withCmd(cmd);
+              }
+            },
             containerId -> {
               try (InputStream agentFileStream = new FileInputStream(agentPath)) {
                 copyFileToContainer(

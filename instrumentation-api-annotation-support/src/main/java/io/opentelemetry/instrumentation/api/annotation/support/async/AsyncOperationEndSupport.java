@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.annotation.support.async;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * A wrapper over {@link Instrumenter} that is able to defer {@link Instrumenter#end(Context,
@@ -36,7 +36,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
   private final Instrumenter<REQUEST, RESPONSE> instrumenter;
   private final Class<RESPONSE> responseType;
   private final Class<?> asyncType;
-  private final @Nullable AsyncOperationEndStrategy asyncOperationEndStrategy;
+  @Nullable private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private AsyncOperationEndSupport(
       Instrumenter<REQUEST, RESPONSE> instrumenter,

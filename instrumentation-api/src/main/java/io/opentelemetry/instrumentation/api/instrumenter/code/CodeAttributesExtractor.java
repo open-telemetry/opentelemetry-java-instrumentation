@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.code;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -16,10 +16,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * code attributes</a>.
  */
 public abstract class CodeAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     Class<?> cls = codeClass(request);
     if (cls != null) {
       set(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
@@ -30,7 +30,7 @@ public abstract class CodeAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** A prefix tree that maps from the longest matching prefix to a value {@code V}. */
 public interface Trie<V> {
 
   /** Start building a trie. */
-  static <V> Builder<V> newBuilder() {
+  static <V> Builder<V> builder() {
     return new TrieImpl.BuilderImpl<>();
   }
 

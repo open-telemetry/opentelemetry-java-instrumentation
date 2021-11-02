@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class ResteasySpanName implements ServerSpanNameSupplier<String> {
 
@@ -25,7 +25,8 @@ public final class ResteasySpanName implements ServerSpanNameSupplier<String> {
   }
 
   @Override
-  public @Nullable String get(Context context, String name) {
+  @Nullable
+  public String get(Context context, String name) {
     if (name.isEmpty()) {
       return null;
     }

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class JaxWsCodeAttributesExtractor extends CodeAttributesExtractor<JaxWsRequest, Void> {
 
@@ -21,12 +21,14 @@ public class JaxWsCodeAttributesExtractor extends CodeAttributesExtractor<JaxWsR
   }
 
   @Override
-  protected @Nullable String filePath(JaxWsRequest request) {
+  @Nullable
+  protected String filePath(JaxWsRequest request) {
     return null;
   }
 
   @Override
-  protected @Nullable Long lineNumber(JaxWsRequest request) {
+  @Nullable
+  protected Long lineNumber(JaxWsRequest request) {
     return null;
   }
 }

@@ -39,7 +39,7 @@ public final class SpringIntegrationTracingBuilder {
    */
   public SpringIntegrationTracing build() {
     Instrumenter<MessageWithChannel, Void> instrumenter =
-        Instrumenter.<MessageWithChannel, Void>newBuilder(
+        Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry, INSTRUMENTATION_NAME, new MessageChannelSpanNameExtractor())
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(new SpringMessagingAttributesExtractor())

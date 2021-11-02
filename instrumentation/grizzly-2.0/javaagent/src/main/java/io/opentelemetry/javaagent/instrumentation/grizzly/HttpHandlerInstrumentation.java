@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,7 +48,7 @@ public class HttpHandlerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        tracer().onException(Java8BytecodeBridge.currentContext(), throwable);
+        GrizzlyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
       }
     }
   }

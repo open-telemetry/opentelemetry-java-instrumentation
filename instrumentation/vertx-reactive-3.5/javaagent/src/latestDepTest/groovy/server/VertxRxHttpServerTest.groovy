@@ -5,7 +5,6 @@
 
 package server
 
-
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.DeploymentOptions
@@ -19,6 +18,7 @@ import io.vertx.reactivex.ext.web.Router
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -58,11 +58,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
-  @Override
   boolean testPathParam() {
     return true
   }
@@ -77,11 +72,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
       default:
         return endpoint.getPath()
     }
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
   }
 
   @Override
@@ -135,6 +125,13 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
       router.route("/path/:id/param").handler { ctx ->
         controller(PATH_PARAM) {
           ctx.response().setStatusCode(PATH_PARAM.status).end(ctx.request().getParam("id"))
+        }
+      }
+      router.route(CAPTURE_HEADERS.path).handler { ctx ->
+        controller(CAPTURE_HEADERS) {
+          ctx.response().setStatusCode(CAPTURE_HEADERS.status)
+            .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
+            .end(CAPTURE_HEADERS.body)
         }
       }
 

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class ArmeriaTracingBuilder {
 
@@ -108,12 +108,12 @@ public final class ArmeriaTracingBuilder {
         new ArmeriaHttpServerAttributesExtractor(capturedHttpServerHeaders);
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(httpClientAttributesExtractor));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(serverAttributesExtractor));

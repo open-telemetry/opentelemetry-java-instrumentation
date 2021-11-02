@@ -18,11 +18,11 @@ import java.net.http.HttpResponse;
 
 public class JdkHttpClientSingletons {
 
-  private static final HttpHeadersInjectAdapter SETTER;
+  private static final HttpHeadersSetter SETTER;
   private static final Instrumenter<HttpRequest, HttpResponse<?>> INSTRUMENTER;
 
   static {
-    SETTER = new HttpHeadersInjectAdapter(GlobalOpenTelemetry.getPropagators());
+    SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
     JdkHttpAttributesExtractor httpAttributesExtractor = new JdkHttpAttributesExtractor();
     SpanNameExtractor<HttpRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
@@ -31,7 +31,7 @@ public class JdkHttpClientSingletons {
     JdkHttpNetAttributesExtractor netAttributesExtractor = new JdkHttpNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse<?>>newBuilder(
+        Instrumenter.<HttpRequest, HttpResponse<?>>builder(
                 GlobalOpenTelemetry.get(), "io.opentelemetry.java-http-client", spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
@@ -45,7 +45,7 @@ public class JdkHttpClientSingletons {
     return INSTRUMENTER;
   }
 
-  public static HttpHeadersInjectAdapter setter() {
+  public static HttpHeadersSetter setter() {
     return SETTER;
   }
 

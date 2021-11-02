@@ -5,13 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class NettyHttpServerAttributesExtractor
     extends HttpServerAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
+
+  private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
+
+  @SuppressWarnings("unchecked")
+  private static Class<? extends ChannelHandler> getSslHandlerClass() {
+    try {
+      return (Class<? extends ChannelHandler>)
+          Class.forName(
+              "io.netty.handler.ssl.SslHandler",
+              false,
+              NettyHttpServerAttributesExtractor.class.getClassLoader());
+    } catch (ClassNotFoundException exception) {
+      return null;
+    }
+  }
 
   @Override
   protected String method(HttpRequestAndChannel requestAndChannel) {
@@ -24,13 +41,15 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }
@@ -41,13 +60,15 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
@@ -73,17 +94,21 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(HttpRequestAndChannel requestAndChannel) {
+  @Nullable
+  protected String route(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String scheme(HttpRequestAndChannel requestAndChannel) {
-    return null;
+  @Nullable
+  protected String scheme(HttpRequestAndChannel requestAndChannel) {
+    boolean isHttps = requestAndChannel.channel().pipeline().get(sslHandlerClass) != null;
+    return isHttps ? "https" : "http";
   }
 
   @Override
-  protected @Nullable String serverName(
+  @Nullable
+  protected String serverName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return null;
   }

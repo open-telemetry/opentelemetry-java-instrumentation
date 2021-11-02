@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client.VertxClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client.VertxClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -92,11 +92,11 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
 
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request);
+      context = instrumenter().start(parentContext, request);
       Contexts contexts = new Contexts(parentContext, context);
       VirtualField.find(HttpClientRequest.class, Contexts.class).set(request, contexts);
 
@@ -105,6 +105,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endScope(
+        @Advice.This HttpClientRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
@@ -112,7 +113,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         scope.close();
       }
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
   }
@@ -131,7 +132,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      tracer().endExceptionally(contexts.context, t);
+      instrumenter().end(contexts.context, request, null, t);
 
       // Scoping all potential callbacks etc to the parent context
       scope = contexts.parentContext.makeCurrent();
@@ -159,7 +160,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      tracer().end(contexts.context, response);
+      instrumenter().end(contexts.context, request, response, null);
 
       // Scoping all potential callbacks etc to the parent context
       scope = contexts.parentContext.makeCurrent();
@@ -205,7 +206,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       if (handler != null) {
         VirtualField<HttpClientRequest, Contexts> virtualField =
             VirtualField.find(HttpClientRequest.class, Contexts.class);
-        handler = ExceptionHandlerWrapper.wrap(tracer(), request, virtualField, handler);
+        handler = ExceptionHandlerWrapper.wrap(instrumenter(), request, virtualField, handler);
       }
     }
   }

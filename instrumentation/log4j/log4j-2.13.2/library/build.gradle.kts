@@ -11,5 +11,5 @@ dependencies {
   // around it.
   testLibrary("org.apache.logging.log4j:log4j-core:2.13.3")
 
-  testImplementation(project(":instrumentation:log4j:log4j-2-testing"))
+  testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
 }

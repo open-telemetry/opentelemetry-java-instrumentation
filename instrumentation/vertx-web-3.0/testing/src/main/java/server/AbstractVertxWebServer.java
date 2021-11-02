@@ -5,6 +5,7 @@
 
 package server;
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD;
@@ -112,6 +113,21 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                       end(
                           ctx.response().setStatusCode(PATH_PARAM.getStatus()),
                           ctx.request().getParam("id"));
+                      return null;
+                    }));
+    router
+        .route(CAPTURE_HEADERS.getPath())
+        .handler(
+            ctx ->
+                HttpServerTest.controller(
+                    CAPTURE_HEADERS,
+                    () -> {
+                      end(
+                          ctx.response()
+                              .setStatusCode(CAPTURE_HEADERS.getStatus())
+                              .putHeader(
+                                  "X-Test-Response", ctx.request().getHeader("X-Test-Request")),
+                          CAPTURE_HEADERS.getBody());
                       return null;
                     }));
 

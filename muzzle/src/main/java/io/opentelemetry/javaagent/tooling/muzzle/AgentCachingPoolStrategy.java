@@ -49,13 +49,13 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    * </ul>
    */
   final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
-      Cache.newBuilder().setWeakKeys().build();
+      Cache.builder().setWeakKeys().build();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
   final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
-      Cache.newBuilder().setMaximumSize(TYPE_CAPACITY).build();
+      Cache.builder().setMaximumSize(TYPE_CAPACITY).build();
 
   // fast path for bootstrap
   final SharedResolutionCacheAdapter bootstrapCacheProvider =

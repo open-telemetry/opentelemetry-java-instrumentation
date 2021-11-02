@@ -14,6 +14,14 @@ import static Resource.Test3
 
 class CxfFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Server> {
 
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
+
   @Override
   boolean testAbortPrematch() {
     false

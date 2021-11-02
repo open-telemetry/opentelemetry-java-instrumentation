@@ -30,12 +30,15 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
 
     expect:
     customer.id == null
-    !repo.findAll().iterator().hasNext()
+    !runWithSpan("parent") {
+      repo.findAll().iterator().hasNext()
+    }
 
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -46,6 +49,10 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -67,6 +74,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -74,15 +82,18 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    repo.save(customer)
+    runWithSpan("parent") {
+      repo.save(customer)
+    }
     def savedId = customer.id
 
     then:
     customer.id != null
+    def sessionId2
     assertTraces(1) {
       trace(0, 4 + (isHibernate4 ? 0 : 1)) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -93,6 +104,10 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId2 = it
+              it instanceof String
+            }
           }
         }
         if (!isHibernate4) {
@@ -113,6 +128,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" sessionId2
             }
           }
           span(4) {
@@ -149,6 +165,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" sessionId2
             }
           }
         }
@@ -158,14 +175,17 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
 
     when:
     customer.firstName = "Bill"
-    repo.save(customer)
+    runWithSpan("parent") {
+      repo.save(customer)
+    }
 
     then:
     customer.id == savedId
+    def sessionId3
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -176,6 +196,10 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId3 = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -196,6 +220,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId3
           }
         }
         span(4) {
@@ -216,7 +241,9 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    customer = repo.findByLastName("Anonymous")[0]
+    customer = runWithSpan("parent") {
+      repo.findByLastName("Anonymous")[0]
+    }
 
     then:
     customer.id == savedId
@@ -224,7 +251,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -235,6 +262,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" String
           }
         }
         span(2) {
@@ -256,13 +284,15 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    repo.delete(customer)
+    runWithSpan("parent") {
+      repo.delete(customer)
+    }
 
     then:
     assertTraces(1) {
       trace(0, 6 + (isHibernate4 ? 0 : 1)) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -276,6 +306,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" String
             }
           }
           span(2) {
@@ -298,6 +329,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" String
           }
         }
         if (isHibernate4) {
@@ -322,6 +354,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" String
           }
         }
         span(3 + offset) {
@@ -329,6 +362,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" String
           }
         }
         span(4 + offset) {

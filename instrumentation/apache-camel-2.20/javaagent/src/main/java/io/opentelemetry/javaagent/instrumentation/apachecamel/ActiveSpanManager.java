@@ -26,8 +26,8 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

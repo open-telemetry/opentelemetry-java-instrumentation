@@ -10,7 +10,9 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.ArrayList;
 import java.util.List;
+import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
 public class LambdaInstrumentationModule extends InstrumentationModule {
@@ -28,8 +30,13 @@ public class LambdaInstrumentationModule extends InstrumentationModule {
   public List<String> getAdditionalHelperClassNames() {
     // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
     // classes
-    return singletonList(
-        "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
+    List<String> classNames = new ArrayList<>();
+    classNames.add("io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
+    if (JavaModule.isSupported()) {
+      classNames.add(
+          "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer");
+    }
+    return classNames;
   }
 
   @Override

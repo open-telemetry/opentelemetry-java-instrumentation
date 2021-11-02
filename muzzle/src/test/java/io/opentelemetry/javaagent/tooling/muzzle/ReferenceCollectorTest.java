@@ -29,12 +29,12 @@ import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
-import net.bytebuddy.jar.asm.Type;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.objectweb.asm.Type;
 
 class ReferenceCollectorTest {
 

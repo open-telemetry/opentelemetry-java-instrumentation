@@ -13,7 +13,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
   private final Cache<ClassLoader, Boolean> cache =
-      Cache.newBuilder().setWeakKeys().setMaximumSize(25).build();
+      Cache.builder().setWeakKeys().setMaximumSize(25).build();
 
   private final String[] resources;
 

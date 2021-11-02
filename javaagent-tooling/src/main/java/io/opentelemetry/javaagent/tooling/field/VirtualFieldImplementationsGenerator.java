@@ -27,12 +27,12 @@ import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.Label;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.pool.TypePool;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 final class VirtualFieldImplementationsGenerator {
 
@@ -264,7 +264,7 @@ final class VirtualFieldImplementationsGenerator {
   @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
   static final class VirtualFieldImplementationTemplate extends VirtualField<Object, Object> {
     private static final VirtualFieldImplementationTemplate INSTANCE =
-        new VirtualFieldImplementationTemplate(Cache.newBuilder().setWeakKeys().build());
+        new VirtualFieldImplementationTemplate(Cache.builder().setWeakKeys().build());
 
     private final Cache<Object, Object> map;
 

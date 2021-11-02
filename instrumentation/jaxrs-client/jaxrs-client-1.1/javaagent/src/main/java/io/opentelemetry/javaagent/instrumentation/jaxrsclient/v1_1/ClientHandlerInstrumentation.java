@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -53,10 +52,8 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ClientRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       Context parentContext = currentContext();
-      if (isRootClientHandler && instrumenter().shouldStart(parentContext, request)) {
+      if (instrumenter().shouldStart(parentContext, request)) {
         context = instrumenter().start(parentContext, request);
         scope = context.makeCurrent();
       }

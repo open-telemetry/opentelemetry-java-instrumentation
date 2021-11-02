@@ -16,7 +16,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 // TODO In search for a better home package
 
@@ -30,7 +30,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *     and HTTP flavor.
  * @param <STORAGE> - Implementation specific storage type for attaching/getting the server context.
  *     Use Void if your subclass does not have an implementation specific storage need.
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.http the HTTP semantic
+ *     convention utilities package} instead.
  */
+@Deprecated
 public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
@@ -272,7 +276,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static void setStatus(Span span, int status) {
     span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-    StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+    StatusCode statusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(status);
     if (statusCode != StatusCode.UNSET) {
       span.setStatus(statusCode);
     }

@@ -13,20 +13,20 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TwilioExperimentalAttributesExtractor extends AttributesExtractor<String, Object> {
+class TwilioExperimentalAttributesExtractor implements AttributesExtractor<String, Object> {
 
   private static final Logger logger =
       LoggerFactory.getLogger(TwilioExperimentalAttributesExtractor.class);
 
   @Override
-  protected void onStart(AttributesBuilder attributes, String s) {}
+  public void onStart(AttributesBuilder attributes, String s) {}
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes, String s, @Nullable Object result, @Nullable Throwable error) {
     if (result == null) {
       return;

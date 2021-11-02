@@ -8,18 +8,18 @@ package io.opentelemetry.instrumentation.spring.webmvc;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class StatusCodeExtractor
-    extends AttributesExtractor<HttpServletRequest, HttpServletResponse> {
+    implements AttributesExtractor<HttpServletRequest, HttpServletResponse> {
 
   @Override
-  protected void onStart(AttributesBuilder attributes, HttpServletRequest httpServletRequest) {}
+  public void onStart(AttributesBuilder attributes, HttpServletRequest httpServletRequest) {}
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       HttpServletRequest httpServletRequest,
       @Nullable HttpServletResponse response,

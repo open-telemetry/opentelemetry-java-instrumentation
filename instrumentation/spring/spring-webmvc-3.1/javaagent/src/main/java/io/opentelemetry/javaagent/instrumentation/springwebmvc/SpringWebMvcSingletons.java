@@ -19,13 +19,13 @@ public final class SpringWebMvcSingletons {
 
   static {
     HANDLER_INSTRUMENTER =
-        Instrumenter.<Object, Void>newBuilder(
+        Instrumenter.<Object, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new HandlerSpanNameExtractor())
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
 
     MODEL_AND_VIEW_INSTRUMENTER =
-        Instrumenter.<ModelAndView, Void>newBuilder(
+        Instrumenter.<ModelAndView, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 new ModelAndViewSpanNameExtractor())

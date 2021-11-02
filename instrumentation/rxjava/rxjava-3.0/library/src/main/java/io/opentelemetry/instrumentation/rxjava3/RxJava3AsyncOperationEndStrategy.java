@@ -29,10 +29,10 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
       AttributeKey.booleanKey("rxjava.canceled");
 
   public static RxJava3AsyncOperationEndStrategy create() {
-    return newBuilder().build();
+    return builder().build();
   }
 
-  public static RxJava3AsyncOperationEndStrategyBuilder newBuilder() {
+  public static RxJava3AsyncOperationEndStrategyBuilder builder() {
     return new RxJava3AsyncOperationEndStrategyBuilder();
   }
 

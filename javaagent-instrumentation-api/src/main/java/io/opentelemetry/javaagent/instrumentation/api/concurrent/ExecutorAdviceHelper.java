@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 import java.util.concurrent.ExecutorService;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Advice helper methods for concurrent executor (e.g. {@link ExecutorService}) instrumentations.
@@ -52,6 +52,14 @@ public final class ExecutorAdviceHelper {
     if (propagatedContext == null) {
       propagatedContext = new PropagatedContext();
       virtualField.set(task, propagatedContext);
+    } else {
+      Context propagated = propagatedContext.get();
+      // if task already has the requested context then we might be inside a nested call to execute
+      // where an outer call already attached state
+      if (propagated != null
+          && (propagated == context || ContextPropagationDebug.unwrap(propagated) == context)) {
+        return null;
+      }
     }
 
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {

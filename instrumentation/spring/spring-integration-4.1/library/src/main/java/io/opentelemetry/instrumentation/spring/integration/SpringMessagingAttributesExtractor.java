@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 // this class is needed mostly for correct CONSUMER span suppression
 final class SpringMessagingAttributesExtractor
@@ -19,17 +19,20 @@ final class SpringMessagingAttributesExtractor
   }
 
   @Override
-  protected @Nullable String system(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String system(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String destinationKind(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String destinationKind(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String destination(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String destination(MessageWithChannel messageWithChannel) {
     return null;
   }
 
@@ -39,38 +42,44 @@ final class SpringMessagingAttributesExtractor
   }
 
   @Override
-  protected @Nullable String protocol(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String protocol(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String protocolVersion(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String protocolVersion(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String url(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String url(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String conversationId(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected String conversationId(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadSize(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected Long messagePayloadSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(MessageWithChannel messageWithChannel) {
+  @Nullable
+  protected Long messagePayloadCompressedSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  protected @Nullable String messageId(
-      MessageWithChannel messageWithChannel, @Nullable Void unused) {
+  @Nullable
+  protected String messageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
   }
 }

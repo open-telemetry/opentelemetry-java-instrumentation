@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.geode;
 
 import com.google.auto.value.AutoValue;
+import javax.annotation.Nullable;
 import org.apache.geode.cache.Region;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue
 public abstract class GeodeRequest {

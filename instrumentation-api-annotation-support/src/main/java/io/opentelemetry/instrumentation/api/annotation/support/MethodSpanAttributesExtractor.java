@@ -11,11 +11,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
 public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final MethodExtractor<REQUEST> methodExtractor;
   private final MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
@@ -46,7 +46,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     Method method = methodExtractor.extract(request);
     AttributeBindings bindings = cache.computeIfAbsent(method, this::bind);
     if (!bindings.isEmpty()) {
@@ -56,7 +56,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

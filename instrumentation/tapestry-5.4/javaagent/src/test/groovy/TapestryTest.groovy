@@ -24,6 +24,14 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class TapestryTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
+  def setupSpec() {
+    setupServer()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
+  }
+
   @Override
   Server startServer(int port) {
     WebAppContext webAppContext = new WebAppContext()

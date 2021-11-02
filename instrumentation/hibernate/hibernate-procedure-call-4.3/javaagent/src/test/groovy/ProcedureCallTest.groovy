@@ -10,7 +10,7 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
-import org.junit.Assume
+import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 
 import javax.persistence.ParameterMode
@@ -62,7 +62,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
       call.getOutputs()
     } catch (Exception exception) {
       // ignore failures on hibernate 6 where this functionality has not been implemented yet
-      Assume.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
+      Assumptions.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
       throw exception
     }
   }
@@ -70,20 +70,23 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
   def "test ProcedureCall"() {
     setup:
 
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
 
-    ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
-    callProcedure(call)
+      ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
+      callProcedure(call)
 
-    session.getTransaction().commit()
-    session.close()
+      session.getTransaction().commit()
+      session.close()
+    }
 
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -94,6 +97,10 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -113,6 +120,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           name "Transaction.commit"
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -122,27 +130,30 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
   def "test failing ProcedureCall"() {
     setup:
 
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
 
-    ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
-    def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
-    Assume.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
-    parameterRegistration.bindValue(420L)
-    try {
-      callProcedure(call)
-    } catch (Exception e) {
-      // We expected this.
+      ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
+      def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
+      Assumptions.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
+      parameterRegistration.bindValue(420L)
+      try {
+        callProcedure(call)
+      } catch (Exception e) {
+        // We expected this.
+      }
+
+      session.getTransaction().commit()
+      session.close()
     }
 
-    session.getTransaction().commit()
-    session.close()
-
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -154,12 +165,19 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           childOf span(0)
           status ERROR
           errorEvent(SQLGrammarException, "could not prepare statement")
+          attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
+          }
         }
         span(2) {
           name "Transaction.commit"
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }

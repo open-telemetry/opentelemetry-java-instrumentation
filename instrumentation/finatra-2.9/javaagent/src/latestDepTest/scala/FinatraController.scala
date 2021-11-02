@@ -65,4 +65,35 @@ class FinatraController extends Controller {
       }
     )
   }
+
+  any(CAPTURE_HEADERS.getPath) { request: Request =>
+    controller(
+      CAPTURE_HEADERS,
+      new Closure[Response](null) {
+        override def call(): Response = {
+          response
+            .ok(CAPTURE_HEADERS.getBody)
+            .header(
+              "X-Test-Response",
+              request.headerMap.get("X-Test-Request").get
+            )
+        }
+      }
+    )
+  }
+
+  any(INDEXED_CHILD.getPath) { request: Request =>
+    controller(
+      INDEXED_CHILD,
+      new Closure[Response](null) {
+        override def call(): Response = {
+          INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+            override def getParameter(name: String): String =
+              request.getParam(name)
+          })
+          response.ok(INDEXED_CHILD.getBody)
+        }
+      }
+    )
+  }
 }

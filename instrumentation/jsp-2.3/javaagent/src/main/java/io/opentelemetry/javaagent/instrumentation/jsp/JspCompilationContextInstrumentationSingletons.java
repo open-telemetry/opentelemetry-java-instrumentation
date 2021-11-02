@@ -11,9 +11,9 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import javax.annotation.Nullable;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class JspCompilationContextInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
@@ -23,7 +23,7 @@ public class JspCompilationContextInstrumentationSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<JspCompilationContext, Void>newBuilder(
+        Instrumenter.<JspCompilationContext, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
                 JspCompilationContextInstrumentationSingletons::spanNameOnCompile)
@@ -42,14 +42,14 @@ public class JspCompilationContextInstrumentationSingletons {
   private JspCompilationContextInstrumentationSingletons() {}
 
   private static class CompilationAttributesExtractor
-      extends AttributesExtractor<JspCompilationContext, Void> {
+      implements AttributesExtractor<JspCompilationContext, Void> {
 
     @Override
-    protected void onStart(
+    public void onStart(
         AttributesBuilder attributes, JspCompilationContext jspCompilationContext) {}
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         JspCompilationContext jspCompilationContext,
         @Nullable Void unused,

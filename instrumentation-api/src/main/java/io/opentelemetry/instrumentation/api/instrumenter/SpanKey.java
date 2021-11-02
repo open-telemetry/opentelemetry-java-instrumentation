@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Makes span keys for specific instrumentation accessible to enrich and suppress spans. */
 public final class SpanKey {

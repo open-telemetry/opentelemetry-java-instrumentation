@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
@@ -66,7 +66,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         additionalAttributesExtractor = new ServletAdditionalAttributesExtractor<>(accessor);
 
     InstrumenterBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> builder =
-        Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>newBuilder(
+        Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .setErrorCauseExtractor(errorCauseExtractor)

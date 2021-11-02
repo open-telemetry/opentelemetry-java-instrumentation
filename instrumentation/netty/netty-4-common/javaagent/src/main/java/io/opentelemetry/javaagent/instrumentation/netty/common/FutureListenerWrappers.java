@@ -24,7 +24,7 @@ public final class FutureListenerWrappers {
   // to the key, that means it's no longer used (referenced) by the netty future anyways.
   private static final Cache<
           GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
-      wrappers = Cache.newBuilder().setWeakKeys().setWeakValues().build();
+      wrappers = Cache.builder().setWeakKeys().setWeakValues().build();
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {

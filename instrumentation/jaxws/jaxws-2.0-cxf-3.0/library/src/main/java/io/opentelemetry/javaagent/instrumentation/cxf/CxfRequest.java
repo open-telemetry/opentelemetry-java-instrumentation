@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.service.model.BindingOperationInfo;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CxfRequest {
   private final Message message;
@@ -32,7 +32,8 @@ public class CxfRequest {
     return message;
   }
 
-  private static @Nullable String getSpanName(Message message) {
+  @Nullable
+  private static String getSpanName(Message message) {
     Exchange exchange = message.getExchange();
     BindingOperationInfo bindingOperationInfo = exchange.get(BindingOperationInfo.class);
     if (bindingOperationInfo == null) {

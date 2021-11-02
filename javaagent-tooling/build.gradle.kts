@@ -29,7 +29,7 @@ dependencies {
   // Other exporters are in javaagent-exporters
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
-  api("net.bytebuddy:byte-buddy")
+  api("net.bytebuddy:byte-buddy-dep")
   implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")

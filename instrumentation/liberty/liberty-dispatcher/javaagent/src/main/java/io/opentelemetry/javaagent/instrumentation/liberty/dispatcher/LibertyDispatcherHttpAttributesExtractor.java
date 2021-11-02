@@ -7,13 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class LibertyDispatcherHttpAttributesExtractor
     extends HttpServerAttributesExtractor<LibertyRequest, LibertyResponse> {
 
   @Override
-  protected @Nullable String method(LibertyRequest libertyRequest) {
+  @Nullable
+  protected String method(LibertyRequest libertyRequest) {
     return libertyRequest.getMethod();
   }
 
@@ -23,19 +24,22 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable String flavor(LibertyRequest libertyRequest) {
+  @Nullable
+  protected String flavor(LibertyRequest libertyRequest) {
     String flavor = libertyRequest.getProtocol();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions
@@ -47,19 +51,21 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(
-      LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
+  @Nullable
+  protected Integer statusCode(LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return libertyResponse.getStatus();
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return null;
   }
@@ -71,7 +77,8 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(LibertyRequest libertyRequest) {
+  @Nullable
+  protected String target(LibertyRequest libertyRequest) {
     String requestUri = libertyRequest.getRequestUri();
     String queryString = libertyRequest.getQueryString();
     if (queryString != null && !queryString.isEmpty()) {
@@ -81,17 +88,20 @@ public class LibertyDispatcherHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String scheme(LibertyRequest libertyRequest) {
+  @Nullable
+  protected String scheme(LibertyRequest libertyRequest) {
     return libertyRequest.getScheme();
   }
 
   @Override
-  protected @Nullable String route(LibertyRequest libertyRequest) {
+  @Nullable
+  protected String route(LibertyRequest libertyRequest) {
     return null;
   }
 
   @Override
-  protected @Nullable String serverName(
+  @Nullable
+  protected String serverName(
       LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
     return null;
   }

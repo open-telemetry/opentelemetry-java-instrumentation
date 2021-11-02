@@ -10,7 +10,7 @@ import com.squareup.okhttp.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class OkHttp2HttpAttributesExtractor
     extends HttpClientAttributesExtractor<Request, Response> {

@@ -33,7 +33,7 @@ public final class AsyncHttpClientSingletons {
         new AsyncHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<RequestContext, Response>newBuilder(
+        Instrumenter.<RequestContext, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)

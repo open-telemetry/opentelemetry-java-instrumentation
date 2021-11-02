@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest, Void> {
   @Nullable

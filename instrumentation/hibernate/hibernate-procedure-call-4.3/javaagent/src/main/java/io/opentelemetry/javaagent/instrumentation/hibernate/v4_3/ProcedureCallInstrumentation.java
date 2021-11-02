@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -16,7 +17,9 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,29 +52,35 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
         @Advice.This ProcedureCall call,
         @Advice.Origin("#m") String name,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
-      VirtualField<ProcedureCall, Context> virtualField =
-          VirtualField.find(ProcedureCall.class, Context.class);
+      VirtualField<ProcedureCall, SessionInfo> criteriaVirtualField =
+          VirtualField.find(ProcedureCall.class, SessionInfo.class);
+      SessionInfo sessionInfo = criteriaVirtualField.get(call);
 
-      context =
-          SessionMethodUtils.startSpanFrom(
-              virtualField, call, "ProcedureCall." + name, call.getProcedureName());
-      if (context != null) {
-        scope = context.makeCurrent();
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      hibernateOperation =
+          new HibernateOperation("ProcedureCall." + name, call.getProcedureName(), sessionInfo);
+      if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
+        return;
       }
+
+      context = instrumenter().start(parentContext, hibernateOperation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -81,7 +90,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(context, throwable);
+        instrumenter().end(context, hibernateOperation, null, throwable);
       }
     }
   }

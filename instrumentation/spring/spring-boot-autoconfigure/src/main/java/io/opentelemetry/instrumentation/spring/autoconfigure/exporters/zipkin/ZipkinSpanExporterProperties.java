@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

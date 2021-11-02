@@ -33,14 +33,14 @@ public class JaxRsClientSingletons {
         new JaxRsClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ClientRequest, ClientResponse>newBuilder(
+        Instrumenter.<ClientRequest, ClientResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new InjectAdapter());
+            .newClientInstrumenter(ClientRequestHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<ClientRequest, ClientResponse> instrumenter() {

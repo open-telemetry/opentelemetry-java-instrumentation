@@ -25,7 +25,7 @@ class OpenTelemetryInstallerTest extends Specification {
   def "should initialize noop"() {
 
     given:
-    def config = Config.newBuilder()
+    def config = Config.builder()
       .readProperties([
         (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "true",
         (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG): "true"
@@ -43,7 +43,7 @@ class OpenTelemetryInstallerTest extends Specification {
   def "should NOT initialize noop"() {
 
     given:
-    def config = Config.newBuilder()
+    def config = Config.builder()
       .readProperties([
         (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "true",
         (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG): "false"

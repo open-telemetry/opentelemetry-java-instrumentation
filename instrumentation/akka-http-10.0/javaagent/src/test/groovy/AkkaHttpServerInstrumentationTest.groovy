@@ -28,11 +28,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
   boolean testCapturedHttpHeaders() {
     false
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }
 
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {

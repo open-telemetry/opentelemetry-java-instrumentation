@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatHttpAttributesExtractor
     extends HttpServerAttributesExtractor<Request, Response> {
@@ -22,7 +22,8 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String target(Request request) {
+  @Nullable
+  protected String target(Request request) {
     String target = request.requestURI().toString();
     String queryString = request.queryString().toString();
     if (queryString != null) {
@@ -32,7 +33,8 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String scheme(Request request) {
+  @Nullable
+  protected String scheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
   }
@@ -43,19 +45,21 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(Request request, @Nullable Response response) {
+  @Nullable
+  protected Long requestContentLength(Request request, @Nullable Response response) {
     long contentLength = request.getContentLengthLong();
     return contentLength != -1 ? contentLength : null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
-      Request request, @Nullable Response response) {
+  @Nullable
+  protected Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
     return null;
   }
 
   @Override
-  protected @Nullable String flavor(Request request) {
+  @Nullable
+  protected String flavor(Request request) {
     String flavor = request.protocol().toString();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions
@@ -67,18 +71,21 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(Request request, Response response) {
+  @Nullable
+  protected Integer statusCode(Request request, Response response) {
     return response.getStatus();
   }
 
   @Override
-  protected @Nullable Long responseContentLength(Request request, Response response) {
+  @Nullable
+  protected Long responseContentLength(Request request, Response response) {
     long contentLength = response.getContentLengthLong();
     return contentLength != -1 ? contentLength : null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(Request request, Response response) {
+  @Nullable
+  protected Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
   }
 
@@ -88,12 +95,14 @@ public class TomcatHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(Request request) {
+  @Nullable
+  protected String route(Request request) {
     return null;
   }
 
   @Override
-  protected @Nullable String serverName(Request request, @Nullable Response response) {
+  @Nullable
+  protected String serverName(Request request, @Nullable Response response) {
     return request.serverName().toString();
   }
 }

@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class KafkaProducerAttributesExtractor
     extends MessagingAttributesExtractor<ProducerRecord<?, ?>, Void> {
@@ -40,37 +40,44 @@ public final class KafkaProducerAttributesExtractor
   }
 
   @Override
-  protected @Nullable String protocol(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected String protocol(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String protocolVersion(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected String protocolVersion(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String url(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected String url(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String conversationId(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected String conversationId(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadSize(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected Long messagePayloadSize(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable Long messagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
+  @Nullable
+  protected Long messagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
-  protected @Nullable String messageId(ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {
+  @Nullable
+  protected String messageId(ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {
     return null;
   }
 }

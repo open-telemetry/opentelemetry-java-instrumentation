@@ -176,6 +176,6 @@ class ConfigPropertiesAdapterTest {
   }
 
   private static ConfigProperties createConfig(Map<String, String> properties) {
-    return new ConfigPropertiesAdapter(Config.newBuilder().readProperties(properties).build());
+    return new ConfigPropertiesAdapter(Config.builder().readProperties(properties).build());
   }
 }

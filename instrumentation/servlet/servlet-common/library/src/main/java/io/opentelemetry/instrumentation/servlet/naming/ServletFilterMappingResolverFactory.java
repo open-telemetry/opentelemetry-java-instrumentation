@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
     extends ServletMappingResolverFactory {

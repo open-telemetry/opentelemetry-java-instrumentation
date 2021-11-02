@@ -22,7 +22,7 @@ public final class ElasticsearchRestInstrumenterFactory {
     ElasticsearchRestNetResponseAttributesExtractor netAttributesExtractor =
         new ElasticsearchRestNetResponseAttributesExtractor();
 
-    return Instrumenter.<String, Response>newBuilder(
+    return Instrumenter.<String, Response>builder(
             GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)

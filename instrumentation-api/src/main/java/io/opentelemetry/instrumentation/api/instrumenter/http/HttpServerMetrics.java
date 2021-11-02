@@ -89,7 +89,7 @@ public final class HttpServerMetrics implements RequestListener {
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyDurationView(state.startAttributes()));
+        applyDurationView(state.startAttributes(), endAttributes));
   }
 
   @AutoValue

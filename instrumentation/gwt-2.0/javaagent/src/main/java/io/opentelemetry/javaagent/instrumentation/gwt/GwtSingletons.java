@@ -24,7 +24,7 @@ public final class GwtSingletons {
   static {
     RpcAttributesExtractor<Method, Void> rpcAttributes = new GwtRpcAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<Method, Void>newBuilder(
+        Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributes))

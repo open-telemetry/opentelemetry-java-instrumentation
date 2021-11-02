@@ -20,7 +20,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,7 +211,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       Integer status = status(response);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+        StatusCode statusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(status);
         if (statusCode != StatusCode.UNSET) {
           span.setStatus(statusCode);
         }

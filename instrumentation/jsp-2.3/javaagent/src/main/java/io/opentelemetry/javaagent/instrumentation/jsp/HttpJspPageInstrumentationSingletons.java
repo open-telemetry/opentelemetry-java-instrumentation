@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.annotation.Nullable;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.LoggerFactory;
 
 public class HttpJspPageInstrumentationSingletons {
@@ -27,7 +27,7 @@ public class HttpJspPageInstrumentationSingletons {
 
   static {
     INSTRUMENTER =
-        Instrumenter.<HttpServletRequest, Void>newBuilder(
+        Instrumenter.<HttpServletRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jsp-2.3",
                 HttpJspPageInstrumentationSingletons::spanNameOnRender)
@@ -52,10 +52,10 @@ public class HttpJspPageInstrumentationSingletons {
   private HttpJspPageInstrumentationSingletons() {}
 
   private static class RenderAttributesExtractor
-      extends AttributesExtractor<HttpServletRequest, Void> {
+      implements AttributesExtractor<HttpServletRequest, Void> {
 
     @Override
-    protected void onStart(AttributesBuilder attributes, HttpServletRequest request) {
+    public void onStart(AttributesBuilder attributes, HttpServletRequest request) {
       if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         return;
       }
@@ -79,7 +79,7 @@ public class HttpJspPageInstrumentationSingletons {
     }
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         HttpServletRequest httpServletRequest,
         @Nullable Void unused,

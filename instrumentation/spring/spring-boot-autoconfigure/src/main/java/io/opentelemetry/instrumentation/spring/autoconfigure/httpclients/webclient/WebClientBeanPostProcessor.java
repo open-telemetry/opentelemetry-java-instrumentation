@@ -6,12 +6,9 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
-import java.util.List;
-import java.util.function.Consumer;
+import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxTracing;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -44,18 +41,10 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
     OpenTelemetry openTelemetry = openTelemetryProvider.getIfUnique();
     if (openTelemetry != null) {
-      return webClientBuilder.filters(webClientFilterFunctionConsumer(openTelemetry));
+      SpringWebfluxTracing instrumentation = SpringWebfluxTracing.create(openTelemetry);
+      return webClientBuilder.filters(instrumentation::addClientTracingFilter);
     } else {
       return webClientBuilder;
     }
-  }
-
-  private static Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
-      OpenTelemetry openTelemetry) {
-    return functions -> {
-      if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {
-        WebClientTracingFilter.addFilter(openTelemetry, functions);
-      }
-    };
   }
 }

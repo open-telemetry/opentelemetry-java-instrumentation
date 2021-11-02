@@ -47,12 +47,6 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     return false
   }
 
-  // no idea how to test that in struts
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     return endpoint != NOT_FOUND

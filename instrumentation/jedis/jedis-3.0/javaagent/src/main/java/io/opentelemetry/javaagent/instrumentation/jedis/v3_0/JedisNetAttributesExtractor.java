@@ -9,13 +9,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNe
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class JedisNetAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<JedisRequest, Void> {
 
   @Override
-  public @Nullable InetSocketAddress getAddress(JedisRequest jedisRequest, @Nullable Void unused) {
+  @Nullable
+  public InetSocketAddress getAddress(JedisRequest jedisRequest, @Nullable Void unused) {
     Socket socket = jedisRequest.getConnection().getSocket();
     if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) socket.getRemoteSocketAddress();

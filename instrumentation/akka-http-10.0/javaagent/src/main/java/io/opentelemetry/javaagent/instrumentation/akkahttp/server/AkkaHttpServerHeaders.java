@@ -12,9 +12,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
-
-  public static final AkkaHttpServerHeaders GETTER = new AkkaHttpServerHeaders();
+class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {

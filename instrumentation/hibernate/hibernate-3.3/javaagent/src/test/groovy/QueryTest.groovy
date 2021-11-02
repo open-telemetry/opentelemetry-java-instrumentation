@@ -16,25 +16,30 @@ class QueryTest extends AbstractHibernateTest {
     setup:
 
     // With Transaction
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
-    queryInteraction(session)
-    session.getTransaction().commit()
-    session.close()
-
-    // Without Transaction
-    if (!requiresTransaction) {
-      session = sessionFactory.openSession()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
       queryInteraction(session)
+      session.getTransaction().commit()
       session.close()
     }
 
+    // Without Transaction
+    if (!requiresTransaction) {
+      runWithSpan("parent2") {
+        Session session = sessionFactory.openSession()
+        queryInteraction(session)
+        session.close()
+      }
+    }
+
     expect:
+    def sessionId
     assertTraces(requiresTransaction ? 1 : 2) {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -45,6 +50,10 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -65,6 +74,7 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -72,7 +82,7 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            name "Session"
+            name "parent2"
             kind INTERNAL
             hasNoParent()
             attributes {
@@ -83,6 +93,7 @@ class QueryTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" String
             }
           }
           span(2) {
@@ -132,21 +143,24 @@ class QueryTest extends AbstractHibernateTest {
   def "test hibernate query.iterate"() {
     setup:
 
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
-    Query q = session.createQuery("from Value")
-    Iterator it = q.iterate()
-    while (it.hasNext()) {
-      it.next()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
+      Query q = session.createQuery("from Value")
+      Iterator iterator = q.iterate()
+      while (iterator.hasNext()) {
+        iterator.next()
+      }
+      session.getTransaction().commit()
+      session.close()
     }
-    session.getTransaction().commit()
-    session.close()
 
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -157,6 +171,10 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -178,6 +196,7 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }

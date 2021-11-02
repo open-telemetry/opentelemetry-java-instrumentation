@@ -28,12 +28,12 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>1.0.0</version>
+      <version>1.7.0</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-annotations</artifactId>
-      <version>1.0.0</version>
+      <version>1.7.0</version>
     </dependency>
   </dependencies>
 ```
@@ -42,8 +42,8 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
 
 ```groovy
 dependencies {
-    implementation('io.opentelemetry:opentelemetry-api:1.0.0')
-    implementation('io.opentelemetry:opentelemetry-extension-annotations:1.0.0')
+    implementation('io.opentelemetry:opentelemetry-api:1.7.0')
+    implementation('io.opentelemetry:opentelemetry-extension-annotations:1.7.0')
 }
 ```
 
@@ -116,7 +116,9 @@ and you want to suppress some of them without modifying the code.
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods` | `OTEL_INSTRUMENTATION_OPENTELEMETRY_ANNOTATIONS_EXCLUDE_METHODS` | Suppress `@WithSpan` instrumentation for specific methods. Format is `my.package.MyClass1[method1,method2];my.package.MyClass2[method3]`
 
 ## Creating spans around methods with otel.instrumentation.methods.include
-This is a way to to create a span around a first-party code method without using `@WithSpan`.
+
+In cases where you are unable to modify the code, you can still configure the javaagent to capture
+spans around specific methods.
 
 | System property                        | Environment variable                   | Purpose |
 | -------------------------------------- | -------------------------------------- | ------- |

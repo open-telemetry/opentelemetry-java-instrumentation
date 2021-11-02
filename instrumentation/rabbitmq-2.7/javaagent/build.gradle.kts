@@ -14,6 +14,9 @@ muzzle {
 dependencies {
   library("com.rabbitmq:amqp-client:2.7.0")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   testLibrary("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
     exclude("com.rabbitmq", "amqp-client")
   }

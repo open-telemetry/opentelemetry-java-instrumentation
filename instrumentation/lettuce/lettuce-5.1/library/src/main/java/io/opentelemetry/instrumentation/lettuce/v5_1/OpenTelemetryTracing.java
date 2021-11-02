@@ -31,7 +31,7 @@ import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
 

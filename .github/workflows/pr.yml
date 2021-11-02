@@ -35,7 +35,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Build
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build
 
       - name: Upload deadlock detector artifacts if any
         if: always()
@@ -73,7 +73,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
-        run: ../gradlew build --stacktrace
+        run: ../gradlew build
         working-directory: gradle-plugins
 
   test:
@@ -122,7 +122,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
       - name: Upload deadlock detector artifacts if any
         if: always()
@@ -244,7 +244,7 @@ jobs:
 
       - name: Run muzzle
         # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.5.0
+        uses: nick-invision/retry@v2.5.1
         with:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
@@ -253,8 +253,6 @@ jobs:
 
   examples:
     runs-on: ubuntu-latest
-    # When we make PR against pre-release branch examples may point to yet-unpublished version
-    if: github.base_ref == 'main'
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -272,9 +270,14 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Local publish
+      - name: Local publish of artifacts
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Local publish of gradle plugins
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ../gradlew publishToMavenLocal -x javadoc
+        working-directory: gradle-plugins
 
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts

@@ -20,6 +20,7 @@ import io.undertow.util.StatusCodes
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -67,6 +68,12 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             throw new Exception(EXCEPTION.body)
           }
         }
+        .addExactPath(INDEXED_CHILD.rawPath()) { exchange ->
+          controller(INDEXED_CHILD) {
+            INDEXED_CHILD.collectSpanAttributes { name -> exchange.getQueryParameters().get(name).peekFirst() }
+            exchange.getResponseSender().send(INDEXED_CHILD.body)
+          }
+        }
         .addExactPath("sendResponse") { exchange ->
           Span.current().addEvent("before-event")
           runWithSpan("sendResponse") {
@@ -106,10 +113,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [
-      SemanticAttributes.HTTP_HOST,
       SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
       SemanticAttributes.NET_PEER_NAME,
       SemanticAttributes.NET_TRANSPORT
     ]
