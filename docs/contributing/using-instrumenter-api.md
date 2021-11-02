@@ -1,14 +1,14 @@
 # Using the `Instrumenter` API
 
 The `Instrumenter` encapsulates the entire logic for gathering telemetry, from collecting the data,
-to starting and ending spans, to recording values using metrics instruments. The `Instrumenter` public API
-contains only three methods: `shouldStart()`, `start()` and `end()`. The class is designed to
-decorate the actual invocation of the instrumented library code; `shouldStart()` and `start()`
-methods are to be called at the start of the request processing, while `end()` must be called when
-processing ends and a response arrives, or when it fails with an error. The `Instrumenter` is a
-generic class parameterized with `REQUEST` and `RESPONSE` types. They represent the input and output
-of the instrumented operation. `Instrumenter` can be configured with various extractors that can
-enhance or modify the telemetry data.
+to starting and ending spans, to recording values using metrics instruments. The `Instrumenter`
+public API contains only three methods: `shouldStart()`, `start()` and `end()`. The class is
+designed to decorate the actual invocation of the instrumented library code; `shouldStart()`
+and `start()`methods are to be called at the start of the request processing, while `end()` must be
+called when processing ends and a response arrives, or when it fails with an error.
+The `Instrumenter` is a generic class parameterized with `REQUEST` and `RESPONSE` types. They
+represent the input and output of the instrumented operation. `Instrumenter` can be configured with
+various extractors that can enhance or modify the telemetry data.
 
 ## Check if any telemetry should be generated for the operation using `shouldStart()`
 
@@ -32,8 +32,8 @@ Response decoratedMethod(Request request) {
 }
 ```
 
-If the `shouldStart()` method returns `false`, none of the remaining `Instrumenter` methods should be
-called.
+If the `shouldStart()` method returns `false`, none of the remaining `Instrumenter` methods should
+be called.
 
 ## Start an instrumented operation using `start()`
 
@@ -79,7 +79,10 @@ Consider the following example:
 
 ```java
 Response decoratedMethod(Request request) {
-  // ...
+  Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+    return actualMethod(request);
+  }
 
   Context context = instrumenter.start(parentContext, request);
   try (Scope scope = context.makeCurrent()) {
@@ -104,9 +107,11 @@ returned `InstrumenterBuilder` to configure captured telemetry and apply customi
 instance. The `builder()` method accepts three arguments:
 
 * An `OpenTelemetry` instance, which is used to obtain the `Tracer` and `Meter` objects.
-* The instrumentation name, which indicates the _instrumentation_ library name, not the _instrumented_
-  library name. The value passed here should uniquely identify the instrumentation library so that
-  during troubleshooting it's possible to determine where the telemetry came from.
+* The instrumentation name, which indicates the _instrumentation_ library name, not the
+  _instrumented_ library name. The value passed here should uniquely identify the instrumentation
+  library so that during troubleshooting it's possible to determine where the telemetry came from.
+  Read more about instrumentation libraries in
+  the [OpenTelemetry specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#instrumentation-libraries).
 * A `SpanNameExtractor` that determines the span name.
 
 An `Instrumenter` can be built from several smaller components. The following subsections describe
@@ -114,8 +119,8 @@ all interfaces that can be used to customize an `Instrumenter`.
 
 ### Name the spans using the `SpanNameExtractor`
 
-A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST` type and returns the
-span name. For more detailed guidelines on span naming please take a look at
+A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST` type and returns
+the span name. For more detailed guidelines on span naming please take a look at
 the [`Span` specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#span)
 and the
 tracing [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
@@ -132,10 +137,10 @@ class MySpanNameExtractor implements SpanNameExtractor<Request> {
 }
 ```
 
-The example `SpanNameExtractor` implementation takes a fitting value provided by the request
-type and uses it as a span name. Notice that `SpanNameExtractor` is
-a `@FunctionalInterface`: instead of implementing it as a separate class you can just
-pass `Request::getOperationName` to the `builder()` method.
+The example `SpanNameExtractor` implementation takes a fitting value provided by the request type
+and uses it as a span name. Notice that `SpanNameExtractor` is a `@FunctionalInterface`: instead of
+implementing it as a separate class you can just pass `Request::getOperationName` to the `builder()`
+method.
 
 ### Add attributes to span and metric data with the `AttributesExtractor`
 
@@ -147,9 +152,9 @@ processing starts and ends. It contains two methods:
 * The `onEnd()` method is called when the instrumented operation ends. It accepts the same two
   parameters as `onStart()` and also an optional `RESPONSE` and an optional `Throwable` error.
 
-The aim of both methods is to extract interesting attributes from the received request (and
-response or error) and set them into the builder. In general, it is better to populate
-attributes `onStart()`, as these attributes will be available to the `Sampler`.
+The aim of both methods is to extract interesting attributes from the received request (and response
+or error) and set them into the builder. In general, it is better to populate attributes
+`onStart()`, as these attributes will be available to the `Sampler`.
 
 Consider the following example:
 
@@ -255,13 +260,14 @@ the `addSpanLinksExtractor()` method.
 
 ### Discard wrapper exception types with the `ErrorCauseExtractor`
 
-When an error occurs, the root cause might be hidden behind several "wrapper" exception types,
-like an `ExecutionException` or a `CompletionException` from the Java standard library. By
-default, the known wrapper exception types from the JDK are removed from the captured error. To
-remove other wrapper exceptions, like the ones provided by the instrumented library, you can
-implement the `ErrorCauseExtractor`, which has the following features:
+When an error occurs, the root cause might be hidden behind several "wrapper" exception types, like
+an `ExecutionException` or a `CompletionException` from the Java standard library. By default, the
+known wrapper exception types from the JDK are removed from the captured error. To remove other
+wrapper exceptions, like the ones provided by the instrumented library, you can implement
+the `ErrorCauseExtractor`, which has the following features:
 
-- It has only one method `extractCause()` that is responsible for stripping the unnecessary exception layers and extracting the actual error that caused the processing to fail.
+- It has only one method `extractCause()` that is responsible for stripping the unnecessary
+  exception layers and extracting the actual error that caused the processing to fail.
 - It accepts a `Throwable` and returns a `Throwable`.
 
 Consider the following example:
@@ -280,11 +286,11 @@ class MyErrorCauseExtractor implements ErrorCauseExtractor {
 ```
 
 The example `ErrorCauseExtractor` implementation checks whether the error is an instance
-of `MyLibWrapperException` and has a cause, in which case it unwraps it. The `error.getCause() != null`
-check is rather relevant: if the extractor did not verify both conditions, it could accidentally remove
-the whole exception, making the instrumentation miss an error and thus radically changing the
-captured telemetry. Next, the extractor falls back to the default `jdk()` implementation that
-removes the known JDK wrapper exception types.
+of `MyLibWrapperException` and has a cause, in which case it unwraps it.
+The `error.getCause() != null` check is rather relevant: if the extractor did not verify both
+conditions, it could accidentally remove the whole exception, making the instrumentation miss an
+error and thus radically changing the captured telemetry. Next, the extractor falls back to the
+default `jdk()` implementation that removes the known JDK wrapper exception types.
 
 You can set the `ErrorCauseExtractor` in the `InstrumenterBuilder` using
 the `setErrorCauseExtractor()` method.
@@ -293,10 +299,10 @@ the `setErrorCauseExtractor()` method.
 
 In some cases, the instrumented library provides a way to retrieve accurate timestamps of when the
 operation starts and ends. The `StartTimeExtractor` and `EndTimeExtractor` interfaces can be used to
-feed this information into OpenTelemetry trace and metrics data. Provide either both time extractors or none
-to the `InstrumenterBuilder`: it is crucial to avoid a situation where
-one time measurement uses the library timestamp and the other the internal OpenTelemetry SDK clock,
-as it would result in inaccurate telemetry.
+feed this information into OpenTelemetry trace and metrics data. Provide either both time extractors
+or none to the `InstrumenterBuilder`: it is crucial to avoid a situation where one time measurement
+uses the library timestamp and the other the internal OpenTelemetry SDK clock, as it would result in
+inaccurate telemetry.
 
 The `StartTimeExtractor` can only extract the timestamp from the request. The `EndTimeExtractor`
 accepts the request, an optional response, and an optional `Throwable` error. Consider the following
@@ -343,8 +349,8 @@ The `RequestListener` contains two methods:
 * `end()` that gets executed when the instrumented operation ends.
 
 Both methods accept a `Context`, an instance of `Attributes` that contains either attributes
-computed on instrumented operation start or end, and the start and end nanoseconds timestamp that can be
-used to accurately compute the duration.
+computed on instrumented operation start or end, and the start and end nanoseconds timestamp that
+can be used to accurately compute the duration.
 
 Consider the following example:
 
@@ -420,9 +426,9 @@ method.
 
 ### Disable the instrumentation
 
-In some rare cases it may be useful to completely disable the constructed `Instrumenter`, for example, based
-on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()` method for that:
-passing `true` will turn the newly created `Instrumenter` into a no-op instance.
+In some rare cases it may be useful to completely disable the constructed `Instrumenter`, for
+example, based on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()`
+method for that: passing `true` will turn the newly created `Instrumenter` into a no-op instance.
 
 ### Set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
 
@@ -436,8 +442,8 @@ methods:
   spans and will propagate current context into the outgoing request.
 * `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
-* `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always
-  start `PRODUCER` spans and will propagate current context into the outgoing request.
+* `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
+  spans and will propagate current context into the outgoing request.
 * `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
 
