@@ -1,21 +1,21 @@
 ----------------------------------------------------------
- Run at Mon Nov 01 05:23:55 UTC 2021
+ Run at Tue Nov 02 05:24:58 UTC 2021
  snapshot-regression : compares the latest snapshot to the latest stable release
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :            latest         snapshot
-Avg. CPU (user)     :         0.5426055       0.54642576
-Max. CPU (user)     :        0.65829146            0.655
-Startup time (ms)   :             17698            18528
-Total allocated MB  :          13085.50         13379.72
-Heap (min)          :          61326336         63728640
-Heap (max)          :         316574208        308959232
-Thread switch rate  :         34130.113          35040.1
-GC time             :        2241125512       2160297532
-Req. mean           :             10.83            11.11
-Req. p95            :             33.31            35.08
-Iter. mean          :            147.27           150.73
-Iter. p95           :            225.74           238.50
-Net read avg (bps)  :        2811589.00       2742964.00
-Net write avg (bps) :       15036389.00      14588893.00
+Avg. CPU (user)     :         0.5463242        0.5457208
+Max. CPU (user)     :        0.67336684        0.6633166
+Startup time (ms)   :             21142            19541
+Total allocated MB  :          12897.35         13303.06
+Heap (min)          :          62660608         63371264
+Heap (max)          :         302987264        316503552
+Thread switch rate  :           32413.2        32377.098
+GC time             :        2329237220       2207064890
+Req. mean           :             11.72            11.90
+Req. p95            :             36.47            37.34
+Iter. mean          :            159.82           161.52
+Iter. p95           :            248.68           250.02
+Net read avg (bps)  :        2594972.00       2558422.00
+Net write avg (bps) :       13819000.00      13769163.00
 Peak threads        :                47               48
