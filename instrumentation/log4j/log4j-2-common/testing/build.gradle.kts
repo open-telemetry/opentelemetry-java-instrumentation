@@ -5,7 +5,7 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
-  api("io.opentelemetry:opentelemetry-sdk-extension-logging")
+  api("io.opentelemetry:opentelemetry-sdk-logs:1.8.0-alpha-SNAPSHOT")
 
   api("org.apache.logging.log4j:log4j-core:2.7")
 

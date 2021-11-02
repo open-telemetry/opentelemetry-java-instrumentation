@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
-import io.opentelemetry.sdk.logging.LogSink;
-import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.logs.LogEmitter;
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.concurrent.GuardedBy;
@@ -16,33 +16,32 @@ public final class OpenTelemetryLog4j {
   private static final Object LOCK = new Object();
 
   @GuardedBy("LOCK")
-  private static LogSink logSink;
-
-  @GuardedBy("LOCK")
-  private static Resource resource;
+  private static LogEmitter logEmitter;
 
   @GuardedBy("LOCK")
   private static final List<OpenTelemetryAppender> APPENDERS = new ArrayList<>();
 
-  public static void initialize(LogSink logSink, Resource resource) {
+  public static void initialize(SdkLogEmitterProvider sdkLogEmitterProvider) {
+    LogEmitter logEmitter;
     List<OpenTelemetryAppender> instances;
     synchronized (LOCK) {
-      if (OpenTelemetryLog4j.logSink != null) {
-        throw new IllegalStateException("LogSinkSdkProvider has already been set.");
+      if (OpenTelemetryLog4j.logEmitter != null) {
+        throw new IllegalStateException("LogEmitter has already been set.");
       }
-      OpenTelemetryLog4j.logSink = logSink;
-      OpenTelemetryLog4j.resource = resource;
+      logEmitter =
+          sdkLogEmitterProvider.logEmitterBuilder(OpenTelemetryLog4j.class.getName()).build();
+      OpenTelemetryLog4j.logEmitter = logEmitter;
       instances = new ArrayList<>(APPENDERS);
     }
     for (OpenTelemetryAppender instance : instances) {
-      instance.initialize(logSink, resource);
+      instance.initialize(logEmitter);
     }
   }
 
   static void registerInstance(OpenTelemetryAppender appender) {
     synchronized (LOCK) {
-      if (logSink != null) {
-        appender.initialize(logSink, resource);
+      if (logEmitter != null) {
+        appender.initialize(logEmitter);
       }
       APPENDERS.add(appender);
     }

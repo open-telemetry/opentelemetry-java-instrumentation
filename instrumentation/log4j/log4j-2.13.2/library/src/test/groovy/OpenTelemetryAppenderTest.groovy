@@ -5,14 +5,13 @@
 
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.log4j.v2_13_2.InMemoryLogExporter
-import io.opentelemetry.instrumentation.log4j.v2_13_2.OpenTelemetryAppender
 import io.opentelemetry.instrumentation.log4j.v2_13_2.OpenTelemetryLog4j
-import io.opentelemetry.instrumentation.log4j.v2_13_2.SimpleLogProcessor
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo
-import io.opentelemetry.sdk.logging.LogSinkSdkProvider
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider
+import io.opentelemetry.sdk.logs.export.InMemoryLogExporter
+import io.opentelemetry.sdk.logs.export.SimpleLogProcessor
 import io.opentelemetry.sdk.resources.Resource
 import org.apache.logging.log4j.LogManager
 
@@ -26,13 +25,14 @@ class OpenTelemetryAppenderTest extends InstrumentationSpecification implements 
   def setupSpec() {
     logExporter = InMemoryLogExporter.create()
     resource = Resource.getDefault()
-    instrumentationLibraryInfo = InstrumentationLibraryInfo.create(OpenTelemetryAppender.getName(), null)
+    instrumentationLibraryInfo = InstrumentationLibraryInfo.create(OpenTelemetryLog4j.getName(), null)
     attributes = Attributes.builder().put("logger.name", "TestLogger").put("thread.name", "Time-limited test").build()
 
-    def sdkSinkProvider = LogSinkSdkProvider.builder().build()
-    sdkSinkProvider.addLogProcessor(SimpleLogProcessor.create(logExporter))
-    def logSink = sdkSinkProvider.get(null, null)
-    OpenTelemetryLog4j.initialize(logSink, resource)
+    def sdkSinkProvider = SdkLogEmitterProvider.builder()
+      .setResource(resource)
+      .addLogProcessor(SimpleLogProcessor.create(logExporter))
+      .build()
+    OpenTelemetryLog4j.initialize(sdkSinkProvider)
   }
 
   def cleanup() {
@@ -54,15 +54,15 @@ class OpenTelemetryAppenderTest extends InstrumentationSpecification implements 
     logRecords[0].getBody().asString() == "log message 1"
     logRecords[0].getResource() == resource
     logRecords[0].getInstrumentationLibraryInfo() == instrumentationLibraryInfo
-    logRecords[0].getTraceId() == ""
-    logRecords[0].getSpanId() == ""
+    logRecords[0].getTraceId() == null
+    logRecords[0].getSpanId() == null
     logRecords[0].getAttributes() == attributes
 
     logRecords[1].getBody().asString() == "log message 2"
     logRecords[1].getResource() == resource
     logRecords[1].getInstrumentationLibraryInfo() == instrumentationLibraryInfo
-    logRecords[1].getTraceId() == ""
-    logRecords[1].getSpanId() == ""
+    logRecords[1].getTraceId() == null
+    logRecords[1].getSpanId() == null
     logRecords[1].getAttributes() == attributes
   }
 
@@ -97,8 +97,8 @@ class OpenTelemetryAppenderTest extends InstrumentationSpecification implements 
     logRecords[1].getBody().asString() == "log message 2"
     logRecords[1].getResource() == resource
     logRecords[1].getInstrumentationLibraryInfo() == instrumentationLibraryInfo
-    logRecords[1].getTraceId() == ""
-    logRecords[1].getSpanId() == ""
+    logRecords[1].getTraceId() == null
+    logRecords[1].getSpanId() == null
     logRecords[1].getAttributes() == attributes
 
     logRecords[2].getBody().asString() == "log message 3"

@@ -10,15 +10,13 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.logging.data.Body;
-import io.opentelemetry.sdk.logging.data.LogRecord;
-import io.opentelemetry.sdk.logging.data.LogRecord.Severity;
-import io.opentelemetry.sdk.logging.data.LogRecordBuilder;
-import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.logs.LogBuilder;
+import io.opentelemetry.sdk.logs.LogEmitter;
+import io.opentelemetry.sdk.logs.data.Severity;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 
@@ -38,16 +36,13 @@ final class LogEventMapper {
     LEVEL_SEVERITY_MAP = Collections.unmodifiableMap(levelSeverityMap);
   }
 
-  static LogRecord toLogRecord(
-      LogEvent logEvent, Resource resource, InstrumentationLibraryInfo instrumentationLibraryInfo) {
-    LogRecordBuilder builder =
-        LogRecord.builder(resource, instrumentationLibraryInfo)
-            .setBody(Body.stringBody(logEvent.getMessage().getFormattedMessage()))
-            .setSeverity(
-                LEVEL_SEVERITY_MAP.getOrDefault(
-                    logEvent.getLevel(), Severity.UNDEFINED_SEVERITY_NUMBER))
-            .setSeverityText(logEvent.getLevel().name())
-            .setUnixTimeNano(logEvent.getNanoTime());
+  static LogBuilder toLogBuilder(LogEmitter logEmitter, LogEvent logEvent) {
+    LogBuilder builder = logEmitter.logBuilder();
+    builder.setBody(logEvent.getMessage().getFormattedMessage());
+    builder.setSeverity(
+        LEVEL_SEVERITY_MAP.getOrDefault(logEvent.getLevel(), Severity.UNDEFINED_SEVERITY_NUMBER));
+    builder.setSeverityText(logEvent.getLevel().name());
+    builder.setEpoch(logEvent.getNanoTime(), TimeUnit.NANOSECONDS);
 
     AttributesBuilder attributes = Attributes.builder();
     attributes.put("logger.name", logEvent.getLoggerName());
@@ -65,8 +60,7 @@ final class LogEventMapper {
     }
 
     builder.setAttributes(attributes.build());
-
-    return builder.build();
+    return builder;
   }
 
   private LogEventMapper() {}

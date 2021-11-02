@@ -9,7 +9,7 @@
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">
-      <AppenderRef ref="OpenTelemetryAppender" leve="All" />
+      <AppenderRef ref="OpenTelemetryAppender" level="All" />
       <AppenderRef ref="ListAppender" level="All" />
       <AppenderRef ref="Console" level="All" />
     </Logger>

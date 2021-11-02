@@ -5,10 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.logging.LogSink;
-import io.opentelemetry.sdk.logging.data.LogRecord;
-import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.logs.LogEmitter;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.core.Appender;
@@ -47,8 +44,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private final AtomicReference<SinkAndResource> sinkAndResourceRef = new AtomicReference<>();
-  private final InstrumentationLibraryInfo instrumentationLibraryInfo;
+  private final AtomicReference<LogEmitter> logEmitterRef = new AtomicReference<>();
 
   private OpenTelemetryAppender(
       String name,
@@ -57,35 +53,21 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean ignoreExceptions,
       Property[] properties) {
     super(name, filter, layout, ignoreExceptions, properties);
-    instrumentationLibraryInfo =
-        InstrumentationLibraryInfo.create(OpenTelemetryAppender.class.getName(), null);
   }
 
   @Override
   public void append(LogEvent event) {
-    SinkAndResource sinkAndResource = sinkAndResourceRef.get();
-    if (sinkAndResource == null) {
+    LogEmitter logEmitter = logEmitterRef.get();
+    if (logEmitter == null) {
       // appender hasn't been initialized
       return;
     }
-    LogRecord logRecord =
-        LogEventMapper.toLogRecord(event, sinkAndResource.resource, instrumentationLibraryInfo);
-    sinkAndResource.logSink.offer(logRecord);
+    LogEventMapper.toLogBuilder(logEmitter, event).emit();
   }
 
-  void initialize(LogSink logSink, Resource resource) {
-    if (!sinkAndResourceRef.compareAndSet(null, new SinkAndResource(logSink, resource))) {
+  void initialize(LogEmitter logEmitter) {
+    if (!logEmitterRef.compareAndSet(null, logEmitter)) {
       throw new IllegalStateException("OpenTelemetryAppender has already been initialized.");
-    }
-  }
-
-  private static class SinkAndResource {
-    private final LogSink logSink;
-    private final Resource resource;
-
-    private SinkAndResource(LogSink logSink, Resource resource) {
-      this.logSink = logSink;
-      this.resource = resource;
     }
   }
 }
