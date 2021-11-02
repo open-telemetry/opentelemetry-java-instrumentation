@@ -1,10 +1,10 @@
 # Using the `Instrumenter` API
 
-The `Instrumenter` encapsulates the entire logic of gathering telemetry: collecting the data,
-starting and ending spans, recording values using metrics instruments. The `Instrumenter` public API
+The `Instrumenter` encapsulates the entire logic for gathering telemetry, from collecting the data,
+to starting and ending spans, to recording values using metrics instruments. The `Instrumenter` public API
 contains only three methods: `shouldStart()`, `start()` and `end()`. The class is designed to
 decorate the actual invocation of the instrumented library code; `shouldStart()` and `start()`
-methods are to be called at the start of the request processing, `end()` must be called when
+methods are to be called at the start of the request processing, while `end()` must be called when
 processing ends and a response arrives, or when it fails with an error. The `Instrumenter` is a
 generic class parameterized with `REQUEST` and `RESPONSE` types. They represent the input and output
 of the instrumented operation. `Instrumenter` can be configured with various extractors that can
@@ -12,7 +12,7 @@ enhance or modify the telemetry data.
 
 ## Check if any telemetry should be generated for the operation using `shouldStart()`
 
-The first method, one that needs to be called before any other `Instrumenter` method,
+The first method, which needs to be called before any other `Instrumenter` method,
 is `shouldStart()`. It determines whether the operation should be instrumented for telemetry or not.
 The `Instrumenter` framework implements several suppression rules that prevent generating duplicate
 telemetry; for example the same HTTP server request will always emit exactly one HTTP `SERVER` span,
@@ -32,12 +32,12 @@ Response decoratedMethod(Request request) {
 }
 ```
 
-If the `shouldStart()` method returns `false`, none of the remaining `Instrumenter` methods are
+If the `shouldStart()` method returns `false`, none of the remaining `Instrumenter` methods should be
 called.
 
 ## Start an instrumented operation using `start()`
 
-When `shouldStart()` returns `true` it is time to `start()` the instrumented operation.
+When `shouldStart()` returns `true`, you can use `start()` to initiate the instrumented operation.
 The `start()` method begins gathering telemetry about the instrumented library function that's being
 invoked. It starts the `Span` and begins recording the metrics (if any are registered in
 the used `Instrumenter` instance).
@@ -64,13 +64,13 @@ called. After that the instrumented operation ends.
 
 The `end()` method is called when the instrumented operation finished. It is of extreme importance
 for this method to be always called after `start()`. Calling `start()` without later `end()`
-may result in inaccurate or wrong telemetry and context leaks. The `end()` method ends the current
+will result in inaccurate or wrong telemetry and context leaks. The `end()` method ends the current
 span and finishes recording the metrics (if any are registered in the `Instrumenter` instance).
 
-The method accepts several arguments:
+The `end()` method accepts several arguments:
 
 * The current OpenTelemetry `Context` - that is, the one that was returned by the `start()` method.
-* The `REQUEST` instance that has started the processing.
+* The `REQUEST` instance that started the processing.
 * Optionally, the `RESPONSE` instance that ends the processing - it may be `null` in case it was not
   received or an error has occurred.
 * Optionally, a `Throwable` error that was thrown during the processing.
@@ -95,7 +95,7 @@ Response decoratedMethod(Request request) {
 
 In the code sample the `context` returned by the `start()` method is passed along to the `end()`
 method. The `end()` method is always called, regardless of the outcome of the
-decorated `actualMethod()` - be it a valid response or an error.
+decorated `actualMethod()`, be it a valid response or an error.
 
 ## Constructing a new `Instrumenter` using an `InstrumenterBuilder`
 
@@ -103,18 +103,18 @@ An `Instrumenter` can be obtained by calling its static `builder()` method and u
 returned `InstrumenterBuilder` to configure captured telemetry and apply customizations to the new
 instance. The `builder()` method accepts three arguments:
 
-* An `OpenTelemetry` instance, which will be used to obtain the `Tracer` and `Meter` objects.
-* The instrumentation name - it denotes the _instrumentation_ library name, not the _instrumented_
+* An `OpenTelemetry` instance, which is used to obtain the `Tracer` and `Meter` objects.
+* The instrumentation name, which indicates the _instrumentation_ library name, not the _instrumented_
   library name. The value passed here should uniquely identify the instrumentation library so that
   during troubleshooting it's possible to determine where the telemetry came from.
 * A `SpanNameExtractor` that determines the span name.
 
-An `Instrumenter` can be built from several smaller components. The following sub-sections describe
+An `Instrumenter` can be built from several smaller components. The following subsections describe
 all interfaces that can be used to customize an `Instrumenter`.
 
 ### Name the spans using the `SpanNameExtractor`
 
-A `SpanNameExtractor` is a simple function interface that accepts the `REQUEST` type and returns the
+A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST` type and returns the
 span name. For more detailed guidelines on span naming please take a look at
 the [`Span` specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#span)
 and the
@@ -132,9 +132,9 @@ class MySpanNameExtractor implements SpanNameExtractor<Request> {
 }
 ```
 
-The example `SpanNameExtractor` implementation simply takes a fitting value provided by the request
-type and uses it as a span name. It is worth noting that `SpanNameExtractor` is
-a `@FunctionalInterface` and instead of implementing it as a separate class you could just
+The example `SpanNameExtractor` implementation takes a fitting value provided by the request
+type and uses it as a span name. Notice that `SpanNameExtractor` is
+a `@FunctionalInterface`: instead of implementing it as a separate class you can just
 pass `Request::getOperationName` to the `builder()` method.
 
 ### Add attributes to span and metric data with the `AttributesExtractor`
@@ -179,15 +179,15 @@ class MyAttributesExtractor implements AttributesExtractor<Request, Response> {
 
 The sample `AttributesExtractor` implementation above sets two attributes: one extracted from the
 request, one from the response. In general, it is recommended to keep `AttributeKey` instances as
-static final constants and reuse them. Creating a new key each time an attribute is set will
-introduce unnecessary overhead.
+static final constants and reuse them. Creating a new key each time an attribute is set risks
+introducing unnecessary overhead.
 
 You can add an `AttributesExtractor` to the `InstrumenterBuilder` by using
 the `addAttributesExtractor()` or `addAttributesExtractors()` methods.
 
 ### Set span status by setting the `SpanStatusExtractor`
 
-By default, the span status is set to `StatusCode.ERROR` when a `Throwable` error occurs, or
+By default, the span status is set to `StatusCode.ERROR` when a `Throwable` error occurs, and
 to `StatusCode.UNSET` in all other cases. Setting a custom `SpanStatusExtractor` allows to customize
 this behavior.
 
@@ -204,7 +204,7 @@ class MySpanStatusExtractor implements SpanStatusExtractor<Request, Response> {
       @Nullable Response response,
       @Nullable Throwable error) {
     if (response != null) {
-      return response.isSuccessful() ? StatusCode.SUCCESS : StatusCode.ERROR;
+      return response.isSuccessful() ? StatusCode.OK : StatusCode.ERROR;
     }
     return SpanStatusExtractor.getDefault().extract(request, response, error);
   }
@@ -245,9 +245,9 @@ class MySpanLinksExtractor implements SpanLinksExtractor<Request> {
 }
 ```
 
-In the sample `SpanLinksExtractor` implementation the request object uses a very
+In the `SpanLinksExtractor` sample implementation, the request object uses a
 convenient `getRelatedOperations()` method to find all spans that should be linked to the newly
-created one. In reality, you will most likely have to construct `SpanContext` by extracting
+created one. When such a function doesn't exist, you need to construct `SpanContext` by extracting
 information from a data structure representing request headers or metadata.
 
 You can add a `SpanLinksExtractor` to the `InstrumenterBuilder` by using
@@ -255,13 +255,14 @@ the `addSpanLinksExtractor()` method.
 
 ### Discard wrapper exception types with the `ErrorCauseExtractor`
 
-Sometimes when an error occurs, the real cause is hidden behind several "wrapper" exception types -
-for example, an `ExecutionException` or a `CompletionException` from the Java standard library. By
+When an error occurs, the root cause might be hidden behind several "wrapper" exception types,
+like an `ExecutionException` or a `CompletionException` from the Java standard library. By
 default, the known wrapper exception types from the JDK are removed from the captured error. To
 remove other wrapper exceptions, like the ones provided by the instrumented library, you can
-implement the `ErrorCauseExtractor`. It has only one method `extractCause()` that is responsible for
-stripping the unnecessary exception layers and extracting the actual error that caused the
-processing to fail. It accepts a `Throwable` and returns a `Throwable`.
+implement the `ErrorCauseExtractor`, which has the following features:
+
+- It has only one method `extractCause()` that is responsible for stripping the unnecessary exception layers and extracting the actual error that caused the processing to fail.
+- It accepts a `Throwable` and returns a `Throwable`.
 
 Consider the following example:
 
@@ -279,8 +280,8 @@ class MyErrorCauseExtractor implements ErrorCauseExtractor {
 ```
 
 The example `ErrorCauseExtractor` implementation checks whether the error is an instance
-of `MyLibWrapperException` and has a cause - if so, it unwraps it. The `error.getCause() != null`
-check is rather important here: if the extractor did not verify this it could accidentally remove
+of `MyLibWrapperException` and has a cause, in which case it unwraps it. The `error.getCause() != null`
+check is rather relevant: if the extractor did not verify both conditions, it could accidentally remove
 the whole exception, making the instrumentation miss an error and thus radically changing the
 captured telemetry. Next, the extractor falls back to the default `jdk()` implementation that
 removes the known JDK wrapper exception types.
@@ -292,8 +293,8 @@ the `setErrorCauseExtractor()` method.
 
 In some cases, the instrumented library provides a way to retrieve accurate timestamps of when the
 operation starts and ends. The `StartTimeExtractor` and `EndTimeExtractor` interfaces can be used to
-feed this information into OpenTelemetry trace and metrics data. Ether both time extractors or none
-at all need to be provided to the `InstrumenterBuilder`. It is crucial to avoid a situation where
+feed this information into OpenTelemetry trace and metrics data. Provide either both time extractors or none
+to the `InstrumenterBuilder`: it is crucial to avoid a situation where
 one time measurement uses the library timestamp and the other the internal OpenTelemetry SDK clock,
 as it would result in inaccurate telemetry.
 
@@ -342,7 +343,7 @@ The `RequestListener` contains two methods:
 * `end()` that gets executed when the instrumented operation ends.
 
 Both methods accept a `Context`, an instance of `Attributes` that contains either attributes
-computed on instrumented operation start or end, and the start/end nanoseconds timestamp that can be
+computed on instrumented operation start or end, and the start and end nanoseconds timestamp that can be
 used to accurately compute the duration.
 
 Consider the following example:
@@ -419,25 +420,25 @@ method.
 
 ### Disable the instrumentation
 
-In some rare cases it may be useful to completely disable the constructed `Instrumenter`, e.g. based
-on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()` method for that -
-passing `true` will turn the newly created `Instrumenter` into an effectively no-op instance.
+In some rare cases it may be useful to completely disable the constructed `Instrumenter`, for example, based
+on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()` method for that:
+passing `true` will turn the newly created `Instrumenter` into a no-op instance.
 
 ### Set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
 
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:
 
-* `newInstrumenter()` - the returned `Instrumenter` will always start spans with kind `INTERNAL`.
-* `newInstrumenter(SpanKindExtractor)` - the returned `Instrumenter` will always start spans with
+* `newInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
+* `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
   kind determined by the passed `SpanKindExtractor`.
-* `newClientInstrumenter(TextMapSetter)` - the returned `Instrumenter` will always start `CLIENT`
+* `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
   spans and will propagate current context into the outgoing request.
-* `newServerInstrumenter(TextMapGetter)` - the returned `Instrumenter` will always start `SERVER`
+* `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
-* `newProducerInstrumenter(TextMapSetter)` - the returned `Instrumenter` will always
+* `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always
   start `PRODUCER` spans and will propagate current context into the outgoing request.
-* `newConsumerInstrumenter(TextMapGetter)` - the returned `Instrumenter` will always start `SERVER`
+* `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
 
 The last four variants that create non-`INTERNAL` spans accept either `TextMapSetter`
