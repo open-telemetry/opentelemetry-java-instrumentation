@@ -9,6 +9,9 @@ dependencies {
     // We don't use JSON features of Armeria but shading it in can cause version conflicts with
     // instrumentation tests that do.
     exclude("com.fasterxml.jackson.core")
+
+    // exclude micrometer so that it doesn't conflict with instrumentation tests
+    exclude("io.micrometer")
   }
 }
 
