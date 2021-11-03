@@ -18,7 +18,7 @@ public class AgentSpanTestingInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.startsWith("AgentSpanTestingTracer");
+    return className.startsWith("AgentSpanTestingInstrumenter");
   }
 
   @Override
