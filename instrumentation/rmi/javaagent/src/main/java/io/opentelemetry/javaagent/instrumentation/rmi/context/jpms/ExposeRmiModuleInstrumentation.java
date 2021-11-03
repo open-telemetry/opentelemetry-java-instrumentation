@@ -57,8 +57,8 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, module) -> {
           if (!instrumented.get() && module != null && module.isNamed()) {
-            // unnamed module in bootstrap loader, instead of InstrumentationVersion could use
-            // any class that is in agent bootstrap
+            // using InstrumentationVersion because it's in the unnamed module in the bootstrap
+            // loader, and that's where the rmi instrumentation helper classes will end up
             JavaModule helperModule = JavaModule.ofType(InstrumentationVersion.class);
             // expose sun.rmi.server package to unnamed module
             ClassInjector.UsingInstrumentation.redefineModule(
