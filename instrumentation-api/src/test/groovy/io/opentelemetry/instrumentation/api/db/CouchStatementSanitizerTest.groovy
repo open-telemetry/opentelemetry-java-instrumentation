@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.db
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class SqlStatementSanitizerTest extends Specification {
+class CouchStatementSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
