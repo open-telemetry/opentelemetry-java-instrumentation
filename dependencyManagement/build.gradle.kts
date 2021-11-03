@@ -13,7 +13,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // IMPORTANT when updating otelVersion, make sure that grpcVersion below is >= the grpc version
 // used by that otel version
-val otelVersion = "1.7.0"
+val otelVersion = "1.7.1"
 val grpcVersion = "1.41.0"
 rootProject.extra["otelVersion"] = otelVersion
 
