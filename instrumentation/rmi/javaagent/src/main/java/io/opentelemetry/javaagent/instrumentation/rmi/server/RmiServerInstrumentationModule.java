@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RmiServerInstrumentation extends InstrumentationModule {
+public class RmiServerInstrumentationModule extends InstrumentationModule {
 
-  public RmiServerInstrumentation() {
+  public RmiServerInstrumentationModule() {
     super("rmi", "rmi-server");
   }
 
