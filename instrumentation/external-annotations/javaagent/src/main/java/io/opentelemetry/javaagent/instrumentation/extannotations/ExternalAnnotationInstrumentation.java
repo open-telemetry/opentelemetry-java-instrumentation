@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -20,8 +20,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -163,24 +163,34 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method method,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Local("otelRequest") ClassAndMethod request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(method);
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = ClassAndMethod.create(declaringClass, methodName);
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelRequest") ClassAndMethod request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
+
+      if (scope == null) {
+        return;
       }
+      scope.close();
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }
