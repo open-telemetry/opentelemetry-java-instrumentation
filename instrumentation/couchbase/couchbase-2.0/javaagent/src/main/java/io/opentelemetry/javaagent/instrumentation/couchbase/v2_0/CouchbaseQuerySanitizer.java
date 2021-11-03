@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.db.CouchStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -115,7 +115,7 @@ public final class CouchbaseQuerySanitizer {
   }
 
   private static SqlStatementInfo sanitizeString(String query) {
-    return SqlStatementSanitizer.sanitize(query);
+    return CouchStatementSanitizer.sanitize(query);
   }
 
   private CouchbaseQuerySanitizer() {}
