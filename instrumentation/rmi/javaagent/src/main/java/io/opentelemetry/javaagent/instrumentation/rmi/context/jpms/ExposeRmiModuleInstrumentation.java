@@ -56,7 +56,7 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, module) -> {
-          if (!instrumented.get() && module != null && module.isNamed()) {
+          if (module != null && module.isNamed()) {
             // using InstrumentationVersion because it's in the unnamed module in the bootstrap
             // loader, and that's where the rmi instrumentation helper classes will end up
             JavaModule helperModule = JavaModule.ofType(InstrumentationVersion.class);
