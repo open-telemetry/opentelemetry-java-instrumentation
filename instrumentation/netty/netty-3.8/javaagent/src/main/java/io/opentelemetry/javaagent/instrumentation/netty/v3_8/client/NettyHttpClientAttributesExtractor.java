@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil.getScheme;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.net.URI;
@@ -24,8 +26,7 @@ final class NettyHttpClientAttributesExtractor
       String target = requestAndChannel.request().getUri();
       URI uri = new URI(target);
       if ((uri.getHost() == null || uri.getHost().equals("")) && hostHeader != null) {
-        String scheme = "http://";
-        return scheme + hostHeader + target;
+        return getScheme(requestAndChannel) + "://" + hostHeader + target;
       }
       return uri.toString();
     } catch (URISyntaxException e) {
