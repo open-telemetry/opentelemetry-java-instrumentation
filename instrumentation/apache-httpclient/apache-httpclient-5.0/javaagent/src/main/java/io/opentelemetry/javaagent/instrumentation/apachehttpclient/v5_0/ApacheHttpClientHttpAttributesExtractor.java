@@ -138,7 +138,7 @@ final class ApacheHttpClientHttpAttributesExtractor
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (int i = 0; i < headers.length; ++i) {
-      headersList.set(i, headers[i].getValue());
+      headersList.add(headers[i].getValue());
     }
     return headersList;
   }

@@ -25,6 +25,11 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   abstract protected CloseableHttpClient createClient()
 
   @Override
+  String userAgent() {
+    return "apachehttpclient"
+  }
+
+  @Override
   Integer responseCodeOnRedirectError() {
     return 302
   }
@@ -35,6 +40,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
+    request.addHeader("user-agent", userAgent())
     headers.entrySet().each {
       request.setHeader(new BasicHeader(it.key, it.value))
     }
