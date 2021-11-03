@@ -12,8 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.ContextDispatcher;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 
 /**
  * RMI server instrumentation class {@link ContextDispatcher} implements an internal interface that
@@ -25,18 +23,6 @@ public class RmiJpmsInstrumentationModule extends InstrumentationModule {
 
   public RmiJpmsInstrumentationModule() {
     super("rmi", "rmi-jpms");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return new ElementMatcher.Junction.AbstractBase<ClassLoader>() {
-
-      @Override
-      public boolean matches(ClassLoader target) {
-        // runs only in bootstrap class loader
-        return JavaModule.isSupported() && target == null;
-      }
-    };
   }
 
   @Override

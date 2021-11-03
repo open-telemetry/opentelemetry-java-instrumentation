@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
   private static final Logger logger =
       LoggerFactory.getLogger(ExposeRmiModuleInstrumentation.class);
-  private static final AtomicBoolean instrumented = new AtomicBoolean();
+
+  private final AtomicBoolean instrumented = new AtomicBoolean();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,6 +38,18 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
         };
 
     return notInstrumented.and(nameStartsWith("sun.rmi"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return new ElementMatcher.Junction.AbstractBase<ClassLoader>() {
+
+      @Override
+      public boolean matches(ClassLoader target) {
+        // runs only in bootstrap class loader
+        return JavaModule.isSupported() && target == null;
+      }
+    };
   }
 
   @Override
