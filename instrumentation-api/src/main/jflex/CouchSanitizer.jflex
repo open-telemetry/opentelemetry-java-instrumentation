@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.db;
 %%
 
 %final
-%class AutoSqlSanitizer
+%class AutoCouchSanitizer
 %apiprivate
 %int
 %buffer 2048
@@ -31,7 +31,7 @@ WHITESPACE        = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement) {
-    AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
+    AutoCouchSanitizer sanitizer = new AutoCouchSanitizer(new java.io.StringReader(statement));
     try {
       while (!sanitizer.yyatEOF()) {
         int token = sanitizer.yylex();
@@ -361,7 +361,7 @@ WHITESPACE        = [ \t\r\n]+
       }
 
   // here is where the actual sanitization happens
-  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOUBLE_QUOTED_STR} | {DOLLAR_QUOTED_STR} {
           builder.append('?');
           if (isOverLimit()) return YYEOF;
       }

@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.api.db
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class SqlStatementSanitizerTest extends Specification {
+class CouchStatementSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
-    def actualSanitized = SqlStatementSanitizer.sanitize(originalSql)
+    def actualSanitized = CouchStatementSanitizer.sanitize(originalSql)
 
     expect:
     actualSanitized.getFullStatement() == sanitizedSql
@@ -59,6 +59,15 @@ class SqlStatementSanitizerTest extends Specification {
     "SELECT * FROM TABLE WHERE FIELD = '\"\$\$\$\$\"'"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'"       | "SELECT * FROM TABLE WHERE FIELD = ?"
 
+    // Some databases support/encourage " instead of ' with same escape rules
+    "SELECT * FROM TABLE WHERE FIELD = \"\""                                   | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\""                  | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"" | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"\\\\\""                               | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\""                   | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"'\$\$\$\$'\""                         | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\""      | "SELECT * FROM TABLE WHERE FIELD = ?"
+
     // Some databases allow using dollar-quoted strings
     "SELECT * FROM TABLE WHERE FIELD = \$\$\$\$"                               | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = \$\$words and spaces\$\$"               | "SELECT * FROM TABLE WHERE FIELD = ?"
@@ -75,8 +84,6 @@ class SqlStatementSanitizerTest extends Specification {
     // hibernate/jpa query language
     "FROM TABLE WHERE FIELD=1234"                                              | "FROM TABLE WHERE FIELD=?"
 
-    // Double-quoted identifier names should not be sanitized
-    "SELECT * FROM \"TABLE\" WHERE FIELD = ''"                                     | "SELECT * FROM \"TABLE\" WHERE FIELD = ?"
   }
 
   @Unroll
