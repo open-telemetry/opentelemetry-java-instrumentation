@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.context.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload.GETTER;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
-import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -51,7 +49,7 @@ public class ContextDispatcher implements Dispatcher {
     if (PROPAGATOR.isOperationWithPayload(operationId)) {
       ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
-        Context context = tracer().extract(payload, GETTER);
+        Context context = payload.extract();
         SpanContext spanContext = Span.fromContext(context).getSpanContext();
         if (spanContext.isValid()) {
           THREAD_LOCAL_CONTEXT.set(context);
