@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -15,7 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -41,16 +41,16 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     public static void startConnect(
         @Advice.Argument(1) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectRequest request,
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = NettyConnectRequest.create(remoteAddress);
-      if (!connectInstrumenter().shouldStart(parentContext, request)) {
+      request = NettyConnectionRequest.connect(remoteAddress);
+      if (!connectionInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = connectInstrumenter().start(parentContext, request);
+      context = connectionInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -59,7 +59,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return(readOnly = false) Mono<Channel> mono,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectRequest request,
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
       if (scope != null) {
@@ -67,7 +67,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
       }
 
       if (throwable != null) {
-        connectInstrumenter().end(context, request, null, throwable);
+        connectionInstrumenter().end(context, request, null, throwable);
       } else {
         mono = ConnectionWrapper.wrap(context, request, mono);
       }
