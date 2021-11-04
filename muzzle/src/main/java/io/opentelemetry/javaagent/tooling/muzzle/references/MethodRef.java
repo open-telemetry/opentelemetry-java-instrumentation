@@ -54,6 +54,10 @@ public final class MethodRef {
     return descriptor;
   }
 
+  public boolean isConstructor() {
+    return "<init>".equals(name);
+  }
+
   MethodRef merge(MethodRef anotherMethod) {
     if (!equals(anotherMethod)) {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);

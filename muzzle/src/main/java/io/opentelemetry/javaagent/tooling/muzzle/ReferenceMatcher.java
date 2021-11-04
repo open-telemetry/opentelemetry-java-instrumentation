@@ -278,6 +278,7 @@ public final class ReferenceMatcher {
 
   private static MethodDescription.InDefinedShape findMethod(
       MethodRef methodRef, TypeDescription typeOnClasspath) {
+
     for (MethodDescription.InDefinedShape methodDescription :
         typeOnClasspath.getDeclaredMethods()) {
       if (methodDescription.getInternalName().equals(methodRef.getName())
@@ -285,6 +286,13 @@ public final class ReferenceMatcher {
         return methodDescription;
       }
     }
+
+    // if the method we're looking for is a constructor, we're only checking the direct super type;
+    // and skipping all the interfaces and indirect superclasses
+    if (methodRef.isConstructor()) {
+      return null;
+    }
+
     if (typeOnClasspath.getSuperClass() != null) {
       MethodDescription.InDefinedShape methodOnSupertype =
           findMethod(methodRef, typeOnClasspath.getSuperClass().asErasure());

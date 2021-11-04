@@ -84,6 +84,10 @@ public class TestClasses {
     public interface AnotherInterface extends SomeInterface {}
   }
 
+  public abstract static class BaseClassWithConstructor {
+    protected BaseClassWithConstructor(long l) {}
+  }
+
   public static class LdcAdvice {
     public static void ldcMethod() {
       MethodBodyAdvice.A.class.getName();
