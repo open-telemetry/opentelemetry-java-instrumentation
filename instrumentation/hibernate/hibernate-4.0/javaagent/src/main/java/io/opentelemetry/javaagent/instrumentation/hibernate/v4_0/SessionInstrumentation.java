@@ -8,15 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getEntityName;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getSessionMethodSpanName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -24,7 +22,9 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,9 +47,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("close")).and(takesArguments(0)),
-        SessionInstrumentation.class.getName() + "$SessionCloseAdvice");
 
     // Session synchronous methods we want to instrument.
     transformer.applyAdviceToMethod(
@@ -66,10 +63,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "fireLock",
                     "refresh",
                     "insert",
-                    "delete",
-                    // Lazy-load methods.
-                    "immediateLoad",
-                    "internalLoad")),
+                    "delete")),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
@@ -80,7 +74,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
-    // current Span to the returned object using a VirtualField.
+    // current SessionInfo to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
         isMethod()
             .and(namedOneOf("beginTransaction", "getTransaction"))
@@ -97,23 +91,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SessionCloseAdvice {
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void closeSession(
-        @Advice.This SharedSessionContract session, @Advice.Thrown Throwable throwable) {
-
-      VirtualField<SharedSessionContract, Context> virtualField =
-          VirtualField.find(SharedSessionContract.class, Context.class);
-      Context sessionContext = virtualField.get(session);
-      if (sessionContext == null) {
-        return;
-      }
-      instrumenter().end(sessionContext, null, null, throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -124,39 +101,38 @@ public class SessionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object arg0,
         @Advice.Argument(value = 1, optional = true) Object arg1,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
-      VirtualField<SharedSessionContract, Context> virtualField =
-          VirtualField.find(SharedSessionContract.class, Context.class);
-      Context sessionContext = virtualField.get(session);
+      VirtualField<SharedSessionContract, SessionInfo> virtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      SessionInfo sessionInfo = virtualField.get(session);
 
-      if (sessionContext == null) {
-        return; // No state found. We aren't in a Session.
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      String entityName =
+          getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
+      hibernateOperation =
+          new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
+      if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
+        return;
       }
 
-      if (!SCOPE_ONLY_METHODS.contains(name)) {
-        String entityName =
-            getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
-        spanContext =
-            SessionMethodUtils.startSpanFrom(
-                sessionContext, getSessionMethodSpanName(name), entityName);
-        scope = spanContext.makeCurrent();
-      } else {
-        scope = sessionContext.makeCurrent();
-      }
+      context = instrumenter().start(parentContext, hibernateOperation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       if (callDepth.decrementAndGet() > 0) {
@@ -165,7 +141,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(spanContext, throwable);
+        instrumenter().end(context, hibernateOperation, null, throwable);
       }
     }
   }
@@ -177,13 +153,12 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
-      VirtualField<SharedSessionContract, Context> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, Context.class);
-      VirtualField<Query, Context> queryVirtualField =
-          VirtualField.find(Query.class, Context.class);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      VirtualField<Query, SessionInfo> queryVirtualField =
+          VirtualField.find(Query.class, SessionInfo.class);
 
-      SessionMethodUtils.attachSpanFromStore(
-          sessionVirtualField, session, queryVirtualField, query);
+      queryVirtualField.set(query, sessionVirtualField.get(session));
     }
   }
 
@@ -194,13 +169,12 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      VirtualField<SharedSessionContract, Context> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, Context.class);
-      VirtualField<Transaction, Context> transactionVirtualField =
-          VirtualField.find(Transaction.class, Context.class);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      VirtualField<Transaction, SessionInfo> transactionVirtualField =
+          VirtualField.find(Transaction.class, SessionInfo.class);
 
-      SessionMethodUtils.attachSpanFromStore(
-          sessionVirtualField, session, transactionVirtualField, transaction);
+      transactionVirtualField.set(transaction, sessionVirtualField.get(session));
     }
   }
 
@@ -211,13 +185,12 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
-      VirtualField<SharedSessionContract, Context> sessionVirtualField =
-          VirtualField.find(SharedSessionContract.class, Context.class);
-      VirtualField<Criteria, Context> criteriaVirtualField =
-          VirtualField.find(Criteria.class, Context.class);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
+          VirtualField.find(Criteria.class, SessionInfo.class);
 
-      SessionMethodUtils.attachSpanFromStore(
-          sessionVirtualField, session, criteriaVirtualField, criteria);
+      criteriaVirtualField.set(criteria, sessionVirtualField.get(session));
     }
   }
 }

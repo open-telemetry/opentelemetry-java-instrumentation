@@ -55,10 +55,6 @@ class PatchLoggerTest {
       for (Class<?> clazz : method.getParameterTypes()) {
         parameterTypes.add(clazz.getName());
       }
-      if (parameterTypes.contains("java.util.function.Supplier")) {
-        // FIXME it would be good to include Java 8 methods
-        continue;
-      }
       builder.parameterTypes.addAll(parameterTypes);
       builder.returnType = method.getReturnType().getName();
       julLoggerMethods.add(builder);
@@ -865,6 +861,12 @@ class PatchLoggerTest {
     @Override
     public int hashCode() {
       return Objects.hash(name, parameterTypes, returnType);
+    }
+
+    @Override
+    public String toString() {
+      String params = parameterTypes.stream().reduce((a, b) -> a + ", " + b).orElse("");
+      return name + "(" + params + ")" + returnType;
     }
   }
 }

@@ -16,9 +16,6 @@ testSets {
   create("version5Test") {
     dirName = "test"
   }
-  create("version6Test") {
-    dirName = "hibernate6Test"
-  }
 
   create("latestDepTest") {
     dirName = "test"
@@ -27,17 +24,9 @@ testSets {
 
 tasks {
   val version5Test by existing(Test::class)
-  val version6Test by existing(Test::class) {
-    filter {
-      // version6 doesn't have all the tests that older versions have
-      // this here prevents failure when running a test that is missing from version6 from ide
-      isFailOnNoMatchingTests = false
-    }
-  }
 
   test {
     dependsOn(version5Test)
-    dependsOn(version6Test)
   }
 }
 
@@ -67,12 +56,12 @@ dependencies {
   add("version5TestImplementation", "org.hibernate:hibernate-entitymanager:5.0.0.Final")
   add("version5TestImplementation", "org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
 
-  add("version6TestImplementation", "org.hibernate:hibernate-core:6.0.0.Alpha6")
-  add("version6TestImplementation", "org.hibernate:hibernate-entitymanager:6.0.0.Alpha6")
-  add("version6TestImplementation", "org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
-
-  // hibernate 6 is alpha so use 5 as latest version
   add("latestDepTestImplementation", "org.hibernate:hibernate-core:5.+")
   add("latestDepTestImplementation", "org.hibernate:hibernate-entitymanager:5.+")
   add("latestDepTestImplementation", "org.springframework.data:spring-data-jpa:(2.4.0,)")
+}
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
 }

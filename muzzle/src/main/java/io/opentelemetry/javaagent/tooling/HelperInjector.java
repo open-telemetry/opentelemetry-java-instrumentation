@@ -71,6 +71,8 @@ public class HelperInjector implements Transformer {
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
       Cache.builder().setWeakKeys().build();
+  private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders =
+      Cache.builder().setWeakKeys().build();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
 
@@ -147,30 +149,40 @@ public class HelperInjector implements Transformer {
       ClassLoader classLoader,
       JavaModule module) {
     if (!helperClassNames.isEmpty()) {
-      classLoader = injectHelperClasses(typeDescription, classLoader, module);
+      injectHelperClasses(typeDescription, classLoader, module);
     }
 
-    if (helpersSource != null && !helperResources.isEmpty()) {
-      for (HelperResource helperResource : helperResources) {
-        URL resource = helpersSource.getResource(helperResource.getAgentPath());
-        if (resource == null) {
-          logger.debug(
-              "Helper resource {} requested but not found.", helperResource.getAgentPath());
-          continue;
-        }
-
-        logger.debug(
-            "Injecting resource onto classloader {} -> {}",
-            classLoader,
-            helperResource.getApplicationPath());
-        HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
-      }
+    if (classLoader != null && helpersSource != null && !helperResources.isEmpty()) {
+      injectHelperResources(classLoader);
     }
 
     return builder;
   }
 
-  private ClassLoader injectHelperClasses(
+  private void injectHelperResources(ClassLoader classLoader) {
+    resourcesInjectedClassLoaders.computeIfAbsent(
+        classLoader,
+        cl -> {
+          for (HelperResource helperResource : helperResources) {
+            URL resource = helpersSource.getResource(helperResource.getAgentPath());
+            if (resource == null) {
+              logger.debug(
+                  "Helper resource {} requested but not found.", helperResource.getAgentPath());
+              continue;
+            }
+
+            logger.debug(
+                "Injecting resource onto classloader {} -> {}",
+                classLoader,
+                helperResource.getApplicationPath());
+            HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
+          }
+
+          return true;
+        });
+  }
+
+  private void injectHelperClasses(
       TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
     if (classLoader == null) {
       classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
@@ -178,7 +190,7 @@ public class HelperInjector implements Transformer {
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.error(
           "Cannot inject helpers into bootstrap classloader without an instance of Instrumentation. Programmer error!");
-      return classLoader;
+      return;
     }
 
     injectedClassLoaders.computeIfAbsent(
@@ -217,7 +229,6 @@ public class HelperInjector implements Transformer {
         });
 
     ensureModuleCanReadHelperModules(module);
-    return classLoader;
   }
 
   private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)

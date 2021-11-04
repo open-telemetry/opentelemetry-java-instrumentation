@@ -19,6 +19,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest
 import com.amazonaws.services.sqs.model.PurgeQueueRequest
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import java.time.Duration
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.localstack.LocalStackContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -36,9 +37,10 @@ class AwsConnector {
     AwsConnector awsConnector = new AwsConnector()
 
     awsConnector.localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
-      .withServices(LocalStackContainer.Service.SQS, LocalStackContainer.Service.SNS)
+      .withServices(LocalStackContainer.Service.SQS, LocalStackContainer.Service.SNS, LocalStackContainer.Service.S3)
       .withEnv("DEBUG", "1")
       .withEnv("SQS_PROVIDER", "elasticmq")
+      .withStartupTimeout(Duration.ofMinutes(2))
     awsConnector.localstack.start()
     awsConnector.localstack.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger("test")))
 
