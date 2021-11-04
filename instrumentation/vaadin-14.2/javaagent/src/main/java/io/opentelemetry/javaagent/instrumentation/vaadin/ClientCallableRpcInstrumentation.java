@@ -49,13 +49,13 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parenContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
       request = VaadinClientCallableRequest.create(componentClass, methodName);
-      if (!clientCallableInstrumenter().shouldStart(parenContext, request)) {
+      if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = clientCallableInstrumenter().start(parenContext, request);
+      context = clientCallableInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 

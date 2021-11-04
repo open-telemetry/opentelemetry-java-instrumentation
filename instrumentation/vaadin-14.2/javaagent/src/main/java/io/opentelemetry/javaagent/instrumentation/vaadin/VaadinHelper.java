@@ -38,20 +38,19 @@ public class VaadinHelper {
   }
 
   public void endVaadinServiceSpan(
-      Context parentContext, VaadinServiceRequest request, Throwable throwable) {
-    serviceInstrumenter.end(parentContext, request, null, throwable);
+      Context context, VaadinServiceRequest request, Throwable throwable) {
+    serviceInstrumenter.end(context, request, null, throwable);
 
-    VaadinServiceContext vaadinServiceContext = parentContext.get(SERVICE_CONTEXT_KEY);
     ServerSpanNaming.updateServerSpanName(
-        parentContext,
+        context,
         ServerSpanNaming.Source.CONTROLLER,
-        (c, req, serviceContext) -> getSpanNameForVaadinServiceContext(req, serviceContext),
-        request,
-        vaadinServiceContext);
+        (c, req) -> getSpanNameForVaadinServiceContext(c, req),
+        request);
   }
 
   private static String getSpanNameForVaadinServiceContext(
-      VaadinServiceRequest request, VaadinServiceContext vaadinServiceContext) {
+      Context context, VaadinServiceRequest request) {
+    VaadinServiceContext vaadinServiceContext = context.get(SERVICE_CONTEXT_KEY);
     // None of the request handlers processed the request, set span name to main request processing
     // method name that calls request handlers.
     if (!vaadinServiceContext.isRequestHandled()) {
@@ -85,13 +84,13 @@ public class VaadinHelper {
   }
 
   public void endRequestHandlerSpan(
-      Context parentContext, VaadinHandlerRequest request, Throwable throwable, boolean handled) {
-    requestHandlerInstrumenter.end(parentContext, request, null, throwable);
+      Context context, VaadinHandlerRequest request, Throwable throwable, boolean handled) {
+    requestHandlerInstrumenter.end(context, request, null, throwable);
 
     // request handler returns true when it processes the request, if that is the case then
     // mark request as handled
     if (handled) {
-      VaadinServiceContext vaadinServiceContext = parentContext.get(SERVICE_CONTEXT_KEY);
+      VaadinServiceContext vaadinServiceContext = context.get(SERVICE_CONTEXT_KEY);
       if (vaadinServiceContext != null) {
         vaadinServiceContext.setRequestHandled();
       }
@@ -106,9 +105,9 @@ public class VaadinHelper {
   }
 
   public void updateServerSpanName(Location location) {
-    Context parentContext = Context.current();
+    Context context = Context.current();
     ServerSpanNaming.updateServerSpanName(
-        parentContext,
+        context,
         ServerSpanNaming.Source.NESTED_CONTROLLER,
         (c, loc) -> ServletContextPath.prepend(c, getSpanNameForLocation(loc)),
         location);

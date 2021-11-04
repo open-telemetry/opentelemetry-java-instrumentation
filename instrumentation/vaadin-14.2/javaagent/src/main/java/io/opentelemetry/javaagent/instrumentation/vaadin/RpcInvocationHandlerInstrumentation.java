@@ -58,13 +58,13 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parenContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
       request = VaadinRpcRequest.create(rpcInvocationHandler, method, jsonObject);
-      if (!rpcInstrumenter().shouldStart(parenContext, request)) {
+      if (!rpcInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = rpcInstrumenter().start(parenContext, request);
+      context = rpcInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
