@@ -11,7 +11,6 @@ import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKey
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan
-import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
@@ -157,17 +156,6 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
       assert ServerSpan.fromContextOrNull(Context.current()) != null
       runWithSpan("internal") {
         assert ServerSpan.fromContextOrNull(Context.current()) != null
-      }
-    }
-  }
-
-  def "test consumer span bridge"() {
-    expect:
-    AgentSpanTesting.runWithConsumerSpan("consumer") {
-      assert Span.current() != null
-      assert ConsumerSpan.fromContextOrNull(Context.current()) != null
-      runWithSpan("internal") {
-        assert ConsumerSpan.fromContextOrNull(Context.current()) != null
       }
     }
   }
