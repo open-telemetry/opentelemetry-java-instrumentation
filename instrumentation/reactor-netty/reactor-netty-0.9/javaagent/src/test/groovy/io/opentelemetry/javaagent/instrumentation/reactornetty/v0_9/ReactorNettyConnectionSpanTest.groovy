@@ -50,13 +50,23 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 5) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         span(1) {
+          name "RESOLVE"
+          kind INTERNAL
+          childOf span(0)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
+          }
+        }
+        span(2) {
           name "CONNECT"
           kind INTERNAL
           childOf(span(0))
@@ -67,15 +77,15 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
-        span(2) {
+        span(3) {
           name "HTTP GET"
           kind CLIENT
           childOf(span(0))
         }
-        span(3) {
+        span(4) {
           name "test-http-server"
           kind SERVER
-          childOf(span(2))
+          childOf(span(3))
         }
       }
     }
@@ -100,7 +110,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 3) {
         span(0) {
           name "parent"
           kind INTERNAL
@@ -109,6 +119,16 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           errorEvent(thrownException.class, thrownException.message)
         }
         span(1) {
+          name "RESOLVE"
+          kind INTERNAL
+          childOf span(0)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" PortUtils.UNUSABLE_PORT
+          }
+        }
+        span(2) {
           name "CONNECT"
           kind INTERNAL
           childOf(span(0))
