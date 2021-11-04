@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -44,7 +44,7 @@ public class RouterInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Location location,
         @Advice.Argument(2) NavigationTrigger navigationTrigger) {
       if (navigationTrigger == NavigationTrigger.PAGE_LOAD) {
-        tracer().updateServerSpanName(location);
+        helper().updateServerSpanName(location);
       }
     }
   }
