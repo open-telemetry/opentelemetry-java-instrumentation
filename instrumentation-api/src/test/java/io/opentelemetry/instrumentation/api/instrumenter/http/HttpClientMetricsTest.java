@@ -32,6 +32,7 @@ class HttpClientMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put("http.method", "GET")
+            .put("http.url", "https://localhost:1234/")
             .put("http.host", "host")
             .put("http.target", "/")
             .put("http.scheme", "https")
@@ -86,9 +87,7 @@ class HttpClientMetricsTest {
                                           .hasSum(150 /* millis */)
                                           .attributes()
                                           .containsOnly(
-                                              attributeEntry("http.scheme", "https"),
-                                              attributeEntry("http.host", "host"),
-                                              attributeEntry("http.target", "/"),
+                                              attributeEntry("http.url", "https://localhost:1234/"),
                                               attributeEntry("http.method", "GET"),
                                               attributeEntry("http.flavor", "2.0"),
                                               attributeEntry("http.status_code", 200))));
