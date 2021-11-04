@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
-import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientTracer.tracer;
-
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -24,11 +23,9 @@ public class ContextPayload {
   private static final Logger logger = LoggerFactory.getLogger(ContextPayload.class);
 
   private final Map<String, String> context;
-  public static final ContextPayloadGetter GETTER = ContextPayloadGetter.INSTANCE;
-  public static final ContextPayloadSetter SETTER = ContextPayloadSetter.INSTANCE;
 
   public ContextPayload() {
-    context = new HashMap<>();
+    this(new HashMap<>());
   }
 
   public ContextPayload(Map<String, String> context) {
@@ -37,7 +34,9 @@ public class ContextPayload {
 
   public static ContextPayload from(Context context) {
     ContextPayload payload = new ContextPayload();
-    tracer().inject(context, payload, SETTER);
+    GlobalOpenTelemetry.getPropagators()
+        .getTextMapPropagator()
+        .inject(context, payload, ContextPayloadSetter.INSTANCE);
     return payload;
   }
 
@@ -54,34 +53,36 @@ public class ContextPayload {
     return null;
   }
 
-  public Map<String, String> getSpanContext() {
-    return context;
-  }
-
   public void write(ObjectOutput out) throws IOException {
     out.writeObject(context);
   }
 
-  enum ContextPayloadGetter implements TextMapGetter<ContextPayload> {
+  public Context extract() {
+    return GlobalOpenTelemetry.getPropagators()
+        .getTextMapPropagator()
+        .extract(Context.root(), this, ContextPayloadGetter.INSTANCE);
+  }
+
+  private enum ContextPayloadGetter implements TextMapGetter<ContextPayload> {
     INSTANCE;
 
     @Override
     public Iterable<String> keys(ContextPayload contextPayload) {
-      return contextPayload.getSpanContext().keySet();
+      return contextPayload.context.keySet();
     }
 
     @Override
     public String get(ContextPayload carrier, String key) {
-      return carrier.getSpanContext().get(key);
+      return carrier.context.get(key);
     }
   }
 
-  enum ContextPayloadSetter implements TextMapSetter<ContextPayload> {
+  private enum ContextPayloadSetter implements TextMapSetter<ContextPayload> {
     INSTANCE;
 
     @Override
     public void set(ContextPayload carrier, String key, String value) {
-      carrier.getSpanContext().put(key, value);
+      carrier.context.put(key, value);
     }
   }
 }
