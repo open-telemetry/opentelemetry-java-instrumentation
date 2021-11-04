@@ -31,3 +31,8 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-core:5.+")
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
 }
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+}

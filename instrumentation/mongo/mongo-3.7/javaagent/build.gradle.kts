@@ -27,6 +27,10 @@ dependencies {
   library("org.mongodb:mongo-java-driver:3.8.0")
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
+
+  testInstrumentation(project(":instrumentation:mongo:mongo-async-3.3:javaagent"))
+  testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:mongo:mongo-4.0:javaagent"))
 }
 
 tasks {

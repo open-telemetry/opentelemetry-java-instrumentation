@@ -53,6 +53,8 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
             + " Instrumentation errors during test";
+    int muzzleFailureCount = TestAgentListenerAccess.getAndResetMuzzleFailureCount();
+    assert muzzleFailureCount == 0 : muzzleFailureCount + " Muzzle failures during test";
     // additional library ignores are ignored during tests, because they can make it really
     // confusing for contributors wondering why their instrumentation is not applied
     //

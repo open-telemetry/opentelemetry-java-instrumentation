@@ -4,14 +4,11 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import spock.lang.Ignore
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
-@Ignore("Requires https://github.com/localstack/localstack/issues/3686 and #3669")
 
 class S3TracingTest extends AgentInstrumentationSpecification {
 
@@ -45,7 +42,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     awsConnector.purgeQueue(queueUrl)
 
     then:
-    assertTraces(13) {
+    assertTraces(12) {
       trace(0, 1) {
 
         span(0) {
@@ -177,33 +174,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(6, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "http.user_agent" String
-            "net.peer.name" String
-            "net.transport" IP_TCP
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      trace(7, 2) {
+      trace(6, 2) {
         span(0) {
           name "S3.PutObject"
           kind CLIENT
@@ -244,11 +215,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
+
       /**
        * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
        * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
        */
-      trace(8, 1) {
+      trace(7, 1) {
         span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
@@ -269,7 +241,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(9, 1) {
+      trace(8, 1) {
         span(0) {
           name "S3.ListObjects"
           kind CLIENT
@@ -290,7 +262,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(10, 1) {
+      trace(9, 1) {
         span(0) {
           name "S3.DeleteObject"
           kind CLIENT
@@ -311,7 +283,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(11, 1) {
+      trace(10, 1) {
         span(0) {
           name "S3.DeleteBucket"
           kind CLIENT
@@ -332,7 +304,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(12, 1) {
+      trace(11, 1) {
         span(0) {
           name "SQS.PurgeQueue"
           kind CLIENT
@@ -570,33 +542,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
       trace(9, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "http.user_agent" String
-            "net.peer.name" String
-            "net.transport" IP_TCP
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      trace(10, 2) {
         span(0) {
           name "S3.PutObject"
           kind CLIENT
@@ -616,32 +562,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.port" { it == null || Number }
           }
         }
-        span(1) {
-          name "SQS.ReceiveMessage"
-          kind CONSUMER
-          childOf span(0)
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "http.user_agent" String
-            "net.peer.name" String
-            "net.transport" IP_TCP
-            "net.peer.port" { it == null || Number }
-          }
-        }
       }
       /**
        * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
        * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
        */
-      trace(11, 1) {
+      trace(10, 1) {
         span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
@@ -656,6 +582,28 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
+            "net.peer.name" String
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
+          }
+        }
+      }
+      trace(11, 1) {
+        span(0) {
+          name "SQS.ReceiveMessage"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "http.user_agent" String
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }

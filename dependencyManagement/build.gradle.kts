@@ -13,7 +13,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // IMPORTANT when updating otelVersion, make sure that grpcVersion below is >= the grpc version
 // used by that otel version
-val otelVersion = "1.7.0"
+val otelVersion = "1.7.1"
 val grpcVersion = "1.41.0"
 rootProject.extra["otelVersion"] = otelVersion
 
@@ -63,7 +63,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "net.bytebuddy",
     // When updating, also update conventions/build.gradle.kts
-    "1.11.20",
+    "1.11.22",
     listOf("byte-buddy", "byte-buddy-dep", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(

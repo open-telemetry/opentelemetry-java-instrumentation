@@ -8,14 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -23,14 +22,14 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 
 public class SessionInstrumentation implements TypeInstrumentation {
@@ -48,10 +47,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("close")).and(takesArguments(0)),
-        SessionInstrumentation.class.getName() + "$SessionCloseAdvice");
-
     // Session synchronous methods we want to instrument.
     transformer.applyAdviceToMethod(
         isMethod()
@@ -66,10 +61,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "lock",
                     "refresh",
                     "insert",
-                    "delete",
-                    // Lazy-load methods.
-                    "immediateLoad",
-                    "internalLoad")),
+                    "delete")),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // Handle the non-generic 'get' separately.
@@ -78,7 +70,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
-    // current Span to the returned object using a VirtualField.
+    // current SessionInfo to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
         isMethod()
             .and(namedOneOf("beginTransaction", "getTransaction"))
@@ -95,31 +87,6 @@ public class SessionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SessionCloseAdvice {
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void closeSession(
-        @Advice.This Object session, @Advice.Thrown Throwable throwable) {
-
-      Context sessionContext = null;
-      if (session instanceof Session) {
-        VirtualField<Session, Context> virtualField =
-            VirtualField.find(Session.class, Context.class);
-        sessionContext = virtualField.get((Session) session);
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> virtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        sessionContext = virtualField.get((StatelessSession) session);
-      }
-
-      if (sessionContext == null) {
-        return;
-      }
-      instrumenter().end(sessionContext, null, null, throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -130,45 +97,35 @@ public class SessionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object arg0,
         @Advice.Argument(value = 1, optional = true) Object arg1,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      callDepth = CallDepth.forClass(SessionMethodUtils.class);
+      callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
-      Context sessionContext = null;
-      if (session instanceof Session) {
-        VirtualField<Session, Context> virtualField =
-            VirtualField.find(Session.class, Context.class);
-        sessionContext = virtualField.get((Session) session);
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> virtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        sessionContext = virtualField.get((StatelessSession) session);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
+      String entityName =
+          getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
+      hibernateOperation =
+          new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
+      if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
+        return;
       }
 
-      if (sessionContext == null) {
-        return; // No state found. We aren't in a Session.
-      }
-
-      if (!SCOPE_ONLY_METHODS.contains(name)) {
-        String entityName =
-            getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
-        spanContext =
-            SessionMethodUtils.startSpanFrom(sessionContext, "Session." + name, entityName);
-        scope = spanContext.makeCurrent();
-      } else {
-        scope = sessionContext.makeCurrent();
-      }
+      context = instrumenter().start(parentContext, hibernateOperation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       if (callDepth.decrementAndGet() > 0) {
@@ -177,7 +134,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        SessionMethodUtils.end(spanContext, throwable);
+        instrumenter().end(context, hibernateOperation, null, throwable);
       }
     }
   }
@@ -188,19 +145,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
-      VirtualField<Query, Context> queryVirtualField =
-          VirtualField.find(Query.class, Context.class);
-      if (session instanceof Session) {
-        VirtualField<Session, Context> sessionVirtualField =
-            VirtualField.find(Session.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (Session) session, queryVirtualField, query);
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> sessionVirtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (StatelessSession) session, queryVirtualField, query);
-      }
+      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
+      VirtualField<Query, SessionInfo> queryVirtualField =
+          VirtualField.find(Query.class, SessionInfo.class);
+      queryVirtualField.set(query, sessionInfo);
     }
   }
 
@@ -211,20 +159,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
     public static void getTransaction(
         @Advice.This Object session, @Advice.Return Transaction transaction) {
 
-      VirtualField<Transaction, Context> transactionVirtualField =
-          VirtualField.find(Transaction.class, Context.class);
-
-      if (session instanceof Session) {
-        VirtualField<Session, Context> sessionVirtualField =
-            VirtualField.find(Session.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (Session) session, transactionVirtualField, transaction);
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> sessionVirtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (StatelessSession) session, transactionVirtualField, transaction);
-      }
+      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
+      VirtualField<Transaction, SessionInfo> transactionVirtualField =
+          VirtualField.find(Transaction.class, SessionInfo.class);
+      transactionVirtualField.set(transaction, sessionInfo);
     }
   }
 
@@ -234,19 +172,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
-      VirtualField<Criteria, Context> criteriaVirtualField =
-          VirtualField.find(Criteria.class, Context.class);
-      if (session instanceof Session) {
-        VirtualField<Session, Context> sessionVirtualField =
-            VirtualField.find(Session.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (Session) session, criteriaVirtualField, criteria);
-      } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> sessionVirtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionVirtualField, (StatelessSession) session, criteriaVirtualField, criteria);
-      }
+      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
+      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
+          VirtualField.find(Criteria.class, SessionInfo.class);
+      criteriaVirtualField.set(criteria, sessionInfo);
     }
   }
 }

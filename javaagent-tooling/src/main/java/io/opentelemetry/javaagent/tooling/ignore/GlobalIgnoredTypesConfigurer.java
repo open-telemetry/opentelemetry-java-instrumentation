@@ -73,6 +73,10 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("java.util.concurrent.")
         .allowClass("java.lang.reflect.Proxy")
         .allowClass("java.lang.ClassLoader")
+        // Ignore inner classes of ClassLoader to avoid
+        // java.lang.ClassCircularityError: java/lang/ClassLoader$1
+        // when SecurityManager is enabled. ClassLoader$1 is used in ClassLoader.checkPackageAccess
+        .ignoreClass("java.lang.ClassLoader$")
         .allowClass("java.lang.invoke.InnerClassLambdaMetafactory")
         // Concurrent instrumentation modifies the structure of
         // Cleaner class incompatibly with java9+ modules.

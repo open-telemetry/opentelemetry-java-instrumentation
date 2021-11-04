@@ -4,18 +4,16 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import spock.lang.Ignore
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
-@Ignore("Requires https://github.com/localstack/localstack/issues/3669 to work with localstack")
 class SnsTracingTest extends AgentInstrumentationSpecification {
 
   @Shared
-  AwsConnector awsConnector = AwsConnector.liveAws()
+  AwsConnector awsConnector = AwsConnector.localstack()
 
 
   def cleanupSpec() {

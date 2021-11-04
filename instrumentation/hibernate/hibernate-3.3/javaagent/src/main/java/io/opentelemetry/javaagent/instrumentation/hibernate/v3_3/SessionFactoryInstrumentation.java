@@ -7,18 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -56,17 +54,14 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      Context context = instrumenter().start(parentContext, "Session");
-
       if (session instanceof Session) {
-        VirtualField<Session, Context> virtualField =
-            VirtualField.find(Session.class, Context.class);
-        virtualField.set((Session) session, context);
+        VirtualField<Session, SessionInfo> virtualField =
+            VirtualField.find(Session.class, SessionInfo.class);
+        virtualField.set((Session) session, new SessionInfo());
       } else if (session instanceof StatelessSession) {
-        VirtualField<StatelessSession, Context> virtualField =
-            VirtualField.find(StatelessSession.class, Context.class);
-        virtualField.set((StatelessSession) session, context);
+        VirtualField<StatelessSession, SessionInfo> virtualField =
+            VirtualField.find(StatelessSession.class, SessionInfo.class);
+        virtualField.set((StatelessSession) session, new SessionInfo());
       }
     }
   }

@@ -24,7 +24,8 @@ public interface TestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
-      TargetWaitStrategy waitStrategy);
+      TargetWaitStrategy waitStrategy,
+      String[] command);
 
   void stopTarget();
 }

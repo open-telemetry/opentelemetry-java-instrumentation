@@ -282,9 +282,9 @@ jobs:
           asset_name: opentelemetry-javaagent.jar
           asset_content_type: application/java-archive
 
-        # TODO (trask) delete this after the 1.7.0 release (to make sure it is used for any 1.6.x patches)
+        # TODO (trask) delete this after the 1.8.0 release (to make sure it is used for any 1.7.x patches)
       - name: Upload Release Asset (backwards compatible "all" artifact)
-        id: upload-release-asset
+        id: upload-release-asset-backwards-compatible
         uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 
-import io.netty.channel.ChannelHandler;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.HttpSchemeUtil.getScheme;
+
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
@@ -17,21 +18,6 @@ import javax.annotation.Nullable;
 final class NettyHttpClientAttributesExtractor
     extends HttpClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
 
-  private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
-
-  @SuppressWarnings("unchecked")
-  private static Class<? extends ChannelHandler> getSslHandlerClass() {
-    try {
-      return (Class<? extends ChannelHandler>)
-          Class.forName(
-              "io.netty.handler.ssl.SslHandler",
-              false,
-              NettyHttpClientAttributesExtractor.class.getClassLoader());
-    } catch (ClassNotFoundException exception) {
-      return null;
-    }
-  }
-
   @Override
   @Nullable
   protected String url(HttpRequestAndChannel requestAndChannel) {
@@ -40,9 +26,7 @@ final class NettyHttpClientAttributesExtractor
       String target = requestAndChannel.request().getUri();
       URI uri = new URI(target);
       if ((uri.getHost() == null || uri.getHost().equals("")) && hostHeader != null) {
-        boolean isHttps = requestAndChannel.channel().pipeline().get(sslHandlerClass) != null;
-        String scheme = isHttps ? "https://" : "http://";
-        return scheme + hostHeader + target;
+        return getScheme(requestAndChannel) + "://" + hostHeader + target;
       }
       return uri.toString();
     } catch (URISyntaxException e) {
