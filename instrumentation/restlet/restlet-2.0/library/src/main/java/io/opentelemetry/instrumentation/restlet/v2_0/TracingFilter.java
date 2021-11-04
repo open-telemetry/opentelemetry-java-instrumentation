@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletServerSpanNaming;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.resource.ResourceException;
 import org.restlet.routing.Filter;
 
 final class TracingFilter extends Filter {
@@ -46,20 +47,26 @@ final class TracingFilter extends Filter {
     try {
       super.doHandle(request, response);
     } catch (Throwable t) {
+
       statusThrowable = t;
+
+      if (t instanceof Error || t instanceof RuntimeException) {
+        throw t;
+      } else {
+        throw new ResourceException(t);
+      }
+
+    } finally {
+
+      if (scope != null) {
+
+        scope.close();
+        if (response.getStatus() != null && response.getStatus().isError()) {
+          statusThrowable = response.getStatus().getThrowable();
+        }
+        instrumenter.end(context, request, response, statusThrowable);
+      }
     }
-
-    if (scope == null) {
-      return CONTINUE;
-    }
-
-    scope.close();
-
-    if (response.getStatus() != null && response.getStatus().isError()) {
-      statusThrowable = response.getStatus().getThrowable();
-    }
-
-    instrumenter.end(context, request, response, statusThrowable);
 
     return CONTINUE;
   }

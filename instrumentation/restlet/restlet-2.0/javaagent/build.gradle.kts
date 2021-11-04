@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.restlet")
     module.set("org.restlet.jse")
-    versions.set("[2.0.0, 2.5-M1]")
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.restlet.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Locale;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.util.Series;
@@ -20,14 +19,8 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Override
   public String get(Request carrier, String key) {
-
     Series<?> headers = getHeaders(carrier);
-
-    String value = headers.getFirstValue(key);
-    if (value != null) {
-      return value;
-    }
-    return headers.getFirstValue(key.toLowerCase(Locale.ROOT));
+    return headers.getFirstValue(key, /* ignoreCase = */ true);
   }
 
   static Series<?> getHeaders(Message carrier) {
