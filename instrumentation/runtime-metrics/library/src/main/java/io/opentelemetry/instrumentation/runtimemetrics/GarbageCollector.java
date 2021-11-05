@@ -42,8 +42,7 @@ public final class GarbageCollector {
       labelSets.add(Attributes.of(GC_KEY, gc.getName()));
     }
     meter
-        .gaugeBuilder("runtime.jvm.gc.time")
-        .ofLongs()
+        .counterBuilder("runtime.jvm.gc.time")
         .setDescription("Time spent in a given JVM garbage collector in milliseconds.")
         .setUnit("ms")
         .buildWithCallback(
@@ -54,8 +53,7 @@ public final class GarbageCollector {
               }
             });
     meter
-        .gaugeBuilder("runtime.jvm.gc.count")
-        .ofLongs()
+        .counterBuilder("runtime.jvm.gc.count")
         .setDescription(
             "The number of collections that have occurred for a given JVM garbage collector.")
         .setUnit("collections")
