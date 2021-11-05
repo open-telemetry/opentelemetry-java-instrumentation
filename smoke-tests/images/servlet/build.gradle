@@ -70,7 +70,7 @@ def targets = [
     [version: ["21.0.0.10"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2021-09-20_1900"]]
   ],
   "websphere": [
-    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"]]
+    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"], windows: false]
   ]
 ]
 
@@ -106,11 +106,6 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
   def dockerWorkingDir = new File(project.buildDir, "docker-$server-$version-jdk$jdk-$vm-$warProject")
   def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
   def platformSuffix = isWindows ? "-windows" : ""
-
-  if (!new File("src/${dockerFileName}").exists()) {
-    println "Skipping ${dockerFileName} as it doesn't exist"
-    return
-  }
 
   def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix", Copy) {
     def warTask = warProject != null ? project(":$warProject").tasks["war"] : project.tasks.war
@@ -183,11 +178,14 @@ def createDockerTasks(Task parentTask, targets, isWindows) {
       def dockerfile = entry["dockerfile"]?.toString() ?: server
       def extraArgs = (entry["args"] ?: [:]) as Map<String, String>
       def warProject = entry["war"] ?: "servlet-3.0"
+      def supportsWindows = entry["windows"] != null ? entry["windows"] : true
 
       entry.version.forEach { version ->
         entry.vm.forEach { vm ->
           entry.jdk.forEach { jdk ->
-            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows, extraTag))
+            if (supportsWindows || !isWindows) {
+              resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows, extraTag))
+            }
           }
         }
       }
