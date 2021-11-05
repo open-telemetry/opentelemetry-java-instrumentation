@@ -29,7 +29,7 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
 def targets = [
-  "jetty" : [
+  "jetty": [
     [version: ["9.4.39"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [sourceVersion: "9.4.39.v20210325"]],
     [version: ["9.4.39"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.39.v20210325"]],
     [version: ["10.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "10.0.7"]],
@@ -37,16 +37,16 @@ def targets = [
     [version: ["11.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"],
     [version: ["11.0.7"], vm: ["openj9"], jdk: ["11", "16"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"]
   ],
-  "tomcat" : [
+  "tomcat": [
     [version: ["7.0.109"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
-    [version: ["8.5.71"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "8"]],
-    [version: ["8.5.71"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
-    [version: ["9.0.53"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "9"]],
-    [version: ["9.0.53"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
-    [version: ["10.0.11"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
-    [version: ["10.0.11"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "10"], war: "servlet-5.0"]
+    [version: ["8.5.72"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "8"]],
+    [version: ["8.5.72"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
+    [version: ["9.0.54"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "9"]],
+    [version: ["9.0.54"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]],
+    [version: ["10.0.12"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
+    [version: ["10.0.12"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "10"], war: "servlet-5.0"]
   ],
-  "tomee"  : [
+  "tomee": [
     [version: ["7.0.9"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["7.1.4"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.8"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
@@ -54,17 +54,21 @@ def targets = [
     [version: ["9.0.0-M7"], vm: ["hotspot"], jdk: ["8", "11", "17"], war: "servlet-5.0"],
     [version: ["9.0.0-M7"], vm: ["openj9"], jdk: ["8", "11", "16"], war: "servlet-5.0"]
   ],
-  "payara" : [
-    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  "payara": [
+    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
+    [version: ["5.2021.8"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
   ],
   "wildfly": [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
-    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
+    [version: ["17.0.1.Final", "21.0.0.Final", "25.0.1.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
+    [version: ["17.0.1.Final", "21.0.0.Final", "25.0.1.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
   ],
   "liberty": [
     // running configure.sh is failing while building the image with Java 17
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
+    [version: ["20.0.0.12", "21.0.0.9"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
+  ],
+  "websphere": [
+    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"]]
   ]
 ]
 
@@ -96,10 +100,15 @@ createDockerTasks(buildLinuxTestImagesTask, targets, false)
 createDockerTasks(buildWindowsTestImagesTask, targets, true)
 
 def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, boolean isWindows, String extraTag) {
-  // Using separate build directory for different war files allows using the same app.war filename
-  def dockerWorkingDir = new File(project.buildDir, "docker-$warProject")
+  // Using separate build directory for different images
+  def dockerWorkingDir = new File(project.buildDir, "docker-$server-$version-jdk$jdk-$vm-$warProject")
   def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
   def platformSuffix = isWindows ? "-windows" : ""
+
+  if (!new File("src/${dockerFileName}").exists()) {
+    println "Skipping ${dockerFileName} as it doesn't exist"
+    return
+  }
 
   def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix", Copy) {
     def warTask = warProject != null ? project(":$warProject").tasks["war"] : project.tasks.war
@@ -122,6 +131,24 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
     jdkImage = "adoptopenjdk:${jdk}-openj9"
   } else {
     throw new GradleException("Unexpected vm: $vm")
+  }
+
+  if (server == "wildfly") {
+    // wildfly url without .zip or .tar.gz suffix
+    def serverBaseUrl
+    int majorVersion = version.substring(0, version.indexOf(".")) as int
+    if (majorVersion >= 25) {
+      serverBaseUrl = "https://github.com/wildfly/wildfly/releases/download/${version}/wildfly-${version}"
+    } else {
+      serverBaseUrl = "https://download.jboss.org/wildfly/${version}/wildfly-${version}"
+    }
+    extraArgs = extraArgs + [baseDownloadUrl: serverBaseUrl]
+  } else if (server == "payara") {
+    if (version == "5.2020.6") {
+      extraArgs = extraArgs + [domainName: "production"]
+    } else {
+      extraArgs = extraArgs + [domainName: "domain1"]
+    }
   }
 
   def buildTask = tasks.register("${server}Image-$version-jdk$jdk$vmSuffix$platformSuffix", DockerBuildImage) {
