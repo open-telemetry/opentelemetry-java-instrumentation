@@ -204,7 +204,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysServer(), getter);
+    return newInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
   }
 
   /**
@@ -222,17 +223,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysConsumer(), getter);
-  }
-
-  /**
-   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
-   * {@code spanKindExtractor} and extract context from requests.
-   */
-  public Instrumenter<REQUEST, RESPONSE> newUpstreamPropagatingInstrumenter(
-      SpanKindExtractor<REQUEST> spanKindExtractor, TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter), spanKindExtractor);
+        InstrumenterConstructor.propagatingFromUpstream(getter),
+        SpanKindExtractor.alwaysConsumer());
   }
 
   /**
