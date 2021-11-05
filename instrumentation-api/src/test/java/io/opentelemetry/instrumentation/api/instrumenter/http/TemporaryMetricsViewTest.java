@@ -114,7 +114,8 @@ public class TemporaryMetricsViewTest {
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.HTTP_HOST, "somehost")
             .put(SemanticAttributes.HTTP_SERVER_NAME, "somehost")
-            .put(SemanticAttributes.HTTP_TARGET, "/somehost/high/cardinality/12345")
+            .put(
+                SemanticAttributes.HTTP_TARGET, "/somehost/high/cardinality/12345;jsessionId=12145")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
             .build();
