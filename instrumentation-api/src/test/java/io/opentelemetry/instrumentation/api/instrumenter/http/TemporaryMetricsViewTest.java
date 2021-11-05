@@ -78,11 +78,15 @@ public class TemporaryMetricsViewTest {
     Attributes startAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_METHOD, "GET")
-            .put(SemanticAttributes.HTTP_URL, "https://somehost/high/cardinality/12345?jsessionId=121454")
+            .put(
+                SemanticAttributes.HTTP_URL,
+                "https://somehost/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.HTTP_HOST, "somehost")
             .put(SemanticAttributes.HTTP_SERVER_NAME, "somehost")
-            .put(SemanticAttributes.HTTP_TARGET, "/somehost/high/cardinality/12345?jsessionId=121454")
+            .put(
+                SemanticAttributes.HTTP_TARGET,
+                "/somehost/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
