@@ -51,6 +51,8 @@ public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
 
   @Override
   protected AddressResolver<T> newResolver(EventExecutor eventExecutor) {
+    // this method is called from the super class's implementation of `getResolver` which is
+    // overridden by this class
     throw new UnsupportedOperationException("This method should never be called");
   }
 
