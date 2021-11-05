@@ -27,6 +27,7 @@ jobs:
           - tomcat
           - tomee
           - wildfly
+          - websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -76,7 +77,7 @@ jobs:
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Using extra tag $TAG"
           ./gradlew buildWindowsTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && matrix.smoke-test-server != 'websphere'
 
   issue:
     name: Open issue on failure

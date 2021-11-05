@@ -21,6 +21,7 @@ jobs:
           - tomcat
           - tomee
           - wildfly
+          - websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -57,4 +58,4 @@ jobs:
       - name: Build Windows docker images
         working-directory: smoke-tests/images/servlet
         run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && matrix.smoke-test-server != 'websphere'
