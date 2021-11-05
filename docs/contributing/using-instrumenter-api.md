@@ -57,7 +57,7 @@ Response decoratedMethod(Request request) {
 ```
 
 The newly started `context` is made current, and inside its `scope` the actual library method is
-called. After that the instrumented operation ends.
+called.
 
 ## End an instrumented operation using `end()`
 
@@ -68,11 +68,11 @@ span and finishes recording the metrics (if any are registered in the `Instrumen
 
 The `end()` method accepts several arguments:
 
-* The current OpenTelemetry `Context` - that is, the one that was returned by the `start()` method.
+* The OpenTelemetry `Context` that was returned by the `start()` method.
 * The `REQUEST` instance that started the processing.
 * Optionally, the `RESPONSE` instance that ends the processing - it may be `null` in case it was not
   received or an error has occurred.
-* Optionally, a `Throwable` error that was thrown during the processing.
+* Optionally, a `Throwable` error that was thrown by the operation.
 
 Consider the following example:
 
@@ -102,8 +102,8 @@ decorated `actualMethod()`, be it a valid response or an error.
 ## Constructing a new `Instrumenter` using an `InstrumenterBuilder`
 
 An `Instrumenter` can be obtained by calling its static `builder()` method and using the
-returned `InstrumenterBuilder` to configure captured telemetry and apply customizations to the new
-instance. The `builder()` method accepts three arguments:
+returned `InstrumenterBuilder` to configure captured telemetry and apply customizations.
+The `builder()` method accepts three arguments:
 
 * An `OpenTelemetry` instance, which is used to obtain the `Tracer` and `Meter` objects.
 * The instrumentation name, which indicates the _instrumentation_ library name, not the
@@ -182,7 +182,7 @@ class MyAttributesExtractor implements AttributesExtractor<Request, Response> {
 ```
 
 The sample `AttributesExtractor` implementation above sets two attributes: one extracted from the
-request, one from the response. In general, it is recommended to keep `AttributeKey` instances as
+request, one from the response. It is recommended to keep `AttributeKey` instances as
 static final constants and reuse them. Creating a new key each time an attribute is set risks
 introducing unnecessary overhead.
 
@@ -229,8 +229,8 @@ The `SpanLinksExtractor` interface can be used to add links to other spans when 
 operation starts. It has a single `extract()` method that receives the following arguments:
 
 * A `SpanLinkBuilder` that can be used to add the links.
-* The parent operation `Context` from before the instrumented operation has started.
-* The `REQUEST` instance that has started the processing.
+* The parent `Context` that was passed in to `Instrumenter.start()`.
+* The `REQUEST` instance that was passed in to `Instrumenter.start()`.
 
 You can read more about span links and their use
 cases [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#links-between-spans).
@@ -266,7 +266,7 @@ wrapper exceptions, like the ones provided by the instrumented library, you can 
 the `ErrorCauseExtractor`, which has the following features:
 
 - It has only one method `extractCause()` that is responsible for stripping the unnecessary
-  exception layers and extracting the actual error that caused the processing to fail.
+  exception layers and extracting the actual error that caused the operation to fail.
 - It accepts a `Throwable` and returns a `Throwable`.
 
 Consider the following example:
@@ -286,7 +286,7 @@ class MyErrorCauseExtractor implements ErrorCauseExtractor {
 
 The example `ErrorCauseExtractor` implementation checks whether the error is an instance
 of `MyLibWrapperException` and has a cause, in which case it unwraps it.
-The `error.getCause() != null` check is rather relevant: if the extractor did not verify both
+The `error.getCause() != null` check is very relevant: if the extractor did not verify both
 conditions, it could accidentally remove the whole exception, making the instrumentation miss an
 error and thus radically changing the captured telemetry. Next, the extractor falls back to the
 default `jdk()` implementation that removes the known JDK wrapper exception types.
@@ -429,7 +429,7 @@ In some rare cases it may be useful to completely disable the constructed `Instr
 example, based on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()`
 method for that: passing `true` will turn the newly created `Instrumenter` into a no-op instance.
 
-### Set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
+### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`!
 
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:
@@ -438,11 +438,11 @@ methods:
 * `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
   kind determined by the passed `SpanKindExtractor`.
 * `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
-  spans and will propagate current context into the outgoing request.
+  spans and will propagate operation context into the outgoing request.
 * `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
 * `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
-  spans and will propagate current context into the outgoing request.
+  spans and will propagate operation context into the outgoing request.
 * `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
 
