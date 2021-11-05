@@ -38,8 +38,8 @@ be called.
 
 When `shouldStart()` returns `true`, you can use `start()` to initiate the instrumented operation.
 The `start()` method begins gathering telemetry about the instrumented library function that's being
-invoked. It starts the `Span` and begins recording the metrics (if any are registered in
-the used `Instrumenter` instance).
+invoked. It starts the `Span` and begins recording the metrics (if any are registered in the
+used `Instrumenter` instance).
 
 The `start()` method accepts the current OpenTelemetry `Context` and the instrumented
 library `REQUEST` type, and returns the new OpenTelemetry `Context` that should be made current
@@ -182,9 +182,9 @@ class MyAttributesExtractor implements AttributesExtractor<Request, Response> {
 ```
 
 The sample `AttributesExtractor` implementation above sets two attributes: one extracted from the
-request, one from the response. It is recommended to keep `AttributeKey` instances as
-static final constants and reuse them. Creating a new key each time an attribute is set risks
-introducing unnecessary overhead.
+request, one from the response. It is recommended to keep `AttributeKey` instances as static final
+constants and reuse them. Creating a new key each time an attribute is set risks introducing
+unnecessary overhead.
 
 You can add an `AttributesExtractor` to the `InstrumenterBuilder` by using
 the `addAttributesExtractor()` or `addAttributesExtractors()` methods.
