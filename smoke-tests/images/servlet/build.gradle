@@ -65,7 +65,9 @@ def targets = [
   ],
   "liberty": [
     // running configure.sh is failing while building the image with Java 17
-    [version: ["20.0.0.12", "21.0.0.9"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]]
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]],
+    [version: ["21.0.0.10"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2020-09-15_1100"]],
+    [version: ["21.0.0.10"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2020-09-15_1100"]]
   ],
   "websphere": [
     [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"]]
