@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.connectInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -15,7 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.ConnectionCompleteListener;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
@@ -40,17 +40,17 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     public static void startConnect(
         @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectRequest request,
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = NettyConnectRequest.create(remoteAddress);
+      request = NettyConnectionRequest.connect(remoteAddress);
 
-      if (!connectInstrumenter().shouldStart(parentContext, request)) {
+      if (!connectionInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = connectInstrumenter().start(parentContext, request);
+      context = connectionInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -59,7 +59,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectRequest request,
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
       if (scope == null) {
@@ -68,10 +68,10 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        connectInstrumenter().end(context, request, null, throwable);
+        connectionInstrumenter().end(context, request, null, throwable);
       } else {
         channelFuture.addListener(
-            new ConnectionCompleteListener(connectInstrumenter(), context, request));
+            new ConnectionCompleteListener(connectionInstrumenter(), context, request));
       }
     }
   }

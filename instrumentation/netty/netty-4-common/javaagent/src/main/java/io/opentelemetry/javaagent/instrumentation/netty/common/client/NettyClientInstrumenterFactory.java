@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 
 public final class NettyClientInstrumenterFactory {
 
@@ -46,12 +46,12 @@ public final class NettyClientInstrumenterFactory {
         .newClientInstrumenter(new HttpRequestHeadersSetter());
   }
 
-  public NettyConnectInstrumenter createConnectInstrumenter() {
+  public NettyConnectionInstrumenter createConnectionInstrumenter() {
     NettyConnectNetAttributesExtractor netAttributesExtractor =
         new NettyConnectNetAttributesExtractor();
-    Instrumenter<NettyConnectRequest, Channel> instrumenter =
-        Instrumenter.<NettyConnectRequest, Channel>builder(
-                GlobalOpenTelemetry.get(), instrumentationName, rq -> "CONNECT")
+    Instrumenter<NettyConnectionRequest, Channel> instrumenter =
+        Instrumenter.<NettyConnectionRequest, Channel>builder(
+                GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .setTimeExtractors(
@@ -63,7 +63,7 @@ public final class NettyClientInstrumenterFactory {
                     : SpanKindExtractor.alwaysClient());
 
     return alwaysCreateConnectSpan
-        ? new NettyConnectInstrumenterImpl(instrumenter)
-        : new NettyErrorOnlyConnectInstrumenter(instrumenter);
+        ? new NettyConnectionInstrumenterImpl(instrumenter)
+        : new NettyErrorOnlyConnectionInstrumenter(instrumenter);
   }
 }

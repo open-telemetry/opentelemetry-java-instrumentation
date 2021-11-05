@@ -11,17 +11,17 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class NettyConnectNetAttributesExtractor
-    extends InetSocketAddressNetClientAttributesExtractor<NettyConnectRequest, Channel> {
+    extends InetSocketAddressNetClientAttributesExtractor<NettyConnectionRequest, Channel> {
 
   @Nullable
   @Override
-  public InetSocketAddress getAddress(NettyConnectRequest request, @Nullable Channel channel) {
+  public InetSocketAddress getAddress(NettyConnectionRequest request, @Nullable Channel channel) {
     SocketAddress remoteAddress = null;
     if (channel != null) {
       remoteAddress = channel.remoteAddress();
@@ -37,7 +37,7 @@ final class NettyConnectNetAttributesExtractor
   }
 
   @Override
-  public String transport(NettyConnectRequest request, @Nullable Channel channel) {
+  public String transport(NettyConnectionRequest request, @Nullable Channel channel) {
     return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 }

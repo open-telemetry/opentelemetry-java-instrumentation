@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
 
 public final class ReactorNettySingletons {
 
@@ -15,17 +15,17 @@ public final class ReactorNettySingletons {
       Config.get()
           .getBoolean("otel.instrumentation.reactor-netty.always-create-connect-span", false);
 
-  private static final NettyConnectInstrumenter CONNECT_INSTRUMENTER;
+  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
 
   static {
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
             "io.opentelemetry.reactor-netty-1.0", alwaysCreateConnectSpan);
-    CONNECT_INSTRUMENTER = instrumenterFactory.createConnectInstrumenter();
+    CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 
-  public static NettyConnectInstrumenter connectInstrumenter() {
-    return CONNECT_INSTRUMENTER;
+  public static NettyConnectionInstrumenter connectionInstrumenter() {
+    return CONNECTION_INSTRUMENTER;
   }
 
   private ReactorNettySingletons() {}

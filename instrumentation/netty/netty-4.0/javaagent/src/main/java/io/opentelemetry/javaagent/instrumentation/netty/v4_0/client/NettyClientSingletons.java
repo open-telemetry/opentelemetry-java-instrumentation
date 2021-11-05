@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
 
 public final class NettyClientSingletons {
 
@@ -18,21 +18,21 @@ public final class NettyClientSingletons {
       Config.get().getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
-  private static final NettyConnectInstrumenter CONNECT_INSTRUMENTER;
+  private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
 
   static {
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory("io.opentelemetry.netty-4.0", alwaysCreateConnectSpan);
     INSTRUMENTER = factory.createHttpInstrumenter();
-    CONNECT_INSTRUMENTER = factory.createConnectInstrumenter();
+    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 
-  public static NettyConnectInstrumenter connectInstrumenter() {
-    return CONNECT_INSTRUMENTER;
+  public static NettyConnectionInstrumenter connectionInstrumenter() {
+    return CONNECTION_INSTRUMENTER;
   }
 
   private NettyClientSingletons() {}

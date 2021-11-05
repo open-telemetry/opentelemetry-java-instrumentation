@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.connectInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.ConnectionListener;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +58,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectRequest request) {
+        @Advice.Local("otelRequest") NettyConnectionRequest request) {
 
       parentContext = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(parentContext);
@@ -73,7 +73,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
       }
       virtualField.set(channel, new NettyConnectionContext(parentContext));
 
-      request = NettyConnectRequest.create(remoteAddress);
+      request = NettyConnectionRequest.connect(remoteAddress);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -81,16 +81,16 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Thrown Throwable error,
         @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectRequest request) {
+        @Advice.Local("otelRequest") NettyConnectionRequest request) {
 
       if (request == null) {
         return;
       }
 
       if (error != null) {
-        if (connectInstrumenter().shouldStart(parentContext, request)) {
-          Context context = connectInstrumenter().start(parentContext, request);
-          connectInstrumenter().end(context, request, null, error);
+        if (connectionInstrumenter().shouldStart(parentContext, request)) {
+          Context context = connectionInstrumenter().start(parentContext, request);
+          connectionInstrumenter().end(context, request, null, error);
         }
       } else {
         channelFuture.addListener(new ConnectionListener(parentContext, request));
