@@ -87,6 +87,7 @@ corresponding instrumentation `name`:
 | Spark Web Framework | spark|
 | Spring Core | spring-core|
 | Spring Data | spring-data|
+| Spring Integration | spring-integration|
 | Spring Scheduling | spring-scheduling|
 | Spring Webflux | spring-webflux|
 | Spring WebMVC | spring-webmvc|
