@@ -8,9 +8,12 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -72,6 +75,19 @@ public final class OkHttpTracingBuilder {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
+            .addSpanLinksExtractor(
+                new SpanLinksExtractor<Request>() {
+                  @Override
+                  public void extract(
+                      SpanLinksBuilder spanLinksBuilder, Context context, Request request) {
+
+                    TracingInterceptor.TryInfo info =
+                        TracingInterceptor.TryInfo.getTryInfo(context);
+                    if (info.getSpanContext().isValid()) {
+                      spanLinksBuilder.addLink(info.getSpanContext());
+                    }
+                  }
+                })
             .newInstrumenter(alwaysClient());
     return new OkHttpTracing(instrumenter, openTelemetry.getPropagators());
   }

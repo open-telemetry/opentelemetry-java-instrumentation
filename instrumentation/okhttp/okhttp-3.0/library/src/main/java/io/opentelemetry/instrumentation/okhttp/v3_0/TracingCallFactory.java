@@ -55,7 +55,7 @@ class TracingCallFactory implements Call.Factory {
 
   @Override
   public Call newCall(Request request) {
-    Context callingContext = Context.current();
+    Context callingContext = TracingInterceptor.TryInfo.newInfo(Context.current());
     Request requestCopy = request.newBuilder().build();
     contextsByRequest.set(requestCopy, callingContext);
     return new TracingCall(okHttpClient.newCall(requestCopy), callingContext);
