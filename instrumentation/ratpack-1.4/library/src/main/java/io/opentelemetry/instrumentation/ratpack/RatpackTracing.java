@@ -40,7 +40,7 @@ public final class RatpackTracing {
     return new RatpackTracingBuilder(openTelemetry);
   }
 
-  private final OpenTelemetryServerHandler serverHandler;
+  public final OpenTelemetryServerHandler serverHandler;
 
   RatpackTracing(Instrumenter<Request, Response> serverInstrumenter) {
     serverHandler = new OpenTelemetryServerHandler(serverInstrumenter);
