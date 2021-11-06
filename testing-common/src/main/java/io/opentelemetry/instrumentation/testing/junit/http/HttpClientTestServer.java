@@ -116,7 +116,11 @@ public final class HttpClientTestServer extends ServerExtension {
         .decorator(LoggingService.newDecorator());
   }
 
-  URI resolveAddress(String path) {
+  public URI resolveAddress(String path) {
     return URI.create("http://localhost:" + httpPort() + path);
+  }
+
+  public URI resolveHttpsAddress(String path) {
+    return URI.create("http://localhost:" + httpsPort() + path);
   }
 }

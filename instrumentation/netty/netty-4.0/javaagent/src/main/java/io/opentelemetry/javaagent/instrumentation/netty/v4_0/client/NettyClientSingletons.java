@@ -22,7 +22,8 @@ public final class NettyClientSingletons {
 
   static {
     NettyClientInstrumenterFactory factory =
-        new NettyClientInstrumenterFactory("io.opentelemetry.netty-4.0", alwaysCreateConnectSpan);
+        new NettyClientInstrumenterFactory(
+            "io.opentelemetry.netty-4.0", alwaysCreateConnectSpan, false);
     INSTRUMENTER = factory.createHttpInstrumenter();
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
   }

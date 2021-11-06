@@ -135,6 +135,17 @@ class SpanAssert {
     errorEvent(expectedClass, null)
   }
 
+  def errorEventWithAnyMessage(Class<Throwable> expectedClass) {
+    event(0) {
+      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      attributes {
+        "${SemanticAttributes.EXCEPTION_TYPE.key}" expectedClass.canonicalName
+        "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
+        "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it != null }
+      }
+    }
+  }
+
   def errorEvent(Class<Throwable> expectedClass, expectedMessage) {
     errorEvent(expectedClass, expectedMessage, 0)
   }

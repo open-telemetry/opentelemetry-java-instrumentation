@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.sslInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,6 +24,7 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
@@ -115,6 +117,10 @@ public class NettyChannelPipelineInstrumentation
         ourHandler = new HttpClientRequestTracingHandler();
       } else if (handler instanceof HttpResponseDecoder) {
         ourHandler = new HttpClientResponseTracingHandler();
+        // the SslHandler lives in the netty-handler module, using class name comparison to avoid
+        // adding a dependency
+      } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {
+        ourHandler = new NettySslInstrumentationHandler(sslInstrumenter());
       }
 
       if (ourHandler != null) {
