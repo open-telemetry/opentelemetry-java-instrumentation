@@ -1,21 +1,21 @@
 ----------------------------------------------------------
- Run at Sun Nov 07 05:16:26 UTC 2021
+ Run at Mon Nov 08 05:16:38 UTC 2021
  snapshot : compares the latest snapshot to no agent
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :              none         snapshot
-Avg. CPU (user)     :        0.54189587        0.5165906
-Max. CPU (user)     :              0.79             0.65
-Startup time (ms)   :             10064            18377
-Total allocated MB  :           9441.19         12713.84
-Heap (min)          :          50468352         60951552
-Heap (max)          :         244355072        301894656
-Thread switch rate  :         34535.652         42220.12
-GC time             :        1757155399       1929024833
-Req. mean           :             10.61            10.90
-Req. p95            :             32.63            34.35
-Iter. mean          :            144.90           150.32
-Iter. p95           :            241.73           232.91
-Net read avg (bps)  :        5655141.00       2752441.00
-Net write avg (bps) :        8048100.00      14422852.00
-Peak threads        :                41               46
+Avg. CPU (user)     :         0.5581743       0.53668696
+Max. CPU (user)     :             0.845       0.65656567
+Startup time (ms)   :             10948            18782
+Total allocated MB  :           9531.74         12703.52
+Heap (min)          :          47569920         66060288
+Heap (max)          :         301404672        333971456
+Thread switch rate  :          34514.25        34775.566
+GC time             :        1660871055       1794532125
+Req. mean           :             10.71            11.08
+Req. p95            :             33.23            34.20
+Iter. mean          :            145.13           151.65
+Iter. p95           :            250.62           231.67
+Net read avg (bps)  :        5651599.00       2717045.00
+Net write avg (bps) :        8059924.00      14204664.00
+Peak threads        :                42               47
