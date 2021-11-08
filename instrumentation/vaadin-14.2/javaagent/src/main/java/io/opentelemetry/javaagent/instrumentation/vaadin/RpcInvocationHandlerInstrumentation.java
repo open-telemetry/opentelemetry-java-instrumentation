@@ -18,7 +18,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -52,14 +51,14 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This RpcInvocationHandler rpcInvocationHandler,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Argument(1) JsonObject jsonObject,
         @Advice.Local("otelRequest") VaadinRpcRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = VaadinRpcRequest.create(rpcInvocationHandler, method, jsonObject);
+      request = VaadinRpcRequest.create(rpcInvocationHandler, methodName, jsonObject);
       if (!rpcInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
