@@ -3,8 +3,9 @@ ARG jdkImage
 # Unzip in a separate container so that zip file layer is not part of final image
 FROM mcr.microsoft.com/windows/servercore:1809 as builder
 ARG version
+ARG baseDownloadUrl
 
-ADD http://download.jboss.org/wildfly/${version}/wildfly-${version}.zip /server.zip
+ADD ${baseDownloadUrl}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
 FROM ${jdkImage}-windowsservercore-1809
