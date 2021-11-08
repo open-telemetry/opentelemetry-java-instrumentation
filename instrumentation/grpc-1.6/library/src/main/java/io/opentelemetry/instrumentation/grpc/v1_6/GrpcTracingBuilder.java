@@ -94,7 +94,7 @@ public final class GrpcTracingBuilder {
     }
 
     return new GrpcTracing(
-        serverInstrumenterBuilder.newServerInstrumenter(GrpcExtractAdapter.GETTER),
+        serverInstrumenterBuilder.newServerInstrumenter(GrpcRequestGetter.INSTANCE),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
         clientInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysClient()),

@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 
-public class TextMapExtractAdapter implements TextMapGetter<DeliveryRequest> {
-
-  public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
+enum DeliveryRequestGetter implements TextMapGetter<DeliveryRequest> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(DeliveryRequest carrier) {

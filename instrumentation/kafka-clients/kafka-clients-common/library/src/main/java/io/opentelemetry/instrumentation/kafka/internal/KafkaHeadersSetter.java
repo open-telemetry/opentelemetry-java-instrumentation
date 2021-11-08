@@ -9,7 +9,8 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import java.nio.charset.StandardCharsets;
 import org.apache.kafka.common.header.Headers;
 
-public final class KafkaHeadersSetter implements TextMapSetter<Headers> {
+public enum KafkaHeadersSetter implements TextMapSetter<Headers> {
+  INSTANCE;
 
   @Override
   public void set(Headers headers, String key, String value) {

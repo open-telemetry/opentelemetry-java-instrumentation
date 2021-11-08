@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class DubboHeadersSetter implements TextMapSetter<DubboRequest> {
+enum DubboHeadersSetter implements TextMapSetter<DubboRequest> {
+  INSTANCE;
 
   @Override
   public void set(DubboRequest request, String key, String value) {

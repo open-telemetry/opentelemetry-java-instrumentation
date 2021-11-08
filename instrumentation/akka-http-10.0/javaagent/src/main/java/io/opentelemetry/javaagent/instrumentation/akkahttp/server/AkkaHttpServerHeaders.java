@@ -12,7 +12,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
+enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {

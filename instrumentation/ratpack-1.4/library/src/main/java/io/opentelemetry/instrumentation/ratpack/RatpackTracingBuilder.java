@@ -70,7 +70,7 @@ public final class RatpackTracingBuilder {
             .addAttributesExtractor(httpAttributes)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(new RatpackGetter());
+            .newServerInstrumenter(RatpackGetter.INSTANCE);
 
     return new RatpackTracing(instrumenter);
   }

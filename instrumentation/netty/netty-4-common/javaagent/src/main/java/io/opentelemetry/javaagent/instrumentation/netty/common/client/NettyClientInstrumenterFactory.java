@@ -43,7 +43,7 @@ public final class NettyClientInstrumenterFactory {
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
         .addRequestMetrics(HttpClientMetrics.get())
-        .newClientInstrumenter(new HttpRequestHeadersSetter());
+        .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
