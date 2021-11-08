@@ -83,7 +83,8 @@ public class VaadinSingletons {
 
   private static String rpcSpanName(VaadinRpcRequest rpcRequest) {
     RpcInvocationHandler rpcInvocationHandler = rpcRequest.getRpcInvocationHandler();
-    String spanName = SpanNames.fromMethod(rpcInvocationHandler.getClass(), rpcRequest.getMethod());
+    String spanName =
+        SpanNames.fromMethod(rpcInvocationHandler.getClass(), rpcRequest.getMethodName());
     if ("event".equals(rpcInvocationHandler.getRpcType())) {
       String eventType = rpcRequest.getJsonObject().getString("event");
       if (eventType != null) {
