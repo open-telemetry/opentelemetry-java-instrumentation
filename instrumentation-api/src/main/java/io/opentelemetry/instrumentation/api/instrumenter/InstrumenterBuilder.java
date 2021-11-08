@@ -42,6 +42,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final OpenTelemetry openTelemetry;
   final Meter meter;
   final String instrumentationName;
+  final String instrumentationVersion;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
@@ -63,11 +64,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      String instrumentationVersion,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
     // TODO(anuraaga): Retrieve from openTelemetry when not alpha anymore.
     this.meter = GlobalMeterProvider.get().get(instrumentationName);
     this.instrumentationName = instrumentationName;
+    this.instrumentationVersion = instrumentationVersion;
     this.spanNameExtractor = spanNameExtractor;
   }
 
