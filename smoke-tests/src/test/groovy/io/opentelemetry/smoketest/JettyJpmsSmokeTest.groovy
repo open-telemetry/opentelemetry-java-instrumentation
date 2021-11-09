@@ -16,7 +16,7 @@ abstract class JettyJpmsSmokeTest extends AppServerTest {
   @Override
   protected String[] getCommand() {
     // --jpms flags enables using java module system
-    return ["java", "-jar", "/server/start.jar", "--jpms", "-Dcom.sun.management.jmxremote"]
+    return ["java", "-jar", "/server/start.jar", "--jpms"]
   }
 }
 
