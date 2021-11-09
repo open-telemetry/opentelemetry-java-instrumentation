@@ -52,7 +52,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
         @Advice.Argument(value = 1) ServletResponse response,
-        @Advice.Local("otelContext") boolean handled) {
+        @Advice.Local("otelHandled") boolean handled) {
 
       // liberty has two handleRequest methods, skip processing when thread local context is already
       // set up
@@ -75,7 +75,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") boolean handled) {
+        @Advice.Local("otelHandled") boolean handled) {
       if (!handled) {
         return;
       }
