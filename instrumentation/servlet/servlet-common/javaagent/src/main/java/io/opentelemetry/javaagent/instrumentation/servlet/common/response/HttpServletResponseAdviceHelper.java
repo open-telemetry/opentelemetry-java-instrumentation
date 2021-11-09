@@ -8,15 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.response;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
 public class HttpServletResponseAdviceHelper {
   public static void stopSpan(
-      Instrumenter<Method, Void> instrumenter,
+      Instrumenter<ClassAndMethod, Void> instrumenter,
       Throwable throwable,
       Context context,
       Scope scope,
-      Method request) {
+      ClassAndMethod request) {
     if (scope != null) {
       scope.close();
 

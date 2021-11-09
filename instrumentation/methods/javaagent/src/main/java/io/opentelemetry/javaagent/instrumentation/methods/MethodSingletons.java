@@ -10,23 +10,23 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
 public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
-  private static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    SpanNameExtractor<Method> spanName = SpanNames::fromMethod;
+    SpanNameExtractor<ClassAndMethod> spanName = SpanNames::fromMethod;
 
     INSTRUMENTER =
-        Instrumenter.<Method, Void>builder(
+        Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .newInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
-  public static Instrumenter<Method, Void> instrumenter() {
+  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
     return INSTRUMENTER;
   }
 

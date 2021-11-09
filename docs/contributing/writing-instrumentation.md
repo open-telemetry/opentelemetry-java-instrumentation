@@ -384,3 +384,19 @@ dependencies {
   testImplementation(project(":instrumentation:yarpc-1.0:javaagent"))
 }
 ```
+
+## Why we don't use ByteBuddy @Advice.Origin Method
+
+Instead of
+```
+@Advice.Origin Method method
+```
+we prefer to use
+```
+@Advice.Origin("#t") Class<?> declaringClass,
+@Advice.Origin("#m") String methodName
+```
+because the former inserts a call to `Class.getMethod(...)` in transformed class. In contrast,
+getting the declaring class and method name is just loading constants from constant pool, which is
+a much simpler operation. Considering that the majority of our use cases only need declaring class
+and method name we can avoid calling `Class.getMethod(...)`.
