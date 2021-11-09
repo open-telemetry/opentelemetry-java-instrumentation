@@ -30,10 +30,6 @@ DOLLAR_QUOTED_STR = "$$" [^$]* "$$"
 WHITESPACE        = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement) {
-    return sanitize(statement, SqlDialect.SQL);
-  }
-
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
