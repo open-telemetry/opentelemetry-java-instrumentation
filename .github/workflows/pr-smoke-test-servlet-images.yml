@@ -24,7 +24,7 @@ jobs:
           - wildfly
         exclude:
           - os: windows-latest
-            smoke-test-suite: websphere
+            smoke-test-server: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
