@@ -55,6 +55,8 @@ val licenseReportDependencies by configurations.creating {
   extendsFrom(bootstrapLibs)
 }
 
+val caffeine3Version: String by project
+
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
@@ -84,7 +86,7 @@ dependencies {
   exporterSlimLibs("io.grpc:grpc-okhttp:1.41.0")
 
   // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
-  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
+  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine:${caffeine3Version}") {
     isTransitive = false
   }
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free")
