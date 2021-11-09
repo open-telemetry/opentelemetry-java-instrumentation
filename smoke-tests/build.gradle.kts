@@ -61,6 +61,7 @@ tasks {
       "liberty" to listOf("**/Liberty*.*"),
       "tomcat" to listOf("**/Tomcat*.*"),
       "tomee" to listOf("**/Tomee*.*"),
+      "websphere" to listOf("**/Websphere*.*"),
       "wildfly" to listOf("**/Wildfly*.*")
     )
 

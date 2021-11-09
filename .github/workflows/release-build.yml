@@ -67,8 +67,12 @@ jobs:
           - liberty
           - tomcat
           - tomee
+          - websphere
           - wildfly
           - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
