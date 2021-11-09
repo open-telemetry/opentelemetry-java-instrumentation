@@ -36,8 +36,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("handleRequest")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.ServletResponse")))
-            .and(takesArgument(2, named("com.ibm.wsspi.http.HttpInboundConnection"))),
+            .and(takesArgument(1, named("javax.servlet.ServletResponse"))),
         this.getClass().getName() + "$HandleRequestAdvice");
 
     // isForbidden is called from handleRequest
@@ -52,9 +51,15 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
-        @Advice.Argument(value = 1) ServletResponse response) {
+        @Advice.Argument(value = 1) ServletResponse response,
+        @Advice.Local("otelContext") boolean handled) {
 
-      if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
+      // liberty has two handleRequest methods, skip processing when thread local context is already
+      // set up
+      handled = ThreadLocalContext.get() == null;
+      if (!handled
+          || !(request instanceof HttpServletRequest)
+          || !(response instanceof HttpServletResponse)) {
         return;
       }
 
@@ -69,7 +74,11 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") boolean handled) {
+      if (!handled) {
+        return;
+      }
       ThreadLocalContext requestInfo = ThreadLocalContext.endRequest();
       if (requestInfo == null) {
         return;
