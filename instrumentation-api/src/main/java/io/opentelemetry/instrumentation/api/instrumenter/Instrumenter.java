@@ -58,7 +58,34 @@ public class Instrumenter<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
-    return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
+    return new InstrumenterBuilder<>(
+        openTelemetry, instrumentationName, InstrumentationVersion.VERSION, spanNameExtractor);
+  }
+
+  /**
+   * Returns a new {@link InstrumenterBuilder}.
+   *
+   * <p>The {@code instrumentationName} is the name of the instrumentation library, not the name of
+   * the instrument*ed* library. The value passed in this parameter should uniquely identify the
+   * instrumentation library so that during troubleshooting it's possible to pinpoint what tracer
+   * produced problematic telemetry.
+   *
+   * <p>The {@code instrumentationVersion} is the version of the instrumentation library, not the
+   * version of the instrument*ed* library.
+   *
+   * <p>In this project we use a convention to encode the minimum supported version of the
+   * instrument*ed* library into the instrumentation name, for example {@code
+   * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
+   * different library versions it's easy to find out which instrumentations produced the telemetry
+   * data.
+   */
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      String instrumentationVersion,
+      SpanNameExtractor<? super REQUEST> spanNameExtractor) {
+    return new InstrumenterBuilder<>(
+        openTelemetry, instrumentationName, instrumentationVersion, spanNameExtractor);
   }
 
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
@@ -82,7 +109,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer =
-        builder.openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION);
+        builder.openTelemetry.getTracer(instrumentationName, builder.instrumentationVersion);
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
