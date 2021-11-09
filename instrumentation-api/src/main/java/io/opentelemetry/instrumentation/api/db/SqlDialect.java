@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.db;
 
-/**
- * Enumeration of sql dialects that are handled differently by {@link SqlStatementSanitizer}.
- */
+/** Enumeration of sql dialects that are handled differently by {@link SqlStatementSanitizer}. */
 public enum SqlDialect {
   DEFAULT,
   // couchbase uses double quotes for string literals
