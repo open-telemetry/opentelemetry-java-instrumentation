@@ -25,7 +25,7 @@ dependencies {
   implementation(project(":instrumentation:restlet:restlet-2.0:library"))
 
   testImplementation(project(":instrumentation:restlet:restlet-2.0:testing"))
-  testImplementation("org.restlet.jse:org.restlet.ext.jetty:2.0.2")
+  testLibrary("org.restlet.jse:org.restlet.ext.jetty:2.0.2")
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version

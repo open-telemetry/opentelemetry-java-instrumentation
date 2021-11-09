@@ -39,9 +39,4 @@ public final class RestletTracing {
   public Filter newFilter(String path) {
     return new TracingFilter(serverInstrumenter, path);
   }
-
-  /** Returns a server {@link Instrumenter}. */
-  public Instrumenter<Request, Response> getServerInstrumenter() {
-    return serverInstrumenter;
-  }
 }

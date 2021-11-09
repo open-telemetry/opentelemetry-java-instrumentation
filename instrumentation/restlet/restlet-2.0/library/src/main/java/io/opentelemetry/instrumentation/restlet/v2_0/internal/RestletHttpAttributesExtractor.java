@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.restlet.v2_0;
+package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
-import static io.opentelemetry.instrumentation.restlet.v2_0.RestletHeadersGetter.getHeaders;
+import static io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter.getHeaders;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
