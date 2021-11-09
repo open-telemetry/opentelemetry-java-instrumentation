@@ -14,11 +14,13 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
+import spock.lang.IgnoreIf
 import spock.lang.Specification
 
 // Hotspot versions before 8u40 crash in jit compiled lambdas when javaagent initializes
 // java.lang.invoke.CallSite
 // This test verifies that such jvm does not crash with opentelemetry agent
+@IgnoreIf({ os.windows })
 class CrashEarlyJdk8Test extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(CrashEarlyJdk8Test)
 
