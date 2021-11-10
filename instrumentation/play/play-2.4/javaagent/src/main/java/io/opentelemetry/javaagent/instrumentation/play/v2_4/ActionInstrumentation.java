@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlaySingletons.instrumentor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -55,7 +56,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Request<?> req,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan("play.request", SpanKind.INTERNAL);
+      context = instrumenter().start("play.request", SpanKind.INTERNAL);
       scope = context.makeCurrent();
     }
 
@@ -68,9 +69,9 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       // Call onRequest on return after tags are populated.
-      tracer().updateSpanName(Java8BytecodeBridge.spanFromContext(context), req);
+//      tracer().updateSpanName(Java8BytecodeBridge.spanFromContext(context), req);
       // set the span name on the upstream akka/netty span
-      tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
+//      tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
 
       scope.close();
       // span finished in RequestCompleteCallback
@@ -78,7 +79,8 @@ public class ActionInstrumentation implements TypeInstrumentation {
         responseFuture.onComplete(
             new RequestCompleteCallback(context), ((Action<?>) thisAction).executionContext());
       } else {
-        tracer().endExceptionally(context, throwable);
+//        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, req, null, throwable);
       }
     }
   }
