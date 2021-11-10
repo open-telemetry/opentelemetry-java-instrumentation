@@ -27,8 +27,7 @@ public class NettyInstrumentationModule extends InstrumentationModule {
     return hasClassesNamed("io.netty.handler.codec.http.HttpMessage")
         .and(
             // Class added in 4.1.0 and not in 4.0.56 to avoid resolving this instrumentation
-            // completely
-            // when using 4.1.
+            // completely when using 4.1.
             not(hasClassesNamed("io.netty.handler.codec.http.CombinedHttpHeaders")));
   }
 
