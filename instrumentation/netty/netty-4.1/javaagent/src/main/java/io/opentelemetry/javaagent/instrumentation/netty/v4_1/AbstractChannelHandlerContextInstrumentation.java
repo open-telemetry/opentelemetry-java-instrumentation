@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;

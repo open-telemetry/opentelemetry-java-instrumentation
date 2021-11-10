@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.util.function.BiConsumer;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientRequest;
