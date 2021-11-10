@@ -20,7 +20,7 @@ public final class ReactorNettySingletons {
   static {
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
-            "io.opentelemetry.reactor-netty-1.0", alwaysCreateConnectSpan);
+            "io.opentelemetry.reactor-netty-1.0", alwaysCreateConnectSpan, false);
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 
