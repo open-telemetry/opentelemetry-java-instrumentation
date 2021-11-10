@@ -396,6 +396,6 @@ we prefer to use
 @Advice.Origin("#t") Class<?> declaringClass,
 @Advice.Origin("#m") String methodName
 ```
-because the former inserts a call to `Class.getMethod(...)` in transformed class. In contrast,
+because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
 getting the declaring class and method name is just loading constants from constant pool, which is
 a much simpler operation.
