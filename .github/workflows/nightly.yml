@@ -158,8 +158,12 @@ jobs:
           - liberty
           - tomcat
           - tomee
+          - websphere
           - wildfly
           - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
       fail-fast: false
     steps:
       - name: Support longpaths

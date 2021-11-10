@@ -44,14 +44,26 @@ abstract class GlassFishSmokeTest extends AppServerTest {
 }
 
 @AppServer(version = "5.2020.6", jdk = "8")
-class GlassFish5Jdk8 extends GlassFishSmokeTest {
+class GlassFish52020Jdk8 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "8-openj9")
-class GlassFish5Jdk8Openj9 extends GlassFishSmokeTest {
+class GlassFish52020Jdk8Openj9 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "11")
-class GlassFish5Jdk11 extends GlassFishSmokeTest {
+class GlassFish52020Jdk11 extends GlassFishSmokeTest {
 }
 @AppServer(version = "5.2020.6", jdk = "11-openj9")
-class GlassFish5Jdk11Openj9 extends GlassFishSmokeTest {
+class GlassFish52020Jdk11Openj9 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2021.8", jdk = "8")
+class GlassFish52021Jdk8 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2021.8", jdk = "8-openj9")
+class GlassFish52021Jdk8Openj9 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2021.8", jdk = "11")
+class GlassFish52021Jdk11 extends GlassFishSmokeTest {
+}
+@AppServer(version = "5.2021.8", jdk = "11-openj9")
+class GlassFish52021Jdk11Openj9 extends GlassFishSmokeTest {
 }
