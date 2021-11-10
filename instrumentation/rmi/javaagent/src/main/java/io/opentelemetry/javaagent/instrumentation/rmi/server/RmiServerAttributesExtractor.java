@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
 final class RmiServerAttributesExtractor extends RpcAttributesExtractor<ClassAndMethod, Void> {
 

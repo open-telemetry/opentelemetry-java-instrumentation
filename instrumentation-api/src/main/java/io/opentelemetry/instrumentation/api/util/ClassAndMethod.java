@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rmi.server;
+package io.opentelemetry.instrumentation.api.util;
 
 import com.google.auto.value.AutoValue;
 

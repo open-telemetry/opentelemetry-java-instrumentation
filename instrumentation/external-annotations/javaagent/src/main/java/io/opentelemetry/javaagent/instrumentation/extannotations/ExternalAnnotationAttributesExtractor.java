@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import javax.annotation.Nullable;
 
 final class ExternalAnnotationAttributesExtractor

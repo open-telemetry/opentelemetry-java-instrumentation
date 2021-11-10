@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
 public final class RmiServerSingletons {
 

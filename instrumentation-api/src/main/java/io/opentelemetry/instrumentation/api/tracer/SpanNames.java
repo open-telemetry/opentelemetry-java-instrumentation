@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +36,14 @@ public final class SpanNames {
    */
   public static String fromMethod(Class<?> clazz, @Nullable Method method) {
     return fromMethod(clazz, method == null ? "<unknown>" : method.getName());
+  }
+
+  /**
+   * This method is used to generate a span name based on a method. Anonymous classes are named
+   * based on their parent.
+   */
+  public static String fromMethod(ClassAndMethod classAndMethod) {
+    return fromMethod(classAndMethod.declaringClass(), classAndMethod.methodName());
   }
 
   /**

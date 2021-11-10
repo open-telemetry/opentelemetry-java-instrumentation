@@ -115,11 +115,16 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method method,
+        @Advice.Origin Method originMethod,
+        @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelOperationEndSupport")
             AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
+      // to local variable so that there would be only one call to Class.getMethod.
+      method = originMethod;
 
       Instrumenter<Method, Object> instrumenter = instrumenter();
       Context current = Java8BytecodeBridge.currentContext();
@@ -134,7 +139,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Origin Method method,
+        @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelOperationEndSupport")
             AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
@@ -154,13 +159,18 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method method,
+        @Advice.Origin Method originMethod,
+        @Advice.Local("otelMethod") Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
         @Advice.Local("otelOperationEndSupport")
             AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
+      // to local variable so that there would be only one call to Class.getMethod.
+      method = originMethod;
 
       Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
       Context current = Java8BytecodeBridge.currentContext();
@@ -176,7 +186,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Origin Method method,
+        @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelOperationEndSupport")
             AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
         @Advice.Local("otelRequest") MethodRequest request,
