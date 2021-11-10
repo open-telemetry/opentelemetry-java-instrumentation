@@ -340,3 +340,18 @@ bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` ins
 limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
 work with variables, method params, etc. Both the owner class and the field class must be known at
 compile time for it to work.
+
+### Why we don't use ByteBuddy @Advice.Origin Method
+
+Instead of
+```
+@Advice.Origin Method method
+```
+we prefer to use
+```
+@Advice.Origin("#t") Class<?> declaringClass,
+@Advice.Origin("#m") String methodName
+```
+because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
+getting the declaring class and method name is just loading constants from constant pool, which is
+a much simpler operation.
