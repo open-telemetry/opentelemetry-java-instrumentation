@@ -24,9 +24,12 @@ public class NettyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Class added in 4.1.0 and not in 4.0.56 to avoid resolving this instrumentation completely
-    // when using 4.1.
-    return not(hasClassesNamed("io.netty.handler.codec.http.CombinedHttpHeaders"));
+    return hasClassesNamed("io.netty.handler.codec.http.HttpMessage")
+        .and(
+            // Class added in 4.1.0 and not in 4.0.56 to avoid resolving this instrumentation
+            // completely
+            // when using 4.1.
+            not(hasClassesNamed("io.netty.handler.codec.http.CombinedHttpHeaders")));
   }
 
   @Override
