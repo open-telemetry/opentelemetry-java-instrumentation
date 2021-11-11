@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.InstrumentedAddressResolverGroup;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.InstrumentedAddressResolverGroup;
 import java.net.SocketAddress;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
@@ -102,9 +102,10 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
-      if (scope != null) {
-        scope.close();
+      if (scope == null) {
+        return;
       }
+      scope.close();
 
       if (throwable != null) {
         connectionInstrumenter().end(context, request, null, throwable);
@@ -145,9 +146,10 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
 
-      if (scope != null) {
-        scope.close();
+      if (scope == null) {
+        return;
       }
+      scope.close();
 
       if (throwable != null) {
         connectionInstrumenter().end(context, request, null, throwable);

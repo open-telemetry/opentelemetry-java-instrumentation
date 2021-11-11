@@ -25,7 +25,7 @@ muzzle {
 
 dependencies {
   library("io.netty:netty-codec-http:4.1.0.Final")
-  api(project(":instrumentation:netty:netty-4-common:javaagent"))
+  api(project(":instrumentation:netty:netty-4.1-common:javaagent"))
 
   // Contains logging handler
   testLibrary("io.netty:netty-handler:4.1.0.Final")
