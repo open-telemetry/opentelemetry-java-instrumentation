@@ -336,7 +336,7 @@ class TracerTest extends AgentInstrumentationSpecification {
   // this test uses opentelemetry-api-1.4 instrumentation
   def "test tracer builder"() {
     when:
-    def tracer = GlobalOpenTelemetry.get().tracerBuilder("test").build()
+    def tracer = GlobalOpenTelemetry.get().tracerBuilder("test").setInstrumentationVersion("1.2.3").build()
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.end()
 
@@ -347,6 +347,7 @@ class TracerTest extends AgentInstrumentationSpecification {
           name "test"
           kind PRODUCER
           hasNoParent()
+          instrumentationLibraryVersion "1.2.3"
           attributes {
           }
         }

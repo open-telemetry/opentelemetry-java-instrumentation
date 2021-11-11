@@ -65,6 +65,11 @@ class SpanAssert {
     checked.name = true
   }
 
+  def instrumentationLibraryVersion(String expected) {
+    assert span.instrumentationLibraryInfo.version == expected
+    checked.instrumentationLibraryVersion = true
+  }
+
   def name(Pattern expected) {
     assert span.name =~ expected
     checked.name = true
