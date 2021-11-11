@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.InstrumentedAddressResolverGroup;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.InstrumentedAddressResolverGroup;
 import java.net.SocketAddress;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
@@ -69,7 +69,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) Mono<Channel> mono) {
-      // end the CONNECT span inside the wrapped mono
+      // end the CONNECT span that was started in doConnect() instrumentation
       mono = ConnectionWrapper.wrap(mono);
     }
   }

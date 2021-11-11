@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPromise;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
 public final class ConnectionWrapper {
@@ -23,26 +24,20 @@ public final class ConnectionWrapper {
     if (!(mono instanceof ChannelPromise)) {
       return mono;
     }
-    return mono.doOnError(
-            error -> {
-              ConnectionRequestAndContext requestAndContext =
-                  requestAndContextField.get((ChannelPromise) mono);
-              if (requestAndContext == null) {
-                return;
-              }
-              connectionInstrumenter()
-                  .end(requestAndContext.context(), requestAndContext.request(), null, error);
-            })
-        .doOnSuccess(
-            channel -> {
-              ConnectionRequestAndContext requestAndContext =
-                  requestAndContextField.get((ChannelPromise) mono);
-              if (requestAndContext == null) {
-                return;
-              }
-              connectionInstrumenter()
-                  .end(requestAndContext.context(), requestAndContext.request(), channel, null);
-            });
+    return mono.doOnError(error -> end(mono, null, error))
+        .doOnSuccess(channel -> end(mono, channel, null))
+        .doOnCancel(() -> end(mono, null, null));
+  }
+
+  private static void end(
+      Mono<Channel> mono, @Nullable Channel channel, @Nullable Throwable error) {
+    ConnectionRequestAndContext requestAndContext =
+        requestAndContextField.get((ChannelPromise) mono);
+    if (requestAndContext == null) {
+      return;
+    }
+    connectionInstrumenter()
+        .end(requestAndContext.context(), requestAndContext.request(), channel, error);
   }
 
   private ConnectionWrapper() {}
