@@ -28,6 +28,9 @@ dependencies {
   api(project(":instrumentation:netty:netty-4.1:library"))
   implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
+
   // Contains logging handler
   testLibrary("io.netty:netty-handler:4.1.0.Final")
   testLibrary("io.netty:netty-transport-native-epoll:4.1.0.Final:linux-x86_64")

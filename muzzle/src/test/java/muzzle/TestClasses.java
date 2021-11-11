@@ -104,6 +104,7 @@ public class TestClasses {
     public static MethodBodyAdvice.SomeInterface invokeDynamicMethod(
         MethodBodyAdvice.SomeImplementation a) {
       Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
+      Runnable constructorMethod = MethodBodyAdvice.A::new;
       return a::someMethod;
     }
   }

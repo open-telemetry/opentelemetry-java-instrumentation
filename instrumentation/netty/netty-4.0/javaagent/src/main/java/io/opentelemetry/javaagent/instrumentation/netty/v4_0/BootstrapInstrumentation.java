@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelFuture;
@@ -31,7 +32,9 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("doConnect").and(takesArgument(0, SocketAddress.class)),
+        named("doConnect")
+            .and(takesArgument(0, SocketAddress.class))
+            .and(returns(named("io.netty.channel.ChannelFuture"))),
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
