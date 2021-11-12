@@ -7,10 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelPromise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -32,16 +31,16 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("doConnect")
-            .and(takesArgument(0, SocketAddress.class))
-            .and(returns(named("io.netty.channel.ChannelFuture"))),
+        named("doConnect0")
+            .and(takesArgument(2, SocketAddress.class))
+            .and(takesArgument(4, named("io.netty.channel.ChannelPromise"))),
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
   public static class ConnectAdvice {
     @Advice.OnMethodEnter
     public static void startConnect(
-        @Advice.Argument(0) SocketAddress remoteAddress,
+        @Advice.Argument(2) SocketAddress remoteAddress,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
@@ -60,7 +59,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Return ChannelFuture channelFuture,
+        @Advice.Argument(4) ChannelPromise channelPromise,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
@@ -73,7 +72,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         connectionInstrumenter().end(context, request, null, throwable);
       } else {
-        channelFuture.addListener(
+        channelPromise.addListener(
             new ConnectionCompleteListener(connectionInstrumenter(), context, request));
       }
     }

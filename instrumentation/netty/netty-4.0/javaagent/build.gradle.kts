@@ -37,16 +37,19 @@ tasks {
   val testConnectionSpan by registering(Test::class) {
     filter {
       includeTestsMatching("Netty40ConnectionSpanTest")
+      includeTestsMatching("Netty40ClientSslTest")
       isFailOnNoMatchingTests = false
     }
-    include("**/Netty40ConnectionSpanTest.*")
+    include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
     dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
+      excludeTestsMatching("Netty40ClientSslTest")
       isFailOnNoMatchingTests = false
     }
   }
