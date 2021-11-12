@@ -8,12 +8,37 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import io.opentelemetry.context.Context;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.SocketAddress;
 
 // inspired by reactor-netty SslProvider.SslReadHandler
 public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
+
+  private static final Class<?> SSL_HANDSHAKE_COMPLETION_EVENT;
+  private static final MethodHandle GET_CAUSE;
+
+  static {
+    Class<?> sslHandshakeCompletionEvent = null;
+    MethodHandle getCause = null;
+    try {
+      sslHandshakeCompletionEvent =
+          Class.forName(
+              "io.netty.handler.ssl.SslHandshakeCompletionEvent",
+              false,
+              NettySslInstrumentationHandler.class.getClassLoader());
+      getCause =
+          MethodHandles.lookup()
+              .findVirtual(
+                  sslHandshakeCompletionEvent, "cause", MethodType.methodType(Throwable.class));
+    } catch (Throwable t) {
+      // no SSL classes on classpath
+    }
+    SSL_HANDSHAKE_COMPLETION_EVENT = sslHandshakeCompletionEvent;
+    GET_CAUSE = getCause;
+  }
 
   private final NettySslInstrumenter instrumenter;
   private Context parentContext;
@@ -26,6 +51,14 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   @Override
   public void channelRegistered(ChannelHandlerContext ctx) {
+    // this should never happen at this point (since the handler is only registered when SSL classes
+    // are on classpath); checking just to be extra safe
+    if (SSL_HANDSHAKE_COMPLETION_EVENT == null) {
+      ctx.pipeline().remove(this);
+      ctx.fireChannelRegistered();
+      return;
+    }
+
     // remember the parent context from the time of channel registration;
     // this happens inside Bootstrap#connect()
     parentContext = Context.current();
@@ -58,17 +91,25 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-    if (evt instanceof SslHandshakeCompletionEvent) {
+    if (SSL_HANDSHAKE_COMPLETION_EVENT.isInstance(evt)) {
       if (ctx.pipeline().context(this) != null) {
         ctx.pipeline().remove(this);
       }
 
-      SslHandshakeCompletionEvent handshake = (SslHandshakeCompletionEvent) evt;
       if (context != null) {
-        instrumenter.end(context, request, handshake.cause());
+        instrumenter.end(context, request, getCause(evt));
       }
     }
 
     ctx.fireUserEventTriggered(evt);
+  }
+
+  private static Throwable getCause(Object evt) {
+    try {
+      return (Throwable) GET_CAUSE.invoke(evt);
+    } catch (Throwable e) {
+      // should not ever happen
+      return null;
+    }
   }
 }
