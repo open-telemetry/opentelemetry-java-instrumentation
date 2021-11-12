@@ -11,11 +11,11 @@ import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesAdapter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.Arrays;
@@ -49,7 +49,12 @@ public class OpenTelemetryInstaller implements AgentListener {
         System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
 
         OpenTelemetrySdk sdk =
-            OpenTelemetrySdkAutoConfiguration.initialize(true, new ConfigPropertiesAdapter(config));
+            AutoConfiguredOpenTelemetrySdk.builder()
+                .setResultAsGlobal(true)
+                .addPropertiesSupplier(config::getAllProperties)
+                .setServiceClassLoader(AgentInitializer.getAgentClassLoader())
+                .build()
+                .getOpenTelemetrySdk();
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {
               CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();

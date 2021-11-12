@@ -18,7 +18,8 @@ public class AgentTestingMetricsCustomizer implements SdkMeterProviderConfigurer
   public void configure(
       SdkMeterProviderBuilder sdkMeterProviderBuilder, ConfigProperties configProperties) {
     sdkMeterProviderBuilder.registerMetricReader(
-        PeriodicMetricReader.create(
-            AgentTestingExporterFactory.metricExporter, Duration.ofMillis(100)));
+        PeriodicMetricReader.builder(AgentTestingExporterFactory.metricExporter)
+            .setInterval(Duration.ofMillis(100))
+            .newMetricReaderFactory());
   }
 }

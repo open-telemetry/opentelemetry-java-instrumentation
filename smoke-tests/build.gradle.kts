@@ -26,7 +26,7 @@ dependencies {
   implementation(platform("io.grpc:grpc-bom:1.33.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-proto")
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("com.google.protobuf:protobuf-java-util:3.12.4")
