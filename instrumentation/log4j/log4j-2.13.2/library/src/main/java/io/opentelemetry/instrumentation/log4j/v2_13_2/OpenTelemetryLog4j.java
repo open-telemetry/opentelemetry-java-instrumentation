@@ -26,7 +26,7 @@ public final class OpenTelemetryLog4j {
     List<OpenTelemetryAppender> instances;
     synchronized (LOCK) {
       if (OpenTelemetryLog4j.logEmitter != null) {
-        throw new IllegalStateException("LogEmitter has already been set.");
+        throw new IllegalStateException("SdkLogEmitterProvider has already been set.");
       }
       logEmitter =
           sdkLogEmitterProvider.logEmitterBuilder(OpenTelemetryLog4j.class.getName()).build();
@@ -44,6 +44,14 @@ public final class OpenTelemetryLog4j {
         appender.initialize(logEmitter);
       }
       APPENDERS.add(appender);
+    }
+  }
+
+  // Visible for testing
+  static void resetForTest() {
+    synchronized (LOCK) {
+      logEmitter = null;
+      APPENDERS.clear();
     }
   }
 

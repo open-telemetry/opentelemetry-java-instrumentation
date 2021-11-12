@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry:opentelemetry-sdk-logs:1.8.0-alpha-SNAPSHOT")
+  api("io.opentelemetry:opentelemetry-sdk-logs:1.9.0-alpha")
 
   library("org.apache.logging.log4j:log4j-core:2.13.2")
 
@@ -12,4 +12,6 @@ dependencies {
   testLibrary("org.apache.logging.log4j:log4j-core:2.13.3")
 
   testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
+
+  testImplementation("org.mockito:mockito-core")
 }

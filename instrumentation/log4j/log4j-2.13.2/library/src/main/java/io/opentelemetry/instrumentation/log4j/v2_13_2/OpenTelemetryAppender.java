@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
+import io.opentelemetry.sdk.logs.LogBuilder;
 import io.opentelemetry.sdk.logs.LogEmitter;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,7 +63,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
       // appender hasn't been initialized
       return;
     }
-    LogEventMapper.toLogBuilder(logEmitter, event).emit();
+    LogBuilder builder = logEmitter.logBuilder();
+    LogEventMapper.mapLogEvent(builder, event);
+    builder.emit();
   }
 
   void initialize(LogEmitter logEmitter) {

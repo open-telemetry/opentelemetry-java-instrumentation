@@ -6,21 +6,45 @@
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceId;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.logs.LogBuilder;
-import io.opentelemetry.sdk.logs.LogEmitter;
 import io.opentelemetry.sdk.logs.data.Severity;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 final class LogEventMapper {
+
+  // Visible for testing
+  static final AttributeKey<String> ATTR_LOGGER_NAME = AttributeKey.stringKey("logger.name");
+  static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
+  static final AttributeKey<Long> ATTR_THREAD_ID = AttributeKey.longKey("thread.id");
+  static final AttributeKey<Long> ATTR_THREAD_PRIORITY = AttributeKey.longKey("thread.priority");
+  static final AttributeKey<String> ATTR_THROWABLE_NAME = AttributeKey.stringKey("throwable.name");
+  static final AttributeKey<String> ATTR_THROWABLE_MESSAGE =
+      AttributeKey.stringKey("throwable.message");
+  static final AttributeKey<List<String>> ATTR_NDC = AttributeKey.stringArrayKey("ndc");
+  static final AttributeKey<String> ATTR_FQCN = AttributeKey.stringKey("fqcn");
+  static final AttributeKey<String> ATTR_MARKER = AttributeKey.stringKey("marker");
 
   private static final Map<Level, Severity> LEVEL_SEVERITY_MAP;
 
@@ -36,31 +60,81 @@ final class LogEventMapper {
     LEVEL_SEVERITY_MAP = Collections.unmodifiableMap(levelSeverityMap);
   }
 
-  static LogBuilder toLogBuilder(LogEmitter logEmitter, LogEvent logEvent) {
-    LogBuilder builder = logEmitter.logBuilder();
-    builder.setBody(logEvent.getMessage().getFormattedMessage());
-    builder.setSeverity(
-        LEVEL_SEVERITY_MAP.getOrDefault(logEvent.getLevel(), Severity.UNDEFINED_SEVERITY_NUMBER));
-    builder.setSeverityText(logEvent.getLevel().name());
+  static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
+    AttributesBuilder attributes = Attributes.builder();
+
+    // message
+    Message message = logEvent.getMessage();
+    if (message != null) {
+      builder.setBody(message.getFormattedMessage());
+    }
+
+    // time
     builder.setEpoch(logEvent.getNanoTime(), TimeUnit.NANOSECONDS);
 
-    AttributesBuilder attributes = Attributes.builder();
-    attributes.put("logger.name", logEvent.getLoggerName());
-    attributes.put("thread.name", logEvent.getThreadName());
+    // level
+    Level level = logEvent.getLevel();
+    if (level != null) {
+      builder.setSeverity(
+          LEVEL_SEVERITY_MAP.getOrDefault(level, Severity.UNDEFINED_SEVERITY_NUMBER));
+      builder.setSeverityText(logEvent.getLevel().name());
+    }
 
-    Map<String, String> contextMap = logEvent.getContextData().toMap();
-    if (!contextMap.isEmpty()) {
-      if (contextMap.containsKey(TRACE_ID)) {
-        builder.setTraceId(contextMap.remove(TRACE_ID));
+    // logger
+    attributes.put(ATTR_LOGGER_NAME, logEvent.getLoggerName());
+
+    // fully qualified class name
+    attributes.put(ATTR_FQCN, logEvent.getLoggerFqcn());
+
+    // thread
+    attributes.put(ATTR_THREAD_NAME, logEvent.getThreadName());
+    attributes.put(ATTR_THREAD_ID, logEvent.getThreadId());
+    attributes.put(ATTR_THREAD_PRIORITY, logEvent.getThreadPriority());
+
+    // throwable
+    Throwable throwable = logEvent.getThrown();
+    if (throwable != null) {
+      attributes.put(ATTR_THROWABLE_NAME, throwable.getClass().getName());
+      attributes.put(ATTR_THROWABLE_MESSAGE, throwable.getMessage());
+    }
+
+    // marker
+    Marker marker = logEvent.getMarker();
+    if (marker != null) {
+      attributes.put(ATTR_MARKER, marker.getName());
+    }
+
+    // nested diagnostic context
+    List<String> contextStackList = logEvent.getContextStack().asList();
+    if (contextStackList.size() > 0) {
+      attributes.put(ATTR_NDC, contextStackList);
+    }
+
+    // mapped diagnostic context (included span context)
+    ReadOnlyStringMap contextData = logEvent.getContextData();
+    if (contextData != null) {
+      Map<String, String> contextMap = contextData.toMap();
+      if (contextMap != null) {
+        String traceId =
+            contextMap.containsKey(TRACE_ID) ? contextMap.remove(TRACE_ID) : TraceId.getInvalid();
+        String spanId =
+            contextMap.containsKey(SPAN_ID) ? contextMap.remove(SPAN_ID) : SpanId.getInvalid();
+        TraceFlags traceFlags =
+            contextMap.containsKey(TRACE_FLAGS)
+                ? TraceFlags.fromHex(contextMap.remove(TRACE_FLAGS), 0)
+                : TraceFlags.getDefault();
+        Context context =
+            Context.root()
+                .with(
+                    Span.wrap(
+                        SpanContext.create(traceId, spanId, traceFlags, TraceState.getDefault())));
+        builder.setContext(context);
+
+        contextMap.forEach(attributes::put);
       }
-      if (contextMap.containsKey(SPAN_ID)) {
-        builder.setSpanId(contextMap.remove(SPAN_ID));
-      }
-      contextMap.forEach(attributes::put);
     }
 
     builder.setAttributes(attributes.build());
-    return builder;
   }
 
   private LogEventMapper() {}
