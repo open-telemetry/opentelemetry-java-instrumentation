@@ -10,8 +10,6 @@ import com.google.inject.Provides
 import groovy.transform.CompileStatic
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.ratpack.OpenTelemetryExecInterceptor
-import io.opentelemetry.instrumentation.ratpack.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.RatpackFunctionalTest
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -20,7 +18,9 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import ratpack.exec.ExecInterceptor
 import ratpack.guice.Guice
+import ratpack.handling.Handler
 import ratpack.server.RatpackServer
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -67,8 +67,20 @@ class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  OpenTelemetryServerHandler ratpackServerHandler(OpenTelemetry openTelemetry) {
-    return RatpackTracing.create(openTelemetry).serverHandler
+  RatpackTracing ratpackTracing(OpenTelemetry openTelemetry) {
+    return RatpackTracing.create(openTelemetry)
+  }
+
+  @Singleton
+  @Provides
+  Handler ratpackServerHandler(RatpackTracing ratpackTracing) {
+    return ratpackTracing.getOpenTelemetryServerHandler()
+  }
+
+  @Singleton
+  @Provides
+  ExecInterceptor ratpackExecInterceptor(RatpackTracing ratpackTracing) {
+    return ratpackTracing.getOpenTelemetryExecInterceptor()
   }
 
   @Provides
@@ -90,13 +102,14 @@ class RatpackApp {
           Guice.registry { bindings ->
             bindings
               .module(OpenTelemetryModule)
-              .bind(OpenTelemetryExecInterceptor)
           }
         )
         .handlers { chain ->
           chain
             .get("ignore") { ctx -> ctx.render("ignored") }
-            .all(OpenTelemetryServerHandler)
+            .all {
+              it.insert(it.get(RatpackTracing).getOpenTelemetryServerHandler())
+            }
             .get("foo") { ctx -> ctx.render("hi-foo") }
         }
     }
