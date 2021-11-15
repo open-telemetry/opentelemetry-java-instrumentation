@@ -6,7 +6,7 @@ import com.google.protobuf.gradle.protoc
 
 plugins {
   id("otel.java-conventions")
-  id("otel.java-conventions")
+  id("otel.protobuf-conventions")
 }
 
 val grpcVersion = "1.6.0"
