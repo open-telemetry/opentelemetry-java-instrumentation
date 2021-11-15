@@ -47,10 +47,7 @@ dependencies {
 
   compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
-  implementation("io.opentelemetry:opentelemetry-proto") {
-    // Only need the proto, not gRPC.
-    exclude("io.grpc")
-  }
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
 
   implementation("com.google.guava:guava")
   implementation("net.bytebuddy:byte-buddy")

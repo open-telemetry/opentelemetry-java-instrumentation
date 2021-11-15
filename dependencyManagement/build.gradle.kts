@@ -13,7 +13,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // IMPORTANT when updating otelVersion, make sure that grpcVersion below is >= the grpc version
 // used by that otel version
-val otelVersion = "1.7.1"
+val otelVersion = "1.9.0"
 val grpcVersion = "1.41.0"
 rootProject.extra["otelVersion"] = otelVersion
 
@@ -106,6 +106,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
+  "io.opentelemetry.proto:opentelemetry-proto:0.11.0-alpha",
   "org.assertj:assertj-core:3.21.0",
   "org.awaitility:awaitility:4.1.0",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -115,7 +116,7 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-junit4:2.0-groovy-2.5",
   "org.scala-lang:scala-library:2.11.12",
   "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
-  "io.grpc:grpc-netty-shaded:${grpcVersion}"
+  "io.grpc:grpc-netty-shaded:${grpcVersion}",
 )
 
 javaPlatform {
