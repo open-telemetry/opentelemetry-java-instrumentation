@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.Arrays;
@@ -48,13 +49,18 @@ public class OpenTelemetryInstaller implements AgentListener {
       } else {
         System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
 
-        OpenTelemetrySdk sdk =
+        AutoConfiguredOpenTelemetrySdkBuilder builder =
             AutoConfiguredOpenTelemetrySdk.builder()
                 .setResultAsGlobal(true)
-                .addPropertiesSupplier(config::getAllProperties)
-                .setServiceClassLoader(AgentInitializer.getAgentClassLoader())
-                .build()
-                .getOpenTelemetrySdk();
+                .addPropertiesSupplier(config::getAllProperties);
+
+        ClassLoader classLoader = AgentInitializer.getAgentClassLoader();
+        if (classLoader != null) {
+          // May be null in unit tests.
+          builder.setServiceClassLoader(classLoader);
+        }
+
+        OpenTelemetrySdk sdk = builder.build().getOpenTelemetrySdk();
         OpenTelemetrySdkAccess.internalSetForceFlush(
             (timeout, unit) -> {
               CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
