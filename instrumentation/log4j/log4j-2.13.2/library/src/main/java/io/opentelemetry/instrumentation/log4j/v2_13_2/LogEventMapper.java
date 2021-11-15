@@ -12,23 +12,16 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanId;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceId;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.logs.LogBuilder;
 import io.opentelemetry.sdk.logs.data.Severity;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
@@ -46,20 +39,6 @@ final class LogEventMapper {
   static final AttributeKey<String> ATTR_FQCN = AttributeKey.stringKey("fqcn");
   static final AttributeKey<String> ATTR_MARKER = AttributeKey.stringKey("marker");
 
-  private static final Map<Level, Severity> LEVEL_SEVERITY_MAP;
-
-  static {
-    Map<Level, Severity> levelSeverityMap = new HashMap<>();
-    levelSeverityMap.put(Level.ALL, Severity.TRACE);
-    levelSeverityMap.put(Level.TRACE, Severity.TRACE2);
-    levelSeverityMap.put(Level.DEBUG, Severity.DEBUG);
-    levelSeverityMap.put(Level.INFO, Severity.INFO);
-    levelSeverityMap.put(Level.WARN, Severity.WARN);
-    levelSeverityMap.put(Level.ERROR, Severity.ERROR);
-    levelSeverityMap.put(Level.FATAL, Severity.FATAL);
-    LEVEL_SEVERITY_MAP = Collections.unmodifiableMap(levelSeverityMap);
-  }
-
   static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
     AttributesBuilder attributes = Attributes.builder();
 
@@ -70,13 +49,18 @@ final class LogEventMapper {
     }
 
     // time
-    builder.setEpoch(logEvent.getNanoTime(), TimeUnit.NANOSECONDS);
+    Instant instant = logEvent.getInstant();
+    if (instant != null) {
+      builder.setEpoch(
+          TimeUnit.MILLISECONDS.toNanos(instant.getEpochMillisecond())
+              + instant.getNanoOfMillisecond(),
+          TimeUnit.NANOSECONDS);
+    }
 
     // level
     Level level = logEvent.getLevel();
     if (level != null) {
-      builder.setSeverity(
-          LEVEL_SEVERITY_MAP.getOrDefault(level, Severity.UNDEFINED_SEVERITY_NUMBER));
+      builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(logEvent.getLevel().name());
     }
 
@@ -115,26 +99,40 @@ final class LogEventMapper {
     if (contextData != null) {
       Map<String, String> contextMap = contextData.toMap();
       if (contextMap != null) {
-        String traceId =
-            contextMap.containsKey(TRACE_ID) ? contextMap.remove(TRACE_ID) : TraceId.getInvalid();
-        String spanId =
-            contextMap.containsKey(SPAN_ID) ? contextMap.remove(SPAN_ID) : SpanId.getInvalid();
-        TraceFlags traceFlags =
-            contextMap.containsKey(TRACE_FLAGS)
-                ? TraceFlags.fromHex(contextMap.remove(TRACE_FLAGS), 0)
-                : TraceFlags.getDefault();
-        Context context =
-            Context.root()
-                .with(
-                    Span.wrap(
-                        SpanContext.create(traceId, spanId, traceFlags, TraceState.getDefault())));
-        builder.setContext(context);
+        // Remove context fields placed by OpenTelemetryContextDataProvider to avoid duplicating
+        // trace context fields in attributes
+        contextMap.remove(TRACE_ID);
+        contextMap.remove(SPAN_ID);
+        contextMap.remove(TRACE_FLAGS);
+        builder.setContext(Context.current());
 
         contextMap.forEach(attributes::put);
       }
     }
 
     builder.setAttributes(attributes.build());
+  }
+
+  private static Severity levelToSeverity(Level level) {
+    switch (level.getStandardLevel()) {
+      case ALL:
+        return Severity.TRACE;
+      case TRACE:
+        return Severity.TRACE2;
+      case DEBUG:
+        return Severity.DEBUG;
+      case INFO:
+        return Severity.INFO;
+      case WARN:
+        return Severity.WARN;
+      case ERROR:
+        return Severity.ERROR;
+      case FATAL:
+        return Severity.FATAL;
+      case OFF:
+        return Severity.UNDEFINED_SEVERITY_NUMBER;
+    }
+    throw new IllegalStateException("Unrecognized level " + level.name());
   }
 
   private LogEventMapper() {}

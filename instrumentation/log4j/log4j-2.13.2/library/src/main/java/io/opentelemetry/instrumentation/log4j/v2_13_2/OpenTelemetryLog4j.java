@@ -13,18 +13,18 @@ import javax.annotation.concurrent.GuardedBy;
 
 public final class OpenTelemetryLog4j {
 
-  private static final Object LOCK = new Object();
+  private static final Object lock = new Object();
 
-  @GuardedBy("LOCK")
+  @GuardedBy("lock")
   private static LogEmitter logEmitter;
 
-  @GuardedBy("LOCK")
+  @GuardedBy("lock")
   private static final List<OpenTelemetryAppender> APPENDERS = new ArrayList<>();
 
   public static void initialize(SdkLogEmitterProvider sdkLogEmitterProvider) {
     LogEmitter logEmitter;
     List<OpenTelemetryAppender> instances;
-    synchronized (LOCK) {
+    synchronized (lock) {
       if (OpenTelemetryLog4j.logEmitter != null) {
         throw new IllegalStateException("SdkLogEmitterProvider has already been set.");
       }
@@ -39,7 +39,7 @@ public final class OpenTelemetryLog4j {
   }
 
   static void registerInstance(OpenTelemetryAppender appender) {
-    synchronized (LOCK) {
+    synchronized (lock) {
       if (logEmitter != null) {
         appender.initialize(logEmitter);
       }
@@ -49,7 +49,7 @@ public final class OpenTelemetryLog4j {
 
   // Visible for testing
   static void resetForTest() {
-    synchronized (LOCK) {
+    synchronized (lock) {
       logEmitter = null;
       APPENDERS.clear();
     }

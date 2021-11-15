@@ -29,8 +29,10 @@ import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.MarkerManager;
@@ -127,7 +129,8 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getEpochNanos()).isGreaterThan(0);
+    assertThat(logData.getEpochNanos())
+        .isGreaterThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli() - 1000));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     Attributes attributes = logData.getAttributes();

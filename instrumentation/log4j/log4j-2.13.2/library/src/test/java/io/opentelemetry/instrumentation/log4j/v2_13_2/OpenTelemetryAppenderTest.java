@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.logs.LogBuilder;
 import io.opentelemetry.sdk.logs.LogEmitter;
-import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LogEvent;
 import org.junit.jupiter.api.AfterAll;
@@ -67,7 +66,6 @@ class OpenTelemetryAppenderTest {
     appender.append(logEvent);
 
     verify(logEmitter).logBuilder();
-    verify(logBuilder).setEpoch(0, TimeUnit.NANOSECONDS);
     verify(logBuilder).emit();
   }
 }

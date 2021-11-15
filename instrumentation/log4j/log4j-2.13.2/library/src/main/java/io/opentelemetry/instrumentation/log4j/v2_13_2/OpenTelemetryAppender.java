@@ -32,7 +32,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     return new Builder<B>().asBuilder();
   }
 
-  public static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
+  static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
     @Override
