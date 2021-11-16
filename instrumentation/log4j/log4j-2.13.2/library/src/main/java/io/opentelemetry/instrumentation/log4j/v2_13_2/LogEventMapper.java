@@ -5,40 +5,41 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.logs.LogBuilder;
 import io.opentelemetry.sdk.logs.data.Severity;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
-import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 final class LogEventMapper {
 
   // Visible for testing
-  static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
-  static final AttributeKey<Long> ATTR_THREAD_ID = AttributeKey.longKey("thread.id");
-  static final AttributeKey<Long> ATTR_THREAD_PRIORITY = AttributeKey.longKey("thread.priority");
-  static final AttributeKey<String> ATTR_THROWABLE_NAME = AttributeKey.stringKey("throwable.name");
   static final AttributeKey<String> ATTR_THROWABLE_MESSAGE =
       AttributeKey.stringKey("throwable.message");
-  static final AttributeKey<List<String>> ATTR_NDC = AttributeKey.stringArrayKey("ndc");
-  static final AttributeKey<String> ATTR_FQCN = AttributeKey.stringKey("fqcn");
-  static final AttributeKey<String> ATTR_MARKER = AttributeKey.stringKey("marker");
 
+  /**
+   * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   *
+   * <ul>
+   *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
+   *   <li>Thread name - {@link LogEvent#getThreadName()}
+   *   <li>Thread id - {@link LogEvent#getThreadId()}
+   *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
+   *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
+   *   <li>Thrown details (stack trace, class name) - {@link LogEvent#getThrown()}
+   *   <li>Marker - {@link LogEvent#getMarker()}
+   *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
+   *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
+   * </ul>
+   */
   static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
+    // TODO: map the LogEvent more completely when semantic conventions allow it
     AttributesBuilder attributes = Attributes.builder();
 
     // message
@@ -63,48 +64,14 @@ final class LogEventMapper {
       builder.setSeverityText(logEvent.getLevel().name());
     }
 
-    // fully qualified class name
-    attributes.put(ATTR_FQCN, logEvent.getLoggerFqcn());
-
-    // thread
-    attributes.put(ATTR_THREAD_NAME, logEvent.getThreadName());
-    attributes.put(ATTR_THREAD_ID, logEvent.getThreadId());
-    attributes.put(ATTR_THREAD_PRIORITY, logEvent.getThreadPriority());
-
     // throwable
     Throwable throwable = logEvent.getThrown();
     if (throwable != null) {
-      attributes.put(ATTR_THROWABLE_NAME, throwable.getClass().getName());
       attributes.put(ATTR_THROWABLE_MESSAGE, throwable.getMessage());
     }
 
-    // marker
-    Marker marker = logEvent.getMarker();
-    if (marker != null) {
-      attributes.put(ATTR_MARKER, marker.getName());
-    }
-
-    // nested diagnostic context
-    List<String> contextStackList = logEvent.getContextStack().asList();
-    if (contextStackList.size() > 0) {
-      attributes.put(ATTR_NDC, contextStackList);
-    }
-
-    // mapped diagnostic context (included span context)
-    ReadOnlyStringMap contextData = logEvent.getContextData();
-    if (contextData != null) {
-      Map<String, String> contextMap = contextData.toMap();
-      if (contextMap != null) {
-        // Remove context fields placed by OpenTelemetryContextDataProvider to avoid duplicating
-        // trace context fields in attributes
-        contextMap.remove(TRACE_ID);
-        contextMap.remove(SPAN_ID);
-        contextMap.remove(TRACE_FLAGS);
-        builder.setContext(Context.current());
-
-        contextMap.forEach(attributes::put);
-      }
-    }
+    // span context
+    builder.setContext(Context.current());
 
     builder.setAttributes(attributes.build());
   }

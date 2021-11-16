@@ -5,17 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_FQCN;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_MARKER;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_NDC;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THREAD_ID;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THREAD_NAME;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THREAD_PRIORITY;
 import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THROWABLE_MESSAGE;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THROWABLE_NAME;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -29,14 +21,11 @@ import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
-import org.apache.logging.log4j.spi.AbstractLogger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,7 +74,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isGreaterThan(0);
+    assertThat(logData.getAttributes()).isEqualTo(Attributes.empty());
   }
 
   @Test
@@ -115,11 +104,7 @@ class OpenTelemetryAppenderConfigTest {
 
   @Test
   void logWithExtras() {
-    ThreadContext.put("mdc-key", "mdc-value");
-    ThreadContext.push("ndc-value1");
-    ThreadContext.push("ndc-value2");
-    logger.info(
-        MarkerManager.getMarker("my-marker"), "log message 1", new IllegalStateException("Error!"));
+    logger.info("log message 1", new IllegalStateException("Error!"));
 
     List<LogData> logDataList = logExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
@@ -131,16 +116,6 @@ class OpenTelemetryAppenderConfigTest {
         .isGreaterThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli() - 1000));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
-    Attributes attributes = logData.getAttributes();
-    assertThat(attributes.get(ATTR_FQCN)).isEqualTo(AbstractLogger.class.getName());
-    assertThat(attributes.get(ATTR_THREAD_NAME)).isNotEmpty();
-    assertThat(attributes.get(ATTR_THREAD_ID)).isGreaterThan(0);
-    assertThat(attributes.get(ATTR_THREAD_PRIORITY)).isGreaterThan(0);
-    assertThat(attributes.get(ATTR_THROWABLE_NAME))
-        .isEqualTo(IllegalStateException.class.getName());
-    assertThat(attributes.get(ATTR_THROWABLE_MESSAGE)).isEqualTo("Error!");
-    assertThat(attributes.get(ATTR_MARKER)).isEqualTo("my-marker");
-    assertThat(attributes.get(ATTR_NDC)).isEqualTo(Arrays.asList("ndc-value1", "ndc-value2"));
-    assertThat(attributes.get(AttributeKey.stringKey("mdc-key"))).isEqualTo("mdc-value");
+    assertThat(logData.getAttributes()).isEqualTo(Attributes.of(ATTR_THROWABLE_MESSAGE, "Error!"));
   }
 }
