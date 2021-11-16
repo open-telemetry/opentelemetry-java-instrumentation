@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
 import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_FQCN;
-import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_LOGGER_NAME;
 import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_MARKER;
 import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_NDC;
 import static io.opentelemetry.instrumentation.log4j.v2_13_2.LogEventMapper.ATTR_THREAD_ID;
@@ -55,8 +54,7 @@ class OpenTelemetryAppenderConfigTest {
   static void setupAll() {
     logExporter = InMemoryLogExporter.create();
     resource = Resource.getDefault();
-    instrumentationLibraryInfo =
-        InstrumentationLibraryInfo.create(OpenTelemetryLog4j.class.getName(), null);
+    instrumentationLibraryInfo = InstrumentationLibraryInfo.create("TestLogger", null);
 
     SdkLogEmitterProvider logEmitterProvider =
         SdkLogEmitterProvider.builder()
@@ -134,7 +132,6 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     Attributes attributes = logData.getAttributes();
-    assertThat(attributes.get(ATTR_LOGGER_NAME)).isEqualTo("TestLogger");
     assertThat(attributes.get(ATTR_FQCN)).isEqualTo(AbstractLogger.class.getName());
     assertThat(attributes.get(ATTR_THREAD_NAME)).isNotEmpty();
     assertThat(attributes.get(ATTR_THREAD_ID)).isGreaterThan(0);

@@ -28,7 +28,6 @@ import org.apache.logging.log4j.util.ReadOnlyStringMap;
 final class LogEventMapper {
 
   // Visible for testing
-  static final AttributeKey<String> ATTR_LOGGER_NAME = AttributeKey.stringKey("logger.name");
   static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
   static final AttributeKey<Long> ATTR_THREAD_ID = AttributeKey.longKey("thread.id");
   static final AttributeKey<Long> ATTR_THREAD_PRIORITY = AttributeKey.longKey("thread.priority");
@@ -63,9 +62,6 @@ final class LogEventMapper {
       builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(logEvent.getLevel().name());
     }
-
-    // logger
-    attributes.put(ATTR_LOGGER_NAME, logEvent.getLoggerName());
 
     // fully qualified class name
     attributes.put(ATTR_FQCN, logEvent.getLoggerFqcn());
