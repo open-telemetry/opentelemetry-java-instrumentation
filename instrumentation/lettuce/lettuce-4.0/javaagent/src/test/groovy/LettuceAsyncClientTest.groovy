@@ -16,7 +16,7 @@ import com.lambdaworks.redis.protocol.AsyncCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
@@ -37,7 +37,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   @Shared
   int port
@@ -65,20 +65,18 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    port = PortUtils.findOpenPort()
     incorrectPort = PortUtils.findOpenPort()
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
     dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
-    embeddedDbUri = "redis://" + dbAddr
-
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
-    redisClient = RedisClient.create(embeddedDbUri)
-
     redisServer.start()
+    port = redisServer.getMappedPort(6379)
+    dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    embeddedDbUri = "redis://" + dbAddr
+
+    redisClient = RedisClient.create(embeddedDbUri)
     redisClient.setOptions(CLIENT_OPTIONS)
 
     connection = redisClient.connect()

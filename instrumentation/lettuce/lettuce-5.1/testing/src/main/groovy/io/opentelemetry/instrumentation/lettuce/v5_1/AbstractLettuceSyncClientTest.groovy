@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -26,7 +27,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   abstract RedisClient createClient(String uri)
 
@@ -57,22 +58,21 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    port = PortUtils.findOpenPort()
     incorrectPort = PortUtils.findOpenPort()
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
     dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
-    embeddedDbUri = "redis://" + dbAddr
-    embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
-
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
+    redisServer.start()
+    port = redisServer.getMappedPort(6379)
+    dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    embeddedDbUri = "redis://" + dbAddr
+    embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
+
     redisClient = createClient(embeddedDbUri)
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
-    redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
 

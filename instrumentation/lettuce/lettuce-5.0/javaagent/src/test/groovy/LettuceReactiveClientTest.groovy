@@ -9,9 +9,8 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import reactor.core.scheduler.Schedulers
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
@@ -28,7 +27,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   @Shared
   String embeddedDbUri
@@ -40,17 +39,16 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    int port = PortUtils.findOpenPort()
-    String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
-    embeddedDbUri = "redis://" + dbAddr
-
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
+    redisServer.start()
+    int port = redisServer.getMappedPort(6379)
+    String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
+    embeddedDbUri = "redis://" + dbAddr
+
     redisClient = RedisClient.create(embeddedDbUri)
 
-    redisServer.start()
     redisClient.setOptions(CLIENT_OPTIONS)
 
     connection = redisClient.connect()

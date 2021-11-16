@@ -10,9 +10,8 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
@@ -26,7 +25,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   abstract RedisClient createClient(String uri)
 
@@ -40,18 +39,14 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
   RedisReactiveCommands<String, ?> reactiveCommands
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    port = PortUtils.findOpenPort()
+  def setup() {
+    redisServer.start()
+
+    port = redisServer.getMappedPort(6379)
     String dbAddr = HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
-
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
-  }
-
-  def setup() {
     redisClient = createClient(embeddedDbUri)
 
-    redisServer.start()
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     connection = redisClient.connect()
