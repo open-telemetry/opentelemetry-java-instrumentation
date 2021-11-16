@@ -41,6 +41,7 @@ dependencies {
   implementation("com.google.guava:guava:30.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.17")
   implementation("gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0")
+  implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.17")
   implementation("org.ow2.asm:asm:9.1")
   implementation("org.ow2.asm:asm-tree:9.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
