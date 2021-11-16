@@ -44,14 +44,18 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * this method, such an API should be used and the HTTP status code of the response returned,
    * for example:
    *
+   * <pre>
    * @Override
    * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
    *   HttpResponse response = client.execute(request)
    *   return response.statusCode()
    * }
+   * </pre>
+   *
    * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
    * can be used to block on a result, for example:
    *
+   * <pre>
    * @Override
    * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
    *   CompletableFuture<Integer> future = new CompletableFuture<>(
@@ -60,6 +64,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    *   }
    *   return future.get()
    * }
+   * </pre>
    */
   abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
@@ -71,6 +76,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * such as ApacheHttpClient's response handler callbacks. This method is used in tests to verify
    * the context is propagated correctly to such callbacks.
    *
+   * <pre>
    * @Override
    * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
    *   // Hypothetical client accepting a callback
@@ -88,6 +94,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    *     requestResult.complete({ response.statusCode() }, throwable)
    *   }
    * }
+   * </pre>
    *
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
