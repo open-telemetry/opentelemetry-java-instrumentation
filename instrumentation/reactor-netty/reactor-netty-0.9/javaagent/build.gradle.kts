@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-4.1-common:javaagent"))
   library("io.projectreactor.netty:reactor-netty:0.9.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:reactor-netty:reactor-netty-1.0:javaagent"))

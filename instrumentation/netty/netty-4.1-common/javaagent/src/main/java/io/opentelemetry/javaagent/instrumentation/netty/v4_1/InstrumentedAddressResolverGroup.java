@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
-
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.connectionInstrumenter;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.netty.resolver.AddressResolver;
 import io.netty.resolver.AddressResolverGroup;
@@ -27,7 +25,7 @@ public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
     if (delegate instanceof InstrumentedAddressResolverGroup) {
       return delegate;
     }
-    return new InstrumentedAddressResolverGroup<>(connectionInstrumenter(), delegate);
+    return new InstrumentedAddressResolverGroup<>(instrumenter, delegate);
   }
 
   private final NettyConnectionInstrumenter instrumenter;
