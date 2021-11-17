@@ -32,13 +32,14 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
-  public static final String HOST = "localhost"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
 
   private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
+  @Shared
+  String host
   @Shared
   int port
   @Shared
@@ -64,17 +65,16 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   RedisAsyncCommands<String, ?> asyncCommands
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    incorrectPort = PortUtils.findOpenPort()
-    dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
-    dbUriNonExistent = "redis://" + dbAddrNonExistent
-  }
-
   def setup() {
     redisServer.start()
+    host = redisServer.getHost()
     port = redisServer.getMappedPort(6379)
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    dbAddr = host + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
+
+    incorrectPort = PortUtils.findOpenPort()
+    dbAddrNonExistent = host + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
 
     redisClient = RedisClient.create(embeddedDbUri)
     redisClient.setOptions(CLIENT_OPTIONS)
@@ -101,7 +101,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     StatefulConnection connection = testConnectionClient.connect(new Utf8StringCodec(),
-      new RedisURI(HOST, port, 3, TimeUnit.SECONDS))
+      new RedisURI(host, port, 3, TimeUnit.SECONDS))
 
     then:
     connection != null
@@ -111,7 +111,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }
@@ -130,7 +130,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     StatefulConnection connection = testConnectionClient.connect(new Utf8StringCodec(),
-      new RedisURI(HOST, incorrectPort, 3, TimeUnit.SECONDS))
+      new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS))
 
     then:
     connection == null
@@ -143,7 +143,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent RedisConnectionException, String
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_PORT.key}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }

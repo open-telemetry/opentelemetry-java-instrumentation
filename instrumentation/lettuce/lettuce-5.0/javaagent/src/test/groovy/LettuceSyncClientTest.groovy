@@ -19,14 +19,14 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceSyncClientTest extends AgentInstrumentationSpecification {
-  public static final String PEER_NAME = "localhost"
-  public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
+  @Shared
+  String host
   @Shared
   int port
   @Shared
@@ -51,17 +51,17 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   StatefulConnection connection
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    incorrectPort = PortUtils.findOpenPort()
-    dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
-    dbUriNonExistent = "redis://" + dbAddrNonExistent
-  }
-
   def setup() {
     redisServer.start()
+
+    host = redisServer.getHost()
     port = redisServer.getMappedPort(6379)
-    dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
+    dbAddr = host + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
+
+    incorrectPort = PortUtils.findOpenPort()
+    dbAddrNonExistent = host + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
 
     redisClient = RedisClient.create(embeddedDbUri)
 
@@ -95,7 +95,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_NAME.key" host
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
           }
@@ -125,7 +125,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_NAME.key" host
             "$SemanticAttributes.NET_PEER_PORT.key" incorrectPort
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
           }

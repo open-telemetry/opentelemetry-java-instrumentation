@@ -45,6 +45,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
@@ -63,6 +64,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"

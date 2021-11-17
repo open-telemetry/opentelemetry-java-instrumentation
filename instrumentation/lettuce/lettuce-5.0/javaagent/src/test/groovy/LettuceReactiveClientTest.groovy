@@ -21,8 +21,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
-  public static final String PEER_HOST = "localhost"
-  public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
@@ -43,8 +41,10 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
 
   def setup() {
     redisServer.start()
+
+    String host = redisServer.getHost()
     int port = redisServer.getMappedPort(6379)
-    String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
+    String dbAddr = host + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 
     redisClient = RedisClient.create(embeddedDbUri)
