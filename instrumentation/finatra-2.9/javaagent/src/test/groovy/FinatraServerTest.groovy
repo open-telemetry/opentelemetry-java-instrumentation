@@ -5,7 +5,6 @@
 
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
-import com.twitter.util.Closable
 import com.twitter.util.Duration
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -21,12 +20,6 @@ import static org.awaitility.Awaitility.await
 
 class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
-
-  static closeAndWait(Closable closable) {
-    if (closable != null) {
-      Await.ready(closable.close(), TIMEOUT)
-    }
-  }
 
   @Override
   HttpServer startServer(int port) {
