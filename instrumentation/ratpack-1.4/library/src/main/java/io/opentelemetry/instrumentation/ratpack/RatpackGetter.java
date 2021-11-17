@@ -9,9 +9,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import ratpack.http.Request;
 
-final class RatpackGetter implements TextMapGetter<Request> {
-
-  RatpackGetter() {}
+enum RatpackGetter implements TextMapGetter<Request> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(Request request) {

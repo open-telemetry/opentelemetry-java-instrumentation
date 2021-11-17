@@ -9,7 +9,9 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import javax.annotation.Nullable;
 
-final class HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
+enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
+  INSTANCE;
+
   @Override
   public Iterable<String> keys(HttpRequestAndChannel carrier) {
     return carrier.request().headers().names();

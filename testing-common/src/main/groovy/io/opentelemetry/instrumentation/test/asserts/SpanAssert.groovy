@@ -65,6 +65,11 @@ class SpanAssert {
     checked.name = true
   }
 
+  def instrumentationLibraryVersion(String expected) {
+    assert span.instrumentationLibraryInfo.version == expected
+    checked.instrumentationLibraryVersion = true
+  }
+
   def name(Pattern expected) {
     assert span.name =~ expected
     checked.name = true
@@ -133,6 +138,17 @@ class SpanAssert {
 
   def errorEvent(Class<Throwable> expectedClass) {
     errorEvent(expectedClass, null)
+  }
+
+  def errorEventWithAnyMessage(Class<Throwable> expectedClass) {
+    event(0) {
+      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      attributes {
+        "${SemanticAttributes.EXCEPTION_TYPE.key}" expectedClass.canonicalName
+        "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
+        "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it != null }
+      }
+    }
   }
 
   def errorEvent(Class<Throwable> expectedClass, expectedMessage) {

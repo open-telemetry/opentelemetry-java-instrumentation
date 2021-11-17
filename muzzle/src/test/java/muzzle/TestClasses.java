@@ -84,6 +84,10 @@ public class TestClasses {
     public interface AnotherInterface extends SomeInterface {}
   }
 
+  public abstract static class BaseClassWithConstructor {
+    protected BaseClassWithConstructor(long l) {}
+  }
+
   public static class LdcAdvice {
     public static void ldcMethod() {
       MethodBodyAdvice.A.class.getName();
@@ -100,6 +104,7 @@ public class TestClasses {
     public static MethodBodyAdvice.SomeInterface invokeDynamicMethod(
         MethodBodyAdvice.SomeImplementation a) {
       Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
+      Runnable constructorMethod = MethodBodyAdvice.A::new;
       return a::someMethod;
     }
   }

@@ -9,9 +9,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import org.apache.coyote.Request;
 
-public class TomcatRequestGetter implements TextMapGetter<Request> {
-
-  public static final TomcatRequestGetter GETTER = new TomcatRequestGetter();
+enum TomcatRequestGetter implements TextMapGetter<Request> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(Request carrier) {

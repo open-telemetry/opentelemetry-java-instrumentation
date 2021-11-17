@@ -10,9 +10,8 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
 import java.util.stream.Collectors;
 
-public class UndertowExchangeGetter implements TextMapGetter<HttpServerExchange> {
-
-  public static final UndertowExchangeGetter GETTER = new UndertowExchangeGetter();
+enum UndertowExchangeGetter implements TextMapGetter<HttpServerExchange> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(HttpServerExchange carrier) {

@@ -48,7 +48,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20211020.1362390004"
+    String extraTag = "20211108.1435776715"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -72,6 +72,10 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   boolean testRequestWebInfWebXml() {
+    true
+  }
+
+  boolean testRequestOutsideDeployedApp() {
     true
   }
 
@@ -272,6 +276,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "#appServer test request outside deployed application JDK #jdk"(String appServer, String jdk, boolean isWindows) {
+    assumeTrue(testRequestOutsideDeployedApp())
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:

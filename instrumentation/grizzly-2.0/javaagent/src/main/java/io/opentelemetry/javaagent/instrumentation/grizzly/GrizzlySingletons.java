@@ -36,7 +36,7 @@ public final class GrizzlySingletons {
                   context = GrizzlyErrorHolder.init(context);
                   return ServerSpanNaming.init(context, ServerSpanNaming.Source.CONTAINER);
                 })
-            .newServerInstrumenter(new HttpRequestHeadersGetter());
+            .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 
   public static Instrumenter<HttpRequestPacket, HttpResponsePacket> instrumenter() {

@@ -13,7 +13,9 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
-public final class KafkaConsumerRecordGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
+public enum KafkaConsumerRecordGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
+  INSTANCE;
+
   @Override
   public Iterable<String> keys(ConsumerRecord<?, ?> carrier) {
     return StreamSupport.stream(carrier.headers().spliterator(), false)

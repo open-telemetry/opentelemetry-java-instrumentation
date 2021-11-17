@@ -1,34 +1,9 @@
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
-
 plugins {
   id("otel.java-conventions")
-  id("com.google.protobuf") version "0.8.16"
+  id("otel.protobuf-conventions")
 }
 
 val grpcVersion = "1.6.0"
-
-protobuf {
-  protoc {
-    // Download compiler rather than using locally installed version:
-    artifact = "com.google.protobuf:protoc:3.3.0"
-  }
-  plugins {
-    id("grpc") {
-      artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
-    }
-  }
-  generateProtoTasks {
-    all().configureEach {
-      plugins {
-        id("grpc")
-      }
-    }
-  }
-}
 
 dependencies {
   api(project(":testing-common"))

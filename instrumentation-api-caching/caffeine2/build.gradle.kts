@@ -4,6 +4,8 @@ plugins {
   id("otel.java-conventions")
 }
 
+group = "io.opentelemetry.javaagent"
+
 val shadowInclude by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false

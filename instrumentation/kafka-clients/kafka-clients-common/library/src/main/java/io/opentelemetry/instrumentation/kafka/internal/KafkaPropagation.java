@@ -14,7 +14,7 @@ import org.apache.kafka.common.record.RecordBatch;
 
 public final class KafkaPropagation {
 
-  private static final KafkaHeadersSetter SETTER = new KafkaHeadersSetter();
+  private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;
 
   private static final boolean CLIENT_PROPAGATION_ENABLED =
       Config.get().getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true);

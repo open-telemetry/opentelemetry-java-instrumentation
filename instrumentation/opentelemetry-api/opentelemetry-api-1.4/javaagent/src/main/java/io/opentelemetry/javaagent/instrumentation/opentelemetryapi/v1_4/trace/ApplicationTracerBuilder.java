@@ -18,14 +18,14 @@ class ApplicationTracerBuilder implements TracerBuilder {
   }
 
   @Override
-  public TracerBuilder setSchemaUrl(String s) {
-    agentTracerBuilder.setSchemaUrl(s);
+  public TracerBuilder setSchemaUrl(String schemaUrl) {
+    agentTracerBuilder.setSchemaUrl(schemaUrl);
     return this;
   }
 
   @Override
-  public TracerBuilder setInstrumentationVersion(String s) {
-    agentTracerBuilder.setSchemaUrl(s);
+  public TracerBuilder setInstrumentationVersion(String version) {
+    agentTracerBuilder.setInstrumentationVersion(version);
     return this;
   }
 

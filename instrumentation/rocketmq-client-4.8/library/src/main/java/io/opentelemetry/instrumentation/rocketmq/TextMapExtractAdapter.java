@@ -9,9 +9,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
-final class TextMapExtractAdapter implements TextMapGetter<MessageExt> {
-
-  public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
+enum TextMapExtractAdapter implements TextMapGetter<MessageExt> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(MessageExt carrier) {

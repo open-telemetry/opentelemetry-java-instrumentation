@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.eclipse.jetty.client.api.Request;
 
-final class HttpHeaderSetter implements TextMapSetter<Request> {
+enum HttpHeaderSetter implements TextMapSetter<Request> {
+  INSTANCE;
 
   @Override
   public void set(Request request, String key, String value) {

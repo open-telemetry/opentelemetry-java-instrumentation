@@ -11,8 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackSingleto
 
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 

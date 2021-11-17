@@ -74,7 +74,7 @@ public final class SpringWebMvcTracingBuilder {
             .addAttributesExtractor(new SpringWebMvcNetAttributesExtractor())
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(JavaxHttpServletRequestGetter.GETTER);
+            .newServerInstrumenter(JavaxHttpServletRequestGetter.INSTANCE);
 
     return new SpringWebMvcTracing(instrumenter);
   }

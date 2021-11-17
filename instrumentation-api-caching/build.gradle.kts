@@ -4,6 +4,8 @@ plugins {
   id("otel.java-conventions")
 }
 
+group = "io.opentelemetry.javaagent"
+
 sourceSets {
   main {
     val caffeine2ShadedDeps = project(":instrumentation-api-caching:caffeine2")

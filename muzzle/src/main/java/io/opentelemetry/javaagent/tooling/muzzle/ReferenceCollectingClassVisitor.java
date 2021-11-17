@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag;
@@ -435,13 +436,35 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       for (Object arg : bootstrapMethodArguments) {
         if (arg instanceof Handle) {
           Handle handle = (Handle) arg;
-          addReference(
+          ClassRefBuilder classRefBuilder =
               ClassRef.builder(Utils.getClassName(handle.getOwner()))
                   .addSource(refSourceClassName, currentLineNumber)
                   .addFlag(
                       computeMinimumClassAccess(
-                          refSourceType, Type.getObjectType(handle.getOwner())))
-                  .build());
+                          refSourceType, Type.getObjectType(handle.getOwner())));
+
+          if (handle.getTag() == Opcodes.H_INVOKEVIRTUAL
+              || handle.getTag() == Opcodes.H_INVOKESTATIC
+              || handle.getTag() == Opcodes.H_INVOKESPECIAL
+              || handle.getTag() == Opcodes.H_NEWINVOKESPECIAL
+              || handle.getTag() == Opcodes.H_INVOKEINTERFACE) {
+            Type methodType = Type.getMethodType(handle.getDesc());
+            Type ownerType = Type.getObjectType(handle.getOwner());
+            List<Flag> methodFlags = new ArrayList<>();
+            methodFlags.add(
+                handle.getTag() == Opcodes.H_INVOKESTATIC
+                    ? OwnershipFlag.STATIC
+                    : OwnershipFlag.NON_STATIC);
+            methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType));
+
+            classRefBuilder.addMethod(
+                new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                methodFlags.toArray(new Flag[0]),
+                handle.getName(),
+                methodType.getReturnType(),
+                methodType.getArgumentTypes());
+            addReference(classRefBuilder.build());
+          }
         }
       }
       super.visitInvokeDynamicInsn(

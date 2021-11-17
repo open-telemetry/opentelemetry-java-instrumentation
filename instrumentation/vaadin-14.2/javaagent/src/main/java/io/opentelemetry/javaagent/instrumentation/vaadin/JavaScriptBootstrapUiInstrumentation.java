@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.vaadin.flow.component.UI;
@@ -34,7 +34,7 @@ public class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This UI ui) {
-      tracer().updateServerSpanName(ui);
+      helper().updateServerSpanName(ui);
     }
   }
 }

@@ -64,6 +64,6 @@ public final class JettyClientInstrumenterBuilder {
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpClientMetrics.get())
-        .newClientInstrumenter(new HttpHeaderSetter());
+        .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 }

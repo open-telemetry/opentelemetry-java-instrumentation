@@ -22,7 +22,8 @@ public class KafkaBatchProcessSpanLinksExtractor
 
   public KafkaBatchProcessSpanLinksExtractor(ContextPropagators contextPropagators) {
     this.singleRecordLinkExtractor =
-        SpanLinksExtractor.fromUpstreamRequest(contextPropagators, new KafkaConsumerRecordGetter());
+        SpanLinksExtractor.fromUpstreamRequest(
+            contextPropagators, KafkaConsumerRecordGetter.INSTANCE);
   }
 
   @Override

@@ -79,6 +79,6 @@ public class RabbitSingletons {
     return Instrumenter.<DeliveryRequest, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
-        .newConsumerInstrumenter(TextMapExtractAdapter.GETTER);
+        .newConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
   }
 }

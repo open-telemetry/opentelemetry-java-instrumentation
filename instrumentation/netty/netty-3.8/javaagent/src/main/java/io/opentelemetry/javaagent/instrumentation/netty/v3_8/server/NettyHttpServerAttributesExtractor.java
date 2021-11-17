@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil.getScheme;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.util.List;
@@ -84,9 +86,8 @@ final class NettyHttpServerAttributesExtractor
   }
 
   @Override
-  @Nullable
   protected String scheme(HttpRequestAndChannel requestAndChannel) {
-    return null;
+    return getScheme(requestAndChannel);
   }
 
   @Override

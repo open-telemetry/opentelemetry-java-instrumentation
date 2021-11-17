@@ -9,9 +9,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
-public class JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
-
-  public static final JavaxHttpServletRequestGetter GETTER = new JavaxHttpServletRequestGetter();
+public enum JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(HttpServletRequest carrier) {

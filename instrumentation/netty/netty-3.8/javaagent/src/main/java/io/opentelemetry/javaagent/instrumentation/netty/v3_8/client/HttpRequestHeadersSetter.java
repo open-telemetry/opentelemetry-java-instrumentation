@@ -9,7 +9,8 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import javax.annotation.Nullable;
 
-final class HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
+enum HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
+  INSTANCE;
 
   @Override
   public void set(@Nullable HttpRequestAndChannel carrier, String key, String value) {

@@ -20,7 +20,11 @@ jobs:
           - payara
           - tomcat
           - tomee
+          - websphere
           - wildfly
+        exclude:
+          - os: windows-latest
+            smoke-test-server: websphere
       fail-fast: false
     steps:
       - name: Support longpaths

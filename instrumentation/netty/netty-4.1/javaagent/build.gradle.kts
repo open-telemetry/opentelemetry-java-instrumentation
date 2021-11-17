@@ -25,8 +25,10 @@ muzzle {
 
 dependencies {
   library("io.netty:netty-codec-http:4.1.0.Final")
-  api(project(":instrumentation:netty:netty-4.1:library"))
-  implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
+  api(project(":instrumentation:netty:netty-4.1-common:javaagent"))
+
+  testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 
   // Contains logging handler
   testLibrary("io.netty:netty-handler:4.1.0.Final")
@@ -46,10 +48,12 @@ tasks {
   val testConnectionSpan by registering(Test::class) {
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
+      includeTestsMatching("Netty41ClientSslTest")
       isFailOnNoMatchingTests = false
     }
-    include("**/Netty41ConnectionSpanTest.*")
+    include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
@@ -58,6 +62,7 @@ tasks {
     dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
+      excludeTestsMatching("Netty41ClientSslTest")
       isFailOnNoMatchingTests = false
     }
   }

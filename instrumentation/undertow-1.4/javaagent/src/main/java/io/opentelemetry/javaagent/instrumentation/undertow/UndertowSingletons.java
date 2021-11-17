@@ -51,7 +51,7 @@ public final class UndertowSingletons {
                   return AppServerBridge.init(context);
                 })
             .addRequestMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(UndertowExchangeGetter.GETTER);
+            .newServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

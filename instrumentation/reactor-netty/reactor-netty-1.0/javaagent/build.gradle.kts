@@ -17,8 +17,10 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:netty:netty-4.1:library"))
-  implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
+  implementation(project(":instrumentation:netty:netty-4.1-common:javaagent"))
   library("io.projectreactor.netty:reactor-netty-http:1.0.0")
 
   testInstrumentation(project(":instrumentation:reactor-netty:reactor-netty-0.9:javaagent"))

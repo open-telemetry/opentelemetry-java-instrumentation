@@ -94,13 +94,13 @@ class RocketMqInstrumenterFactory {
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
           SpanLinksExtractor.fromUpstreamRequest(
-              openTelemetry.getPropagators(), TextMapExtractAdapter.GETTER);
+              openTelemetry.getPropagators(), TextMapExtractAdapter.INSTANCE);
 
       return builder
           .addSpanLinksExtractor(spanLinksExtractor)
           .newInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      return builder.newConsumerInstrumenter(TextMapExtractAdapter.GETTER);
+      return builder.newConsumerInstrumenter(TextMapExtractAdapter.INSTANCE);
     }
   }
 
