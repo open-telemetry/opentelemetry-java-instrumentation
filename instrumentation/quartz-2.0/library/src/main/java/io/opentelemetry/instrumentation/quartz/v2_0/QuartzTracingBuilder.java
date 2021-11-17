@@ -16,7 +16,7 @@ import org.quartz.JobExecutionContext;
 /** A builder of {@link QuartzTracing}. */
 public final class QuartzTracingBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.quartz-1.7";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.quartz-2.0";
 
   private final OpenTelemetry openTelemetry;
 
