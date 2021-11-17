@@ -95,7 +95,7 @@ final class LogEventMapper {
       case OFF:
         return Severity.UNDEFINED_SEVERITY_NUMBER;
     }
-    throw new IllegalStateException("Unrecognized level " + level.name());
+    return Severity.UNDEFINED_SEVERITY_NUMBER;
   }
 
   private LogEventMapper() {}
