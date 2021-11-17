@@ -41,7 +41,8 @@ public final class ContextStorageCloser {
     // retry close when scope leak was reported.
     await()
         .ignoreException(AssertionError.class)
-        .atMost(Duration.ofSeconds(15))
+        .atMost(Duration.ofSeconds(10))
+        .pollInterval(Duration.ofSeconds(1))
         .until(() -> restorer.runWithRestore(storage));
   }
 
@@ -57,6 +58,15 @@ public final class ContextStorageCloser {
       } catch (Throwable throwable) {
         restore();
         if (throwable instanceof AssertionError) {
+          System.err.println();
+          for (Map.Entry<Thread, StackTraceElement[]> threadEntry :
+              Thread.getAllStackTraces().entrySet()) {
+            System.err.println("Thread " + threadEntry.getKey());
+            for (StackTraceElement stackTraceElement : threadEntry.getValue()) {
+              System.err.println("\t" + stackTraceElement);
+            }
+            System.err.println();
+          }
           throw (AssertionError) throwable;
         }
         throw new IllegalStateException(throwable);
