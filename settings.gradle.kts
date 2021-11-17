@@ -14,8 +14,9 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.6.3"
+  id("com.gradle.enterprise") version "3.7.1"
   id("com.github.burrunan.s3-build-cache") version "1.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.2.1"
 }
 
 dependencyResolutionManagement {
@@ -28,13 +29,13 @@ dependencyResolutionManagement {
 val isCI = System.getenv("CI") != null
 val skipBuildscan = System.getenv("SKIP_BUILDSCAN").toBoolean()
 gradleEnterprise {
+  server = "https://ge.opentelemetry.io"
   buildScan {
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+    publishAlwaysIf(!skipBuildscan)
+    isUploadInBackground = !isCI
 
-    if (isCI && !skipBuildscan) {
-      publishAlways()
-      tag("CI")
+    capture {
+      isTaskInputFiles = isCI
     }
   }
 }
