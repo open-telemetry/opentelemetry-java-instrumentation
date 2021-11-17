@@ -51,6 +51,7 @@ public final class ContextStorageCloser {
   private abstract static class ContextRestorer {
     abstract void restore();
 
+    @SuppressWarnings("SystemOut")
     boolean runWithRestore(AutoCloseable target) {
       try {
         target.close();
