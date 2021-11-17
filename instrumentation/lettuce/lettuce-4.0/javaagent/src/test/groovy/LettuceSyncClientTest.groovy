@@ -11,20 +11,21 @@ import com.lambdaworks.redis.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceSyncClientTest extends AgentInstrumentationSpecification {
-  public static final String HOST = "localhost"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
 
-  private static FixedHostPortGenericContainer redis = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
+  @Shared
+  String host
   @Shared
   int port
   @Shared
@@ -49,20 +50,18 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   StatefulConnection connection
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    port = PortUtils.findOpenPort()
-    incorrectPort = PortUtils.findOpenPort()
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
-    dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
-    dbUriNonExistent = "redis://" + dbAddrNonExistent
-    embeddedDbUri = "redis://" + dbAddr
-
-    redis = redis.withFixedExposedPort(port, 6379)
-  }
-
   def setup() {
     //TODO do not restart server for every test
-    redis.start()
+    redisServer.start()
+
+    host = redisServer.getHost()
+    port = redisServer.getMappedPort(6379)
+    dbAddr = host + ":" + port + "/" + DB_INDEX
+    embeddedDbUri = "redis://" + dbAddr
+
+    incorrectPort = PortUtils.findOpenPort()
+    dbAddrNonExistent = host + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
 
     redisClient = RedisClient.create(embeddedDbUri)
 
@@ -78,7 +77,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
 
   def cleanup() {
     connection.close()
-    redis.stop()
+    redisServer.stop()
   }
 
   def "connect"() {
@@ -96,7 +95,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }
@@ -126,7 +125,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent RedisConnectionException, String
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key}" host
             "${SemanticAttributes.NET_PEER_PORT.key}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }
