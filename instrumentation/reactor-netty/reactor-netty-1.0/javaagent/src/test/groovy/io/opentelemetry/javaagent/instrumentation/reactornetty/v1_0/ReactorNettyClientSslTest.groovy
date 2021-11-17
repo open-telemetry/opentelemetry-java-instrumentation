@@ -54,26 +54,34 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
     Throwable thrownException = thrown()
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 5) {
         span(0) {
           name "parent"
           status ERROR
           errorEvent(thrownException.class, thrownException.message)
         }
         span(1) {
+          name "HTTP GET"
+          kind CLIENT
+          childOf span(0)
+          status ERROR
+          // netty swallows the exception, it doesn't make any sense to hard-code the message
+          errorEventWithAnyMessage(SSLHandshakeException)
+        }
+        span(2) {
           name "RESOLVE"
           kind INTERNAL
-          childOf span(0)
+          childOf span(1)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
           }
         }
-        span(2) {
+        span(3) {
           name "CONNECT"
           kind INTERNAL
-          childOf span(0)
+          childOf span(1)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -81,10 +89,10 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
           }
         }
-        span(3) {
+        span(4) {
           name "SSL handshake"
           kind INTERNAL
-          childOf span(0)
+          childOf span(1)
           status ERROR
           // netty swallows the exception, it doesn't make any sense to hard-code the message
           errorEventWithAnyMessage(SSLHandshakeException)
@@ -121,30 +129,24 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
           name "parent"
         }
         span(1) {
-          name "RESOLVE"
-          kind INTERNAL
+          name "HTTP GET"
+          kind CLIENT
           childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-          }
         }
         span(2) {
-          name "CONNECT"
+          name "RESOLVE"
           kind INTERNAL
-          childOf span(0)
+          childOf span(1)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
           }
         }
         span(3) {
-          name "SSL handshake"
+          name "CONNECT"
           kind INTERNAL
-          childOf span(0)
+          childOf span(1)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -153,14 +155,20 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
           }
         }
         span(4) {
-          name "HTTP GET"
-          kind CLIENT
-          childOf(span(0))
+          name "SSL handshake"
+          kind INTERNAL
+          childOf span(1)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+          }
         }
         span(5) {
           name "test-http-server"
           kind SERVER
-          childOf(span(4))
+          childOf span(1)
         }
       }
     }

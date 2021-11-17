@@ -38,6 +38,9 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpClientInstrumentation(), new TransportConnectorInstrumentation());
+    return asList(
+        new HttpClientInstrumentation(),
+        new ResponseReceiverInstrumentation(),
+        new TransportConnectorInstrumentation());
   }
 }

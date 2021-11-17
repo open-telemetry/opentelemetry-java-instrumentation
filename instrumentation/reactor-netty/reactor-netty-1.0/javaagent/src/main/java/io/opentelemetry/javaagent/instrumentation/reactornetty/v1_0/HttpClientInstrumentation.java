@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -14,13 +13,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.DecoratorFunctions.PropagatedContext;
 import java.util.function.BiConsumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.netty.Connection;
-import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
@@ -32,10 +30,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isStatic().and(namedOneOf("create", "newConnection", "from")),
-        this.getClass().getName() + "$CreateAdvice");
-
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
         isPublic()
@@ -71,35 +65,21 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class CreateAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(HttpClient.class);
-      callDepth.getAndIncrement();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return(readOnly = false) HttpClient client,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-
-      if (callDepth.decrementAndGet() == 0 && throwable == null) {
-        client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class OnRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback,
+        @Advice.Origin("#m") String methodName) {
+
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnMessageDecorator<>(callback);
+        // use client context after request is sent, parent context before that
+        PropagatedContext propagatedContext =
+            "doAfterRequest".equals(methodName)
+                ? PropagatedContext.CLIENT
+                : PropagatedContext.PARENT;
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, propagatedContext);
       }
     }
   }
@@ -111,8 +91,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
             BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
+
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnMessageErrorDecorator<>(callback);
+        callback =
+            new DecoratorFunctions.OnMessageErrorDecorator<>(callback, PropagatedContext.PARENT);
       }
     }
   }
@@ -123,9 +105,15 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback,
+        @Advice.Origin("#m") String methodName) {
+
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnMessageDecorator<>(callback);
+        // use client context just when response status & headers are received, the parent context
+        // after the response is completed
+        PropagatedContext propagatedContext =
+            "doOnResponse".equals(methodName) ? PropagatedContext.CLIENT : PropagatedContext.PARENT;
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, propagatedContext);
       }
     }
   }
@@ -137,8 +125,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
             BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
+
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnMessageErrorDecorator<>(callback);
+        callback =
+            new DecoratorFunctions.OnMessageErrorDecorator<>(callback, PropagatedContext.PARENT);
       }
     }
   }
@@ -152,11 +142,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
         @Advice.Argument(value = 1, readOnly = false)
             BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
+
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
-        requestCallback = new DecoratorFunctions.OnMessageErrorDecorator<>(requestCallback);
+        requestCallback =
+            new DecoratorFunctions.OnMessageErrorDecorator<>(
+                requestCallback, PropagatedContext.PARENT);
       }
       if (DecoratorFunctions.shouldDecorate(responseCallback.getClass())) {
-        responseCallback = new DecoratorFunctions.OnMessageErrorDecorator<>(responseCallback);
+        responseCallback =
+            new DecoratorFunctions.OnMessageErrorDecorator<>(
+                responseCallback, PropagatedContext.PARENT);
       }
     }
   }

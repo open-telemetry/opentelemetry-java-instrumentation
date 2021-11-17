@@ -70,17 +70,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  String expectedClientSpanName(URI uri, String method) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return "CONNECT"
-      default:
-        return super.expectedClientSpanName(uri, method)
-    }
-  }
-
-  @Override
   Throwable clientSpanError(URI uri, Throwable exception) {
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
