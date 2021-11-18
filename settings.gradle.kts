@@ -67,9 +67,9 @@ include(":javaagent")
 
 include(":bom-alpha")
 include(":instrumentation-api")
-include(":instrumentation-api-caching")
-include(":instrumentation-api-caching:caffeine2")
-include(":instrumentation-api-caching:caffeine3")
+//include(":instrumentation-api-caching")
+//include(":instrumentation-api-caching:caffeine2")
+//include(":instrumentation-api-caching:caffeine3")
 include(":javaagent-instrumentation-api")
 include(":instrumentation-api-annotation-support")
 

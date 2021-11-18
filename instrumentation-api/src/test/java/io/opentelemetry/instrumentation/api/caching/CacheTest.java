@@ -11,6 +11,8 @@ import static org.awaitility.Awaitility.await;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import io.opentelemetry.instrumentation.api.cache.WeakLockFreeCache;
+
 class CacheTest {
 
   @Nested

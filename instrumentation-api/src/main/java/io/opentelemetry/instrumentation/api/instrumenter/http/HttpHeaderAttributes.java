@@ -6,15 +6,15 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class HttpHeaderAttributes {
 
-  private static final Cache<String, AttributeKey<List<String>>> requestKeysCache =
-      Cache.builder().setMaximumSize(32).build();
-  private static final Cache<String, AttributeKey<List<String>>> responseKeysCache =
-      Cache.builder().setMaximumSize(32).build();
+  private static final ConcurrentHashMap<String, AttributeKey<List<String>>> requestKeysCache =
+      new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, AttributeKey<List<String>>> responseKeysCache =
+      new ConcurrentHashMap<>();
 
   static AttributeKey<List<String>> requestAttributeKey(String headerName) {
     return requestKeysCache.computeIfAbsent(headerName, n -> createKey("request", n));

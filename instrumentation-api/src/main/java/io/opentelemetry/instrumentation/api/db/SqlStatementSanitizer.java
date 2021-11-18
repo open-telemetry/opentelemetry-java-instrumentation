@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.db;
 import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
+import java.util.concurrent.ConcurrentHashMap;
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import javax.annotation.Nullable;
 
@@ -20,8 +20,9 @@ import javax.annotation.Nullable;
 public final class SqlStatementSanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
-  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.builder().setMaximumSize(1000).build();
+  //TODO use CHLM
+  private static final ConcurrentHashMap<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
+      new ConcurrentHashMap<>();
 
   public static SqlStatementInfo sanitize(@Nullable String statement) {
     return sanitize(statement, SqlDialect.DEFAULT);

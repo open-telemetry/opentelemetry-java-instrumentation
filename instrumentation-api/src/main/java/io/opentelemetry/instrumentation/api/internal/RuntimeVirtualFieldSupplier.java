@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,7 +55,7 @@ public final class RuntimeVirtualFieldSupplier {
   }
 
   private static final class CacheBasedVirtualField<T, F> extends VirtualField<T, F> {
-    private final Cache<T, F> cache = Cache.builder().setWeakKeys().build();
+    private final Cache<T, F> cache = Cache.builder().build();
 
     @Override
     @Nullable

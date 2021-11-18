@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.caching;
+package io.opentelemetry.instrumentation.api.cache;
 
 import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import java.util.function.Function;

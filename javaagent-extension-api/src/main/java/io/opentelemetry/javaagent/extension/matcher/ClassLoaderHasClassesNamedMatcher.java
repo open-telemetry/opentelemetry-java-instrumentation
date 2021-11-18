@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.extension.matcher;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.api.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
+  //TODO .setMaximumSize(25)
   private final Cache<ClassLoader, Boolean> cache =
-      Cache.builder().setWeakKeys().setMaximumSize(25).build();
+      Cache.builder().build();
 
   private final String[] resources;
 

@@ -12,8 +12,8 @@ dependencies {
 
   // this only exists to make Intellij happy since it doesn't (currently at least) understand our
   // inclusion of this artifact inside of :instrumentation-api
-  compileOnly(project(":instrumentation-api-caching"))
-  testCompileOnly(project(":instrumentation-api-caching"))
+//  compileOnly(project(":instrumentation-api-caching"))
+//  testCompileOnly(project(":instrumentation-api-caching"))
 
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")

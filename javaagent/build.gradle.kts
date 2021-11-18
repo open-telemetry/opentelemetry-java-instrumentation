@@ -60,7 +60,7 @@ val caffeine3Version: String by project
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
-  bootstrapLibs(project(":instrumentation-api-caching:caffeine3", configuration = "shadow"))
+//  bootstrapLibs(project(":instrumentation-api-caching:caffeine3", configuration = "shadow"))
   bootstrapLibs(project(":javaagent-bootstrap"))
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")

@@ -11,7 +11,7 @@ import io.netty.util.concurrent.GenericProgressiveFutureListener;
 import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 
 public final class FutureListenerWrappers {
   // Instead of VirtualField use Cache with weak keys and weak values to store link between original
@@ -22,9 +22,10 @@ public final class FutureListenerWrappers {
   // Also note that it's ok if the value is collected prior to the key, since this cache is only
   // used to remove the wrapped listener from the netty future, and if the value is collected prior
   // to the key, that means it's no longer used (referenced) by the netty future anyways.
+  //TODO .setWeakValues()
   private static final Cache<
           GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
-      wrappers = Cache.builder().setWeakKeys().setWeakValues().build();
+      wrappers = Cache.builder().build();
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {

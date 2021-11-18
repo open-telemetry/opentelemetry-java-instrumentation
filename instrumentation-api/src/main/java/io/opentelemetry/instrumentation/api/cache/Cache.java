@@ -3,13 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.caching;
+package io.opentelemetry.instrumentation.api.cache;
 
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/** A cache from keys to values. */
-interface Cache<K, V> {
+/** A cache from keys to values.
+ *
+ * Keys are always referenced weakly and are compared using identity comparison, not
+ * {@link Object#equals(Object)}.
+ */
+public interface Cache<K, V> {
 
   /** Returns a new {@link CacheBuilder} to configure a {@link Cache}. */
   static CacheBuilder builder() {

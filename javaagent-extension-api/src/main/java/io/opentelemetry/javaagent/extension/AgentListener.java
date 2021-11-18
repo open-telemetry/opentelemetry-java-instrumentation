@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.extension;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.lang.instrument.Instrumentation;

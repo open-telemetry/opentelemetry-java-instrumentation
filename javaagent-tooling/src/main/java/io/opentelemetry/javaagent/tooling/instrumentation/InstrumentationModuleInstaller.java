@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -125,7 +125,7 @@ public final class InstrumentationModuleInstaller {
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final Cache<ClassLoader, Boolean> matchCache = Cache.builder().setWeakKeys().build();
+    private final Cache<ClassLoader, Boolean> matchCache = Cache.builder().build();
     private volatile ReferenceMatcher referenceMatcher;
 
     private MuzzleMatcher(InstrumentationModule instrumentationModule) {
