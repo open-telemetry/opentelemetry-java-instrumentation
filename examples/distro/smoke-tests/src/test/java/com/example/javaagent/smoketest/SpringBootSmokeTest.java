@@ -22,7 +22,7 @@ class SpringBootSmokeTest extends SmokeTest {
 
   @Test
   public void springBootSmokeTestOnJDK() throws IOException, InterruptedException {
-    startTarget(11);
+    startTarget(8);
     String url = String.format("http://localhost:%d/greeting", target.getMappedPort(8080));
     Request request = new Request.Builder().url(url).get().build();
 

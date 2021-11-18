@@ -80,7 +80,7 @@ abstract class IntegrationTest {
 
   private GenericContainer<?> buildTargetContainer(String agentPath, String extensionLocation) {
     GenericContainer<?> result =
-        new GenericContainer<>(getTargetImage(11))
+        new GenericContainer<>(getTargetImage(8))
             .withExposedPorts(8080)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))

@@ -1,6 +1,7 @@
 package com.example.javaagent;
 
 import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,9 +14,10 @@ public class DemoPropertySource implements ConfigPropertySource {
 
   @Override
   public Map<String, String> getProperties() {
-    return Map.of(
-        "otel.exporter.otlp.endpoint", "http://backend:8080",
-        "otel.exporter.otlp.insecure", "true",
-        "otel.config.max.attrs", "16");
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.exporter.otlp.endpoint", "http://backend:8080");
+    properties.put("otel.exporter.otlp.insecure", "true");
+    properties.put("otel.config.max.attrs", "16");
+    return properties;
   }
 }
