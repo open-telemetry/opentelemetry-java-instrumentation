@@ -14,6 +14,9 @@ import io.opentelemetry.instrumentation.api.field.VirtualField;
 
 public final class FinatraResponseListener implements FutureEventListener<Response> {
 
+  private static final VirtualField<Response, Throwable> responseThrowableField =
+      VirtualField.find(Response.class, Throwable.class);
+
   private final Context context;
   private final Class<?> request;
 
@@ -24,9 +27,7 @@ public final class FinatraResponseListener implements FutureEventListener<Respon
 
   @Override
   public void onSuccess(Response response) {
-    VirtualField<Response, Throwable> virtualField =
-        VirtualField.find(Response.class, Throwable.class);
-    Throwable throwable = virtualField.get(response);
+    Throwable throwable = responseThrowableField.get(response);
     instrumenter().end(context, request, null, throwable);
   }
 
