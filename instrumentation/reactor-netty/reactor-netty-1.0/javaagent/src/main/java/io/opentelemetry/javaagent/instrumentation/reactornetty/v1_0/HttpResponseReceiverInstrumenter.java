@@ -29,7 +29,8 @@ public final class HttpResponseReceiverInstrumenter {
 
   // this method adds several stateful listeners that execute the instrumenter lifecycle during HTTP
   // request processing
-  // it should be used just before one of the response*() methods is called - after this point the HTTP
+  // it should be used just before one of the response*() methods is called - after this point the
+  // HTTP
   // request is no longer modifiable by the user
   @Nullable
   public static HttpClient.ResponseReceiver<?> instrument(HttpClient.ResponseReceiver<?> receiver) {

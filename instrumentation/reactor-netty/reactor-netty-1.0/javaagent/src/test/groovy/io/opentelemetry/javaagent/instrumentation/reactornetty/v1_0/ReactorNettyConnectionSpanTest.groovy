@@ -17,6 +17,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implements AgentTestTrait {
@@ -34,11 +35,14 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
   }
 
   def "test successful request"() {
-    when:
+    given:
     def httpClient = HttpClient.create()
+    def uri = "http://localhost:${server.httpPort()}/success"
+
+    when:
     def responseCode =
       runWithSpan("parent") {
-        httpClient.get().uri("http://localhost:${server.httpPort()}/success")
+        httpClient.get().uri(uri)
           .responseSingle { resp, content ->
             // Make sure to consume content since that's when we close the span.
             content.map { resp }
@@ -60,6 +64,15 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           name "HTTP GET"
           kind CLIENT
           childOf span(0)
+          attributes {
+            "${SemanticAttributes.HTTP_METHOD}" "GET"
+            "${SemanticAttributes.HTTP_URL}" uri
+            "${SemanticAttributes.HTTP_FLAVOR}" HTTP_1_1
+            "${SemanticAttributes.HTTP_STATUS_CODE}" 200
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+          }
         }
         span(2) {
           name "RESOLVE"
@@ -92,10 +105,13 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
   }
 
   def "test failing request"() {
-    when:
+    given:
     def httpClient = HttpClient.create()
+    def uri = "http://localhost:${PortUtils.UNUSABLE_PORT}"
+
+    when:
     runWithSpan("parent") {
-      httpClient.get().uri("http://localhost:${PortUtils.UNUSABLE_PORT}")
+      httpClient.get().uri(uri)
         .responseSingle { resp, content ->
           // Make sure to consume content since that's when we close the span.
           content.map { resp }
@@ -124,6 +140,10 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           childOf span(0)
           status ERROR
           errorEvent(connectException.class, connectException.message)
+          attributes {
+            "${SemanticAttributes.HTTP_METHOD}" "GET"
+            "${SemanticAttributes.HTTP_URL}" uri
+          }
         }
         span(2) {
           name "RESOLVE"
@@ -145,7 +165,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" PortUtils.UNUSABLE_PORT
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
       }

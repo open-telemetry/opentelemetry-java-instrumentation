@@ -19,6 +19,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
@@ -38,9 +39,10 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
   def "should fail SSL handshake"() {
     given:
     def httpClient = createHttpClient(["SSLv3"])
+    def uri = "https://localhost:${server.httpsPort()}/success"
 
     when:
-    def responseMono = httpClient.get().uri("https://localhost:${server.httpsPort()}/success")
+    def responseMono = httpClient.get().uri(uri)
       .responseSingle { resp, content ->
         // Make sure to consume content since that's when we close the span.
         content.map { resp }
@@ -67,6 +69,10 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
           status ERROR
           // netty swallows the exception, it doesn't make any sense to hard-code the message
           errorEventWithAnyMessage(SSLHandshakeException)
+          attributes {
+            "${SemanticAttributes.HTTP_METHOD}" "GET"
+            "${SemanticAttributes.HTTP_URL}" uri
+          }
         }
         span(2) {
           name "RESOLVE"
@@ -86,7 +92,7 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
         span(4) {
@@ -100,7 +106,7 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
       }
@@ -110,9 +116,10 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
   def "should successfully establish SSL handshake"() {
     given:
     def httpClient = createHttpClient()
+    def uri = "https://localhost:${server.httpsPort()}/success"
 
     when:
-    def responseMono = httpClient.get().uri("https://localhost:${server.httpsPort()}/success")
+    def responseMono = httpClient.get().uri(uri)
       .responseSingle { resp, content ->
         // Make sure to consume content since that's when we close the span.
         content.map { resp }
@@ -132,6 +139,15 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
           name "HTTP GET"
           kind CLIENT
           childOf span(0)
+          attributes {
+            "${SemanticAttributes.HTTP_METHOD}" "GET"
+            "${SemanticAttributes.HTTP_URL}" uri
+            "${SemanticAttributes.HTTP_FLAVOR}" HTTP_1_1
+            "${SemanticAttributes.HTTP_STATUS_CODE}" 200
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+          }
         }
         span(2) {
           name "RESOLVE"
@@ -151,7 +167,7 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
         span(4) {
@@ -162,7 +178,7 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.httpsPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
           }
         }
         span(5) {

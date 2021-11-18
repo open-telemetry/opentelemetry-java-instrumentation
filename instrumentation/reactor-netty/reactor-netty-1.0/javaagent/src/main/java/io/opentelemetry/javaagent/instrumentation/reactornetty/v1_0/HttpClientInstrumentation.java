@@ -33,10 +33,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
         isPublic()
-            .and(namedOneOf("doOnRequest", "doAfterRequest"))
+            .and(named("doOnRequest"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
         this.getClass().getName() + "$OnRequestAdvice");
+    transformer.applyAdviceToMethod(
+        isPublic()
+            .and(named("doAfterRequest"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, BiConsumer.class)),
+        this.getClass().getName() + "$AfterRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnRequestError"))
@@ -45,10 +51,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
-            .and(namedOneOf("doOnResponse", "doAfterResponseSuccess", "doOnRedirect"))
+            .and(named("doOnResponse"))
             .and(takesArguments(1))
             .and(takesArgument(0, BiConsumer.class)),
         this.getClass().getName() + "$OnResponseAdvice");
+    transformer.applyAdviceToMethod(
+        isPublic()
+            .and(namedOneOf("doAfterResponseSuccess", "doOnRedirect"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, BiConsumer.class)),
+        this.getClass().getName() + "$AfterResponseAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("doOnResponseError"))
@@ -70,16 +82,25 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientRequest, ? super Connection> callback,
-        @Advice.Origin("#m") String methodName) {
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        // use client context after request is sent, parent context before that
-        PropagatedContext propagatedContext =
-            "doAfterRequest".equals(methodName)
-                ? PropagatedContext.CLIENT
-                : PropagatedContext.PARENT;
-        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, propagatedContext);
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AfterRequestAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false)
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+
+      if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
+        // use client context after request is sent
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.CLIENT);
       }
     }
   }
@@ -105,15 +126,25 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Connection> callback,
-        @Advice.Origin("#m") String methodName) {
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        // use client context just when response status & headers are received, the parent context
-        // after the response is completed
-        PropagatedContext propagatedContext =
-            "doOnResponse".equals(methodName) ? PropagatedContext.CLIENT : PropagatedContext.PARENT;
-        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, propagatedContext);
+        // use client context just when response status & headers are received
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.CLIENT);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AfterResponseAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false)
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
+
+      if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
       }
     }
   }
