@@ -91,12 +91,14 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Enter HttpClient.ResponseReceiver<?> modifiedReceiver,
         @Advice.Return(readOnly = false) Mono<HttpClientResponse> returnValue) {
 
-      if (modifiedReceiver != null) {
-        returnValue = modifiedReceiver.response();
+      try {
+        if (modifiedReceiver != null) {
+          returnValue = modifiedReceiver.response();
+        }
+      } finally {
+        // needs to be called after original method to prevent StackOverflowError
+        callDepth.decrementAndGet();
       }
-
-      // needs to be called after original method to prevent StackOverflowError
-      callDepth.decrementAndGet();
     }
   }
 
@@ -125,12 +127,14 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) BiFunction receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
-      if (modifiedReceiver != null) {
-        returnValue = modifiedReceiver.response(receiveFunction);
+      try {
+        if (modifiedReceiver != null) {
+          returnValue = modifiedReceiver.response(receiveFunction);
+        }
+      } finally {
+        // needs to be called after original method to prevent StackOverflowError
+        callDepth.decrementAndGet();
       }
-
-      // needs to be called after original method to prevent StackOverflowError
-      callDepth.decrementAndGet();
     }
   }
 
@@ -159,12 +163,14 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) BiFunction receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
-      if (modifiedReceiver != null) {
-        returnValue = modifiedReceiver.responseConnection(receiveFunction);
+      try {
+        if (modifiedReceiver != null) {
+          returnValue = modifiedReceiver.responseConnection(receiveFunction);
+        }
+      } finally {
+        // needs to be called after original method to prevent StackOverflowError
+        callDepth.decrementAndGet();
       }
-
-      // needs to be called after original method to prevent StackOverflowError
-      callDepth.decrementAndGet();
     }
   }
 
@@ -192,12 +198,14 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Enter HttpClient.ResponseReceiver<?> modifiedReceiver,
         @Advice.Return(readOnly = false) ByteBufFlux returnValue) {
 
-      if (modifiedReceiver != null) {
-        returnValue = modifiedReceiver.responseContent();
+      try {
+        if (modifiedReceiver != null) {
+          returnValue = modifiedReceiver.responseContent();
+        }
+      } finally {
+        // needs to be called after original method to prevent StackOverflowError
+        callDepth.decrementAndGet();
       }
-
-      // needs to be called after original method to prevent StackOverflowError
-      callDepth.decrementAndGet();
     }
   }
 
@@ -226,12 +234,14 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) BiFunction receiveFunction,
         @Advice.Return(readOnly = false) Mono<?> returnValue) {
 
-      if (modifiedReceiver != null) {
-        returnValue = modifiedReceiver.responseSingle(receiveFunction);
+      try {
+        if (modifiedReceiver != null) {
+          returnValue = modifiedReceiver.responseSingle(receiveFunction);
+        }
+      } finally {
+        // needs to be called after original method to prevent StackOverflowError
+        callDepth.decrementAndGet();
       }
-
-      // needs to be called after original method to prevent StackOverflowError
-      callDepth.decrementAndGet();
     }
   }
 }
