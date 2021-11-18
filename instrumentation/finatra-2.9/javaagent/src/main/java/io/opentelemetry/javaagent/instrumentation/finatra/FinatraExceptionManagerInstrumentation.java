@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.twitter.finagle.http.Response;
@@ -26,7 +27,10 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("toResponse")).and(takesArgument(1, Throwable.class)),
+        isMethod()
+            .and(named("toResponse"))
+            .and(takesArgument(1, Throwable.class))
+            .and(returns(named("com.twitter.finagle.http.Response"))),
         this.getClass().getName() + "$HandleExceptionAdvice");
   }
 
