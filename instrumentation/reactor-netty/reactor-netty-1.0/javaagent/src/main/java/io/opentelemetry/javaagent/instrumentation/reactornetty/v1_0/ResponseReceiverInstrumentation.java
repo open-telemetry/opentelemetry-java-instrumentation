@@ -75,7 +75,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.This HttpClient.ResponseReceiver<?> receiver) {
 
-      callDepth = CallDepth.forClass(ClassLoader.class);
+      callDepth = CallDepth.forClass(HttpClient.ResponseReceiver.class);
       if (callDepth.getAndIncrement() > 0) {
         // execute the original method on nested calls
         return null;
@@ -110,7 +110,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.This HttpClient.ResponseReceiver<?> receiver) {
 
-      callDepth = CallDepth.forClass(ClassLoader.class);
+      callDepth = CallDepth.forClass(HttpClient.ResponseReceiver.class);
       if (callDepth.getAndIncrement() > 0) {
         // execute the original method on nested calls
         return null;
@@ -146,7 +146,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.This HttpClient.ResponseReceiver<?> receiver) {
 
-      callDepth = CallDepth.forClass(ClassLoader.class);
+      callDepth = CallDepth.forClass(HttpClient.ResponseReceiver.class);
       if (callDepth.getAndIncrement() > 0) {
         // execute the original method on nested calls
         return null;
@@ -182,7 +182,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.This HttpClient.ResponseReceiver<?> receiver) {
 
-      callDepth = CallDepth.forClass(ClassLoader.class);
+      callDepth = CallDepth.forClass(HttpClient.ResponseReceiver.class);
       if (callDepth.getAndIncrement() > 0) {
         // execute the original method on nested calls
         return null;
@@ -217,7 +217,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.This HttpClient.ResponseReceiver<?> receiver) {
 
-      callDepth = CallDepth.forClass(ClassLoader.class);
+      callDepth = CallDepth.forClass(HttpClient.ResponseReceiver.class);
       if (callDepth.getAndIncrement() > 0) {
         // execute the original method on nested calls
         return null;
