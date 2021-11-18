@@ -29,7 +29,7 @@ public final class HttpResponseReceiverInstrumenter {
 
   // this method adds several stateful listeners that execute the instrumenter lifecycle during HTTP
   // request processing
-  // it should be used just before one of the response*() methods is called - at this point the HTTP
+  // it should be used just before one of the response*() methods is called - after this point the HTTP
   // request is no longer modifiable by the user
   @Nullable
   public static HttpClient.ResponseReceiver<?> instrument(HttpClient.ResponseReceiver<?> receiver) {
@@ -80,6 +80,8 @@ public final class HttpResponseReceiverInstrumenter {
             Context parentContext = Context.current();
             contextHolder.parentContext = parentContext;
             if (!instrumenter().shouldStart(parentContext, config)) {
+              // make context accessible via the reactor ContextView - the doOn* callbacks
+              // instrumentation uses this to set the proper context for callbacks
               return mono.contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext));
             }
 
@@ -87,7 +89,7 @@ public final class HttpResponseReceiverInstrumenter {
             contextHolder.context = context;
             return ContextPropagationOperator.runWithContext(mono, context)
                 // make contexts accessible via the reactor ContextView - the doOn* callbacks
-                // instrumentation uses these to set the proper context
+                // instrumentation uses the parent context to set the proper context for callbacks
                 .contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext))
                 .contextWrite(ctx -> ctx.put(CLIENT_CONTEXT_KEY, context));
           });
