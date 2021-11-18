@@ -35,6 +35,6 @@ class OpenTelemetryLog4jTest {
 
     assertThatCode(() -> OpenTelemetryLog4j.initialize(SdkLogEmitterProvider.builder().build()))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("SdkLogEmitterProvider has already been set.");
+        .hasMessageContaining("OpenTelemetryLog4j.initialize has already been called.");
   }
 }

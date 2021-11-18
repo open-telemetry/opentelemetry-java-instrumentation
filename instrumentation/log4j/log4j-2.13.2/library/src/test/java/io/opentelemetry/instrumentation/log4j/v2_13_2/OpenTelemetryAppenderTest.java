@@ -32,7 +32,7 @@ class OpenTelemetryAppenderTest {
 
   @BeforeEach
   void setup() {
-    appender = OpenTelemetryAppender.newBuilder().setName("my-otel-appender").build();
+    appender = OpenTelemetryAppender.builder().setName("my-otel-appender").build();
 
     logEvent = mock(LogEvent.class);
     when(logEvent.getContextStack()).thenReturn(mock(ThreadContext.ContextStack.class));

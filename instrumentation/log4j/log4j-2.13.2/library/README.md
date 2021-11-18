@@ -29,7 +29,7 @@ dependencies {
 ## OpenTelemetry Context Data Provider
 
 `OpenTelemetryContextDataProvider` implements the Log4j2 `ContextDataProvider` SPI, and injects the
-trace ID and span ID from a mounted span into
+trace ID and span ID from an active span into
 Log4j's [context data](https://logging.apache.org/log4j/2.x/manual/thread-context.html).
 
 **Note**: Depending on your application, you may run into
@@ -98,6 +98,9 @@ SdkLogEmitterProvider logEmitterProvider =
     .build();
 OpenTelemetryLog4j.initialize(logEmitterProvider);
 ```
+
+**Note:** In order to initialize the `OpenTelemetryAppender` your application must depend on the
+OpenTelemetry log sdk (`io.opentelemetry:opentelemetry-sdk-logs`).
 
 In this example Log4j2 logs will be sent to both the console appender and
 the `OpenTelemetryAppender`, which will drop the logs until `OpenTelemetryLog4j.initialize(..)` is

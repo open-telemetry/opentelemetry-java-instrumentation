@@ -28,7 +28,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   @PluginBuilderFactory
-  public static <B extends Builder<B>> B newBuilder() {
+  public static <B extends Builder<B>> B builder() {
     return new Builder<B>().asBuilder();
   }
 
