@@ -122,7 +122,7 @@ These are the supported application servers:
 | [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12.x                        | Oracle JDK 8     | Oracle Linux 7, 8              |
 | [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14.x                        | Oracle JDK 8, 11 | Oracle Linux 7, 8              |
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.x, 21.x                  | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
-| [Websphere Traditional](https://www.ibm.com/cloud/websphere-application-server)           | 8.5.x, 9.0.x                | IBM JDK 8        | Red Hat Enterprise Linux 8.4   |
+| [Websphere Traditional](https://www.ibm.com/cloud/websphere-application-server)           | 8.5.5.x, 9.0.x              | IBM JDK 8        | Red Hat Enterprise Linux 8.4   |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 
