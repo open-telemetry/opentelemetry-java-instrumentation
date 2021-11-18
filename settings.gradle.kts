@@ -16,7 +16,7 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise") version "3.7.1"
   id("com.github.burrunan.s3-build-cache") version "1.2"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.2.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.5"
 }
 
 dependencyResolutionManagement {
@@ -26,12 +26,16 @@ dependencyResolutionManagement {
   }
 }
 
+val gradleEnterpriseServer = "https://ge.opentelemetry.io"
 val isCI = System.getenv("CI") != null
 val publishBuildscan = System.getenv("PUBLISH_BUILDSCAN").toBoolean()
 gradleEnterprise {
-  server = "https://ge.opentelemetry.io"
+  server = gradleEnterpriseServer
   buildScan {
-    publishAlwaysIf(isCI || publishBuildscan)
+    publishAlways()
+    this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
+    publishIfAuthenticated()
+
     isUploadInBackground = !isCI
 
     capture {
@@ -46,7 +50,7 @@ buildCache {
   remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
     region = "us-west-2"
     bucket = "opentelemetry-java-instrumentation-gradle-cache"
-    isPush = isCI && !awsAccessKey.isEmpty()
+    isPush = isCI && awsAccessKey.isNotEmpty()
   }
 }
 
