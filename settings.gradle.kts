@@ -27,15 +27,15 @@ dependencyResolutionManagement {
 }
 
 val isCI = System.getenv("CI") != null
-val skipBuildscan = System.getenv("SKIP_BUILDSCAN").toBoolean()
+val publishBuildscan = System.getenv("PUBLISH_BUILDSCAN").toBoolean()
 gradleEnterprise {
   server = "https://ge.opentelemetry.io"
   buildScan {
-    publishAlwaysIf(!skipBuildscan)
+    publishAlwaysIf(isCI || publishBuildscan)
     isUploadInBackground = !isCI
 
     capture {
-      isTaskInputFiles = isCI
+      isTaskInputFiles = true
     }
   }
 }
