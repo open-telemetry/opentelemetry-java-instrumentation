@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.ratpack;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import ratpack.exec.ExecInterceptor;
-import ratpack.handling.Handler;
 import ratpack.handling.HandlerDecorator;
 import ratpack.http.Request;
 import ratpack.http.Response;
@@ -48,7 +47,7 @@ public final class RatpackTracing {
     serverHandler = new OpenTelemetryServerHandler(serverInstrumenter);
   }
 
-  public Handler getOpenTelemetryServerHandler() {
+  public OpenTelemetryServerHandler getOpenTelemetryServerHandler() {
     return serverHandler;
   }
 

@@ -10,6 +10,7 @@ import com.google.inject.Provides
 import groovy.transform.CompileStatic
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.ratpack.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.RatpackFunctionalTest
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -20,7 +21,6 @@ import io.opentelemetry.sdk.trace.export.SpanExporter
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.exec.ExecInterceptor
 import ratpack.guice.Guice
-import ratpack.handling.Handler
 import ratpack.server.RatpackServer
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -73,7 +73,7 @@ class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  Handler ratpackServerHandler(RatpackTracing ratpackTracing) {
+  OpenTelemetryServerHandler ratpackServerHandler(RatpackTracing ratpackTracing) {
     return ratpackTracing.getOpenTelemetryServerHandler()
   }
 
@@ -95,6 +95,7 @@ class OpenTelemetryModule extends AbstractModule {
 
 @CompileStatic
 class RatpackApp {
+
   static void main(String... args) {
     RatpackServer.start { server ->
       server
@@ -107,9 +108,7 @@ class RatpackApp {
         .handlers { chain ->
           chain
             .get("ignore") { ctx -> ctx.render("ignored") }
-            .all {
-              it.insert(it.get(RatpackTracing).getOpenTelemetryServerHandler())
-            }
+            .all(OpenTelemetryServerHandler)
             .get("foo") { ctx -> ctx.render("hi-foo") }
         }
     }

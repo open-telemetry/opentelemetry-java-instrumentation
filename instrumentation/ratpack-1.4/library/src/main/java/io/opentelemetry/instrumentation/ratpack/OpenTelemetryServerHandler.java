@@ -15,7 +15,7 @@ import ratpack.handling.Handler;
 import ratpack.http.Request;
 import ratpack.http.Response;
 
-final class OpenTelemetryServerHandler implements Handler {
+public final class OpenTelemetryServerHandler implements Handler {
 
   private final Instrumenter<Request, Response> instrumenter;
 
