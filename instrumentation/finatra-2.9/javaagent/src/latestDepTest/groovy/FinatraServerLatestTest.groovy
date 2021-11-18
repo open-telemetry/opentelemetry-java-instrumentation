@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+
 import com.twitter.app.lifecycle.Event
 import com.twitter.app.lifecycle.Observer
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
 import com.twitter.util.Duration
 import com.twitter.util.Promise
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -81,8 +84,10 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements Agen
       name "FinatraController"
       kind INTERNAL
       childOf(parent as SpanData)
-      // Finatra doesn't propagate the stack trace or exception to the instrumentation
-      // so the normal errorAttributes() method can't be used
+      if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
       }
     }
