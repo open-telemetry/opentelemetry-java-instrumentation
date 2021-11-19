@@ -215,14 +215,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
         .build()
     }
 
-    @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
-    void listener(List<ConsumerRecord<String, String>> records) {
-      runInternalSpan("consumer")
-      records.forEach({ record ->
-        if (record.value() == "error") {
-          throw new IllegalArgumentException("boom")
-        }
-      })
+    @Bean
+    Listener listener() {
+      return new Listener()
     }
 
     @Bean
@@ -239,6 +234,19 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
         container.setInterceptBeforeTx(true)
       })
       factory
+    }
+  }
+
+  static class Listener {
+
+    @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
+    void listener(List<ConsumerRecord<String, String>> records) {
+      runInternalSpan("consumer")
+      records.forEach({ record ->
+        if (record.value() == "error") {
+          throw new IllegalArgumentException("boom")
+        }
+      })
     }
   }
 }
