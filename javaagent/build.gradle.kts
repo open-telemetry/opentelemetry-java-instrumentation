@@ -83,7 +83,6 @@ dependencies {
 
   exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp")
   exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
-  exporterSlimLibs("io.grpc:grpc-okhttp:1.41.0")
 
   // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
   licenseReportDependencies("com.github.ben-manes.caffeine:caffeine:$caffeine3Version") {
