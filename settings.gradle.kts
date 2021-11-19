@@ -28,7 +28,6 @@ dependencyResolutionManagement {
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"
 val isCI = System.getenv("CI") != null
-val publishBuildscan = System.getenv("PUBLISH_BUILDSCAN").toBoolean()
 gradleEnterprise {
   server = gradleEnterpriseServer
   buildScan {
@@ -44,13 +43,16 @@ gradleEnterprise {
   }
 }
 
-val awsAccessKey = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID") ?: ""
-
+val geCacheUsername = System.getenv("GE_CACHE_USERNAME") ?: ""
+val geCachePassword = System.getenv("GE_CACHE_PASSWORD") ?: ""
 buildCache {
-  remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
-    region = "us-west-2"
-    bucket = "opentelemetry-java-instrumentation-gradle-cache"
-    isPush = isCI && awsAccessKey.isNotEmpty()
+  remote<HttpBuildCache> {
+    url = uri("$gradleEnterpriseServer/cache/")
+    isPush = isCI && geCacheUsername.isNotEmpty()
+    credentials {
+      username = geCacheUsername
+      password = geCachePassword
+    }
   }
 }
 
