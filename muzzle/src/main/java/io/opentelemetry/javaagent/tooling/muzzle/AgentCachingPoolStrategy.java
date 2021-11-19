@@ -211,6 +211,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     @Override
     public TypePool.Resolution find(String className) {
+      //TODO this will not work with WeakLockFreeCache, as it uses instance comparison, not equals
       TypePool.Resolution existingResolution =
           sharedResolutionCache.get(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) {

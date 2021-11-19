@@ -52,10 +52,6 @@ dependencies {
   testImplementation("io.grpc:grpc-api:1.30.2")
   testImplementation("io.grpc:grpc-netty-shaded:1.30.2")
   testImplementation(project(":instrumentation-api-annotation-support"))
-
-  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-  // inclusion of this artifact inside of :instrumentation-api
-//  compileOnly(project(":instrumentation-api-caching"))
 }
 
 tasks.compileTestJava {

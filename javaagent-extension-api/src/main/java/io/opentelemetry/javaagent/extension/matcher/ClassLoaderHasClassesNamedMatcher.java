@@ -12,9 +12,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-  //TODO .setMaximumSize(25)
-  private final Cache<ClassLoader, Boolean> cache =
-      Cache.builder().build();
+  private final Cache<ClassLoader, Boolean> cache = Cache.builder().build();
 
   private final String[] resources;
 

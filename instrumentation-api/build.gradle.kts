@@ -30,7 +30,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-//  testCompileOnly(project(":instrumentation-api-caching"))
   testImplementation(project(":testing-common"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
