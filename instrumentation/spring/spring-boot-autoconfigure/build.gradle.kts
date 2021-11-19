@@ -29,7 +29,6 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-jaeger")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
-  compileOnly("io.grpc:grpc-api:1.30.2")
 
   testImplementation("org.springframework.boot:spring-boot-starter-aop:${versions["org.springframework.boot"]}")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux:${versions["org.springframework.boot"]}")
@@ -49,8 +48,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
-  testImplementation("io.grpc:grpc-api:1.30.2")
-  testImplementation("io.grpc:grpc-netty-shaded:1.30.2")
   testImplementation(project(":instrumentation-api-annotation-support"))
 
   // this only exists to make Intellij happy since it doesn't (currently at least) understand our
