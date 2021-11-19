@@ -42,9 +42,13 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
     ServletException
   }
 
+  boolean isAsyncTest() {
+    false
+  }
+
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (IS_BEFORE_94 && endpoint == EXCEPTION) || super.hasResponseSpan(endpoint)
+    return (IS_BEFORE_94 && endpoint == EXCEPTION && !isAsyncTest()) || super.hasResponseSpan(endpoint)
   }
 
   @Override
@@ -140,9 +144,8 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
   }
 
   @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
+  boolean isAsyncTest() {
+    true
   }
 }
 
@@ -155,8 +158,9 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
 
   @Override
   boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
+    // we expect this request to fail with http 500 but is succeeds with http 200
+    // when using -PtestLatestDeps=true
+    false
   }
 }
 
@@ -224,6 +228,11 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   }
 
   @Override
+  boolean isAsyncTest() {
+    true
+  }
+
+  @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
 
@@ -237,18 +246,17 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
   }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
 }
 
 class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.Async
+  }
+
+  @Override
+  boolean isAsyncTest() {
+    true
   }
 
   @Override
@@ -269,12 +277,6 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   boolean errorEndpointUsesSendError() {
     false
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 

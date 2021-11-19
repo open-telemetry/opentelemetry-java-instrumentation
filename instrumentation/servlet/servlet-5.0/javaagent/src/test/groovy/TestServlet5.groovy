@@ -112,7 +112,7 @@ class TestServlet5 {
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
                 context.complete()
-                throw new Exception(endpoint.body)
+                throw new ServletException(endpoint.body)
             }
           }
         } finally {
@@ -157,7 +157,7 @@ class TestServlet5 {
               resp.sendError(endpoint.status, endpoint.body)
               break
             case EXCEPTION:
-              throw new Exception(endpoint.body)
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {

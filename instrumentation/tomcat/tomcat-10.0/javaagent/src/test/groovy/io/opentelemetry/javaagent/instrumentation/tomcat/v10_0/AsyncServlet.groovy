@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import jakarta.servlet.ServletException
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
@@ -67,7 +68,7 @@ class AsyncServlet extends HttpServlet {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               context.complete()
-              throw new Exception(endpoint.body)
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {

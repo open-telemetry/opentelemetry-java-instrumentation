@@ -111,8 +111,8 @@ class TestServlet3 {
               case EXCEPTION:
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
-                context.complete()
-                throw new Exception(endpoint.body)
+                // context.complete()
+                throw new ServletException(endpoint.body)
             }
           }
         } finally {
@@ -157,7 +157,7 @@ class TestServlet3 {
               resp.sendError(endpoint.status, endpoint.body)
               break
             case EXCEPTION:
-              throw new Exception(endpoint.body)
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {
