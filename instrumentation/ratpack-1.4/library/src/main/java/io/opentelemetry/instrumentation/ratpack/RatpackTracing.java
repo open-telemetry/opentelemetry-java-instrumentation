@@ -47,10 +47,20 @@ public final class RatpackTracing {
     serverHandler = new OpenTelemetryServerHandler(serverInstrumenter);
   }
 
+  /**
+   * This method returns the {@link OpenTelemetryServerHandler} instance to support Ratpack Registry binding
+   *
+   * @return The OpenTelemetryServerHandler instance
+   */
   public OpenTelemetryServerHandler getOpenTelemetryServerHandler() {
     return serverHandler;
   }
 
+  /**
+   * This method returns the {@link ExecInterceptor} instance to support Ratpack Registry binding
+   *
+   * @return The ExecInterceptor instance
+   */
   public ExecInterceptor getOpenTelemetryExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
   }
