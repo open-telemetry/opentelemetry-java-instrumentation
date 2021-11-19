@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -39,6 +40,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -408,6 +410,38 @@ class InstrumenterTest {
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
+  }
+
+  @Test
+  void requestMetrics() {
+    AtomicReference<Context> startContext = new AtomicReference<>();
+    AtomicReference<Context> endContext = new AtomicReference<>();
+
+    RequestListener requestListener =
+        new RequestListener() {
+          @Override
+          public Context start(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(context);
+            return context;
+          }
+
+          @Override
+          public void end(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(context);
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addRequestMetrics(meter -> requestListener)
+            .newServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
+    assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
   }
 
   @Test

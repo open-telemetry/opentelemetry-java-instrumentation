@@ -100,6 +100,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends RequestListener> requestListeners;
+  private final List<? extends RequestListener> requestMetricListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
   @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
@@ -117,6 +118,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
+    this.requestMetricListeners = new ArrayList<>(builder.requestMetricListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
@@ -192,6 +194,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = spanBuilder.startSpan();
     context = context.with(span);
 
+    // request metric listeners need to run after the span has been added to the context in order
+    // for them to generate exemplars
+    if (!requestMetricListeners.isEmpty()) {
+      long startNanos = getNanos(startTime);
+      for (RequestListener requestListener : requestMetricListeners) {
+        context = requestListener.start(context, attributes, startNanos);
+      }
+    }
+
     return spanSuppressionStrategy.storeInContext(context, spanKind, span);
   }
 
@@ -221,9 +232,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       endTime = endTimeExtractor.extract(request, response, error);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!requestListeners.isEmpty() || !requestMetricListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
       for (RequestListener requestListener : requestListeners) {
+        requestListener.end(context, attributes, endNanos);
+      }
+      for (RequestListener requestListener : requestMetricListeners) {
         requestListener.end(context, attributes, endNanos);
       }
     }
