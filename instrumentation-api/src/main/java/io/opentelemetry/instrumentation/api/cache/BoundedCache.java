@@ -37,4 +37,9 @@ final class BoundedCache<K, V> implements Cache<K, V> {
   public void remove(K key) {
     delegate.remove(key);
   }
+
+  // Visible for tests
+  int size() {
+    return delegate.size();
+  }
 }
