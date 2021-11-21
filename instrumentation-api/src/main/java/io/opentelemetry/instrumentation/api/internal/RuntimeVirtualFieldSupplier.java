@@ -40,19 +40,19 @@ public final class RuntimeVirtualFieldSupplier {
   private static final class CacheBasedVirtualFieldSupplier implements VirtualFieldSupplier {
 
     private final Cache<Class<?>, Cache<Class<?>, VirtualField<?, ?>>>
-        ownerToFieldToImplementationMap = Cache.builder().build();
+        ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
     public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
       return (VirtualField<U, F>)
           ownerToFieldToImplementationMap
-              .computeIfAbsent(type, c -> Cache.builder().build())
+              .computeIfAbsent(type, c -> Cache.weak())
               .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());
     }
   }
 
   private static final class CacheBasedVirtualField<T, F> extends VirtualField<T, F> {
-    private final Cache<T, F> cache = Cache.builder().build();
+    private final Cache<T, F> cache = Cache.weak();
 
     @Override
     @Nullable

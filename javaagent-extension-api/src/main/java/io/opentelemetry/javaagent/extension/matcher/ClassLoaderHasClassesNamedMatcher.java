@@ -12,7 +12,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-  private final Cache<ClassLoader, Boolean> cache = Cache.builder().build();
+  private final Cache<ClassLoader, Boolean> cache = Cache.weak();
 
   private final String[] resources;
 

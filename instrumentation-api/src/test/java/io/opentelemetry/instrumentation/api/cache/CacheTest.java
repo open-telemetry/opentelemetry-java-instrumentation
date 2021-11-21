@@ -18,7 +18,7 @@ class CacheTest {
   //  class StrongKeys {
   //    @Test
   //    void unbounded() {
-  //      Cache<String, String> cache = Cache.builder().build();
+  //      Cache<String, String> cache = Cache.weak();
   //
   //      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
   //      cache.remove("bear");
@@ -65,7 +65,7 @@ class CacheTest {
   class WeakKeys {
     @Test
     void unbounded() {
-      Cache<String, String> cache = Cache.builder().build();
+      Cache<String, String> cache = Cache.weak();
 
       assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
       cache.remove("bear");

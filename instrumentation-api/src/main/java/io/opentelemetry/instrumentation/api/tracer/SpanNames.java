@@ -14,8 +14,7 @@ import javax.annotation.Nullable;
 
 public final class SpanNames {
 
-  private static final Cache<Class<?>, Map<String, String>> spanNameCaches =
-      Cache.builder().build();
+  private static final Cache<Class<?>, Map<String, String>> spanNameCaches = Cache.weak();
 
   /**
    * This method is used to generate a span name based on a method. Anonymous classes are named

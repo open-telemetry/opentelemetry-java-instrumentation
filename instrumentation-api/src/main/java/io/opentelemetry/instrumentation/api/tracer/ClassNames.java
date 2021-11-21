@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.cache.Cache;
 
 public final class ClassNames {
 
-  private static final Cache<Class<?>, String> simpleNames = Cache.builder().build();
+  private static final Cache<Class<?>, String> simpleNames = Cache.weak();
 
   /**
    * This method is used to generate a simple name based on a given class reference, e.g. for use in

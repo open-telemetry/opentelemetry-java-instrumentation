@@ -26,7 +26,7 @@ public final class FutureListenerWrappers {
   private static final Cache<
           GenericFutureListener<? extends Future<?>>,
           WeakReference<GenericFutureListener<? extends Future<?>>>>
-      wrappers = Cache.builder().build();
+      wrappers = Cache.weak();
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {

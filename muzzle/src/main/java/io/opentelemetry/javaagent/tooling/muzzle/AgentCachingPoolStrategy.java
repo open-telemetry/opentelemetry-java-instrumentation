@@ -48,13 +48,13 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *   <li>Allow for quick fast path equivalence check of composite keys
    * </ul>
    */
-  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.builder().build();
+  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.weak();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
-  // TODO .setMaximumSize(TYPE_CAPACITY)
-  final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache = Cache.builder().build();
+  final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
+      Cache.bounded(TYPE_CAPACITY);
 
   // fast path for bootstrap
   final SharedResolutionCacheAdapter bootstrapCacheProvider =
@@ -209,7 +209,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     @Override
     public TypePool.Resolution find(String className) {
-      // TODO this will not work with WeakLockFreeCache, as it uses instance comparison, not equals
       TypePool.Resolution existingResolution =
           sharedResolutionCache.get(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) {

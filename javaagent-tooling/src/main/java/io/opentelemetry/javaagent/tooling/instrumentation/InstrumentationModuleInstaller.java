@@ -125,7 +125,7 @@ public final class InstrumentationModuleInstaller {
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final Cache<ClassLoader, Boolean> matchCache = Cache.builder().build();
+    private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
     private volatile ReferenceMatcher referenceMatcher;
 
     private MuzzleMatcher(InstrumentationModule instrumentationModule) {

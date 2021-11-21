@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -14,12 +15,27 @@ import javax.annotation.Nullable;
  * <p>Keys are always referenced weakly and are compared using identity comparison, not {@link
  * Object#equals(Object)}.
  */
-// TODO (trask) rename since now just a weak-keyed map
 public interface Cache<K, V> {
 
-  /** Returns a new {@link CacheBuilder} to configure a {@link Cache}. */
-  static CacheBuilder builder() {
-    return new CacheBuilder();
+  /**
+   * Returns new unbounded cache
+   *
+   * <p>Keys are referenced weakly and compared using identity comparison, not {@link
+   * Object#equals(Object)}.
+   */
+  static <K, V> Cache<K, V> weak() {
+    return new WeakLockFreeCache<>();
+  }
+
+  /**
+   * Returns new bounded cache.
+   *
+   * <p>Both keys and values are strongly referenced.
+   */
+  static <K, V> Cache<K, V> bounded(int capacity) {
+    ConcurrentLinkedHashMap<K, V> map =
+        new ConcurrentLinkedHashMap.Builder<K, V>().maximumWeightedCapacity(capacity).build();
+    return new BoundedCache<>(map);
   }
 
   /**
