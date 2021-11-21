@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +37,17 @@ public final class RuntimeVirtualFieldSupplier {
     return instance;
   }
 
-  private static final class CacheBasedVirtualFieldSupplier
-      extends ClassValue<Map<Class<?>, VirtualField<?, ?>>> implements VirtualFieldSupplier {
+  private static final class CacheBasedVirtualFieldSupplier implements VirtualFieldSupplier {
+
+    private final Cache<Class<?>, Cache<Class<?>, VirtualField<?, ?>>>
+        ownerToFieldToImplementationMap = Cache.builder().setWeakKeys().build();
 
     @Override
     public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
       return (VirtualField<U, F>)
-          get(type).computeIfAbsent(fieldType, k -> new CacheBasedVirtualField<>());
-    }
-
-    @Override
-    protected Map<Class<?>, VirtualField<?, ?>> computeValue(Class<?> type) {
-      return new ConcurrentHashMap<>();
+          ownerToFieldToImplementationMap
+              .computeIfAbsent(type, c -> Cache.builder().setWeakKeys().build())
+              .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());
     }
   }
 

@@ -17,6 +17,4 @@ dependencies {
   implementation("io.prometheus:simpleclient_httpserver")
 
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
-
-  implementation("io.grpc:grpc-netty-shaded")
 }

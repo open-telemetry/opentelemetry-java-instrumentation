@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ public final class SupportabilityMetrics {
   private final Consumer<String> reporter;
 
   private final ConcurrentMap<String, KindCounters> suppressionCounters = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, LongAdder> counters = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
       new SupportabilityMetrics(Config.get(), logger::debug).start();
@@ -52,7 +52,7 @@ public final class SupportabilityMetrics {
       return;
     }
 
-    counters.computeIfAbsent(counterName, k -> new LongAdder()).increment();
+    counters.computeIfAbsent(counterName, k -> new AtomicLong()).incrementAndGet();
   }
 
   // visible for testing
@@ -69,7 +69,7 @@ public final class SupportabilityMetrics {
         });
     counters.forEach(
         (counterName, counter) -> {
-          long value = counter.sumThenReset();
+          long value = counter.getAndSet(0);
           if (value > 0) {
             reporter.accept("Counter '" + counterName + "' : " + value);
           }
@@ -100,28 +100,28 @@ public final class SupportabilityMetrics {
 
   // this class is threadsafe.
   private static class KindCounters {
-    private final LongAdder server = new LongAdder();
-    private final LongAdder client = new LongAdder();
-    private final LongAdder internal = new LongAdder();
-    private final LongAdder consumer = new LongAdder();
-    private final LongAdder producer = new LongAdder();
+    private final AtomicLong server = new AtomicLong();
+    private final AtomicLong client = new AtomicLong();
+    private final AtomicLong internal = new AtomicLong();
+    private final AtomicLong consumer = new AtomicLong();
+    private final AtomicLong producer = new AtomicLong();
 
     void increment(SpanKind kind) {
       switch (kind) {
         case INTERNAL:
-          internal.increment();
+          internal.incrementAndGet();
           break;
         case SERVER:
-          server.increment();
+          server.incrementAndGet();
           break;
         case CLIENT:
-          client.increment();
+          client.incrementAndGet();
           break;
         case PRODUCER:
-          producer.increment();
+          producer.incrementAndGet();
           break;
         case CONSUMER:
-          consumer.increment();
+          consumer.incrementAndGet();
           break;
       }
     }
@@ -129,15 +129,15 @@ public final class SupportabilityMetrics {
     long getAndReset(SpanKind kind) {
       switch (kind) {
         case INTERNAL:
-          return internal.sumThenReset();
+          return internal.getAndSet(0);
         case SERVER:
-          return server.sumThenReset();
+          return server.getAndSet(0);
         case CLIENT:
-          return client.sumThenReset();
+          return client.getAndSet(0);
         case PRODUCER:
-          return producer.sumThenReset();
+          return producer.getAndSet(0);
         case CONSUMER:
-          return consumer.sumThenReset();
+          return consumer.getAndSet(0);
       }
       return 0;
     }

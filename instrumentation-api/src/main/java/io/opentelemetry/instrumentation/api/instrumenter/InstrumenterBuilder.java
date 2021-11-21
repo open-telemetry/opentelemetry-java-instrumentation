@@ -50,6 +50,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
+  final List<RequestListener> requestMetricListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
@@ -124,7 +125,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
   @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
-    requestListeners.add(factory.create(meter));
+    requestMetricListeners.add(factory.create(meter));
     return this;
   }
 

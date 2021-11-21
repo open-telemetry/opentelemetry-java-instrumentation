@@ -37,6 +37,23 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel messageChannel) {
+
+    Map<MessageChannel, ContextAndScope> localMap = LOCAL_CONTEXT_AND_SCOPE.get();
+    if (localMap.get(messageChannel) != null) {
+      // GlobalChannelInterceptorProcessor.afterSingletonsInstantiated() adds the global
+      // interceptors for every bean name / channel pair, which means it's possible that this
+      // interceptor is added twice to the same channel if the channel is registered twice under
+      // different bean names
+      //
+      // there's an option for this class to implement VetoCapableInterceptor and prevent itself
+      // from being registered if it's already registered, but the VetoCapableInterceptor interface
+      // broke backwards compatibility in 5.2.0, and the version prior to 5.2.0 takes a parameter
+      // of type ChannelInterceptorAware which doesn't exist after 5.2.0, and while it's possible to
+      // implement both at the same time (since we compile using 4.1.0), muzzle doesn't like the
+      // missing class type when running testLatestDeps
+      return message;
+    }
+
     Context parentContext = Context.current();
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
 
@@ -55,16 +72,12 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     //    instrumentation should not create another one
     if (shouldStart(parentContext, messageWithChannel)) {
       context = instrumenter.start(parentContext, messageWithChannel);
-      LOCAL_CONTEXT_AND_SCOPE
-          .get()
-          .put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
+      localMap.put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
     } else {
       // in case there already was another span in the context: back off and just inject the current
       // context into the message
       context = parentContext;
-      LOCAL_CONTEXT_AND_SCOPE
-          .get()
-          .put(messageChannel, ContextAndScope.create(null, context.makeCurrent()));
+      localMap.put(messageChannel, ContextAndScope.create(null, context.makeCurrent()));
     }
 
     propagators
@@ -113,6 +126,13 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public Message<?> beforeHandle(
       Message<?> message, MessageChannel channel, MessageHandler handler) {
+
+    Map<MessageChannel, ContextAndScope> localMap = LOCAL_CONTEXT_AND_SCOPE.get();
+    if (localMap.get(channel) != null) {
+      // see comment explaining the same conditional in preSend()
+      return message;
+    }
+
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, channel);
     Context context =
         propagators
@@ -120,7 +140,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
             .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
     // beforeHandle()/afterMessageHandles() always execute in a different thread than send(), so
     // there's no real risk of overwriting the send() context
-    LOCAL_CONTEXT_AND_SCOPE.get().put(channel, ContextAndScope.create(null, context.makeCurrent()));
+    localMap.put(channel, ContextAndScope.create(null, context.makeCurrent()));
     return message;
   }
 

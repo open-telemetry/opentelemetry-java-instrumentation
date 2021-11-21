@@ -10,8 +10,12 @@ import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingleto
 import com.twitter.finagle.http.Response;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 
 public final class FinatraResponseListener implements FutureEventListener<Response> {
+
+  private static final VirtualField<Response, Throwable> responseThrowableField =
+      VirtualField.find(Response.class, Throwable.class);
 
   private final Context context;
   private final Class<?> request;
@@ -23,7 +27,8 @@ public final class FinatraResponseListener implements FutureEventListener<Respon
 
   @Override
   public void onSuccess(Response response) {
-    instrumenter().end(context, request, null, null);
+    Throwable throwable = responseThrowableField.get(response);
+    instrumenter().end(context, request, null, throwable);
   }
 
   @Override

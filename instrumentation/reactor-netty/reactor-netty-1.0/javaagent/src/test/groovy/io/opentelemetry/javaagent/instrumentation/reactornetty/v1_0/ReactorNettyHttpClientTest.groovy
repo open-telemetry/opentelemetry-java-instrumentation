@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0
 
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
 import reactor.netty.http.client.HttpClient
 
 import java.util.concurrent.ExecutionException
@@ -15,9 +16,12 @@ import java.util.concurrent.TimeoutException
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
 
   HttpClient createHttpClient() {
-    return HttpClient.create().tcpConfiguration({ tcpClient ->
-      tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-    }).resolver(getAddressResolverGroup())
+    return HttpClient.create()
+      .tcpConfiguration({ tcpClient ->
+        tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+      })
+      .resolver(getAddressResolverGroup())
+      .headers({ headers -> headers.set(HttpHeaderNames.USER_AGENT, userAgent()) })
   }
 
   @Override
@@ -26,6 +30,7 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
       .newConnection()
       .host(host)
       .port(port)
+      .headers({ headers -> headers.set(HttpHeaderNames.USER_AGENT, userAgent()) })
 
     return new SingleConnection() {
 
