@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
  * <p>Keys are always referenced weakly and are compared using identity comparison, not {@link
  * Object#equals(Object)}.
  */
+// TODO (trask) rename since now just a weak-keyed map
 public interface Cache<K, V> {
 
   /** Returns a new {@link CacheBuilder} to configure a {@link Cache}. */
