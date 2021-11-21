@@ -45,7 +45,7 @@ public final class RestletTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public RestletTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+  public RestletTracingBuilder setCaptureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;
   }

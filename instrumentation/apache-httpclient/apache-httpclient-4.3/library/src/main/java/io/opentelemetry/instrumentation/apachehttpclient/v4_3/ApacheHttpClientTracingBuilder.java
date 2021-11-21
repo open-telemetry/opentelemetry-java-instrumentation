@@ -53,7 +53,7 @@ public final class ApacheHttpClientTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public ApacheHttpClientTracingBuilder captureHttpHeaders(
+  public ApacheHttpClientTracingBuilder setCaptureHttpHeaders(
       CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;

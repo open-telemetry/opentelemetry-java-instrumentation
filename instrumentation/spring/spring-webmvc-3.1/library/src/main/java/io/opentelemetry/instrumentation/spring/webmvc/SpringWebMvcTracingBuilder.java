@@ -50,7 +50,7 @@ public final class SpringWebMvcTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public SpringWebMvcTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+  public SpringWebMvcTracingBuilder setCaptureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;
   }

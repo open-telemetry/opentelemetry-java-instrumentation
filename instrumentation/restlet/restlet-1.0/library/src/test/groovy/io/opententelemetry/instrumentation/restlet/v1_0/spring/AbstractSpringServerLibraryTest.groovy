@@ -19,7 +19,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
   Restlet wrapRestlet(Restlet restlet, String path) {
 
     RestletTracing tracing = RestletTracing.builder(openTelemetry)
-      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .setCaptureHttpHeaders(capturedHttpHeadersForTesting())
       .build()
 
     def tracingFilter = tracing.newFilter(path)

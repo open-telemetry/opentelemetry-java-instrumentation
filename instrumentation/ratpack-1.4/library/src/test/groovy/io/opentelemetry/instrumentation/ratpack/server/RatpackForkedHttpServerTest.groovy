@@ -15,7 +15,7 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   @Override
   void configure(RatpackServerSpec serverSpec) {
     RatpackTracing tracing = RatpackTracing.builder(openTelemetry)
-      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .setCaptureHttpHeaders(capturedHttpHeadersForTesting())
       .build()
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)

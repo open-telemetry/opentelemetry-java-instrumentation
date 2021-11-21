@@ -41,7 +41,7 @@ public final class JettyClientInstrumenterBuilder {
     return this;
   }
 
-  public JettyClientInstrumenterBuilder captureHttpHeaders(
+  public JettyClientInstrumenterBuilder setCaptureHttpHeaders(
       CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;

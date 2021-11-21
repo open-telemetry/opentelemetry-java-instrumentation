@@ -52,8 +52,8 @@ public final class JettyClientTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public JettyClientTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    instrumenterBuilder.captureHttpHeaders(capturedHttpHeaders);
+  public JettyClientTracingBuilder setCaptureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+    instrumenterBuilder.setCaptureHttpHeaders(capturedHttpHeaders);
     return this;
   }
 

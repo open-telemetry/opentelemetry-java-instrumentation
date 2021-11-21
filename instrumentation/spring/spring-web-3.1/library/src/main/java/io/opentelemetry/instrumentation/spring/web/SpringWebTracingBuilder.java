@@ -48,7 +48,7 @@ public final class SpringWebTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public SpringWebTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+  public SpringWebTracingBuilder setCaptureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;
   }

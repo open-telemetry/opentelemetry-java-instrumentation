@@ -15,7 +15,7 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest impl
   @Override
   void configure(RatpackServerSpec serverSpec) {
     RatpackTracing tracing = RatpackTracing.builder(openTelemetry)
-      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .setCaptureHttpHeaders(capturedHttpHeadersForTesting())
       .build()
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)
