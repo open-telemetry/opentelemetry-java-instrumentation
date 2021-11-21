@@ -294,7 +294,11 @@ jobs:
 
   snapshot:
     runs-on: ubuntu-latest
-    needs: [ build, test, testLatestDeps, smoke-test, examples, muzzle ]
+    # intentionally not blocking snapshot publishing on testLatestDeps
+    # because any time a new library version is released to maven central
+    # it can fail due to test code incompatibility with the new library version,
+    # or due to slight changes in emitted telemetry
+    needs: [ build, test, smoke-test, examples, muzzle ]
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     steps:
       - uses: actions/checkout@v2.3.4
