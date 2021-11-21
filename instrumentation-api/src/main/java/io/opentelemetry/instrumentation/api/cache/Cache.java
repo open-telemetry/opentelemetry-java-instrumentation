@@ -8,10 +8,11 @@ package io.opentelemetry.instrumentation.api.cache;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/** A cache from keys to values.
+/**
+ * A cache from keys to values.
  *
- * Keys are always referenced weakly and are compared using identity comparison, not
- * {@link Object#equals(Object)}.
+ * <p>Keys are always referenced weakly and are compared using identity comparison, not {@link
+ * Object#equals(Object)}.
  */
 public interface Cache<K, V> {
 

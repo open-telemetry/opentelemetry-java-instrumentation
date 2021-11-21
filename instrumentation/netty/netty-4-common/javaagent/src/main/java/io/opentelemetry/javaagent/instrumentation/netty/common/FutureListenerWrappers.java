@@ -24,7 +24,8 @@ public final class FutureListenerWrappers {
   // used to remove the wrapped listener from the netty future, and if the value is collected prior
   // to the key, that means it's no longer used (referenced) by the netty future anyways.
   private static final Cache<
-      GenericFutureListener<? extends Future<?>>, WeakReference<GenericFutureListener<? extends Future<?>>>>
+          GenericFutureListener<? extends Future<?>>,
+          WeakReference<GenericFutureListener<? extends Future<?>>>>
       wrappers = Cache.builder().build();
 
   private static final ClassValue<Boolean> shouldWrap =
@@ -45,26 +46,29 @@ public final class FutureListenerWrappers {
   @SuppressWarnings("unchecked")
   public static GenericFutureListener<?> wrap(
       Context context, GenericFutureListener<? extends Future<?>> delegate) {
-    WeakReference<GenericFutureListener<? extends Future<?>>> resultReference = wrappers.computeIfAbsent(
-        delegate,
-        key -> {
-          GenericFutureListener<? extends Future<?>> wrapper;
-          if (delegate instanceof GenericProgressiveFutureListener) {
-            wrapper = new WrappedProgressiveFutureListener(
-                context, (GenericProgressiveFutureListener<ProgressiveFuture<?>>) delegate);
-          } else {
-            wrapper = new WrappedFutureListener(context,
-                (GenericFutureListener<Future<?>>) delegate);
-          }
-          return new WeakReference<>(wrapper);
-        });
+    WeakReference<GenericFutureListener<? extends Future<?>>> resultReference =
+        wrappers.computeIfAbsent(
+            delegate,
+            key -> {
+              GenericFutureListener<? extends Future<?>> wrapper;
+              if (delegate instanceof GenericProgressiveFutureListener) {
+                wrapper =
+                    new WrappedProgressiveFutureListener(
+                        context, (GenericProgressiveFutureListener<ProgressiveFuture<?>>) delegate);
+              } else {
+                wrapper =
+                    new WrappedFutureListener(context, (GenericFutureListener<Future<?>>) delegate);
+              }
+              return new WeakReference<>(wrapper);
+            });
     return resultReference.get();
   }
 
   public static GenericFutureListener<? extends Future<?>> getWrapper(
       GenericFutureListener<? extends Future<?>> delegate) {
-    WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference = wrappers.get(delegate);
-    if(wrapperReference == null){
+    WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference =
+        wrappers.get(delegate);
+    if (wrapperReference == null) {
       return delegate;
     }
     GenericFutureListener<? extends Future<?>> wrapper = wrapperReference.get();

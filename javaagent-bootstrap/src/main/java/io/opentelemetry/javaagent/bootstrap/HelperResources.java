@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import io.opentelemetry.instrumentation.api.cache.Cache;
 
 /**
  * A holder of resources needed by instrumentation. We store them in the bootstrap classloader so
@@ -17,8 +17,7 @@ import io.opentelemetry.instrumentation.api.cache.Cache;
  */
 public final class HelperResources {
 
-  private static final Cache<ClassLoader, Map<String, URL>> RESOURCES =
-      Cache.builder().build();
+  private static final Cache<ClassLoader, Map<String, URL>> RESOURCES = Cache.builder().build();
 
   /** Registers the {@code payload} to be available to instrumentation at {@code path}. */
   public static void register(ClassLoader classLoader, String path, URL url) {

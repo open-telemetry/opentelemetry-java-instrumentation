@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support;
 
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import io.opentelemetry.instrumentation.api.cache.Cache;
 
 /**
  * Implementation of {@link Cache} that uses {@link ClassValue} to store values keyed by {@link

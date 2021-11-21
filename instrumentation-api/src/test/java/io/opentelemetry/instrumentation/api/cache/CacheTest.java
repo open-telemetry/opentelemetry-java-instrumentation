@@ -13,52 +13,52 @@ import org.junit.jupiter.api.Test;
 
 class CacheTest {
 
-//  @Nested
-//  @SuppressWarnings("ClassCanBeStatic")
-//  class StrongKeys {
-//    @Test
-//    void unbounded() {
-//      Cache<String, String> cache = Cache.builder().build();
-//
-//      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
-//      cache.remove("bear");
-//
-//      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
-//      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      cache.put("dog", "bark");
-//      assertThat(cache.get("dog")).isEqualTo("bark");
-//      assertThat(cache.get("cat")).isEqualTo("meow");
-//      assertThat(cache.get("bear")).isNull();
-//      assertThat(caffeineCache.keySet()).hasSize(2);
-//      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
-//    }
-//
-//    @Test
-//    void bounded() {
-//      Cache<String, String> cache = Cache.builder().setMaximumSize(1).build();
-//
-//      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
-//      cache.remove("bear");
-//
-//      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
-//      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      cache.put("dog", "bark");
-//      assertThat(cache.get("dog")).isEqualTo("bark");
-//      caffeineCache.cleanup();
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//      assertThat(cache.computeIfAbsent("cat", unused -> "purr")).isEqualTo("purr");
-//    }
-//  }
+  //  @Nested
+  //  @SuppressWarnings("ClassCanBeStatic")
+  //  class StrongKeys {
+  //    @Test
+  //    void unbounded() {
+  //      Cache<String, String> cache = Cache.builder().build();
+  //
+  //      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+  //      cache.remove("bear");
+  //
+  //      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
+  //      assertThat(caffeineCache.keySet()).hasSize(1);
+  //
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
+  //      assertThat(caffeineCache.keySet()).hasSize(1);
+  //
+  //      cache.put("dog", "bark");
+  //      assertThat(cache.get("dog")).isEqualTo("bark");
+  //      assertThat(cache.get("cat")).isEqualTo("meow");
+  //      assertThat(cache.get("bear")).isNull();
+  //      assertThat(caffeineCache.keySet()).hasSize(2);
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
+  //    }
+  //
+  //    @Test
+  //    void bounded() {
+  //      Cache<String, String> cache = Cache.builder().setMaximumSize(1).build();
+  //
+  //      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+  //      cache.remove("bear");
+  //
+  //      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
+  //      assertThat(caffeineCache.keySet()).hasSize(1);
+  //
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
+  //      assertThat(caffeineCache.keySet()).hasSize(1);
+  //
+  //      cache.put("dog", "bark");
+  //      assertThat(cache.get("dog")).isEqualTo("bark");
+  //      caffeineCache.cleanup();
+  //      assertThat(caffeineCache.keySet()).hasSize(1);
+  //      assertThat(cache.computeIfAbsent("cat", unused -> "purr")).isEqualTo("purr");
+  //    }
+  //  }
 
   @Nested
   @SuppressWarnings("ClassCanBeStatic")
@@ -97,39 +97,40 @@ class CacheTest {
       await().untilAsserted(() -> assertThat(weakLockFreeCache.size()).isEqualTo(0));
     }
 
-//    @Test
-//    void bounded() {
-//      io.opentelemetry.instrumentation.api.caching.Cache<String, String> cache = io.opentelemetry.instrumentation.api.caching.Cache.builder().setWeakKeys().setMaximumSize(1).build();
-//
-//      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
-//      cache.remove("bear");
-//
-//      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
-//
-//      String cat = new String("cat");
-//      String dog = new String("dog");
-//      assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
-//      assertThat(cache.get(cat)).isEqualTo("meow");
-//      assertThat(cache.get(new String("cat"))).isNull();
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      assertThat(cache.computeIfAbsent(cat, unused -> "bark")).isEqualTo("meow");
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//
-//      cache.put(dog, "bark");
-//      assertThat(cache.get(dog)).isEqualTo("bark");
-//      assertThat(cache.get(new String("dog"))).isNull();
-//      caffeineCache.cleanup();
-//      assertThat(caffeineCache.keySet()).hasSize(1);
-//      dog = null;
-//      System.gc();
-//      // Wait for GC to be reflected.
-//      await()
-//          .untilAsserted(
-//              () -> {
-//                caffeineCache.cleanup();
-//                assertThat(caffeineCache.keySet()).isEmpty();
-//              });
-//    }
+    //    @Test
+    //    void bounded() {
+    //      io.opentelemetry.instrumentation.api.caching.Cache<String, String> cache =
+    // io.opentelemetry.instrumentation.api.caching.Cache.builder().setWeakKeys().setMaximumSize(1).build();
+    //
+    //      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+    //      cache.remove("bear");
+    //
+    //      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
+    //
+    //      String cat = new String("cat");
+    //      String dog = new String("dog");
+    //      assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
+    //      assertThat(cache.get(cat)).isEqualTo("meow");
+    //      assertThat(cache.get(new String("cat"))).isNull();
+    //      assertThat(caffeineCache.keySet()).hasSize(1);
+    //
+    //      assertThat(cache.computeIfAbsent(cat, unused -> "bark")).isEqualTo("meow");
+    //      assertThat(caffeineCache.keySet()).hasSize(1);
+    //
+    //      cache.put(dog, "bark");
+    //      assertThat(cache.get(dog)).isEqualTo("bark");
+    //      assertThat(cache.get(new String("dog"))).isNull();
+    //      caffeineCache.cleanup();
+    //      assertThat(caffeineCache.keySet()).hasSize(1);
+    //      dog = null;
+    //      System.gc();
+    //      // Wait for GC to be reflected.
+    //      await()
+    //          .untilAsserted(
+    //              () -> {
+    //                caffeineCache.cleanup();
+    //                assertThat(caffeineCache.keySet()).isEmpty();
+    //              });
+    //    }
   }
 }

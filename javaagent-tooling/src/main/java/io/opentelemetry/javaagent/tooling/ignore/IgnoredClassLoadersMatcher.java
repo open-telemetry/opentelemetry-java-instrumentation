@@ -17,8 +17,7 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
   private static final Logger logger = LoggerFactory.getLogger(IgnoredClassLoadersMatcher.class);
 
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-  private static final Cache<ClassLoader, Boolean> skipCache =
-      Cache.builder().build();
+  private static final Cache<ClassLoader, Boolean> skipCache = Cache.builder().build();
 
   private final Trie<IgnoreAllow> ignoredClassLoaders;
 

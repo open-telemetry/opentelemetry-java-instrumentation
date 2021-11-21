@@ -11,13 +11,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import io.opentelemetry.instrumentation.api.cache.Cache;
 
 @ExtendWith(MockitoExtension.class)
 public class MethodCacheTest {
