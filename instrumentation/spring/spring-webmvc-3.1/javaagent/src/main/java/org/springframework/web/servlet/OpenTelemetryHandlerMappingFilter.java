@@ -31,16 +31,14 @@ import org.springframework.core.Ordered;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
-  // copied from ServletRequestPathUtils
-  private static final String PATH_ATTRIBUTE =
-      "org.springframework.web.util.ServletRequestPathUtils.PATH";
+  private static final String PATH_ATTRIBUTE = getRequestPathAttribute();
   private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
   private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
 
   private final ServerSpanNameSupplier<HttpServletRequest> serverSpanName =
       (context, request) -> {
         Object previousValue = null;
-        if (this.parseRequestPath) {
+        if (this.parseRequestPath && PATH_ATTRIBUTE != null) {
           previousValue = request.getAttribute(PATH_ATTRIBUTE);
           // sets new value for PATH_ATTRIBUTE of request
           parseAndCache(request);
@@ -53,7 +51,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
           }
         } finally {
           // mimic spring DispatcherServlet and restore the previous value of PATH_ATTRIBUTE
-          if (this.parseRequestPath) {
+          if (this.parseRequestPath && PATH_ATTRIBUTE != null) {
             if (previousValue == null) {
               request.removeAttribute(PATH_ATTRIBUTE);
             } else {
@@ -120,7 +118,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       // application-crashing side-effects with grails. That is why we don't add all HandlerMapping
       // classes here. Although now that we run findMapping after the request, and only when server
       // span name has not been updated by a controller, the probability of bad side-effects is much
-      // reduced.
+      // reduced even if we did add all HandlerMapping classes here.
       if (mapping instanceof RequestMappingHandlerMapping) {
         handlerMappings.add(mapping);
         if (usePathPatterns(mapping)) {
@@ -183,6 +181,21 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
     try {
       parseAndCacheMh.invoke(request);
+    } catch (Throwable throwable) {
+      throw new IllegalStateException(throwable);
+    }
+  }
+
+  private static String getRequestPathAttribute() {
+    try {
+      Class<?> pathUtilsClass =
+          Class.forName("org.springframework.web.util.ServletRequestPathUtils");
+      return (String)
+          MethodHandles.lookup()
+              .findStaticGetter(pathUtilsClass, "PATH_ATTRIBUTE", String.class)
+              .invoke();
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
+      return null;
     } catch (Throwable throwable) {
       throw new IllegalStateException(throwable);
     }
