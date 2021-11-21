@@ -28,9 +28,19 @@ dependencyResolutionManagement {
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"
 val isCI = System.getenv("CI") != null
+val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
+
+// if GE access key is not given and we are in CI, then we publish to scans.gradle.com
 gradleEnterprise {
-  server = gradleEnterpriseServer
+  if (geAccessKey.isNotEmpty()) {
+    server = gradleEnterpriseServer
+  }
   buildScan {
+    //TODO remove this until legal approves
+    if (geAccessKey.isEmpty() && isCI) {
+      termsOfServiceUrl = "https://gradle.com/terms-of-service"
+      termsOfServiceAgree = "yes"
+    }
     publishAlways()
     this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
     publishIfAuthenticated()
