@@ -33,8 +33,9 @@ jobs:
 
       - name: Build
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         run: ./gradlew build
 
   build-gradle-plugins:
@@ -104,8 +105,9 @@ jobs:
 
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDeps:
@@ -141,8 +143,9 @@ jobs:
 
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         run: ./gradlew test -PtestLatestDeps=true
 
   smoke-test:
@@ -194,8 +197,9 @@ jobs:
 
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
   setup-muzzle-matrix:
@@ -321,8 +325,7 @@ jobs:
 
       - name: Build and publish artifact snapshots
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -331,6 +334,7 @@ jobs:
 
       - name: Build and publish gradle plugin snapshots
         env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

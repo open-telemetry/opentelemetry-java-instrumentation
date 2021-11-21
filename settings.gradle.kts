@@ -14,8 +14,9 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.6.3"
+  id("com.gradle.enterprise") version "3.7.1"
   id("com.github.burrunan.s3-build-cache") version "1.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.5"
 }
 
 dependencyResolutionManagement {
@@ -25,27 +26,43 @@ dependencyResolutionManagement {
   }
 }
 
+val gradleEnterpriseServer = "https://ge.opentelemetry.io"
 val isCI = System.getenv("CI") != null
-val skipBuildscan = System.getenv("SKIP_BUILDSCAN").toBoolean()
-gradleEnterprise {
-  buildScan {
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
 
-    if (isCI && !skipBuildscan) {
-      publishAlways()
-      tag("CI")
+// if GE access key is not given and we are in CI, then we publish to scans.gradle.com
+gradleEnterprise {
+  if (geAccessKey.isNotEmpty()) {
+    server = gradleEnterpriseServer
+  }
+  buildScan {
+    // TODO remove this until legal approves
+    if (geAccessKey.isEmpty() && isCI) {
+      termsOfServiceUrl = "https://gradle.com/terms-of-service"
+      termsOfServiceAgree = "yes"
+    }
+    publishAlways()
+    this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
+    publishIfAuthenticated()
+
+    isUploadInBackground = !isCI
+
+    capture {
+      isTaskInputFiles = true
     }
   }
 }
 
-val awsAccessKey = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID") ?: ""
-
+val geCacheUsername = System.getenv("GE_CACHE_USERNAME") ?: ""
+val geCachePassword = System.getenv("GE_CACHE_PASSWORD") ?: ""
 buildCache {
-  remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
-    region = "us-west-2"
-    bucket = "opentelemetry-java-instrumentation-gradle-cache"
-    isPush = isCI && !awsAccessKey.isEmpty()
+  remote<HttpBuildCache> {
+    url = uri("$gradleEnterpriseServer/cache/")
+    isPush = isCI && geCacheUsername.isNotEmpty()
+    credentials {
+      username = geCacheUsername
+      password = geCachePassword
+    }
   }
 }
 
