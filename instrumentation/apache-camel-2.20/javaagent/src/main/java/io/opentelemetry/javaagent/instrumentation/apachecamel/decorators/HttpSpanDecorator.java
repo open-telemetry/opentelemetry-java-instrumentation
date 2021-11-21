@@ -39,6 +39,10 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
 
+  protected String getProtocol() {
+    return "http";
+  }
+
   protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
     // 1. Use method provided in header.
     Object method = exchange.getIn().getHeader(Exchange.HTTP_METHOD);
@@ -131,7 +135,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
         return (String) uri;
       } else {
         // Try to obtain from endpoint
-        int index = endpoint.getEndpointUri().lastIndexOf("http:");
+        int index = endpoint.getEndpointUri().lastIndexOf(getProtocol()+":");
         if (index != -1) {
           return endpoint.getEndpointUri().substring(index);
         }

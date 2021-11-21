@@ -32,6 +32,7 @@ public class DecoratorRegistry {
     result.put("disruptor-vm", new InternalSpanDecorator());
     result.put("elasticsearch", new DbSpanDecorator("elasticsearch", "elasticsearch"));
     result.put("http4", new Http4SpanDecorator());
+    result.put("https4", new Https4SpanDecorator());
     result.put("http", new HttpSpanDecorator());
     result.put("ironmq", new MessagingSpanDecorator("ironmq"));
     result.put("jdbc", new DbSpanDecorator("jdbc", DbSystemValues.OTHER_SQL));
