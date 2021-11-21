@@ -36,7 +36,7 @@ gradleEnterprise {
     server = gradleEnterpriseServer
   }
   buildScan {
-    //TODO remove this until legal approves
+    // TODO remove this until legal approves
     if (geAccessKey.isEmpty() && isCI) {
       termsOfServiceUrl = "https://gradle.com/terms-of-service"
       termsOfServiceAgree = "yes"
