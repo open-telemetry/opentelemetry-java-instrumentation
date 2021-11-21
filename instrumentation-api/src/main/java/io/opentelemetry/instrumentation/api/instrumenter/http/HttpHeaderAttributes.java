@@ -8,12 +8,16 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 final class HttpHeaderAttributes {
 
-  private static final ConcurrentHashMap<String, AttributeKey<List<String>>> requestKeysCache =
+  // these are naturally bounded because they only store keys listed in
+  // otel.instrumentation.http.capture-headers.server.request and
+  // otel.instrumentation.http.capture-headers.server.response
+  private static final ConcurrentMap<String, AttributeKey<List<String>>> requestKeysCache =
       new ConcurrentHashMap<>();
-  private static final ConcurrentHashMap<String, AttributeKey<List<String>>> responseKeysCache =
+  private static final ConcurrentMap<String, AttributeKey<List<String>>> responseKeysCache =
       new ConcurrentHashMap<>();
 
   static AttributeKey<List<String>> requestAttributeKey(String headerName) {
