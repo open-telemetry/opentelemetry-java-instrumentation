@@ -135,7 +135,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
         return (String) uri;
       } else {
         // Try to obtain from endpoint
-        int index = endpoint.getEndpointUri().lastIndexOf(getProtocol()+":");
+        int index = endpoint.getEndpointUri().lastIndexOf(getProtocol() + ":");
         if (index != -1) {
           return endpoint.getEndpointUri().substring(index);
         }
