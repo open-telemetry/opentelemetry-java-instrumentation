@@ -26,7 +26,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api-metrics")
   implementation("org.slf4j:slf4j-api")
   implementation("com.blogspot.mydailyjava:weak-lock-free")
-  implementation("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

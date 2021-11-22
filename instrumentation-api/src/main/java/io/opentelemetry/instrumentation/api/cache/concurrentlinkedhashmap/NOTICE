@@ -1,0 +1,7 @@
+ConcurrentLinkedHashMap
+Copyright 2008, Ben Manes
+Copyright 2010, Google Inc.
+
+Some alternate data structures provided by JSR-166e
+from http://gee.cs.oswego.edu/dl/concurrency-interest/.
+Written by Doug Lea and released as Public Domain.
