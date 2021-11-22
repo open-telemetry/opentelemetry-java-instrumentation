@@ -155,13 +155,6 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
   }
-
-  @Override
-  boolean testException() {
-    // we expect this request to fail with http 500 but is succeeds with http 200
-    // when using -PtestLatestDeps=true
-    false
-  }
 }
 
 class JettyServlet3TestForward extends JettyDispatchTest {

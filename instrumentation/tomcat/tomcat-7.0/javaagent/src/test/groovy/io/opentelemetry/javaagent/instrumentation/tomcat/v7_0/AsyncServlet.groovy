@@ -28,6 +28,9 @@ class AsyncServlet extends AbstractHttpServlet {
     HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
     def latch = new CountDownLatch(1)
     def context = req.startAsync()
+    if (endpoint == EXCEPTION) {
+      context.setTimeout(5000)
+    }
     context.start {
       try {
         HttpServerTest.controller(endpoint) {
@@ -65,7 +68,9 @@ class AsyncServlet extends AbstractHttpServlet {
         }
       } finally {
         // complete at the end so the server span will end after the controller span
-        context.complete()
+        if (endpoint != EXCEPTION) {
+          context.complete()
+        }
         latch.countDown()
       }
     }

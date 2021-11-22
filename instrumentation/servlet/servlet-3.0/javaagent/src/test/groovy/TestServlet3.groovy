@@ -5,7 +5,6 @@
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
@@ -72,6 +71,9 @@ class TestServlet3 {
       HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
       def latch = new CountDownLatch(1)
       def context = req.startAsync()
+      if (endpoint == EXCEPTION) {
+        context.setTimeout(5000)
+      }
       context.start {
         try {
           HttpServerTest.controller(endpoint) {
@@ -111,7 +113,6 @@ class TestServlet3 {
               case EXCEPTION:
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
-                context.complete()
                 throw new ServletException(endpoint.body)
             }
           }
@@ -157,6 +158,8 @@ class TestServlet3 {
               resp.sendError(endpoint.status, endpoint.body)
               break
             case EXCEPTION:
+              resp.status = endpoint.status
+              resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
           }
         }

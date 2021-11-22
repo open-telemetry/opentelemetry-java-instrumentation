@@ -128,12 +128,6 @@ class JettyServlet5TestFakeAsync extends JettyServlet5Test {
   Class<Servlet> servlet() {
     TestServlet5.FakeAsync
   }
-
-  @Override
-  boolean testException() {
-    // we expect this request to fail with http 500 but is succeeds with http 200
-    false
-  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
