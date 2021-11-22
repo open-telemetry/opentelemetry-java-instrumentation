@@ -19,7 +19,7 @@ tasks {
       disableWarningsInGeneratedCode.set(true)
       allDisabledChecksAsWarnings.set(true)
 
-      excludedPaths.set(".*/build/generated/.*")
+      excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*",)
 
       if (System.getenv("CI") == null) {
         disable("SystemOut")
