@@ -51,7 +51,8 @@ public final class SpringWebfluxTracingBuilder {
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
    */
-  public SpringWebfluxTracingBuilder setCaptureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
+  public SpringWebfluxTracingBuilder setCaptureHttpHeaders(
+      CapturedHttpHeaders capturedHttpHeaders) {
     this.capturedHttpHeaders = capturedHttpHeaders;
     return this;
   }
