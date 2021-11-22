@@ -14,7 +14,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+  implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure"))
 
   library("software.amazon.awssdk:aws-core:2.2.0")
 
@@ -30,4 +30,10 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
+  mergeServiceFiles {
+    include("software/amazon/awssdk/global/handlers/execution.interceptors")
+  }
 }
