@@ -318,12 +318,6 @@ class TomcatServlet5TestAsync extends TomcatServlet5Test {
   boolean errorEndpointUsesSendError() {
     false
   }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
 }
 
 class TomcatServlet5TestFakeAsync extends TomcatServlet5Test {
@@ -331,12 +325,6 @@ class TomcatServlet5TestFakeAsync extends TomcatServlet5Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet5.FakeAsync
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 
@@ -457,12 +445,6 @@ class TomcatServlet5TestDispatchAsync extends TomcatDispatchTest {
   @Override
   boolean errorEndpointUsesSendError() {
     false
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 

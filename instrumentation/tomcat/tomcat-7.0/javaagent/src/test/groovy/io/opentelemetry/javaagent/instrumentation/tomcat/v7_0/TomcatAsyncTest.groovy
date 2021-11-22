@@ -109,12 +109,6 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
-
-  @Override
   Class<?> expectedExceptionClass() {
     ServletException
   }

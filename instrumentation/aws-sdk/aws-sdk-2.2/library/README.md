@@ -4,7 +4,9 @@ Instrumentation for [AWS Java SDK v2](https://github.com/aws/aws-sdk-java-v2).
 
 ## Usage
 
-To register instrumentation on an SDK client, register the interceptor when creating it.
+To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autoconfigure` submodule in your classpath.
+
+To register instrumentation only on a specific SDK client, register the interceptor when creating it.
 
 ```java
 DynamoDbClient client = DynamoDbClient.builder()
