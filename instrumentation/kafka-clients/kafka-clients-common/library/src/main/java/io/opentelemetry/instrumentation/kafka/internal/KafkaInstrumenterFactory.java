@@ -62,7 +62,7 @@ public final class KafkaInstrumenterFactory {
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractors(extractors)
-        .setTimeExtractors(ReceivedRecords::startTime, (request, response, error) -> request.now())
+        .setTimeExtractor(new KafkaConsumerTimeExtractor())
         .setDisabled(ExperimentalConfig.get().suppressMessagingReceiveSpans())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

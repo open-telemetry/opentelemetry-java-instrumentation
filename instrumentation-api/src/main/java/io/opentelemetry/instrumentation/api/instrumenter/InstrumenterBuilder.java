@@ -56,8 +56,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
-  @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  @Nullable EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor = null;
+  @Nullable TimeExtractor<REQUEST, RESPONSE> timeExtractor = null;
   boolean disabled = false;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
@@ -140,15 +139,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets the {@link StartTimeExtractor} and the {@link EndTimeExtractor} to extract the timestamp
-   * marking the start and end of processing. If unset, the constructed instrumenter will defer
-   * determining start and end timestamps to the OpenTelemetry SDK.
+   * Sets the {@link TimeExtractor} to extract the timestamp marking the start and end of
+   * processing. If unset, the constructed instrumenter will defer determining start and end
+   * timestamps to the OpenTelemetry SDK.
    */
-  public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
-      StartTimeExtractor<REQUEST> startTimeExtractor,
-      EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor) {
-    this.startTimeExtractor = requireNonNull(startTimeExtractor);
-    this.endTimeExtractor = requireNonNull(endTimeExtractor);
+  public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractor(
+      TimeExtractor<REQUEST, RESPONSE> timeExtractor) {
+    this.timeExtractor = requireNonNull(timeExtractor);
     return this;
   }
 

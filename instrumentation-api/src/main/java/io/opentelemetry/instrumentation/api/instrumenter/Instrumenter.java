@@ -102,8 +102,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends RequestListener> requestListeners;
   private final List<? extends RequestListener> requestMetricListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
-  @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
+  @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean disabled;
   private final SpanSuppressionStrategy spanSuppressionStrategy;
 
@@ -120,8 +119,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.requestMetricListeners = new ArrayList<>(builder.requestMetricListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
-    this.startTimeExtractor = builder.startTimeExtractor;
-    this.endTimeExtractor = builder.endTimeExtractor;
+    this.timeExtractor = builder.timeExtractor;
     this.disabled = builder.disabled;
     this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
   }
@@ -161,8 +159,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setParent(parentContext);
 
     Instant startTime = null;
-    if (startTimeExtractor != null) {
-      startTime = startTimeExtractor.extract(request);
+    if (timeExtractor != null) {
+      startTime = timeExtractor.extractStartTime(request);
       spanBuilder.setStartTimestamp(startTime);
     }
 
@@ -228,8 +226,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     span.setAllAttributes(attributes);
 
     Instant endTime = null;
-    if (endTimeExtractor != null) {
-      endTime = endTimeExtractor.extract(request, response, error);
+    if (timeExtractor != null) {
+      endTime = timeExtractor.extractEndTime(request, response, error);
     }
 
     if (!requestListeners.isEmpty() || !requestMetricListeners.isEmpty()) {

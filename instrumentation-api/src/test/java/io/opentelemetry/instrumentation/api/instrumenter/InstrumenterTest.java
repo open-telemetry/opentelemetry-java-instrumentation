@@ -129,6 +129,20 @@ class InstrumenterTest {
     }
   }
 
+  static class TestTimeExtractor implements TimeExtractor<Instant, Instant> {
+
+    @Override
+    public Instant extractStartTime(Instant request) {
+      return request;
+    }
+
+    @Override
+    public Instant extractEndTime(
+        Instant request, @Nullable Instant response, @Nullable Throwable error) {
+      return response;
+    }
+  }
+
   static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
@@ -450,7 +464,7 @@ class InstrumenterTest {
     Instrumenter<Instant, Instant> instrumenter =
         Instrumenter.<Instant, Instant>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractors(request -> request, (request, response, error) -> response)
+            .setTimeExtractor(new TestTimeExtractor())
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);
