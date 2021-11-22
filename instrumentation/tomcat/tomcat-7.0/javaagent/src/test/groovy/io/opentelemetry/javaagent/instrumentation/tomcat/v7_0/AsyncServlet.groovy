@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-
+import java.util.concurrent.CountDownLatch
+import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -25,7 +26,11 @@ class AsyncServlet extends AbstractHttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) {
     HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
+    def latch = new CountDownLatch(1)
     def context = req.startAsync()
+    if (endpoint == EXCEPTION) {
+      context.setTimeout(5000)
+    }
     context.start {
       try {
         HttpServerTest.controller(endpoint) {
@@ -58,13 +63,17 @@ class AsyncServlet extends AbstractHttpServlet {
             case EXCEPTION:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
-              throw new Exception(endpoint.body)
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {
         // complete at the end so the server span will end after the controller span
-        context.complete()
+        if (endpoint != EXCEPTION) {
+          context.complete()
+        }
+        latch.countDown()
       }
     }
+    latch.await()
   }
 }

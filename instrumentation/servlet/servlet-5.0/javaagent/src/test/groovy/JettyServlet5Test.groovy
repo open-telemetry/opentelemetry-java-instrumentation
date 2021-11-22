@@ -119,12 +119,6 @@ class JettyServlet5TestAsync extends JettyServlet5Test {
   boolean errorEndpointUsesSendError() {
     false
   }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -133,12 +127,6 @@ class JettyServlet5TestFakeAsync extends JettyServlet5Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet5.FakeAsync
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 
@@ -222,12 +210,6 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -255,12 +237,6 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
   @Override
   boolean errorEndpointUsesSendError() {
     false
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 
