@@ -1,5 +1,3 @@
-import ru.vyarus.gradle.plugin.animalsniffer.AnimalSniffer
-
 plugins {
   id("org.xbib.gradle.plugin.jflex")
 
