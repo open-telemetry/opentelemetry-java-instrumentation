@@ -14,7 +14,7 @@ import java.io.IOException;
 public class TestServlet extends HttpServlet {
 
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+  protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String path = req.getServletPath();
 
     HttpServerTest.ServerEndpoint serverEndpoint = HttpServerTest.ServerEndpoint.forPath(path);

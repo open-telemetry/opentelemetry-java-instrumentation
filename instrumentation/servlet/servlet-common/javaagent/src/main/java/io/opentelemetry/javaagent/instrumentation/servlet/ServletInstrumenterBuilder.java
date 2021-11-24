@@ -74,6 +74,11 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(additionalAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get());
+    if (ServletRequestParametersExtractor.enabled()) {
+      AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
+      builder.addAttributesExtractor(requestParametersExtractor);
+    }
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);

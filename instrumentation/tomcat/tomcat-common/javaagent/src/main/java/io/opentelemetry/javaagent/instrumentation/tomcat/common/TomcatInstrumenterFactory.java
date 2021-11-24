@@ -53,7 +53,11 @@ public final class TomcatInstrumenterFactory {
         .addContextCustomizer(
             (context, request, attributes) -> {
               context = ServerSpanNaming.init(context, CONTAINER);
-              return AppServerBridge.init(context);
+
+              return new AppServerBridge.Builder()
+                  .captureServletAttributes()
+                  .recordException()
+                  .init(context);
             })
         .addRequestMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(TomcatRequestGetter.INSTANCE);

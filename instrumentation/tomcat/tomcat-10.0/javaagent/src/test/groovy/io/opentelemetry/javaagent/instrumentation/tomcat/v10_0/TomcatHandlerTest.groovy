@@ -44,6 +44,11 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
+  boolean testCapturedRequestParameters() {
+    true
+  }
+
+  @Override
   Tomcat startServer(int port) {
     Tomcat tomcat = new Tomcat()
     tomcat.setBaseDir(File.createTempDir().absolutePath)

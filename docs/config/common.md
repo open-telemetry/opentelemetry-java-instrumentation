@@ -49,3 +49,16 @@ These configuration options are supported by all HTTP client and server instrume
 
 > **Note**: The property/environment variable names listed in the table are still experimental,
 > and thus are subject to change.
+
+## Capturing servlet request parameters
+
+You can configure the agent to capture predefined HTTP request parameter as span attributes for
+requests that are handled by Servlet API.
+Use the following property to define which servlet request parameters you want to capture:
+
+| System property                                                        | Environment variable                                                   | Description |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------- |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `OTEL_INSTRUMENTATION_SERVLET_EXPERIMENTAL_CAPTURE_REQUEST_PARAMETERS` | A comma-separated list of request parameter names.
+
+> **Note**: The property/environment variable names listed in the table are still experimental,
+> and thus are subject to change.

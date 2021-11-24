@@ -14,6 +14,7 @@ import javax.servlet.Servlet
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -48,6 +49,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, AUTH_REQUIRED.path, servlet)
     addServlet(context, INDEXED_CHILD.path, servlet)
     addServlet(context, CAPTURE_HEADERS.path, servlet)
+    addServlet(context, CAPTURE_PARAMETERS.path, servlet)
   }
 
   protected ServerEndpoint lastRequest
@@ -64,6 +66,11 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       SemanticAttributes.HTTP_SERVER_NAME,
       SemanticAttributes.NET_TRANSPORT
     ]
+  }
+
+  @Override
+  boolean testCapturedRequestParameters() {
+    true
   }
 
   boolean errorEndpointUsesSendError() {
