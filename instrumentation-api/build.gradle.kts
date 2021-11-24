@@ -41,7 +41,6 @@ dependencies {
 tasks {
   named<Checkstyle>("checkstyleMain") {
     exclude("**/concurrentlinkedhashmap/**")
-    exclude("**/weaklockfree/**")
   }
 
   sourcesJar {

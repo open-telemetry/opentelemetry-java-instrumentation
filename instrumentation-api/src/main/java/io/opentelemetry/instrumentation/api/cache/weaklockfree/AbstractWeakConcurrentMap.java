@@ -3,6 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Includes work from:
+/*
+ * Copyright Rafael Winterhalter
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Suppress warnings since this is vendored as-is.
+// CHECKSTYLE:OFF
+
 package io.opentelemetry.instrumentation.api.cache.weaklockfree;
 
 import java.lang.ref.Reference;
@@ -20,8 +40,13 @@ import java.util.concurrent.ConcurrentMap;
  * that allows to override methods. This class does not implement the {@link Map} interface because
  * this implementation is incompatible with the map contract. While iterating over a map's entries,
  * any key that has not passed iteration is referenced non-weakly.
+ *
+ * <p>This class has been copied as is from
+ * https://github.com/raphw/weak-lock-free/blob/ad0e5e0c04d4a31f9485bf12b89afbc9d75473b3/src/main/java/com/blogspot/mydailyjava/weaklockfree/WeakConcurrentMap.java
  */
-public abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
+// Suppress warnings since this is vendored as-is.
+@SuppressWarnings({"MissingSummary", "EqualsBrokenForNull", "FieldMissingNullable"})
+abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     implements Runnable, Iterable<Map.Entry<K, V>> {
 
   final ConcurrentMap<WeakKey<K>, V> target;
