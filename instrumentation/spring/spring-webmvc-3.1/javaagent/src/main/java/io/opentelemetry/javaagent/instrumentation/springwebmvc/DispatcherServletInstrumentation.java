@@ -52,8 +52,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
 
   /**
    * This advice creates a filter that has reference to the handlerMappings from DispatcherServlet
-   * which allows the mappings to be evaluated at the beginning of the filter chain. This evaluation
-   * is done inside the Servlet3Decorator.onContext method.
+   * which allows the mappings to be evaluated outside of regular request processing.
    */
   @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
