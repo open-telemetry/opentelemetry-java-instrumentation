@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
-import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
+import io.opentelemetry.instrumentation.api.cache.weaklockfree.WeakConcurrentMap;
 import java.util.function.Function;
 
 final class WeakLockFreeCache<K, V> implements Cache<K, V> {

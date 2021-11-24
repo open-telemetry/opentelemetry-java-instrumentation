@@ -87,7 +87,8 @@ dependencies {
   licenseReportDependencies("com.github.ben-manes.caffeine:caffeine:$caffeine3Version") {
     isTransitive = false
   }
-  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free")
+  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
+  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
   // TODO ideally this would be :instrumentation instead of :javaagent-tooling
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work

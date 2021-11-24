@@ -87,7 +87,6 @@ val DEPENDENCY_SETS = listOf(
 
 val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.3",
-  "com.blogspot.mydailyjava:weak-lock-free:0.18",
   "com.github.stefanbirkner:system-lambda:1.2.0",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "com.google.auto.service:auto-service:1.0",
