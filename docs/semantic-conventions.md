@@ -1,6 +1,6 @@
 # Semantic conventions
 
-This document describes which [OpenTelemetry Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/trace/semantic_conventions)
+This document describes which [OpenTelemetry Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/trace/semantic_conventions)
 are implemented by Java autoinstrumentation and which ones are not.
 
 ## Http Server

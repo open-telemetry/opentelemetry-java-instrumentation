@@ -89,4 +89,4 @@ public class WebMvcTracingFilterConfig {
 
 ### Starter Guide
 
-Check out the OpenTelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the OpenTelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.

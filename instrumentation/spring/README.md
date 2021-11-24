@@ -742,7 +742,7 @@ public class TimeServiceApplication {
 
 ### Generating Trace - LoggingSpanExporter
 
-To generate a trace, run MainServiceApplication and TimeServiceApplication, and then send a request to `localhost:8080/message`. Shown below is the output of the default span exporter - (LoggingSpanExporter)[https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/logging].
+To generate a trace, run MainServiceApplication and TimeServiceApplication, and then send a request to `localhost:8080/message`. Shown below is the output of the default span exporter - (LoggingSpanExporter)[https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging].
 
 #### MainService
 

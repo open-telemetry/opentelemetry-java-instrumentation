@@ -40,7 +40,7 @@ does this, though not to run on older JVMs, but to run with the `-javaagent` fla
 think about hacking the `-javaagent` flag directly into the test JVM). But this approach does come
 with a more complex testing and debugging story due to propagating tests and parameters, and
 debugging across two separate JVMs. And new contributor experience
-[has a very high priority for this project](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/docs/ga-requirements.md#p2)
+[has a very high priority for this project](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/ga-requirements.md#p2)
 (compared to say commercial tools who can invest more in onboarding their employees onto a more
 complex codebase).
 

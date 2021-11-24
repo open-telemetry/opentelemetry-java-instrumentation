@@ -4,9 +4,9 @@ Common settings that apply to multiple instrumentations at once.
 
 ## Peer service name
 
-The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes)
+The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes)
 is the name of a remote service to which a connection is made. It corresponds to `service.name` in
-the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service)
+the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/resource/semantic_conventions#service)
 for the local service.
 
 | System property                                    | Environment variable                               | Description |
