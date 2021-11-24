@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/*
+ * NOTICE file from https://github.com/ben-manes/concurrentlinkedhashmap/blob/master/NOTICE:
+ *
+ * ConcurrentLinkedHashMap
+ * Copyright 2008, Ben Manes
+ * Copyright 2010, Google Inc.
+ *
+ * Some alternate data structures provided by JSR-166e
+ * from http://gee.cs.oswego.edu/dl/concurrency-interest/.
+ * Written by Doug Lea and released as Public Domain.
+ */
+
 /**
  * This package contains an implementation of a bounded {@link java.util.concurrent.ConcurrentMap}
  * data structure.
