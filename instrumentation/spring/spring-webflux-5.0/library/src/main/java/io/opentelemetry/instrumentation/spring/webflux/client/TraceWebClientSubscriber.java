@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.reactivestreams.Subscription;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;
 
@@ -16,22 +19,22 @@ import reactor.core.CoreSubscriber;
  */
 final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
-  private final SpringWebfluxHttpClientTracer tracer;
-
+  private final Instrumenter<ClientRequest, ClientResponse> instrumenter;
+  private final ClientRequest request;
   private final CoreSubscriber<? super ClientResponse> actual;
-
-  private final reactor.util.context.Context context;
-
-  private final io.opentelemetry.context.Context tracingContext;
+  private final reactor.util.context.Context reactorContext;
+  private final io.opentelemetry.context.Context otelContext;
 
   TraceWebClientSubscriber(
-      SpringWebfluxHttpClientTracer tracer,
+      Instrumenter<ClientRequest, ClientResponse> instrumenter,
+      ClientRequest request,
       CoreSubscriber<? super ClientResponse> actual,
-      io.opentelemetry.context.Context tracingContext) {
-    this.tracer = tracer;
+      Context otelContext) {
+    this.instrumenter = instrumenter;
+    this.request = request;
     this.actual = actual;
-    this.tracingContext = tracingContext;
-    this.context = actual.currentContext();
+    this.otelContext = otelContext;
+    this.reactorContext = actual.currentContext();
   }
 
   @Override
@@ -41,31 +44,31 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
   @Override
   public void onNext(ClientResponse response) {
-    try (Scope ignored = tracingContext.makeCurrent()) {
+    try (Scope ignored = otelContext.makeCurrent()) {
       this.actual.onNext(response);
     } finally {
-      tracer.end(tracingContext, response);
+      instrumenter.end(otelContext, request, response, null);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (Scope ignored = tracingContext.makeCurrent()) {
+    try (Scope ignored = otelContext.makeCurrent()) {
       this.actual.onError(t);
     } finally {
-      tracer.endExceptionally(tracingContext, t);
+      instrumenter.end(otelContext, request, null, t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignored = tracingContext.makeCurrent()) {
+    try (Scope ignored = otelContext.makeCurrent()) {
       this.actual.onComplete();
     }
   }
 
   @Override
   public reactor.util.context.Context currentContext() {
-    return this.context;
+    return this.reactorContext;
   }
 }

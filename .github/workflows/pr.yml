@@ -160,8 +160,12 @@ jobs:
           - liberty
           - tomcat
           - tomee
+          - websphere
           - wildfly
           - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -253,8 +257,6 @@ jobs:
 
   examples:
     runs-on: ubuntu-latest
-    # When we make PR against pre-release branch examples may point to yet-unpublished version
-    if: github.base_ref == 'main'
     steps:
       - uses: actions/checkout@v2.3.4
         with:

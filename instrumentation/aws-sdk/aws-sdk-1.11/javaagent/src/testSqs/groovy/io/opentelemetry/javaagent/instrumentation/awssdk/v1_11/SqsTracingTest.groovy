@@ -14,4 +14,9 @@ class SqsTracingTest extends AbstractSqsTracingTest implements AgentTestTrait {
   AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client
   }
+
+  @Override
+  boolean hasHttpClientSpan() {
+    true
+  }
 }

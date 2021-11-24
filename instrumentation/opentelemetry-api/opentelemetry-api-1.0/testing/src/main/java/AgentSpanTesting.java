@@ -14,14 +14,6 @@ public class AgentSpanTesting {
   }
 
   /**
-   * Runs the provided {@code runnable} inside the scope of an CONSUMER span with name {@code
-   * spanName}.
-   */
-  public static void runWithConsumerSpan(String spanName, Runnable runnable) {
-    runnable.run();
-  }
-
-  /**
    * Runs the provided {@code runnable} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */

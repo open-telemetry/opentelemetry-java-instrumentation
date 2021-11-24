@@ -7,9 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 
-public class LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
-
-  public static final LibertyDispatcherRequestGetter GETTER = new LibertyDispatcherRequestGetter();
+enum LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(LibertyRequest carrier) {

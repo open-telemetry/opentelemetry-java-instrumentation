@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 
-final class HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
+enum HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
+  INSTANCE;
 
   @Override
   public void set(HttpRequestAndChannel requestAndChannel, String key, String value) {

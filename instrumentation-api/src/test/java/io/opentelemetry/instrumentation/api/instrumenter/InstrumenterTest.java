@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -22,6 +23,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
@@ -38,6 +40,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -410,6 +413,38 @@ class InstrumenterTest {
   }
 
   @Test
+  void requestMetrics() {
+    AtomicReference<Context> startContext = new AtomicReference<>();
+    AtomicReference<Context> endContext = new AtomicReference<>();
+
+    RequestListener requestListener =
+        new RequestListener() {
+          @Override
+          public Context start(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(context);
+            return context;
+          }
+
+          @Override
+          public void end(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(context);
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addRequestMetrics(meter -> requestListener)
+            .newServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
+    assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
+  }
+
+  @Test
   void shouldStartSpanWithGivenStartTime() {
     // given
     Instrumenter<Instant, Instant> instrumenter =
@@ -639,6 +674,53 @@ class InstrumenterTest {
     assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
     assertThat(SpanKey.RPC_CLIENT.fromContextOrNull(context)).isNull();
     assertThat(SpanKey.PRODUCER.fromContextOrNull(context)).isNull();
+  }
+
+  @Test
+  void instrumentationVersion_default() {
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", name -> "span");
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasInstrumentationLibraryInfo(
+                                InstrumentationLibraryInfo.create(
+                                    "test", InstrumentationVersion.VERSION))));
+  }
+
+  @Test
+  void instrumentationVersion_custom() {
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", "1.0", name -> "span");
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasInstrumentationLibraryInfo(
+                                InstrumentationLibraryInfo.create("test", "1.0"))));
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {

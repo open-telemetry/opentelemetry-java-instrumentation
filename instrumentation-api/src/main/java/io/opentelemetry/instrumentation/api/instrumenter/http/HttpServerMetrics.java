@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationView;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
@@ -71,7 +71,7 @@ public final class HttpServerMetrics implements RequestListener {
 
   @Override
   public Context start(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes));
+    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
@@ -89,7 +89,8 @@ public final class HttpServerMetrics implements RequestListener {
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyDurationView(state.startAttributes(), endAttributes));
+        applyServerDurationView(state.startAttributes(), endAttributes),
+        context);
   }
 
   @AutoValue

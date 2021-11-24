@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationView;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
@@ -76,7 +76,8 @@ public final class HttpClientMetrics implements RequestListener {
     }
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyDurationView(state.startAttributes(), endAttributes));
+        applyClientDurationView(state.startAttributes(), endAttributes),
+        context);
   }
 
   @AutoValue

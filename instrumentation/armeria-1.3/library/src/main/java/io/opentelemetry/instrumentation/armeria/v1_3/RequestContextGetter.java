@@ -12,7 +12,8 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {

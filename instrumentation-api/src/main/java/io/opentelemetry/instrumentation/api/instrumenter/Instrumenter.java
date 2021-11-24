@@ -58,7 +58,34 @@ public class Instrumenter<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
-    return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
+    return new InstrumenterBuilder<>(
+        openTelemetry, instrumentationName, InstrumentationVersion.VERSION, spanNameExtractor);
+  }
+
+  /**
+   * Returns a new {@link InstrumenterBuilder}.
+   *
+   * <p>The {@code instrumentationName} is the name of the instrumentation library, not the name of
+   * the instrument*ed* library. The value passed in this parameter should uniquely identify the
+   * instrumentation library so that during troubleshooting it's possible to pinpoint what tracer
+   * produced problematic telemetry.
+   *
+   * <p>The {@code instrumentationVersion} is the version of the instrumentation library, not the
+   * version of the instrument*ed* library.
+   *
+   * <p>In this project we use a convention to encode the minimum supported version of the
+   * instrument*ed* library into the instrumentation name, for example {@code
+   * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
+   * different library versions it's easy to find out which instrumentations produced the telemetry
+   * data.
+   */
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      String instrumentationVersion,
+      SpanNameExtractor<? super REQUEST> spanNameExtractor) {
+    return new InstrumenterBuilder<>(
+        openTelemetry, instrumentationName, instrumentationVersion, spanNameExtractor);
   }
 
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
@@ -73,6 +100,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends RequestListener> requestListeners;
+  private final List<? extends RequestListener> requestMetricListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
   @Nullable private final EndTimeExtractor<REQUEST, RESPONSE> endTimeExtractor;
@@ -82,7 +110,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer =
-        builder.openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION);
+        builder.openTelemetry.getTracer(instrumentationName, builder.instrumentationVersion);
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
@@ -90,6 +118,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
+    this.requestMetricListeners = new ArrayList<>(builder.requestMetricListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
@@ -165,6 +194,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = spanBuilder.startSpan();
     context = context.with(span);
 
+    // request metric listeners need to run after the span has been added to the context in order
+    // for them to generate exemplars
+    if (!requestMetricListeners.isEmpty()) {
+      long startNanos = getNanos(startTime);
+      for (RequestListener requestListener : requestMetricListeners) {
+        context = requestListener.start(context, attributes, startNanos);
+      }
+    }
+
     return spanSuppressionStrategy.storeInContext(context, spanKind, span);
   }
 
@@ -194,9 +232,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       endTime = endTimeExtractor.extract(request, response, error);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!requestListeners.isEmpty() || !requestMetricListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
       for (RequestListener requestListener : requestListeners) {
+        requestListener.end(context, attributes, endNanos);
+      }
+      for (RequestListener requestListener : requestMetricListeners) {
         requestListener.end(context, attributes, endNanos);
       }
     }

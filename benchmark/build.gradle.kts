@@ -21,7 +21,7 @@ dependencies {
   jmh(project(":javaagent-tooling"))
   jmh(project(":javaagent-extension-api"))
 
-  jmh("com.github.ben-manes.caffeine:caffeine:$caffeine2Version")
+  jmh("com.github.ben-manes.caffeine:caffeine:2.9.2")
 
   jmh("javax.servlet:javax.servlet-api:4.0.1")
   jmh("com.google.http-client:google-http-client:1.19.0")

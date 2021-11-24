@@ -11,7 +11,8 @@ import org.restlet.data.Form;
 import org.restlet.data.Message;
 import org.restlet.data.Request;
 
-final class RestletHeadersGetter implements TextMapGetter<Request> {
+enum RestletHeadersGetter implements TextMapGetter<Request> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(Request carrier) {

@@ -35,6 +35,11 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   }
 
   @Override
+  String userAgent() {
+    return "httpasyncclient"
+  }
+
+  @Override
   Integer responseCodeOnRedirectError() {
     return 302
   }
@@ -42,6 +47,7 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   @Override
   HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
+    request.addHeader("user-agent", userAgent())
     headers.entrySet().each {
       request.setHeader(new BasicHeader(it.key, it.value))
     }

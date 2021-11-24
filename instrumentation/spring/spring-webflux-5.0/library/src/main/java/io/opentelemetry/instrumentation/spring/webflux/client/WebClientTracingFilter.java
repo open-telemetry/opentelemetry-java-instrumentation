@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.List;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -20,39 +20,28 @@ import reactor.core.publisher.Mono;
  * Based on Spring Sleuth's Reactor instrumentation.
  * https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientBeanPostProcessor.java
  */
-public class WebClientTracingFilter implements ExchangeFilterFunction {
+class WebClientTracingFilter implements ExchangeFilterFunction {
 
-  private final SpringWebfluxHttpClientTracer tracer;
+  private final Instrumenter<ClientRequest, ClientResponse> instrumenter;
+  private final ContextPropagators propagators;
 
-  private WebClientTracingFilter(SpringWebfluxHttpClientTracer tracer) {
-    this.tracer = tracer;
-  }
-
-  public static void addFilter(
-      OpenTelemetry openTelemetry, List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
-      if (filterFunction instanceof WebClientTracingFilter) {
-        return;
-      }
-    }
-    exchangeFilterFunctions.add(
-        0, new WebClientTracingFilter(new SpringWebfluxHttpClientTracer(openTelemetry)));
+  public WebClientTracingFilter(
+      Instrumenter<ClientRequest, ClientResponse> instrumenter, ContextPropagators propagators) {
+    this.instrumenter = instrumenter;
+    this.propagators = propagators;
   }
 
   @Override
   public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-    return new MonoWebClientTrace(tracer, request, next);
+    return new MonoWebClientTrace(request, next);
   }
 
-  private static final class MonoWebClientTrace extends Mono<ClientResponse> {
+  private final class MonoWebClientTrace extends Mono<ClientResponse> {
 
-    private final SpringWebfluxHttpClientTracer tracer;
     private final ExchangeFunction next;
     private final ClientRequest request;
 
-    private MonoWebClientTrace(
-        SpringWebfluxHttpClientTracer tracer, ClientRequest request, ExchangeFunction next) {
-      this.tracer = tracer;
+    private MonoWebClientTrace(ClientRequest request, ExchangeFunction next) {
       this.next = next;
       this.request = request;
     }
@@ -60,22 +49,23 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       Context parentContext = Context.current();
-      if (!tracer.shouldStartSpan(parentContext)) {
+      if (!instrumenter.shouldStart(parentContext, request)) {
         next.exchange(request).subscribe(subscriber);
         return;
       }
 
+      Context context = instrumenter.start(parentContext, request);
+
       ClientRequest.Builder builder = ClientRequest.from(request);
-      Context context = tracer.startSpan(parentContext, request, builder);
+      propagators.getTextMapPropagator().inject(context, builder, HttpHeadersSetter.INSTANCE);
+
       try (Scope ignored = context.makeCurrent()) {
         this.next
             .exchange(builder.build())
             .doOnCancel(
-                () -> {
-                  tracer.onCancel(context);
-                  tracer.end(context);
-                })
-            .subscribe(new TraceWebClientSubscriber(tracer, subscriber, context));
+                // no response and no error means that the request has been cancelled
+                () -> instrumenter.end(context, request, null, null))
+            .subscribe(new TraceWebClientSubscriber(instrumenter, request, subscriber, context));
       }
     }
   }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -17,8 +17,7 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
   private static final Logger logger = LoggerFactory.getLogger(IgnoredClassLoadersMatcher.class);
 
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-  private static final Cache<ClassLoader, Boolean> skipCache =
-      Cache.builder().setWeakKeys().build();
+  private static final Cache<ClassLoader, Boolean> skipCache = Cache.weak();
 
   private final Trie<IgnoreAllow> ignoredClassLoaders;
 

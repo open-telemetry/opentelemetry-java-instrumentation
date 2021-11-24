@@ -59,9 +59,8 @@ final class ParentContextExtractor {
             MapGetter.INSTANCE);
   }
 
-  private static class MapGetter implements TextMapGetter<Map<String, String>> {
-
-    private static final MapGetter INSTANCE = new MapGetter();
+  private enum MapGetter implements TextMapGetter<Map<String, String>> {
+    INSTANCE;
 
     @Override
     public Iterable<String> keys(Map<String, String> map) {

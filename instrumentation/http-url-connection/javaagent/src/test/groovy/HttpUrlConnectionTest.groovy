@@ -27,6 +27,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   @Override
   int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
+    if (uri.toString().contains("/read-timeout")) {
+      connection.readTimeout = READ_TIMEOUT_MS
+    }
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }
@@ -63,6 +66,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   @Override
   boolean testCallback() {
     return false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Unroll

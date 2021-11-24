@@ -29,8 +29,8 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:0.8.0")
-  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:0.8.0")
+  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin")
+  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
@@ -39,14 +39,16 @@ dependencies {
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:5.16.0")
   implementation("com.google.guava:guava:30.1-jre")
+  implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.17")
   implementation("gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0")
+  implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.17")
   implementation("org.ow2.asm:asm:9.1")
   implementation("org.ow2.asm:asm-tree:9.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
   implementation("org.gradle:test-retry-gradle-plugin:1.2.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.3")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.20")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.22")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.5")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")

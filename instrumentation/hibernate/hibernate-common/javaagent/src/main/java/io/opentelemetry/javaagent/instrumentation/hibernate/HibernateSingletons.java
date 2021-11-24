@@ -6,20 +6,32 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
 public class HibernateSingletons {
 
-  private static final Instrumenter<String, Void> INSTANCE;
+  static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get().getBoolean("otel.instrumentation.hibernate.experimental-span-attributes", false);
+
+  private static final Instrumenter<HibernateOperation, Void> INSTANCE;
 
   static {
-    INSTANCE =
-        Instrumenter.<String, Void>builder(
-                GlobalOpenTelemetry.get(), "io.opentelemetry.hibernate-common", s -> s)
-            .newInstrumenter();
+    InstrumenterBuilder<HibernateOperation, Void> instrumenterBuilder =
+        Instrumenter.builder(
+            GlobalOpenTelemetry.get(),
+            "io.opentelemetry.hibernate-common",
+            HibernateOperation::getName);
+
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      instrumenterBuilder.addAttributesExtractor(new HibernateExperimentalAttributesExtractor());
+    }
+
+    INSTANCE = instrumenterBuilder.newInstrumenter();
   }
 
-  public static Instrumenter<String, Void> instrumenter() {
+  public static Instrumenter<HibernateOperation, Void> instrumenter() {
     return INSTANCE;
   }
 }

@@ -14,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,9 +48,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Origin Method method,
-        @Advice.Argument(0) FilterChainContext ctx,
-        @Advice.Argument(1) Object httpHeader) {
+        @Advice.Argument(0) FilterChainContext ctx, @Advice.Argument(1) Object httpHeader) {
 
       Context parentContext = GrizzlyStateStorage.getContext(ctx);
       if (parentContext == null) {

@@ -56,6 +56,6 @@ public final class TomcatInstrumenterFactory {
               return AppServerBridge.init(context);
             })
         .addRequestMetrics(HttpServerMetrics.get())
-        .newServerInstrumenter(TomcatRequestGetter.GETTER);
+        .newServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }
 }

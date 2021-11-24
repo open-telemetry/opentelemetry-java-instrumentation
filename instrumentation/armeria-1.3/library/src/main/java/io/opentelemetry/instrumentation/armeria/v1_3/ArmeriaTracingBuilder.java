@@ -148,7 +148,7 @@ public final class ArmeriaTracingBuilder {
     }
 
     return new ArmeriaTracing(
-        clientInstrumenterBuilder.newClientInstrumenter(new ClientRequestContextSetter()),
-        serverInstrumenterBuilder.newServerInstrumenter(new RequestContextGetter()));
+        clientInstrumenterBuilder.newClientInstrumenter(ClientRequestContextSetter.INSTANCE),
+        serverInstrumenterBuilder.newServerInstrumenter(RequestContextGetter.INSTANCE));
   }
 }

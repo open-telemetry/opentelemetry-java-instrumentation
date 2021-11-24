@@ -72,7 +72,7 @@ public final class SpringWebTracingBuilder {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new HttpRequestSetter());
+            .newClientInstrumenter(HttpRequestSetter.INSTANCE);
 
     return new SpringWebTracing(instrumenter);
   }

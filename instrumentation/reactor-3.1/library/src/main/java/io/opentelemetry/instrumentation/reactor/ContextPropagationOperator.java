@@ -117,7 +117,7 @@ public final class ContextPropagationOperator {
   }
 
   /** Forces Mono to run in traceContext scope. */
-  static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
+  public static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
     if (!enabled) {
       return publisher;
     }

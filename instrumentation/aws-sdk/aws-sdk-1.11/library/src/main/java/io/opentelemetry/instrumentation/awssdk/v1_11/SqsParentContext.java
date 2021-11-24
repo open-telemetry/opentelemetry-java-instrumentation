@@ -13,9 +13,8 @@ import java.util.Map;
 
 final class SqsParentContext {
 
-  private static class MapGetter implements TextMapGetter<Map<String, String>> {
-
-    private static final MapGetter INSTANCE = new MapGetter();
+  enum MapGetter implements TextMapGetter<Map<String, String>> {
+    INSTANCE;
 
     @Override
     public Iterable<String> keys(Map<String, String> map) {

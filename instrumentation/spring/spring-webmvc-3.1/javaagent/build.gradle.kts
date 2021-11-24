@@ -40,6 +40,10 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-security:1.5.17.RELEASE")
 
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.5.+")
+
   testImplementation("org.springframework.security.oauth:spring-security-oauth2:2.0.16.RELEASE")
 
   // For spring security

@@ -19,7 +19,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
 
+  testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.7:javaagent"))
+  testInstrumentation(project(":instrumentation:mongo:mongo-4.0:javaagent"))
 }
 
 tasks {

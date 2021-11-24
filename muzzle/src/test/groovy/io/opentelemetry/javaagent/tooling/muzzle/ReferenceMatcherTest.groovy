@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
+import muzzle.TestClasses
 import muzzle.TestClasses.MethodBodyAdvice
 import org.objectweb.asm.Type
 import spock.lang.Shared
@@ -318,6 +319,30 @@ class ReferenceMatcherTest extends Specification {
     "internal helper, different field type" | "io.opentelemetry.instrumentation.Helper"         | "field"          | "Lcom/external/DifferentType;"
     "external helper, different field name" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "differentField" | "Ljava/lang/Integer;"
     "external helper, different field type" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "field"          | "Lcom/external/DifferentType;"
+  }
+
+  def "should fail #desc helper class when the library parent class has different constructor"() {
+    given:
+    def helper = ClassRef.builder(className)
+      .setSuperClassName(TestClasses.BaseClassWithConstructor.name)
+      .build()
+    // muzzle codegen plugin has captured a no-arg constructor reference;
+    // the actual constructor of the base class on the classpath requires a long
+    def baseClassRef = ClassRef.builder(TestClasses.BaseClassWithConstructor.name)
+      .addMethod(new Source[0], new Flag[0], "<init>", Type.VOID_TYPE)
+      .build()
+
+    when:
+    def mismatches = createMatcher([(helper.className): helper, (baseClassRef.className): baseClassRef], [helper.className])
+      .getMismatchedReferenceSources(this.class.classLoader)
+
+    then:
+    getMismatchClassSet(mismatches) == [Mismatch.MissingMethod] as Set
+
+    where:
+    desc       | className
+    "internal" | "io.opentelemetry.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
   private static ReferenceMatcher createMatcher(Map<String, ClassRef> references = [:],

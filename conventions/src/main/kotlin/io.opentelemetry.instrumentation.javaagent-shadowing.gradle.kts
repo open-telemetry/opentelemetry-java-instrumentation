@@ -8,7 +8,6 @@ tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles()
 
   exclude("**/module-info.class")
-  exclude("META-INF/jandex.idx") // from caffeine
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")

@@ -94,7 +94,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     response != null
 
     client.requestHandler2s != null
-    client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
+    client.requestHandler2s.find{it.getClass().getSimpleName() == "TracingRequestHandler"} != null
 
     assertTraces(1) {
       trace(0, 1) {

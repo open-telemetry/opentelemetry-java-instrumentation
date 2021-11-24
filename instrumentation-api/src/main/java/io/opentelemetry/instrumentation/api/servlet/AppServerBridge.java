@@ -50,24 +50,6 @@ public class AppServerBridge {
   }
 
   /**
-   * Returns true, if servlet integration should record exception thrown during servlet invocation
-   * in server span. This method should return <code>false</code> on servers where exceptions thrown
-   * during servlet invocation are propagated to the method where server span is closed and can be
-   * added to server span there and <code>true</code> otherwise.
-   *
-   * @param context server context
-   * @return <code>true</code>, if servlet integration should record exception thrown during servlet
-   *     invocation in server span, or <code>false</code> otherwise.
-   */
-  public static boolean shouldRecordException(Context context) {
-    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
-    if (appServerBridge != null) {
-      return appServerBridge.servletShouldRecordException;
-    }
-    return true;
-  }
-
-  /**
    * Record exception that happened during servlet invocation so that app server instrumentation can
    * add it to server span.
    *

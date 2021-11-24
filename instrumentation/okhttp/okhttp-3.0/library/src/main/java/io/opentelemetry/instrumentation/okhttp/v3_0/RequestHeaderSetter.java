@@ -10,9 +10,8 @@ import javax.annotation.Nullable;
 import okhttp3.Request;
 
 /** Helper class to inject span context into request headers. */
-final class RequestHeaderSetter implements TextMapSetter<Request.Builder> {
-
-  static final RequestHeaderSetter SETTER = new RequestHeaderSetter();
+enum RequestHeaderSetter implements TextMapSetter<Request.Builder> {
+  INSTANCE;
 
   @Override
   public void set(@Nullable Request.Builder carrier, String key, String value) {

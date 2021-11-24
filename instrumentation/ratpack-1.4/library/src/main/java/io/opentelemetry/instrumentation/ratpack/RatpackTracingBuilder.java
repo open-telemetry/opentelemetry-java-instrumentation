@@ -9,8 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.ratpack.internal.RatpackNetAttributesExtractor;
@@ -62,15 +62,16 @@ public final class RatpackTracingBuilder {
     RatpackHttpAttributesExtractor httpAttributes =
         new RatpackHttpAttributesExtractor(capturedHttpHeaders);
 
-    InstrumenterBuilder<Request, Response> builder =
-        Instrumenter.builder(
-            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes));
+    Instrumenter<Request, Response> instrumenter =
+        Instrumenter.<Request, Response>builder(
+                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
+            .addAttributesExtractor(netAttributes)
+            .addAttributesExtractor(httpAttributes)
+            .addAttributesExtractors(additionalExtractors)
+            .addRequestMetrics(HttpServerMetrics.get())
+            .newServerInstrumenter(RatpackGetter.INSTANCE);
 
-    builder.setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes));
-    builder.addAttributesExtractor(netAttributes);
-    builder.addAttributesExtractor(httpAttributes);
-    builder.addAttributesExtractors(additionalExtractors);
-
-    return new RatpackTracing(builder.newServerInstrumenter(new RatpackGetter()));
+    return new RatpackTracing(instrumenter);
   }
 }

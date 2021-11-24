@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
  * Object, Attributes)} during {@link Instrumenter#start(Context, Object)}, allowing customization
  * of the {@link Context} that is returned from that method.
  */
+@FunctionalInterface
 public interface ContextCustomizer<REQUEST> {
 
   /**

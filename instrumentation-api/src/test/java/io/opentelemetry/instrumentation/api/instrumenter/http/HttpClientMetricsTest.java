@@ -10,6 +10,10 @@ import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.asse
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -32,7 +36,9 @@ class HttpClientMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put("http.method", "GET")
+            .put("http.url", "https://localhost:1234/")
             .put("http.host", "host")
+            .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
@@ -45,7 +51,17 @@ class HttpClientMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context context1 = listener.start(Context.current(), requestAttributes, nanos(100));
+    Context parent =
+        Context.root()
+            .with(
+                Span.wrap(
+                    SpanContext.create(
+                        "ff01020304050600ff0a0b0c0d0e0f00",
+                        "090a0b0c0d0e0f00",
+                        TraceFlags.getSampled(),
+                        TraceState.getDefault())));
+
+    Context context1 = listener.start(parent, requestAttributes, nanos(100));
 
     // TODO(anuraaga): Remove await from this file after 1.8.0 hopefully fixes
     // https://github.com/open-telemetry/opentelemetry-java/issues/3725
@@ -56,7 +72,7 @@ class HttpClientMetricsTest {
               assertThat(metrics).isEmpty();
             });
 
-    Context context2 = listener.start(Context.current(), requestAttributes, nanos(150));
+    Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
 
     await()
         .untilAsserted(
@@ -80,19 +96,20 @@ class HttpClientMetricsTest {
                               .hasDoubleHistogram()
                               .points()
                               .satisfiesExactly(
-                                  point ->
-                                      assertThat(point)
-                                          .hasSum(150 /* millis */)
-                                          .attributes()
-                                          .containsOnly(
-                                              attributeEntry("http.host", "host"),
-                                              attributeEntry("http.method", "GET"),
-                                              attributeEntry("http.scheme", "https"),
-                                              attributeEntry("http.flavor", "2.0"),
-                                              attributeEntry("http.server_name", "server"),
-                                              attributeEntry("http.status_code", 200),
-                                              attributeEntry("net.host.name", "localhost"),
-                                              attributeEntry("net.host.port", 1234L))));
+                                  point -> {
+                                    assertThat(point)
+                                        .hasSum(150 /* millis */)
+                                        .attributes()
+                                        .containsOnly(
+                                            attributeEntry("http.url", "https://localhost:1234/"),
+                                            attributeEntry("http.method", "GET"),
+                                            attributeEntry("http.flavor", "2.0"),
+                                            attributeEntry("http.status_code", 200));
+                                    assertThat(point).exemplars().hasSize(1);
+                                    assertThat(point.getExemplars().get(0))
+                                        .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                        .hasSpanId("090a0b0c0d0e0f00");
+                                  }));
             });
 
     listener.end(context2, responseAttributes, nanos(300));

@@ -17,7 +17,7 @@ import io.netty.channel.AbstractChannel
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
@@ -34,14 +34,14 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
-  public static final String PEER_NAME = "localhost"
-  public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
+  @Shared
+  String host
   @Shared
   int port
   @Shared
@@ -67,21 +67,20 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   RedisAsyncCommands<String, ?> asyncCommands
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    port = PortUtils.findOpenPort()
-    incorrectPort = PortUtils.findOpenPort()
-    dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
-    dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
-    dbUriNonExistent = "redis://" + dbAddrNonExistent
+  def setup() {
+    redisServer.start()
+
+    host = redisServer.getHost()
+    port = redisServer.getMappedPort(6379)
+    dbAddr = host + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
-  }
+    incorrectPort = PortUtils.findOpenPort()
+    dbAddrNonExistent = host + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
 
-  def setup() {
     redisClient = RedisClient.create(embeddedDbUri)
 
-    redisServer.start()
     redisClient.setOptions(CLIENT_OPTIONS)
 
     connection = redisClient.connect()
@@ -106,7 +105,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      new RedisURI(PEER_NAME, port, 3, TimeUnit.SECONDS))
+      new RedisURI(host, port, 3, TimeUnit.SECONDS))
     StatefulConnection connection = connectionFuture.get()
 
     then:
@@ -117,7 +116,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_NAME.key" host
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
           }
@@ -136,7 +135,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      new RedisURI(PEER_NAME, incorrectPort, 3, TimeUnit.SECONDS))
+      new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS))
     StatefulConnection connection = connectionFuture.get()
 
     then:
@@ -150,7 +149,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_NAME.key" host
             "$SemanticAttributes.NET_PEER_PORT.key" incorrectPort
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
           }
@@ -202,7 +201,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -266,7 +265,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
@@ -319,7 +318,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
@@ -381,7 +380,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     })
 
     then:
-    conds.await()
+    conds.await(10)
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
@@ -431,7 +430,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     redisFuture.get()
 
     then:
-    conds.await()
+    conds.await(10)
     completedExceptionally == true
     thrown Exception
     assertTraces(1) {
@@ -473,7 +472,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     asyncCommands.flushCommands()
 
     then:
-    conds.await()
+    conds.await(10)
     cancelSuccess == true
     assertTraces(1) {
       trace(0, 3) {

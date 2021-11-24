@@ -56,6 +56,11 @@ public class ApplicationContextInstrumentation implements TypeInstrumentation {
             genericBeanDefinition(GlobalChannelInterceptorWrapper.class)
                 .addConstructorArgValue(SpringIntegrationSingletons.interceptor())
                 .addPropertyValue("patterns", SpringIntegrationSingletons.patterns())
+                // it is important for the tracing interceptor to run first for CONSUMER spans so
+                // that they capture the whole operation and also so that users can write their own
+                // interceptors to enrich the CONSUMER span (similar to writing a servlet filter to
+                // enrich the SERVER span)
+                .addPropertyValue("order", Integer.MIN_VALUE)
                 .getBeanDefinition();
 
         ((BeanDefinitionRegistry) beanFactory)

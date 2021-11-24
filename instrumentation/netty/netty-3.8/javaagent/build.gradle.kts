@@ -25,6 +25,9 @@ dependencies {
 
   compileOnly("io.netty:netty:3.8.0.Final")
 
+  testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+
   testLibrary("io.netty:netty:3.8.0.Final")
   testLibrary("com.ning:async-http-client:1.8.0")
 

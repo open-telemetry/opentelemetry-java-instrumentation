@@ -5,31 +5,34 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.instrumenter;
 
 import com.twitter.finagle.http.Response;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 
-public class FinatraResponseListener implements FutureEventListener<Response> {
+public final class FinatraResponseListener implements FutureEventListener<Response> {
+
+  private static final VirtualField<Response, Throwable> responseThrowableField =
+      VirtualField.find(Response.class, Throwable.class);
+
   private final Context context;
-  private final Scope scope;
+  private final Class<?> request;
 
-  public FinatraResponseListener(Context context, Scope scope) {
+  public FinatraResponseListener(Context context, Class<?> request) {
     this.context = context;
-    this.scope = scope;
+    this.request = request;
   }
 
   @Override
   public void onSuccess(Response response) {
-    scope.close();
-    tracer().end(context);
+    Throwable throwable = responseThrowableField.get(response);
+    instrumenter().end(context, request, null, throwable);
   }
 
   @Override
   public void onFailure(Throwable cause) {
-    scope.close();
-    tracer().endExceptionally(context, cause);
+    instrumenter().end(context, request, null, cause);
   }
 }

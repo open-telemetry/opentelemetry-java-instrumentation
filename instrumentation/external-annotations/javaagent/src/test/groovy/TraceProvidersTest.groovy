@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.annotation.SayTracedHello
 
 /**
@@ -22,6 +23,8 @@ class TraceProvidersTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.${provider.toLowerCase()}"
           hasNoParent()
           attributes {
+            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
+            "${SemanticAttributes.CODE_FUNCTION}" "${provider.toLowerCase()}"
             "providerAttr" provider
           }
         }

@@ -5,18 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 
 import io.netty.channel.Channel;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectRequest;
+import io.netty.channel.ChannelPromise;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
+import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
-public class ConnectionWrapper {
+public final class ConnectionWrapper {
 
-  public static Mono<Channel> wrap(
-      Context context, NettyConnectRequest request, Mono<Channel> mono) {
-    return mono.doOnError(error -> connectInstrumenter().end(context, request, null, error))
-        .doOnSuccess(channel -> connectInstrumenter().end(context, request, channel, null));
+  private static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
+      requestAndContextField =
+          VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class);
+
+  public static Mono<Channel> wrap(Mono<Channel> mono) {
+    // if we didn't attach the connection context&request then we have nothing to instrument
+    if (!(mono instanceof ChannelPromise)) {
+      return mono;
+    }
+    return mono.doOnError(error -> end(mono, null, error))
+        .doOnSuccess(channel -> end(mono, channel, null))
+        .doOnCancel(() -> end(mono, null, null));
   }
+
+  private static void end(
+      Mono<Channel> mono, @Nullable Channel channel, @Nullable Throwable error) {
+    ConnectionRequestAndContext requestAndContext =
+        requestAndContextField.get((ChannelPromise) mono);
+    if (requestAndContext == null) {
+      return;
+    }
+    connectionInstrumenter()
+        .end(requestAndContext.context(), requestAndContext.request(), channel, error);
+  }
+
+  private ConnectionWrapper() {}
 }

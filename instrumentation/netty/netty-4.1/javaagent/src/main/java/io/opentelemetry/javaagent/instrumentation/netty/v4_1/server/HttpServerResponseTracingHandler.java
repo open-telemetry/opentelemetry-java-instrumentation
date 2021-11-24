@@ -18,9 +18,9 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import javax.annotation.Nullable;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {

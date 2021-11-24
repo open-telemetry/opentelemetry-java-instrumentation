@@ -6,13 +6,16 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import java.util.Map;
+import org.apache.rocketmq.client.hook.SendMessageContext;
 
-enum MapSetter implements TextMapSetter<Map<String, String>> {
+enum MapSetter implements TextMapSetter<SendMessageContext> {
   INSTANCE;
 
   @Override
-  public void set(Map<String, String> carrier, String key, String value) {
-    carrier.put(key, value);
+  public void set(SendMessageContext carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
+    carrier.getMessage().getProperties().put(key, value);
   }
 }

@@ -31,9 +31,10 @@ import org.slf4j.LoggerFactory;
 public final class KafkaTracing {
   private static final Logger logger = LoggerFactory.getLogger(KafkaTracing.class);
 
-  private static final TextMapGetter<ConsumerRecord<?, ?>> GETTER = new KafkaConsumerRecordGetter();
+  private static final TextMapGetter<ConsumerRecord<?, ?>> GETTER =
+      KafkaConsumerRecordGetter.INSTANCE;
 
-  private static final TextMapSetter<Headers> SETTER = new KafkaHeadersSetter();
+  private static final TextMapSetter<Headers> SETTER = KafkaHeadersSetter.INSTANCE;
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter;

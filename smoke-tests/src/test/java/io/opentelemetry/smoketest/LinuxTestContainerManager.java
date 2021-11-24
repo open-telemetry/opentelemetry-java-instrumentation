@@ -69,7 +69,8 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
-      TargetWaitStrategy waitStrategy) {
+      TargetWaitStrategy waitStrategy,
+      String[] command) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
     target =
@@ -97,6 +98,11 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
                     .withStartupTimeout(waitStrategy.timeout));
       }
     }
+
+    if (command != null) {
+      target = target.withCommand(command);
+    }
+
     target.start();
     return output;
   }

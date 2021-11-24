@@ -99,11 +99,11 @@ public final class KafkaInstrumenterFactory {
     if (!KafkaPropagation.isPropagationEnabled()) {
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else if (ExperimentalConfig.get().suppressMessagingReceiveSpans()) {
-      return builder.newConsumerInstrumenter(new KafkaConsumerRecordGetter());
+      return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
     } else {
       builder.addSpanLinksExtractor(
           SpanLinksExtractor.fromUpstreamRequest(
-              GlobalOpenTelemetry.getPropagators(), new KafkaConsumerRecordGetter()));
+              GlobalOpenTelemetry.getPropagators(), KafkaConsumerRecordGetter.INSTANCE));
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
   }

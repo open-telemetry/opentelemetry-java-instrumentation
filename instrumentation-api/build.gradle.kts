@@ -17,17 +17,12 @@ sourceSets {
       // set to generate into. By default it would be the src/main directory itself.
       srcDir("$buildDir/generated/sources/jflex")
     }
-
-    val cachingShadedDeps = project(":instrumentation-api-caching")
-    output.dir(cachingShadedDeps.file("build/extracted/shadow"), "builtBy" to ":instrumentation-api-caching:extractShadowJar")
   }
 }
 
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
-  compileOnly(project(":instrumentation-api-caching"))
-
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
 
@@ -37,7 +32,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testCompileOnly(project(":instrumentation-api-caching"))
   testImplementation(project(":testing-common"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
@@ -48,6 +42,10 @@ dependencies {
 }
 
 tasks {
+  named<Checkstyle>("checkstyleMain") {
+    exclude("**/concurrentlinkedhashmap/**")
+  }
+
   sourcesJar {
     dependsOn("generateJflex")
   }

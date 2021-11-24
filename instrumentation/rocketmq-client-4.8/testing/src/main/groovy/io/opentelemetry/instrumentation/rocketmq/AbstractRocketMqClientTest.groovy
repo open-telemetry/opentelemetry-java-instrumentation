@@ -21,6 +21,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
+//TODO add tests for propagationEnabled flag
 @Unroll
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
