@@ -9,12 +9,7 @@ import io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.Concur
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/**
- * A cache from keys to values.
- *
- * <p>Keys are always referenced weakly and are compared using identity comparison, not {@link
- * Object#equals(Object)}.
- */
+/** A cache from keys to values. */
 public interface Cache<K, V> {
 
   /**
