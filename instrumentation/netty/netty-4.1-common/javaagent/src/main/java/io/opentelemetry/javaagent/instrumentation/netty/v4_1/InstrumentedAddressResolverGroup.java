@@ -9,7 +9,6 @@ import io.netty.resolver.AddressResolver;
 import io.netty.resolver.AddressResolverGroup;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
@@ -107,7 +106,7 @@ public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
       Context context = instrumenter.start(parentContext, request);
       try {
         Future<U> future = resolveFunc.get();
-        return future.addListener(new OnEndListener<>(request, context));
+        return future.addListener(f -> instrumenter.end(context, request, null, f.cause()));
       } catch (Throwable t) {
         instrumenter.end(context, request, null, t);
         throw t;
@@ -117,23 +116,6 @@ public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
     @Override
     public void close() {
       delegate.close();
-    }
-
-    // currently cannot use lambda for this
-    private class OnEndListener<U> implements GenericFutureListener<Future<U>> {
-
-      private final NettyConnectionRequest request;
-      private final Context context;
-
-      private OnEndListener(NettyConnectionRequest request, Context context) {
-        this.request = request;
-        this.context = context;
-      }
-
-      @Override
-      public void operationComplete(Future<U> future) {
-        instrumenter.end(context, request, null, future.cause());
-      }
     }
   }
 }
