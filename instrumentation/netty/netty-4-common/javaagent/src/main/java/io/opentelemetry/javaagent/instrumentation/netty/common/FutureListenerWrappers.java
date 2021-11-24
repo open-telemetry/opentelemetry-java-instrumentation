@@ -25,8 +25,7 @@ public final class FutureListenerWrappers {
   // case the wrapper listener (value) has a strong reference to original listener (key), which will
   // create a memory leak. which is not a problem in the javaagent's implementation of VirtualField,
   // since it injects the value directly into the key as a field, and so the value is only retained
-  // strongly by the key, and so they can be collected together (though currently the tests fail
-  // when using VirtualField due to )
+  // strongly by the key, and so they can be collected together.
   private static final Cache<
           GenericFutureListener<? extends Future<?>>,
           WeakReference<GenericFutureListener<? extends Future<?>>>>
