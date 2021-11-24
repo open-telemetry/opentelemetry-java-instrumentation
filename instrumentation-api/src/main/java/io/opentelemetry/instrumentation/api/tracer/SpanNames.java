@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -14,8 +14,7 @@ import javax.annotation.Nullable;
 
 public final class SpanNames {
 
-  private static final Cache<Class<?>, Map<String, String>> spanNameCaches =
-      Cache.builder().setWeakKeys().build();
+  private static final Cache<Class<?>, Map<String, String>> spanNameCaches = Cache.weak();
 
   /**
    * This method is used to generate a span name based on a method. Anonymous classes are named

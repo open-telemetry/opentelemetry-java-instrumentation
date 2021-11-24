@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfi
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import javax.annotation.Nullable;
 
@@ -21,7 +21,7 @@ public final class SqlStatementSanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.builder().setMaximumSize(1000).build();
+      Cache.bounded(1000);
 
   public static SqlStatementInfo sanitize(@Nullable String statement) {
     return sanitize(statement, SqlDialect.DEFAULT);

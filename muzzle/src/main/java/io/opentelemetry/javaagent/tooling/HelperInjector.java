@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
@@ -58,8 +58,7 @@ public class HelperInjector implements Transformer {
         }
       };
 
-  private static final Cache<Class<?>, Boolean> injectedClasses =
-      Cache.builder().setWeakKeys().build();
+  private static final Cache<Class<?>, Boolean> injectedClasses = Cache.weak();
 
   private final String requestingName;
 
@@ -69,10 +68,8 @@ public class HelperInjector implements Transformer {
   @Nullable private final Instrumentation instrumentation;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
-  private final Cache<ClassLoader, Boolean> injectedClassLoaders =
-      Cache.builder().setWeakKeys().build();
-  private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders =
-      Cache.builder().setWeakKeys().build();
+  private final Cache<ClassLoader, Boolean> injectedClassLoaders = Cache.weak();
+  private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders = Cache.weak();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
 

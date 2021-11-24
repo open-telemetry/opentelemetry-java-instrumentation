@@ -40,10 +40,6 @@ dependencies {
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
-
-  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-  // inclusion of this artifact inside of :instrumentation-api
-  compileOnly(project(":instrumentation-api-caching"))
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in

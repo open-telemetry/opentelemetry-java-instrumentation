@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.lang.ref.WeakReference;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
@@ -48,14 +48,13 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *   <li>Allow for quick fast path equivalence check of composite keys
    * </ul>
    */
-  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
-      Cache.builder().setWeakKeys().build();
+  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.weak();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
   final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
-      Cache.builder().setMaximumSize(TYPE_CAPACITY).build();
+      Cache.bounded(TYPE_CAPACITY);
 
   // fast path for bootstrap
   final SharedResolutionCacheAdapter bootstrapCacheProvider =
