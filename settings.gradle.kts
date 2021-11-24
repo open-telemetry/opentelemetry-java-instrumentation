@@ -8,7 +8,6 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "1.5.10"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
-    id("nebula.release") version "15.3.1"
     id("com.github.johnrengelman.shadow") version "7.0.0"
     id("ru.vyarus.animalsniffer") version "1.5.3"
   }

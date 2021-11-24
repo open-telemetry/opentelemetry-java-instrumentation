@@ -2,16 +2,12 @@
 
 OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semver.org) for versioning of its artifacts.
 
-Instead of manually specifying project version (and by extension the version of built artifacts)
-in gradle build scripts, we use [nebula-release-plugin](https://github.com/nebula-plugins/nebula-release-plugin)
-to calculate the current version based on git tags. This plugin looks for the latest tag of the form
-`vX.Y.Z` on the current branch and calculates the current project version as `vX.Y.(Z+1)-SNAPSHOT`.
+The version is specified in [version.gradle.kts](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/version.gradle.kts).
 
 ## Snapshot builds
-Every successful CI build of the master branch automatically executes `./gradlew snapshot` as the last task.
-This signals Nebula plugin to build and publish to
-[Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/)
-next _minor_ release version. This means version `vX.(Y+1).0-SNAPSHOT`.
+Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
+as the last step, which publishes a snapshot build to
+[Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/).
 
 ## Starting the Release
 
