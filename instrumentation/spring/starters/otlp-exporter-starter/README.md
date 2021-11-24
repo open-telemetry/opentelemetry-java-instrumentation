@@ -1,6 +1,6 @@
 # OpenTelemetry OTLP Exporter Starter
 
-OpenTelemetry OTLP Exporter Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-extension-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. It also provides the [opentelemetry-exporters-otlp](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp) artifact and corresponding exporter auto-configuration.  Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
+OpenTelemetry OTLP Exporter Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-extension-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. It also provides the [opentelemetry-exporters-otlp](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp) artifact and corresponding exporter auto-configuration.  Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
 
 ## Quickstart
 
@@ -32,4 +32,4 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-sta
 
 ### Starter Guide
 
-Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
