@@ -31,11 +31,19 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
   }
 
   @Override
+  boolean testReadTimeout() {
+    true
+  }
+
+  @Override
   HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def genericUrl = new GenericUrl(uri)
 
     def request = requestFactory.buildRequest(method, genericUrl, null)
     request.connectTimeout = CONNECT_TIMEOUT_MS
+    if (uri.toString().contains("/read-timeout")) {
+      request.readTimeout = READ_TIMEOUT_MS
+    }
 
     // GenericData::putAll method converts all known http headers to List<String>
     // and lowercase all other headers

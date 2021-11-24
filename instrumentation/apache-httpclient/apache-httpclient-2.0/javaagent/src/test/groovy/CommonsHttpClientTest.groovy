@@ -61,10 +61,17 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
 
   @Override
   int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers) {
+    boolean useTimeout = uri.toString().contains("/read-timeout")
+    if (useTimeout) {
+      client.setTimeout(READ_TIMEOUT_MS)
+    }
     try {
       client.executeMethod(request)
       return request.getStatusCode()
     } finally {
+      if (useTimeout) {
+        client.setTimeout(0)
+      }
       request.releaseConnection()
     }
   }
@@ -84,6 +91,11 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   @Override
   boolean testCallback() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Override
