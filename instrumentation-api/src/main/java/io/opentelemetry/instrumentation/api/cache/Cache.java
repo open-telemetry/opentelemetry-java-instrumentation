@@ -35,7 +35,7 @@ public interface Cache<K, V> {
   static <K, V> Cache<K, V> bounded(int capacity) {
     ConcurrentLinkedHashMap<K, V> map =
         new ConcurrentLinkedHashMap.Builder<K, V>().maximumWeightedCapacity(capacity).build();
-    return new BoundedCache<>(map);
+    return new MapBackedCache<>(map);
   }
 
   /**

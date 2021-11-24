@@ -9,11 +9,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-final class BoundedCache<K, V> implements Cache<K, V> {
+final class MapBackedCache<K, V> implements Cache<K, V> {
 
   private final ConcurrentMap<K, V> delegate;
 
-  BoundedCache(ConcurrentMap<K, V> delegate) {
+  MapBackedCache(ConcurrentMap<K, V> delegate) {
     this.delegate = delegate;
   }
 

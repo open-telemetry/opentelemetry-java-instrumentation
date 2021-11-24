@@ -23,16 +23,16 @@ class CacheTest {
       assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
       cache.remove("bear");
 
-      BoundedCache<?, ?> boundedCache = ((BoundedCache<?, ?>) cache);
+      MapBackedCache<?, ?> mapBackedCache = ((MapBackedCache<?, ?>) cache);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
-      assertThat(boundedCache.size()).isEqualTo(1);
+      assertThat(mapBackedCache.size()).isEqualTo(1);
 
       assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
-      assertThat(boundedCache.size()).isEqualTo(1);
+      assertThat(mapBackedCache.size()).isEqualTo(1);
 
       cache.put("dog", "bark");
       assertThat(cache.get("dog")).isEqualTo("bark");
-      assertThat(boundedCache.size()).isEqualTo(1);
+      assertThat(mapBackedCache.size()).isEqualTo(1);
       assertThat(cache.computeIfAbsent("cat", unused -> "purr")).isEqualTo("purr");
     }
   }
