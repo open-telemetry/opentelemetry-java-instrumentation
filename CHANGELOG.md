@@ -1,5 +1,31 @@
 # Changelog
 
+## Version 1.9.0 - 2021-10-19
+
+### 🌟 New javaagent instrumentation
+
+- 
+
+### 🌟 New library instrumentation
+
+- 
+
+### 📈 Enhancements
+
+- 
+
+### 🛠️ Bug fixes
+
+- 
+
+### 🧰 Tooling
+
+- 
+
+## Version 1.8.0 - Bad Release
+
+Due to an issue in the publishing infrastructure, a bad release was published as 1.8.0. Do not use it.
+
 ## Version 1.7.0 - 2021-10-19
 
 ### 📈 Enhancements
