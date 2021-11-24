@@ -15,7 +15,6 @@ import org.apache.http.HttpResponse
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicHttpRequest
-import org.apache.http.params.HttpConnectionParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 
