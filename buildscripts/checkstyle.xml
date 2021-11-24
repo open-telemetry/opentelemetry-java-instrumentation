@@ -373,6 +373,8 @@
     </module>
     <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
     <module name="SuppressWarningsHolder"/>
+    <!-- this enables CHECKSTYLE:OFF and CHECKSTYLE:ON comments -->
+    <module name="SuppressionCommentFilter"/>
   </module>
   <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
   <module name="SuppressWarningsFilter"/>
