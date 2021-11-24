@@ -8,6 +8,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.commons.httpclient.HttpClient
+import org.apache.commons.httpclient.HttpConnectionManager
 import org.apache.commons.httpclient.HttpMethod
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager
 import org.apache.commons.httpclient.methods.DeleteMethod
@@ -21,10 +22,26 @@ import spock.lang.Shared
 
 class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentTestTrait {
   @Shared
-  HttpClient client = new HttpClient(new MultiThreadedHttpConnectionManager())
+  HttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager()
+  @Shared
+  HttpClient client = buildClient(false)
+  @Shared
+  HttpClient clientWithReadTimeout = buildClient(true)
 
-  def setupSpec() {
+  def buildClient(boolean readTimeout) {
+    HttpClient client = new HttpClient(connectionManager)
     client.setConnectionTimeout(CONNECT_TIMEOUT_MS)
+    if (readTimeout) {
+      client.setTimeout(READ_TIMEOUT_MS)
+    }
+    return client
+  }
+
+  HttpClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
   }
 
   @Override
@@ -61,17 +78,10 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
 
   @Override
   int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers) {
-    boolean useTimeout = uri.toString().contains("/read-timeout")
-    if (useTimeout) {
-      client.setTimeout(READ_TIMEOUT_MS)
-    }
     try {
-      client.executeMethod(request)
+      getClient(uri).executeMethod(request)
       return request.getStatusCode()
     } finally {
-      if (useTimeout) {
-        client.setTimeout(0)
-      }
       request.releaseConnection()
     }
   }
