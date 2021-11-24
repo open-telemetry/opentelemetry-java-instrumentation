@@ -2,6 +2,7 @@ plugins {
   id("org.xbib.gradle.plugin.jflex")
 
   id("otel.java-conventions")
+  id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
   id("otel.japicmp-conventions")
   id("otel.publish-conventions")

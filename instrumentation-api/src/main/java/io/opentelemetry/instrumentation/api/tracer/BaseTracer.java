@@ -22,9 +22,9 @@ import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Base class for all instrumentation specific tracer implementations.
@@ -47,6 +47,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class BaseTracer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
+
+  @Nullable
+  private static final Class<?> COMPLETION_EXCEPTION_CLASS = getCompletionExceptionClass();
 
   private final Tracer tracer;
   private final ContextPropagators propagators;
@@ -242,7 +245,7 @@ public abstract class BaseTracer {
   protected Throwable unwrapThrowable(Throwable throwable) {
     if (throwable.getCause() != null
         && (throwable instanceof ExecutionException
-            || throwable instanceof CompletionException
+            || isInstanceOfCompletionException(throwable)
             || throwable instanceof InvocationTargetException
             || throwable instanceof UndeclaredThrowableException)) {
       return unwrapThrowable(throwable.getCause());
@@ -282,5 +285,19 @@ public abstract class BaseTracer {
    */
   public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
     propagators.getTextMapPropagator().inject(context, carrier, setter);
+  }
+
+  private static boolean isInstanceOfCompletionException(Throwable error) {
+    return COMPLETION_EXCEPTION_CLASS != null && COMPLETION_EXCEPTION_CLASS.isInstance(error);
+  }
+
+  @Nullable
+  private static Class<?> getCompletionExceptionClass() {
+    try {
+      return Class.forName("java.util.concurrent.CompletionException");
+    } catch (ClassNotFoundException e) {
+      // Android level 21 does not support java.util.concurrent.CompletionException
+      return null;
+    }
   }
 }
