@@ -15,7 +15,7 @@ for dir in . \
            smoke-tests/images/grpc \
            smoke-tests/images/servlet \
            smoke-tests/images/play \
-           smoke-tests/images/springboot
+           smoke-tests/images/spring-boot
 do
   (cd $dir && ./gradlew wrapper --gradle-version $GRADLE_VERSION \
                   --gradle-distribution-sha256-sum=$GRADLE_VERSION_CHECKSUM)
