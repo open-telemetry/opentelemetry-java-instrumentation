@@ -69,28 +69,4 @@ tasks {
       isFailOnNoMatchingTests = false
     }
   }
-
-  withType<AnimalSniffer>().configureEach {
-    // we catch NoClassDefFoundError when use caffeine3 is not available on classpath and fall back to caffeine2
-    exclude("**/internal/shaded/caffeine3/**")
-
-    ignoreClasses = listOf(
-      // ignore shaded caffeine3 references
-      "io.opentelemetry.instrumentation.api.internal.shaded.caffeine3.cache.Caffeine",
-      "io.opentelemetry.instrumentation.api.internal.shaded.caffeine3.cache.Cache",
-
-      // these are being referenced by some caffeine2 classes, but we don't use them
-      "java.util.concurrent.CompletableFuture",
-      "java.util.concurrent.CompletionException",
-      "java.util.concurrent.CompletionStage",
-      "java.util.concurrent.ForkJoinPool",
-      "java.util.concurrent.ConcurrentHashMap",
-      // LongAdder is also referenced by our own SupportabilityMetrics; only if agent debug is enabled though
-      "java.util.concurrent.atomic.LongAdder",
-
-      // these standard Java classes seem to be desugared properly
-      "java.lang.ClassValue",
-      "sun.misc.Unsafe",
-    )
-  }
 }
