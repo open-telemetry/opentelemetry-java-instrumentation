@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.client;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -75,17 +77,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     // netty SslHandler starts the handshake after it receives the channelActive() signal; this
     // happens just after the connection is established
     // this makes connect() promise a good place to start the SSL handshake span
-    promise.addListener(
-        future -> {
-          // there won't be any SSL handshake if the channel fails to connect
-          if (!future.isSuccess()) {
-            return;
-          }
-          request = NettySslRequest.create(ctx.channel());
-          if (instrumenter.shouldStart(parentContext, request)) {
-            context = instrumenter.start(parentContext, request);
-          }
-        });
+    promise.addListener(new StartListener(ctx));
     ctx.connect(remoteAddress, localAddress, promise);
   }
 
@@ -110,6 +102,27 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     } catch (Throwable e) {
       // should not ever happen
       return null;
+    }
+  }
+
+  private class StartListener implements GenericFutureListener<Future<Void>> {
+
+    private final ChannelHandlerContext ctx;
+
+    private StartListener(ChannelHandlerContext ctx) {
+      this.ctx = ctx;
+    }
+
+    @Override
+    public void operationComplete(Future<Void> future) {
+      // there won't be any SSL handshake if the channel fails to connect
+      if (!future.isSuccess()) {
+        return;
+      }
+      request = NettySslRequest.create(ctx.channel());
+      if (instrumenter.shouldStart(parentContext, request)) {
+        context = instrumenter.start(parentContext, request);
+      }
     }
   }
 }
