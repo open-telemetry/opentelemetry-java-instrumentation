@@ -38,8 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -85,15 +83,6 @@ public class AgentInstaller {
     // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
     // internal-proxy instrumentation module after the bytebuddy transformer is set up
     Proxy.class.getName();
-
-    // caffeine can trigger first access of ForkJoinPool under transform(), which leads ForkJoinPool
-    // not to get transformed itself.
-    // loading it early here still allows it to be retransformed as part of agent installation below
-    ForkJoinPool.class.getName();
-
-    // caffeine uses AtomicReferenceArray, ensure it is loaded to avoid ClassCircularityError during
-    // transform.
-    AtomicReferenceArray.class.getName();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {

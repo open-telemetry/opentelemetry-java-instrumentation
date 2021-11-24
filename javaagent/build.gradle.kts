@@ -55,8 +55,6 @@ val licenseReportDependencies by configurations.creating {
   extendsFrom(bootstrapLibs)
 }
 
-val caffeine3Version: String by project
-
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
@@ -83,11 +81,8 @@ dependencies {
   exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp")
   exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
 
-  // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
-  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine:$caffeine3Version") {
-    isTransitive = false
-  }
-  licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
+  // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
+  licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
   // TODO ideally this would be :instrumentation instead of :javaagent-tooling
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules

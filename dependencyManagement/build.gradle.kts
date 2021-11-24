@@ -17,9 +17,6 @@ rootProject.extra["otelVersion"] = otelVersion
 // Need both BOM and -all
 val groovyVersion = "2.5.14"
 
-rootProject.extra["caffeine2Version"] = "2.9.2"
-rootProject.extra["caffeine3Version"] = "3.0.4"
-
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
 // but we do try to force those libraries' transitive dependencies to new versions where possible
