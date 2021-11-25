@@ -19,7 +19,7 @@ Before making the release:
   git checkout -b v1.9.x upstream/main
   git push upstream v1.9.x
   ```
-* Create a new commit on the release branch to update the version (remove `-SNAPSHOT`) in these files:
+* Push a new commit to the release branch updating the version (remove `-SNAPSHOT`) in these files:
   * version.gradle.kts
   * examples/distro/build.gradle
   * examples/extension/build.gradle
