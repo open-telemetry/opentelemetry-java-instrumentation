@@ -15,6 +15,10 @@ Before making the release:
 
 * Merge a PR to `main` updating the `CHANGELOG.md`
 * Create a release branch, e.g. `v1.9.x`
+  ```
+  git checkout -b v1.9.x upstream/main
+  git push upstream v1.9.x
+  ```
 * Create a new commit on the release branch to update the version (remove `-SNAPSHOT`) in these files:
   * version.gradle.kts
   * examples/distro/build.gradle
