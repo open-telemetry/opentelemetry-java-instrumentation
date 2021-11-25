@@ -171,7 +171,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: assemble final closeAndReleaseSonatypeStagingRepository
+          arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
