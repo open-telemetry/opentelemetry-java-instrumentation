@@ -7,7 +7,7 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-abstract class GlassFishSmokeTest extends AppServerTest {
+abstract class PayaraSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-payara"
@@ -44,26 +44,33 @@ abstract class GlassFishSmokeTest extends AppServerTest {
 }
 
 @AppServer(version = "5.2020.6", jdk = "8")
-class GlassFish52020Jdk8 extends GlassFishSmokeTest {
+class Payara52020Jdk8 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2020.6", jdk = "8-openj9")
-class GlassFish52020Jdk8Openj9 extends GlassFishSmokeTest {
+class Payara52020Jdk8Openj9 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2020.6", jdk = "11")
-class GlassFish52020Jdk11 extends GlassFishSmokeTest {
+class Payara52020Jdk11 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2020.6", jdk = "11-openj9")
-class GlassFish52020Jdk11Openj9 extends GlassFishSmokeTest {
+class Payara52020Jdk11Openj9 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2021.8", jdk = "8")
-class GlassFish52021Jdk8 extends GlassFishSmokeTest {
+class Payara52021Jdk8 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2021.8", jdk = "8-openj9")
-class GlassFish52021Jdk8Openj9 extends GlassFishSmokeTest {
+class Payara52021Jdk8Openj9 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2021.8", jdk = "11")
-class GlassFish52021Jdk11 extends GlassFishSmokeTest {
+class Payara52021Jdk11 extends PayaraSmokeTest {
 }
+
 @AppServer(version = "5.2021.8", jdk = "11-openj9")
-class GlassFish52021Jdk11Openj9 extends GlassFishSmokeTest {
+class Payara52021Jdk11Openj9 extends PayaraSmokeTest {
 }

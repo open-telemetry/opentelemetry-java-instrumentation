@@ -155,9 +155,9 @@ jobs:
           - windows-latest
           - ubuntu-latest
         smoke-test-suite:
-          - glassfish
           - jetty
           - liberty
+          - payara
           - tomcat
           - tomee
           - websphere
