@@ -1,26 +1,65 @@
 # Changelog
 
-## Version 1.9.0 - 2021-10-19
-
-### 🌟 New javaagent instrumentation
-
-- 
-
-### 🌟 New library instrumentation
-
-- 
+## Version 1.9.0 - 2021-11-25
 
 ### 📈 Enhancements
 
-- 
+- Don't report 400 level as error for SERVER spans (#4403)
+- Netty instrumentation now captures http.scheme (#4446, #4576)
+- Stabilize HTTP headers capturing configuration property names (#4459)
+- Add metrics to remaining http instrumenters (#4541)
+- Remove hibernate session spans (#4538)
+- Support Jedis 4 (#4555)
+- Trace DNS resolution in Netty 4.1 (#4587)
+- Update garbage collector instruments to be async counters (#4600)
+- Update HTTP metrics 'view' code to match the specification (#4556)
+- Update spring-integration instrumentation name (#4601)
+- Improve Spring Integration interceptor ordering (#4602)
+- Support Restlet 2.0 (#4535)
+- Sql sanitizer: sanitize double-quoted strings only in couchbase queries (#4615)
+- Trace SSL handshakes in netty 4.1 (#4604)
+- Trace DNS resolution in reactor-netty (#4627)
+- Trace SSL handshakes in netty 4.0 (#4635)
+- Capture exception on finatra controller span (#4669)
+- Capture exception for async servlet invocations (#4677)
+- Automatic AWS library instrumentor (#4607)
+- Support spring boot 2.6.0 (#4687)
 
 ### 🛠️ Bug fixes
 
-- 
+- Preserve caught netty exception in the context instead of calling end() (#4413)
+- Extract net attributes both on start and on end in netty HTTP client (#4420)
+- Capture metric dimensions from end attributes also (#4430)
+- Avoid logging servlet3 muzzle failure when running on servlet2 (#4474)
+- Fix JettyHttpClient9TracingInterceptor NullPointerException NPE (#4527)
+- Fix context propagation in tomcat thread pool (#4521)
+- Add missing java.util.logging.Logger methods to PatchLogger (#4540)
+- Fix ClassCircularityError when running with security manager (#4557)
+- Fix sun.misc.Unsafe generation on jdk17 (#4558)
+- Fix IndexOutOfBounds in apache http clients (#4575)
+- Fix RMI instrumentation on jdk17 (#4577)
+- Fix Instrumentation version on application tracer not set correctly when using agent (#4630)
+- Ensure that netty 4.0 instrumentation is not applied to 4.1 (#4626)
+- Fix muzzle problems happening when netty without SSL is used (#4631)
+- Fix memory leak when using ktor-client-java (#4637)
+- Fix spring-integration context leak (#4673)
+- Fix exemplars (#4678)
+- Fix and enforce Android support (#4671, #4667, #4505)
 
 ### 🧰 Tooling
 
-- 
+- Migrate to spock 2 (#4458)
+- Rename `newBuilder()` to `builder()` (#4475)
+- Sync gradle-plugins version with main project (#4248)
+- Muzzle match only once in each class loader (#4543)
+- Inject helper resources only once (#4573)
+- Improve muzzle check for constructors (#4591)
+- Add version to the InstrumenterBuilder and Instrumenter (#4611)
+- Add a ClassAndMethod class to Instrumentation API (#4619)
+- Fix quartz instrumentation name (#4657)
+- Implement a dedicated reactor-netty 1.0 instrumentation (#4662)
+- Remove gRPC dependency for export (#4674)
+- Start using Gradle Enterprise instance (#4663)
 
 ## Version 1.8.0 - Bad Release
 
