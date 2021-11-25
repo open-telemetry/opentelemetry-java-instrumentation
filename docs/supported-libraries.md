@@ -109,7 +109,7 @@ These are the supported libraries and frameworks:
 
 ## Application Servers
 
-These are the application servers that the OpenTelemetry Javaagent is tested against:
+These are the application servers that the smoke tests are run against:
 
 | Application server                                                                        | Version                     | JVM               | OS                             |
 | ----------------------------------------------------------------------------------------- | --------------------------- | ----------------- | ------------------------------ |
@@ -125,7 +125,7 @@ These are the application servers that the OpenTelemetry Javaagent is tested aga
 
 ## JVMs and operating systems
 
-These are the supported JVM version and OS configurations which the javaagent is tested on:
+These are the JVMs and operating systems that the integration tests are run against:
 
 | JVM                                               | Versions  | OS                             |
 | ------------------------------------------------- | --------- | ------------------------------ |
