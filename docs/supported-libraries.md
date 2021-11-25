@@ -109,26 +109,23 @@ These are the supported libraries and frameworks:
 
 ## Application Servers
 
-These are the supported application servers:
+These are the application servers that the smoke tests are run against:
 
-| Application server                                                                        | Version                     | JVM              | OS                             |
-| ----------------------------------------------------------------------------------------- | --------------------------- | ---------------- | ------------------------------ |
-| [Glassfish](https://javaee.github.io/glassfish/)                                          | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
-| [JBoss EAP](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) | 7.1.x, 7.3.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
-| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11    | Ubuntu 20                      |
-| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
-| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11    | Ubuntu 18                      |
-| [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11    | Ubuntu 18                      |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12.x                        | Oracle JDK 8     | Oracle Linux 7, 8              |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14.x                        | Oracle JDK 8, 11 | Oracle Linux 7, 8              |
-| [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.x, 21.x                  | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
-| [Websphere Traditional](https://www.ibm.com/cloud/websphere-application-server)           | 8.5.5.x, 9.0.x              | IBM JDK 8        | Red Hat Enterprise Linux 8.4   |
-| [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
-| [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| Application server                                                                        | Version                     | JVM               | OS                             |
+| ----------------------------------------------------------------------------------------- | --------------------------- | ----------------- | ------------------------------ |
+| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11     | Ubuntu 18, Windows Server 2019 |
+| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x                       | OpenJDK 8         | Ubuntu 18, Windows Server 2019 |
+| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.x, 21.x                  | OpenJDK 8         | Ubuntu 18, Windows Server 2019 |
+| [Websphere Traditional](https://www.ibm.com/cloud/websphere-application-server)           | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4   |
+| [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8         | Ubuntu 18, Windows Server 2019 |
+| [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 
 ## JVMs and operating systems
 
-These are the supported JVM version and OS configurations which the javaagent is tested on:
+These are the JVMs and operating systems that the integration tests are run against:
 
 | JVM                                               | Versions  | OS                             |
 | ------------------------------------------------- | --------- | ------------------------------ |
