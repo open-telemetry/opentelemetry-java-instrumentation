@@ -46,11 +46,11 @@ not relevant for most contributions. Explicitly specify `:smoke-tests:test` to r
 If you need to run a specific smoke test suite:
 
 ```
-./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish
+./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
 
 If you are on Windows and you want to run the tests using linux containers:
 
 ```
-USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish
+USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
