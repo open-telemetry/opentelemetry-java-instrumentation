@@ -6,6 +6,10 @@ on:
       release-branch-name:
         description: The release branch to use, e.g. v1.9.x
         required: true
+      version:
+        # TODO (trask) this is redundant
+        description: The version of the release, e.g. 1.9.0 (without the "v" prefix)
+        required: true
 
 jobs:
   test:
