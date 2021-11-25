@@ -1,5 +1,121 @@
 # Changelog
 
+## Version 1.9.0 - 2021-11-25
+
+### 📈 Enhancements
+
+- Don't report 400 level as error for SERVER spans
+  ([#4403](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4403))
+- Netty instrumentation now captures `http.scheme`
+  ([#4446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4446),
+   [#4576](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4576))
+- Stabilize HTTP headers capturing configuration property names
+  ([#4459](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4459))
+- Add metrics to remaining http instrumentation
+  ([#4541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4541))
+- Remove hibernate session spans
+  ([#4538](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4538))
+- Support Jedis 4
+  ([#4555](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4555))
+- Trace DNS resolution in Netty 4.1 and reactor-netty
+  ([#4587](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4587),
+   [#4627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4627))
+- Update garbage collector instruments to be async counters
+  ([#4600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4600))
+- Update HTTP metrics view to match the specification
+  ([#4556](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4556))
+- Improve Spring Integration interceptor ordering
+  ([#4602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4602))
+- Support Restlet 2.0
+  ([#4535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4535))
+- Improved capture of couchbase queries
+  ([#4615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4615))
+- Trace SSL handshakes in netty 4.0 and 4.1
+  ([#4635](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4635),
+   [#4604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4604))
+- Capture exception on finatra controller spans
+  ([#4669](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4669))
+- Capture exception on async servlet spans
+  ([#4677](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4677))
+- Automatic AWS library instrumentor
+  ([#4607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4607))
+- Support spring boot 2.6.0
+  ([#4687](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4687))
+
+### 🛠️ Bug fixes
+
+- Preserve caught netty exception in the context instead of calling end()
+  ([#4413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4413))
+- Extract net attributes both on start and on end in netty HTTP client
+  ([#4420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4420))
+- Capture metric dimensions from end attributes also
+  ([#4430](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4430))
+- Avoid logging servlet3 muzzle failure when running on servlet2
+  ([#4474](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4474))
+- Fix JettyHttpClient9TracingInterceptor NullPointerException
+  ([#4527](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4527))
+- Fix context propagation in tomcat thread pool
+  ([#4521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4521))
+- Add missing java.util.logging.Logger methods to PatchLogger
+  ([#4540](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4540))
+- Fix ClassCircularityError when running with security manager
+  ([#4557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4557))
+- Fix sun.misc.Unsafe generation on Java 17
+  ([#4558](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4558))
+- Fix IndexOutOfBounds in apache http clients
+  ([#4575](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4575))
+- Fix RMI instrumentation on Java 17
+  ([#4577](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4577))
+- Fix Spring Integration instrumentation name
+  ([#4601](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4601))
+- Capture instrumentation version provided by application tracer correctly when using agent
+  ([#4630](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4630))
+- Ensure that netty 4.0 instrumentation is not applied to 4.1
+  ([#4626](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4626))
+- Fix muzzle problems happening when netty without SSL is used
+  ([#4631](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4631))
+- Fix memory leak when using ktor-client-java
+  ([#4637](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4637))
+- Fix quartz instrumentation name
+  ([#4657](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4657))
+- Fix Spring Integration context leak
+  ([#4673](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4673))
+- Fix exemplars
+  ([#4678](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4678))
+- Fix and enforce Android support
+  ([#4671](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4671),
+   [#4667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4667)
+   [#4505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4505))
+
+### 🧰 Tooling
+
+- Migrate to Spock 2
+  ([#4458](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4458))
+- Rename `newBuilder()` to `builder()`
+  ([#4475](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4475))
+- Sync gradle-plugins version with main project
+  ([#4248](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4248))
+- Muzzle match only once in each class loader
+  ([#4543](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4543))
+- Inject helper resources only once
+  ([#4573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4573))
+- Improve muzzle check for constructors
+  ([#4591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4591))
+- Add version to the InstrumenterBuilder and Instrumenter
+  ([#4611](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4611))
+- Add a ClassAndMethod class to Instrumentation API
+  ([#4619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4619))
+- Implement a dedicated reactor-netty 1.0 instrumentation
+  ([#4662](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4662))
+- Remove gRPC dependency for export
+  ([#4674](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4674))
+- Start using Gradle Enterprise instance
+  ([#4663](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4663))
+
+## Version 1.8.0 - Bad Release
+
+Due to an issue in the publishing infrastructure, a bad release was published as 1.8.0. Do not use it.
+
 ## Version 1.7.0 - 2021-10-19
 
 ### 📈 Enhancements
