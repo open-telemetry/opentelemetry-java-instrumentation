@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -18,6 +19,7 @@ public final class ReflectionHelper {
   public static Field[] filterFields(Class<?> containingClass, Field[] fields) {
     if (fields.length == 0
         || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
       return fields;
     }
     List<Field> result = new ArrayList<>(fields.length);
@@ -36,6 +38,7 @@ public final class ReflectionHelper {
       return methods;
     } else if (containingClass.isInterface()
         && containingClass.isSynthetic()
+        && VirtualFieldAccessorMarker.class.isAssignableFrom(containingClass)
         && containingClass.getName().contains("VirtualFieldAccessor$")) {
       // hide all methods from virtual field accessor interfaces
       return new Method[0];
@@ -54,5 +57,26 @@ public final class ReflectionHelper {
       result.add(method);
     }
     return result.toArray(new Method[0]);
+  }
+
+  @SuppressWarnings("unused")
+  public static Class<?>[] filterInterfaces(Class<?>[] interfaces, Class<?> containingClass) {
+    if (interfaces.length == 0
+        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
+      return interfaces;
+    }
+    List<Class<?>> result = new ArrayList<>(interfaces.length);
+    for (Class<?> interfaceClass : interfaces) {
+      // filter out virtual field marker and accessor interfaces
+      if (interfaceClass == VirtualFieldInstalledMarker.class
+          || (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
+              && interfaceClass.isSynthetic()
+              && interfaceClass.getName().contains("VirtualFieldAccessor$"))) {
+        continue;
+      }
+      result.add(interfaceClass);
+    }
+    return result.toArray(new Class<?>[0]);
   }
 }
