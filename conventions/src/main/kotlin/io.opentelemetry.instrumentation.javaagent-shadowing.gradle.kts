@@ -6,6 +6,9 @@ plugins {
 
 tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles()
+  // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
+  // service loader...)
+  mergeServiceFiles("software/amazon/awssdk/global/handlers")
 
   exclude("**/module-info.class")
 
