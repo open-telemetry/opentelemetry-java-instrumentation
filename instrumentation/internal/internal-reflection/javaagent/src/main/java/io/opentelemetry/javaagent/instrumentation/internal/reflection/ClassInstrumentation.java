@@ -81,13 +81,13 @@ public class ClassInstrumentation implements TypeInstrumentation {
                 super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 // filter the result of call to getInterfaces0, which is used on hotspot, and
                 // J9VMInternals.getInterfaces which is used on openj9
-                if ((opcode == Opcodes.INVOKEVIRTUAL
+                if (((opcode == Opcodes.INVOKEVIRTUAL || opcode == Opcodes.INVOKESPECIAL)
                         && "getInterfaces0".equals(name)
                         && "()[Ljava/lang/Class;".equals(descriptor))
                     || (opcode == Opcodes.INVOKESTATIC
                         && "getInterfaces".equals(name)
                         && "java/lang/J9VMInternals".equals(owner)
-                        && "()[Ljava/lang/Class;".equals(descriptor))) {
+                        && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
                   mv.visitVarInsn(Opcodes.ALOAD, 0);
                   mv.visitMethodInsn(
                       Opcodes.INVOKESTATIC,
