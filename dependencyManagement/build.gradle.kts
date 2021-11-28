@@ -77,7 +77,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.testcontainers",
-    "1.15.3",
+    "1.16.2",
     listOf("testcontainers", "junit-jupiter", "cassandra", "couchbase", "elasticsearch", "kafka", "localstack", "selenium")
   )
 )
