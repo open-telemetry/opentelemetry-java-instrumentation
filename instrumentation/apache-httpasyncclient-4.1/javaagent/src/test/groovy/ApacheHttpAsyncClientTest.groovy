@@ -12,6 +12,7 @@ import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
@@ -26,12 +27,29 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
     .setConnectTimeout(CONNECT_TIMEOUT_MS)
     .build()
 
+  @Shared
+  RequestConfig requestWithReadTimeoutConfig = RequestConfig.copy(requestConfig)
+    .setSocketTimeout(READ_TIMEOUT_MS)
+    .build()
+
   @AutoCleanup
   @Shared
   def client = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build()
 
+  @AutoCleanup
+  @Shared
+  def clientWithReadTimeout = HttpAsyncClients.custom().setDefaultRequestConfig(requestWithReadTimeoutConfig).build()
+
   def setupSpec() {
     client.start()
+    clientWithReadTimeout.start()
+  }
+
+  CloseableHttpAsyncClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
   }
 
   @Override
@@ -42,6 +60,11 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   @Override
   Integer responseCodeOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Override
@@ -128,12 +151,12 @@ class ApacheClientUriRequest extends ApacheHttpAsyncClientTest {
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, null).get()
+    return getClient(uri).execute(request, null).get()
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
-    client.execute(request, callback)
+    getClient(uri).execute(request, callback)
   }
 }
 
@@ -146,12 +169,12 @@ class ApacheClientHostRequest extends ApacheHttpAsyncClientTest {
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
   }
 }
 
@@ -164,11 +187,11 @@ class ApacheClientHostAbsoluteUriRequest extends ApacheHttpAsyncClientTest {
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
   }
 }

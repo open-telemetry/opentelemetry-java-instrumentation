@@ -22,6 +22,9 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpURLConnecti
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
       connection.connectTimeout = CONNECT_TIMEOUT_MS
+      if (uri.toString().contains("/read-timeout")) {
+        connection.readTimeout = READ_TIMEOUT_MS
+      }
       def parentSpan = Span.current()
       def stream = connection.inputStream
       assert Span.current() == parentSpan
@@ -52,5 +55,10 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpURLConnecti
   @Override
   boolean testCallback() {
     return false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }

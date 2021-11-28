@@ -22,7 +22,7 @@ import java.util.function.Consumer
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> {
 
-  abstract protected CloseableHttpClient createClient()
+  abstract protected CloseableHttpClient createClient(boolean readTimeout)
 
   @Override
   String userAgent() {
@@ -34,8 +34,23 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
     return 302
   }
 
+  @Override
+  boolean testReadTimeout() {
+    true
+  }
+
   @Shared
-  CloseableHttpClient client = createClient()
+  CloseableHttpClient client = createClient(false)
+
+  @Shared
+  CloseableHttpClient clientWithReadTimeout = createClient(true)
+
+  CloseableHttpClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
+  }
 
   @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -109,12 +124,12 @@ abstract class AbstractApacheClientHostRequestTest extends ApacheHttpClientTest<
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
       callback.accept(it)
     }
   }
@@ -128,12 +143,12 @@ abstract class AbstractApacheClientHostAbsoluteUriRequestTest extends ApacheHttp
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
       callback.accept(it)
     }
   }
@@ -148,12 +163,12 @@ abstract class AbstractApacheClientHostRequestContextTest extends ApacheHttpClie
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }
@@ -167,12 +182,12 @@ abstract class AbstractApacheClientHostAbsoluteUriRequestContextTest extends Apa
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }
@@ -186,12 +201,12 @@ abstract class AbstractApacheClientUriRequestTest extends ApacheHttpClientTest<H
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request)
+    return getClient(uri).execute(request)
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(request) {
+    getClient(uri).execute(request) {
       callback.accept(it)
     }
   }
@@ -205,12 +220,12 @@ abstract class AbstractApacheClientUriRequestContextTest extends ApacheHttpClien
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, new BasicHttpContext())
+    return getClient(uri).execute(request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(request, {
+    getClient(uri).execute(request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }
