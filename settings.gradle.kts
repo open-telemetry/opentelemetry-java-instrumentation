@@ -14,9 +14,9 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.7.1"
+  id("com.gradle.enterprise") version "3.7.2"
   id("com.github.burrunan.s3-build-cache") version "1.2"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.5"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.6.1"
 }
 
 dependencyResolutionManagement {
