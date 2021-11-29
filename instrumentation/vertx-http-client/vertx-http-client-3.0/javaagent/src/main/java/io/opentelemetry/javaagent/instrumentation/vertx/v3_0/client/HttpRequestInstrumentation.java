@@ -89,8 +89,13 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      VertxRequestInfo requestInfo =
+          VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class).get(request);
+      if (requestInfo == null) {
+        return;
+      }
 
+      Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }

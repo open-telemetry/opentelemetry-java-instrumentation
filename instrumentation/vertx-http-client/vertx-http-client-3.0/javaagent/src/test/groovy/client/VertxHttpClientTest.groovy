@@ -31,7 +31,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
 
   @Override
   HttpClientRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = httpClient.request(HttpMethod.valueOf(method), getPort(uri), uri.host, "$uri")
+    def request = httpClient.requestAbs(HttpMethod.valueOf(method), "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
   }
@@ -76,6 +76,11 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   boolean testHttps() {
     false
+  }
+
+  @Override
+  String nonRoutableAddress() {
+    "http://192.0.2.1/"
   }
 
   @Override
