@@ -4,7 +4,8 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -37,16 +38,20 @@ class ReflectionTest extends AgentInstrumentationSpecification {
     methodFound == false
 
     and:
-    def interfaceClass = TestClass.getInterfaces().find {
-      it.getName().contains("VirtualFieldAccessor\$")
-    }
-    interfaceClass != null
-    def interfaceMethodFound = false
-    for (Method method : interfaceClass.getDeclaredMethods()) {
-      if (method.getName().contains("__opentelemetry")) {
-        interfaceMethodFound = true
-      }
-    }
-    interfaceMethodFound == false
+    // although marker interfaces are removed from getInterfaces() result class is still assignable
+    // to them
+    VirtualFieldInstalledMarker.isAssignableFrom(TestClass)
+    VirtualFieldAccessorMarker.isAssignableFrom(TestClass)
+    TestClass.getInterfaces().length == 2
+    TestClass.getInterfaces() == [Runnable, Serializable]
+  }
+
+  def "test generated serialVersionUID"() {
+    // expected value is computed with serialver utility that comes with jdk
+    expect:
+    ObjectStreamClass.lookup(TestClass).getSerialVersionUID() == -1508684692096503670L
+
+    and:
+    TestClass.getDeclaredFields().length == 0
   }
 }
