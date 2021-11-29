@@ -62,7 +62,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class Vertx35Advice {
+  public static class Vertx34Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void attachRequestInfo(
         @Advice.This HttpClientRequest request,

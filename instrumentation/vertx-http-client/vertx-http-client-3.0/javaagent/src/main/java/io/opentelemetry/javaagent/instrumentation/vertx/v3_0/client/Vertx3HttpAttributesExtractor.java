@@ -11,7 +11,7 @@ import io.vertx.core.http.HttpClientRequest;
 import javax.annotation.Nullable;
 
 final class Vertx3HttpAttributesExtractor extends AbstractVertxHttpAttributesExtractor {
-  private static final VirtualField requestInfoField =
+  private static final VirtualField<HttpClientRequest, VertxRequestInfo> requestInfoField =
       VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class);
 
   @Nullable
@@ -21,7 +21,7 @@ final class Vertx3HttpAttributesExtractor extends AbstractVertxHttpAttributesExt
     // Uri should be relative, but it is possible to misuse vert.x api and pass an absolute uri
     // where relative is expected.
     if (!isAbsolute(uri)) {
-      VertxRequestInfo requestInfo = (VertxRequestInfo) requestInfoField.get(request);
+      VertxRequestInfo requestInfo = requestInfoField.get(request);
       uri = absoluteUri(requestInfo, uri);
     }
     return uri;
