@@ -36,7 +36,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, boolean.class))
             .and(takesArgument(3, String.class))
             .and(takesArgument(4, int.class)),
-        HttpRequestImplInstrumentation.class.getName() + "$Vertx35Advice");
+        HttpRequestImplInstrumentation.class.getName() + "$Vertx34Advice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(1, boolean.class))
