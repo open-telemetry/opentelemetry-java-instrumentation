@@ -84,10 +84,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   }
 
   def "connect"() {
-//    setup:
-//    RedisClient testConnectionClient = createClient(embeddedDbUri)
-//    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
-
     when:
     StatefulConnection connection = redisClient.connect()
 
@@ -97,7 +93,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
     cleanup:
     connection.close()
-//    testConnectionClient.shutdown()
   }
 
   def "connect exception"() {
