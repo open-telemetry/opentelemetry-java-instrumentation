@@ -16,9 +16,9 @@ import java.util.WeakHashMap;
 public final class JdbcData {
 
   private static final Map<DbInfo, WeakReference<DbInfo>> dbInfos = new WeakHashMap<>();
-  public static VirtualField<Connection, DbInfo> connectionInfo =
+  public static final VirtualField<Connection, DbInfo> connectionInfo =
       VirtualField.find(Connection.class, DbInfo.class);
-  public static VirtualField<PreparedStatement, String> preparedStatement =
+  public static final VirtualField<PreparedStatement, String> preparedStatement =
       VirtualField.find(PreparedStatement.class, String.class);
 
   private JdbcData() {}
