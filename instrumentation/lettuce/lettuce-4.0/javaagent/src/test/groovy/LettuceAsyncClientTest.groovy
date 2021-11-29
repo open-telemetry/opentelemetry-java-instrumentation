@@ -73,7 +73,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     embeddedDbUri = "redis://" + dbAddr
 
     incorrectPort = PortUtils.findOpenPort()
-    dbAddrNonExistent = host + incorrectPort + "/" + DB_INDEX
+    dbAddrNonExistent = host + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
 
     redisClient = RedisClient.create(embeddedDbUri)

@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-  testImplementation("org.testcontainers:testcontainers:1.15.3")
+  testImplementation("org.testcontainers:testcontainers:1.16.2")
   testImplementation("org.testcontainers:postgresql:1.15.3")
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.2")
