@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.8.0") {
+  implementation("com.linecorp.armeria:armeria-junit5:1.13.3") {
     // We don't use JSON features of Armeria but shading it in can cause version conflicts with
     // instrumentation tests that do.
     exclude("com.fasterxml.jackson.core")
