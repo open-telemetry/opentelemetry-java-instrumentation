@@ -80,7 +80,7 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.11'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:1.15.3")
+  testImplementation("org.testcontainers:testcontainers:1.16.2")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
   testImplementation("com.google.protobuf:protobuf-java-util:3.12.4")
   testImplementation("com.squareup.okhttp3:okhttp:3.12.12")
