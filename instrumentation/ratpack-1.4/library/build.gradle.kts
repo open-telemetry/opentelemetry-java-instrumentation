@@ -8,7 +8,8 @@ dependencies {
 
   testImplementation(project(":instrumentation:ratpack-1.4:testing"))
 
-  testLibrary("io.ratpack:ratpack-test:1.4.0")
+  // 1.4.0 has a bug which makes tests flaky
+  testLibrary("io.ratpack:ratpack-test:1.4.1")
   testLibrary("io.ratpack:ratpack-guice:1.4.0")
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
