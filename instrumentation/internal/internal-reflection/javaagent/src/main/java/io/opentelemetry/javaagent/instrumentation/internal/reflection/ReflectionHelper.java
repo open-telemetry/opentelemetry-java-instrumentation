@@ -34,15 +34,8 @@ public final class ReflectionHelper {
   }
 
   public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
-    if (methods.length == 0) {
-      return methods;
-    } else if (containingClass.isInterface()
-        && containingClass.isSynthetic()
-        && VirtualFieldAccessorMarker.class.isAssignableFrom(containingClass)
-        && containingClass.getName().contains("VirtualFieldAccessor$")) {
-      // hide all methods from virtual field accessor interfaces
-      return new Method[0];
-    } else if (!VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+    if (methods.length == 0
+        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
       // nothing to filter when class does not have any added virtual fields
       return methods;
     }
