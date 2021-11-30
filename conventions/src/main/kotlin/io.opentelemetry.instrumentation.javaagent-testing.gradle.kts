@@ -81,7 +81,12 @@ class JavaagentTestArgumentsProvider(
     // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
-    "-Dotel.metrics.exporter=otlp"
+    "-Dotel.metrics.exporter=otlp",
+    //suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO"
   )
 }
 
