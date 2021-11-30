@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
-import io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

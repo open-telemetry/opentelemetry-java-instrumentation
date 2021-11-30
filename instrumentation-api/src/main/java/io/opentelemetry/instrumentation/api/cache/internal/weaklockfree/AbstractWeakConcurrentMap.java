@@ -23,7 +23,7 @@
 // Suppress warnings since this is vendored as-is.
 // CHECKSTYLE:OFF
 
-package io.opentelemetry.instrumentation.api.cache.weaklockfree;
+package io.opentelemetry.instrumentation.api.cache.internal.weaklockfree;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -278,7 +278,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
    * The weak key invokes the latent key's equality method upon evaluation.
    */
 
-  public static final class WeakKey<K> extends WeakReference<K> {
+  static final class WeakKey<K> extends WeakReference<K> {
 
     private final int hashCode;
 

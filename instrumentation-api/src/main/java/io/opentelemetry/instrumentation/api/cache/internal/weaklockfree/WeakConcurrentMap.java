@@ -23,7 +23,7 @@
 // Suppress warnings since this is vendored as-is.
 // CHECKSTYLE:OFF
 
-package io.opentelemetry.instrumentation.api.cache.weaklockfree;
+package io.opentelemetry.instrumentation.api.cache.internal.weaklockfree;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -115,7 +115,9 @@ public class WeakConcurrentMap<K, V>
    * @param target ConcurrentMap implementation that this class wraps.
    */
   public WeakConcurrentMap(
-      boolean cleanerThread, boolean reuseKeys, ConcurrentMap<WeakKey<K>, V> target) {
+      boolean cleanerThread,
+      boolean reuseKeys,
+      ConcurrentMap<AbstractWeakConcurrentMap.WeakKey<K>, V> target) {
     super(target);
     this.reuseKeys = reuseKeys;
     if (cleanerThread) {
@@ -180,7 +182,7 @@ public class WeakConcurrentMap<K, V>
       if (other instanceof WeakConcurrentMap.LookupKey<?>) {
         return ((LookupKey<?>) other).key == key;
       } else {
-        return ((WeakKey<?>) other).get() == key;
+        return ((AbstractWeakConcurrentMap.WeakKey<?>) other).get() == key;
       }
     }
 

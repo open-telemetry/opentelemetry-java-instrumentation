@@ -30,24 +30,26 @@
  * This package contains an implementation of a bounded {@link java.util.concurrent.ConcurrentMap}
  * data structure.
  *
- * <p>{@link io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.Weigher} is a simple
- * interface for determining how many units of capacity an entry consumes. Depending on which
- * concrete Weigher class is used, an entry may consume a different amount of space within the
- * cache. The {@link io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.Weighers}
- * class provides utility methods for obtaining the most common kinds of implementations.
+ * <p>{@link io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.Weigher} is
+ * a simple interface for determining how many units of capacity an entry consumes. Depending on
+ * which concrete Weigher class is used, an entry may consume a different amount of space within the
+ * cache. The {@link
+ * io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.Weighers} class
+ * provides utility methods for obtaining the most common kinds of implementations.
  *
- * <p>{@link io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.EvictionListener}
+ * <p>{@link
+ * io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.EvictionListener}
  * provides the ability to be notified when an entry is evicted from the map. An eviction occurs
  * when the entry was automatically removed due to the map exceeding a capacity threshold. It is not
  * called when an entry was explicitly removed.
  *
  * <p>The {@link
- * io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap} class
- * supplies an efficient, scalable, thread-safe, bounded map. As with the <tt>Java Collections
+ * io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap}
+ * class supplies an efficient, scalable, thread-safe, bounded map. As with the <tt>Java Collections
  * Framework</tt> the "Concurrent" prefix is used to indicate that the map is not governed by a
  * single exclusion lock.
  *
  * @see <a href="http://code.google.com/p/concurrentlinkedhashmap/">
  *     http://code.google.com/p/concurrentlinkedhashmap/</a>
  */
-package io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap;
+package io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap;
