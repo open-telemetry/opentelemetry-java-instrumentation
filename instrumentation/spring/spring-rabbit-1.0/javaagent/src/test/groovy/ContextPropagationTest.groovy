@@ -23,6 +23,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
+import static io.opentelemetry.instrumentation.testing.util.TestContainersUtils.isContainerIpAddress
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 
@@ -84,7 +85,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
+            "${SemanticAttributes.NET_PEER_IP.key}" { isContainerIpAddress(rabbitMqContainer, it) }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "<default>"
@@ -135,7 +136,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
+            "${SemanticAttributes.NET_PEER_IP.key}" { isContainerIpAddress(rabbitMqContainer, it) }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"

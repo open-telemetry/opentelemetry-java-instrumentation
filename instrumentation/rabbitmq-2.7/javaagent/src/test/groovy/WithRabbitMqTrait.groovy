@@ -28,13 +28,4 @@ trait WithRabbitMqTrait {
   def stopRabbit() {
     rabbitMqContainer?.stop()
   }
-
-  static boolean isContainerIpAddress(Object ip) {
-    def containerIp = rabbitMqContainer.containerIpAddress
-    // getContainerIpAddress() can return "localhost", which obviously is not an IP address
-    if (containerIp == "localhost") {
-      return ip == "127.0.0.1" || ip == "0:0:0:0:0:0:0:1"
-    }
-    return containerIp == ip
-  }
 }

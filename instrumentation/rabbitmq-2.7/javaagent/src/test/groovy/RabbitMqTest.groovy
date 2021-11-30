@@ -27,6 +27,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.testing.util.TestContainersUtils.isContainerIpAddress
 
 class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabbitMqTrait {
 
@@ -340,7 +341,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || isContainerIpAddress(it) }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || isContainerIpAddress(rabbitMqContainer, it) }
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
 
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
