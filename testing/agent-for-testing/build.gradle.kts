@@ -26,6 +26,7 @@ dependencies {
 
 tasks {
   jar {
+    dependsOn(agent)
     from(zipTree(agent.singleFile))
     from(extensionLibs) {
       into("extensions")
