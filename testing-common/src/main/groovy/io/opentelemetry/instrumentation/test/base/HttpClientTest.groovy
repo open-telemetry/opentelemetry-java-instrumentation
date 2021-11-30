@@ -225,11 +225,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     protected boolean testErrorWithCallback() {
       return HttpClientTest.this.testErrorWithCallback()
     }
-
-    @Override
-    protected String nonRoutableAddress() {
-      return HttpClientTest.this.nonRoutableAddress()
-    }
   }
 
   @Shared
@@ -504,10 +499,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   boolean testErrorWithCallback() {
     return true
-  }
-
-  String nonRoutableAddress() {
-    HttpClientTestOptions.DEFAULT_NON_ROUTABLE_ADDRESS
   }
 
   Throwable clientSpanError(URI uri, Throwable exception) {

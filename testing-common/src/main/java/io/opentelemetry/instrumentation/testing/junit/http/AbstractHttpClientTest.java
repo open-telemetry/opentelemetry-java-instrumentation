@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_NON_ROUTABLE_ADDRESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -192,7 +191,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     if (!testErrorWithCallback()) {
       options.disableTestErrorWithCallback();
     }
-    options.setNonRoutableAddress(nonRoutableAddress());
 
     configure(options);
   }
@@ -571,7 +569,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assumeTrue(options.testRemoteConnection);
 
     String method = "HEAD";
-    URI uri = URI.create(options.nonRoutableAddress);
+    URI uri = URI.create(options.testHttps ? "https://192.0.2.1/" : "http://192.0.2.1/");
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
@@ -906,7 +904,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                             port -> {
                               // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
                               if (port > 0) {
-                                assertThat(port).isEqualTo(443);
+                                assertThat(port).isEqualTo(options.testHttps ? 443 : 80);
                               }
                             });
                   }
@@ -924,11 +922,10 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               // TODO(anuraaga): Move to test knob rather than always treating
               // as optional
               if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
-                String nonRoutableHost = URI.create(options.nonRoutableAddress).getHost();
-                if (uri.getHost().equals(nonRoutableHost)) {
+                if (uri.getHost().equals("192.0.2.1")) {
                   // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
                   // It would be good to understand how the JVM version is impacting this check.
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, nonRoutableHost);
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "192.0.2.1");
                 } else {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "127.0.0.1");
                 }
@@ -1072,10 +1069,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   protected boolean testErrorWithCallback() {
     return true;
-  }
-
-  protected String nonRoutableAddress() {
-    return DEFAULT_NON_ROUTABLE_ADDRESS;
   }
 
   protected void configure(HttpClientTestOptions options) {}

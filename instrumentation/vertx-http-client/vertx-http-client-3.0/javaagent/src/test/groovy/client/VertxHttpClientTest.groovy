@@ -79,11 +79,6 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   }
 
   @Override
-  String nonRoutableAddress() {
-    "http://192.0.2.1/"
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(SemanticAttributes.HTTP_FLAVOR)

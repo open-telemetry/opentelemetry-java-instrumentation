@@ -31,8 +31,6 @@ public final class HttpClientTestOptions {
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method != null ? "HTTP " + method : "HTTP request";
 
-  public static final String DEFAULT_NON_ROUTABLE_ADDRESS = "https://192.0.2.1/";
-
   Function<URI, Set<AttributeKey<?>>> httpAttributes = unused -> DEFAULT_HTTP_ATTRIBUTES;
 
   BiFunction<URI, String, String> expectedClientSpanNameMapper =
@@ -59,7 +57,6 @@ public final class HttpClientTestOptions {
   boolean testCallback = true;
   boolean testCallbackWithParent = true;
   boolean testErrorWithCallback = true;
-  String nonRoutableAddress = DEFAULT_NON_ROUTABLE_ADDRESS;
 
   HttpClientTestOptions() {}
 
@@ -164,11 +161,6 @@ public final class HttpClientTestOptions {
 
   public HttpClientTestOptions disableTestErrorWithCallback() {
     testErrorWithCallback = false;
-    return this;
-  }
-
-  public HttpClientTestOptions setNonRoutableAddress(String nonRoutableAddress) {
-    this.nonRoutableAddress = nonRoutableAddress;
     return this;
   }
 }
