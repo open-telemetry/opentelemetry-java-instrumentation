@@ -195,6 +195,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.event.inputs.version }}
+          commitish: ${{ github.event.inputs.release-branch-name }}
           release_name: Release v${{ github.event.inputs.version }}
           draft: true
           prerelease: false
