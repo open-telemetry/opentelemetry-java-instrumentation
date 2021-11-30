@@ -41,14 +41,18 @@ import java.util.jar.Manifest;
 public final class OpenTelemetryAgent {
 
   public static void premain(String agentArgs, Instrumentation inst) {
-    agentmain(agentArgs, inst);
+    startAgent(inst, true);
   }
 
   public static void agentmain(String agentArgs, Instrumentation inst) {
+    startAgent(inst, false);
+  }
+
+  private static void startAgent(Instrumentation inst, boolean fromPremain) {
     try {
       File javaagentFile = installBootstrapJar(inst);
       InstrumentationHolder.setInstrumentation(inst);
-      AgentInitializer.initialize(inst, javaagentFile);
+      AgentInitializer.initialize(inst, javaagentFile, fromPremain);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + OpenTelemetryAgent.class.getName());
@@ -74,7 +78,7 @@ public final class OpenTelemetryAgent {
 
     // passing verify false for vendors who sign the agent jar, because jar file signature
     // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
-    // after premain executes
+    // after premain execution completes
     JarFile agentJar = new JarFile(javaagentFile, false);
     verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
