@@ -48,7 +48,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
@@ -62,7 +62,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
@@ -117,7 +117,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"

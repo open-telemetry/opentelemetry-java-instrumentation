@@ -84,7 +84,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "<default>"
@@ -135,7 +135,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"

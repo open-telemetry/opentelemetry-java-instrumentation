@@ -340,7 +340,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-        "${SemanticAttributes.NET_PEER_IP.key}" { "127.0.0.1" }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == rabbitMqContainer.containerIpAddress }
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
 
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"

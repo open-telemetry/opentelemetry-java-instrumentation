@@ -38,7 +38,7 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
           kind SpanKind.CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-            "${SemanticAttributes.NET_PEER_IP.key}" String
+            "${SemanticAttributes.NET_PEER_IP.key}" rabbitMqContainer.containerIpAddress
             "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
