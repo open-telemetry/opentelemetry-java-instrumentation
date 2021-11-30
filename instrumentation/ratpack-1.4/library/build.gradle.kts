@@ -9,6 +9,7 @@ dependencies {
   testImplementation(project(":instrumentation:ratpack-1.4:testing"))
 
   // 1.4.0 has a bug which makes tests flaky
+  // (https://github.com/ratpack/ratpack/commit/dde536ac138a76c34df03a0642c88d64edde688e)
   testLibrary("io.ratpack:ratpack-test:1.4.1")
   testLibrary("io.ratpack:ratpack-guice:1.4.0")
 
