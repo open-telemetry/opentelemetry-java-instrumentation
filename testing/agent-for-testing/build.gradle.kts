@@ -25,23 +25,18 @@ dependencies {
 }
 
 tasks {
-  // Extracts manifest from OpenTelemetry Java agent to reuse it later
-  val agentManifest by registering(Copy::class) {
-    dependsOn(agent)
-    from(
-      zipTree(agent.singleFile).matching {
-        include("META-INF/MANIFEST.MF")
-      }
-    )
-    into("$buildDir/tmp")
-  }
-
   jar {
-    dependsOn(agentManifest)
-    manifest.from("$buildDir/tmp/META-INF/MANIFEST.MF")
     from(zipTree(agent.singleFile))
     from(extensionLibs) {
       into("extensions")
+    }
+
+    doFirst {
+      manifest.from(
+        zipTree(agent.singleFile).matching {
+          include("META-INF/MANIFEST.MF")
+        }.singleFile
+      )
     }
   }
 

@@ -99,23 +99,22 @@ dependencies {
   add("codegen", "ch.qos.logback:logback-classic:1.2.3")
 }
 
-//Extracts manifest from OpenTelemetry Java agent to reuse it later
-task agentManifest(type: Copy) {
-  from zipTree(configurations.otel.singleFile).matching {
-    include 'META-INF/MANIFEST.MF'
-  }
-  into buildDir
-}
-
 //Produces a copy of upstream javaagent with this extension jar included inside it
 //The location of extension directory inside agent jar is hard-coded in the agent source code
 task extendedAgent(type: Jar) {
-  dependsOn agentManifest
   archiveFileName = "opentelemetry-javaagent.jar"
-  manifest.from "$buildDir/META-INF/MANIFEST.MF"
   from zipTree(configurations.otel.singleFile)
   from(tasks.shadowJar.archiveFile) {
     into "extensions"
+  }
+
+  //Preserve MANIFEST.MF file from the upstream javaagent
+  doFirst {
+    manifest.from(
+      zipTree(configurations.otel.singleFile).matching {
+        include 'META-INF/MANIFEST.MF'
+      }.singleFile
+    )
   }
 }
 
