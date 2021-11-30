@@ -92,7 +92,10 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
 dependencies {
   add(dependencyManagementConf.name, platform(project(":dependencyManagement")))
 
-  components.all<NettyAlignmentRule>()
+  // ratpack tests don't work correctly with 4.1.65.Final
+  if (!project.path.contains("ratpack")) {
+    components.all<NettyAlignmentRule>()
+  }
 
   compileOnly("com.google.code.findbugs:jsr305")
 
