@@ -1,52 +1,17 @@
-# Releases a patch by cherrypicking commits into a release branch based on the previous
-# release tag.
+# Releases a new patch version from a release branch
 name: Patch Release Build
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: The version to tag the release with, e.g., 1.2.1, 1.2.2
+      release-branch-name:
+        description: The release branch to use, e.g. v1.9.x
         required: true
-      commits:
-        description: List of commit shas to cherrypick. Multiple shas should be separated by spaces.
-        required: false
+      version:
+        # TODO (trask) this is redundant
+        description: The version of the release, e.g. 1.9.0 (without the "v" prefix)
+        required: true
 
 jobs:
-  prepare-release-branch:
-    runs-on: ubuntu-latest
-    outputs:
-      release-branch-name: ${{ steps.parse-release-branch.outputs.release-branch-name }}
-    steps:
-      - id: parse-release-branch
-        name: Parse release branch name
-        run: |
-          # Sets the release-branch-name output to the version number with the last non-period element replaced with an 'x' and preprended with v.
-          echo "::set-output name=release-branch-name::$(echo '${{ github.event.inputs.version }}' | sed -E 's/([^.]+)\.([^.]+)\.([^.]+)/v\1.\2.x/')"
-          # Sets the release-tag-name output to the version number with the last non-period element replace with a '0' and prepended with v
-          echo "::set-output name=release-tag-name::$(echo '${{ github.event.inputs.version }}' | sed -E 's/([^.]+)\.([^.]+)\.([^.]+)/v\1.\2.0/')"
-
-      - id: checkout-release-branch
-        name: Check out release branch
-        continue-on-error: true
-        uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ steps.parse-release-branch.outputs.release-branch-name }}
-          fetch-depth: 0
-
-      - id: checkout-release-tag
-        name: Check out release tag
-        if: ${{ steps.checkout-release-branch.outcome == 'failure' }}
-        uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ steps.parse-release-branch.outputs.release-tag-name }}
-          fetch-depth: 0
-
-      - name: Create release branch
-        if: ${{ steps.checkout-release-tag.outcome == 'success' }}
-        run: |
-          git checkout -b ${{ steps.parse-release-branch.outputs.release-branch-name }}
-          git push --set-upstream origin ${{ steps.parse-release-branch.outputs.release-branch-name }}
-
   test:
     runs-on: ubuntu-latest
     needs: prepare-release-branch
@@ -91,12 +56,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-
-      - name: Cherrypicks
-        if: ${{ github.event.inputs.commits != '' }}
-        run: |
-          git fetch origin main
-          git cherry-pick ${{ github.event.inputs.commits }} 
 
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
@@ -159,12 +118,6 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
 
-      - name: Cherrypicks
-        if: ${{ github.event.inputs.commits != '' }}
-        run: |
-          git fetch origin main
-          git cherry-pick ${{ github.event.inputs.commits }}
-
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
@@ -197,12 +150,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-
-      - name: Cherrypicks
-        if: ${{ github.event.inputs.commits != '' }}
-        run: |
-          git fetch origin main
-          git cherry-pick ${{ github.event.inputs.commits }}
 
       - name: Local publish of artifacts
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
@@ -241,12 +188,6 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
 
-      - name: Cherrypicks
-        if: ${{ github.event.inputs.commits != '' }}
-        run: |
-          git fetch origin main
-          git cherry-pick ${{ github.event.inputs.commits }}
-
       - name: Build and publish artifacts
         uses: burrunan/gradle-cache-action@v1.10
         with:
@@ -269,9 +210,6 @@ jobs:
         run: ../gradlew build publishPlugins
         working-directory: gradle-plugins
 
-      - name: Push cherry-picked changes to the release branch
-        run: git push
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
@@ -279,7 +217,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.event.inputs.version }}
-          commitish: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          commitish: ${{ github.event.inputs.release-branch-name }}
           release_name: Release v${{ github.event.inputs.version }}
           draft: true
           prerelease: false
