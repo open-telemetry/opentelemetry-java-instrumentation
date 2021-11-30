@@ -88,7 +88,8 @@ public final class AgentInitializer {
   }
 
   public static ClassLoader getExtensionsClassLoader() {
-    return agentStarter.getExtensionClassLoader();
+    // agentStarter can be null when running tests
+    return agentStarter != null ? agentStarter.getExtensionClassLoader() : null;
   }
 
   /**
