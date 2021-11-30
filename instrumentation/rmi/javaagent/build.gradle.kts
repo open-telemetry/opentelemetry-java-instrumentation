@@ -15,33 +15,6 @@ dependencies {
   compileOnly(project(":instrumentation:rmi:bootstrap"))
 }
 
-tasks {
-  val rmic by registering(Exec::class) {
-    dependsOn(testClasses)
-
-    val clazz = "rmi.app.ServerLegacy"
-
-    val rmicBinaryPath = listOf("/bin/rmic", "/../bin/rmic").map {
-      File(System.getProperty("java.home"), it).absoluteFile
-    }.find { it.isFile() }?.let(File::toString) ?: "rmic"
-
-    commandLine(
-      rmicBinaryPath,
-      "-g",
-      "-keep",
-      "-classpath",
-      sourceSets.test.get().output.classesDirs.asPath,
-      "-d",
-      "$buildDir/classes/java/test",
-      clazz
-    )
-  }
-
-  test {
-    dependsOn(rmic)
-  }
-}
-
 // We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
 
