@@ -64,7 +64,7 @@ public class RabbitSingletons {
     return Instrumenter.<ReceiveRequest, GetResponse>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
-        .setTimeExtractors(ReceiveRequest::startTime, (request, response, error) -> request.now())
+        .setTimeExtractor(new RabbitReceiveTimeExtractor())
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

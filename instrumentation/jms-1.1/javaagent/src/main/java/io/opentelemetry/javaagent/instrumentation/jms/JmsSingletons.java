@@ -45,8 +45,7 @@ public final class JmsSingletons {
     return Instrumenter.<MessageWithDestination, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
-        .setTimeExtractors(
-            MessageWithDestination::startTime, (request, response, error) -> request.endTime())
+        .setTimeExtractor(new JmsMessageTimeExtractor())
         .setDisabled(ExperimentalConfig.get().suppressMessagingReceiveSpans())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
