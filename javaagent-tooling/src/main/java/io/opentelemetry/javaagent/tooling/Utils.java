@@ -24,7 +24,7 @@ public class Utils {
   }
 
   public static ClassLoader getExtensionsClassLoader() {
-    return AgentInitializer.getAgentClassLoader();
+    return AgentInitializer.getExtensionsClassLoader();
   }
 
   /** Return a classloader which can be used to look up bootstrap resources. */

@@ -54,7 +54,7 @@ public class OpenTelemetryInstaller implements AgentListener {
                 .setResultAsGlobal(true)
                 .addPropertiesSupplier(config::getAllProperties);
 
-        ClassLoader classLoader = AgentInitializer.getAgentClassLoader();
+        ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
         if (classLoader != null) {
           // May be null in unit tests.
           builder.setServiceClassLoader(classLoader);
