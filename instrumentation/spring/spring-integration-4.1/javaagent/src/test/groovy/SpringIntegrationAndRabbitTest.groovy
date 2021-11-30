@@ -6,12 +6,12 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
+import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.ServerTraceUtils.runUnderServerTrace
-import static io.opentelemetry.instrumentation.testing.util.TestContainersUtils.isContainerIpAddress
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {
@@ -49,7 +49,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isContainerIpAddress(rabbitMqContainer, it) }
+            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
             "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
@@ -63,7 +63,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isContainerIpAddress(rabbitMqContainer, it) }
+            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
@@ -118,7 +118,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             // "localhost" on linux, null on windows
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isContainerIpAddress(rabbitMqContainer, it) }
+            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
