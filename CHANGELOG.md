@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.9.1 - 2021-12-01
+
+### 🛠️ Bug fixes
+
+- Shade class references within AWS SDK service files
+  ([#4752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4752))
+
 ## Version 1.9.0 - 2021-11-25
 
 ### 📈 Enhancements
