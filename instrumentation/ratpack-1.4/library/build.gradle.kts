@@ -20,3 +20,19 @@ dependencies {
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+
+// to allow all tests to pass we need to choose a specific netty version
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.configureEach {
+    if (!name.contains("muzzle")) {
+      resolutionStrategy {
+        eachDependency {
+          // specifying a fixed version for all libraries with io.netty group
+          if (requested.group == "io.netty") {
+            useVersion("4.1.31.Final")
+          }
+        }
+      }
+    }
+  }
+}

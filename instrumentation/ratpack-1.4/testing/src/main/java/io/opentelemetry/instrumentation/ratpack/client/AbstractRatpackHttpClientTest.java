@@ -156,9 +156,5 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     options.disableTestReusedRequest();
 
     options.enableTestReadTimeout();
-
-    if (!Boolean.getBoolean("testLatestDeps")) {
-      options.disableTestHttps();
-    }
   }
 }
