@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
   id("org.xbib.gradle.plugin.jflex")
 
@@ -6,6 +8,7 @@ plugins {
   id("otel.jacoco-conventions")
   id("otel.japicmp-conventions")
   id("otel.publish-conventions")
+  id("otel.jmh-conventions")
 }
 
 sourceSets {
@@ -63,6 +66,14 @@ tasks {
     filter {
       excludeTestsMatching("StatementSanitizationConfigTest")
       isFailOnNoMatchingTests = false
+    }
+  }
+
+  // TODO this should live in jmh-conventions
+  named("jmhCompileGeneratedClasses") {
+    this as JavaCompile
+    options.errorprone {
+      isEnabled.set(false)
     }
   }
 }

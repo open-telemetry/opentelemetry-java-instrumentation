@@ -378,7 +378,6 @@ include(":instrumentation:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark
-include(":benchmark")
 include(":benchmark-e2e")
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
