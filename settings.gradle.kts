@@ -33,23 +33,32 @@ val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
 // if GE access key is not given and we are in CI, then we publish to scans.gradle.com
 val useScansGradleCom = isCI && geAccessKey.isEmpty()
 
-gradleEnterprise {
-  if (!useScansGradleCom) {
-    server = gradleEnterpriseServer
-  }
-  buildScan {
-    if (useScansGradleCom) {
+if (useScansGradleCom) {
+  gradleEnterprise {
+    buildScan {
       termsOfServiceUrl = "https://gradle.com/terms-of-service"
       termsOfServiceAgree = "yes"
+      isUploadInBackground = !isCI
+      publishAlways()
+
+      capture {
+        isTaskInputFiles = true
+      }
     }
-    publishAlways()
-    this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
-    publishIfAuthenticated()
+  }
+} else {
+  gradleEnterprise {
+    server = gradleEnterpriseServer
+    buildScan {
+      isUploadInBackground = !isCI
 
-    isUploadInBackground = !isCI
+      this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
+      publishIfAuthenticated()
+      publishAlways()
 
-    capture {
-      isTaskInputFiles = true
+      capture {
+        isTaskInputFiles = true
+      }
     }
   }
 }
