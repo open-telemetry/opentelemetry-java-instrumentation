@@ -1,3 +1,5 @@
+import ru.vyarus.gradle.plugin.animalsniffer.AnimalSniffer
+
 plugins {
   `java-library`
 
@@ -10,4 +12,8 @@ dependencies {
 
 animalsniffer {
   sourceSets = listOf(java.sourceSets.main.get())
+}
+tasks.withType<AnimalSniffer> {
+  // always having declared output makes this task properly participate in tasks up-to-date checks
+  reports.text.required.set(true)
 }
