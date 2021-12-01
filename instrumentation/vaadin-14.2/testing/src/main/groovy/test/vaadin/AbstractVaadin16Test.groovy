@@ -13,11 +13,14 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
   static final boolean VAADIN_19 = Version.majorVersion >= 6
   static final boolean VAADIN_21 = Version.majorVersion >= 8
+  static final boolean VAADIN_22 = Version.majorVersion >= 9
 
   @Override
   List<String> getRequestHandlers() {
     List<String> handlers = []
-    if (VAADIN_21) {
+    if (VAADIN_22) {
+      handlers.add("WebpackHandler")
+    } else if (VAADIN_21) {
       handlers.add("DevModeHandlerImpl")
     }
     handlers.add("PushRequestHandler")
