@@ -128,6 +128,10 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     return io.opentelemetry.context.Context.root();
   }
 
+  public static Context toApplicationContext(io.opentelemetry.context.Context agentContext) {
+    return new AgentContextWrapper(agentContext);
+  }
+
   public static Context newContextWrapper(
       io.opentelemetry.context.Context agentContext, Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
@@ -226,6 +230,10 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   private static class AgentContextWrapper implements Context {
     final io.opentelemetry.context.Context agentContext;
     final Context applicationContext;
+
+    AgentContextWrapper(io.opentelemetry.context.Context agentContext) {
+      this(agentContext, agentContext.get(APPLICATION_CONTEXT));
+    }
 
     AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
       if (applicationContext instanceof AgentContextWrapper) {
