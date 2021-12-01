@@ -5,7 +5,6 @@
 
 import com.netflix.hystrix.HystrixCommand
 import com.netflix.hystrix.HystrixCommandProperties
-import com.netflix.hystrix.HystrixObservableCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.concurrent.BlockingQueue
