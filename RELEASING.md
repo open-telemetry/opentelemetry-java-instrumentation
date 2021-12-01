@@ -30,10 +30,8 @@ You will see a button that says "Run workflow". Press the button, then enter the
 * Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
 * The release branch to use: <e.g. `v1.9.x`>
 * The version of the release: <e.g. `1.9.0`>
-Yes there is redundancy between these inputs that we plan to address.
 
-You will see a button that says "Run workflow". Press the button, enter the release branch to use
-and the version of the release.
+(Yes there is redundancy between the above inputs that we plan to address.)
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
@@ -78,4 +76,5 @@ You will see a button that says "Run workflow". Press the button, then enter the
 * Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
 * The release branch to use: <e.g. `v1.9.x`>
 * The version of the release: <e.g. `1.9.1`>
-Yes there is redundancy between these inputs that we plan to address.
+
+(Yes there is redundancy between the above inputs that we plan to address.)
