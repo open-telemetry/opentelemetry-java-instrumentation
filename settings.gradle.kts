@@ -28,9 +28,20 @@ dependencyResolutionManagement {
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"
 val isCI = System.getenv("CI") != null
+val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
+
+// if GE access key is not given and we are in CI, then we publish to scans.gradle.com
+val useScansGradleCom = isCI && geAccessKey.isEmpty()
+
 gradleEnterprise {
-  server = gradleEnterpriseServer
+  if (!useScansGradleCom) {
+    server = gradleEnterpriseServer
+  }
   buildScan {
+    if (useScansGradleCom) {
+      termsOfServiceUrl = "https://gradle.com/terms-of-service"
+      termsOfServiceAgree = "yes"
+    }
     publishAlways()
     this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
     publishIfAuthenticated()
@@ -128,8 +139,6 @@ include(":instrumentation:internal:internal-class-loader:javaagent-integration-t
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
 include(":instrumentation:internal:internal-lambda:javaagent")
 include(":instrumentation:internal:internal-lambda-java9:javaagent")
-include(":instrumentation:internal:internal-proxy:javaagent")
-include(":instrumentation:internal:internal-proxy:javaagent-unit-tests")
 include(":instrumentation:internal:internal-reflection:javaagent")
 include(":instrumentation:internal:internal-reflection:javaagent-integration-tests")
 include(":instrumentation:internal:internal-url-class-loader:javaagent")

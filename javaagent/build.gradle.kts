@@ -72,7 +72,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:internal:internal-proxy:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 

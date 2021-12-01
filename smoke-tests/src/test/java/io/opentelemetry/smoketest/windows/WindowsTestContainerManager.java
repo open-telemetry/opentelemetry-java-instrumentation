@@ -53,6 +53,7 @@ import org.testcontainers.containers.output.OutputFrame;
 public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private static final Logger logger = LoggerFactory.getLogger(WindowsTestContainerManager.class);
   private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
+  private static final Logger appLogger = LoggerFactory.getLogger("App");
 
   private static final String NPIPE_URI = "npipe:////./pipe/docker_engine";
 
@@ -179,7 +180,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             },
             createTargetWaiter(waitStrategy),
             /* inspect= */ true,
-            logger);
+            appLogger);
     return null;
   }
 

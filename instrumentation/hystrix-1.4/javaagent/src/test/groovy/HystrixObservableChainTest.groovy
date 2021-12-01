@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.netflix.hystrix.HystrixCommandProperties
 import com.netflix.hystrix.HystrixObservableCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import rx.Observable
@@ -17,7 +18,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
     setup:
 
     def result = runWithSpan("parent") {
-      def val = new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
+      def val = new HystrixObservableCommand<String>(setter("ExampleGroup")) {
         private String tracedMethod() {
           runInternalSpan("tracedMethod")
           return "Hello"
@@ -35,7 +36,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         .map {
           it.toUpperCase()
         }.flatMap { str ->
-        new HystrixObservableCommand<String>(asKey("OtherGroup")) {
+        new HystrixObservableCommand<String>(setter("OtherGroup")) {
           private String anotherTracedMethod() {
             runInternalSpan("anotherTracedMethod")
             return "$str!"
@@ -97,5 +98,12 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  def setter(String key) {
+    def setter = new HystrixObservableCommand.Setter(asKey(key))
+    setter.andCommandPropertiesDefaults(new HystrixCommandProperties.Setter()
+      .withExecutionTimeoutInMilliseconds(10_000))
+    return setter
   }
 }

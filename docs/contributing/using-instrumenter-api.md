@@ -294,32 +294,26 @@ default `jdk()` implementation that removes the known JDK wrapper exception type
 You can set the `ErrorCauseExtractor` in the `InstrumenterBuilder` using
 the `setErrorCauseExtractor()` method.
 
-### Provide custom operation start and end times using the `StartTimeExtractor` and `EndTimeExtractor`
+### Provide custom operation start and end times using the `TimeExtractor`
 
 In some cases, the instrumented library provides a way to retrieve accurate timestamps of when the
-operation starts and ends. The `StartTimeExtractor` and `EndTimeExtractor` interfaces can be used to
-feed this information into OpenTelemetry trace and metrics data. Provide either both time extractors
-or none to the `InstrumenterBuilder`: it is crucial to avoid a situation where one time measurement
-uses the library timestamp and the other the internal OpenTelemetry SDK clock, as it would result in
-inaccurate telemetry.
+operation starts and ends. The `TimeExtractor` interface can be used to
+feed this information into OpenTelemetry trace and metrics data.
 
-The `StartTimeExtractor` can only extract the timestamp from the request. The `EndTimeExtractor`
+`extractStartTime()` can only extract the timestamp from the request. `extractEndTime()`
 accepts the request, an optional response, and an optional `Throwable` error. Consider the following
 example:
 
 ```java
-class MyStartTimeExtractor implements StartTimeExtractor<Request> {
+class MyTimeExtractor implements TimeExtractor<Request, Response> {
 
   @Override
-  public Instant extract(Request request) {
+  public Instant extractStartTime(Request request) {
     return request.startTimestamp();
   }
-}
-
-class MyEndTimeExtractor implements EndTimeExtractor<Request, Response> {
 
   @Override
-  public Instant extract(Request request, @Nullable Response response, @Nullable Throwable error) {
+  public Instant extractEndTime(Request request, @Nullable Response response, @Nullable Throwable error) {
     if (response != null) {
       return response.endTimestamp();
     }
@@ -332,7 +326,7 @@ The sample implementations above use the request to retrieve the start timestamp
 used to compute the end time if it is available; in case it is missing (for example, when an error
 occurs) the same time source is used to compute the current timestamp.
 
-You can set both time extractors in the `InstrumenterBuilder` using the `setTimeExtractors()`
+You can set the time extractor in the `InstrumenterBuilder` using the `setTimeExtractor()`
 method.
 
 ### Register metrics by implementing the `RequestMetrics` and `RequestListener`

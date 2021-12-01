@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.apache.logging.log4j.LogManager
 
 abstract class Log4j2Test extends InstrumentationSpecification {
-  def cleanup() {
+  def setup() {
     ListAppender.get().clearEvents()
   }
 

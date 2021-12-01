@@ -23,6 +23,7 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
+import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -340,7 +341,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-        "${SemanticAttributes.NET_PEER_IP.key}" { "127.0.0.1" }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || isInetAddress(it as String) }
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
 
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"

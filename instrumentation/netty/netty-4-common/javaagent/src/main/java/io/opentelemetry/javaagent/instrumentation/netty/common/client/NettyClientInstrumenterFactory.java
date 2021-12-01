@@ -56,9 +56,7 @@ public final class NettyClientInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
-            .setTimeExtractors(
-                request -> request.timer().startTime(),
-                (request, channel, error) -> request.timer().now())
+            .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(
                 alwaysCreateConnectSpan
                     ? SpanKindExtractor.alwaysInternal()
@@ -76,9 +74,7 @@ public final class NettyClientInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
-            .setTimeExtractors(
-                request -> request.timer().startTime(),
-                (request, channel, error) -> request.timer().now())
+            .setTimeExtractor(new NettySslTimeExtractor())
             .newInstrumenter(
                 sslTelemetryEnabled
                     ? SpanKindExtractor.alwaysInternal()

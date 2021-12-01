@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" packages="com.example.appender,io.opentelemetry.instrumentation.log4j.v2_13_2">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId: %X{trace_id} spanId: %X{span_id} flags: %X{trace_flags} - %msg%n" />
+    </Console>
+    <ListAppender name="ListAppender" />
+    <OpenTelemetry name="OpenTelemetryAppender" />
+  </Appenders>
+  <Loggers>
+    <Logger name="TestLogger" level="All">
+      <AppenderRef ref="OpenTelemetryAppender" level="All" />
+      <AppenderRef ref="ListAppender" level="All" />
+      <AppenderRef ref="Console" level="All" />
+    </Logger>
+    <Root>
+      <AppenderRef ref="Console" level="All" />
+    </Root>
+  </Loggers>
+</Configuration>
