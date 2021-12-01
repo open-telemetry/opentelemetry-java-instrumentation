@@ -20,7 +20,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap;
+package io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap;
 
 import java.util.AbstractCollection;
 import java.util.Collection;

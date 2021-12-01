@@ -20,9 +20,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap;
+package io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap;
 
-import static io.opentelemetry.instrumentation.api.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap.checkNotNull;
+import static io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap.checkNotNull;
 
 import java.io.Serializable;
 import java.util.Collection;
