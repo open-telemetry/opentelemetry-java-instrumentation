@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import java.rmi.server.RemoteServer;
+import java.rmi.Remote;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RemoteServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("java.rmi.server.RemoteServer"));
+    return implementsInterface(named("java.rmi.Remote"));
   }
 
   @Override
@@ -50,7 +50,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      callDepth = CallDepth.forClass(RemoteServer.class);
+      callDepth = CallDepth.forClass(Remote.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }

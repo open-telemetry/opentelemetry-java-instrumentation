@@ -48,11 +48,6 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
 
-      // TODO replace with client span check - this is a bit different condition though, can we
-      // remove it?
-      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-        return;
-      }
       if (!instrumenter().shouldStart(parentContext, method)) {
         return;
       }
