@@ -62,7 +62,9 @@ class AsyncServlet extends AbstractHttpServlet {
               break
             case EXCEPTION:
               resp.status = endpoint.status
-              resp.writer.print(endpoint.body)
+              def writer = resp.writer
+              writer.print(endpoint.body)
+              writer.close()
               throw new ServletException(endpoint.body)
           }
         }
