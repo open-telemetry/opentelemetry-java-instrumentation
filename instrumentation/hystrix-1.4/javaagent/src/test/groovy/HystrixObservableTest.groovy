@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import com.netflix.hystrix.HystrixCommandProperties
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
@@ -24,7 +26,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     def observeOnFn = observeOn
     def subscribeOnFn = subscribeOn
     def result = runWithSpan("parent") {
-      def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
+      def val = operation new HystrixObservableCommand<String>(setter("ExampleGroup")) {
         private String tracedMethod() {
           runInternalSpan("tracedMethod")
           return "Hello!"
@@ -116,7 +118,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     def observeOnFn = observeOn
     def subscribeOnFn = subscribeOn
     def result = runWithSpan("parent") {
-      def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
+      def val = operation new HystrixObservableCommand<String>(setter("ExampleGroup")) {
         @Override
         protected Observable<String> construct() {
           def err = Observable.defer {
@@ -214,7 +216,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
 
     when:
     runWithSpan("parent") {
-      operation new HystrixObservableCommand<String>(asKey("FailingGroup")) {
+      operation new HystrixObservableCommand<String>(setter("FailingGroup")) {
 
         @Override
         protected Observable<String> construct() {
@@ -304,5 +306,12 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
       subscription.unsubscribe()
       throw ex
     }
+  }
+
+  def setter(String key) {
+    def setter = new HystrixObservableCommand.Setter(asKey(key))
+    setter.andCommandPropertiesDefaults(new HystrixCommandProperties.Setter()
+      .withExecutionTimeoutInMilliseconds(10_000))
+    return setter
   }
 }
