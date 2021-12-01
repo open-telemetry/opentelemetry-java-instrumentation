@@ -24,7 +24,7 @@ public final class AgentClassLoaderAccess {
     }
   }
 
-  static Class<?> loadClass(String name) {
+  public static Class<?> loadClass(String name) {
     try {
       return agentClassLoader.loadClass(name);
     } catch (ClassNotFoundException e) {
