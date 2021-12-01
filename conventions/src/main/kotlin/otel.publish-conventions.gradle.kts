@@ -9,7 +9,7 @@ publishing {
       plugins.withId("java-platform") {
         from(components["javaPlatform"])
       }
-      if(project.name != "javaagent"){
+      if(project.path != ":javaagent"){
         plugins.withId("java-library") {
           from(components["java"])
         }
