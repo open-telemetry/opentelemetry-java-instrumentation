@@ -14,6 +14,9 @@ muzzle {
 dependencies {
   library("io.vertx:vertx-core:3.0.0")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   implementation(project(":instrumentation:vertx-http-client:vertx-http-client-common:javaagent"))
 
   // We need both version as different versions of Vert.x use different versions of Netty

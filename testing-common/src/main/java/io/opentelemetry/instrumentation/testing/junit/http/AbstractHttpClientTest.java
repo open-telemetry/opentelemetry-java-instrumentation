@@ -569,7 +569,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assumeTrue(options.testRemoteConnection);
 
     String method = "HEAD";
-    URI uri = URI.create("https://192.0.2.1/");
+    URI uri = URI.create(options.testHttps ? "https://192.0.2.1/" : "http://192.0.2.1/");
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
@@ -904,7 +904,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                             port -> {
                               // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
                               if (port > 0) {
-                                assertThat(port).isEqualTo(443);
+                                assertThat(port).isEqualTo(options.testHttps ? 443 : 80);
                               }
                             });
                   }
