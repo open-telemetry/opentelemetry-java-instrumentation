@@ -32,15 +32,16 @@ final class Vertx3HttpAttributesExtractor extends AbstractVertxHttpAttributesExt
   }
 
   private static String absoluteUri(VertxRequestInfo requestInfo, String uri) {
-    String result = requestInfo.isSsl() ? "https://" : "http://";
-    result += requestInfo.getHost();
+    StringBuilder result = new StringBuilder();
+    result.append(requestInfo.isSsl() ? "https://" : "http://");
+    result.append(requestInfo.getHost());
     if (requestInfo.getPort() != -1
         && (requestInfo.getPort() != 80 || requestInfo.isSsl())
         && (requestInfo.getPort() != 443 || !requestInfo.isSsl())) {
-      result += ":" + requestInfo.getPort();
+      result.append(':').append(requestInfo.getPort());
     }
-    result += uri;
-    return result;
+    result.append(uri);
+    return result.toString();
   }
 
   @Override
