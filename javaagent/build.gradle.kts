@@ -254,6 +254,7 @@ tasks {
     publications {
       named<MavenPublication>("maven") {
         artifact(slimShadowJar)
+        project.shadow.component(this)
       }
     }
   }
