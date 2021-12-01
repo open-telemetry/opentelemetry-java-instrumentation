@@ -29,7 +29,7 @@ tasks.create("pushMatrix", DockerPushImage) {
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
 def targets = [
-  "jetty": [
+  "jetty"    : [
     [version: ["9.4.39"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [sourceVersion: "9.4.39.v20210325"]],
     [version: ["9.4.39"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [sourceVersion: "9.4.39.v20210325"]],
     [version: ["10.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "10.0.7"]],
@@ -37,7 +37,17 @@ def targets = [
     [version: ["11.0.7"], vm: ["hotspot"], jdk: ["11", "17"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"],
     [version: ["11.0.7"], vm: ["openj9"], jdk: ["11", "16"], args: [sourceVersion: "11.0.7"], war: "servlet-5.0"]
   ],
-  "tomcat": [
+  "liberty"  : [
+    // running configure.sh is failing while building the image with Java 17
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]],
+    [version: ["21.0.0.10"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2021-09-20_1900"]],
+    [version: ["21.0.0.10"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2021-09-20_1900"]]
+  ],
+  "payara"   : [
+    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
+    [version: ["5.2021.8"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  ],
+  "tomcat"   : [
     [version: ["7.0.109"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
     [version: ["8.5.72"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "8"]],
     [version: ["8.5.72"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
@@ -46,7 +56,7 @@ def targets = [
     [version: ["10.0.12"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [majorVersion: "10"], war: "servlet-5.0"],
     [version: ["10.0.12"], vm: ["openj9"], jdk: ["8", "11"], args: [majorVersion: "10"], war: "servlet-5.0"]
   ],
-  "tomee": [
+  "tomee"    : [
     [version: ["7.0.9"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["7.1.4"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.8"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
@@ -54,23 +64,13 @@ def targets = [
     [version: ["9.0.0-M7"], vm: ["hotspot"], jdk: ["8", "11", "17"], war: "servlet-5.0"],
     [version: ["9.0.0-M7"], vm: ["openj9"], jdk: ["8", "11", "16"], war: "servlet-5.0"]
   ],
-  "payara": [
-    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]],
-    [version: ["5.2021.8"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  "websphere": [
+    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"], windows: false]
   ],
-  "wildfly": [
+  "wildfly"  : [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["17.0.1.Final", "21.0.0.Final", "25.0.1.Final"], vm: ["hotspot"], jdk: ["8", "11", "17"]],
     [version: ["17.0.1.Final", "21.0.0.Final", "25.0.1.Final"], vm: ["openj9"], jdk: ["8", "11", "16"]]
-  ],
-  "liberty": [
-    // running configure.sh is failing while building the image with Java 17
-    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]],
-    [version: ["21.0.0.10"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2021-09-20_1900"]],
-    [version: ["21.0.0.10"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2021-09-20_1900"]]
-  ],
-  "websphere": [
-    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"], windows: false]
   ]
 ]
 
