@@ -87,7 +87,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
         return super.expectedClientSpanName(uri, method)
@@ -98,7 +98,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return []
     }
     return super.httpAttributes(uri)
