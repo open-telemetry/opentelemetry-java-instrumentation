@@ -14,6 +14,8 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
+import java.time.Duration
+
 class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentationSpecification {
   def "store and get context"() {
 
@@ -69,13 +71,13 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
     }
   }
 
-  def "run with context"() {
+  def "run with context forces it to become current"() {
     setup:
     def result = Mono.defer({ ->
       Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
-      def inner = Mono.defer({ -> new TracedWithSpan().mono(Mono.just("Value") )});
-      ContextPropagationOperator
-        .runWithContext(inner, Context.current().with(span))
+      def outer = Mono.defer({ -> new TracedWithSpan().mono(Mono.just("Value") )});
+      return ContextPropagationOperator
+        .runWithContext(outer, Context.current().with(span))
         .doFinally({ i -> span.end() })
     })
 
@@ -102,4 +104,42 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
     }
   }
 
+  def "store context forces it to become current"() {
+    setup:
+    def result = Mono.defer({ ->
+      Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
+
+      Mono.delay(Duration.ofMillis(1))
+        .flatMap({ t ->
+          // usual trick to force this to run under new TracingSubscriber with context written in the next call
+          new TracedWithSpan().mono(Mono.just("Value"))
+        })
+        .subscriberContext({ ctx ->
+          ContextPropagationOperator.storeOpenTelemetryContext(ctx, Context.current().with(span))
+        })
+        .doFinally({ i -> span.end() })
+    })
+
+    StepVerifier.create(result)
+      .expectNext("Value")
+      .verifyComplete()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "TracedWithSpan.mono"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+  }
 }

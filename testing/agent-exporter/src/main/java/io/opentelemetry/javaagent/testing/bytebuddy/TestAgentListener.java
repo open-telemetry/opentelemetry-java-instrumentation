@@ -149,10 +149,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
       }
     }
     if (!(throwable instanceof AbortTransformationException)) {
-      System.out.printf("Unexpected instrumentation error when instrumenting %s on %s, %s \r\n",typeName,
-          classLoader,
-          throwable.toString());
-
       logger.error(
           "Unexpected instrumentation error when instrumenting {} on {}",
           typeName,
