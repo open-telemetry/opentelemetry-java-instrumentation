@@ -121,7 +121,7 @@ afterEvaluate {
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false
       }
-      if (lib.name.contains("-autoconfigure-")) {
+      if (lib.name.startsWith("opentelemetry-") && lib.name.contains("-autoconfigure-")) {
         // These dependencies should not be on the test classpath, because they will auto-instrument
         // the library and the tests could pass even if the javaagent instrumentation fails to apply
         return@filter false
