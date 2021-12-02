@@ -1,6 +1,9 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
+  id("otel.jmh-conventions")
 }
 
 group = "io.opentelemetry.javaagent"
@@ -49,4 +52,12 @@ tasks {
     environment("OTEL_TRACES_EXPORTER", "none")
     environment("OTEL_METRICS_EXPORTER", "none")
   }
+
+  // TODO this should live in jmh-conventions
+  named<JavaCompile>("jmhCompileGeneratedClasses") {
+    options.errorprone {
+      isEnabled.set(false)
+    }
+  }
+
 }

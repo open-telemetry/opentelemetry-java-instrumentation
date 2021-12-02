@@ -70,8 +70,7 @@ tasks {
   }
 
   // TODO this should live in jmh-conventions
-  named("jmhCompileGeneratedClasses") {
-    this as JavaCompile
+  named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
       isEnabled.set(false)
     }
