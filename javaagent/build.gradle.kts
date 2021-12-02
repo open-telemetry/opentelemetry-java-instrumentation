@@ -158,9 +158,7 @@ tasks {
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
-    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
-    dependsOn(jar, relocateJavaagentLibs, relocateExporterLibs)
+    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
     isolateClasses(relocateExporterLibs.get().outputs.files)
 
@@ -220,6 +218,10 @@ tasks {
     add("baseJar", baseJavaagentJar)
   }
 
+  jar {
+    enabled = false
+  }
+
   assemble {
     dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
   }
@@ -252,6 +254,7 @@ tasks {
     publications {
       named<MavenPublication>("maven") {
         artifact(slimShadowJar)
+        project.shadow.component(this)
       }
     }
   }
