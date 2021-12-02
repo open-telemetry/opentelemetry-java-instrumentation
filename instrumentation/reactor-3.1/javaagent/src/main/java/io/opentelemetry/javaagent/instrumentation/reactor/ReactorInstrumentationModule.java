@@ -21,8 +21,6 @@ public class ReactorInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new HooksInstrumentation(),
-        new ContextPropagationOperatorInstrumentation());
+    return asList(new HooksInstrumentation(), new ContextPropagationOperatorInstrumentation());
   }
 }

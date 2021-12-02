@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -65,7 +70,9 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
         @Advice.Argument(1) Context applicationContext,
         @Advice.Return(readOnly = false) reactor.util.context.Context updatedReactorContext) {
-      updatedReactorContext = ContextPropagationOperator.storeOpenTelemetryContext(reactorContext, AgentContextStorage.getAgentContext(applicationContext));
+      updatedReactorContext =
+          ContextPropagationOperator.storeOpenTelemetryContext(
+              reactorContext, AgentContextStorage.getAgentContext(applicationContext));
     }
   }
 
@@ -82,7 +89,8 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
         @Advice.Argument(1) Context defaultContext,
         @Advice.Return(readOnly = false) Context applicationContext) {
 
-      io.opentelemetry.context.Context agentContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, null);
+      io.opentelemetry.context.Context agentContext =
+          ContextPropagationOperator.getOpenTelemetryContext(reactorContext, null);
       if (agentContext == null) {
         applicationContext = defaultContext;
       } else {
