@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import rmi.app.Greeter;
 import rmi.app.Server;
-import rmi.app.ServerLegacy;
 
 class RmiTest {
 
@@ -225,59 +224,5 @@ class RmiTest {
                                                 entry(
                                                     SemanticAttributes.RPC_METHOD,
                                                     "exceptional")))));
-  }
-
-  @Test
-  void clientCallUsingLegacyStub() throws Exception {
-    ServerLegacy server = new ServerLegacy();
-    serverRegistry.rebind(ServerLegacy.RMI_ID, server);
-    autoCleanup.deferCleanup(() -> serverRegistry.unbind(ServerLegacy.RMI_ID));
-
-    String response =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              Greeter client = (Greeter) clientRegistry.lookup(ServerLegacy.RMI_ID);
-              return client.hello("you");
-            });
-
-    assertThat(response).contains("Hello you");
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("parent")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid()),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.Greeter/hello")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasParentSpanId(trace.get(0).getSpanId())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                                entry(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "rmi.app.Greeter"),
-                                                entry(SemanticAttributes.RPC_METHOD, "hello"))),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.ServerLegacy/hello")
-                                .hasKind(SpanKind.SERVER)
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                                entry(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "rmi.app.ServerLegacy"),
-                                                entry(SemanticAttributes.RPC_METHOD, "hello")))));
   }
 }
