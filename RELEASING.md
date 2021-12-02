@@ -26,12 +26,12 @@ Before making the release:
 
 Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
 
-You will see a button that says "Run workflow". Press the button, then enter the release branch
-to use (e.g. `v1.9.x`) and the version of the release (e.g. `1.9.0`). Yes there is redundancy
-between these two inputs that we plan to address.
+You will see a button that says "Run workflow". Press the button, then enter the following:
+* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
+* The release branch to use: <e.g. `v1.9.x`>
+* The version of the release: <e.g. `1.9.0`>
 
-You will see a button that says "Run workflow". Press the button, enter the release branch to use
-and the version of the release.
+(Yes there is redundancy between the above inputs that we plan to address.)
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
@@ -72,6 +72,9 @@ Before making the release:
 To make a patch release, open the patch release build workflow in your browser
 [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
-You will see a button that says "Run workflow". Press the button, then enter the release branch
-to use (e.g. `v1.9.x`) and the version of the release (e.g. `1.9.1`). Yes there is redundancy
-between these two inputs that we plan to address.
+You will see a button that says "Run workflow". Press the button, then enter the following:
+* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
+* The release branch to use: <e.g. `v1.9.x`>
+* The version of the release: <e.g. `1.9.1`>
+
+(Yes there is redundancy between the above inputs that we plan to address.)
