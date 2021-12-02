@@ -59,5 +59,4 @@ tasks {
       isEnabled.set(false)
     }
   }
-
 }
