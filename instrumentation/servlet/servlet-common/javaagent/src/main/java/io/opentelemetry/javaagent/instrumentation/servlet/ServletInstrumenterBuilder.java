@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;

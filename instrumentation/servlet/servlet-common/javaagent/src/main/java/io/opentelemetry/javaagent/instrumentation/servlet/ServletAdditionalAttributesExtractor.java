@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;

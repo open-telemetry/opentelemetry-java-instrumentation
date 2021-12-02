@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

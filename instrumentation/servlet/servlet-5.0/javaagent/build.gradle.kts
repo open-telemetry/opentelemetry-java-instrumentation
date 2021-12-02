@@ -13,7 +13,7 @@ muzzle {
 
 dependencies {
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
-  implementation(project(":instrumentation:servlet:servlet-common:library"))
+
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
   testLibrary("org.eclipse.jetty:jetty-server:11.0.0")
