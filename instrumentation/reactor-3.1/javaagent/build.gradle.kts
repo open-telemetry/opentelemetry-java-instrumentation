@@ -22,6 +22,7 @@ dependencies {
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
 
+  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation-api-annotation-support"))
   compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
