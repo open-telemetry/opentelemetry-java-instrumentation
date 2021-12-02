@@ -3,12 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.benchmark;
+package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
-import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
