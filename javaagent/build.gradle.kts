@@ -42,7 +42,7 @@ val exporterSlimLibs by configurations.creating {
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
+listOf(baseJavaagentLibs, javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
