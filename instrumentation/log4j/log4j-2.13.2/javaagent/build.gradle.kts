@@ -23,7 +23,7 @@ testSets {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.13.2")
 
-  implementation(project(":instrumentation:log4j:log4j-2.13.2:library"))
+  implementation(project(":instrumentation:log4j:log4j-2.13.2:library-autoconfigure"))
 
   testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
 }
