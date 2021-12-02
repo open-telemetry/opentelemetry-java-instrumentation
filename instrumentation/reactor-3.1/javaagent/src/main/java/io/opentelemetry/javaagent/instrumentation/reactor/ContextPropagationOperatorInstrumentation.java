@@ -13,7 +13,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
-import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +20,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 public class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return nameEndsWith("ContextPropagationOperator");
+    return named("application.io.opentelemetry.instrumentation.reactor.ContextPropagationOperator");
   }
 
   @Override
