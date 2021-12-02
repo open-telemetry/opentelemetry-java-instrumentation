@@ -19,15 +19,19 @@ Before making the release:
   git checkout -b v1.9.x upstream/main
   git push upstream v1.9.x
   ```
-* Push a new commit to the release branch updating the version (remove `-SNAPSHOT`) in these files:
+* Merge a PR to the release branch updating the version (remove `-SNAPSHOT`) in these files:
   * version.gradle.kts
   * examples/distro/build.gradle
   * examples/extension/build.gradle
 
 Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
 
-You will see a button that says "Run workflow". Press the button, enter the release branch
-(e.g. `v1.9.x`) in the input field that pops up, and then press "Run workflow".
+You will see a button that says "Run workflow". Press the button, then enter the release branch
+to use (e.g. `v1.9.x`) and the version of the release (e.g. `1.9.0`). Yes there is redundancy
+between these two inputs that we plan to address.
+
+You will see a button that says "Run workflow". Press the button, enter the release branch to use
+and the version of the release.
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
@@ -56,63 +60,18 @@ In general, patch releases are only made for bug-fixes for the following types o
 * Memory leaks
 * Deadlocks
 
+Before making the release:
+
+* Merge PR(s) containing the desired patches to the release branch
+* Merge a PR to the release branch updating the `CHANGELOG.md`
+* Merge a PR to the release branch updating the version in these files:
+  * version.gradle.kts
+  * examples/distro/build.gradle
+  * examples/extension/build.gradle
+
 To make a patch release, open the patch release build workflow in your browser
 [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
 
-You will see a button that says "Run workflow". Press the button, enter the version number you want
-to release in the input field for version that pops up and the commits you want to cherrypick.
-If you are entering multiple commits, they should be separated by spaces. Then, press "Run workflow".
-
-The automated branch creation will fail if any of the yaml files differ between the release branch
-and `main`:
-
-```
-Switched to a new branch 'v1.6.x'
-To https://github.com/open-telemetry/opentelemetry-java-instrumentation
-! [remote rejected]     v1.6.x -> v1.6.x (refusing to allow a GitHub App to create or update workflow `.github/workflows/pr-smoke-test-fake-backend-images.yml` without `workflows` permission)
-```
-
-and you will need to manually create it before proceeding, e.g.
-
-```
-git checkout -b v1.6.x v1.6.0
-git push upstream v1.6.x
-```
-
-If the commits cannot be cleanly applied to the release branch, for example because it has diverged
-too much from main, then the workflow will fail before building. In this case, you will need to
-prepare the release branch manually.
-
-This example will assume patching into release branch `v1.6.x` from a git repository with remotes
-named `origin` and `upstream`.
-
-```
-$ git remote -v
-origin	git@github.com:username/opentelemetry-java.git (fetch)
-origin	git@github.com:username/opentelemetry-java.git (push)
-upstream	git@github.com:open-telemetry/opentelemetry-java.git (fetch)
-upstream	git@github.com:open-telemetry/opentelemetry-java.git (push)
-```
-
-First, checkout the release branch
-
-```
-git fetch upstream v1.6.x
-git checkout upstream/v1.6.x
-```
-
-Apply cherrypicks manually and commit. It is ok to apply multiple cherrypicks in a single commit.
-Use a commit message such as "Manual cherrypick for commits commithash1, commithash2".
-
-After committing the change, push to your fork's branch.
-
-```
-git push origin v1.6.x
-```
-
-Create a PR to have code review and merge this into upstream's release branch. As this was not
-applied automatically, we need to do code review to make sure the manual cherrypick is correct.
-
-After it is merged, Run the patch release workflow again, but leave the commits input field blank.
-The release will be made with the current state of the release branch, which is what you prepared
-above.
+You will see a button that says "Run workflow". Press the button, then enter the release branch
+to use (e.g. `v1.9.x`) and the version of the release (e.g. `1.9.1`). Yes there is redundancy
+between these two inputs that we plan to address.
