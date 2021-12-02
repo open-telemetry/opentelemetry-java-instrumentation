@@ -24,6 +24,7 @@ public final class AgentClassLoaderAccess {
     }
   }
 
+  // public for use by downstream distros
   public static Class<?> loadClass(String name) {
     try {
       return agentClassLoader.loadClass(name);
