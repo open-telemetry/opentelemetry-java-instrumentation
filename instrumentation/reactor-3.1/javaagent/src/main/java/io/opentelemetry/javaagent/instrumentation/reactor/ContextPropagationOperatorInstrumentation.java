@@ -1,21 +1,20 @@
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
-import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import application.io.opentelemetry.context.Context;
-
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import application.io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
 public class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
   @Override
