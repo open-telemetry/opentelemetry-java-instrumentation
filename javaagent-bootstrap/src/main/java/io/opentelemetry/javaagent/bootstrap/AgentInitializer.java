@@ -44,9 +44,9 @@ public final class AgentInitializer {
    * @return true for oracle 1.8 before 1.8.0_40
    */
   private static boolean isEarlyOracle18() {
-    // Java HotSpot(TM) 64-Bit Server VM
+    // Java HotSpot(TM) 64-Bit Server VM or OpenJDK 64-Bit Server VM
     String vmName = System.getProperty("java.vm.name");
-    if (!vmName.contains("HotSpot")) {
+    if (!vmName.contains("HotSpot") && !vmName.contains("OpenJDK")) {
       return false;
     }
     // 1.8.0_31
