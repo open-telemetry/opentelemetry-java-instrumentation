@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
@@ -27,6 +28,8 @@ import java.util.stream.StreamSupport
 
 plugins {
   `java-library`
+
+  id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
 // Select a random set of versions to test
@@ -38,14 +41,37 @@ val muzzleTooling: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
+
 val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
 
+val muzzleShadow by tasks.registering(ShadowJar::class) {
+  from(tasks.jar.get().archiveFile.get())
+
+  configurations = listOf(project.configurations.runtimeClasspath.get())
+
+  archiveFileName.set("artifact-for-muzzle-check.jar")
+
+  dependsOn(tasks.jar)
+}
+
+val muzzleToolingShadow by tasks.registering(ShadowJar::class) {
+  configurations = listOf(muzzleTooling)
+
+  archiveFileName.set("agent-tooling-for-muzzle-check.jar")
+}
+
+val muzzleBootstrapShadow by tasks.registering(ShadowJar::class) {
+  configurations = listOf(muzzleBootstrap)
+
+  archiveFileName.set("agent-bootstrap-for-muzzle-check.jar")
+}
+
 val compileMuzzle by tasks.registering {
-  dependsOn(muzzleBootstrap)
-  dependsOn(muzzleTooling)
+  dependsOn(muzzleBootstrapShadow)
+  dependsOn(muzzleToolingShadow)
   dependsOn(tasks.named("classes"))
 }
 
@@ -59,6 +85,7 @@ tasks.register("printMuzzleReferences") {
   group = "Muzzle"
   description = "Print references created by instrumentation muzzle"
   dependsOn(compileMuzzle)
+  dependsOn(muzzleShadow)
   doLast {
     val instrumentationCL = createInstrumentationClassloader()
     withContextClassLoader(instrumentationCL) {
@@ -126,8 +153,9 @@ if (hasRelevantTask) {
 
 fun createInstrumentationClassloader(): ClassLoader {
   logger.info("Creating instrumentation class loader for: $path")
-  val runtimeClasspath = sourceSets.main.get().runtimeClasspath
-  return classpathLoader(runtimeClasspath + muzzleTooling, ClassLoader.getPlatformClassLoader())
+  val muzzleShadowJar = muzzleShadow.get().archiveFile.get()
+  val muzzleToolingShadowJar = muzzleToolingShadow.get().archiveFile.get()
+  return classpathLoader(files(muzzleShadowJar, muzzleToolingShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
 fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader {
@@ -214,6 +242,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
   val muzzleTask = tasks.register(taskName) {
     dependsOn(configurations.named("runtimeClasspath"))
+    dependsOn(muzzleShadow)
     doLast {
       val instrumentationCL = createInstrumentationClassloader()
       val userCL = createClassLoaderForTask(config)
@@ -238,7 +267,8 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
   logger.info("Creating user classloader for muzzle check")
-  return classpathLoader(muzzleTaskConfiguration + muzzleBootstrap, ClassLoader.getPlatformClassLoader())
+  val muzzleBootstrapShadowJar = muzzleBootstrapShadow.get().archiveFile.get()
+  return classpathLoader(muzzleTaskConfiguration + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
 fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession): Set<MuzzleDirective> {
