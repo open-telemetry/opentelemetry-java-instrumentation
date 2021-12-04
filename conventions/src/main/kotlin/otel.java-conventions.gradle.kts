@@ -213,11 +213,9 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
-  inputs.file(trustStore)
   // Work around payara not working when this is set for some reason.
   if (project.name != "jaxrs-2.0-payara-testing") {
-    jvmArgs("-Djavax.net.ssl.trustStore=${trustStore.absolutePath}")
-    jvmArgs("-Djavax.net.ssl.trustStorePassword=testing")
+    jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
   // All tests must complete within 15 minutes.
@@ -236,6 +234,16 @@ tasks.withType<Test>().configureEach {
   testLogging {
     exceptionFormat = TestExceptionFormat.FULL
   }
+}
+
+class KeystoreArgumentsProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val trustStore: File
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
+    "-Djavax.net.ssl.trustStorePassword=testing")
 }
 
 afterEvaluate {

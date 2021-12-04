@@ -43,11 +43,20 @@ tasks {
 
   afterEvaluate {
     withType<Test>().configureEach {
-      dependsOn(jar)
-
       jvmArgs("-Dotel.javaagent.debug=true")
-      jvmArgs("-javaagent:${jar.get().archiveFile.get().asFile.absolutePath}")
       jvmArgs("-Dotel.metrics.exporter=otlp")
+
+      jvmArgumentProviders.add(JavaagentProvider(jar.flatMap { it.archiveFile }))
     }
   }
+}
+
+class JavaagentProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val agentJar: Provider<RegularFile>
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-javaagent:${file(agentJar).absolutePath}"
+  )
 }

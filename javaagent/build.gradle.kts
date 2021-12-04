@@ -228,14 +228,10 @@ tasks {
 
   withType<Test>().configureEach {
     dependsOn(shadowJar)
-    inputs.file(shadowJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
-    doFirst {
-      // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
-    }
+    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
 
     testLogging {
       events("started")
@@ -298,4 +294,14 @@ fun ShadowJar.excludeBootstrapJars() {
     exclude(project(":javaagent-bootstrap"))
     exclude(project(":javaagent-instrumentation-api"))
   }
+}
+
+class JavaagentProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val agentJar: Provider<RegularFile>
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-javaagent:${file(agentJar).absolutePath}"
+  )
 }

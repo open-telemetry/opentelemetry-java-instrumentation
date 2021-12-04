@@ -64,7 +64,7 @@ tasks {
 
 fun createLanguageTask(
   compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
-  return tasks.register<ByteBuddySimpleTask>(name) {
+  return tasks.register<ByteBuddyTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
     var transformationClassPath = inputClasspath
@@ -89,5 +89,14 @@ fun createLanguageTask(
 fun createTransformation(classPath: FileCollection, pluginClassName: String): Transformation {
   return ClasspathTransformation(classPath, pluginClassName).apply {
     plugin = ClasspathByteBuddyPlugin::class.java
+  }
+}
+
+//TODO remove when https://github.com/raphw/byte-buddy/issues/1169 is fixed
+open class ByteBuddyTask : ByteBuddySimpleTask() {
+  @InputDirectory
+  @PathSensitive(PathSensitivity.RELATIVE)
+  override fun getSource(): File? {
+    return super.getSource()
   }
 }

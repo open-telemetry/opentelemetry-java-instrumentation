@@ -45,10 +45,22 @@ dependencies {
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
 }
 
-val warDir = "$buildDir/testapp/war"
+val warDir = file("$buildDir/testapp/war")
 
 val launcher = javaToolchains.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(8))
+}
+
+class CompilerArgumentsProvider : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "test.gwt.Greeting", // gwt module
+    "-war", "$buildDir/testapp/war",
+    "-logLevel", "INFO",
+    "-localWorkers", "2",
+    "-compileReport",
+    "-extra", "$buildDir/testapp/extra",
+    "-draftCompile" // makes compile a bit faster
+  )
 }
 
 tasks {
@@ -57,26 +69,14 @@ tasks {
     // versions before 2.9 require java8
     javaLauncher.set(launcher)
 
-    val extraDir = "$buildDir/testapp/extra"
-
     outputs.cacheIf { true }
-
-    outputs.dir(extraDir)
     outputs.dir(warDir)
 
     mainClass.set("com.google.gwt.dev.Compiler")
 
     classpath(sourceSets["testapp"].java.srcDirs, sourceSets["testapp"].compileClasspath)
 
-    args(
-      "test.gwt.Greeting", // gwt module
-      "-war", warDir,
-      "-logLevel", "INFO",
-      "-localWorkers", "2",
-      "-compileReport",
-      "-extra", extraDir,
-      "-draftCompile" // makes compile a bit faster
-    )
+    argumentProviders.add(CompilerArgumentsProvider())
   }
 
   val copyTestWebapp by registering(Copy::class) {
