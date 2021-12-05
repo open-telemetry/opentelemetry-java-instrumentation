@@ -48,7 +48,7 @@ val muzzleBootstrap: Configuration by configurations.creating {
 }
 
 val muzzleShadow by tasks.registering(ShadowJar::class) {
-  from(tasks.jar.get().archiveFile.get())
+  from(tasks.jar)
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
 
