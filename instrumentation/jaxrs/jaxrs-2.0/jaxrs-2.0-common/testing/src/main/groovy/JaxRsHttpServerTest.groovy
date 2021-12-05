@@ -221,7 +221,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     false
   }
 
-  private static boolean shouldTestCompletableStageAsync() {
+  boolean shouldTestCompletableStageAsync() {
     Boolean.getBoolean("testLatestDeps")
   }
 
