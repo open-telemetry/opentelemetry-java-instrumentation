@@ -16,7 +16,7 @@ public class CrashEarlyJdk8 {
 
   public void test() {
     // run loop enough times for jit compiler to kick in
-    for (int i = 0; i < 10_000; i++) {
+    for (int i = 0; i < 100_000; i++) {
       this.bar(this::foo);
     }
   }
