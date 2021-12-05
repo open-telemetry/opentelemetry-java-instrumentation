@@ -41,7 +41,11 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.1.0.Final")
 
   // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-core:+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-core:5.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:5.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:5.+") {
+    exclude("org.jboss.resteasy", "resteasy-client")
+  }
 }
 
 tasks {
