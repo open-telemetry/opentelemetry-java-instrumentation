@@ -29,8 +29,8 @@ class ConfiguredTraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "AnnotationTracedCallable.call"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" AnnotationTracedCallable.name
-            "${SemanticAttributes.CODE_FUNCTION}" "call"
+            "$SemanticAttributes.CODE_NAMESPACE" AnnotationTracedCallable.name
+            "$SemanticAttributes.CODE_FUNCTION" "call"
           }
         }
       }

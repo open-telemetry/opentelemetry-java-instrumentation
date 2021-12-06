@@ -144,9 +144,9 @@ class SpanAssert {
     event(0) {
       eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
       attributes {
-        "${SemanticAttributes.EXCEPTION_TYPE.key}" expectedClass.canonicalName
-        "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
-        "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it != null }
+        "$SemanticAttributes.EXCEPTION_TYPE" expectedClass.canonicalName
+        "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+        "$SemanticAttributes.EXCEPTION_MESSAGE" { it != null }
       }
     }
   }
@@ -159,10 +159,10 @@ class SpanAssert {
     event(index) {
       eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
       attributes {
-        "${SemanticAttributes.EXCEPTION_TYPE.key}" errorClass.canonicalName
-        "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
+        "$SemanticAttributes.EXCEPTION_TYPE" errorClass.canonicalName
+        "$SemanticAttributes.EXCEPTION_STACKTRACE" String
         if (expectedMessage != null) {
-          "${SemanticAttributes.EXCEPTION_MESSAGE.key}" expectedMessage
+          "$SemanticAttributes.EXCEPTION_MESSAGE" expectedMessage
         }
       }
     }

@@ -41,7 +41,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
           name("my_function")
           kind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }
@@ -71,7 +71,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
           status ERROR
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }
@@ -100,7 +100,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
           parentSpanId("0000000000000456")
           traceId("8a3c60f7d188f8fa79d48a391a778fa6")
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }

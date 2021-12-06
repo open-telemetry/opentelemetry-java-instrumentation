@@ -97,8 +97,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "ClusterHealthAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -144,8 +144,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           childOf(span(0))
           errorEvent IndexNotFoundException, "no such index"
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -210,8 +210,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "CreateIndexAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -223,8 +223,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           name "ClusterHealthAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "ClusterHealthAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -235,8 +235,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           name "GetAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -251,8 +251,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           name "IndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "IndexAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -270,8 +270,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           name "GetAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

@@ -48,11 +48,11 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(1)
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
-            "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
+            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
+            "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
         span(3) {
@@ -62,14 +62,14 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind PRODUCER
           attributes {
             // "localhost" on linux, null on windows
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
+            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
@@ -80,12 +80,12 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(3)
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
           }
         }
         // spring-integration will detect that spring-rabbit has already created a consumer span and back off
@@ -95,12 +95,12 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(3)
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
           }
         }
         span(6) {
@@ -117,11 +117,11 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind CLIENT
           attributes {
             // "localhost" on linux, null on windows
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_IP.key}" { isInetAddress(it as String) }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
       }
