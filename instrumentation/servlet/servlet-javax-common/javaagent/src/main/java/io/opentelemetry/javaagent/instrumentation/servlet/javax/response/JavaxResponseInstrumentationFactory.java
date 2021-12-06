@@ -14,11 +14,8 @@ public final class JavaxResponseInstrumentationFactory {
 
   public static TypeInstrumentation create() {
     return new HttpServletResponseInstrumentation(
-        BASE_PACKAGE, adviceClassName(".ResponseSendAdvice"));
-  }
-
-  private static String adviceClassName(String suffix) {
-    return JavaxResponseInstrumentationFactory.class.getPackage().getName() + suffix;
+        BASE_PACKAGE,
+        JavaxResponseInstrumentationFactory.class.getPackage().getName() + ".ResponseSendAdvice");
   }
 
   private JavaxResponseInstrumentationFactory() {}
