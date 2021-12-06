@@ -59,6 +59,13 @@ if (useScansGradleCom) {
       capture {
         isTaskInputFiles = true
       }
+
+      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
+        value("Smoke test suite", it)
+      }
+
     }
   }
 }
