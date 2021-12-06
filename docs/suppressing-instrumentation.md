@@ -25,7 +25,9 @@ corresponding instrumentation `name`:
 | Apache HttpAsyncClient | apache-httpasyncclient|
 | Apache HttpClient | apache-httpclient|
 | Apache Kafka | kafka |
+| Apache MyFaces | myfaces|
 | Apache RocketMQ | rocketmq-client|
+| Apache Struts 2 | struts|
 | Apache Tapestry | tapestry|
 | Apache Tomcat | tomcat|
 | Apache Wicket | wicket|
@@ -35,7 +37,14 @@ corresponding instrumentation `name`:
 | AWS SDK | aws-sdk|
 | Couchbase | couchbase|
 | Dropwizard Views | dropwizard-views |
+| Eclipse Grizzly | grizzly|
+| Eclipse Jersey | jersey|
+| Eclipse Jetty | jetty|
+| Eclipse Jetty HTTP Client | jetty-httpclient|
+| Eclipse Metro | metro|
+| Eclipse Mojarra | mojarra|
 | Eclipse OSGi | eclipse-osgi |
+| Eclipse Vert.x | vertx |
 | Elasticsearch client | elasticsearch-transport|
 | Elasticsearch REST client | elasticsearch-rest|
 | Google Guava | guava|
@@ -44,7 +53,6 @@ corresponding instrumentation `name`:
 | Grails | grails|
 | GRPC | grpc|
 | Hibernate | hibernate|
-| Java EE Grizzly | grizzly|
 | Java HTTP Client | java-http-client |
 | Java `HttpURLConnection` | http-url-connection |
 | Java JDBC | jdbc |
@@ -55,14 +63,9 @@ corresponding instrumentation `name`:
 | JAX-RS (Client) | jaxrs-client|
 | JAX-RS (Server) | jaxrs|
 | JAX-WS | jaxws|
-| JAX-WS Metro | metro|
-| Jetty | jetty|
 | JMS | jms|
-| JSF Mojarra | mojarra|
-| JSF MyFaces | myfaces|
 | JSP | jsp |
 | K8s Client | kubernetes-client|
-| Kotlin HTTP (kHttp) | khttp |
 | kotlinx.coroutines | kotlinx-coroutines |
 | Log4j | log4j|
 | Logback | logback|
@@ -72,9 +75,11 @@ corresponding instrumentation `name`:
 | OkHttp | okhttp|
 | OpenLiberty | liberty |
 | OpenTelemetry Trace annotations | opentelemetry-annotations |
+| OpenTelemetry SDK | opentelemetry-api |
 | OSHI (Operating System and Hardware Information) | oshi |
 | Play Framework | play|
 | Play WS HTTP Client | play-ws|
+| Quartz | quartz|
 | RabbitMQ Client | rabbitmq|
 | Ratpack | ratpack|
 | ReactiveX RxJava | rxjava2, rxjava3 |
@@ -85,20 +90,22 @@ corresponding instrumentation `name`:
 | Rediscala | rediscala|
 | Scala executors | scala-executors |
 | Spark Web Framework | spark|
+| Spring Batch | spring-batch|
 | Spring Core | spring-core|
 | Spring Data | spring-data|
 | Spring Integration | spring-integration|
+| Spring Kafka | spring-kafka|
+| Spring RabbitMQ | spring-rabbit|
 | Spring Scheduling | spring-scheduling|
-| Spring Webflux | spring-webflux|
-| Spring WebMVC | spring-webmvc|
-| Spring WS | spring-ws|
+| Spring Web | spring-web|
+| Spring WebFlux | spring-webflux|
+| Spring Web MVC | spring-webmvc|
+| Spring Web Services | spring-ws|
 | Spymemcached | spymemcached|
-| Struts | struts|
 | Twilio SDK | twilio|
 | Twitter Finatra | finatra|
 | Undertow | undertow|
 | Vaadin | vaadin|
-| Vert.x RxJava2 | vertx |
 
 **Note:** When using environment variables, dashes (`-`) should be converted to
 underscores (`_`). For example, to suppress traces from `akka-actor` library, set
