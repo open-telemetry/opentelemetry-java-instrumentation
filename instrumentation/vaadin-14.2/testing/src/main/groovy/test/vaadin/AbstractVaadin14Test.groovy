@@ -30,6 +30,8 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
   @Override
   void assertFirstRequest() {
     assertTraces(VAADIN_14_4 ? 5 : 4) {
+      traces.sort(orderByRootSpanName(getContextPath() + "/main", getContextPath() + "/*"))
+
       def handlers = getRequestHandlers("BootstrapHandler")
       trace(0, 2 + handlers.size()) {
         serverSpan(it, 0, getContextPath() + "/main")
@@ -49,17 +51,9 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
         }
       }
       // following traces are for javascript files used on page
-      trace(1, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      trace(2, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      trace(3, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      if (VAADIN_14_4) {
-        trace(4, 1) {
+      def count = VAADIN_14_4 ? 3 : 2
+      for (i in 0..count) {
+        trace(1 + i, 1) {
           serverSpan(it, 0, getContextPath() + "/*")
         }
       }
