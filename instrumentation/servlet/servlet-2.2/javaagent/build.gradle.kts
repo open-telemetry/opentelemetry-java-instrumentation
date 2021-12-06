@@ -20,7 +20,7 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
-  compileOnly(project(":instrumentation:servlet:servlet-common:bootstrap"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:servlet-api:2.2")
 

@@ -12,7 +12,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  compileOnly(project(":instrumentation:rmi:bootstrap"))
+  bootstrap(project(":instrumentation:rmi:bootstrap"))
 }
 
 // We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.

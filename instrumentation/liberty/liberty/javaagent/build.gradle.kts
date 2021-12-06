@@ -6,7 +6,7 @@ plugins {
 // liberty module has access to servlet api while liberty-dispatcher does not
 
 dependencies {
-  compileOnly(project(":instrumentation:servlet:servlet-common:bootstrap"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 

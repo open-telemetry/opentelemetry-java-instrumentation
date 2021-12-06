@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
+  bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
   compileOnly("javax.ws.rs:jsr311-api:1.1.1")
 
