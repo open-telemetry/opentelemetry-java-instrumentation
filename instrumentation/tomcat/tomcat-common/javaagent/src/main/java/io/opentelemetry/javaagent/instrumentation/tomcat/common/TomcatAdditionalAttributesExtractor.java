@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;

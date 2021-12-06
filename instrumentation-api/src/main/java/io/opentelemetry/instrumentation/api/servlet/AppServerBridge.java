@@ -18,35 +18,13 @@ public class AppServerBridge {
   private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
-  /**
-   * Attach AppServerBridge to context.
-   *
-   * @param ctx server context
-   * @return new context with AppServerBridge attached.
-   */
-  public static Context init(Context ctx) {
-    return init(ctx, /* shouldRecordException= */ true);
-  }
-
-  /**
-   * Attach AppServerBridge to context.
-   *
-   * @param ctx server context
-   * @param shouldRecordException whether servlet integration should record exception thrown during
-   *     servlet invocation in server span. Use <code>false</code> on servers where exceptions
-   *     thrown during servlet invocation are propagated to the method where server span is closed
-   *     and can be added to server span there and <code>true</code> otherwise.
-   * @return new context with AppServerBridge attached.
-   */
-  public static Context init(Context ctx, boolean shouldRecordException) {
-    return ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(shouldRecordException));
-  }
-
   private final boolean servletShouldRecordException;
+  private boolean captureServletAttributes;
   private Throwable exception;
 
-  private AppServerBridge(boolean shouldRecordException) {
-    servletShouldRecordException = shouldRecordException;
+  private AppServerBridge(Builder builder) {
+    servletShouldRecordException = builder.recordException;
+    captureServletAttributes = builder.captureServletAttributes;
   }
 
   /**
@@ -79,6 +57,23 @@ public class AppServerBridge {
   }
 
   /**
+   * Test whether servlet attributes should be captured. This method will return true only on the
+   * first call with given context.
+   *
+   * @param context server context
+   * @return true when servlet attributes should be captured
+   */
+  public static boolean captureServletAttributes(Context context) {
+    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+    if (appServerBridge != null) {
+      boolean result = appServerBridge.captureServletAttributes;
+      appServerBridge.captureServletAttributes = false;
+      return result;
+    }
+    return false;
+  }
+
+  /**
    * Class used as key in CallDepthThreadLocalMap for counting servlet invocation depth in
    * Servlet3Advice and Servlet2Advice. We can not use helper classes like Servlet3Advice and
    * Servlet2Advice for determining call depth of server invocation because they can be injected
@@ -90,5 +85,44 @@ public class AppServerBridge {
     class Key {}
 
     return Key.class;
+  }
+
+  public static class Builder {
+    boolean recordException;
+    boolean captureServletAttributes;
+
+    /**
+     * Use on servers where exceptions thrown during servlet invocation are not propagated to the
+     * method where server span is closed. Recorded exception can be retrieved by calling {@link
+     * #getException(Context)}
+     *
+     * @return this builder.
+     */
+    public Builder recordException() {
+      recordException = true;
+      return this;
+    }
+
+    /**
+     * Use on servers where server instrumentation is not based on servlet instrumentation. Setting
+     * this flag lets servlet instrumentation know that it should augment server span with servlet
+     * specific attributes.
+     *
+     * @return this builder.
+     */
+    public Builder captureServletAttributes() {
+      captureServletAttributes = true;
+      return this;
+    }
+
+    /**
+     * Attach AppServerBridge to context.
+     *
+     * @param context server context
+     * @return new context with AppServerBridge attached.
+     */
+    public Context init(Context context) {
+      return context.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(this));
+    }
   }
 }

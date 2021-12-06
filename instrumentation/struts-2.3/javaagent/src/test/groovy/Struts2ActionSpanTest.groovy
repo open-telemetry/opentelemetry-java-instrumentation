@@ -93,8 +93,8 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
       }
       def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.struts.GreetingAction"
-        "${SemanticAttributes.CODE_FUNCTION.key}" expectedMethodName
+        "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.struts.GreetingAction"
+        "$SemanticAttributes.CODE_FUNCTION" expectedMethodName
       }
       childOf((SpanData) parent)
     }

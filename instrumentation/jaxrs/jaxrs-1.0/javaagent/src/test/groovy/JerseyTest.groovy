@@ -48,8 +48,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controllerName
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-            "${SemanticAttributes.CODE_FUNCTION.key}" "hello"
+            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$SemanticAttributes.CODE_FUNCTION" "hello"
           }
         }
       }
@@ -86,8 +86,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-            "${SemanticAttributes.CODE_FUNCTION.key}" "nested"
+            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$SemanticAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

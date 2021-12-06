@@ -16,8 +16,7 @@ import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
@@ -26,6 +25,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
   private final Function<REQUEST, String> contextPathExtractor;
+  private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -34,6 +34,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
+    this.parameterExtractor =
+        ServletRequestParametersExtractor.enabled()
+            ? new ServletRequestParametersExtractor<>(accessor)
+            : null;
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -83,7 +87,22 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       ServerSpanNaming.updateServerSpanName(
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
+
+    captureServletAttributes(context, request);
+
     return result;
+  }
+
+  private void captureServletAttributes(Context context, REQUEST request) {
+    if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
+      return;
+    }
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan == null) {
+      return;
+    }
+
+    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
   }
 
   /*

@@ -62,16 +62,16 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
-            "${SemanticAttributes.HTTP_TARGET.key}" "/listProducts"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
+            "$SemanticAttributes.HTTP_TARGET" "/listProducts"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
           }
         }
         span(1) {
@@ -89,13 +89,13 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(2)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key}" "test"
-            "${SemanticAttributes.DB_USER.key}" "SA"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SELECT id, name, price, weight FROM products"
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "products"
+            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
+            "$SemanticAttributes.DB_NAME" "test"
+            "$SemanticAttributes.DB_USER" "SA"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$SemanticAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "products"
           }
         }
       }
@@ -151,16 +151,16 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
-              "${SemanticAttributes.NET_PEER_PORT.key}" Long
-              "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-              "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
-              "${SemanticAttributes.HTTP_TARGET.key}" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
-              "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-              "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-              "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-              "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-              "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+              "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
+              "$SemanticAttributes.NET_PEER_PORT" Long
+              "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+              "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
+              "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
+              "$SemanticAttributes.HTTP_METHOD" "GET"
+              "$SemanticAttributes.HTTP_STATUS_CODE" 200
+              "$SemanticAttributes.HTTP_SCHEME" "http"
+              "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+              "$SemanticAttributes.HTTP_USER_AGENT" String
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }
@@ -185,13 +185,13 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf(span(3))
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
-              "${SemanticAttributes.DB_NAME.key}" "test"
-              "${SemanticAttributes.DB_USER.key}" "SA"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" "SELECT id AS request$requestId, name, price, weight FROM products"
-              "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "products"
+              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
+              "$SemanticAttributes.DB_NAME" "test"
+              "$SemanticAttributes.DB_USER" "SA"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$SemanticAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
+              "$SemanticAttributes.DB_OPERATION" "SELECT"
+              "$SemanticAttributes.DB_SQL_TABLE" "products"
             }
           }
         }

@@ -84,13 +84,13 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
           kind CLIENT
           status ERROR
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_URL.key}" "${uri}"
-            "${SemanticAttributes.HTTP_METHOD.key}" method
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_URL" "${uri}"
+            "$SemanticAttributes.HTTP_METHOD" method
+            "$SemanticAttributes.HTTP_STATUS_CODE" 500
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         serverSpan(it, 1, span(0))

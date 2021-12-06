@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -53,7 +53,11 @@ public final class TomcatInstrumenterFactory {
         .addContextCustomizer(
             (context, request, attributes) -> {
               context = ServerSpanNaming.init(context, CONTAINER);
-              return AppServerBridge.init(context);
+
+              return new AppServerBridge.Builder()
+                  .captureServletAttributes()
+                  .recordException()
+                  .init(context);
             })
         .addRequestMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(TomcatRequestGetter.INSTANCE);

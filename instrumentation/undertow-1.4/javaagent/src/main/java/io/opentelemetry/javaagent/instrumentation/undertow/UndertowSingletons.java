@@ -48,7 +48,11 @@ public final class UndertowSingletons {
                   // span is ended when counter reaches 0, we start from 2 which accounts for the
                   // handler that started the span and exchange completion listener
                   context = UndertowActiveHandlers.init(context, 2);
-                  return AppServerBridge.init(context);
+
+                  return new AppServerBridge.Builder()
+                      .captureServletAttributes()
+                      .recordException()
+                      .init(context);
                 })
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(UndertowExchangeGetter.INSTANCE);

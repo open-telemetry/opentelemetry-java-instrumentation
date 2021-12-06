@@ -69,8 +69,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -104,8 +104,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -113,8 +113,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
