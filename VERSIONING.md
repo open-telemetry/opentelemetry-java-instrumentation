@@ -72,6 +72,6 @@ that do not require bumping the minimum supported library version include:
 * Create a new javaagent instrumentation module to support the new library version. This requires
   configuring non-overlapping versions in the muzzle check and applying `assertInverse` to confirm
   that the two instrumentations are never be applied to the same library version (see
-  [class loader matchers](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#restrict-the-criteria-for-applying-the-instrumentation-by-extending-the-classloadermatcher-method) 
+  [class loader matchers](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#restrict-the-criteria-for-applying-the-instrumentation-by-extending-the-classloadermatcher-method)
   for how to restrict instrumentations to specific library versions). If there's too much copy-paste
-  between the two javaagent instrumentation modules, a `-common` module can be extracted. 
+  between the two javaagent instrumentation modules, a `-common` module can be extracted.
