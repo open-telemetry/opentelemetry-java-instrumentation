@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.wrapSpan;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.StateHolder.HOLDER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -58,13 +56,11 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      Context receiveContext =
+          VirtualField.find(ConsumerRecord.class, Context.class).get(record.value);
+
       // use the receive CONSUMER span as parent if it's available
-      Context parentContext = currentContext();
-      SpanContext receiveSpanContext =
-          VirtualField.find(ConsumerRecord.class, SpanContext.class).get(record.value);
-      if (receiveSpanContext != null) {
-        parentContext = parentContext.with(wrapSpan(receiveSpanContext));
-      }
+      Context parentContext = receiveContext != null ? receiveContext : currentContext();
 
       if (!instrumenter().shouldStart(parentContext, record.value)) {
         return;

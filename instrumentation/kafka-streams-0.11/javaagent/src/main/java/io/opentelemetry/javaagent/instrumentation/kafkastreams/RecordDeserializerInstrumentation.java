@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -62,9 +62,9 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
       }
 
       // copy the receive CONSUMER span association
-      VirtualField<ConsumerRecord, SpanContext> singleRecordReceiveSpan =
-          VirtualField.find(ConsumerRecord.class, SpanContext.class);
-      singleRecordReceiveSpan.set(result, singleRecordReceiveSpan.get(incoming));
+      VirtualField<ConsumerRecord, Context> singleRecordReceiveContext =
+          VirtualField.find(ConsumerRecord.class, Context.class);
+      singleRecordReceiveContext.set(result, singleRecordReceiveContext.get(incoming));
     }
   }
 }
