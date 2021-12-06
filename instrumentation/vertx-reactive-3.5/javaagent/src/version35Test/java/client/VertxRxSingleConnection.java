@@ -14,11 +14,8 @@ import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.web.client.HttpRequest;
 import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 public class VertxRxSingleConnection implements SingleConnection {
   private final WebClient webClient;
@@ -41,17 +38,10 @@ public class VertxRxSingleConnection implements SingleConnection {
   }
 
   @Override
-  public int doRequest(String path, Map<String, String> headers) throws ExecutionException {
+  public int doRequest(String path, Map<String, String> headers) {
     String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
 
-    String url;
-    try {
-      url = new URL("http", host, port, path).toString();
-    } catch (MalformedURLException e) {
-      throw new ExecutionException(e);
-    }
-
-    HttpRequest<Buffer> request = webClient.request(HttpMethod.GET, port, host, url);
+    HttpRequest<Buffer> request = webClient.request(HttpMethod.GET, port, host, path);
     headers.forEach(request::putHeader);
 
     HttpResponse<?> response = fetchResponse(request);
