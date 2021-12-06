@@ -666,8 +666,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
 
         "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
-        // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
-        "$SemanticAttributes.HTTP_SCHEME" { it == "http" || it == null }
+        "$SemanticAttributes.HTTP_SCHEME" "http"
         "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
