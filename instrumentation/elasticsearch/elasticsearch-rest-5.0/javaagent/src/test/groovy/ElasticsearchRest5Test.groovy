@@ -117,7 +117,8 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
     Map result = new JsonSlurper().parseText(EntityUtils.toString(requestResponse.entity))
 
     expect:
-    result.status == "green"
+    // usually this test reports green status, but sometimes it is yellow
+    result.status == "green" || result.status == "yellow"
 
     assertTraces(1) {
       trace(0, 3) {
