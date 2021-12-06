@@ -65,6 +65,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
+      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
+      // is being used as the parent context for the span instead of the current context
       if (iterable != null
           && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
         Context receiveContext =
@@ -96,6 +98,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
+      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
+      // is being used as the parent context for the span instead of the current context
       if (iterator != null
           && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
         Context receiveContext =
