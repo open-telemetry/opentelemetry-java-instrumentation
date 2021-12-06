@@ -2,22 +2,10 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-muzzle {
-  pass {
-    group.set("javax.servlet")
-    module.set("servlet-api")
-    versions.set("(0,)")
-  }
-  pass {
-    group.set("javax.servlet")
-    module.set("javax.servlet-api")
-    versions.set("[3.0,)")
-    assertInverse.set(true)
-  }
-}
+// This module is only used as a dependency for other javaagent modules and does not contain any
+// non-abstract implementations of InstrumentationModule
 
 dependencies {
-  api(project(":instrumentation:servlet:servlet-javax-common:library"))
   implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
 
   compileOnly("javax.servlet:servlet-api:2.3")

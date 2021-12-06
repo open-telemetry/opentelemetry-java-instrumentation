@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import java.security.Principal;
 import java.util.List;
@@ -46,6 +46,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   List<String> getRequestHeaderValues(REQUEST request, String name);
 
   Iterable<String> getRequestHeaderNames(REQUEST request);
+
+  List<String> getRequestParameterValues(REQUEST request, String name);
 
   String getRequestServletPath(REQUEST request);
 

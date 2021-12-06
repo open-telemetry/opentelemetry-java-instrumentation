@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,8 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -63,10 +65,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
-      if (iterable != null) {
-        SpanContext receiveSpanContext =
-            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        iterable = TracingIterable.wrap(iterable, receiveSpanContext);
+      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
+      // is being used as the parent context for the span instead of the current context
+      if (iterable != null
+          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
+        Context receiveContext =
+            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+        iterable = TracingIterable.wrap(iterable, receiveContext);
       }
     }
   }
@@ -79,9 +84,9 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) List<ConsumerRecord<K, V>> list) {
       if (list != null) {
-        SpanContext receiveSpanContext =
-            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        list = TracingList.wrap(list, receiveSpanContext);
+        Context receiveContext =
+            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+        list = TracingList.wrap(list, receiveContext);
       }
     }
   }
@@ -93,10 +98,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
-      if (iterator != null) {
-        SpanContext receiveSpanContext =
-            VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-        iterator = TracingIterator.wrap(iterator, receiveSpanContext);
+      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
+      // is being used as the parent context for the span instead of the current context
+      if (iterator != null
+          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
+        Context receiveContext =
+            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+        iterator = TracingIterator.wrap(iterator, receiveContext);
       }
     }
   }

@@ -101,9 +101,9 @@ class CassandraTest extends AgentInstrumentationSpecification implements RetryOn
           kind CLIENT
           attributes {
             "apache-camel.uri" "cql://$host:$port/test"
-            "$SemanticAttributes.DB_NAME.key" "test"
-            "$SemanticAttributes.DB_STATEMENT.key" "select * from test.users where id=? ALLOW FILTERING"
-            "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
+            "$SemanticAttributes.DB_NAME" "test"
+            "$SemanticAttributes.DB_STATEMENT" "select * from test.users where id=? ALLOW FILTERING"
+            "$SemanticAttributes.DB_SYSTEM" "cassandra"
           }
         }
       }

@@ -235,8 +235,8 @@ class TracerTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key}" "java.lang.IllegalStateException"
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
+              "$SemanticAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
+              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -263,8 +263,8 @@ class TracerTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key}" "java.lang.IllegalStateException"
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
+              "$SemanticAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
+              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
               "dog" "bark"
             }
           }

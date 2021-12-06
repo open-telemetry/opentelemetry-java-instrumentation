@@ -111,9 +111,9 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" host
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "$SemanticAttributes.NET_PEER_NAME" host
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
           }
         }
       }
@@ -143,9 +143,9 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent RedisConnectionException, String
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" host
-            "${SemanticAttributes.NET_PEER_PORT.key}" incorrectPort
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "$SemanticAttributes.NET_PEER_NAME" host
+            "$SemanticAttributes.NET_PEER_PORT" incorrectPort
+            "$SemanticAttributes.DB_SYSTEM" "redis"
           }
         }
       }
@@ -165,8 +165,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -207,8 +207,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
         span(2) {
@@ -270,8 +270,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
         span(2) {
@@ -322,8 +322,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
           }
         }
         span(2) {
@@ -378,8 +378,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "HMSET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "HMSET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "HMSET"
           }
         }
       }
@@ -388,8 +388,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "HGETALL"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "HGETALL"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "HGETALL"
           }
         }
       }
@@ -430,8 +430,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(IllegalStateException, "TestException")
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "DEL"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "DEL"
           }
         }
       }
@@ -474,8 +474,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "SADD"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "SADD"
             "lettuce.command.cancelled" true
           }
         }
@@ -499,8 +499,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "DEBUG"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "DEBUG"
           }
         }
       }
@@ -519,8 +519,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "SHUTDOWN"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_OPERATION.key}" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_OPERATION" "SHUTDOWN"
           }
         }
       }

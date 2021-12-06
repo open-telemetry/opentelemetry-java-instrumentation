@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.ServletException;
@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -93,6 +94,13 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     return Collections.list(httpServletRequest.getHeaderNames());
+  }
+
+  @Override
+  public List<String> getRequestParameterValues(
+      HttpServletRequest httpServletRequest, String name) {
+    String[] values = httpServletRequest.getParameterValues(name);
+    return values == null ? Collections.emptyList() : Arrays.asList(values);
   }
 
   @Override

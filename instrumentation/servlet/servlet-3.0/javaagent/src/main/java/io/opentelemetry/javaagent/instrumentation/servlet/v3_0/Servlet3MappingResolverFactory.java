@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.instrumentation.servlet.naming.ServletMappingResolverFactory;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletMappingResolverFactory;
 import javax.annotation.Nullable;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;

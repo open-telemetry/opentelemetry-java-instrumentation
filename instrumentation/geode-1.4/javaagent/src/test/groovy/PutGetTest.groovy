@@ -116,29 +116,29 @@ class PutGetTest extends AgentInstrumentationSpecification {
           name "clear test-region"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "geode"
-            "$SemanticAttributes.DB_NAME.key" "test-region"
-            "$SemanticAttributes.DB_OPERATION.key" "clear"
+            "$SemanticAttributes.DB_SYSTEM" "geode"
+            "$SemanticAttributes.DB_NAME" "test-region"
+            "$SemanticAttributes.DB_OPERATION" "clear"
           }
         }
         span(2) {
           name "put test-region"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "geode"
-            "$SemanticAttributes.DB_NAME.key" "test-region"
-            "$SemanticAttributes.DB_OPERATION.key" "put"
+            "$SemanticAttributes.DB_SYSTEM" "geode"
+            "$SemanticAttributes.DB_NAME" "test-region"
+            "$SemanticAttributes.DB_OPERATION" "put"
           }
         }
         span(3) {
           name "$verb test-region"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "geode"
-            "$SemanticAttributes.DB_NAME.key" "test-region"
-            "$SemanticAttributes.DB_OPERATION.key" verb
+            "$SemanticAttributes.DB_SYSTEM" "geode"
+            "$SemanticAttributes.DB_NAME" "test-region"
+            "$SemanticAttributes.DB_OPERATION" verb
             if (query != null) {
-              "$SemanticAttributes.DB_STATEMENT.key" query
+              "$SemanticAttributes.DB_STATEMENT" query
             }
           }
         }
@@ -167,10 +167,10 @@ class PutGetTest extends AgentInstrumentationSpecification {
           name "query test-region"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "geode"
-            "$SemanticAttributes.DB_NAME.key" "test-region"
-            "$SemanticAttributes.DB_OPERATION.key" "query"
-            "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM /test-region p WHERE p.expDate = ?"
+            "$SemanticAttributes.DB_SYSTEM" "geode"
+            "$SemanticAttributes.DB_NAME" "test-region"
+            "$SemanticAttributes.DB_OPERATION" "query"
+            "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM /test-region p WHERE p.expDate = ?"
           }
         }
       }

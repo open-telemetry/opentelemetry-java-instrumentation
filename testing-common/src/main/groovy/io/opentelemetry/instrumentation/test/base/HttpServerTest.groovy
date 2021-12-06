@@ -18,15 +18,20 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.QueryParams
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
 import spock.lang.Unroll
 
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -119,6 +124,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testCapturedRequestParameters() {
+    false
+  }
+
   boolean testErrorBody() {
     true
   }
@@ -154,6 +163,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
     CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
+    CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
 
     // TODO: add tests for the following cases:
     QUERY_PARAM("query?some=query", 200, "some=query"),
@@ -233,14 +243,18 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  String resolveAddress(ServerEndpoint uri) {
     def url = uri.resolvePath(address).toString()
     // Force HTTP/1 via h1c so upgrade requests don't show up as traces
     url = url.replace("http://", "h1c://")
     if (uri.query != null) {
       url += "?${uri.query}"
     }
-    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), url)
+    return url
+  }
+
+  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri))
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
@@ -412,6 +426,28 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     and:
     assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, null, response)
+  }
+
+  def "test captured request parameters"() {
+    setup:
+    assumeTrue(testCapturedRequestParameters())
+
+    QueryParams formBody = QueryParams.builder()
+      .add("test-parameter", "test value")
+      .build()
+    def request = AggregatedHttpRequest.of(
+      RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
+        .contentType(MediaType.FORM_DATA)
+        .build(),
+      HttpData.ofUtf8(formBody.toQueryString()))
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == CAPTURE_PARAMETERS.status
+    response.contentUtf8() == CAPTURE_PARAMETERS.body
+
+    and:
+    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, null, response)
   }
 
   /*
@@ -608,55 +644,57 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
-            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == expectedExceptionClass().name }
-            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == endpoint.body }
-            "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" { it == null || it instanceof String }
+            "$SemanticAttributes.EXCEPTION_TYPE" { it == null || it == expectedExceptionClass().name }
+            "$SemanticAttributes.EXCEPTION_MESSAGE" { it == null || it == endpoint.body }
+            "$SemanticAttributes.EXCEPTION_STACKTRACE" { it == null || it instanceof String }
           }
         }
       }
       attributes {
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+          "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
         // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == address.host }
-        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == peerIp(endpoint) } // Optional
+        "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
+        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
 
-        "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
-        "${SemanticAttributes.HTTP_METHOD.key}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key}" { it == "1.1" || it == "2.0" }
-        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+        "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
+        "$SemanticAttributes.HTTP_METHOD" method
+        "$SemanticAttributes.HTTP_STATUS_CODE" endpoint.status
+        "$SemanticAttributes.HTTP_FLAVOR" { it == "1.1" || it == "2.0" }
+        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
 
-        "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
-        // TODO netty does not set http.scheme - refactor HTTP server tests so that it's possible to specify extracted attributes, like in HTTP client tests
-        "${SemanticAttributes.HTTP_SCHEME}" { it == "http" || it == null }
-        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
+        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
+        "$SemanticAttributes.HTTP_SCHEME" "http"
+        "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
           // currently reports '/*' which is a fallback route.
-          "${SemanticAttributes.HTTP_ROUTE}" String
+          "$SemanticAttributes.HTTP_ROUTE" String
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+          "$SemanticAttributes.HTTP_SERVER_NAME" String
         }
         if (endpoint == CAPTURE_HEADERS) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
+        }
+        if (endpoint == CAPTURE_PARAMETERS) {
+          "servlet.request.parameter.test_parameter" { it == ["test value"] }
         }
       }
     }
@@ -671,42 +709,42 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       childOf((SpanData) parent)
       attributes {
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+          "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
         // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "${SemanticAttributes.NET_PEER_NAME.key}" { (it == null || it == address.host) }
-        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == peerIp(endpoint) } // Optional
+        "$SemanticAttributes.NET_PEER_NAME" { (it == null || it == address.host) }
+        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
 
-        "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
-        "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-        "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+        "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
+        "$SemanticAttributes.HTTP_METHOD" "GET"
+        "$SemanticAttributes.HTTP_STATUS_CODE" 200
+        "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
 
-        "${SemanticAttributes.HTTP_HOST}" { it == "localhost" || it == "localhost:${port}" }
-        "${SemanticAttributes.HTTP_SCHEME}" "http"
-        "${SemanticAttributes.HTTP_TARGET}" endpoint.resolvePath(address).getPath() + "?id=$requestId"
+        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
+        "$SemanticAttributes.HTTP_SCHEME" "http"
+        "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "?id=$requestId"
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long }
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
           // currently reports '/*' which is a fallback route.
-          "${SemanticAttributes.HTTP_ROUTE}" String
+          "$SemanticAttributes.HTTP_ROUTE" String
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+          "$SemanticAttributes.HTTP_SERVER_NAME" String
         }
       }
     }

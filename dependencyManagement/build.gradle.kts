@@ -15,7 +15,7 @@ val otelVersion = "1.9.1"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
-val groovyVersion = "2.5.14"
+val groovyVersion = "3.0.9"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
@@ -105,8 +105,8 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.0-groovy-2.5",
-  "org.spockframework:spock-junit4:2.0-groovy-2.5",
+  "org.spockframework:spock-core:2.0-groovy-3.0",
+  "org.spockframework:spock-junit4:2.0-groovy-3.0",
   "org.scala-lang:scala-library:2.11.12",
   "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
 )

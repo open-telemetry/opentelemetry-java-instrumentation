@@ -223,8 +223,9 @@ tasks.withType<Test>().configureEach {
   timeout.set(Duration.ofMinutes(15))
 
   retry {
+    val retryTests = System.getenv("CI") != null || rootProject.hasProperty("retryTests")
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries.set(if (System.getenv("CI") != null) 5 else 0)
+    maxRetries.set(if (retryTests) 5 else 0)
   }
 
   reports {

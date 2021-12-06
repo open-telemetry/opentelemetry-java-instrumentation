@@ -106,12 +106,12 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
-            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
-            "$SemanticAttributes.HTTP_METHOD.key" "GET"
-            "$SemanticAttributes.HTTP_USER_AGENT.key" "Test Client"
-            "$SemanticAttributes.HTTP_URL.key" "http://localhost:123/hello/world?a=b&c=d"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER" "http"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_USER_AGENT" "Test Client"
+            "$SemanticAttributes.HTTP_URL" "http://localhost:123/hello/world?a=b&c=d"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
           }
         }
       }
@@ -138,8 +138,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
-            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER" "http"
           }
         }
       }
@@ -166,8 +166,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
-            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER" "http"
           }
         }
       }
@@ -194,8 +194,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
-            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER" "http"
           }
         }
       }
@@ -222,8 +222,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
-            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER" "http"
           }
         }
       }

@@ -12,6 +12,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.javax.response.JavaxResponseInstrumentationFactory;
 import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,6 +35,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
         new HttpServletResponseInstrumentation(),
         new ServletAndFilterInstrumentation(
             "javax.servlet",
-            Servlet2InstrumentationModule.class.getPackage().getName() + ".Servlet2Advice"));
+            Servlet2InstrumentationModule.class.getPackage().getName() + ".Servlet2Advice"),
+        JavaxResponseInstrumentationFactory.create());
   }
 }

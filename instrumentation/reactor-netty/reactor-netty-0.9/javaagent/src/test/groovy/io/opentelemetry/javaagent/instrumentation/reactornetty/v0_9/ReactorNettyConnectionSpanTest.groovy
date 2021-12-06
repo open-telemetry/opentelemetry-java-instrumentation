@@ -61,9 +61,9 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           kind INTERNAL
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
           }
         }
         span(2) {
@@ -71,10 +71,10 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           kind INTERNAL
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
         span(3) {
@@ -123,9 +123,9 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           kind INTERNAL
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" PortUtils.UNUSABLE_PORT
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" PortUtils.UNUSABLE_PORT
           }
         }
         span(2) {
@@ -135,10 +135,10 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
           status ERROR
           errorEvent(connectException.class, connectException.message)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" PortUtils.UNUSABLE_PORT
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" PortUtils.UNUSABLE_PORT
+            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
       }

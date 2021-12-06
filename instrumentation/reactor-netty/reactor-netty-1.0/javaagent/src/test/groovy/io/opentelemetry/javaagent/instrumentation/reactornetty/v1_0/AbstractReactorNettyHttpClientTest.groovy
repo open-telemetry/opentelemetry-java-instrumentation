@@ -191,7 +191,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     }
   }
 
-  private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
+  static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
     def expectedSpanContext = expected.spanContext
     def actualSpanContext = actual.get().spanContext
     assert expectedSpanContext.traceId == actualSpanContext.traceId

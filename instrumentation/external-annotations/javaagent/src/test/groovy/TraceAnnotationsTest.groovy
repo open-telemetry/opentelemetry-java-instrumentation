@@ -26,8 +26,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.sayHello"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "sayHello"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "sayHello"
             "myattr" "test"
           }
         }
@@ -47,8 +47,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.sayHelloSayHa"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "sayHelloSayHa"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "sayHelloSayHa"
             "myattr" "test2"
           }
         }
@@ -56,8 +56,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.sayHello"
           childOf span(0)
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "sayHello"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "sayHello"
             "myattr" "test"
           }
         }
@@ -65,8 +65,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.sayHello"
           childOf span(0)
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "sayHello"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "sayHello"
             "myattr" "test"
           }
         }
@@ -91,8 +91,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(error.class)
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "sayError"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "sayError"
           }
         }
       }
@@ -110,8 +110,8 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello\$1.call"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name + '$1'
-            "${SemanticAttributes.CODE_FUNCTION}" "call"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name + '$1'
+            "$SemanticAttributes.CODE_FUNCTION" "call"
           }
         }
       }
@@ -133,16 +133,16 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello\$1.call"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name + '$1'
-            "${SemanticAttributes.CODE_FUNCTION}" "call"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name + '$1'
+            "$SemanticAttributes.CODE_FUNCTION" "call"
           }
         }
         trace(1, 1) {
           span(0) {
             name "TraceAnnotationsTest\$1.call"
             attributes {
-              "${SemanticAttributes.CODE_NAMESPACE}" TraceAnnotationsTest.name + '$1'
-              "${SemanticAttributes.CODE_FUNCTION}" "call"
+              "$SemanticAttributes.CODE_NAMESPACE" TraceAnnotationsTest.name + '$1'
+              "$SemanticAttributes.CODE_FUNCTION" "call"
             }
           }
         }
