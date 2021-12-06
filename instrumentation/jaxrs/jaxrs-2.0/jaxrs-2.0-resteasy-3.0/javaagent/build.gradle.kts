@@ -43,9 +43,9 @@ dependencies {
   testLibrary("io.undertow:undertow-servlet:1.4.28.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.4.Final")
 
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:5.+")
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.+")
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.+") {
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.0.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") {
     exclude("org.jboss.resteasy", "resteasy-client")
   }
 }
