@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.List;
 import javax.annotation.Nullable;
 

@@ -17,8 +17,6 @@ import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
