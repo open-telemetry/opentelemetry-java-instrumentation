@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -63,7 +65,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
-      if (iterable != null) {
+      if (iterable != null
+          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
         Context receiveContext =
             VirtualField.find(ConsumerRecords.class, Context.class).get(records);
         iterable = TracingIterable.wrap(iterable, receiveContext);
@@ -93,7 +96,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
-      if (iterator != null) {
+      if (iterator != null
+          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
         Context receiveContext =
             VirtualField.find(ConsumerRecords.class, Context.class).get(records);
         iterator = TracingIterator.wrap(iterator, receiveContext);
