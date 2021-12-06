@@ -75,7 +75,7 @@ corresponding instrumentation `name`:
 | OkHttp | okhttp|
 | OpenLiberty | liberty |
 | OpenTelemetry Trace annotations | opentelemetry-annotations |
-| OpenTelemetry SDK | opentelemetry-api |
+| OpenTelemetry API | opentelemetry-api |
 | OSHI (Operating System and Hardware Information) | oshi |
 | Play Framework | play|
 | Play WS HTTP Client | play-ws|
