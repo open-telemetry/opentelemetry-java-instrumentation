@@ -21,6 +21,10 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
+java {
+  toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
+
 dependencies {
   implementation("com.google.guava:guava:30.1.1-jre")
   // we need to use byte buddy variant that does not shade asm
