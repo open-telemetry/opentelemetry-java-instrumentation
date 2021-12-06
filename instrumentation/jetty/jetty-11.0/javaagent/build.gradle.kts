@@ -11,9 +11,11 @@ muzzle {
 }
 
 dependencies {
-  library("org.eclipse.jetty:jetty-server:11.0.0")
-  implementation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   implementation(project(":instrumentation:jetty:jetty-common:javaagent"))
+  implementation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
+  compileOnly(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
+  library("org.eclipse.jetty:jetty-server:11.0.0")
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 

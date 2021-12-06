@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
