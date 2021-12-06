@@ -84,7 +84,7 @@ class TracingRequestStreamWrapperPropagationTest extends LibraryInstrumentationS
           name("my_function")
           kind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }
@@ -125,7 +125,7 @@ class TracingRequestStreamWrapperPropagationTest extends LibraryInstrumentationS
           status ERROR
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }

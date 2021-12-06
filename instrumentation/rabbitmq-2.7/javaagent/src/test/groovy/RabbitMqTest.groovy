@@ -340,17 +340,17 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       }
 
       attributes {
-        "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || isInetAddress(it as String) }
-        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+        "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
+        "$SemanticAttributes.NET_PEER_IP" { it == null || isInetAddress(it as String) }
+        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
 
-        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
-        "${SemanticAttributes.MESSAGING_DESTINATION.key}" exchange
-        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+        "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
+        "$SemanticAttributes.MESSAGING_DESTINATION" exchange
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
 
-        "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY}" { it == null || it == routingKey || it.startsWith("amq.gen-") }
+        "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" { it == null || it == routingKey || it.startsWith("amq.gen-") }
         if (operation != null && operation != "send") {
-          "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
+          "$SemanticAttributes.MESSAGING_OPERATION" operation
         }
         if (expectTimestamp) {
           "rabbitmq.record.queue_time_ms" { it instanceof Long && it >= 0 }
@@ -359,21 +359,21 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {
           case "basic.publish":
             "rabbitmq.command" "basic.publish"
-            "${SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY}" {
+            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" {
               it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
             }
             "rabbitmq.delivery_mode" { it == null || it == 2 }
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             break
           case "basic.get":
             "rabbitmq.command" "basic.get"
             //TODO why this queue name is not a destination for semantic convention
             "rabbitmq.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" { it == null || it instanceof Long }
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" { it == null || it instanceof Long }
             break
           case "basic.deliver":
             "rabbitmq.command" "basic.deliver"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             break
           default:
             "rabbitmq.command" { it == null || it == resource }

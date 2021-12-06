@@ -34,12 +34,12 @@ class SlickTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "h2"
-            "$SemanticAttributes.DB_NAME.key" SlickUtils.Db()
-            "$SemanticAttributes.DB_USER.key" SlickUtils.Username()
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "h2:mem:"
-            "$SemanticAttributes.DB_STATEMENT.key" "SELECT ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" SlickUtils.Db()
+            "$SemanticAttributes.DB_USER" SlickUtils.Username()
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" "SELECT ?"
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
           }
         }
       }

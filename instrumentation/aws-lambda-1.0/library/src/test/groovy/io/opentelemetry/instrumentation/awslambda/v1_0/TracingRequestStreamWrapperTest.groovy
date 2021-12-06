@@ -74,7 +74,7 @@ class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecificatio
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }
@@ -109,7 +109,7 @@ class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecificatio
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
       }

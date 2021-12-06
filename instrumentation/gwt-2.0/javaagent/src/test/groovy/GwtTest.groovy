@@ -126,9 +126,9 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
           kind SpanKind.INTERNAL
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
-            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
-            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+            "$SemanticAttributes.RPC_SYSTEM" "gwt"
+            "$SemanticAttributes.RPC_SERVICE" "test.gwt.shared.MessageService"
+            "$SemanticAttributes.RPC_METHOD" "sendMessage"
           }
         }
       }
@@ -151,9 +151,9 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
           childOf(span(0))
           errorEvent(IOException)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
-            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
-            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+            "$SemanticAttributes.RPC_SYSTEM" "gwt"
+            "$SemanticAttributes.RPC_SERVICE" "test.gwt.shared.MessageService"
+            "$SemanticAttributes.RPC_METHOD" "sendMessage"
           }
         }
       }

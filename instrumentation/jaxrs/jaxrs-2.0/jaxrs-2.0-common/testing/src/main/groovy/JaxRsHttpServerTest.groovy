@@ -274,19 +274,19 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         hasNoParent()
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key}" Long
-        "${SemanticAttributes.HTTP_SCHEME.key}" fullUrl.getScheme()
-        "${SemanticAttributes.HTTP_HOST.key}" fullUrl.getHost() + ":" + fullUrl.getPort()
-        "${SemanticAttributes.HTTP_TARGET.key}" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
-        "${SemanticAttributes.HTTP_METHOD.key}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
-        "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-        "${SemanticAttributes.HTTP_SERVER_NAME}" String
-        "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" { it == null || it instanceof Long } // Optional
+        "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$SemanticAttributes.NET_PEER_PORT" Long
+        "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
+        "$SemanticAttributes.HTTP_HOST" fullUrl.getHost() + ":" + fullUrl.getPort()
+        "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
+        "$SemanticAttributes.HTTP_METHOD" method
+        "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
+        "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+        "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+        "$SemanticAttributes.HTTP_SERVER_NAME" String
+        "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+        "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long } // Optional
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
@@ -324,8 +324,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
       }
       childOf((SpanData) parent)
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "test.JaxRsTestResource"
-        "${SemanticAttributes.CODE_FUNCTION.key}" methodName
+        "$SemanticAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
+        "$SemanticAttributes.CODE_FUNCTION" methodName
         if (isCancelled) {
           "jaxrs.canceled" true
         }

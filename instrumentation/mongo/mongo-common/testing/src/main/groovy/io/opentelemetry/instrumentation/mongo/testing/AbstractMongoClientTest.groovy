@@ -386,17 +386,17 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT.key" port
-        "$SemanticAttributes.DB_STATEMENT.key" {
+        "$SemanticAttributes.NET_PEER_NAME" "localhost"
+        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT" port
+        "$SemanticAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
         }
-        "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
-        "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
-        "$SemanticAttributes.DB_NAME.key" dbName
-        "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
+        "$SemanticAttributes.DB_SYSTEM" "mongodb"
+        "$SemanticAttributes.DB_CONNECTION_STRING" "mongodb://localhost:" + port
+        "$SemanticAttributes.DB_NAME" dbName
+        "$SemanticAttributes.DB_OPERATION" operation
+        "$SemanticAttributes.DB_MONGODB_COLLECTION" collection
       }
     }
   }

@@ -144,23 +144,23 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
 
           attributes {
-            "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-            "${SemanticAttributes.HTTP_SCHEME.key}" uri.getScheme()
-            "${SemanticAttributes.HTTP_HOST.key}" uri.getHost() + ":" + uri.getPort()
-            "${SemanticAttributes.HTTP_TARGET.key}" uri.getPath()
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
-            "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
-            "${SemanticAttributes.HTTP_SCHEME}" "http"
-            "${SemanticAttributes.HTTP_TARGET}" "/sendResponse"
+            "$SemanticAttributes.NET_PEER_PORT" { it instanceof Long }
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+            "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
+            "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
+            "$SemanticAttributes.HTTP_TARGET" uri.getPath()
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.HTTP_HOST" "localhost:${port}"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {
@@ -199,23 +199,23 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           errorEvent(Exception, "exception after sending response", 2)
 
           attributes {
-            "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
-            "${SemanticAttributes.HTTP_SCHEME.key}" uri.getScheme()
-            "${SemanticAttributes.HTTP_HOST.key}" uri.getHost() + ":" + uri.getPort()
-            "${SemanticAttributes.HTTP_TARGET.key}" uri.getPath()
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
-            "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
-            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
-            "${SemanticAttributes.HTTP_SCHEME}" "http"
-            "${SemanticAttributes.HTTP_TARGET}" "/sendResponseWithException"
+            "$SemanticAttributes.NET_PEER_PORT" { it instanceof Long }
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+            "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
+            "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
+            "$SemanticAttributes.HTTP_TARGET" uri.getPath()
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.HTTP_HOST" "localhost:${port}"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {

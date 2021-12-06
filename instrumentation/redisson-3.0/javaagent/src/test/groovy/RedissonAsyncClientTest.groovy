@@ -69,12 +69,12 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -98,12 +98,12 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           name "SADD"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "SADD set1 ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SADD"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
+            "$SemanticAttributes.DB_OPERATION" "SADD"
           }
         }
       }
@@ -112,12 +112,12 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           name "RPUSH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "RPUSH list1 ?"
-            "$SemanticAttributes.DB_OPERATION.key" "RPUSH"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "RPUSH list1 ?"
+            "$SemanticAttributes.DB_OPERATION" "RPUSH"
           }
         }
       }

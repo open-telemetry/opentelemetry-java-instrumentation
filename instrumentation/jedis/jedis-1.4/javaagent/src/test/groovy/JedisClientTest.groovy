@@ -48,11 +48,11 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
       }
@@ -73,11 +73,11 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
       }
@@ -86,11 +86,11 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET foo"
+            "$SemanticAttributes.DB_OPERATION" "GET"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
       }
@@ -111,11 +111,11 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
       }
@@ -124,11 +124,11 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
-            "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
+            "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
       }

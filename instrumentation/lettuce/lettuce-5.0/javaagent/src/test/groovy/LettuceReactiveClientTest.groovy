@@ -100,9 +100,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -129,9 +129,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
@@ -171,9 +171,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
         span(2) {
@@ -206,9 +206,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
-            "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
+            "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
           }
         }
       }
@@ -226,9 +226,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "COMMAND"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "$SemanticAttributes.DB_OPERATION.key" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "COMMAND"
+            "$SemanticAttributes.DB_OPERATION" "COMMAND"
             "lettuce.command.results.count" { it > 100 }
           }
         }
@@ -247,9 +247,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "COMMAND"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "$SemanticAttributes.DB_OPERATION.key" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "COMMAND"
+            "$SemanticAttributes.DB_OPERATION" "COMMAND"
             "lettuce.command.cancelled" true
             "lettuce.command.results.count" 2
           }
@@ -278,9 +278,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "DEBUG"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
-            "$SemanticAttributes.DB_OPERATION.key" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "DEBUG SEGFAULT"
+            "$SemanticAttributes.DB_OPERATION" "DEBUG"
           }
         }
       }
@@ -298,9 +298,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           name "SHUTDOWN"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
-            "$SemanticAttributes.DB_OPERATION.key" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SHUTDOWN NOSAVE"
+            "$SemanticAttributes.DB_OPERATION" "SHUTDOWN"
           }
         }
       }
@@ -328,9 +328,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET a ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -338,9 +338,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET a"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
@@ -368,9 +368,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET a ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -378,9 +378,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET a"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
@@ -409,9 +409,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET a ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -419,9 +419,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET a"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }

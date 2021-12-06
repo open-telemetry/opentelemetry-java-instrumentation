@@ -23,8 +23,8 @@ class TraceProvidersTest extends AgentInstrumentationSpecification {
           name "SayTracedHello.${provider.toLowerCase()}"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" SayTracedHello.name
-            "${SemanticAttributes.CODE_FUNCTION}" "${provider.toLowerCase()}"
+            "$SemanticAttributes.CODE_NAMESPACE" SayTracedHello.name
+            "$SemanticAttributes.CODE_FUNCTION" "${provider.toLowerCase()}"
             "providerAttr" provider
           }
         }
