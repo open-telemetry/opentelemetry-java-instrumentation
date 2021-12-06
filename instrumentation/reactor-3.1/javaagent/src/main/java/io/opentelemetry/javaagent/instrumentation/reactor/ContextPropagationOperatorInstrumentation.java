@@ -53,7 +53,9 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
             .and(isPublic())
             .and(isStatic())
             .and(named("runWithContext"))
-            .and(takesArgument(0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
+            .and(
+                takesArgument(
+                    0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
         ContextPropagationOperatorInstrumentation.class.getName() + "$RunWithAdvice");
