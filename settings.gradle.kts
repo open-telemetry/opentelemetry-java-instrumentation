@@ -65,7 +65,6 @@ if (useScansGradleCom) {
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
       }
-
     }
   }
 }
