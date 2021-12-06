@@ -7,7 +7,6 @@ plugins {
 }
 
 protobuf {
-  val versions: Map<String, String> by project
   protoc {
     // The artifact spec for the Protobuf Compiler
     artifact = "com.google.protobuf:protoc:3.3.0"
