@@ -17,3 +17,7 @@ dependencies {
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+}

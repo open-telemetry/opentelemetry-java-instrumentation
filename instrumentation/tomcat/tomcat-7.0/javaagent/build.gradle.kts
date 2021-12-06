@@ -25,3 +25,7 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:[9.+, 10)")
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:[9.+, 10)")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+}

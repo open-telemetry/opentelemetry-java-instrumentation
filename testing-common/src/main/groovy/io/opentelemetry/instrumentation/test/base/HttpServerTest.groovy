@@ -18,15 +18,20 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.QueryParams
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
 import spock.lang.Unroll
 
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -119,6 +124,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testCapturedRequestParameters() {
+    false
+  }
+
   boolean testErrorBody() {
     true
   }
@@ -154,6 +163,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
     CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
+    CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
 
     // TODO: add tests for the following cases:
     QUERY_PARAM("query?some=query", 200, "some=query"),
@@ -233,14 +243,18 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  String resolveAddress(ServerEndpoint uri) {
     def url = uri.resolvePath(address).toString()
     // Force HTTP/1 via h1c so upgrade requests don't show up as traces
     url = url.replace("http://", "h1c://")
     if (uri.query != null) {
       url += "?${uri.query}"
     }
-    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), url)
+    return url
+  }
+
+  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri))
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
@@ -412,6 +426,28 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     and:
     assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, null, response)
+  }
+
+  def "test captured request parameters"() {
+    setup:
+    assumeTrue(testCapturedRequestParameters())
+
+    QueryParams formBody = QueryParams.builder()
+      .add("test-parameter", "test value")
+      .build()
+    def request = AggregatedHttpRequest.of(
+      RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
+        .contentType(MediaType.FORM_DATA)
+        .build(),
+      HttpData.ofUtf8(formBody.toQueryString()))
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == CAPTURE_PARAMETERS.status
+    response.contentUtf8() == CAPTURE_PARAMETERS.body
+
+    and:
+    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, null, response)
   }
 
   /*
@@ -657,6 +693,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (endpoint == CAPTURE_HEADERS) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
+        }
+        if (endpoint == CAPTURE_PARAMETERS) {
+          "servlet.request.parameter.test_parameter" { it == ["test value"] }
         }
       }
     }
