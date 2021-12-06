@@ -47,31 +47,31 @@ val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeResolved = true
 }
 
-val muzzleShadow by tasks.registering(ShadowJar::class) {
+val shadowModule by tasks.registering(ShadowJar::class) {
   from(tasks.jar)
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
 
-  archiveFileName.set("artifact-for-muzzle-check.jar")
+  archiveFileName.set("module-for-muzzle-check.jar")
 
   dependsOn(tasks.jar)
 }
 
-val muzzleToolingShadow by tasks.registering(ShadowJar::class) {
+val shadowMuzzleTooling by tasks.registering(ShadowJar::class) {
   configurations = listOf(muzzleTooling)
 
-  archiveFileName.set("agent-tooling-for-muzzle-check.jar")
+  archiveFileName.set("tooling-for-muzzle-check.jar")
 }
 
-val muzzleBootstrapShadow by tasks.registering(ShadowJar::class) {
+val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
   configurations = listOf(muzzleBootstrap)
 
-  archiveFileName.set("agent-bootstrap-for-muzzle-check.jar")
+  archiveFileName.set("bootstrap-for-muzzle-check.jar")
 }
 
 val compileMuzzle by tasks.registering {
-  dependsOn(muzzleBootstrapShadow)
-  dependsOn(muzzleToolingShadow)
+  dependsOn(shadowMuzzleBootstrap)
+  dependsOn(shadowMuzzleTooling)
   dependsOn(tasks.named("classes"))
 }
 
@@ -85,7 +85,7 @@ tasks.register("printMuzzleReferences") {
   group = "Muzzle"
   description = "Print references created by instrumentation muzzle"
   dependsOn(compileMuzzle)
-  dependsOn(muzzleShadow)
+  dependsOn(shadowModule)
   doLast {
     val instrumentationCL = createInstrumentationClassloader()
     withContextClassLoader(instrumentationCL) {
@@ -153,8 +153,8 @@ if (hasRelevantTask) {
 
 fun createInstrumentationClassloader(): ClassLoader {
   logger.info("Creating instrumentation class loader for: $path")
-  val muzzleShadowJar = muzzleShadow.get().archiveFile.get()
-  val muzzleToolingShadowJar = muzzleToolingShadow.get().archiveFile.get()
+  val muzzleShadowJar = shadowModule.get().archiveFile.get()
+  val muzzleToolingShadowJar = shadowMuzzleTooling.get().archiveFile.get()
   return classpathLoader(files(muzzleShadowJar, muzzleToolingShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
@@ -242,7 +242,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
   val muzzleTask = tasks.register(taskName) {
     dependsOn(configurations.named("runtimeClasspath"))
-    dependsOn(muzzleShadow)
+    dependsOn(shadowModule)
     doLast {
       val instrumentationCL = createInstrumentationClassloader()
       val userCL = createClassLoaderForTask(config)
@@ -267,7 +267,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
   logger.info("Creating user classloader for muzzle check")
-  val muzzleBootstrapShadowJar = muzzleBootstrapShadow.get().archiveFile.get()
+  val muzzleBootstrapShadowJar = shadowMuzzleBootstrap.get().archiveFile.get()
   return classpathLoader(muzzleTaskConfiguration + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
