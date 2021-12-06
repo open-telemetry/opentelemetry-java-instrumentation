@@ -97,11 +97,11 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
-            "${SemanticAttributes.RPC_METHOD.key}" "\$invoke"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "$SemanticAttributes.RPC_SYSTEM" "dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
+            "$SemanticAttributes.RPC_METHOD" "\$invoke"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
         span(2) {
@@ -109,12 +109,12 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(1)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
-            "${SemanticAttributes.RPC_METHOD.key}" "hello"
-            "${SemanticAttributes.NET_PEER_IP.key}" String
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "$SemanticAttributes.RPC_SYSTEM" "dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$SemanticAttributes.NET_PEER_IP" String
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
       }
@@ -168,11 +168,11 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
-            "${SemanticAttributes.RPC_METHOD.key}" "\$invokeAsync"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "$SemanticAttributes.RPC_SYSTEM" "dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
+            "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
         span(2) {
@@ -180,12 +180,12 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(1)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
-            "${SemanticAttributes.RPC_METHOD.key}" "hello"
-            "${SemanticAttributes.NET_PEER_IP.key}" String
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "$SemanticAttributes.RPC_SYSTEM" "dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$SemanticAttributes.NET_PEER_IP" String
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
       }

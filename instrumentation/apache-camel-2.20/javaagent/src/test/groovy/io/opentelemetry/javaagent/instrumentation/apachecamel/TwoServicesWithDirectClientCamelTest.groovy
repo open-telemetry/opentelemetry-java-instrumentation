@@ -91,9 +91,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           kind CLIENT
           parentSpanId(span(0).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_URL" "http://localhost:$portOne/serviceOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "apache-camel.uri" "http://localhost:$portOne/serviceOne"
           }
         }
@@ -102,9 +102,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           kind SERVER
           parentSpanId(span(1).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_URL" "http://localhost:$portOne/serviceOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "apache-camel.uri" "http://0.0.0.0:$portOne/serviceOne"
           }
         }
@@ -113,9 +113,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           kind CLIENT
           parentSpanId(span(2).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://127.0.0.1:$portTwo/serviceTwo"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "apache-camel.uri" "http://127.0.0.1:$portTwo/serviceTwo"
           }
         }
@@ -124,18 +124,18 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           kind SERVER
           parentSpanId(span(3).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-            "$SemanticAttributes.HTTP_SCHEME.key" "http"
-            "$SemanticAttributes.HTTP_HOST.key" "127.0.0.1:$portTwo"
-            "$SemanticAttributes.HTTP_TARGET.key" "/serviceTwo"
-            "$SemanticAttributes.NET_PEER_PORT.key" Number
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
-            "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
-            "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "127.0.0.1:$portTwo"
+            "$SemanticAttributes.HTTP_TARGET" "/serviceTwo"
+            "$SemanticAttributes.NET_PEER_PORT" Number
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" "Jakarta Commons-HttpClient/3.1"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
           }
         }
         it.span(5) {
@@ -143,8 +143,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           kind INTERNAL
           parentSpanId(span(4).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://127.0.0.1:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:$portTwo/serviceTwo"
             "apache-camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo?arg=value"
           }
         }

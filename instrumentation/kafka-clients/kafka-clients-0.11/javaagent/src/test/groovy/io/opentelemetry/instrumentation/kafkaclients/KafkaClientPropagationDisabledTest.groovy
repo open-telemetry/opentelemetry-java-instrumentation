@@ -28,9 +28,9 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           kind PRODUCER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
       }
@@ -54,9 +54,9 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           kind PRODUCER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
       }
@@ -66,10 +66,10 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           kind CONSUMER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         span(1) {
@@ -78,12 +78,12 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           childOf span(0)
           hasNoLinks()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
           }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHttpAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;

@@ -201,13 +201,13 @@ class Jms1Test extends AgentInstrumentationSpecification {
           name destinationName + " receive"
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" receivedMessage.getJMSMessageID()
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
+            "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" receivedMessage.getJMSMessageID()
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             if (destinationName == "(temporary)") {
-              "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
+              "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
             }
           }
         }
@@ -273,13 +273,13 @@ class Jms1Test extends AgentInstrumentationSpecification {
       kind PRODUCER
       hasNoParent()
       attributes {
-        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-        "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
+        "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
+        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
-          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
+          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
         }
-        "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
       }
     }
   }
@@ -297,16 +297,16 @@ class Jms1Test extends AgentInstrumentationSpecification {
         hasNoParent()
       }
       attributes {
-        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-        "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-        "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
+        "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
+        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
+        "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute
-          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" { it == messageId || messageId == "" }
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" { it == messageId || messageId == "" }
         }
         if (destinationName == "(temporary)") {
-          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
+          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
         }
       }
     }

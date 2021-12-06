@@ -59,9 +59,9 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
         span(2) {
@@ -70,12 +70,12 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
           childOf span(1)
           hasLink(span(1))
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
           }

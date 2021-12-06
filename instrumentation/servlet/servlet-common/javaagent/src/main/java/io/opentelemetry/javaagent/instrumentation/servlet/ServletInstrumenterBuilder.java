@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -74,6 +73,11 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(additionalAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get());
+    if (ServletRequestParametersExtractor.enabled()) {
+      AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
+      builder.addAttributesExtractor(requestParametersExtractor);
+    }
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);

@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerProcessInstrumenter;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
@@ -32,21 +30,17 @@ public class TracingIterator<K, V>
   @Nullable private Scope currentScope;
 
   private TracingIterator(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable SpanContext receiveSpanContext) {
+      Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable Context receiveContext) {
     this.delegateIterator = delegateIterator;
 
-    // use the receive CONSUMER span as parent if it's available
-    Context parentContext = Context.current();
-    if (receiveSpanContext != null) {
-      parentContext = parentContext.with(Span.wrap(receiveSpanContext));
-    }
-    this.parentContext = parentContext;
+    // use the receive CONSUMER as parent if it's available
+    this.parentContext = receiveContext != null ? receiveContext : Context.current();
   }
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable SpanContext receiveSpanContext) {
+      Iterator<ConsumerRecord<K, V>> delegateIterator, @Nullable Context receiveContext) {
     if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingIterator<>(delegateIterator, receiveSpanContext);
+      return new TracingIterator<>(delegateIterator, receiveContext);
     }
     return delegateIterator;
   }

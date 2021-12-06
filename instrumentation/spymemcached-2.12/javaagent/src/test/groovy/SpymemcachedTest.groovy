@@ -623,8 +623,8 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
       }
 
       attributes {
-        "${SemanticAttributes.DB_SYSTEM.key}" "memcached"
-        "${SemanticAttributes.DB_OPERATION.key}" operation
+        "$SemanticAttributes.DB_SYSTEM" "memcached"
+        "$SemanticAttributes.DB_OPERATION" operation
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

@@ -97,9 +97,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind PRODUCER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
 
@@ -112,10 +112,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         // kafka-stream CONSUMER
@@ -125,12 +125,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           childOf span(0)
           hasLink(producerPending)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
@@ -142,9 +142,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind PRODUCER
           childOf span(1)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
 
@@ -157,10 +157,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         // kafka-clients CONSUMER process
@@ -170,12 +170,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           childOf span(0)
           hasLink producerProcessed
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123

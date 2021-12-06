@@ -4,11 +4,16 @@
  */
 
 import com.rabbitmq.client.ConnectionFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 
 import java.time.Duration
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.Wait
 
 trait WithRabbitMqTrait {
+  private static final Logger logger = LoggerFactory.getLogger("io.opentelemetry.testing.rabbitmq-container")
 
   static GenericContainer rabbitMqContainer
   static ConnectionFactory connectionFactory
@@ -16,7 +21,9 @@ trait WithRabbitMqTrait {
   def startRabbit() {
     rabbitMqContainer = new GenericContainer('rabbitmq:latest')
       .withExposedPorts(5672)
-      .withStartupTimeout(Duration.ofSeconds(120))
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+      .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
+      .withStartupTimeout(Duration.ofMinutes(2))
     rabbitMqContainer.start()
 
     connectionFactory = new ConnectionFactory(

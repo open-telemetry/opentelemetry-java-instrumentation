@@ -20,8 +20,8 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SoapProvider.invoke"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider"
-            "${SemanticAttributes.CODE_FUNCTION.key}" "invoke"
+            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider"
+            "$SemanticAttributes.CODE_FUNCTION" "invoke"
           }
         }
       }

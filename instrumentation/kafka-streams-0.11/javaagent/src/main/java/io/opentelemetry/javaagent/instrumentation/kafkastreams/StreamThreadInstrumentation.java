@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -47,17 +47,16 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      SpanContext receiveSpanContext =
-          VirtualField.find(ConsumerRecords.class, SpanContext.class).get(records);
-      if (receiveSpanContext == null) {
+      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+      if (receiveContext == null) {
         return;
       }
 
-      VirtualField<ConsumerRecord<?, ?>, SpanContext> singleRecordReceiveSpan =
-          VirtualField.find(ConsumerRecord.class, SpanContext.class);
+      VirtualField<ConsumerRecord<?, ?>, Context> singleRecordReceiveContext =
+          VirtualField.find(ConsumerRecord.class, Context.class);
 
       for (ConsumerRecord<?, ?> record : records) {
-        singleRecordReceiveSpan.set(record, receiveSpanContext);
+        singleRecordReceiveContext.set(record, receiveContext);
       }
     }
   }

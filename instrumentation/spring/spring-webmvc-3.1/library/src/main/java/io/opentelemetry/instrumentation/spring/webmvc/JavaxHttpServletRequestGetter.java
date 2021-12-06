@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.javax;
+package io.opentelemetry.instrumentation.spring.webmvc;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
-public enum JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
+enum JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
   INSTANCE;
 
   @Override

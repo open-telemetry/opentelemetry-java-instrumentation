@@ -114,13 +114,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(2) {
@@ -135,13 +135,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(4) {
@@ -183,13 +183,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         serverSpan(it, 2, span(1))
@@ -241,13 +241,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "POST"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(2) {

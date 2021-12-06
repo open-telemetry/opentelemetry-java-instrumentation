@@ -95,9 +95,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" host
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.NET_PEER_NAME" host
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
           }
         }
       }
@@ -125,9 +125,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME.key" host
-            "$SemanticAttributes.NET_PEER_PORT.key" incorrectPort
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.NET_PEER_NAME" host
+            "$SemanticAttributes.NET_PEER_PORT" incorrectPort
+            "$SemanticAttributes.DB_SYSTEM" "redis"
           }
         }
       }
@@ -146,9 +146,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -167,9 +167,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
@@ -188,9 +188,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
-            "$SemanticAttributes.DB_OPERATION.key" "GET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
+            "$SemanticAttributes.DB_OPERATION" "GET"
           }
         }
       }
@@ -209,9 +209,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
-            "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
+            "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
           }
         }
       }
@@ -230,9 +230,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "LPUSH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "LPUSH TESTLIST ?"
-            "$SemanticAttributes.DB_OPERATION.key" "LPUSH"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "LPUSH TESTLIST ?"
+            "$SemanticAttributes.DB_OPERATION" "LPUSH"
           }
         }
       }
@@ -251,9 +251,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "HMSET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "HMSET user firstname ? lastname ? age ?"
-            "$SemanticAttributes.DB_OPERATION.key" "HMSET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "HMSET user firstname ? lastname ? age ?"
+            "$SemanticAttributes.DB_OPERATION" "HMSET"
           }
         }
       }
@@ -272,9 +272,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "HGETALL"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "HGETALL TESTHM"
-            "$SemanticAttributes.DB_OPERATION.key" "HGETALL"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "HGETALL TESTHM"
+            "$SemanticAttributes.DB_OPERATION" "HGETALL"
           }
         }
       }
@@ -292,9 +292,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "DEBUG"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
-            "$SemanticAttributes.DB_OPERATION.key" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "DEBUG SEGFAULT"
+            "$SemanticAttributes.DB_OPERATION" "DEBUG"
           }
         }
       }
@@ -312,9 +312,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "SHUTDOWN"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
-            "$SemanticAttributes.DB_OPERATION.key" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SHUTDOWN NOSAVE"
+            "$SemanticAttributes.DB_OPERATION" "SHUTDOWN"
           }
         }
       }
