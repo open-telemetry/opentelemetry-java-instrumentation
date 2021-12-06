@@ -42,7 +42,7 @@ val exporterSlimLibs by configurations.creating {
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
+listOf(baseJavaagentLibs, javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
@@ -158,9 +158,7 @@ tasks {
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
-    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
-    dependsOn(jar, relocateJavaagentLibs, relocateExporterLibs)
+    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
     isolateClasses(relocateExporterLibs.get().outputs.files)
 
@@ -220,20 +218,20 @@ tasks {
     add("baseJar", baseJavaagentJar)
   }
 
+  jar {
+    enabled = false
+  }
+
   assemble {
     dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
     dependsOn(shadowJar)
-    inputs.file(shadowJar.get().archiveFile)
 
     jvmArgs("-Dotel.javaagent.debug=true")
 
-    doFirst {
-      // Defining here to allow jacoco to be first on the command line.
-      jvmArgs("-javaagent:${shadowJar.get().archiveFile.get().asFile}")
-    }
+    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
 
     testLogging {
       events("started")
@@ -252,6 +250,7 @@ tasks {
     publications {
       named<MavenPublication>("maven") {
         artifact(slimShadowJar)
+        project.shadow.component(this)
       }
     }
   }
@@ -295,4 +294,14 @@ fun ShadowJar.excludeBootstrapJars() {
     exclude(project(":javaagent-bootstrap"))
     exclude(project(":javaagent-instrumentation-api"))
   }
+}
+
+class JavaagentProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val agentJar: Provider<RegularFile>
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-javaagent:${file(agentJar).absolutePath}"
+  )
 }

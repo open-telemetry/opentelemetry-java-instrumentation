@@ -61,7 +61,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
         return super.expectedClientSpanName(uri, method)
@@ -73,7 +73,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
     if (exception.class == RuntimeException) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
-        case "https://192.0.2.1/": // non routable address
+        case "http://192.0.2.1/": // non routable address
           exception = exception.getCause()
       }
     }
@@ -84,7 +84,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return []
     }
     return super.httpAttributes(uri)

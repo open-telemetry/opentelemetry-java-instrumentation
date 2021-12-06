@@ -9,8 +9,10 @@ publishing {
       plugins.withId("java-platform") {
         from(components["javaPlatform"])
       }
-      plugins.withId("java-library") {
-        from(components["java"])
+      if(project.path != ":javaagent"){
+        plugins.withId("java-library") {
+          from(components["java"])
+        }
       }
 
       versionMapping {

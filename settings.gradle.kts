@@ -33,23 +33,32 @@ val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
 // if GE access key is not given and we are in CI, then we publish to scans.gradle.com
 val useScansGradleCom = isCI && geAccessKey.isEmpty()
 
-gradleEnterprise {
-  if (!useScansGradleCom) {
-    server = gradleEnterpriseServer
-  }
-  buildScan {
-    if (useScansGradleCom) {
+if (useScansGradleCom) {
+  gradleEnterprise {
+    buildScan {
       termsOfServiceUrl = "https://gradle.com/terms-of-service"
       termsOfServiceAgree = "yes"
+      isUploadInBackground = !isCI
+      publishAlways()
+
+      capture {
+        isTaskInputFiles = true
+      }
     }
-    publishAlways()
-    this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
-    publishIfAuthenticated()
+  }
+} else {
+  gradleEnterprise {
+    server = gradleEnterpriseServer
+    buildScan {
+      isUploadInBackground = !isCI
 
-    isUploadInBackground = !isCI
+      this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
+      publishIfAuthenticated()
+      publishAlways()
 
-    capture {
-      isTaskInputFiles = true
+      capture {
+        isTaskInputFiles = true
+      }
     }
   }
 }
@@ -106,7 +115,7 @@ include(":instrumentation:akka-http-10.0:javaagent")
 include(":instrumentation:apache-camel-2.20:javaagent")
 include(":instrumentation:apache-camel-2.20:javaagent-unit-tests")
 include(":instrumentation:apache-dubbo-2.7:javaagent")
-include(":instrumentation:apache-dubbo-2.7:library")
+include(":instrumentation:apache-dubbo-2.7:library-autoconfigure")
 include(":instrumentation:apache-dubbo-2.7:testing")
 include(":instrumentation:apache-httpasyncclient-4.1:javaagent")
 include(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent")
@@ -255,7 +264,7 @@ include(":instrumentation:liberty:liberty-dispatcher:javaagent")
 include(":instrumentation:log4j:log4j-1.2:javaagent")
 include(":instrumentation:log4j:log4j-2.7:javaagent")
 include(":instrumentation:log4j:log4j-2.13.2:javaagent")
-include(":instrumentation:log4j:log4j-2.13.2:library")
+include(":instrumentation:log4j:log4j-2.13.2:library-autoconfigure")
 include(":instrumentation:log4j:log4j-2-common:testing")
 include(":instrumentation:logback-1.0:javaagent")
 include(":instrumentation:logback-1.0:library")
@@ -378,7 +387,6 @@ include(":instrumentation:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark
-include(":benchmark")
 include(":benchmark-e2e")
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")

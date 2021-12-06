@@ -24,7 +24,8 @@ public final class AgentClassLoaderAccess {
     }
   }
 
-  static Class<?> loadClass(String name) {
+  // public for use by downstream distros
+  public static Class<?> loadClass(String name) {
     try {
       return agentClassLoader.loadClass(name);
     } catch (ClassNotFoundException e) {

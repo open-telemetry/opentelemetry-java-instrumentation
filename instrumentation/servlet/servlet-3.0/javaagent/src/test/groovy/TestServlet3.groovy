@@ -112,7 +112,13 @@ class TestServlet3 {
                 break
               case EXCEPTION:
                 resp.status = endpoint.status
-                resp.writer.print(endpoint.body)
+                def writer = resp.writer
+                writer.print(endpoint.body)
+                if (req.getClass().getName().contains("catalina")) {
+                  // on tomcat close the writer to ensure response is sent immediately, otherwise
+                  // there is a chance that tomcat resets the connection before the response is sent
+                  writer.close()
+                }
                 throw new ServletException(endpoint.body)
             }
           }

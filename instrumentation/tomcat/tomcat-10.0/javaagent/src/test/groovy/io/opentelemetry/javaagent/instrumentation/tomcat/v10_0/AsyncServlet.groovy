@@ -62,6 +62,10 @@ class AsyncServlet extends HttpServlet {
               resp.writer.print(endpoint.body)
               break
             case EXCEPTION:
+              resp.status = endpoint.status
+              def writer = resp.writer
+              writer.print(endpoint.body)
+              writer.close()
               throw new ServletException(endpoint.body)
           }
         }
