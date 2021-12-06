@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -52,10 +53,10 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
             .and(isPublic())
             .and(isStatic())
             .and(named("runWithContext"))
-            .and(takesArgument(0, named("reactor.core.publisher.Mono")))
+            .and(takesArgument(0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(named("reactor.core.publisher.Mono"))),
-        ContextPropagationOperatorInstrumentation.class.getName() + "$RunMonoAdvice");
+            .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
+        ContextPropagationOperatorInstrumentation.class.getName() + "$RunWithAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -100,7 +101,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
   }
 
   @SuppressWarnings("unused")
-  public static class RunMonoAdvice {
+  public static class RunWithAdvice {
     @Advice.OnMethodEnter
     public static void methodEnter(
         @Advice.FieldValue(value = "enabled", readOnly = false) boolean enabled) {

@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
 import io.opentelemetry.instrumentation.reactor.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -70,7 +71,7 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
     }
   }
 
-  def "run with context forces it to become current"() {
+  def "run Mono with context forces it to become current"() {
     setup:
     def result = Mono.defer({ ->
       Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
@@ -94,6 +95,39 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
         }
         span(1) {
           name "TracedWithSpan.mono"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "run Flux with context forces it to become current"() {
+    setup:
+    def result = Flux.defer({ ->
+      Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
+      def outer = Flux.defer({ -> new TracedWithSpan().flux(Flux.just("Value") )});
+      return ContextPropagationOperator
+        .runWithContext(outer, Context.current().with(span))
+        .doFinally({ i -> span.end() })
+    })
+
+    StepVerifier.create(result)
+      .expectNext("Value")
+      .verifyComplete()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "TracedWithSpan.flux"
           kind SpanKind.INTERNAL
           childOf span(0)
           attributes {
