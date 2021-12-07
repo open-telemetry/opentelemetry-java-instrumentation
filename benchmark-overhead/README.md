@@ -41,7 +41,7 @@ After all the tests are complete, the results are collected and commited back to
 For each test pass, we record the following metrics in order to compare agents and determine
 relative overhead.
 
-| metric name              | units      | description                                                     |
+| metric name              | units      | description                                              |
 |--------------------------|------------|----------------------------------------------------------|
 | Startup time             | ms         | How long it takes for the spring app to report "healthy"
 | Total allocated mem      | bytes      | Across the life of the application
