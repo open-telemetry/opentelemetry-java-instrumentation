@@ -7,6 +7,7 @@ muzzle {
     group.set("io.projectreactor")
     module.set("reactor-core")
     versions.set("[3.1.0.RELEASE,)")
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
   }
 }
@@ -18,11 +19,15 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   implementation(project(":instrumentation:reactor-3.1:library"))
+  library("io.projectreactor:reactor-core:3.1.0.RELEASE")
+
+  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
+
+  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation-api-annotation-support"))
+  compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
-  testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
-
   testImplementation(project(":instrumentation:reactor-3.1:testing"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 

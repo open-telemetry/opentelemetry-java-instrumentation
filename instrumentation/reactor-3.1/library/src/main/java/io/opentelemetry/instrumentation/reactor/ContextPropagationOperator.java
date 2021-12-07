@@ -131,7 +131,7 @@ public final class ContextPropagationOperator {
   }
 
   /** Forces Flux to run in traceContext scope. */
-  static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
+  public static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
     if (!enabled) {
       return publisher;
     }
