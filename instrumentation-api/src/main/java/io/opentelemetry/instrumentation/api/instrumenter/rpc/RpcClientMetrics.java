@@ -51,7 +51,7 @@ public class RpcClientMetrics implements RequestListener {
   @Override
   public Context start(Context context, Attributes startAttributes, long startNanos) {
     return context.with(RPC_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_RpcClientMetrics_state(startAttributes, startNanos));
+        new AutoValue_RpcClientMetrics_State(startAttributes, startNanos));
   }
 
   @Override
