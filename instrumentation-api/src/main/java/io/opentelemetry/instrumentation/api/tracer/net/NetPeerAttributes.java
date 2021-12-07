@@ -49,7 +49,7 @@ public final class NetPeerAttributes {
       if (remoteAddress != null) {
         setNetPeer(
             span,
-            remoteAddress.getHostName(),
+            remoteAddress.getHostAddress(),
             remoteAddress.getHostAddress(),
             remoteConnection.getPort());
       } else {
