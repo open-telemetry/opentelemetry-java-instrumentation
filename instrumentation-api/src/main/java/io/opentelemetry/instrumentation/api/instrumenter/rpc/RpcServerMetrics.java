@@ -27,7 +27,7 @@ public class RpcServerMetrics implements RequestListener {
   /**
    * measures duration of inbound RPC
    */
-  private LongHistogram serverDurationHistogram;
+  private final LongHistogram serverDurationHistogram;
 
   private RpcServerMetrics(Meter meter) {
     serverDurationHistogram = meter
