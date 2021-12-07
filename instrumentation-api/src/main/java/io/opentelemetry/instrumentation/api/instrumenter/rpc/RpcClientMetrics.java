@@ -25,7 +25,7 @@ public class RpcClientMetrics implements RequestListener {
   private static final Logger logger = LoggerFactory.getLogger(RpcClientMetrics.class);
 
   /**
-   * measures duration of outbound RPC
+   * measures duration of outbound RPC.
    */
   private final LongHistogram clientDurationHistogram;
 
@@ -41,7 +41,7 @@ public class RpcClientMetrics implements RequestListener {
    * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
    * RpcClientMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}
-   * method addRequestMetrics()
+   * method addRequestMetrics().
    */
   @UnstableApi
   public static RequestMetrics get() {
