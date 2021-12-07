@@ -30,7 +30,7 @@ public final class ContextStorageCloser {
   }
 
   private static void cleanup(AutoCloseable storage) throws Exception {
-    ContextRestorer restorer = ContextRestorer.create();
+    ContextRestorer restorer = ContextRestorer.create((ContextStorage) storage);
     if (restorer == null) {
       storage.close();
       return;
@@ -43,6 +43,7 @@ public final class ContextStorageCloser {
         .ignoreException(AssertionError.class)
         .atMost(Duration.ofSeconds(10))
         .pollInterval(Duration.ofSeconds(1))
+        .pollDelay(Duration.ZERO)
         .until(() -> restorer.runWithRestore(storage));
   }
 
@@ -74,18 +75,15 @@ public final class ContextStorageCloser {
       }
     }
 
-    static ContextRestorer create()
-        throws NoSuchFieldException, IllegalAccessException, ClassNotFoundException {
-      Object strictContextStorage = getStrictContextStorage();
+    static ContextRestorer create(ContextStorage storage)
+        throws NoSuchFieldException, IllegalAccessException {
+      Object strictContextStorage = getStrictContextStorage(storage);
       if (strictContextStorage == null) {
         return null;
       }
-      Object pendingScopes = getStrictContextStoragePendingScopes(strictContextStorage);
 
-      Class<?> pendingScopesClass =
-          Class.forName(
-              "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.StrictContextStorage$PendingScopes");
-      Field mapField = pendingScopesClass.getDeclaredField("map");
+      Object pendingScopes = getStrictContextStoragePendingScopes(strictContextStorage);
+      Field mapField = pendingScopes.getClass().getDeclaredField("map");
       mapField.setAccessible(true);
       @SuppressWarnings("unchecked")
       ConcurrentHashMap<Object, Object> map =
@@ -101,17 +99,20 @@ public final class ContextStorageCloser {
     }
 
     private static Object getStrictContextStoragePendingScopes(Object strictContextStorage)
-        throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
-      Class<?> strictContextStorageClass =
-          Class.forName(
-              "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.StrictContextStorage");
-      Field field = strictContextStorageClass.getDeclaredField("pendingScopes");
+        throws NoSuchFieldException, IllegalAccessException {
+      Field field = strictContextStorage.getClass().getDeclaredField("pendingScopes");
       field.setAccessible(true);
       return field.get(strictContextStorage);
     }
 
-    private static Object getStrictContextStorage()
+    private static Object getStrictContextStorage(ContextStorage storage)
         throws NoSuchFieldException, IllegalAccessException {
+      // in library instrumentation tests we already have access to StrictContextStorage
+      if (storage.getClass().getName().contains("StrictContextStorage")) {
+        return storage;
+      }
+      // in javaagent tests the storage we get is wrapped by opentelemetry api bridge, find the
+      // actual storage
       Object contextStorage = getAgentContextStorage();
       if (contextStorage == null) {
         return null;
