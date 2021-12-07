@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
   api(project(":instrumentation:restlet:restlet-1.0:library"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   library("org.restlet:org.restlet:1.1.5")
   library("com.noelios.restlet:com.noelios.restlet:1.1.5")

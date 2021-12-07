@@ -64,7 +64,7 @@ tasks {
 dependencies {
   compileOnly("javax.faces:jsf-api:1.2")
 
-  implementation(project(":instrumentation:jsf:jsf-common:library"))
+  implementation(project(":instrumentation:jsf:jsf-common:javaagent"))
 
   testImplementation(project(":instrumentation:jsf:jsf-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))

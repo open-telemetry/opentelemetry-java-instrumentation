@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.metro;
 
 import com.sun.xml.ws.api.message.Packet;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.handler.MessageContext;
 

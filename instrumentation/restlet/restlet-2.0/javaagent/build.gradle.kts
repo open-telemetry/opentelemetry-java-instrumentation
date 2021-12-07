@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
   api(project(":instrumentation:restlet:restlet-2.0:library"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   library("org.restlet.jse:org.restlet:2.0.2")
 

@@ -32,6 +32,8 @@ val grailsVersion = "3.0.6"
 val springBootVersion = "1.2.5.RELEASE"
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))

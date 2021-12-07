@@ -10,10 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jsf.JsfRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.jsf.JsfRequest;
 import javax.faces.event.ActionEvent;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

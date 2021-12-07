@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameTwoArgSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */

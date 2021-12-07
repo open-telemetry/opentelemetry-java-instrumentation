@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
 public final class ResteasySpanName implements ServerSpanNameSupplier<String> {
