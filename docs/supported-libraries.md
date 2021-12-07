@@ -29,7 +29,10 @@ These are the supported libraries and frameworks:
 | [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+ (not including 3.x yet)   |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
+| [Apache Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                             | 0.11+                          |
+| [Apache MyFaces](https://myfaces.apache.org/)                                                                                         | 1.2+ (not including 3.x yet)   |
 | [Apache RocketMQ](https://rocketmq.apache.org/)                                                                                       | 4.8+                           |
+| [Apache Struts 2](https://github.com/apache/struts)                                                                                   | 2.3+                           |
 | [Apache Tapestry](https://tapestry.apache.org/)                                                                                       | 5.4+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 1.3+                           |
@@ -39,13 +42,17 @@ These are the supported libraries and frameworks:
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ and 3.1+                  |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
+| [Eclipse Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                          | 2.0+ (disabled by default)     |
+| [Eclipse Jersey](https://eclipse-ee4j.github.io/jersey/)                                                                              | 2.0+ (not including 3.x yet)   |
+| [Eclipse Jetty HTTP Client](https://www.eclipse.org/jetty/javadoc/jetty-9/org/eclipse/jetty/client/HttpClient.html)                   | 9.2+ (not including 10+ yet)   |
+| [Eclipse Metro](https://projects.eclipse.org/projects/ee4j.metro)                                                                     | 2.2+ (not including 3.x yet)   |
+| [Eclipse Mojarra](https://projects.eclipse.org/projects/ee4j.mojarra)                                                                 | 1.2+ (not including 3.x yet)   |
 | [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 5.0+                           |
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grails](https://grails.org/)                                                                                                         | 3.0+                           |
-| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.6+                           |
 | [GWT](http://www.gwtproject.org/)                                                                                                     | 2.0+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
@@ -58,20 +65,14 @@ These are the supported libraries and frameworks:
 | [Java Http Client](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html)               | Java 11+                       |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 8+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
-| [Jersey](https://eclipse-ee4j.github.io/jersey/)                                                                                      | 2.0+ (not including 3.x yet)   |
-| [Jetty HTTP Client](https://www.eclipse.org/jetty/javadoc/jetty-9/org/eclipse/jetty/client/HttpClient.html)                           | 9.2+ (not including 10+ yet)   |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
-| [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j 1](https://logging.apache.org/log4j/1.2/)                                                                                      | 1.2+                           |
 | [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                      | 2.7+                           |
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
-| [Metro](https://projects.eclipse.org/projects/ee4j.metro)                                                                             | 2.2+ (not including 3.x yet)   |
-| [Mojarra](https://projects.eclipse.org/projects/ee4j.mojarra)                                                                         | 1.2+ (not including 3.x yet)   |
 | [MongoDB Driver](https://mongodb.github.io/mongo-java-driver/)                                                                        | 3.1+                           |
-| [MyFaces](https://myfaces.apache.org/)                                                                                                | 1.2+ (not including 3.x yet)   |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
 | [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
@@ -92,13 +93,12 @@ These are the supported libraries and frameworks:
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
 | [Spring Integration](https://spring.io/projects/spring-integration)                                                                   | 4.1+                           |
 | [Spring Kafka](https://spring.io/projects/spring-kafka)                                                                               | 2.7+                           |
-| [Spring Rabbit](https://spring.io/projects/spring-amqp)                                                                               | 1.0+                           |
+| [Spring RabbitMQ](https://spring.io/projects/spring-amqp)                                                                             | 1.0+                           |
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |
 | [Spring Web Services](https://spring.io/projects/spring-ws)                                                                           | 2.0+                           |
-| [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
+| [Spring WebFlux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
-| [Struts2](https://github.com/apache/struts)                                                                                           | 2.3+                           |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
 | [Undertow](https://undertow.io/)                                                                                                      | 1.4+                           |
 | [Vaadin](https://vaadin.com/)                                                                                                         | 14.2+                          |
