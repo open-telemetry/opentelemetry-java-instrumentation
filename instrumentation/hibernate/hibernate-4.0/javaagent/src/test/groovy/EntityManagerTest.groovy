@@ -82,13 +82,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             childOf span(1)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
         }
@@ -98,13 +98,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             childOf span(1)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
           span(3 + offset) {
@@ -128,13 +128,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             childOf span(2 + offset)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
         }
@@ -204,13 +204,13 @@ class EntityManagerTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {

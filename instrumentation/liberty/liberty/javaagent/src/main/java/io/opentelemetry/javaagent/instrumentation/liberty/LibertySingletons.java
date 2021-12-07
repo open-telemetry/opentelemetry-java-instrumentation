@@ -27,7 +27,7 @@ public final class LibertySingletons {
               .addContextCustomizer(
                   (context, request, attributes) -> {
                     context = ServerSpanNaming.init(context, CONTAINER);
-                    return AppServerBridge.init(context);
+                    return new AppServerBridge.Builder().recordException().init(context);
                   })
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 

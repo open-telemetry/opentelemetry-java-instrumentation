@@ -13,6 +13,7 @@ import spock.lang.IgnoreIf
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -148,6 +149,7 @@ class JettyServlet5TestForward extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
   }
 }
@@ -184,6 +186,8 @@ class JettyServlet5TestInclude extends JettyDispatchTest {
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
   }
 }
@@ -207,6 +211,7 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
@@ -230,6 +235,7 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }

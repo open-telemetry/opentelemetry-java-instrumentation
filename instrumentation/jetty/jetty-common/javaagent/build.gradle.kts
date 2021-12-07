@@ -3,6 +3,5 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation:servlet:servlet-common:library"))
-  implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
+  api(project(":instrumentation:servlet:servlet-common:javaagent"))
 }

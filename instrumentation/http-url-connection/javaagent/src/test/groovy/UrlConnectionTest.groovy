@@ -43,12 +43,12 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent ConnectException, String
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" UNUSABLE_PORT
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" UNUSABLE_PORT
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
       }

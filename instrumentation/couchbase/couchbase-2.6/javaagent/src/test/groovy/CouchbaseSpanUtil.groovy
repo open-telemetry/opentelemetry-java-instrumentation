@@ -28,14 +28,14 @@ class CouchbaseSpanUtil {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "${SemanticAttributes.DB_SYSTEM.key}" "couchbase"
-        "${SemanticAttributes.DB_NAME.key}" bucketName
-        "${SemanticAttributes.DB_STATEMENT.key}" statement
-        "${SemanticAttributes.DB_OPERATION.key}"(operation ?: spanName)
+        "$SemanticAttributes.DB_SYSTEM" "couchbase"
+        "$SemanticAttributes.DB_NAME" bucketName
+        "$SemanticAttributes.DB_STATEMENT" statement
+        "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
 
         // Because of caching, not all requests hit the server so these attributes may be absent
-        "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || Number }
+        "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "$SemanticAttributes.NET_PEER_PORT" { it == null || Number }
 
         // Because of caching, not all requests hit the server so this tag may be absent
         "couchbase.local.address" { it == null || String }

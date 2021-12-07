@@ -199,8 +199,8 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
         errorEvent(exception.class, exception.message)
       }
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "hello.HelloServiceImpl"
-        "${SemanticAttributes.CODE_FUNCTION.key}" methodName
+        "$SemanticAttributes.CODE_NAMESPACE" "hello.HelloServiceImpl"
+        "$SemanticAttributes.CODE_FUNCTION" methodName
       }
     }
   }

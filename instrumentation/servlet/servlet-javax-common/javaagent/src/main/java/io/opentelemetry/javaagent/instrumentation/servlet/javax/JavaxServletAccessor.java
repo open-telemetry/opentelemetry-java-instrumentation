@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.javax;
+package io.opentelemetry.javaagent.instrumentation.servlet.javax;
 
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -88,6 +89,13 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     return Collections.list(httpServletRequest.getHeaderNames());
+  }
+
+  @Override
+  public List<String> getRequestParameterValues(
+      HttpServletRequest httpServletRequest, String name) {
+    String[] values = httpServletRequest.getParameterValues(name);
+    return values == null ? Collections.emptyList() : Arrays.asList(values);
   }
 
   @Override

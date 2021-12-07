@@ -68,15 +68,15 @@ class TracingSqsEventWrapperTest extends LibraryInstrumentationSpecification {
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
             "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION" "1-22-333"
           }
         }
         span(1) {
           name("otel process")
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM}" "AmazonSQS"
-            "${SemanticAttributes.MESSAGING_OPERATION}" "process"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
           }
         }
       }

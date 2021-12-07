@@ -16,6 +16,9 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
+    if (ServerEndpoint.CAPTURE_PARAMETERS == endpoint) {
+      return "HTTP POST"
+    }
     "HTTP GET"
   }
 

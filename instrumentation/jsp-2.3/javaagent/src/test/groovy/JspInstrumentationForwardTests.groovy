@@ -87,17 +87,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "/$jspWebappContext/$forwardFromFileName"
           kind SERVER
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/$forwardFromFileName"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$forwardFromFileName"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {
@@ -153,17 +153,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "/$jspWebappContext/forwards/forwardToHtml.jsp"
           kind SERVER
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/forwards/forwardToHtml.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/forwards/forwardToHtml.jsp"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {
@@ -198,17 +198,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
           kind SERVER
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {
@@ -291,17 +291,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "/$jspWebappContext/forwards/forwardToJspForward.jsp"
           kind SERVER
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/forwards/forwardToJspForward.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/forwards/forwardToJspForward.jsp"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {
@@ -370,17 +370,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/forwards/forwardToCompileError.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/forwards/forwardToCompileError.jsp"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 500
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {
@@ -428,17 +428,17 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           kind SERVER
           status UNSET
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 404
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
-            "${SemanticAttributes.HTTP_SERVER_NAME}" String
-            "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 404
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
         span(1) {

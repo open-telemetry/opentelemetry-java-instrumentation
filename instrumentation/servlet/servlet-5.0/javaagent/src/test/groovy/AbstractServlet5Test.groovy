@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
+
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -47,6 +49,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, AUTH_REQUIRED.path, servlet)
     addServlet(context, INDEXED_CHILD.path, servlet)
     addServlet(context, CAPTURE_HEADERS.path, servlet)
+    addServlet(context, CAPTURE_PARAMETERS.path, servlet)
   }
 
   protected ServerEndpoint lastRequest
@@ -55,6 +58,11 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   AggregatedHttpRequest request(ServerEndpoint uri, String method) {
     lastRequest = uri
     super.request(uri, method)
+  }
+
+  @Override
+  boolean testCapturedRequestParameters() {
+    true
   }
 
   boolean errorEndpointUsesSendError() {

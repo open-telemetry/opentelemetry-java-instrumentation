@@ -46,8 +46,8 @@ class TracedMethodsExclusionTest extends AgentInstrumentationSpecification {
         span(0) {
           name "TestClass.annotated"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE}" TestClass.name
-            "${SemanticAttributes.CODE_FUNCTION}" "annotated"
+            "$SemanticAttributes.CODE_NAMESPACE" TestClass.name
+            "$SemanticAttributes.CODE_FUNCTION" "annotated"
           }
         }
       }

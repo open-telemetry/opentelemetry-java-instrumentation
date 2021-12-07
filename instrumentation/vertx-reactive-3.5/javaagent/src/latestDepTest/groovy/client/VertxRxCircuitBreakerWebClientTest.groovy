@@ -40,7 +40,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
 
   @Override
   HttpRequest<?> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), getPort(uri), uri.host, "$uri")
+    def request = client.requestAbs(HttpMethod.valueOf(method), "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
   }

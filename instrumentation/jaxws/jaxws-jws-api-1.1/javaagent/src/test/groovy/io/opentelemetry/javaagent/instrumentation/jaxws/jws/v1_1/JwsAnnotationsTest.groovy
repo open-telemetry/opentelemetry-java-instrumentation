@@ -24,8 +24,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceClass.doSomethingPublic"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass"
-            "${SemanticAttributes.CODE_FUNCTION.key}" "doSomethingPublic"
+            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass"
+            "$SemanticAttributes.CODE_FUNCTION" "doSomethingPublic"
           }
         }
       }
@@ -44,8 +44,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
-            "${SemanticAttributes.CODE_FUNCTION.key}" "partOfPublicInterface"
+            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
+            "$SemanticAttributes.CODE_FUNCTION" "partOfPublicInterface"
           }
         }
       }
@@ -68,8 +68,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
-            "${SemanticAttributes.CODE_FUNCTION.key}" "partOfPublicInterface"
+            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
+            "$SemanticAttributes.CODE_FUNCTION" "partOfPublicInterface"
           }
         }
       }

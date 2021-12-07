@@ -63,8 +63,8 @@ class SingleServiceCamelTest extends AgentInstrumentationSpecification implement
           kind SERVER
           name "/camelService"
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "${address.resolve("/camelService")}"
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_URL" "${address.resolve("/camelService")}"
             "apache-camel.uri" "${address.resolve("/camelService")}".replace("localhost", "0.0.0.0")
           }
         }

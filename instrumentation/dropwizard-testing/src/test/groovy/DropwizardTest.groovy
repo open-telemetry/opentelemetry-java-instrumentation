@@ -83,6 +83,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == NOT_FOUND
+  }
+
+  @Override
   boolean testPathParam() {
     true
   }
@@ -110,6 +115,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
       }
       childOf((SpanData) parent)
     }
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    sendErrorSpan(trace, index, parent)
   }
 
   static class TestApp extends Application<Configuration> {

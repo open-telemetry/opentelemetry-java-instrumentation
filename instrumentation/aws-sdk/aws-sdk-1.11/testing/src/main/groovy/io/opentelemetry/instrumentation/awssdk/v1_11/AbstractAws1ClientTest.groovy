@@ -103,13 +103,13 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           kind operation == "SendMessage" ? PRODUCER : CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "${operation}"
@@ -172,12 +172,12 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" 61
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:${UNUSABLE_PORT}"
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" 61
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://127.0.0.1:${UNUSABLE_PORT}"
             "aws.operation" "${operation}"
@@ -229,12 +229,12 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           }
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "aws.service" "Amazon S3"
             "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "GetObject"
