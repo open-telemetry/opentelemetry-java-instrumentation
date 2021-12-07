@@ -21,10 +21,6 @@ tasks {
 
       excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
 
-      if (System.getenv("CI") == null) {
-        disable("SystemOut")
-      }
-
       disable("BooleanParameter")
 
       // Doesn't work well with Java 8
