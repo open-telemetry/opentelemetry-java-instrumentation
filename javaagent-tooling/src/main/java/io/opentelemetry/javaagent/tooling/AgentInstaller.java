@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
+import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
@@ -31,6 +32,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +55,7 @@ public class AgentInstaller {
 
   private static final Logger logger;
 
-  private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -110,7 +112,9 @@ public class AgentInstaller {
 
     setBootstrapPackages(config);
 
-    runBeforeAgentListeners(agentListeners, config);
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk(config);
+
+    runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
@@ -157,7 +161,7 @@ public class AgentInstaller {
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
-    runAfterAgentListeners(agentListeners, config);
+    runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
     return resettableClassFileTransformer;
   }
 
@@ -178,9 +182,14 @@ public class AgentInstaller {
   }
 
   private static void runBeforeAgentListeners(
-      Iterable<AgentListener> agentListeners, Config config) {
+      Iterable<AgentListener> agentListeners,
+      Config config,
+      @Nullable AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     for (AgentListener agentListener : agentListeners) {
       agentListener.beforeAgent(config);
+      if (autoConfiguredSdk != null) {
+        agentListener.beforeAgent(autoConfiguredSdk);
+      }
     }
   }
 
@@ -199,7 +208,9 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners, Config config) {
+      Iterable<AgentListener> agentListeners,
+      Config config,
+      @Nullable AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -227,6 +238,9 @@ public class AgentInstaller {
     } else {
       for (AgentListener agentListener : agentListeners) {
         agentListener.afterAgent(config);
+        if (autoConfiguredSdk != null) {
+          agentListener.afterAgent(autoConfiguredSdk);
+        }
       }
     }
   }
