@@ -56,6 +56,11 @@ relative overhead.
 | Peak threads             | #          | Highest number of running threads in the VM, including agent threads
 | Network read mean        | bits/s     | Average network read rate
 | Network write mean       | bits/s     | Average network write rate
+| Average JVM user CPU     | %          | Average observed user CPU (range 0.0-1.0)
+| Max JVM user CPU         | %          | Max observed user CPU used (range 0.0-1.0) 
+| Average machine tot. CPU | %          | Average percentage of machine CPU used (range 0.0-1.0) 
+| Total GC pause nanos     | ns         | JVM time spent paused due to GC 
+| Run duration ms          | ms         | Duration of the test run, in ms
 
 ## Config
 
