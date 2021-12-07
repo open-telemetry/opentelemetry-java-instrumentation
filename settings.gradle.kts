@@ -1,15 +1,12 @@
 pluginManagement {
   plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("com.github.jk1.dependency-license-report") version "1.16"
-    id("com.gradle.plugin-publish") version "0.15.0"
+    id("com.github.jk1.dependency-license-report") version "2.0"
+    id("com.gradle.plugin-publish") version "0.18.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("me.champeau.jmh") version "0.6.5"
-    id("org.jetbrains.kotlin.jvm") version "1.5.10"
+    id("org.jetbrains.kotlin.jvm") version "1.6.0"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
-    id("ru.vyarus.animalsniffer") version "1.5.3"
   }
 }
 
