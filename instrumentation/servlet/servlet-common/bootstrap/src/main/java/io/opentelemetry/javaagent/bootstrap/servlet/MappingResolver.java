@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.servlet;
+package io.opentelemetry.javaagent.bootstrap.servlet;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.liberty;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;

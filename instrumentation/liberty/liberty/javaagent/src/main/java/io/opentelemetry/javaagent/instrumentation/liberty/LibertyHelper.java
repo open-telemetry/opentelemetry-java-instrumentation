@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;

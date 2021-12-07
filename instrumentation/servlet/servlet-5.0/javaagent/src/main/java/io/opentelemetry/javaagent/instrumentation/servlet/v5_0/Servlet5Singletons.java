@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;

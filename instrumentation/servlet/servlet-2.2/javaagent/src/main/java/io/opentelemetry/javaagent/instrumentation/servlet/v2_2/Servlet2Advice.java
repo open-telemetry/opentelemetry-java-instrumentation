@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Si
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
