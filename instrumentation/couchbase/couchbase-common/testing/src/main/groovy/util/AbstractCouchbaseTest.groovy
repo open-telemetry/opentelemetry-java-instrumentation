@@ -120,10 +120,10 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "${SemanticAttributes.DB_SYSTEM.key}" "couchbase"
-        "${SemanticAttributes.DB_NAME.key}" bucketName
-        "${SemanticAttributes.DB_STATEMENT.key}" statement
-        "${SemanticAttributes.DB_OPERATION.key}"(operation ?: spanName)
+        "$SemanticAttributes.DB_SYSTEM" "couchbase"
+        "$SemanticAttributes.DB_NAME" bucketName
+        "$SemanticAttributes.DB_STATEMENT" statement
+        "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
       }
     }
   }

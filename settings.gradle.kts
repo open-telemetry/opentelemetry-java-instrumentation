@@ -56,6 +56,12 @@ if (useScansGradleCom) {
       capture {
         isTaskInputFiles = true
       }
+
+      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
+        value("Smoke test suite", it)
+      }
     }
   }
 }
@@ -333,9 +339,7 @@ include(":instrumentation:rxjava:rxjava-3.0:library")
 include(":instrumentation:rxjava:rxjava-3.0:testing")
 include(":instrumentation:rxjava:rxjava-3.0:javaagent")
 include(":instrumentation:scala-executors:javaagent")
-include(":instrumentation:servlet:servlet-common:library")
 include(":instrumentation:servlet:servlet-common:javaagent")
-include(":instrumentation:servlet:servlet-javax-common:library")
 include(":instrumentation:servlet:servlet-javax-common:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")

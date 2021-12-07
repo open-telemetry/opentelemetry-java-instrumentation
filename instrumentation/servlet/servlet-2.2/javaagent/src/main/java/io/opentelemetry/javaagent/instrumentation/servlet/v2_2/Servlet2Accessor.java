@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
-import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAsyncListener;
+import io.opentelemetry.javaagent.instrumentation.servlet.javax.JavaxServletAccessor;
 import java.util.Collections;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;

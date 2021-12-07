@@ -118,22 +118,22 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT.key" cassandraPort
-        "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
-        "$SemanticAttributes.DB_NAME.key" keyspace
-        "$SemanticAttributes.DB_STATEMENT.key" statement
-        "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL.key" "LOCAL_ONE"
-        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC.key" "datacenter1"
-        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID.key" String
-        "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE.key" Boolean
-        "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE.key" 5000
-        "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT.key" 0
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE.key" keyspace
+        "$SemanticAttributes.NET_PEER_NAME" "localhost"
+        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT" cassandraPort
+        "$SemanticAttributes.DB_SYSTEM" "cassandra"
+        "$SemanticAttributes.DB_NAME" keyspace
+        "$SemanticAttributes.DB_STATEMENT" statement
+        "$SemanticAttributes.DB_OPERATION" operation
+        "$SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL" "LOCAL_ONE"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC" "datacenter1"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID" String
+        "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE" Boolean
+        "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE" 5000
+        "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT" 0
+        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE" keyspace
         // the SqlStatementSanitizer can't handle CREATE statements yet
-        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" table
+        "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }
     }
   }

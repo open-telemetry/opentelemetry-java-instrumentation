@@ -85,13 +85,13 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           name controllerName
           if (abortPrematch) {
             attributes {
-              "${SemanticAttributes.CODE_NAMESPACE.key}" "JaxRsFilterTest\$PrematchRequestFilter"
-              "${SemanticAttributes.CODE_FUNCTION.key}" "filter"
+              "$SemanticAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
+              "$SemanticAttributes.CODE_FUNCTION" "filter"
             }
           } else {
             attributes {
-              "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-              "${SemanticAttributes.CODE_FUNCTION.key}" "hello"
+              "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+              "$SemanticAttributes.CODE_FUNCTION" "hello"
             }
           }
         }
@@ -143,8 +143,8 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-            "${SemanticAttributes.CODE_FUNCTION.key}" "nested"
+            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$SemanticAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

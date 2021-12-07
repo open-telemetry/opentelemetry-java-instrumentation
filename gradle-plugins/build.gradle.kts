@@ -14,6 +14,7 @@ apply(from = "../version.gradle.kts")
 
 repositories {
   mavenCentral()
+  gradlePluginPortal()
 }
 
 val bbGradlePlugin by configurations.creating
@@ -32,6 +33,8 @@ dependencies {
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
+
+  implementation("gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.1.0")
 
   testImplementation("org.assertj:assertj-core:3.21.0")
 

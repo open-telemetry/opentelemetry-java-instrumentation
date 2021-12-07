@@ -28,7 +28,7 @@ public final class Jetty11Singletons {
               .addContextCustomizer(
                   (context, request, attributes) -> {
                     context = ServerSpanNaming.init(context, CONTAINER);
-                    return AppServerBridge.init(context, /* shouldRecordException= */ false);
+                    return new AppServerBridge.Builder().init(context);
                   })
               .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
 

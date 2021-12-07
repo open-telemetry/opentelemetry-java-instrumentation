@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.kafka.internal.ReceivedRecords;
@@ -73,9 +71,9 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
         // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-        VirtualField<ConsumerRecords, SpanContext> consumerRecordsSpan =
-            VirtualField.find(ConsumerRecords.class, SpanContext.class);
-        consumerRecordsSpan.set(records, spanFromContext(context).getSpanContext());
+        VirtualField<ConsumerRecords, Context> consumerRecordsContext =
+            VirtualField.find(ConsumerRecords.class, Context.class);
+        consumerRecordsContext.set(records, context);
       }
     }
   }
