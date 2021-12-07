@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   id("org.jetbrains.kotlin.jvm")
   id("otel.javaagent-instrumentation")
@@ -27,6 +29,12 @@ dependencies {
 }
 
 tasks {
+  withType(KotlinCompile::class).configureEach {
+    kotlinOptions {
+      jvmTarget = "1.8"
+    }
+  }
+
   val compileTestKotlin by existing(AbstractCompile::class)
 
   named<GroovyCompile>("compileTestGroovy") {
