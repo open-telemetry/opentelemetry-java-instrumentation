@@ -29,7 +29,12 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   @Override
   public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) throws Exception {
-    Context context = instrumenter.start(Context.current(), ctx);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, ctx)) {
+      return unwrap().serve(ctx, req);
+    }
+
+    Context context = instrumenter.start(parentContext, ctx);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {
