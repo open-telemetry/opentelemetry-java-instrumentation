@@ -37,11 +37,12 @@ public final class RpcClientMetrics implements RequestListener {
   private final DoubleHistogram clientDurationHistogram;
 
   private RpcClientMetrics(Meter meter) {
-    clientDurationHistogram = meter
-        .histogramBuilder("rpc.client.duration")
-        .setDescription("The duration of an outbound RPC invocation")
-        .setUnit("milliseconds")
-        .build();
+    clientDurationHistogram = 
+        meter
+            .histogramBuilder("rpc.client.duration")
+            .setDescription("The duration of an outbound RPC invocation")
+            .setUnit("milliseconds")
+            .build();
   }
 
   /**
@@ -56,7 +57,8 @@ public final class RpcClientMetrics implements RequestListener {
 
   @Override
   public Context start(Context context, Attributes startAttributes, long startNanos) {
-    return context.with(RPC_CLIENT_REQUEST_METRICS_STATE,
+    return context.with(
+        RPC_CLIENT_REQUEST_METRICS_STATE,
         new AutoValue_RpcClientMetrics_State(startAttributes, startNanos));
   }
 
@@ -69,7 +71,8 @@ public final class RpcClientMetrics implements RequestListener {
     }
     clientDurationHistogram.record(
         TimeUnit.NANOSECONDS.toMillis(endNanos - state.startTimeNanos()),
-        MetricsView.applyRpcView(state.startAttributes(), endAttributes), context);
+        MetricsView.applyRpcView(state.startAttributes(), endAttributes), 
+        context);
   }
 
   @AutoValue
