@@ -18,21 +18,12 @@ public final class RestletSingletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER =
       RestletTracing.create(GlobalOpenTelemetry.get()).getServerInstrumenter();
 
-  private static final ServerSpanNameSupplier<String> SERVER_SPAN_NAME =
-      (context, pattern) -> {
-        if (pattern == null || pattern.equals("")) {
-          return null;
-        }
-
-        return ServletContextPath.prepend(context, pattern);
-      };
-
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
   }
 
   public static ServerSpanNameSupplier<String> serverSpanName() {
-    return SERVER_SPAN_NAME;
+    return ServletContextPath::prepend;
   }
 
   private RestletSingletons() {}
