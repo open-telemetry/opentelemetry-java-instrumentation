@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 /**
- * filter metrics unnecessary attributes.
+ * filter rpc metrics unnecessary attributes.
  */
 public class MetricsView {
 
