@@ -12,4 +12,8 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-api")
   compileOnly(project(":instrumentation-api"))
   compileOnly(project(":javaagent-instrumentation-api"))
+
+  testImplementation("io.opentelemetry:opentelemetry-api")
+  testImplementation(project(":instrumentation-api"))
+  testImplementation(project(":javaagent-instrumentation-api"))
 }
