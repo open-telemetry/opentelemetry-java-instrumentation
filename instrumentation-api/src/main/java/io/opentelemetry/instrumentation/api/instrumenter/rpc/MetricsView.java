@@ -13,9 +13,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-/**
- * filter rpc metrics unnecessary attributes.
- */
+/** filter rpc metrics unnecessary attributes. */
+@SuppressWarnings("rawtypes")
 public class MetricsView {
 
   private static final Set<AttributeKey> recommended = buildRecommended();

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -19,7 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * guide from https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server
+ * guide from
+ * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server
  */
 @UnstableApi
 public class RpcServerMetrics implements RequestListener {
@@ -29,24 +30,20 @@ public class RpcServerMetrics implements RequestListener {
 
   private static final Logger logger = LoggerFactory.getLogger(RpcServerMetrics.class);
 
-  /**
-   * measures duration of inbound RPC.
-   */
-  private final LongHistogram serverDurationHistogram;
+  private final DoubleHistogram serverDurationHistogram;
 
   private RpcServerMetrics(Meter meter) {
     serverDurationHistogram = meter
         .histogramBuilder("rpc.server.duration")
         .setDescription("measures duration of inbound RPC")
         .setUnit("milliseconds")
-        .ofLongs().build();
+        .build();
   }
 
   /**
    * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
    * RpcServerMetrics} on an {@link
-   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}
-   * method addRequestMetrics().
+   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   @UnstableApi
   public static RequestMetrics get() {

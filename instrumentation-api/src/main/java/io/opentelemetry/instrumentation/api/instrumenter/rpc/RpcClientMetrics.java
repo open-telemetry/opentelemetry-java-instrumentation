@@ -7,19 +7,21 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * guide from https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client
+ * guide from
+ * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client
  */
 @UnstableApi
 public class RpcClientMetrics implements RequestListener {
@@ -29,24 +31,20 @@ public class RpcClientMetrics implements RequestListener {
 
   private static final Logger logger = LoggerFactory.getLogger(RpcClientMetrics.class);
 
-  /**
-   * measures duration of outbound RPC.
-   */
-  private final LongHistogram clientDurationHistogram;
+  private final DoubleHistogram clientDurationHistogram;
 
   private RpcClientMetrics(Meter meter) {
     clientDurationHistogram = meter
         .histogramBuilder("rpc.client.duration")
         .setDescription("measures duration of outbound RPC")
         .setUnit("milliseconds")
-        .ofLongs().build();
+        .build();
   }
 
   /**
    * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
    * RpcClientMetrics} on an {@link
-   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}
-   * method addRequestMetrics().
+   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   @UnstableApi
   public static RequestMetrics get() {
