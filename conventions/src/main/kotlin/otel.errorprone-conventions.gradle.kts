@@ -4,6 +4,10 @@ plugins {
   id("net.ltgt.errorprone")
 }
 
+dependencies {
+  errorprone("com.google.errorprone:error_prone_core")
+}
+
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
 
 tasks {
