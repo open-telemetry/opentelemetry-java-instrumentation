@@ -71,8 +71,12 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    HttpHeaders.setHost(request, uri.host)
+    def target = uri.path
+    if (uri.query != null) {
+      target += "?" + uri.query
+    }
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER)
+    HttpHeaders.setHost(request, uri.host + ":" + uri.port)
     request.headers().set("user-agent", userAgent())
     headers.each { k, v -> request.headers().set(k, v) }
     return request
