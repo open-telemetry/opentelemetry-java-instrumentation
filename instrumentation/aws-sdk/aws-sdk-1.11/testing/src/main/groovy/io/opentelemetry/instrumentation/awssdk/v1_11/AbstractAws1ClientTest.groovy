@@ -198,10 +198,9 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
   // TODO(anuraaga): Add events for retries.
   def "timeout and retry errors not captured"() {
     setup:
-    def response = HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500))
     // One retry so two requests.
-    server.enqueue(response)
-    server.enqueue(response)
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
     AmazonS3Client client = configureClient(AmazonS3ClientBuilder.standard())
       .withClientConfiguration(new ClientConfiguration()
         .withRequestTimeout(50 /* ms */)
