@@ -19,11 +19,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * guide from
- * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server
+ * {@link RequestListener} which keeps track of <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server">RPC
+ * server metrics</a>.
+ *
+ * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
+ * dependencies.
  */
 @UnstableApi
-public class RpcServerMetrics implements RequestListener {
+public final class RpcServerMetrics implements RequestListener {
 
   private static final ContextKey<RpcServerMetrics.State> RPC_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-server-request-metrics-state");
@@ -35,7 +39,7 @@ public class RpcServerMetrics implements RequestListener {
   private RpcServerMetrics(Meter meter) {
     serverDurationHistogram = meter
         .histogramBuilder("rpc.server.duration")
-        .setDescription("measures duration of inbound RPC")
+        .setDescription("The duration of an inbound RPC invocation")
         .setUnit("milliseconds")
         .build();
   }
@@ -64,8 +68,7 @@ public class RpcServerMetrics implements RequestListener {
           "No state present when ending context {}. Cannot reset RPC request metrics.", context);
     }
     serverDurationHistogram.record(
-        TimeUnit.MILLISECONDS.convert(
-            endNanos - state.startTimeNanos(), TimeUnit.NANOSECONDS),
+        TimeUnit.NANOSECONDS.toMillis(endNanos - state.startTimeNanos()),
         MetricsView.applyRpcView(state.startAttributes(), endAttributes), context);
   }
 

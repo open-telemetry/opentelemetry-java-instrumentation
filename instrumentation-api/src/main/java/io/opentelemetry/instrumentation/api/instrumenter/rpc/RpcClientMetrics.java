@@ -14,17 +14,20 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * guide from
- * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client
+ * {@link RequestListener} which keeps track of <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client">RPC
+ * client metrics</a>.
+ *
+ * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
+ * dependencies.
  */
 @UnstableApi
-public class RpcClientMetrics implements RequestListener {
+public final class RpcClientMetrics implements RequestListener {
 
   private static final ContextKey<RpcClientMetrics.State> RPC_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-client-request-metrics-state");
@@ -36,7 +39,7 @@ public class RpcClientMetrics implements RequestListener {
   private RpcClientMetrics(Meter meter) {
     clientDurationHistogram = meter
         .histogramBuilder("rpc.client.duration")
-        .setDescription("measures duration of outbound RPC")
+        .setDescription("The duration of an outbound RPC invocation")
         .setUnit("milliseconds")
         .build();
   }
@@ -65,8 +68,7 @@ public class RpcClientMetrics implements RequestListener {
           "No state present when ending context {}. Cannot reset RPC request metrics.", context);
     }
     clientDurationHistogram.record(
-        TimeUnit.MILLISECONDS.convert(
-            endNanos - state.startTimeNanos(), TimeUnit.NANOSECONDS),
+        TimeUnit.NANOSECONDS.toMillis(endNanos - state.startTimeNanos()),
         MetricsView.applyRpcView(state.startAttributes(), endAttributes), context);
   }
 

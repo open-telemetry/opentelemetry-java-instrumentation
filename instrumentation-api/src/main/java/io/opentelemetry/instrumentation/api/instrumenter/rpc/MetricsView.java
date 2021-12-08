@@ -13,15 +13,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-/** filter rpc metrics unnecessary attributes. */
+// this is temporary, see
+// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3962#issuecomment-906606325
 @SuppressWarnings("rawtypes")
-public class MetricsView {
+final class MetricsView {
 
   private static final Set<AttributeKey> recommended = buildRecommended();
   private static final Set<AttributeKey> optional = buildOptional();
 
   private static Set<AttributeKey> buildRecommended() {
-    // the list of Recommended metrics attributes is from
+    // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.RPC_SYSTEM);
@@ -31,7 +32,7 @@ public class MetricsView {
   }
 
   private static Set<AttributeKey> buildOptional() {
-    // the list of Recommended metrics attributes is from
+    // the list of optional metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.NET_PEER_IP);
