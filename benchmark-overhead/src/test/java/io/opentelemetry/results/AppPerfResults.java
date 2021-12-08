@@ -52,7 +52,19 @@ public class AppPerfResults {
   }
 
   double getTotalAllocatedMB() {
-    return totalAllocated / (1024.0 * 1024.0);
+    return bytesToMegs(this.totalAllocated);
+  }
+
+  double getMinHeapUsedMB(){
+    return bytesToMegs(this.heapUsed.min);
+  }
+
+  double getMaxHeapUsedMB(){
+    return bytesToMegs(this.heapUsed.max);
+  }
+
+  private double bytesToMegs(long x) {
+    return x / (1024.0 * 1024.0);
   }
 
   String getAgentName() {
