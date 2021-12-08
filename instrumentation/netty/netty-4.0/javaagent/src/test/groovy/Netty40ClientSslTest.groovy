@@ -58,8 +58,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
     def bootstrap = createBootstrap(eventLoopGroup, ["SSLv3"])
 
     def uri = server.resolveHttpsAddress("/success")
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getPath(), Unpooled.EMPTY_BUFFER)
-    HttpHeaders.setHost(request, uri.host)
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.path, Unpooled.EMPTY_BUFFER)
+    HttpHeaders.setHost(request, uri.host + ":" + uri.port)
 
     when:
     Channel channel = null
@@ -121,8 +121,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
     def bootstrap = createBootstrap(eventLoopGroup, ["TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"])
 
     def uri = server.resolveHttpsAddress("/success")
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getPath(), Unpooled.EMPTY_BUFFER)
-    HttpHeaders.setHost(request, uri.host)
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.path, Unpooled.EMPTY_BUFFER)
+    HttpHeaders.setHost(request, uri.host + ":" + uri.port)
 
     when:
     Channel channel = null

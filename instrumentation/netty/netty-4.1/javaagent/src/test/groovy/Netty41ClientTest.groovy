@@ -100,8 +100,12 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    def target = uri.path
+    if (uri.query != null) {
+      target += "?" + uri.query
+    }
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host + ":" + uri.port)
     headers.each { k, v -> request.headers().set(k, v) }
     return request
   }
@@ -177,8 +181,8 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           pipeline.addLast(new HttpClientCodec())
         }
       })
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, resolveAddress("/success").toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, "localhost")
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/success", Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, "localhost:" + server.httpPort())
     Channel ch = null
 
     when:

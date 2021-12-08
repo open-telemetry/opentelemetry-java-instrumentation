@@ -69,8 +69,8 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
   }
 
   DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.getPath(), Unpooled.EMPTY_BUFFER)
-    HttpHeaders.setHost(request, uri.host)
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.path, Unpooled.EMPTY_BUFFER)
+    HttpHeaders.setHost(request, uri.host + ":" + uri.port)
     headers.each { k, v -> request.headers().set(k, v) }
     return request
   }

@@ -75,17 +75,10 @@ public class SingleNettyConnection implements SingleConnection {
 
     channel.pipeline().addLast(new ClientHandler(result));
 
-    String url;
-    try {
-      url = new URL("http", host, port, path).toString();
-    } catch (MalformedURLException e) {
-      throw new ExecutionException(e);
-    }
-
     HttpRequest request =
         new DefaultFullHttpRequest(
-            HttpVersion.HTTP_1_1, HttpMethod.GET, url, Unpooled.EMPTY_BUFFER);
-    request.headers().set(HttpHeaderNames.HOST, host);
+            HttpVersion.HTTP_1_1, HttpMethod.GET, path, Unpooled.EMPTY_BUFFER);
+    request.headers().set(HttpHeaderNames.HOST, host + ":" + port);
     headers.forEach((k, v) -> request.headers().set(k, v));
 
     channel.writeAndFlush(request).get();
