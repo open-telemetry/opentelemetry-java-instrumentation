@@ -32,5 +32,7 @@ jmhReport {
 tasks {
   named("jmh") {
     finalizedBy(named("jmhReport"))
+
+    outputs.cacheIf { false }
   }
 }
