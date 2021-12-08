@@ -147,7 +147,7 @@ public class AppPerfResults {
       return this;
     }
 
-    Builder averageNetworkRead(long averageNetworkRead){
+    Builder averageNetworkRead(long averageNetworkRead) {
       this.averageNetworkRead = averageNetworkRead;
       return this;
     }
