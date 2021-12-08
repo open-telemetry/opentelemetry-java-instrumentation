@@ -51,12 +51,6 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  boolean testNotFound() {
-    // currently span name is /notFound which indicates it won't be low-cardinality
-    false
-  }
-
-  @Override
   Server startServer(int port) {
     ServerBuilder sb = Server.builder()
 

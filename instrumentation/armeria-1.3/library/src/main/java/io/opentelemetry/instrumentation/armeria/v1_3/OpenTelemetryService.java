@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
@@ -36,15 +35,7 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
     if (span.isRecording()) {
       ctx.log()
           .whenComplete()
-          .thenAccept(
-              log -> {
-                if (log.responseHeaders().status().equals(HttpStatus.NOT_FOUND)) {
-                  // Assume a not-found request was not served. The route we use by default will be
-                  // some fallback like `/*` which is not as useful as the requested path.
-                  span.updateName(ctx.path());
-                }
-                instrumenter.end(context, ctx, log, log.responseCause());
-              });
+          .thenAccept(log -> instrumenter.end(context, ctx, log, log.responseCause()));
     }
 
     try (Scope ignored = context.makeCurrent()) {
