@@ -8,10 +8,6 @@ plugins {
   id("otel.errorprone-conventions")
 }
 
-dependencies {
-  errorprone("com.uber.nullaway:nullaway")
-}
-
 nullaway {
   annotatedPackages.addAll("io.opentelemetry", "com.linecorp.armeria,com.google.common")
 }
