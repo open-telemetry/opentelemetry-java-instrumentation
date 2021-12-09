@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -39,52 +38,40 @@ public class Servlet3Advice {
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
+    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 
-    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-
     Context currentContext = Java8BytecodeBridge.currentContext();
     Context attachedContext = helper().getServerContext(httpServletRequest);
-    if (attachedContext != null && helper().needsRescoping(currentContext, attachedContext)) {
-      MappingResolver mappingResolver = Servlet3Singletons.getMappingResolver(servletOrFilter);
-      boolean servlet = servletOrFilter instanceof Servlet;
-      attachedContext =
-          helper().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
-      scope = attachedContext.makeCurrent();
-      // We are inside nested servlet/filter/app-server span, don't create new span
-      return;
-    }
-
-    if (attachedContext != null || ServerSpan.fromContextOrNull(currentContext) != null) {
-      // Update context with info from current request to ensure that server span gets the best
-      // possible name.
-      // In case server span was created by app server instrumentations calling updateContext
-      // returns a new context that contains servlet context path that is used in other
-      // instrumentations for naming server span.
-      MappingResolver mappingResolver = Servlet3Singletons.getMappingResolver(servletOrFilter);
-      boolean servlet = servletOrFilter instanceof Servlet;
-      Context updatedContext =
-          helper().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
-      if (currentContext != updatedContext) {
-        // updateContext updated context, need to re-scope
-        scope = updatedContext.makeCurrent();
-      }
-      // We are inside nested servlet/filter/app-server span, don't create new span
-      return;
-    }
+    Context contextToUpdate;
 
     requestContext = new ServletRequestContext<>(httpServletRequest, servletOrFilter);
+    if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
+      context = helper().start(currentContext, requestContext);
+      helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
 
-    if (!helper().shouldStart(currentContext, requestContext)) {
-      return;
+      contextToUpdate = context;
+    } else if (helper().needsRescoping(currentContext, attachedContext)) {
+      // Given request already has a context associated with it.
+      // see the needsRescoping() javadoc for more explanation
+      contextToUpdate = attachedContext;
+    } else {
+      // We are inside nested servlet/filter/app-server span, don't create new span
+      contextToUpdate = currentContext;
     }
 
-    context = helper().start(currentContext, requestContext);
-    scope = context.makeCurrent();
-
-    helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
+    // Update context with info from current request to ensure that server span gets the best
+    // possible name.
+    // In case server span was created by app server instrumentations calling updateContext
+    // returns a new context that contains servlet context path that is used in other
+    // instrumentations for naming server span.
+    MappingResolver mappingResolver = Servlet3Singletons.getMappingResolver(servletOrFilter);
+    boolean servlet = servletOrFilter instanceof Servlet;
+    contextToUpdate =
+        helper().updateContext(contextToUpdate, httpServletRequest, mappingResolver, servlet);
+    scope = contextToUpdate.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

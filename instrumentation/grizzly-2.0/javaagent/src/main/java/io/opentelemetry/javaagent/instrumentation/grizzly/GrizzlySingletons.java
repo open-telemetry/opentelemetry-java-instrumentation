@@ -32,10 +32,8 @@ public final class GrizzlySingletons {
             .addAttributesExtractor(netAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
-                (context, httpRequestPacket, startAttributes) -> {
-                  context = GrizzlyErrorHolder.init(context);
-                  return ServerSpanNaming.init(context, ServerSpanNaming.Source.CONTAINER);
-                })
+                (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
+            .addContextCustomizer(ServerSpanNaming.get())
             .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 
