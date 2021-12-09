@@ -7,18 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.updateSpanNames;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -55,7 +54,12 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Request<?> req,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan("play.request", SpanKind.INTERNAL);
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, null)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, null);
       scope = context.makeCurrent();
     }
 
@@ -67,18 +71,15 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Future<Result> responseFuture,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      // Call onRequest on return after tags are populated.
-      tracer().updateSpanName(Java8BytecodeBridge.spanFromContext(context), req);
-      // set the span name on the upstream akka/netty span
-      tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
-
       scope.close();
+
+      updateSpanNames(context, req);
       // span finished in RequestCompleteCallback
       if (throwable == null) {
         responseFuture.onComplete(
             new RequestCompleteCallback(context), ((Action<?>) thisAction).executionContext());
       } else {
-        tracer().endExceptionally(context, throwable);
+        instrumenter().end(context, null, null, throwable);
       }
     }
   }

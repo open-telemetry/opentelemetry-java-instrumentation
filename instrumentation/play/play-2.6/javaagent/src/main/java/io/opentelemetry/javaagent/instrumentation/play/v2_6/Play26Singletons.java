@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -16,12 +19,13 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public class PlayTracer extends BaseTracer {
-  private static final PlayTracer TRACER = new PlayTracer();
+public final class Play26Singletons {
 
-  public static PlayTracer tracer() {
-    return TRACER;
-  }
+  private static final String SPAN_NAME = "play.request";
+  private static final Instrumenter<Void, Void> INSTRUMENTER =
+      Instrumenter.<Void, Void>builder(
+              GlobalOpenTelemetry.get(), "io.opentelemetry.play-2.6", s -> SPAN_NAME)
+          .newInstrumenter();
 
   @Nullable private static final Method typedKeyGetUnderlying;
 
@@ -44,7 +48,25 @@ public class PlayTracer extends BaseTracer {
     typedKeyGetUnderlying = typedKeyGetUnderlyingCheck;
   }
 
-  public void updateSpanName(Span span, Request request) {
+  public static Instrumenter<Void, Void> instrumenter() {
+    return INSTRUMENTER;
+  }
+
+  public static void updateSpanNames(Context context, Request<?> request) {
+    String route = getRoute(request);
+    if (route == null) {
+      return;
+    }
+
+    Span.fromContext(context).updateName(route);
+    // set the span name on the upstream akka/netty span
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan != null) {
+      serverSpan.updateName(route);
+    }
+  }
+
+  private static String getRoute(Request<?> request) {
     if (request != null) {
       // more about routes here:
       // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
@@ -62,14 +84,11 @@ public class PlayTracer extends BaseTracer {
         }
       }
       if (defOption != null && !defOption.isEmpty()) {
-        String path = defOption.get().path();
-        span.updateName(path);
+        return defOption.get().path();
       }
     }
+    return null;
   }
 
-  @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.play-2.6";
-  }
+  private Play26Singletons() {}
 }

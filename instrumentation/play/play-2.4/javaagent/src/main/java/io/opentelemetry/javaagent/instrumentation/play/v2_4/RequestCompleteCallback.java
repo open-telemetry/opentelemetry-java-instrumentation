@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import org.slf4j.Logger;
@@ -27,11 +27,7 @@ public class RequestCompleteCallback extends AbstractFunction1<Try<Result>, Obje
   @Override
   public Object apply(Try<Result> result) {
     try {
-      if (result.isFailure()) {
-        tracer().endExceptionally(context, result.failed().get());
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, null, null, result.isFailure() ? result.failed().get() : null);
     } catch (Throwable t) {
       logger.debug("error in play instrumentation", t);
     }
