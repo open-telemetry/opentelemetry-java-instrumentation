@@ -86,7 +86,7 @@ public class WebClientConfig {
       WebClient webClient = WebClient.create();
       SpringWebfluxTracing instrumentation = SpringWebfluxTracing.create(openTelemetry);
 
-      return webClient.mutate().filter(instrumentation::addClientTracingFilter);
+      return webClient.mutate().filters(instrumentation::addClientTracingFilter);
    }
 }
 ```

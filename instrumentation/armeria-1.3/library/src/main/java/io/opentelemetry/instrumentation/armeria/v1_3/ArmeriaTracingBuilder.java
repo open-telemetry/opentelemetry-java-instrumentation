@@ -21,8 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;

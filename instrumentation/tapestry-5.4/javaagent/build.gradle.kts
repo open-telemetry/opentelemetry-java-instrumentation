@@ -16,6 +16,8 @@ otelJava {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   library("org.apache.tapestry:tapestry-core:5.4.0")
 
   testImplementation("org.eclipse.jetty:jetty-webapp:8.0.0.v20110901")

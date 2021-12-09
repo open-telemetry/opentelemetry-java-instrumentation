@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.axis2;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.axis2.TracingInvocationListenerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;

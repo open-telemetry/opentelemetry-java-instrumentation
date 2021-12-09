@@ -20,6 +20,8 @@ muzzle {
 val versions: Map<String, String> by project
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   compileOnly("org.springframework:spring-webmvc:3.1.0.RELEASE")
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
 //  compileOnly("org.springframework:spring-webmvc:2.5.6")

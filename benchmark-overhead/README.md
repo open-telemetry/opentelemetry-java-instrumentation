@@ -41,21 +41,26 @@ After all the tests are complete, the results are collected and commited back to
 For each test pass, we record the following metrics in order to compare agents and determine
 relative overhead.
 
-| metric name              | units      | description                                                     |
+| metric name              | units      | description                                              |
 |--------------------------|------------|----------------------------------------------------------|
-| Startup time             | ms         | how long it takes for the spring app to report "healthy"
-| Total allocated mem      | bytes      | across the life of the application
-| Heap (min)               | bytes      | smallest observed heap size
-| Heap (max)               | bytes      | largest observed heap size
-| Thread switch rate       | # / s      | max observed thread context switch rate
-| GC time                  | ms         | total amount of time spent paused for garbage collection
-| Request mean             | ms         | average time to handle a single web request (measured at the caller)
+| Startup time             | ms         | How long it takes for the spring app to report "healthy"
+| Total allocated mem      | bytes      | Across the life of the application
+| Heap (min)               | bytes      | Smallest observed heap size
+| Heap (max)               | bytes      | Largest observed heap size
+| Thread switch rate       | # / s      | Max observed thread context switch rate
+| GC time                  | ms         | Total amount of time spent paused for garbage collection
+| Request mean             | ms         | Average time to handle a single web request (measured at the caller)
 | Request p95              | ms         | 95th percentile time to handle a single web requ4st (measured at the caller)
 | Iteration mean           | ms         | average time to do a single pass through the k6 test script
 | Iteration p95            | ms         | 95th percentile time to do a single pass through the k6 test script
 | Peak threads             | #          | Highest number of running threads in the VM, including agent threads
 | Network read mean        | bits/s     | Average network read rate
 | Network write mean       | bits/s     | Average network write rate
+| Average JVM user CPU     | %          | Average observed user CPU (range 0.0-1.0)
+| Max JVM user CPU         | %          | Max observed user CPU used (range 0.0-1.0) 
+| Average machine tot. CPU | %          | Average percentage of machine CPU used (range 0.0-1.0) 
+| Total GC pause nanos     | ns         | JVM time spent paused due to GC 
+| Run duration ms          | ms         | Duration of the test run, in ms
 
 ## Config
 

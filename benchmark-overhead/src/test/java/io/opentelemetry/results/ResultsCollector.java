@@ -14,15 +14,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ResultsCollector {
 
   private final NamingConvention namingConvention;
+  private final Map<String, Long> runDurations;
 
-  public ResultsCollector(NamingConvention namingConvention) {
+  public ResultsCollector(NamingConvention namingConvention, Map<String, Long> runDurations) {
     this.namingConvention = namingConvention;
+    this.runDurations = runDurations;
   }
+
 
   public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
@@ -32,7 +36,10 @@ public class ResultsCollector {
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
     try {
-      AppPerfResults.Builder builder = AppPerfResults.builder().agent(agent).config(config);
+      AppPerfResults.Builder builder = AppPerfResults.builder()
+          .agent(agent)
+          .runDurationMs(runDurations.get(agent.getName()))
+          .config(config);
 
       builder = addStartupTime(builder, agent);
       builder = addK6Results(builder, agent);
@@ -78,28 +85,9 @@ public class ResultsCollector {
         .averageNetworkRead(computeAverageNetworkRead(jfrFile))
         .averageNetworkWrite(computeAverageNetworkWrite(jfrFile))
         .averageJvmUserCpu(computeAverageJvmUserCpu(jfrFile))
-        .maxJvmUserCpu(computeMaxJvmUserCpu(jfrFile));
-  }
-
-  private float computeAverageJvmUserCpu(Path jfrFile) throws IOException {
-    return JFRUtils.computeAverageFloat(jfrFile, "jdk.CPULoad", "jvmUser");
-  }
-
-  private float computeMaxJvmUserCpu(Path jfrFile) throws IOException {
-    return JFRUtils.findMaxFloat(jfrFile, "jdk.CPULoad", "jvmUser");
-  }
-
-  private long computeAverageNetworkRead(Path jfrFile) throws IOException {
-    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "readRate");
-  }
-
-  private long computeAverageNetworkWrite(Path jfrFile) throws IOException {
-    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "writeRate");
-  }
-
-  private long readPeakThreadCount(Path jfrFile) throws IOException {
-    MinMax minMax = JFRUtils.findMinMax(jfrFile, "jdk.JavaThreadStatistics", "peakCount");
-    return minMax.max;
+        .maxJvmUserCpu(computeMaxJvmUserCpu(jfrFile))
+        .averageMachineCpuTotal(computeAverageMachineCpuTotal(jfrFile))
+        .totalGcPauseNanos(computeTotalGcPauseNanos(jfrFile));
   }
 
   private long readTotalGCTime(Path jfrFile) throws IOException {
@@ -117,4 +105,34 @@ public class ResultsCollector {
   private float readMaxThreadContextSwitchRate(Path jfrFile) throws IOException {
     return JFRUtils.findMaxFloat(jfrFile, "jdk.ThreadContextSwitchRate", "switchRate");
   }
+
+  private long readPeakThreadCount(Path jfrFile) throws IOException {
+    MinMax minMax = JFRUtils.findMinMax(jfrFile, "jdk.JavaThreadStatistics", "peakCount");
+    return minMax.max;
+  }
+
+  private long computeAverageNetworkRead(Path jfrFile) throws IOException {
+    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "readRate");
+  }
+
+  private long computeAverageNetworkWrite(Path jfrFile) throws IOException {
+    return JFRUtils.findAverageLong(jfrFile, "jdk.NetworkUtilization", "writeRate");
+  }
+
+  private float computeAverageJvmUserCpu(Path jfrFile) throws IOException {
+    return JFRUtils.computeAverageFloat(jfrFile, "jdk.CPULoad", "jvmUser");
+  }
+
+  private float computeMaxJvmUserCpu(Path jfrFile) throws IOException {
+    return JFRUtils.findMaxFloat(jfrFile, "jdk.CPULoad", "jvmUser");
+  }
+
+  private float computeAverageMachineCpuTotal(Path jfrFile) throws IOException {
+    return JFRUtils.computeAverageFloat(jfrFile, "jdk.CPULoad", "machineTotal");
+  }
+
+  private long computeTotalGcPauseNanos(Path jfrFile) throws IOException {
+    return JFRUtils.sumLongEventValues(jfrFile, "jdk.GCPhasePause", "duration");
+  }
+
 }

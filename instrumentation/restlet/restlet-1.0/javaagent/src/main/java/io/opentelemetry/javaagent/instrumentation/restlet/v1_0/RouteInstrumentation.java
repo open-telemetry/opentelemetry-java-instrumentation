@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v1_0;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.restlet.v1_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.restlet.v1_0.internal.RestletServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -45,7 +45,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
       String pattern = route.getTemplate().getPattern();
 
       ServerSpanNaming.updateServerSpanName(
-          currentContext(), CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, pattern);
+          currentContext(), CONTROLLER, serverSpanName(), pattern);
     }
   }
 }

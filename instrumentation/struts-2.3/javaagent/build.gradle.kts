@@ -11,6 +11,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   library("org.apache.struts:struts2-core:2.3.1")
 
   // There was no 2.4 version at all.

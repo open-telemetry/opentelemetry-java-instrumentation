@@ -26,7 +26,7 @@ public class RabbitSingletons {
   private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter;
 
   static {
-    channelInstrumenter = createChanneInstrumenter();
+    channelInstrumenter = createChannelInstrumenter();
     receiveInstrumenter = createReceiveInstrumenter();
     deliverInstrumenter = createDeliverInstrumenter();
   }
@@ -43,7 +43,7 @@ public class RabbitSingletons {
     return deliverInstrumenter;
   }
 
-  private static Instrumenter<ChannelAndMethod, Void> createChanneInstrumenter() {
+  private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractors(

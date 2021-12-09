@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   library("org.apache.wicket:wicket:8.0.0")
 
   testImplementation(project(":testing-common"))

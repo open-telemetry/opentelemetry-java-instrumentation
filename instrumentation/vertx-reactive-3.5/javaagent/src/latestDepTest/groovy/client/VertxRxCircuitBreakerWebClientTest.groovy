@@ -62,11 +62,11 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
 
   void sendRequestWithCallback(HttpRequest<?> request, Consumer<AsyncResult> consumer) {
     breaker.execute({ command ->
-      request.rxSend().doOnSuccess {
-        command.complete(it)
-      }.doOnError {
-        command.fail(it)
-      }.subscribe()
+      request.rxSend().subscribe({ response ->
+        command.complete(response)
+      }, { throwable ->
+        command.fail(throwable)
+      })
     }, {
       consumer.accept(it)
     })
