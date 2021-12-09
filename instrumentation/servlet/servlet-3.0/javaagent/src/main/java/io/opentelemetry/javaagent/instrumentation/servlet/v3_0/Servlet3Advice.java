@@ -53,7 +53,8 @@ public class Servlet3Advice {
       helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
 
       contextToUpdate = context;
-    } else if (helper().needsRescoping(currentContext, attachedContext)) {
+    } else if (attachedContext != null
+        && helper().needsRescoping(currentContext, attachedContext)) {
       // Given request already has a context associated with it.
       // see the needsRescoping() javadoc for more explanation
       contextToUpdate = attachedContext;
