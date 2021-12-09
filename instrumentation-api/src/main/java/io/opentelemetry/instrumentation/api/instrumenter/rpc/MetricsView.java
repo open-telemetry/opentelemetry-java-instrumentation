@@ -18,10 +18,13 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class MetricsView {
 
-  private static final Set<AttributeKey> recommended = buildRecommended();
-  private static final Set<AttributeKey> optional = buildOptional();
+  private static final Set<AttributeKey> alwaysInclude = buildAlwaysInclude();
+  private static final Set<AttributeKey> clientView = buildClientView();
+  private static final Set<AttributeKey> clientFallbackView = buildClientFallbackView();
+  private static final Set<AttributeKey> serverView = buildServerView();
+  private static final Set<AttributeKey> serverFallbackView = buildServerView();
 
-  private static Set<AttributeKey> buildRecommended() {
+  private static Set<AttributeKey> buildAlwaysInclude() {
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>();
@@ -31,22 +34,70 @@ final class MetricsView {
     return view;
   }
 
-  private static Set<AttributeKey> buildOptional() {
-    // the list of optional metrics attributes is from
+  private static Set<AttributeKey> buildClientView() {
+    // the list of rpc client metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
-    Set<AttributeKey> view = new HashSet<>();
-    view.add(SemanticAttributes.NET_PEER_IP);
+    Set<AttributeKey> view = new HashSet<>(alwaysInclude);
     view.add(SemanticAttributes.NET_PEER_NAME);
     view.add(SemanticAttributes.NET_PEER_PORT);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
   }
 
-  static Attributes applyRpcView(Attributes startAttributes, Attributes endAttributes) {
-    Attributes attributes = startAttributes.toBuilder().putAll(endAttributes).build();
+  private static Set<AttributeKey> buildClientFallbackView() {
+    // the list of rpc client metrics attributes is from
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
+    Set<AttributeKey> view = new HashSet<>(alwaysInclude);
+    view.add(SemanticAttributes.NET_PEER_IP);
+    view.add(SemanticAttributes.NET_PEER_PORT);
+    view.add(SemanticAttributes.NET_TRANSPORT);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildServerView() {
+    // the list of rpc server metrics attributes is from
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
+    Set<AttributeKey> view = new HashSet<>(alwaysInclude);
+    view.add(SemanticAttributes.NET_PEER_NAME);
+    view.add(SemanticAttributes.NET_TRANSPORT);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildServerFallbackView() {
+    // the list of rpc server metrics attributes is from
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
+    Set<AttributeKey> view = new HashSet<>(alwaysInclude);
+    view.add(SemanticAttributes.NET_PEER_IP);
+    view.add(SemanticAttributes.NET_TRANSPORT);
+    return view;
+  }
+
+  private static <T> boolean containsAttribute(
+      AttributeKey<T> key, Attributes startAttributes, Attributes endAttributes) {
+    return startAttributes.get(key) != null || endAttributes.get(key) != null;
+  }
+
+  static Attributes applyClientView(Attributes startAttributes, Attributes endAttributes) {
+    Set<AttributeKey> fullSet = clientView;
+    if (!containsAttribute(SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
+      fullSet = clientFallbackView;
+    }
+    return applyView(fullSet, startAttributes, endAttributes);
+  }
+
+  static Attributes applyServerView(Attributes startAttributes, Attributes endAttributes) {
+    Set<AttributeKey> fullSet = serverView;
+    if (!containsAttribute(SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
+      fullSet = serverFallbackView;
+    }
+    return applyView(fullSet, startAttributes, endAttributes);
+  }
+
+  static Attributes applyView(
+      Set<AttributeKey> view, Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
-    applyView(filtered, attributes, recommended);
-    applyView(filtered, attributes, optional);
+    applyView(filtered, startAttributes, view);
+    applyView(filtered, endAttributes, view);
     return filtered.build();
   }
 

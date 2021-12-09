@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.rpc.MetricsView.applyClientView;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -29,6 +31,8 @@ import org.slf4j.LoggerFactory;
 @UnstableApi
 public final class RpcClientMetrics implements RequestListener {
 
+  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+
   private static final ContextKey<RpcClientMetrics.State> RPC_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-client-request-metrics-state");
 
@@ -37,7 +41,7 @@ public final class RpcClientMetrics implements RequestListener {
   private final DoubleHistogram clientDurationHistogram;
 
   private RpcClientMetrics(Meter meter) {
-    clientDurationHistogram = 
+    clientDurationHistogram =
         meter
             .histogramBuilder("rpc.client.duration")
             .setDescription("The duration of an outbound RPC invocation")
@@ -68,10 +72,11 @@ public final class RpcClientMetrics implements RequestListener {
     if (state == null) {
       logger.debug(
           "No state present when ending context {}. Cannot reset RPC request metrics.", context);
+      return;
     }
     clientDurationHistogram.record(
-        TimeUnit.NANOSECONDS.toMillis(endNanos - state.startTimeNanos()),
-        MetricsView.applyRpcView(state.startAttributes(), endAttributes), 
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
+        applyClientView(state.startAttributes(), endAttributes),
         context);
   }
 
