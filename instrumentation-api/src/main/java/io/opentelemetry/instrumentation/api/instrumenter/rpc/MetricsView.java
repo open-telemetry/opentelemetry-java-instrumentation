@@ -22,7 +22,7 @@ final class MetricsView {
   private static final Set<AttributeKey> clientView = buildClientView();
   private static final Set<AttributeKey> clientFallbackView = buildClientFallbackView();
   private static final Set<AttributeKey> serverView = buildServerView();
-  private static final Set<AttributeKey> serverFallbackView = buildServerView();
+  private static final Set<AttributeKey> serverFallbackView = buildServerFallbackView();
 
   private static Set<AttributeKey> buildAlwaysInclude() {
     // the list of recommended metrics attributes is from
