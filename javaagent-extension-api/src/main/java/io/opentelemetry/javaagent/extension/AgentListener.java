@@ -29,7 +29,10 @@ public interface AgentListener extends Ordered {
    * to be retransformed, which takes extra time, and more importantly means that fields can't be
    * added to those classes - which causes {@link VirtualField} to fall back to the less performant
    * {@link Cache} implementation for those classes.
+   *
+   * @deprecated Use {@link #beforeAgent(Config, AutoConfiguredOpenTelemetrySdk)}
    */
+  @Deprecated
   default void beforeAgent(Config config) {}
 
   /**
@@ -41,12 +44,16 @@ public interface AgentListener extends Ordered {
    * added to those classes - which causes {@link VirtualField} to fall back to the less performant
    * {@link Cache} implementation for those classes.
    */
-  default void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
+  default void beforeAgent(
+      Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
 
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
    * on an {@link Instrumentation}.
+   *
+   * @deprecated Use {@link #afterAgent(Config, AutoConfiguredOpenTelemetrySdk)}
    */
+  @Deprecated
   default void afterAgent(Config config) {}
 
   /**
@@ -54,5 +61,6 @@ public interface AgentListener extends Ordered {
    * on an {@link Instrumentation}. Not called if noop api enabled via {@code
    * otel.javaagent.experimental.use-noop-api}.
    */
-  default void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
+  default void afterAgent(
+      Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
 }

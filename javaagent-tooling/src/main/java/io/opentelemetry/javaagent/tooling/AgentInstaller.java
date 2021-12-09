@@ -56,6 +56,7 @@ public class AgentInstaller {
   private static final Logger logger;
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -112,9 +113,13 @@ public class AgentInstaller {
 
     setBootstrapPackages(config);
 
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk(config);
+    boolean enableNoopApi = config.getBoolean(JAVAAGENT_NOOP_CONFIG, false);
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
+        installOpenTelemetrySdk(enableNoopApi, config);
 
-    runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
+    if (!enableNoopApi) {
+      runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
+    }
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
@@ -161,7 +166,11 @@ public class AgentInstaller {
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
-    runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
+
+    if (!enableNoopApi) {
+      runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
+    }
+
     return resettableClassFileTransformer;
   }
 
@@ -187,9 +196,7 @@ public class AgentInstaller {
       @Nullable AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     for (AgentListener agentListener : agentListeners) {
       agentListener.beforeAgent(config);
-      if (autoConfiguredSdk != null) {
-        agentListener.beforeAgent(autoConfiguredSdk);
-      }
+      agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
 
@@ -238,9 +245,7 @@ public class AgentInstaller {
     } else {
       for (AgentListener agentListener : agentListeners) {
         agentListener.afterAgent(config);
-        if (autoConfiguredSdk != null) {
-          agentListener.afterAgent(autoConfiguredSdk);
-        }
+        agentListener.afterAgent(config, autoConfiguredSdk);
       }
     }
   }

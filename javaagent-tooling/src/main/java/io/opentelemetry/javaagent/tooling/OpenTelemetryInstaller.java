@@ -25,18 +25,16 @@ import org.slf4j.LoggerFactory;
 public class OpenTelemetryInstaller {
   private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
 
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
-
   /**
    * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
    * AutoConfiguredOpenTelemetrySdk}.
    *
-   * @return the {@link AutoConfiguredOpenTelemetrySdk}, or null if {@link #JAVAAGENT_NOOP_CONFIG}
-   *     is enabled
+   * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
   @Nullable
-  public static synchronized AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(Config config) {
-    if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
+  static synchronized AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
+      boolean enableNoopApi, Config config) {
+    if (enableNoopApi) {
       logger.info("Tracing and metrics are disabled because noop is enabled.");
       GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
       return null;

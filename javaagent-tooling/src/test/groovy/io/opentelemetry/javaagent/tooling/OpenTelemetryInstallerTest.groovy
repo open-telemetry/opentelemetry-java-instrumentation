@@ -21,15 +21,8 @@ class OpenTelemetryInstallerTest extends Specification {
   }
 
   def "should initialize noop"() {
-    given:
-    def config = Config.builder()
-      .readProperties([
-        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "true"
-      ])
-      .build()
-
     when:
-    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(config)
+    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(true, Config.builder().build())
 
     then:
     otelInstaller == null
@@ -37,15 +30,8 @@ class OpenTelemetryInstallerTest extends Specification {
   }
 
   def "should NOT initialize noop"() {
-    given:
-    def config = Config.builder()
-      .readProperties([
-        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "false",
-      ])
-      .build()
-
     when:
-    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(config)
+    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(false, Config.builder().build())
 
     then:
     otelInstaller != null
