@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import play.api.mvc.Result;
@@ -22,14 +22,14 @@ public class ResponseFutureWrapper {
         new AbstractFunction1<Result, Result>() {
           @Override
           public Result apply(Result result) {
-            tracer().end(context);
+            instrumenter().end(context, null, null, null);
             return result;
           }
         },
         new AbstractFunction1<Throwable, Throwable>() {
           @Override
           public Throwable apply(Throwable throwable) {
-            tracer().endExceptionally(context, throwable);
+            instrumenter().end(context, null, null, throwable);
             return throwable;
           }
         },
