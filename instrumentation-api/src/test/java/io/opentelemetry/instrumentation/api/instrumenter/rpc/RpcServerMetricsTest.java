@@ -44,16 +44,16 @@ class RpcServerMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_PEER_NAME, "example.com")
-            .put(SemanticAttributes.NET_PEER_IP, "127.0.0.1")
-            .put(SemanticAttributes.NET_PEER_PORT, 8080)
+            .put(SemanticAttributes.NET_HOST_NAME, "example.com")
+            .put(SemanticAttributes.NET_HOST_IP, "127.0.0.1")
+            .put(SemanticAttributes.NET_HOST_PORT, 8080)
             .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_PEER_IP, "127.0.0.1")
-            .put(SemanticAttributes.NET_PEER_PORT, 8080)
+            .put(SemanticAttributes.NET_HOST_IP, "127.0.0.1")
+            .put(SemanticAttributes.NET_HOST_PORT, 8080)
             .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
             .build();
 
@@ -110,7 +110,7 @@ class RpcServerMetricsTest {
                                             attributeEntry("rpc.system", "grpc"),
                                             attributeEntry("rpc.service", "myservice.EchoService"),
                                             attributeEntry("rpc.method", "exampleMethod"),
-                                            attributeEntry("net.peer.name", "example.com"),
+                                            attributeEntry("net.host.name", "example.com"),
                                             attributeEntry("net.transport", "ip_tcp"));
                                     MetricAssertions.assertThat(point).exemplars().hasSize(1);
                                     MetricAssertions.assertThat(point.getExemplars().get(0))
@@ -142,7 +142,7 @@ class RpcServerMetricsTest {
                                             attributeEntry("rpc.system", "grpc"),
                                             attributeEntry("rpc.service", "myservice.EchoService"),
                                             attributeEntry("rpc.method", "exampleMethod"),
-                                            attributeEntry("net.peer.ip", "127.0.0.1"),
+                                            attributeEntry("net.host.ip", "127.0.0.1"),
                                             attributeEntry("net.transport", "ip_tcp"));
                                   }));
             });

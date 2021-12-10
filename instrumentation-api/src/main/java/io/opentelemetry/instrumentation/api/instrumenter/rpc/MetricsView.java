@@ -58,7 +58,7 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_PEER_NAME);
+    view.add(SemanticAttributes.NET_HOST_NAME);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
   }
@@ -67,7 +67,7 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_PEER_IP);
+    view.add(SemanticAttributes.NET_HOST_IP);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
   }
@@ -87,7 +87,7 @@ final class MetricsView {
 
   static Attributes applyServerView(Attributes startAttributes, Attributes endAttributes) {
     Set<AttributeKey> fullSet = serverView;
-    if (!containsAttribute(SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
+    if (!containsAttribute(SemanticAttributes.NET_HOST_NAME, startAttributes, endAttributes)) {
       fullSet = serverFallbackView;
     }
     return applyView(fullSet, startAttributes, endAttributes);
