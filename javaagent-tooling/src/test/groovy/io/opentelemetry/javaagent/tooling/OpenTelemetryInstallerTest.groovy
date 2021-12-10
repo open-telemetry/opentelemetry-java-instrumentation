@@ -20,18 +20,9 @@ class OpenTelemetryInstallerTest extends Specification {
     GlobalOpenTelemetry.resetForTest()
   }
 
-  def "should initialize noop"() {
+  def "should initialize GlobalOpenTelemetry"() {
     when:
-    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(true, Config.builder().build())
-
-    then:
-    otelInstaller == null
-    GlobalOpenTelemetry.getTracerProvider() == NoopOpenTelemetry.getInstance().getTracerProvider()
-  }
-
-  def "should NOT initialize noop"() {
-    when:
-    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(false, Config.builder().build())
+    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(Config.builder().build())
 
     then:
     otelInstaller != null
