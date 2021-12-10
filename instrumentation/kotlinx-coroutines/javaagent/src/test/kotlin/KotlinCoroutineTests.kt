@@ -17,6 +17,7 @@ import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
@@ -37,9 +38,9 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
       }
     }
 
-    producer.consumeAsFlow().collect {
+    producer.consumeAsFlow().onEach {
       tracedChild("consume_$it")
-    }
+    }.collect()
   }
 
   fun tracePreventedByCancellation() {
