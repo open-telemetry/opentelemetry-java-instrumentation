@@ -16,4 +16,6 @@ dependencies {
 
   // metrics are unstable, do not expose as api
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")
+  // autoconfigure is unstable, do not expose as api
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
