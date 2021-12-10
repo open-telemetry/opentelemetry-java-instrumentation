@@ -1,5 +1,4 @@
 plugins {
-  `java-gradle-plugin`
   `kotlin-dsl`
   // When updating, update below in dependencies too
   id("com.diffplug.spotless") version "6.0.4"
@@ -29,8 +28,7 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin")
-  implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin")
+  implementation("io.opentelemetry.instrumentation:gradle-plugins:1.9.1-alpha")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")

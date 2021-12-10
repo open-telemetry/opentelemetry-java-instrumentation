@@ -13,8 +13,6 @@ import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -39,13 +37,7 @@ public class VertxSingleConnection implements SingleConnection {
       throws ExecutionException, InterruptedException {
     String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
 
-    String url;
-    try {
-      url = new URL("http", host, port, path).toString();
-    } catch (MalformedURLException e) {
-      throw new ExecutionException(e);
-    }
-    HttpClientRequest request = httpClient.request(HttpMethod.GET, port, host, url);
+    HttpClientRequest request = httpClient.request(HttpMethod.GET, port, host, path);
     headers.forEach(request::putHeader);
 
     CompletableFuture<HttpClientResponse> future = new CompletableFuture<>();
