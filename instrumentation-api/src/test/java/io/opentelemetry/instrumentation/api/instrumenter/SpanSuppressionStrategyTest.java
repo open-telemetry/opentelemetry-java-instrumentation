@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;

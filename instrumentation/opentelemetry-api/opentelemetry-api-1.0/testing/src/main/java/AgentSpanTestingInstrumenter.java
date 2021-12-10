@@ -9,8 +9,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
-import java.lang.reflect.Field;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
 public final class AgentSpanTestingInstrumenter {
 
@@ -35,7 +34,7 @@ public final class AgentSpanTestingInstrumenter {
   public static Context startSpanWithAllKeys(String name) {
     Context context = start(name, SpanKind.INTERNAL);
     Span span = Span.fromContext(context);
-    for (SpanKey spanKey : SpanKeyAccess.getSpanKeys()) {
+    for (SpanKey spanKey : getSpanKeys()) {
       context = spanKey.storeInContext(context, span);
     }
     return context;
@@ -59,30 +58,17 @@ public final class AgentSpanTestingInstrumenter {
     }
   }
 
-  private static final class SpanKeyAccess {
-
-    public static SpanKey[] getSpanKeys() {
-      return new SpanKey[] {
-        SpanKey.SERVER,
-        getSpanKeyByName("HTTP_CLIENT"),
-        getSpanKeyByName("RPC_CLIENT"),
-        getSpanKeyByName("DB_CLIENT"),
-        SpanKey.ALL_CLIENTS,
-        getSpanKeyByName("PRODUCER"),
-        getSpanKeyByName("CONSUMER_RECEIVE"),
-        getSpanKeyByName("CONSUMER_PROCESS")
-      };
-    }
-
-    private static SpanKey getSpanKeyByName(String name) {
-      try {
-        Field field = SpanKey.class.getDeclaredField(name);
-        field.setAccessible(true);
-        return (SpanKey) field.get(name);
-      } catch (NoSuchFieldException | IllegalAccessException exception) {
-        throw new IllegalStateException("Failed to find span key named " + name, exception);
-      }
-    }
+  private static SpanKey[] getSpanKeys() {
+    return new SpanKey[] {
+      SpanKey.SERVER,
+      SpanKey.HTTP_CLIENT,
+      SpanKey.RPC_CLIENT,
+      SpanKey.DB_CLIENT,
+      SpanKey.ALL_CLIENTS,
+      SpanKey.PRODUCER,
+      SpanKey.CONSUMER_RECEIVE,
+      SpanKey.CONSUMER_PROCESS
+    };
   }
 
   private AgentSpanTestingInstrumenter() {}

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import javax.annotation.Nullable;
 
 /**
