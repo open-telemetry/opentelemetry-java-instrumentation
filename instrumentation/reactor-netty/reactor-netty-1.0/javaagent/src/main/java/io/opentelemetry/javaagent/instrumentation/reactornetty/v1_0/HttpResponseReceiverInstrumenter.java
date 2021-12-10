@@ -18,12 +18,10 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
-import reactor.netty.ConnectionObserver;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
-import reactor.netty.http.client.HttpClientState;
 
 public final class HttpResponseReceiverInstrumenter {
 
@@ -46,8 +44,9 @@ public final class HttpResponseReceiverInstrumenter {
           client
               .mapConnect(new StartOperation(contextHolder, config))
               .doOnRequest(new PropagateContext(contextHolder))
-              .doOnRequestError(new EndOperationWithError(contextHolder, config))
-              .observe(new EndOperation(contextHolder, config));
+              .doOnRequestError(new EndOperationWithRequestError(contextHolder, config))
+              .doOnResponseError(new EndOperationWithResponseError(contextHolder, config))
+              .doAfterResponseSuccess(new EndOperationWithSuccess(contextHolder, config));
 
       // modified should always be an HttpClientFinalizer too
       if (modified instanceof HttpClient.ResponseReceiver) {
@@ -122,12 +121,13 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class EndOperationWithError implements BiConsumer<HttpClientRequest, Throwable> {
+  static final class EndOperationWithRequestError
+      implements BiConsumer<HttpClientRequest, Throwable> {
 
     private final ContextHolder contextHolder;
     private final HttpClientConfig config;
 
-    EndOperationWithError(ContextHolder contextHolder, HttpClientConfig config) {
+    EndOperationWithRequestError(ContextHolder contextHolder, HttpClientConfig config) {
       this.contextHolder = contextHolder;
       this.config = config;
     }
@@ -142,42 +142,44 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class EndOperation implements ConnectionObserver {
+  static final class EndOperationWithResponseError
+      implements BiConsumer<HttpClientResponse, Throwable> {
 
     private final ContextHolder contextHolder;
     private final HttpClientConfig config;
 
-    EndOperation(ContextHolder contextHolder, HttpClientConfig config) {
+    EndOperationWithResponseError(ContextHolder contextHolder, HttpClientConfig config) {
       this.contextHolder = contextHolder;
       this.config = config;
     }
 
     @Override
-    public void onStateChange(Connection connection, State newState) {
-      if (newState != HttpClientState.RESPONSE_COMPLETED) {
-        return;
-      }
-
+    public void accept(HttpClientResponse response, Throwable error) {
       Context context = contextHolder.context;
       if (context == null) {
         return;
       }
+      instrumenter().end(context, config, response, error);
+    }
+  }
 
-      // connection is actually an instance of HttpClientOperations - a package private class that
-      // implements both Connection and HttpClientResponse
-      if (connection instanceof HttpClientResponse) {
-        HttpClientResponse response = (HttpClientResponse) connection;
-        instrumenter().end(context, config, response, null);
-      }
+  static final class EndOperationWithSuccess implements BiConsumer<HttpClientResponse, Connection> {
+
+    private final ContextHolder contextHolder;
+    private final HttpClientConfig config;
+
+    EndOperationWithSuccess(ContextHolder contextHolder, HttpClientConfig config) {
+      this.contextHolder = contextHolder;
+      this.config = config;
     }
 
     @Override
-    public void onUncaughtException(Connection connection, Throwable error) {
+    public void accept(HttpClientResponse response, Connection connection) {
       Context context = contextHolder.context;
       if (context == null) {
         return;
       }
-      instrumenter().end(context, config, null, error);
+      instrumenter().end(context, config, response, null);
     }
   }
 
