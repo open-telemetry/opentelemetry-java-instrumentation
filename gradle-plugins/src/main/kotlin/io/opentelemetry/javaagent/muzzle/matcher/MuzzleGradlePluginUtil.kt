@@ -55,10 +55,10 @@ class MuzzleGradlePluginUtil {
     fun assertInstrumentationMuzzled(agentClassLoader: ClassLoader, userClassLoader: ClassLoader, assertPass: Boolean) {
       val matcherClass = agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher")
 
-      // We cannot reference Mismatch class directly here, because we are loaded from a differen
+      // We cannot reference Mismatch class directly here, because we are loaded from a different
       // classloader.
 
-      // We cannot reference Mismatch class directly here, because we are loaded from a differen
+      // We cannot reference Mismatch class directly here, because we are loaded from a different
       // classloader.
       val allMismatches = matcherClass
         .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType)
