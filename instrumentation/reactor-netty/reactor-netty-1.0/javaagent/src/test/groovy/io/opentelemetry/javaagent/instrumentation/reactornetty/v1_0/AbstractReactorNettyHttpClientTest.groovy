@@ -191,6 +191,32 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     }
   }
 
+  def "should not leak connections"() {
+    given:
+    def uniqueChannelHashes = new HashSet<>()
+    def httpClient = createHttpClient()
+      .doOnConnect({ uniqueChannelHashes.add(it.channelHash())})
+    def uri = "http://localhost:${server.httpPort()}/success"
+
+    def count = 100
+
+    when:
+    (1..count).forEach({
+      runWithSpan("parent") {
+        def status = httpClient.get().uri(uri)
+          .responseSingle { resp, content ->
+            // Make sure to consume content since that's when we close the span.
+            content.map { resp.status().code() }
+          }.block()
+        assert status == 200
+      }
+    })
+
+    then:
+    traces.size() == count
+    uniqueChannelHashes.size() == 1
+  }
+
   static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
     def expectedSpanContext = expected.spanContext
     def actualSpanContext = actual.get().spanContext
