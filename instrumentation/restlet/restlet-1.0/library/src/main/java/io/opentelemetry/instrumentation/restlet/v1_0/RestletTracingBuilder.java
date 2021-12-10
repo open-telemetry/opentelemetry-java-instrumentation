@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import java.util.ArrayList;
 import java.util.List;
 import org.restlet.data.Request;
@@ -79,7 +78,6 @@ public final class RestletTracingBuilder {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(ServerSpanNaming.get())
             .newServerInstrumenter(RestletHeadersGetter.INSTANCE);
 
     return new RestletTracing(instrumenter);
