@@ -71,7 +71,7 @@ public final class RpcServerMetrics implements RequestListener {
     State state = context.get(RPC_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
-          "No state present when ending context {}. Cannot reset RPC request metrics.", context);
+          "No state present when ending context {}. Cannot record RPC request metrics.", context);
       return;
     }
     serverDurationHistogram.record(
