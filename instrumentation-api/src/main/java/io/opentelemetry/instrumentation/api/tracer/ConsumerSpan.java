@@ -14,7 +14,11 @@ import javax.annotation.Nullable;
 /**
  * This class encapsulates the context key for storing the current {@link SpanKind#CONSUMER} span in
  * the {@link Context}.
+ *
+ * @deprecated This class should not be used directly; it's functionality is encapsulated inside the
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.Instrumenter Instrumenter API}.
  */
+@Deprecated
 public final class ConsumerSpan {
 
   /**
