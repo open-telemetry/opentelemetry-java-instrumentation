@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,7 +136,8 @@ public final class ArmeriaTracingBuilder {
                 HttpSpanStatusExtractor.create(serverAttributesExtractor)))
         .addAttributesExtractor(new ArmeriaNetServerAttributesExtractor())
         .addAttributesExtractor(serverAttributesExtractor)
-        .addRequestMetrics(HttpServerMetrics.get());
+        .addRequestMetrics(HttpServerMetrics.get())
+        .addContextCustomizer(ServerSpanNaming.get());
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
