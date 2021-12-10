@@ -291,8 +291,31 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def traceId = "00000000000000000000000000000123"
     def parentId = "0000000000000456"
     def request = AggregatedHttpRequest.of(
+      // intentionally sending mixed-case "tracePARENT" to make sure that TextMapGetters are not case-sensitive
       request(SUCCESS, method).headers().toBuilder()
-        .set("traceparent", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
+        .set("tracePARENT", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
+        .build())
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
+
+    and:
+    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
+
+    where:
+    method = "GET"
+  }
+
+  // make sure that TextMapGetters are not case-sensitive
+  def "test success with uppercase TRACEPARENT header"() {
+    setup:
+    def traceId = "00000000000000000000000000000123"
+    def parentId = "0000000000000456"
+    def request = AggregatedHttpRequest.of(
+      request(SUCCESS, method).headers().toBuilder()
+        .set("TRACEPARENT", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
         .build())
     def response = client.execute(request).aggregate().join()
 
