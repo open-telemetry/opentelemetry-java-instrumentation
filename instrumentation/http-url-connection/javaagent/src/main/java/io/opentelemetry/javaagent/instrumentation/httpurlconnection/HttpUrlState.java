@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 public class HttpUrlState {
   public final Context context;
   public boolean finished;
+  public int statusCode;
 
   public HttpUrlState(Context context) {
     this.context = context;

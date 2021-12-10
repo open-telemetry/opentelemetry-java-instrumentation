@@ -15,17 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -137,7 +132,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
                 .end(
                     httpUrlState.context,
                     connection,
-                    responseCode > 0 ? responseCode : null,
+                    responseCode > 0 ? responseCode : httpUrlState.statusCode,
                     throwable);
           }
           httpUrlState.finished = true;
@@ -167,12 +162,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
       HttpUrlState httpUrlState = storage.get(connection);
       if (httpUrlState != null) {
-        Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, returnValue);
-        StatusCode statusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(returnValue);
-        if (statusCode != StatusCode.UNSET) {
-          span.setStatus(statusCode);
-        }
+        httpUrlState.statusCode = returnValue;
       }
     }
   }
