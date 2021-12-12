@@ -291,6 +291,10 @@ jobs:
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
+      - name: Run muzzle check against extension
+        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
+
   accept-pr:
     needs: [ build, test, smoke-test, muzzle, examples ]
     runs-on: ubuntu-latest
