@@ -24,7 +24,8 @@ dependencies {
 }
 
 compileJava {
-  options.release = 8
+  // Quarkus 2.0+ does not support Java 8
+  options.release = 11
 }
 
 def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
