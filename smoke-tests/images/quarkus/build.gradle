@@ -43,3 +43,5 @@ jib {
     }
   }
 }
+
+tasks.jibDockerBuild.dependsOn quarkusBuild
