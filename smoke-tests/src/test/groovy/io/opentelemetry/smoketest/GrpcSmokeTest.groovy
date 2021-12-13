@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20210917.1246635135"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20211213.1570880329"
   }
 
   @Unroll
@@ -60,6 +60,6 @@ class GrpcSmokeTest extends SmokeTest {
     channel.shutdown()
 
     where:
-    jdk << [8, 11, 16]
+    jdk << [8, 11, 17]
   }
 }
