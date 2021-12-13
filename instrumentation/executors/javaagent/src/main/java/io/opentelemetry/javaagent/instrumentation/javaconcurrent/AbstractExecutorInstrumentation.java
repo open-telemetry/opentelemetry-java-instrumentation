@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -99,7 +100,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
         "scala.concurrent.impl.ExecutionContextImpl",
       };
       Set<String> combined = new HashSet<>(Arrays.asList(includeExecutors));
-      combined.addAll(Config.get().getList(EXECUTORS_INCLUDE_PROPERTY_NAME));
+      combined.addAll(Config.get().getList(EXECUTORS_INCLUDE_PROPERTY_NAME, emptyList()));
       this.includeExecutors = Collections.unmodifiableSet(combined);
 
       String[] includePrefixes = {"slick.util.AsyncExecutor$"};

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer.net;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -12,7 +14,6 @@ import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -28,12 +29,12 @@ public final class NetPeerAttributes {
 
   public static final NetPeerAttributes INSTANCE =
       new NetPeerAttributes(
-          Config.get().getMap("otel.instrumentation.common.peer-service-mapping"));
+          Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
 
   private final Map<String, String> peerServiceMapping;
 
   public NetPeerAttributes() {
-    this(Collections.emptyMap());
+    this(emptyMap());
   }
 
   public NetPeerAttributes(Map<String, String> peerServiceMapping) {
