@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
