@@ -53,9 +53,11 @@ public abstract class CapturedHttpHeaders {
     // fall back to the experimental properties if the stable one isn't supplied
     return CapturedHttpHeaders.create(
         config.getList(
-            CLIENT_REQUEST_PROPERTY, config.getList(EXPERIMENTAL_CLIENT_REQUEST_PROPERTY)),
+            CLIENT_REQUEST_PROPERTY,
+            config.getList(EXPERIMENTAL_CLIENT_REQUEST_PROPERTY, emptyList())),
         config.getList(
-            CLIENT_RESPONSE_PROPERTY, config.getList(EXPERIMENTAL_CLIENT_RESPONSE_PROPERTY)));
+            CLIENT_RESPONSE_PROPERTY,
+            config.getList(EXPERIMENTAL_CLIENT_RESPONSE_PROPERTY, emptyList())));
   }
 
   private static final String SERVER_REQUEST_PROPERTY =
@@ -77,9 +79,11 @@ public abstract class CapturedHttpHeaders {
     // fall back to the experimental properties if the stable one isn't supplied
     return CapturedHttpHeaders.create(
         config.getList(
-            SERVER_REQUEST_PROPERTY, config.getList(EXPERIMENTAL_SERVER_REQUEST_PROPERTY)),
+            SERVER_REQUEST_PROPERTY,
+            config.getList(EXPERIMENTAL_SERVER_REQUEST_PROPERTY, emptyList())),
         config.getList(
-            SERVER_RESPONSE_PROPERTY, config.getList(EXPERIMENTAL_SERVER_RESPONSE_PROPERTY)));
+            SERVER_RESPONSE_PROPERTY,
+            config.getList(EXPERIMENTAL_SERVER_RESPONSE_PROPERTY, emptyList())));
   }
 
   /**
