@@ -2,15 +2,15 @@ import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 plugins {
-  id 'java'
-  id 'com.google.cloud.tools.jib' version '2.5.0'
+  id "java"
+  id "com.google.cloud.tools.jib" version "2.5.0"
   id "com.bmuschko.docker-remote-api" version "6.7.0"
-  id 'com.github.johnrengelman.shadow' version '6.1.0'
+  id "com.github.johnrengelman.shadow" version "6.1.0"
   id "de.undercouch.download" version "4.1.1"
 }
 
-group = 'io.opentelemetry'
-version = '0.0.1-SNAPSHOT'
+group = "io.opentelemetry"
+version = "0.0.1-SNAPSHOT"
 
 repositories {
   mavenCentral()
@@ -28,7 +28,7 @@ dependencies {
 
 shadowJar {
   manifest {
-    attributes 'Main-Class': 'io.opentelemetry.smoketest.fakebackend.FakeBackendMain'
+    attributes "Main-Class": "io.opentelemetry.smoketest.fakebackend.FakeBackendMain"
   }
 }
 

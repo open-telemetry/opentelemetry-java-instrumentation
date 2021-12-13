@@ -1,12 +1,12 @@
 plugins {
-  id 'org.springframework.boot' version '2.3.2.RELEASE'
-  id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-  id 'java'
-  id 'com.google.cloud.tools.jib' version '2.5.0'
+  id "org.springframework.boot" version "2.3.2.RELEASE"
+  id "io.spring.dependency-management" version "1.0.9.RELEASE"
+  id "java"
+  id "com.google.cloud.tools.jib" version "2.5.0"
 }
 
-group = 'io.opentelemetry'
-version = '0.0.1-SNAPSHOT'
+group = "io.opentelemetry"
+version = "0.0.1-SNAPSHOT"
 
 repositories {
   mavenCentral()
@@ -22,9 +22,9 @@ repositories {
 dependencies {
   implementation platform("io.opentelemetry:opentelemetry-bom:1.0.0")
 
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'io.opentelemetry:opentelemetry-extension-annotations'
-  implementation 'io.opentelemetry:opentelemetry-api'
+  implementation "org.springframework.boot:spring-boot-starter-web"
+  implementation "io.opentelemetry:opentelemetry-extension-annotations"
+  implementation "io.opentelemetry:opentelemetry-api"
 }
 
 compileJava {
