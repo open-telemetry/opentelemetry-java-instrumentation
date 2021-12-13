@@ -21,7 +21,11 @@ import javax.annotation.Nullable;
  * @param <CONNECTION> type of the database connection.
  * @param <STATEMENT> type of the database statement being executed.
  * @param <SANITIZEDSTATEMENT> type of the database statement after sanitization.
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.db the database semantic
+ *     convention utilities package} instead.
  */
+@Deprecated
 public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATEMENT>
     extends BaseTracer {
   private static final String DB_QUERY = "DB Query";

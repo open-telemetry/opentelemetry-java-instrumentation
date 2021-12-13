@@ -253,7 +253,7 @@ jobs:
 
       - name: Run muzzle
         # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.5.1
+        uses: nick-invision/retry@v2.6.0
         with:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
@@ -294,6 +294,10 @@ jobs:
 
       - name: Build extension
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/extension
+
+      - name: Run muzzle check against extension
+        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
   snapshot:

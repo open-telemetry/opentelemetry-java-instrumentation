@@ -1,7 +1,8 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "5.16.0"
+  // TEMPORARY NOTE: Intellij (re-)import is currently failing with 6.0.3 and 6.0.4
+  id("com.diffplug.spotless") version "6.0.2"
 }
 
 spotless {
@@ -35,7 +36,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:5.16.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.0.2")
   implementation("com.google.guava:guava:31.0.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.0")
@@ -45,7 +46,7 @@ dependencies {
   implementation("org.gradle:test-retry-gradle-plugin:1.3.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.4")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.22")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.3")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.6")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.2")

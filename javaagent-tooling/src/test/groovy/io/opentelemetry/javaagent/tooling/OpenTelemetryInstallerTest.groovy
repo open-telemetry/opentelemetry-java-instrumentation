@@ -12,7 +12,6 @@ import spock.lang.Specification
 
 class OpenTelemetryInstallerTest extends Specification {
 
-
   void setup() {
     GlobalOpenTelemetry.resetForTest()
   }
@@ -21,40 +20,12 @@ class OpenTelemetryInstallerTest extends Specification {
     GlobalOpenTelemetry.resetForTest()
   }
 
-
-  def "should initialize noop"() {
-
-    given:
-    def config = Config.builder()
-      .readProperties([
-        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "true",
-        (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG): "true"
-      ])
-      .build()
-
+  def "should initialize GlobalOpenTelemetry"() {
     when:
-    def otelInstaller = new OpenTelemetryInstaller()
-    otelInstaller.beforeAgent(config)
+    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(Config.builder().build())
 
     then:
-    GlobalOpenTelemetry.getTracerProvider() == NoopOpenTelemetry.getInstance().getTracerProvider()
-  }
-
-  def "should NOT initialize noop"() {
-
-    given:
-    def config = Config.builder()
-      .readProperties([
-        (OpenTelemetryInstaller.JAVAAGENT_NOOP_CONFIG)   : "true",
-        (OpenTelemetryInstaller.JAVAAGENT_ENABLED_CONFIG): "false"
-      ])
-      .build()
-
-    when:
-    def otelInstaller = new OpenTelemetryInstaller()
-    otelInstaller.beforeAgent(config)
-
-    then:
+    otelInstaller != null
     GlobalOpenTelemetry.getTracerProvider() != NoopOpenTelemetry.getInstance().getTracerProvider()
   }
 

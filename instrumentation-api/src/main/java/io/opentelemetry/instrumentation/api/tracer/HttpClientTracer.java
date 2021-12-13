@@ -24,6 +24,14 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Base class for implementing Tracers for HTTP clients.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.http the HTTP semantic
+ *     convention utilities package} instead.
+ */
+@Deprecated
 public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseTracer {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpClientTracer.class);
