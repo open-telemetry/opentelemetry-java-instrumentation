@@ -47,7 +47,7 @@ public class OpenTelemetryInstaller {
     OpenTelemetrySdkAccess.internalSetForceFlush(
         (timeout, unit) -> {
           CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-          MeterProvider meterProvider = GlobalMeterProvider.get();
+          MeterProvider meterProvider = sdk.getSdkMeterProvider();
           final CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
           CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
               .join(timeout, unit);
