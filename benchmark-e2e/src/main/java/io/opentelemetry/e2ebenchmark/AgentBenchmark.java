@@ -29,7 +29,7 @@ public class AgentBenchmark {
       System.getenv()
           .getOrDefault(
               "APP_IMAGE",
-              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk8-20210918.1248928124");
+              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk8-20211213.1570880324");
 
   private List<GenericContainer<?>> containers;
   private static final Logger logger = LoggerFactory.getLogger(AgentBenchmark.class);
