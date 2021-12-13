@@ -37,7 +37,7 @@ class QuarkusSmokeTest extends SmokeTest {
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:
-    countSpansByName(traces, 'GET /hello') == 1
+    countSpansByName(traces, '/hello') == 1
     countSpansByName(traces, 'HelloResource.hello') == 1
 
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
