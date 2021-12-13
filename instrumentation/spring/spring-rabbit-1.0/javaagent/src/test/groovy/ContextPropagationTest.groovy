@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
 
 import java.time.Duration
@@ -37,7 +38,8 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     rabbitMqContainer = new GenericContainer('rabbitmq:latest')
       .withExposedPorts(5672)
-      .withStartupTimeout(Duration.ofSeconds(120))
+      .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
+      .withStartupTimeout(Duration.ofMinutes(2))
     rabbitMqContainer.start()
 
     def app = new SpringApplication(ConsumerConfig)

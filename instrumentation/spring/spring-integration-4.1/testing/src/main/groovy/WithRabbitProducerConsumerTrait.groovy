@@ -15,6 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.messaging.support.MessageBuilder
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 
 import java.time.Duration
 
@@ -30,7 +31,8 @@ trait WithRabbitProducerConsumerTrait {
   def startRabbit(Class<?> additionalContext = null) {
     rabbitMqContainer = new GenericContainer('rabbitmq:latest')
       .withExposedPorts(5672)
-      .withStartupTimeout(Duration.ofSeconds(120))
+      .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
+      .withStartupTimeout(Duration.ofMinutes(2))
     rabbitMqContainer.start()
 
     def producerApp = new SpringApplication(getContextClasses(ProducerConfig, additionalContext))
