@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Registers recordrs that generate metrics about JVM garbage collectors.
+ * Registers observers that generate metrics about JVM garbage collectors.
  *
  * <p>Example usage:
  *
