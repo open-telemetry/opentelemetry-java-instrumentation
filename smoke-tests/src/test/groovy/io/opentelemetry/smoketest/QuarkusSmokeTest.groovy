@@ -15,8 +15,8 @@ import java.util.jar.JarFile
 
 import static java.util.stream.Collectors.toSet
 
+// TODO (trask) remove global @Ignore after smoke test image is published
 @Ignore
-// TODO (trask) remove after smoke test image is published
 @IgnoreIf({ os.windows })
 class QuarkusSmokeTest extends SmokeTest {
 
