@@ -1,7 +1,8 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.0.4"
+  // TEMPORARY NOTE: Intellij (re-)import is currently failing with 6.0.3 and 6.0.4
+  id("com.diffplug.spotless") version "6.0.2"
 }
 
 spotless {
@@ -35,7 +36,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.0.4")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.0.2")
   implementation("com.google.guava:guava:31.0.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.0")
