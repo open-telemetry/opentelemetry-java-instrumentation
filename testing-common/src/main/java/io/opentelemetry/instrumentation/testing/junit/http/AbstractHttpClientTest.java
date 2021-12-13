@@ -969,6 +969,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               if (responseCode != null) {
                 assertThat(attrs)
                     .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, (long) responseCode);
+              } else {
+                // worth adding AttributesAssert.doesNotContainKey?
+                assertThat(attrs.get(SemanticAttributes.HTTP_STATUS_CODE)).isNull();
               }
             });
   }
