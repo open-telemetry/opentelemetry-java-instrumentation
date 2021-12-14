@@ -14,31 +14,21 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private ServletInstrumenterBuilder() {}
-
-  @Nullable
-  private Function<ServletRequestContext<REQUEST>, MappingResolver> mappingResolverFunction;
 
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new ServletInstrumenterBuilder<>();
-  }
-
-  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setMappingResolverFunction(
-      Function<ServletRequestContext<REQUEST>, MappingResolver> mappingResolverFunction) {
-    this.mappingResolverFunction = mappingResolverFunction;
-    return this;
   }
 
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
@@ -72,7 +62,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(additionalAttributesExtractor)
-            .addRequestMetrics(HttpServerMetrics.get());
+            .addRequestMetrics(HttpServerMetrics.get())
+            .addContextCustomizer(ServerSpanNaming.get());
     if (ServletRequestParametersExtractor.enabled()) {
       AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
@@ -90,7 +81,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     HttpServerAttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesExtractor = new ServletHttpAttributesExtractor<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
-        new ServletSpanNameExtractor<>(accessor, mappingResolverFunction);
+        HttpSpanNameExtractor.create(httpAttributesExtractor);
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesExtractor);
   }

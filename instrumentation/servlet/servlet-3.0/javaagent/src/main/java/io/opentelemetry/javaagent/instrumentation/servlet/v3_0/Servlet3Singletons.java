@@ -5,12 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
-
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
@@ -28,11 +24,6 @@ public final class Servlet3Singletons {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
           ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
-              .setMappingResolverFunction(Servlet3Singletons::getMappingResolver)
-              .addContextCustomizer(
-                  (context, request, attributes) ->
-                      ServerSpanNaming.init(
-                          context, request.servletOrFilter() instanceof Servlet ? SERVLET : FILTER))
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
@@ -45,11 +36,6 @@ public final class Servlet3Singletons {
 
   public static ServletHelper<HttpServletRequest, HttpServletResponse> helper() {
     return HELPER;
-  }
-
-  private static MappingResolver getMappingResolver(
-      ServletRequestContext<?> servletRequestContext) {
-    return getMappingResolver(servletRequestContext.servletOrFilter());
   }
 
   public static MappingResolver getMappingResolver(Object servletOrFilter) {

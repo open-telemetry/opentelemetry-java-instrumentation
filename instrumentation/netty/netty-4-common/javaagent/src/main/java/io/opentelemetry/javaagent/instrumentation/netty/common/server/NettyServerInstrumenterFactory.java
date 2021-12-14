@@ -31,12 +31,8 @@ public final class NettyServerInstrumenterFactory {
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(new NettyNetServerAttributesExtractor())
         .addRequestMetrics(HttpServerMetrics.get())
-        .addContextCustomizer(
-            (context, request, attributes) -> {
-              context = NettyErrorHolder.init(context);
-              // netty is not exactly a "container", but it's the best match out of these
-              return ServerSpanNaming.init(context, ServerSpanNaming.Source.CONTAINER);
-            })
+        .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
+        .addContextCustomizer(ServerSpanNaming.get())
         .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

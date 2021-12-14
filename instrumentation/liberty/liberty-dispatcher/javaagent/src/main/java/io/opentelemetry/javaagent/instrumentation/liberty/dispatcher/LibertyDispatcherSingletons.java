@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -39,8 +37,7 @@ public final class LibertyDispatcherSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addContextCustomizer(
-                (context, request, attributes) -> ServerSpanNaming.init(context, CONTAINER))
+            .addContextCustomizer(ServerSpanNaming.get())
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }
