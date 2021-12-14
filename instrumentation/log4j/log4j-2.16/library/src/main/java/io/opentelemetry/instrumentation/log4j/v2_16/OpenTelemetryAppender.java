@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import io.opentelemetry.sdk.logs.LogBuilder;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.LogBuilder;
+import io.opentelemetry.instrumentation.appender.api.LogEmitterProvider;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.core.Appender;
@@ -45,7 +45,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private final AtomicReference<SdkLogEmitterProvider> sdkLogEmitterProviderRef =
+  private final AtomicReference<LogEmitterProvider> sdkLogEmitterProviderRef =
       new AtomicReference<>();
 
   private OpenTelemetryAppender(
@@ -59,7 +59,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   @Override
   public void append(LogEvent event) {
-    SdkLogEmitterProvider logEmitterProvider = sdkLogEmitterProviderRef.get();
+    LogEmitterProvider logEmitterProvider = sdkLogEmitterProviderRef.get();
     if (logEmitterProvider == null) {
       // appender hasn't been initialized
       return;
@@ -70,8 +70,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     builder.emit();
   }
 
-  void initialize(SdkLogEmitterProvider sdkLogEmitterProvider) {
-    if (!sdkLogEmitterProviderRef.compareAndSet(null, sdkLogEmitterProvider)) {
+  void initialize(LogEmitterProvider logEmitterProvider) {
+    if (!sdkLogEmitterProviderRef.compareAndSet(null, logEmitterProvider)) {
       throw new IllegalStateException("OpenTelemetryAppender has already been initialized.");
     }
   }

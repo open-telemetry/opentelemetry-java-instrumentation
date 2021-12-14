@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.appender.api.LogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
@@ -53,7 +54,7 @@ class OpenTelemetryAppenderTest {
 
   @Test
   void append_Initialized() {
-    appender.initialize(logEmitterProvider);
+    appender.initialize(LogEmitterProvider.from(logEmitterProvider));
     appender.append(logEvent);
 
     assertThat(logExporter.getFinishedLogItems()).hasSize(1);

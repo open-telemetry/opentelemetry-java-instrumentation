@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.LogEmitterProvider;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -16,7 +16,7 @@ public final class OpenTelemetryLog4j {
   private static final Object lock = new Object();
 
   @GuardedBy("lock")
-  private static SdkLogEmitterProvider sdkLogEmitterProvider;
+  private static LogEmitterProvider logEmitterProvider;
 
   @GuardedBy("lock")
   @Nullable
@@ -25,28 +25,28 @@ public final class OpenTelemetryLog4j {
   @GuardedBy("lock")
   private static final List<OpenTelemetryAppender> APPENDERS = new ArrayList<>();
 
-  public static void initialize(SdkLogEmitterProvider sdkLogEmitterProvider) {
+  public static void initialize(LogEmitterProvider logEmitterProvider) {
     List<OpenTelemetryAppender> instances;
     synchronized (lock) {
-      if (OpenTelemetryLog4j.sdkLogEmitterProvider != null) {
+      if (OpenTelemetryLog4j.logEmitterProvider != null) {
         throw new IllegalStateException(
             "OpenTelemetryLog4j.initialize has already been called. OpenTelemetryLog4j.initialize "
                 + "must be called only once. Previous invocation set to cause of this exception.",
             initializeCaller);
       }
-      OpenTelemetryLog4j.sdkLogEmitterProvider = sdkLogEmitterProvider;
+      OpenTelemetryLog4j.logEmitterProvider = logEmitterProvider;
       instances = new ArrayList<>(APPENDERS);
       initializeCaller = new Throwable();
     }
     for (OpenTelemetryAppender instance : instances) {
-      instance.initialize(sdkLogEmitterProvider);
+      instance.initialize(logEmitterProvider);
     }
   }
 
   static void registerInstance(OpenTelemetryAppender appender) {
     synchronized (lock) {
-      if (sdkLogEmitterProvider != null) {
-        appender.initialize(sdkLogEmitterProvider);
+      if (logEmitterProvider != null) {
+        appender.initialize(logEmitterProvider);
       }
       APPENDERS.add(appender);
     }
@@ -55,7 +55,7 @@ public final class OpenTelemetryLog4j {
   // Visible for testing
   static void resetForTest() {
     synchronized (lock) {
-      sdkLogEmitterProvider = null;
+      logEmitterProvider = null;
       APPENDERS.clear();
     }
   }

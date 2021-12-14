@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly("io.opentelemetry:opentelemetry-sdk-logs")
+  api(project(":instrumentation-appender-api"))
 
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
