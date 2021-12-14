@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import spock.lang.Ignore
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
@@ -15,14 +14,11 @@ import java.util.jar.JarFile
 
 import static java.util.stream.Collectors.toSet
 
-// TODO (trask) remove global @Ignore after smoke test image is published
-@Ignore
 @IgnoreIf({ os.windows })
 class QuarkusSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    // TODO (trask) update tag after smoke test image is published
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20211212.1701473"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20211213.1574595137"
   }
 
   @Unroll
