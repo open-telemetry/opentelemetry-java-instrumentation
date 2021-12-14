@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-public class WicketServerSpanNameing {
+public final class WicketServerSpanNaming {
 
   public static final ServerSpanNameSupplier<IPageClassRequestHandler> SERVER_SPAN_NAME =
       (context, handler) -> {
@@ -22,5 +22,5 @@ public class WicketServerSpanNameing {
         return ServletContextPath.prepend(context, filterPath + "/" + pageName);
       };
 
-  private WicketServerSpanNameing() {}
+  private WicketServerSpanNaming() {}
 }

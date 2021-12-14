@@ -10,9 +10,10 @@ import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinSingletons
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.Location;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
@@ -41,11 +42,10 @@ public class VaadinHelper {
       Context context, VaadinServiceRequest request, Throwable throwable) {
     serviceInstrumenter.end(context, request, null, throwable);
 
-    ServerSpanNaming.updateServerSpanName(
-        context,
-        ServerSpanNaming.Source.CONTROLLER,
-        (c, req) -> getSpanNameForVaadinServiceContext(c, req),
-        request);
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan != null) {
+      serverSpan.updateName(getSpanNameForVaadinServiceContext(context, request));
+    }
   }
 
   private static String getSpanNameForVaadinServiceContext(
@@ -106,11 +106,10 @@ public class VaadinHelper {
 
   public void updateServerSpanName(Location location) {
     Context context = Context.current();
-    ServerSpanNaming.updateServerSpanName(
-        context,
-        ServerSpanNaming.Source.NESTED_CONTROLLER,
-        (c, loc) -> ServletContextPath.prepend(c, getSpanNameForLocation(loc)),
-        location);
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan != null) {
+      serverSpan.updateName(ServletContextPath.prepend(context, getSpanNameForLocation(location)));
+    }
   }
 
   private static String getSpanNameForLocation(Location location) {

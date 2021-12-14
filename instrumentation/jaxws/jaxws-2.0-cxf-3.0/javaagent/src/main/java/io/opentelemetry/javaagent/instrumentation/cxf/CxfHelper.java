@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.cxf.CxfSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
@@ -31,8 +29,7 @@ public final class CxfHelper {
       return;
     }
 
-    ServerSpanNaming.updateServerSpanName(
-        parentContext, CONTROLLER, CxfServerSpanNaming.SERVER_SPAN_NAME, request);
+    CxfServerSpanNaming.updateServerSpanName(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;
