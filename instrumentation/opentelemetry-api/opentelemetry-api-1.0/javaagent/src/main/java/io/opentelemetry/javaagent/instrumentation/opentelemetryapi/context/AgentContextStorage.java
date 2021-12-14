@@ -168,8 +168,8 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   private static ContextKeyBridge<Span, io.opentelemetry.api.trace.Span> bridgeSpanKey(
       String name) {
     return new ContextKeyBridge<>(
-        "application.io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
-        "io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
+        "application.io.opentelemetry.instrumentation.api.internal.SpanKey",
+        "io.opentelemetry.instrumentation.api.internal.SpanKey",
         name,
         Bridging::toApplication,
         Bridging::toAgentOrNull);

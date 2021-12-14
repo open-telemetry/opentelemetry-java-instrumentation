@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Set;
 
 final class SuppressIfSameSpanKeyStrategy extends SpanSuppressionStrategy {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -43,16 +43,16 @@ public final class SpanKey {
 
   public static final SpanKey SERVER = new SpanKey(SERVER_KEY);
 
-  static final SpanKey HTTP_CLIENT = new SpanKey(HTTP_CLIENT_KEY);
-  static final SpanKey RPC_CLIENT = new SpanKey(RPC_CLIENT_KEY);
-  static final SpanKey DB_CLIENT = new SpanKey(DB_CLIENT_KEY);
+  public static final SpanKey HTTP_CLIENT = new SpanKey(HTTP_CLIENT_KEY);
+  public static final SpanKey RPC_CLIENT = new SpanKey(RPC_CLIENT_KEY);
+  public static final SpanKey DB_CLIENT = new SpanKey(DB_CLIENT_KEY);
 
   // this is used instead of above, depending on the configuration value for
   // otel.instrumentation.experimental.outgoing-span-suppression-by-type
   public static final SpanKey ALL_CLIENTS = new SpanKey(CLIENT_KEY);
 
-  static final SpanKey PRODUCER = new SpanKey(PRODUCER_KEY);
-  static final SpanKey CONSUMER_RECEIVE = new SpanKey(CONSUMER_RECEIVE_KEY);
+  public static final SpanKey PRODUCER = new SpanKey(PRODUCER_KEY);
+  public static final SpanKey CONSUMER_RECEIVE = new SpanKey(CONSUMER_RECEIVE_KEY);
   public static final SpanKey CONSUMER_PROCESS = new SpanKey(CONSUMER_PROCESS_KEY);
 
   private final ContextKey<Span> key;

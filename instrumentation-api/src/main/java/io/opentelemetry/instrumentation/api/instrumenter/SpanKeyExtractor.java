@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

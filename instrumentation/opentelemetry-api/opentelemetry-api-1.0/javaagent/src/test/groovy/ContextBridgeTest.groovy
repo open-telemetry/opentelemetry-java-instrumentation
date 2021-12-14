@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKey
+import io.opentelemetry.instrumentation.api.internal.SpanKey
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
