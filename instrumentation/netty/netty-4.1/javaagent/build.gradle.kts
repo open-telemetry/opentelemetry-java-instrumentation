@@ -37,13 +37,11 @@ dependencies {
   // first version with kqueue, add it only as a compile time dependency
   testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
 
-  // TODO (trask) change from 4.1.70.Final back to (,5.0) once netty 4.1.72.Final is released
-  //  (due to issue in 4.1.71.Final bom: https://github.com/netty/netty/pull/11902)
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.70.Final"))
-  latestDepTestLibrary("io.netty:netty-codec-http:4.1.70.Final")
-  latestDepTestLibrary("io.netty:netty-handler:4.1.70.Final")
-  latestDepTestLibrary("io.netty:netty-transport-native-epoll:4.1.70.Final:linux-x86_64")
-  latestDepTestLibrary("io.netty:netty-transport-native-kqueue:4.1.70.Final:osx-x86_64")
+  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:(,5.0)"))
+  latestDepTestLibrary("io.netty:netty-codec-http:(,5.0)")
+  latestDepTestLibrary("io.netty:netty-handler:(,5.0)")
+  latestDepTestLibrary("io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64")
+  latestDepTestLibrary("io.netty:netty-transport-native-kqueue:(,5.0):osx-x86_64")
 }
 
 tasks {
