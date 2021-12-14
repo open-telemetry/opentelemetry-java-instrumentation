@@ -34,6 +34,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2")
+    // limit memory usage
+    elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m")
     elasticsearch.start()
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())

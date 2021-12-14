@@ -61,7 +61,7 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
 
     if (response != null) {
       Integer statusCode = statusCode(request, response);
-      if (statusCode != null) {
+      if (statusCode != null && statusCode > 0) {
         set(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
       set(

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer.net;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -12,23 +14,27 @@ import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+/**
+ * Utility class settings the {@code net.peer.*} attributes.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.net the net semantic convention
+ *     utilities package} instead.
+ */
+@Deprecated
 public final class NetPeerAttributes {
 
-  // TODO: this should only be used by the javaagent; move to javaagent-instrumentation-api after
-  // removing all
-  // library usages
   public static final NetPeerAttributes INSTANCE =
       new NetPeerAttributes(
-          Config.get().getMap("otel.instrumentation.common.peer-service-mapping"));
+          Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
 
   private final Map<String, String> peerServiceMapping;
 
   public NetPeerAttributes() {
-    this(Collections.emptyMap());
+    this(emptyMap());
   }
 
   public NetPeerAttributes(Map<String, String> peerServiceMapping) {

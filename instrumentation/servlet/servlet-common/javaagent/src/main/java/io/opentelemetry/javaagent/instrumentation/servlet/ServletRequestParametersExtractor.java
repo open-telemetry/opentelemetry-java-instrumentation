@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -20,7 +22,9 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      Config.get().getList("otel.instrumentation.servlet.experimental.capture-request-parameters");
+      Config.get()
+          .getList(
+              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
 
   private static final ConcurrentMap<String, AttributeKey<List<String>>> parameterKeysCache =
       new ConcurrentHashMap<>();

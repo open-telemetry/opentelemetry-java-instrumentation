@@ -27,7 +27,7 @@ object AkkaHttpTestWebServer {
     )
   }
 
-  val route = { // handleExceptions(exceptionHandler) {
+  val route = { //handleExceptions(exceptionHandler) {
     path(SUCCESS.rawPath) {
       complete(
         HttpResponse(status = SUCCESS.getStatus).withEntity(SUCCESS.getBody)

@@ -17,7 +17,7 @@ class SpringBootIntegrationTest extends IntegrationTest {
   protected String getTargetImage(int jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
         + jdk
-        + "-20210918.1248928124";
+        + "-20211213.1570880324";
   }
 
   @Test

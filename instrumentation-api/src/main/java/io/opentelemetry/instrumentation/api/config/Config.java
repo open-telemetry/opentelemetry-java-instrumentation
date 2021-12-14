@@ -13,7 +13,6 @@ import com.google.auto.value.AutoValue;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +95,10 @@ public abstract class Config {
   /**
    * Returns a boolean-valued configuration property or {@code null} if a property with name {@code
    * name} has not been configured.
+   *
+   * @deprecated Use the {@link #getBoolean(String, boolean)} variant instead.
    */
+  @Deprecated
   @Nullable
   public Boolean getBoolean(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseBoolean);
@@ -115,7 +117,9 @@ public abstract class Config {
    * name} has not been configured.
    *
    * @throws ConfigParsingException if the property is not a valid integer.
+   * @deprecated Use the {@link #getInt(String, int)} variant instead.
    */
+  @Deprecated
   @Nullable
   public Integer getInt(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseInt);
@@ -135,7 +139,9 @@ public abstract class Config {
    * name} has not been configured.
    *
    * @throws ConfigParsingException if the property is not a valid long.
+   * @deprecated Use the {@link #getLong(String, long)} variant instead.
    */
+  @Deprecated
   @Nullable
   public Long getLong(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseLong);
@@ -155,7 +161,9 @@ public abstract class Config {
    * name} has not been configured.
    *
    * @throws ConfigParsingException if the property is not a valid long.
+   * @deprecated Use the {@link #getDouble(String, double)} variant instead.
    */
+  @Deprecated
   @Nullable
   public Double getDouble(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseDouble);
@@ -187,7 +195,9 @@ public abstract class Config {
    * <p>If no unit is specified, milliseconds is the assumed duration unit.
    *
    * @throws ConfigParsingException if the property is not a valid long.
+   * @deprecated Use the {@link #getDuration(String, Duration)} variant instead.
    */
+  @Deprecated
   @Nullable
   public Duration getDuration(String name) {
     return getTypedProperty(name, ConfigValueParsers::parseDuration);
@@ -218,7 +228,10 @@ public abstract class Config {
    * Returns a list-valued configuration property or an empty list if a property with name {@code
    * name} has not been configured. The format of the original value must be comma-separated, e.g.
    * {@code one,two,three}.
+   *
+   * @deprecated Use the {@link #getList(String, List)} variant instead.
    */
+  @Deprecated
   public List<String> getList(String name) {
     List<String> list = getTypedProperty(name, ConfigValueParsers::parseList);
     return list == null ? emptyList() : list;
@@ -240,7 +253,9 @@ public abstract class Config {
    * key=value,anotherKey=anotherValue}.
    *
    * @throws ConfigParsingException if the property is not a valid long.
+   * @deprecated Use the {@link #getMap(String, Map)} variant instead.
    */
+  @Deprecated
   public Map<String, String> getMap(String name) {
     Map<String, String> map = getTypedProperty(name, ConfigValueParsers::parseMap);
     return map == null ? emptyMap() : map;
@@ -304,17 +319,5 @@ public abstract class Config {
 
   public boolean isAgentDebugEnabled() {
     return getBoolean("otel.javaagent.debug", false);
-  }
-
-  /**
-   * Converts this config instance to Java {@link Properties}.
-   *
-   * @deprecated Use {@link #getAllProperties()} instead.
-   */
-  @Deprecated
-  public Properties asJavaProperties() {
-    Properties properties = new Properties();
-    properties.putAll(getAllProperties());
-    return properties;
   }
 }
