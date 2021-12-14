@@ -225,15 +225,16 @@ jobs:
       - name: Local publish of artifacts
         uses: gradle/gradle-build-action@v2
         with:
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: publishToMavenLocal -x javadoc
 
       - name: Local publish of gradle plugins
         uses: gradle/gradle-build-action@v2
         with:
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: publishToMavenLocal -x javadoc
           build-root-directory: gradle-plugins
+          gradle-executable: ./gradlew
 
       - name: Build distro
         uses: gradle/gradle-build-action@v2
