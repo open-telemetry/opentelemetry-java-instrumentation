@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -88,10 +89,10 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
         "java.util.concurrent.ScheduledThreadPoolExecutor",
         "java.util.concurrent.ThreadPoolExecutor",
         "org.apache.tomcat.util.threads.ThreadPoolExecutor",
-        "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() is covered in the jetty
-        // module
+        "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() covered in the jetty module
         "org.eclipse.jetty.util.thread.ReservedThreadExecutor",
         "org.glassfish.grizzly.threadpool.GrizzlyExecutorService",
+        "org.jboss.threads.EnhancedQueueExecutor",
         "play.api.libs.streams.Execution$trampoline$",
         "play.shaded.ahc.io.netty.util.concurrent.ThreadPerTaskExecutor",
         "scala.concurrent.forkjoin.ForkJoinPool",
@@ -99,7 +100,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
         "scala.concurrent.impl.ExecutionContextImpl",
       };
       Set<String> combined = new HashSet<>(Arrays.asList(includeExecutors));
-      combined.addAll(Config.get().getList(EXECUTORS_INCLUDE_PROPERTY_NAME));
+      combined.addAll(Config.get().getList(EXECUTORS_INCLUDE_PROPERTY_NAME, emptyList()));
       this.includeExecutors = Collections.unmodifiableSet(combined);
 
       String[] includePrefixes = {"slick.util.AsyncExecutor$"};
