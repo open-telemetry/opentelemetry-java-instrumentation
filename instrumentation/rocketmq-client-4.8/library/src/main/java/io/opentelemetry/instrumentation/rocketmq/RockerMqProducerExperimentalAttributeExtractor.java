@@ -22,7 +22,9 @@ class RockerMqProducerExperimentalAttributeExtractor
 
   @Override
   public void onStart(AttributesBuilder attributes, SendMessageContext request) {
-    set(attributes, MESSAGING_ROCKETMQ_TAGS, request.getMessage().getTags());
+    if (request.getMessage() != null) {
+      set(attributes, MESSAGING_ROCKETMQ_TAGS, request.getMessage().getTags());
+    }
     set(attributes, MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
   }
 
