@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -333,6 +334,26 @@ class ReferenceCollectorTest {
 
     assertThat(collector.getReferences()).isEmpty();
     assertThat(collector.getSortedHelperClasses()).isEmpty();
+  }
+
+  @Test
+  public void shouldCollectReferencesFromAdditionalHelperClasses() {
+    ReferenceCollector collector = new ReferenceCollector(s -> false);
+    collector.collectReferencesFromAdditionalHelperClasses(
+        singleton(TestHelperClasses.Helper.class.getName()));
+    collector.prune();
+    List<String> helperClasses = collector.getSortedHelperClasses();
+
+    assertThat(helperClasses)
+        .containsSubsequence(
+            Arrays.asList(
+                TestHelperClasses.HelperInterface.class.getName(),
+                TestHelperClasses.Helper.class.getName()));
+    assertThat(helperClasses)
+        .containsSubsequence(
+            Arrays.asList(
+                TestHelperClasses.HelperSuperClass.class.getName(),
+                TestHelperClasses.Helper.class.getName()));
   }
 
   @Test

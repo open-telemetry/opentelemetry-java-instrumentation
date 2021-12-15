@@ -188,6 +188,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       ClassLoader resourceLoader = new URLClassLoader(classLoader.getURLs(), null);
       ReferenceCollector collector =
           new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);
+      collector.collectReferencesFromAdditionalHelperClasses(
+          instrumentationModule.getAdditionalHelperClassNames());
       for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {
         collector.collectReferencesFromAdvice(adviceClass);
       }

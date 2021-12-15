@@ -111,7 +111,8 @@ public final class ReferenceCollector {
 
   /**
    * Traverse a graph of classes starting from {@code adviceClassName} and collect all references to
-   * both internal (instrumentation) and external classes.
+   * both internal (instrumentation) and external classes, excluding {@code adviceClassName} -
+   * references to this class will not be collected.
    *
    * <p>The graph of classes is traversed until a non-instrumentation (external) class is
    * encountered.
@@ -121,6 +122,23 @@ public final class ReferenceCollector {
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
     visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
+  }
+
+  /**
+   * Traverse a graph of classes starting from {@code additionalHelperClasses} and collect all
+   * references to both internal (instrumentation) and external classes, including {@code
+   * additionalHelperClasses}.
+   *
+   * <p>The graph of classes is traversed until a non-instrumentation (external) class is
+   * encountered.
+   *
+   * @param additionalHelperClasses A collection of additional helper class names that should be
+   *     scanned for references.
+   * @see HelperClassPredicate
+   */
+  public void collectReferencesFromAdditionalHelperClasses(
+      Collection<String> additionalHelperClasses) {
+    visitClassesAndCollectReferences(additionalHelperClasses, /* startsFromAdviceClass= */ false);
   }
 
   private void visitClassesAndCollectReferences(
