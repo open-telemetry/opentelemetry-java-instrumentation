@@ -85,8 +85,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
             "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
+            "messaging.rocketmq.send_result" "SEND_OK"
           }
         }
         span(1) {
