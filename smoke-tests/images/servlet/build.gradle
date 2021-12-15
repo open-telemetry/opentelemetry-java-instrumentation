@@ -123,10 +123,10 @@ def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warPro
 
   def jdkImage
   if (vm == "hotspot") {
-    if (jdk <= 17) {
-      jdkImage = "eclipse-temurin:${jdk}"
-    } else {
+    if (jdk == "18") {
       jdkImage = "openjdk:${jdk}"
+    } else {
+      jdkImage = "eclipse-temurin:${jdk}"
     }
   } else if (vm == "openj9") {
     jdkImage = "adoptopenjdk:${jdk}-openj9"
