@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.apache.logging.log4j")
     module.set("log4j-core")
-    versions.set("[2.7,2.13.2)")
+    versions.set("[2.7,2.16.0)")
     assertInverse.set(true)
   }
 }

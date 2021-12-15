@@ -23,8 +23,16 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // want to cover 2.7 through (and including) 2.15.0 (but not including 2.16.0+)
+    // - ContextDataInjectorFactory introduced in 2.7
+    // - DefaultArbiter introduced in 2.15.0
+    // - LookupMessagePatternConverter introduced in 2.15.0, removed in 2.16.0
     return hasClassesNamed("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
-        .and(not(hasClassesNamed("org.apache.logging.log4j.core.util.ContextDataProvider")));
+        .and(
+            not(hasClassesNamed("org.apache.logging.log4j.core.config.arbiters.DefaultArbiter"))
+                .or(
+                    hasClassesNamed(
+                        "org.apache.logging.log4j.core.pattern.MessagePatternConverter$LookupMessagePatternConverter")));
   }
 
   @Override
