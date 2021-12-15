@@ -33,7 +33,7 @@ def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 def tag = findProperty("tag") ?: new Date().format("yyyyMMdd.HHmmSS")
 
 jib {
-  from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
+  from.image = "openjdk:$targetJDK-alpine"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$targetJDK-$tag"
   container {
     mainClass = 'bogus'  // to suppress Jib warning about missing main class
