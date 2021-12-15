@@ -16,5 +16,5 @@ dependencies {
 
   testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
 
-  latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.13.1")
+  latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.15.0")
 }
