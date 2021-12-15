@@ -37,4 +37,5 @@ jobs:
           ./gradlew jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
           ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
           ./gradlew jibDockerBuild -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+          ./gradlew jibDockerBuild -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
         working-directory: smoke-tests/images/spring-boot
