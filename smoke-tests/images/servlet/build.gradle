@@ -40,7 +40,8 @@ def targets = [
   "liberty"  : [
     // running configure.sh is failing while building the image with Java 17
     [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "16"], args: [release: "2020-11-11_0736"]],
-    [version: ["21.0.0.10"], vm: ["hotspot"], jdk: ["8", "11", "17", "18"], args: [release: "2021-09-20_1900"]],
+    // running configure.sh is failing while building the image with Java 18
+    [version: ["21.0.0.10"], vm: ["hotspot"], jdk: ["8", "11", "17"], args: [release: "2021-09-20_1900"]],
     [version: ["21.0.0.10"], vm: ["openj9"], jdk: ["8", "11", "16"], args: [release: "2021-09-20_1900"]]
   ],
   "payara"   : [
