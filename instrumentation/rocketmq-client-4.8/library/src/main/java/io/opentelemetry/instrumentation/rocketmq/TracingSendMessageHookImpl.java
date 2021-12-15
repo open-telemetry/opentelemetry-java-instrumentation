@@ -42,7 +42,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     }
     if (context.getMqTraceContext() instanceof Context) {
       Context otelContext = (Context) context.getMqTraceContext();
-      instrumenter.end(otelContext, context, null, null);
+      instrumenter.end(otelContext, context, null, context.getException());
     }
   }
 }
