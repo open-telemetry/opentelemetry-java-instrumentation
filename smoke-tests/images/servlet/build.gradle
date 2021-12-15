@@ -66,7 +66,9 @@ def targets = [
     [version: ["9.0.0-M7"], vm: ["openj9"], jdk: ["8", "11", "16"], war: "servlet-5.0"]
   ],
   "websphere": [
-    [version: ["8.5.5.20", "9.0.5.9"], vm: ["openj9"], jdk: ["8"], windows: false]
+    // TODO (trask) this is a recent change, check back in a while and see if it's been fixed
+    // 8.5.5.20 only has linux/ppc64le image
+    [version: ["8.5.5.19", "9.0.5.9"], vm: ["openj9"], jdk: ["8"], windows: false]
   ],
   "wildfly"  : [
     [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
