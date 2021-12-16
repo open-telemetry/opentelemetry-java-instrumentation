@@ -257,6 +257,9 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
+
+      otelRequest = new ApacheHttpClientRequest(host, request);
+
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
