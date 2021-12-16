@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.common.message.Message;
 
 class RockerMqProducerAttributeExtractor
     extends MessagingAttributesExtractor<SendMessageContext, Void> {
@@ -28,9 +30,11 @@ class RockerMqProducerAttributeExtractor
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
+  @Nullable
   @Override
   protected String destination(SendMessageContext sendMessageContext) {
-    return sendMessageContext.getMessage().getTopic();
+    Message message = sendMessageContext.getMessage();
+    return message == null ? null : message.getTopic();
   }
 
   @Override
@@ -77,6 +81,7 @@ class RockerMqProducerAttributeExtractor
   @Nullable
   @Override
   protected String messageId(SendMessageContext request, @Nullable Void unused) {
-    return request.getSendResult().getMsgId();
+    SendResult sendResult = request.getSendResult();
+    return sendResult == null ? null : sendResult.getMsgId();
   }
 }
