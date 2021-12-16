@@ -754,18 +754,24 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       throw new AssertionError(e);
                     }
                     try {
-                      testing.runWithSpan(
-                          "Parent span " + index,
-                          () -> {
-                            Span.current().setAttribute("test.request.id", index);
-                            doRequestWithCallback(
-                                method,
-                                uri,
-                                Collections.singletonMap("test-request-id", String.valueOf(index)),
-                                () -> testing.runWithSpan("child", () -> {}));
-                          });
-                    } catch (Exception e) {
-                      throw new AssertionError(e);
+                      RequestResult result =
+                          testing.runWithSpan(
+                              "Parent span " + index,
+                              () -> {
+                                Span.current().setAttribute("test.request.id", index);
+                                return doRequestWithCallback(
+                                    method,
+                                    uri,
+                                    Collections.singletonMap(
+                                        "test-request-id", String.valueOf(index)),
+                                    () -> testing.runWithSpan("child", () -> {}));
+                              });
+                      assertThat(result.get()).isEqualTo(200);
+                    } catch (Throwable throwable) {
+                      if (throwable instanceof AssertionError) {
+                        throw (AssertionError) throwable;
+                      }
+                      throw new AssertionError(throwable);
                     }
                   };
               pool.submit(job);
