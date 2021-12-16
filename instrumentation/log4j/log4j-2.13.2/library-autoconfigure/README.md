@@ -11,8 +11,8 @@ To use it, add the module to your application's runtime classpath.
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-log4j-2.13.2</artifactId>
-    <version>0.17.0-alpha</version>
+    <artifactId>opentelemetry-log4j-2.16</artifactId>
+    <version>1.10.0-alpha</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -22,7 +22,7 @@ To use it, add the module to your application's runtime classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.13.2:0.17.0-alpha")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.16:1.10.0-alpha")
 }
 ```
 
@@ -31,12 +31,6 @@ dependencies {
 `OpenTelemetryContextDataProvider` implements the Log4j2 `ContextDataProvider` SPI, and injects the
 trace ID and span ID from an active span into
 Log4j's [context data](https://logging.apache.org/log4j/2.x/manual/thread-context.html).
-
-**Note**: Depending on your application, you may run into
-a [critical bug](https://issues.apache.org/jira/browse/LOG4J2-2838)
-with Log4j 2.13.2. If log messages show a `NullPointerException` when adding this instrumentation,
-please update to 2.13.3 or higher. The only change between 2.13.2 and 2.13.3 is the fix to this
-issue.
 
 Log4j will automatically pick up the integration when you include this module. The following keys
 will be added to the context when a log statement is made when a span is active:

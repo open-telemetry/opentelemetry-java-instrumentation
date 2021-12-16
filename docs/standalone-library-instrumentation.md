@@ -12,7 +12,7 @@ that can be used if you prefer that over using the Java agent:
 * [Guava](../instrumentation/guava-10.0/library)
 * [JDBC](../instrumentation/jdbc/library)
 * [Lettuce](../instrumentation/lettuce/lettuce-5.1/library)
-* [Log4j](../instrumentation/log4j/log4j-2.13.2/library)
+* [Log4j](../instrumentation/log4j/log4j-2.16/library)
 * [Logback](../instrumentation/logback-1.0/library)
 * [MongoDB Driver](../instrumentation/mongo/mongo-3.1/library)
 * [OkHttp](../instrumentation/okhttp/okhttp-3.0/library)
