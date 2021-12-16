@@ -1,0 +1,77 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class CounterTest {
+
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void testCounter() {
+    // given
+    Counter counter =
+        Counter.builder("testCounter")
+            .description("This is a test counter")
+            .tags("tag", "value")
+            .baseUnit("items")
+            .register(Metrics.globalRegistry);
+
+    // when
+    counter.increment();
+    counter.increment(2);
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testCounter",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("This is a test counter")
+                        .hasUnit("items")
+                        .hasDoubleSum()
+                        .isMonotonic()
+                        .isCumulative()
+                        .points()
+                        .satisfiesExactly(
+                            point ->
+                                assertThat(point)
+                                    .hasValue(3)
+                                    .attributes()
+                                    .containsOnly(attributeEntry("tag", "value")))));
+    testing.clearData();
+
+    // when
+    Metrics.globalRegistry.remove(counter);
+    counter.increment();
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testCounter",
+        metrics ->
+            metrics.allSatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleSum()
+                        .points()
+                        .noneSatisfy(point -> assertThat(point).hasValue(4))));
+  }
+}
