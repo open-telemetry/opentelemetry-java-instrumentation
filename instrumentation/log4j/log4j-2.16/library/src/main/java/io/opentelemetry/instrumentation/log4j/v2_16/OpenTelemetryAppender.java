@@ -46,7 +46,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   private final AtomicReference<LogEmitterProvider> sdkLogEmitterProviderRef =
-      new AtomicReference<>();
+      new AtomicReference<>(LogEmitterProvider.noop());
 
   private OpenTelemetryAppender(
       String name,
@@ -60,10 +60,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
   @Override
   public void append(LogEvent event) {
     LogEmitterProvider logEmitterProvider = sdkLogEmitterProviderRef.get();
-    if (logEmitterProvider == null) {
-      // appender hasn't been initialized
-      return;
-    }
     LogBuilder builder =
         logEmitterProvider.logEmitterBuilder(event.getLoggerName()).build().logBuilder();
     LogEventMapper.mapLogEvent(builder, event);
@@ -71,7 +67,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   void initialize(LogEmitterProvider logEmitterProvider) {
-    if (!sdkLogEmitterProviderRef.compareAndSet(null, logEmitterProvider)) {
+    if (!sdkLogEmitterProviderRef.compareAndSet(LogEmitterProvider.noop(), logEmitterProvider)) {
       throw new IllegalStateException("OpenTelemetryAppender has already been initialized.");
     }
   }

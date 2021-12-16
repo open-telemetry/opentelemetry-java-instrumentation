@@ -16,7 +16,7 @@ public final class OpenTelemetryLog4j {
   private static final Object lock = new Object();
 
   @GuardedBy("lock")
-  private static LogEmitterProvider logEmitterProvider;
+  private static LogEmitterProvider logEmitterProvider = LogEmitterProvider.noop();
 
   @GuardedBy("lock")
   @Nullable
@@ -28,7 +28,7 @@ public final class OpenTelemetryLog4j {
   public static void initialize(LogEmitterProvider logEmitterProvider) {
     List<OpenTelemetryAppender> instances;
     synchronized (lock) {
-      if (OpenTelemetryLog4j.logEmitterProvider != null) {
+      if (OpenTelemetryLog4j.logEmitterProvider != LogEmitterProvider.noop()) {
         throw new IllegalStateException(
             "OpenTelemetryLog4j.initialize has already been called. OpenTelemetryLog4j.initialize "
                 + "must be called only once. Previous invocation set to cause of this exception.",
@@ -45,7 +45,7 @@ public final class OpenTelemetryLog4j {
 
   static void registerInstance(OpenTelemetryAppender appender) {
     synchronized (lock) {
-      if (logEmitterProvider != null) {
+      if (logEmitterProvider != LogEmitterProvider.noop()) {
         appender.initialize(logEmitterProvider);
       }
       APPENDERS.add(appender);
@@ -55,7 +55,7 @@ public final class OpenTelemetryLog4j {
   // Visible for testing
   static void resetForTest() {
     synchronized (lock) {
-      logEmitterProvider = null;
+      logEmitterProvider = LogEmitterProvider.noop();
       APPENDERS.clear();
     }
   }
