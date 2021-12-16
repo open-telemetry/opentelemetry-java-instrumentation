@@ -92,6 +92,7 @@ dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-instrumentation-api"))
 
+  testImplementation("com.fasterxml.jackson.jr:jackson-jr-objects")
   testImplementation("com.google.guava:guava")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
 }
