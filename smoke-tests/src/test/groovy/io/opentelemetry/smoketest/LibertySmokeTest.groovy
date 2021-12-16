@@ -63,10 +63,6 @@ class Liberty21Jdk11Openj9 extends LibertySmokeTest {
 class Liberty21Jdk17 extends LibertySmokeTest {
 }
 
-@AppServer(version = "21.0.0.10", jdk = "18")
-class Liberty21Jdk18 extends LibertySmokeTest {
-}
-
 @AppServer(version = "21.0.0.10", jdk = "16-openj9")
 class Liberty21Jdk16Openj9 extends LibertySmokeTest {
 }
