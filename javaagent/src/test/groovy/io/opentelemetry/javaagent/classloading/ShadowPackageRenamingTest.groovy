@@ -15,7 +15,7 @@ class ShadowPackageRenamingTest extends Specification {
 
   static final String[] AGENT_PACKAGE_PREFIXES = [
     "io.opentelemetry.instrumentation.api",
-    // guava
+    // jackson
     "com.fasterxml.jackson",
     // bytebuddy
     "net.bytebuddy",
