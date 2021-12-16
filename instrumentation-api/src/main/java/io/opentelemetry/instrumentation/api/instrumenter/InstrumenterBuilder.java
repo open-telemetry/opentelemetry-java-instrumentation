@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -68,8 +67,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationVersion,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
-    // TODO(anuraaga): Retrieve from openTelemetry when not alpha anymore.
-    this.meter = GlobalMeterProvider.get().get(instrumentationName);
+    this.meter = openTelemetry.getMeterProvider().get(instrumentationName);
     this.instrumentationName = instrumentationName;
     this.instrumentationVersion = instrumentationVersion;
     this.spanNameExtractor = spanNameExtractor;

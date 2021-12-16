@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.oshi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.testing.InMemoryMetricReader;
@@ -15,18 +17,24 @@ import io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions;
 import io.opentelemetry.sdk.testing.assertj.metrics.MetricDataAssert;
 import java.util.Collection;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 class AbstractMetricsTest {
 
-  static SdkMeterProvider meterProvider;
   static InMemoryMetricReader metricReader;
 
   @BeforeAll
   static void initializeOpenTelemetry() {
-    metricReader = new InMemoryMetricReader();
-    meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).buildAndRegisterGlobal();
+    metricReader = InMemoryMetricReader.create();
+    OpenTelemetrySdk.builder()
+        .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
+        .buildAndRegisterGlobal();
+  }
+
+  @AfterAll
+  static void reset() {
+    GlobalOpenTelemetry.resetForTest();
   }
 
   protected void waitAndAssertMetrics(Consumer<MetricDataAssert>... assertions) {

@@ -5,17 +5,14 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.13.3") {
-    // We don't use JSON features of Armeria but shading it in can cause version conflicts with
-    // instrumentation tests that do.
-    exclude("com.fasterxml.jackson.core")
-  }
+  implementation("com.linecorp.armeria:armeria-junit5:1.13.3")
 }
 
 tasks {
   shadowJar {
     // Ensures tests are not affected by Armeria instrumentation
     relocate("com.linecorp.armeria", "io.opentelemetry.testing.internal.armeria")
+    relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
 
     // Allows tests of Netty instrumentations which would otherwise conflict.
     // The relocation must end with io.netty to allow Netty to detect shaded native libraries.

@@ -19,49 +19,49 @@ class MemoryPoolsTest {
   @Test
   void observeHeap() {
     ObservableLongMeasurement measurement = mock(ObservableLongMeasurement.class);
-    MemoryPools.observeHeap(measurement, new MemoryUsage(-1, 1, 2, 3));
+    MemoryPools.recordHeap(measurement, new MemoryUsage(-1, 1, 2, 3));
     verify(measurement)
-        .observe(1, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "heap"));
+        .record(1, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "heap"));
     verify(measurement)
-        .observe(2, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "heap"));
+        .record(2, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "heap"));
     verify(measurement)
-        .observe(3, Attributes.of(MemoryPools.TYPE_KEY, "max", MemoryPools.AREA_KEY, "heap"));
+        .record(3, Attributes.of(MemoryPools.TYPE_KEY, "max", MemoryPools.AREA_KEY, "heap"));
     verifyNoMoreInteractions(measurement);
   }
 
   @Test
   void observeHeapNoMax() {
     ObservableLongMeasurement measurement = mock(ObservableLongMeasurement.class);
-    MemoryPools.observeHeap(measurement, new MemoryUsage(-1, 1, 2, -1));
+    MemoryPools.recordHeap(measurement, new MemoryUsage(-1, 1, 2, -1));
     verify(measurement)
-        .observe(1, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "heap"));
+        .record(1, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "heap"));
     verify(measurement)
-        .observe(2, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "heap"));
+        .record(2, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "heap"));
     verifyNoMoreInteractions(measurement);
   }
 
   @Test
   void observeNonHeap() {
     ObservableLongMeasurement measurement = mock(ObservableLongMeasurement.class);
-    MemoryPools.observeNonHeap(measurement, new MemoryUsage(-1, 4, 5, 6));
+    MemoryPools.recordNonHeap(measurement, new MemoryUsage(-1, 4, 5, 6));
     verify(measurement)
-        .observe(4, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "non_heap"));
+        .record(4, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "non_heap"));
     verify(measurement)
-        .observe(
+        .record(
             5, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "non_heap"));
     verify(measurement)
-        .observe(6, Attributes.of(MemoryPools.TYPE_KEY, "max", MemoryPools.AREA_KEY, "non_heap"));
+        .record(6, Attributes.of(MemoryPools.TYPE_KEY, "max", MemoryPools.AREA_KEY, "non_heap"));
     verifyNoMoreInteractions(measurement);
   }
 
   @Test
   void observeNonHeapNoMax() {
     ObservableLongMeasurement measurement = mock(ObservableLongMeasurement.class);
-    MemoryPools.observeNonHeap(measurement, new MemoryUsage(-1, 4, 5, -1));
+    MemoryPools.recordNonHeap(measurement, new MemoryUsage(-1, 4, 5, -1));
     verify(measurement)
-        .observe(4, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "non_heap"));
+        .record(4, Attributes.of(MemoryPools.TYPE_KEY, "used", MemoryPools.AREA_KEY, "non_heap"));
     verify(measurement)
-        .observe(
+        .record(
             5, Attributes.of(MemoryPools.TYPE_KEY, "committed", MemoryPools.AREA_KEY, "non_heap"));
     verifyNoMoreInteractions(measurement);
   }
