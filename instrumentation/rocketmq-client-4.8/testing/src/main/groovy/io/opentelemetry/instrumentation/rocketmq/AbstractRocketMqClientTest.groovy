@@ -40,6 +40,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   @Shared
   def msgs = new ArrayList<Message>()
 
+  @Shared
+  TracingMessageListener tracingMessageListener = new TracingMessageListener()
+
   abstract void configureMQProducer(DefaultMQProducer producer)
 
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
@@ -53,7 +56,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     msgs.add(msg2)
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new TracingMessageListener())
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", tracingMessageListener)
     configureMQPushConsumer(consumer)
   }
 
@@ -175,8 +178,26 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     consumer.setConsumeMessageBatchMaxSize(2)
 
     when:
-    runWithSpan("parent") {
-      producer.send(msgs)
+    // This test assumes that messages are sent and received as a batch. Occasionally it happens
+    // that the messages are not received as a batch, but one by one. This doesn't match what the
+    // assertion expects. To reduce flakiness we retry the test when messages weren't received as
+    // a batch.
+    def maxAttempts = 5
+    for (i in 1..maxAttempts) {
+      tracingMessageListener.reset()
+
+      runWithSpan("parent") {
+        producer.send(msgs)
+      }
+
+      tracingMessageListener.waitForMessages()
+      if (tracingMessageListener.getLastBatchSize() == 2) {
+        break
+      } else if (i < maxAttempts) {
+        // if messages weren't received as a batch we get 1 trace instead of 2
+        ignoreTracesAndClear(1)
+        System.err.println("Messages weren't received as batch, retrying")
+      }
     }
 
     then:
