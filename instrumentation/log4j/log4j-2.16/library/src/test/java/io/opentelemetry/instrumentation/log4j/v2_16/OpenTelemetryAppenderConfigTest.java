@@ -12,9 +12,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.appender.api.LogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,17 +45,14 @@ class OpenTelemetryAppenderConfigTest {
     resource = Resource.getDefault();
     instrumentationLibraryInfo = InstrumentationLibraryInfo.create("TestLogger", null);
 
-    SdkLogEmitterProvider logEmitterProvider =
-        SdkLogEmitterProvider.builder()
+    io.opentelemetry.sdk.logs.SdkLogEmitterProvider logEmitterProvider =
+        io.opentelemetry.sdk.logs.SdkLogEmitterProvider.builder()
             .setResource(resource)
             .addLogProcessor(SimpleLogProcessor.create(logExporter))
             .build();
-    OpenTelemetryLog4j.initialize(LogEmitterProvider.from(logEmitterProvider));
-  }
 
-  @AfterAll
-  static void afterAll() {
-    OpenTelemetryLog4j.resetForTest();
+    GlobalLogEmitterProvider.resetForTest();
+    GlobalLogEmitterProvider.set(SdkLogEmitterProvider.from(logEmitterProvider));
   }
 
   @BeforeEach
@@ -95,7 +91,7 @@ class OpenTelemetryAppenderConfigTest {
 
   private static Span runWithSpan(String spanName, Runnable runnable) {
     Span span = SdkTracerProvider.builder().build().get("tracer").spanBuilder(spanName).startSpan();
-    try (Scope unused = span.makeCurrent()) {
+    try (Scope ignored = span.makeCurrent()) {
       runnable.run();
     } finally {
       span.end();

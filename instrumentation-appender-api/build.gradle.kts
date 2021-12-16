@@ -10,4 +10,6 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-logs")
+
+  testImplementation("org.assertj:assertj-core")
 }
