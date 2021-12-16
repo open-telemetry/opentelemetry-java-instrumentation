@@ -25,6 +25,8 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-2.16:library-autoconfigure"))
 
+  testInstrumentation(project(":instrumentation:log4j:log4j-2.7:javaagent"))
+
   testImplementation(project(":instrumentation:log4j:log4j-2-common:testing"))
 }
 
