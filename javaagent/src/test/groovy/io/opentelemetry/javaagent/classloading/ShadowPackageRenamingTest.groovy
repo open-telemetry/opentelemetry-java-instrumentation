@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.classloading
 
-import com.fasterxml.jackson.jr.ob.JSON
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.javaagent.IntegrationTestUtils
+import io.opentelemetry.sdk.OpenTelemetrySdk
 import spock.lang.Specification
 
 class ShadowPackageRenamingTest extends Specification {
@@ -37,12 +37,12 @@ class ShadowPackageRenamingTest extends Specification {
     Class<?> clazz =
       IntegrationTestUtils.getAgentClassLoader()
         .loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller")
-    URL userJackson =
-      JSON.getProtectionDomain().getCodeSource().getLocation()
-    URL agentJacksonep =
+    URL userSdk =
+      OpenTelemetrySdk.getProtectionDomain().getCodeSource().getLocation()
+    URL agentSdkDep =
       clazz
         .getClassLoader()
-        .loadClass("com.fasterxml.jackson.jr.ob.JSON")
+        .loadClass("io.opentelemetry.sdk.OpenTelemetrySdk")
         .getProtectionDomain()
         .getCodeSource()
         .getLocation()
@@ -52,8 +52,8 @@ class ShadowPackageRenamingTest extends Specification {
     expect:
     agentSource.getFile().endsWith(".jar")
     agentSource.getProtocol() == "file"
-    agentSource == agentJacksonep
-    agentSource.getFile() != userJackson.getFile()
+    agentSource == agentSdkDep
+    agentSource.getFile() != userSdk.getFile()
   }
 
   def "agent classes not visible"() {
