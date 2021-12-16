@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
+import io.opentelemetry.instrumentation.log4j.v2_16.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.apache.logging.log4j.LogManager
 
