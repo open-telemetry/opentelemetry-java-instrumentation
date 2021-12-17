@@ -9,5 +9,7 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
+  api(project(":instrumentation-api-appender"))
+
   api("io.opentelemetry:opentelemetry-sdk-logs")
 }
