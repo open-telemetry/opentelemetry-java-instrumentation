@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.appender.api;
 
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+
 public final class DelegatingLogEmitterProvider implements LogEmitterProvider {
 
-  private final io.opentelemetry.sdk.logs.SdkLogEmitterProvider delegate;
+  private final SdkLogEmitterProvider delegate;
 
-  public static DelegatingLogEmitterProvider from(
-      io.opentelemetry.sdk.logs.SdkLogEmitterProvider delegate) {
+  public static DelegatingLogEmitterProvider from(SdkLogEmitterProvider delegate) {
     return new DelegatingLogEmitterProvider(delegate);
   }
 
-  private DelegatingLogEmitterProvider(io.opentelemetry.sdk.logs.SdkLogEmitterProvider delegate) {
+  private DelegatingLogEmitterProvider(SdkLogEmitterProvider delegate) {
     this.delegate = delegate;
   }
 
