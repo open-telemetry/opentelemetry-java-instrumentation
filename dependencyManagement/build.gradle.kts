@@ -31,12 +31,14 @@ val groovyVersion = "3.0.9"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.12.3",
-  "com.google.guava:guava-bom:30.1.1-jre",
+  // wait to upgrade to jackson 2.13.x until after 2.13.1 is released
+  // due to https://github.com/FasterXML/jackson-databind/issues/3328
+  "com.fasterxml.jackson:jackson-bom:2.12.6",
+  "com.google.guava:guava-bom:31.0.1-jre",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelAlphaVersion}",
-  "org.junit:junit-bom:5.7.2"
+  "org.junit:junit-bom:5.8.2"
 )
 
 val DEPENDENCY_SETS = listOf(
