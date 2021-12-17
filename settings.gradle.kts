@@ -97,7 +97,7 @@ include(":javaagent")
 
 include(":bom-alpha")
 include(":instrumentation-api")
-include(":instrumentation-appender-api")
+include(":instrumentation-api-appender")
 include(":javaagent-instrumentation-api")
 include(":instrumentation-api-annotation-support")
 

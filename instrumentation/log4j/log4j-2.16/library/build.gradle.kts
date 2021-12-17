@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation-appender-api"))
+  api(project(":instrumentation-api-appender"))
 
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
