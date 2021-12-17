@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
+import io.opentelemetry.sdk.logs.data.LogData
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.junit.Rule
@@ -68,6 +69,11 @@ abstract class InstrumentationSpecification extends Specification {
   /** Return a list of all captured metrics. */
   List<MetricData> getMetrics() {
     testRunner().getExportedMetrics()
+  }
+
+  /** Return a list of all captured logs. */
+  List<LogData> getLogs() {
+    testRunner().getExportedLogs()
   }
 
   /**

@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
   `java-library`
 
@@ -31,11 +29,13 @@ dependencies {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling") {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
