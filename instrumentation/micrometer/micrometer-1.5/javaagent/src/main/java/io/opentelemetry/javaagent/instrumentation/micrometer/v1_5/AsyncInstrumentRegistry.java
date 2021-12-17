@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
-import java.util.function.DoubleSupplier;
 import java.util.function.ToDoubleFunction;
 
 final class AsyncInstrumentRegistry {
@@ -55,21 +55,36 @@ final class AsyncInstrumentRegistry {
   private static final class GaugeMeasurementsRecorder
       implements Consumer<ObservableDoubleMeasurement> {
 
-    private final ConcurrentMap<Attributes, DoubleSupplier> measurements =
-        new ConcurrentHashMap<>();
+    private final ConcurrentMap<Attributes, GaugeInfo> measurements = new ConcurrentHashMap<>();
 
     @Override
     public void accept(ObservableDoubleMeasurement measurement) {
       measurements.forEach(
-          (attributes, supplier) -> measurement.record(supplier.getAsDouble(), attributes));
+          (attributes, gauge) -> {
+            Object obj = gauge.objWeakRef.get();
+            if (obj != null) {
+              measurement.record(gauge.metricFunction.applyAsDouble(obj), attributes);
+            }
+          });
     }
 
     <T> void addGaugeMeasurement(Attributes attributes, T obj, ToDoubleFunction<T> objMetric) {
-      measurements.put(attributes, () -> objMetric.applyAsDouble(obj));
+      measurements.put(attributes, new GaugeInfo(obj, (ToDoubleFunction<Object>) objMetric));
     }
 
     void removeGaugeMeasurement(Attributes attributes) {
       measurements.remove(attributes);
+    }
+  }
+
+  private static final class GaugeInfo {
+
+    private final WeakReference<Object> objWeakRef;
+    private final ToDoubleFunction<Object> metricFunction;
+
+    private GaugeInfo(Object obj, ToDoubleFunction<Object> metricFunction) {
+      this.objWeakRef = new WeakReference<>(obj);
+      this.metricFunction = metricFunction;
     }
   }
 }

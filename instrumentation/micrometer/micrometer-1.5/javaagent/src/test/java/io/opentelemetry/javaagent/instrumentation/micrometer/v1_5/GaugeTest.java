@@ -10,8 +10,11 @@ import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.asse
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,5 +108,36 @@ class GaugeTest {
                                     .hasValue(42)
                                     .attributes()
                                     .containsOnly(attributeEntry("tag", "2")))));
+  }
+
+  @Test
+  void testWeakRefGauge() throws InterruptedException {
+    // when
+    AtomicLong num = new AtomicLong(42);
+    Gauge.builder("testWeakRefGauge", num, AtomicLong::get)
+        .strongReference(false)
+        .register(Metrics.globalRegistry);
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testWeakRefGauge",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleGauge()
+                        .points()
+                        .satisfiesExactly(point -> assertThat(point).hasValue(42))));
+    testing.clearData();
+
+    // when
+    WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);
+    num = null;
+    GcUtils.awaitGc(numWeakRef);
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "testWeakRefGauge", AbstractIterableAssert::isEmpty);
   }
 }
