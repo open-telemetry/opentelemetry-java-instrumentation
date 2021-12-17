@@ -10,11 +10,11 @@ import io.opentelemetry.context.Context;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-final class SdkLogBuilder implements LogBuilder {
+final class DelegatingLogBuilder implements LogBuilder {
 
   private final io.opentelemetry.sdk.logs.LogBuilder delegate;
 
-  SdkLogBuilder(io.opentelemetry.sdk.logs.LogBuilder delegate) {
+  DelegatingLogBuilder(io.opentelemetry.sdk.logs.LogBuilder delegate) {
     this.delegate = delegate;
   }
 

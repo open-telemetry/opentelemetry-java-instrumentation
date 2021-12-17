@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.appender.api;
 
-final class SdkLogEmitter implements LogEmitter {
+final class DelegatingLogEmitter implements LogEmitter {
 
   private final io.opentelemetry.sdk.logs.LogEmitter delegate;
 
-  SdkLogEmitter(io.opentelemetry.sdk.logs.LogEmitter delegate) {
+  DelegatingLogEmitter(io.opentelemetry.sdk.logs.LogEmitter delegate) {
     this.delegate = delegate;
   }
 
   @Override
   public LogBuilder logBuilder() {
-    return new SdkLogBuilder(delegate.logBuilder());
+    return new DelegatingLogBuilder(delegate.logBuilder());
   }
 }

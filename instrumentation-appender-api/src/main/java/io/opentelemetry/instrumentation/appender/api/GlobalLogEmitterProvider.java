@@ -60,4 +60,6 @@ public final class GlobalLogEmitterProvider {
   public static void resetForTest() {
     globalLogEmitterProvider = null;
   }
+
+  private GlobalLogEmitterProvider() {}
 }
