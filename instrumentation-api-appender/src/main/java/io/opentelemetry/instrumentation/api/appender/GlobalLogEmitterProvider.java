@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.appender;
 
-import io.opentelemetry.api.internal.GuardedBy;
 import javax.annotation.Nullable;
 
 public final class GlobalLogEmitterProvider {
@@ -14,9 +13,7 @@ public final class GlobalLogEmitterProvider {
 
   private static volatile LogEmitterProvider globalLogEmitterProvider = null;
 
-  @GuardedBy("mutex")
-  @Nullable
-  private static Throwable setGlobalCaller;
+  @Nullable private static Throwable setGlobalCaller;
 
   /** Returns the registered global {@link LogEmitterProvider}. */
   public static LogEmitterProvider get() {
