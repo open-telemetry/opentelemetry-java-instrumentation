@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.appender.api.DelegatingLogEmitterProvider;
 import io.opentelemetry.instrumentation.appender.api.GlobalLogEmitterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
@@ -45,8 +46,8 @@ class OpenTelemetryAppenderConfigTest {
     resource = Resource.getDefault();
     instrumentationLibraryInfo = InstrumentationLibraryInfo.create("TestLogger", null);
 
-    io.opentelemetry.sdk.logs.SdkLogEmitterProvider logEmitterProvider =
-        io.opentelemetry.sdk.logs.SdkLogEmitterProvider.builder()
+    SdkLogEmitterProvider logEmitterProvider =
+        SdkLogEmitterProvider.builder()
             .setResource(resource)
             .addLogProcessor(SimpleLogProcessor.create(logExporter))
             .build();
