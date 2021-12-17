@@ -61,9 +61,11 @@ class RockerMqConsumerAttributeExtractor extends MessagingAttributesExtractor<Me
     return null;
   }
 
+  @Nullable
   @Override
   protected Long messagePayloadSize(MessageExt request) {
-    return (long) request.getBody().length;
+    byte[] body = request.getBody();
+    return body == null ? null : (long) body.length;
   }
 
   @Nullable

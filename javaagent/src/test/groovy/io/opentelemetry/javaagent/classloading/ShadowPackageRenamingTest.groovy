@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.classloading
 
-import com.google.common.collect.MapMaker
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.javaagent.IntegrationTestUtils
+import io.opentelemetry.sdk.OpenTelemetrySdk
 import spock.lang.Specification
 
 class ShadowPackageRenamingTest extends Specification {
@@ -15,10 +15,8 @@ class ShadowPackageRenamingTest extends Specification {
 
   static final String[] AGENT_PACKAGE_PREFIXES = [
     "io.opentelemetry.instrumentation.api",
-    // guava
-    "com.google.auto",
-    "com.google.common",
-    "com.google.thirdparty.publicsuffix",
+    // jackson
+    "com.fasterxml.jackson",
     // bytebuddy
     "net.bytebuddy",
     "org.yaml.snakeyaml",
@@ -39,12 +37,12 @@ class ShadowPackageRenamingTest extends Specification {
     Class<?> clazz =
       IntegrationTestUtils.getAgentClassLoader()
         .loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller")
-    URL userGuava =
-      MapMaker.getProtectionDomain().getCodeSource().getLocation()
-    URL agentGuavaDep =
+    URL userSdk =
+      OpenTelemetrySdk.getProtectionDomain().getCodeSource().getLocation()
+    URL agentSdkDep =
       clazz
         .getClassLoader()
-        .loadClass("com.google.common.collect.MapMaker")
+        .loadClass("io.opentelemetry.sdk.OpenTelemetrySdk")
         .getProtectionDomain()
         .getCodeSource()
         .getLocation()
@@ -54,8 +52,8 @@ class ShadowPackageRenamingTest extends Specification {
     expect:
     agentSource.getFile().endsWith(".jar")
     agentSource.getProtocol() == "file"
-    agentSource == agentGuavaDep
-    agentSource.getFile() != userGuava.getFile()
+    agentSource == agentSdkDep
+    agentSource.getFile() != userSdk.getFile()
   }
 
   def "agent classes not visible"() {

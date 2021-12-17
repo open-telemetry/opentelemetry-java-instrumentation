@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
@@ -21,7 +21,8 @@ public class ProcessMetrics {
 
   /** Register observers for java runtime metrics. */
   public static void registerObservers() {
-    Meter meter = GlobalMeterProvider.get().get(ProcessMetrics.class.getName());
+    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
+    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(ProcessMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
@@ -34,8 +35,8 @@ public class ProcessMetrics {
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.observe(processInfo.getResidentSetSize(), Attributes.of(TYPE_KEY, "rss"));
-              r.observe(processInfo.getVirtualSize(), Attributes.of(TYPE_KEY, "vms"));
+              r.record(processInfo.getResidentSetSize(), Attributes.of(TYPE_KEY, "rss"));
+              r.record(processInfo.getVirtualSize(), Attributes.of(TYPE_KEY, "vms"));
             });
 
     meter
@@ -45,8 +46,8 @@ public class ProcessMetrics {
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.observe(processInfo.getUserTime() * 1000, Attributes.of(TYPE_KEY, "user"));
-              r.observe(processInfo.getKernelTime() * 1000, Attributes.of(TYPE_KEY, "system"));
+              r.record(processInfo.getUserTime() * 1000, Attributes.of(TYPE_KEY, "user"));
+              r.record(processInfo.getKernelTime() * 1000, Attributes.of(TYPE_KEY, "system"));
             });
   }
 }

@@ -172,7 +172,7 @@
     </module>
     <module name="PackageName">
       <!-- modified from default to support packages like
-           io.opentelemetry.javaagent.instrumentation.log4j.v2_13_2 and
+           io.opentelemetry.javaagent.instrumentation.log4j.v2_16 and
            io.opentelemetry.javaagent.instrumentation.netty.v4_1.client -->
       <property name="format"
         value="^[a-z]+(\.[a-z][a-z0-9]*)*(\.v[0-9]+_[0-9]+(_[0-9]+)?)?(\.[a-z][a-z0-9]*)*$"/>
