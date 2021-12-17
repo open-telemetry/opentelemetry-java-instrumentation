@@ -137,4 +137,36 @@ class TimerTest {
                                     .attributes()
                                     .containsEntry("le", "1000000"))));
   }
+
+  @Test
+  void testMicrometerPercentiles() {
+    // given
+    Timer timer =
+        Timer.builder("testPercentiles")
+            .description("This is a test timer")
+            .tags("tag", "value")
+            .publishPercentiles(0.5, 0.95, 0.99)
+            .register(Metrics.globalRegistry);
+
+    // when
+    timer.record(50, TimeUnit.MILLISECONDS);
+    timer.record(100, TimeUnit.MILLISECONDS);
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testPercentiles.percentile",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleGauge()
+                        .points()
+                        .anySatisfy(
+                            point -> assertThat(point).attributes().containsEntry("phi", "0.5"))
+                        .anySatisfy(
+                            point -> assertThat(point).attributes().containsEntry("phi", "0.95"))
+                        .anySatisfy(
+                            point -> assertThat(point).attributes().containsEntry("phi", "0.99"))));
+  }
 }
