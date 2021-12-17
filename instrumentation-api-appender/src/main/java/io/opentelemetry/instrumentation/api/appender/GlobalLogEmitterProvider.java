@@ -20,15 +20,17 @@ public final class GlobalLogEmitterProvider {
 
   /** Returns the registered global {@link LogEmitterProvider}. */
   public static LogEmitterProvider get() {
-    if (globalLogEmitterProvider == null) {
+    LogEmitterProvider logEmitterProvider = globalLogEmitterProvider;
+    if (logEmitterProvider == null) {
       synchronized (mutex) {
-        if (globalLogEmitterProvider == null) {
+        logEmitterProvider = globalLogEmitterProvider;
+        if (logEmitterProvider == null) {
           set(NoopLogEmitterProvider.INSTANCE);
           return NoopLogEmitterProvider.INSTANCE;
         }
       }
     }
-    return globalLogEmitterProvider;
+    return logEmitterProvider;
   }
 
   /**
