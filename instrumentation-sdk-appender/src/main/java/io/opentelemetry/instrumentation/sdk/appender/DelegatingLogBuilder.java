@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.appender;
+package io.opentelemetry.instrumentation.sdk.appender;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.appender.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.Severity;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
