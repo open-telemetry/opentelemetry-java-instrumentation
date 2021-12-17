@@ -7,6 +7,7 @@ dependencies {
 
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
+  testImplementation(project(":instrumentation-sdk-appender"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
 
   testImplementation("org.mockito:mockito-core")
