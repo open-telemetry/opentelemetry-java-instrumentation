@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import io.opentelemetry.instrumentation.appender.api.GlobalLogEmitterProvider;
-import io.opentelemetry.instrumentation.appender.api.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import java.io.Serializable;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
