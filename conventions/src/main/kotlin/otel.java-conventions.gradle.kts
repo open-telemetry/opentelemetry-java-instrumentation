@@ -301,7 +301,7 @@ idea {
 }
 
 when (projectDir.name) {
-  "bootstrap", "javaagent", "library", "testing" -> {
+  "bootstrap", "javaagent", "library", "library-autoconfigure", "testing" -> {
     // We don't use this group anywhere in our config, but we need to make sure it is unique per
     // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
     // https://github.com/gradle/gradle/issues/847
