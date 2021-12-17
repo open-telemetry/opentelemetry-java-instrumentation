@@ -12,38 +12,26 @@ import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridgin
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Measurement;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 
 final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   private final Id id;
-  private final T obj;
-  private final ToDoubleFunction<T> objMetric;
   private final Attributes attributes;
+  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
-  volatile boolean removed = false;
-
-  OpenTelemetryGauge(Id id, T obj, ToDoubleFunction<T> objMetric, Meter otelMeter) {
+  OpenTelemetryGauge(
+      Id id,
+      T obj,
+      ToDoubleFunction<T> objMetric,
+      AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
-    this.obj = obj;
-    this.objMetric = objMetric;
     this.attributes = toAttributes(id.getTags());
+    this.asyncInstrumentRegistry = asyncInstrumentRegistry;
 
-    otelMeter
-        .gaugeBuilder(id.getName())
-        .setDescription(description(id))
-        .setUnit(baseUnit(id))
-        .buildWithCallback(this::recordMeasurements);
-  }
-
-  private void recordMeasurements(ObservableDoubleMeasurement measurement) {
-    if (removed) {
-      return;
-    }
-    measurement.record(objMetric.applyAsDouble(obj), attributes);
+    asyncInstrumentRegistry.buildGauge(
+        id.getName(), description(id), baseUnit(id), attributes, obj, objMetric);
   }
 
   @Override
@@ -65,6 +53,6 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   @Override
   public void onRemove() {
-    removed = true;
+    asyncInstrumentRegistry.removeGauge(id.getName(), attributes);
   }
 }

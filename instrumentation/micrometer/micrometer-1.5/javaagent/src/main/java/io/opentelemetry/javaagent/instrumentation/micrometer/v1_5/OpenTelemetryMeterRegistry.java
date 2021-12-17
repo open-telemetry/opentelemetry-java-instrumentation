@@ -37,15 +37,17 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   }
 
   private final io.opentelemetry.api.metrics.Meter otelMeter;
+  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
   private OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.otelMeter = otelMeter;
+    this.asyncInstrumentRegistry = new AsyncInstrumentRegistry(otelMeter);
   }
 
   @Override
   protected <T> Gauge newGauge(Meter.Id id, T t, ToDoubleFunction<T> toDoubleFunction) {
-    return new OpenTelemetryGauge<>(id, t, toDoubleFunction, otelMeter);
+    return new OpenTelemetryGauge<>(id, t, toDoubleFunction, asyncInstrumentRegistry);
   }
 
   @Override

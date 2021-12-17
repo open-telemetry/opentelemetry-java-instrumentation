@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,6 +25,11 @@ class TimerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @BeforeEach
+  void cleanupMeters() {
+    Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
+  }
 
   @Test
   void testTimer() {
@@ -112,27 +118,23 @@ class TimerTest {
                                     .hasValue(1)
                                     .attributes()
                                     .containsEntry("le", "1000"))
-                // TODO: I have absolutely no idea why otel drops these points below
-                /*
-                                        .anySatisfy(
-                                            point ->
-                                                assertThat(point)
-                                                    .hasValue(2)
-                                                    .attributes()
-                                                    .containsEntry("le", "10000"))
-                                        .anySatisfy(
-                                            point ->
-                                                assertThat(point)
-                                                    .hasValue(3)
-                                                    .attributes()
-                                                    .containsEntry("le", "100000"))
-                                        .anySatisfy(
-                                            point ->
-                                                assertThat(point)
-                                                    .hasValue(4)
-                                                    .attributes()
-                                                    .containsEntry("le", "1000000"))
-                */
-                ));
+                        .anySatisfy(
+                            point ->
+                                assertThat(point)
+                                    .hasValue(2)
+                                    .attributes()
+                                    .containsEntry("le", "10000"))
+                        .anySatisfy(
+                            point ->
+                                assertThat(point)
+                                    .hasValue(3)
+                                    .attributes()
+                                    .containsEntry("le", "100000"))
+                        .anySatisfy(
+                            point ->
+                                assertThat(point)
+                                    .hasValue(4)
+                                    .attributes()
+                                    .containsEntry("le", "1000000"))));
   }
 }
