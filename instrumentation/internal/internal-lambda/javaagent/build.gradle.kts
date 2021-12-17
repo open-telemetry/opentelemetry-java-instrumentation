@@ -8,3 +8,8 @@ dependencies {
 
   testImplementation(project(":javaagent-bootstrap"))
 }
+
+// disable muzzle codegen - this module includes java9+ only classes, and they must not be captured as references or helpers
+tasks.named("byteBuddy").configure {
+  enabled = false
+}

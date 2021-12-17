@@ -11,9 +11,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
@@ -44,13 +42,5 @@ public class LambdaInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new InnerClassLambdaMetafactoryInstrumentation());
-  }
-
-  // adding this method here turns off the muzzle reference generation process
-  // we don't want to have references to the java 9 transformer class because it is impossible to
-  // load it on java 8 vms
-  @SuppressWarnings({"unused", "rawtypes"})
-  public Map getMuzzleReferences() {
-    return Collections.emptyMap();
   }
 }
