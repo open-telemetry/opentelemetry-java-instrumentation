@@ -9,5 +9,7 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
+  api("io.opentelemetry:opentelemetry-api")
+
   testImplementation("org.assertj:assertj-core")
 }
