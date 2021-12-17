@@ -28,6 +28,12 @@ public class MicrometerInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  protected boolean defaultEnabled() {
+    // TODO: disabled by default, since not all instruments are implemented
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new MetricsInstrumentation());
   }
