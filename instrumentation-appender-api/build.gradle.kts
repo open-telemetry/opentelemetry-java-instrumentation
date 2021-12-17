@@ -9,7 +9,7 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
-  implementation("io.opentelemetry:opentelemetry-sdk-logs")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-logs")
 
   testImplementation("org.assertj:assertj-core")
 }
