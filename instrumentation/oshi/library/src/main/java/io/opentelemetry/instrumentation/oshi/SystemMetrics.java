@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
@@ -29,7 +29,9 @@ public class SystemMetrics {
 
   /** Register observers for system metrics. */
   public static void registerObservers() {
-    Meter meter = GlobalMeterProvider.get().get("io.opentelemetry.instrumentation.oshi");
+    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
+    Meter meter =
+        GlobalOpenTelemetry.get().getMeterProvider().get("io.opentelemetry.instrumentation.oshi");
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
@@ -41,8 +43,8 @@ public class SystemMetrics {
         .buildWithCallback(
             r -> {
               GlobalMemory mem = hal.getMemory();
-              r.observe(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
-              r.observe(mem.getAvailable(), ATTRIBUTES_FREE);
+              r.record(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
+              r.record(mem.getAvailable(), ATTRIBUTES_FREE);
             });
 
     meter
@@ -52,10 +54,10 @@ public class SystemMetrics {
         .buildWithCallback(
             r -> {
               GlobalMemory mem = hal.getMemory();
-              r.observe(
+              r.record(
                   ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
                   ATTRIBUTES_USED);
-              r.observe(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
+              r.record(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
             });
 
     meter
@@ -70,8 +72,8 @@ public class SystemMetrics {
                 long recv = networkIf.getBytesRecv();
                 long sent = networkIf.getBytesSent();
                 String device = networkIf.getName();
-                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
             });
 
@@ -87,8 +89,8 @@ public class SystemMetrics {
                 long recv = networkIf.getPacketsRecv();
                 long sent = networkIf.getPacketsSent();
                 String device = networkIf.getName();
-                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
             });
 
@@ -104,8 +106,8 @@ public class SystemMetrics {
                 long recv = networkIf.getInErrors();
                 long sent = networkIf.getOutErrors();
                 String device = networkIf.getName();
-                r.observe(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.observe(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
               }
             });
 
@@ -120,8 +122,8 @@ public class SystemMetrics {
                 long read = diskStore.getReadBytes();
                 long write = diskStore.getWriteBytes();
                 String device = diskStore.getName();
-                r.observe(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                r.observe(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
+                r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
               }
             });
 
@@ -136,8 +138,8 @@ public class SystemMetrics {
                 long read = diskStore.getReads();
                 long write = diskStore.getWrites();
                 String device = diskStore.getName();
-                r.observe(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                r.observe(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
+                r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
               }
             });
   }

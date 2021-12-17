@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
@@ -14,7 +13,6 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.Arrays;
 
 public class OpenTelemetryInstaller {
@@ -45,13 +43,8 @@ public class OpenTelemetryInstaller {
     OpenTelemetrySdkAccess.internalSetForceFlush(
         (timeout, unit) -> {
           CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-          MeterProvider meterProvider = GlobalMeterProvider.get();
-          final CompletableResultCode metricsResult;
-          if (meterProvider instanceof SdkMeterProvider) {
-            metricsResult = ((SdkMeterProvider) meterProvider).forceFlush();
-          } else {
-            metricsResult = CompletableResultCode.ofSuccess();
-          }
+          MeterProvider meterProvider = sdk.getSdkMeterProvider();
+          final CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
           CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
               .join(timeout, unit);
         });

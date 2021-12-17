@@ -29,7 +29,7 @@ class RpcServerMetricsTest {
 
   @Test
   void collectsMetrics() {
-    InMemoryMetricReader metricReader = new InMemoryMetricReader();
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
