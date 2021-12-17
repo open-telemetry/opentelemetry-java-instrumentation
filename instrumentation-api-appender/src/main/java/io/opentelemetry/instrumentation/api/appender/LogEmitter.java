@@ -16,6 +16,6 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public interface LogEmitter {
 
-  /** Return a {@link LogBuilder} to emit a log. */
+  /** Return a new {@link LogBuilder} to emit a log. */
   LogBuilder logBuilder();
 }
