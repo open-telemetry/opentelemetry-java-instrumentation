@@ -23,6 +23,11 @@ abstract class JettyJpmsSmokeTest extends AppServerTest {
 @AppServer(version = "11.0.7", jdk = "11")
 class Jetty11JpmsJdk11 extends JettyJpmsSmokeTest {
 }
+
 @AppServer(version = "11.0.7", jdk = "17")
 class Jetty11JpmsJdk17 extends JettyJpmsSmokeTest {
+}
+
+@AppServer(version = "11.0.7", jdk = "18")
+class Jetty11JpmsJdk18 extends JettyJpmsSmokeTest {
 }

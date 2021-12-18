@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import io.opentelemetry.sdk.logs.LogBuilder;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
@@ -37,16 +36,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
-      OpenTelemetryAppender appender =
-          new OpenTelemetryAppender(
-              getName(), getLayout(), getFilter(), isIgnoreExceptions(), getPropertyArray());
-      OpenTelemetryLog4j.registerInstance(appender);
-      return appender;
+      return new OpenTelemetryAppender(
+          getName(), getLayout(), getFilter(), isIgnoreExceptions(), getPropertyArray());
     }
   }
-
-  private final AtomicReference<SdkLogEmitterProvider> sdkLogEmitterProviderRef =
-      new AtomicReference<>();
 
   private OpenTelemetryAppender(
       String name,
@@ -59,20 +52,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   @Override
   public void append(LogEvent event) {
-    SdkLogEmitterProvider logEmitterProvider = sdkLogEmitterProviderRef.get();
-    if (logEmitterProvider == null) {
-      // appender hasn't been initialized
-      return;
-    }
     LogBuilder builder =
-        logEmitterProvider.logEmitterBuilder(event.getLoggerName()).build().logBuilder();
+        GlobalLogEmitterProvider.get()
+            .logEmitterBuilder(event.getLoggerName())
+            .build()
+            .logBuilder();
     LogEventMapper.mapLogEvent(builder, event);
     builder.emit();
-  }
-
-  void initialize(SdkLogEmitterProvider sdkLogEmitterProvider) {
-    if (!sdkLogEmitterProviderRef.compareAndSet(null, sdkLogEmitterProvider)) {
-      throw new IllegalStateException("OpenTelemetryAppender has already been initialized.");
-    }
   }
 }

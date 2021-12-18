@@ -14,6 +14,7 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
@@ -98,6 +99,12 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   @Override
   public List<MetricData> getExportedMetrics() {
     // no metrics support yet
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<LogData> getExportedLogs() {
+    // no logs support yet
     return Collections.emptyList();
   }
 
