@@ -58,7 +58,7 @@ val licenseReportDependencies by configurations.creating {
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
-  bootstrapLibs(project(":instrumentation-appender-api"))
+  bootstrapLibs(project(":instrumentation-api-appender"))
   bootstrapLibs(project(":javaagent-bootstrap"))
   bootstrapLibs(project(":javaagent-instrumentation-api"))
   bootstrapLibs("org.slf4j:slf4j-simple")
@@ -295,7 +295,7 @@ fun ShadowJar.excludeBootstrapJars() {
   dependencies {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-annotation-support"))
-    exclude(project(":instrumentation-appender-api"))
+    exclude(project(":instrumentation-api-appender"))
     exclude(project(":javaagent-bootstrap"))
     exclude(project(":javaagent-instrumentation-api"))
   }
