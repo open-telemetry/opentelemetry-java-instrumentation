@@ -32,7 +32,6 @@ final class LogEventMapper {
    *   <li>Thread id - {@link LogEvent#getThreadId()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Thrown details (stack trace, class name) - {@link LogEvent#getThrown()}
    *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
@@ -79,9 +78,8 @@ final class LogEventMapper {
   private static Severity levelToSeverity(Level level) {
     switch (level.getStandardLevel()) {
       case ALL:
-        return Severity.TRACE;
       case TRACE:
-        return Severity.TRACE2;
+        return Severity.TRACE;
       case DEBUG:
         return Severity.DEBUG;
       case INFO:
