@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.appender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +34,7 @@ class GlobalLogEmitterProviderTest {
   @Test
   void setThenSet() {
     setLogEmitterProvider();
-    assertThatThrownBy(() -> GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE))
+    assertThatThrownBy(() -> GlobalLogEmitterProvider.set(mock(LogEmitterProvider.class)))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("GlobalLogEmitterProvider.set has already been called")
         .hasStackTraceContaining("setLogEmitterProvider");
@@ -40,18 +42,23 @@ class GlobalLogEmitterProviderTest {
 
   @Test
   void getThenSet() {
-    assertThat(getLogEmitterProvider()).isInstanceOf(NoopLogEmitterProvider.class);
-    assertThatThrownBy(() -> GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("GlobalLogEmitterProvider.set has already been called")
-        .hasStackTraceContaining("getLogEmitterProvider");
+    LogEmitterProvider existingProvider = GlobalLogEmitterProvider.get();
+    assertSame(existingProvider, NoopLogEmitterProvider.INSTANCE);
+    LogEmitterProvider newProvider = mock(LogEmitterProvider.class);
+    GlobalLogEmitterProvider.set(newProvider);
+    assertSame(newProvider, GlobalLogEmitterProvider.get());
   }
 
-  private static void setLogEmitterProvider() {
+  @Test
+  void okToSetNoopMultipleTimes() {
     GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    // pass
   }
 
-  private static LogEmitterProvider getLogEmitterProvider() {
-    return GlobalLogEmitterProvider.get();
+  private void setLogEmitterProvider() {
+    GlobalLogEmitterProvider.set(mock(LogEmitterProvider.class));
   }
 }

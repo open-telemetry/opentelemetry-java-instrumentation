@@ -5,29 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.appender;
 
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 public final class GlobalLogEmitterProvider {
 
-  private static final Object mutex = new Object();
+  private static final AtomicReference<LogEmitterProvider> globalLogEmitterProvider =
+      new AtomicReference<>(NoopLogEmitterProvider.INSTANCE);
 
-  private static volatile LogEmitterProvider globalLogEmitterProvider = null;
-
-  @Nullable private static Throwable setGlobalCaller;
+  @Nullable private static volatile Throwable setGlobalCaller;
 
   /** Returns the registered global {@link LogEmitterProvider}. */
   public static LogEmitterProvider get() {
-    LogEmitterProvider logEmitterProvider = globalLogEmitterProvider;
-    if (logEmitterProvider == null) {
-      synchronized (mutex) {
-        logEmitterProvider = globalLogEmitterProvider;
-        if (logEmitterProvider == null) {
-          set(NoopLogEmitterProvider.INSTANCE);
-          return NoopLogEmitterProvider.INSTANCE;
-        }
-      }
-    }
-    return logEmitterProvider;
+    return globalLogEmitterProvider.get();
   }
 
   /**
@@ -39,17 +29,16 @@ public final class GlobalLogEmitterProvider {
    * in tests, use {@link GlobalLogEmitterProvider#resetForTest()} between them.
    */
   public static void set(LogEmitterProvider logEmitterProvider) {
-    synchronized (mutex) {
-      if (globalLogEmitterProvider != null) {
-        throw new IllegalStateException(
-            "GlobalLogEmitterProvider.set has already been called. GlobalLogEmitterProvider.set "
-                + "must be called only once before any calls to GlobalLogEmitterProvider.get. "
-                + "Previous invocation set to cause of this exception.",
-            setGlobalCaller);
-      }
-      globalLogEmitterProvider = logEmitterProvider;
-      setGlobalCaller = new Throwable();
+    boolean changed =
+        globalLogEmitterProvider.compareAndSet(NoopLogEmitterProvider.INSTANCE, logEmitterProvider);
+    if (!changed && (logEmitterProvider != NoopLogEmitterProvider.INSTANCE)) {
+      throw new IllegalStateException(
+          "GlobalLogEmitterProvider.set has already been called. GlobalLogEmitterProvider.set "
+              + "must be called only once before any calls to GlobalLogEmitterProvider.get. "
+              + "Previous invocation set to cause of this exception.",
+          setGlobalCaller);
     }
+    setGlobalCaller = new Throwable();
   }
 
   /**
@@ -57,7 +46,7 @@ public final class GlobalLogEmitterProvider {
    * need to reconfigure {@link LogEmitterProvider}.
    */
   public static void resetForTest() {
-    globalLogEmitterProvider = null;
+    globalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
   }
 
   private GlobalLogEmitterProvider() {}
