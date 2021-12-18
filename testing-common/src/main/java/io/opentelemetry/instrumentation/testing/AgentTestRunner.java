@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
+import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -83,6 +84,11 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
   @Override
   public List<MetricData> getExportedMetrics() {
     return AgentTestingExporterAccess.getExportedMetrics();
+  }
+
+  @Override
+  public List<LogData> getExportedLogs() {
+    return AgentTestingExporterAccess.getExportedLogs();
   }
 
   @Override

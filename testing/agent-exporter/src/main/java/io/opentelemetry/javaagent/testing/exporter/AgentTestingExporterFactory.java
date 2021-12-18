@@ -11,6 +11,7 @@ public class AgentTestingExporterFactory {
 
   static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
   static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
+  static final OtlpInMemoryLogExporter logExporter = new OtlpInMemoryLogExporter();
 
   public static List<byte[]> getSpanExportRequests() {
     return spanExporter.getCollectedExportRequests();
@@ -20,9 +21,14 @@ public class AgentTestingExporterFactory {
     return metricExporter.getCollectedExportRequests();
   }
 
+  public static List<byte[]> getLogExportRequests() {
+    return logExporter.getCollectedExportRequests();
+  }
+
   public static void reset() {
     spanExporter.reset();
     metricExporter.reset();
+    logExporter.reset();
   }
 
   public static boolean forceFlushCalled() {
