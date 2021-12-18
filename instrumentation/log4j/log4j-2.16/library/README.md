@@ -11,7 +11,7 @@ To use it, add the module to your application's runtime classpath.
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-log4j-2.16</artifactId>
+    <artifactId>opentelemetry-log4j-appender-2.16</artifactId>
     <version>1.10.0-alpha</version>
     <scope>runtime</scope>
   </dependency>
@@ -22,7 +22,7 @@ To use it, add the module to your application's runtime classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.16:1.10.0-alpha")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.16:1.10.0-alpha")
 }
 ```
 
