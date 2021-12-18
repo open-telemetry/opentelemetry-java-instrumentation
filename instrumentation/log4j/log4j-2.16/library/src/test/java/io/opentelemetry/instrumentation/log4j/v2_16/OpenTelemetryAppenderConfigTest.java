@@ -12,6 +12,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.sdk.appender.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.logs.data.LogData;
@@ -26,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +51,9 @@ class OpenTelemetryAppenderConfigTest {
             .setResource(resource)
             .addLogProcessor(SimpleLogProcessor.create(logExporter))
             .build();
-    OpenTelemetryLog4j.initialize(logEmitterProvider);
-  }
 
-  @AfterAll
-  static void afterAll() {
-    OpenTelemetryLog4j.resetForTest();
+    GlobalLogEmitterProvider.resetForTest();
+    GlobalLogEmitterProvider.set(DelegatingLogEmitterProvider.from(logEmitterProvider));
   }
 
   @BeforeEach
@@ -94,7 +92,7 @@ class OpenTelemetryAppenderConfigTest {
 
   private static Span runWithSpan(String spanName, Runnable runnable) {
     Span span = SdkTracerProvider.builder().build().get("tracer").spanBuilder(spanName).startSpan();
-    try (Scope unused = span.makeCurrent()) {
+    try (Scope ignored = span.makeCurrent()) {
       runnable.run();
     } finally {
       span.end();
