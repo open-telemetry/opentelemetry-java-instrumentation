@@ -381,7 +381,7 @@
       <property name="id" value="SystemOut"/>
       <!-- . matches any character, so we need to escape it and use \. to match dots. -->
       <property name="format"
-        value="(System\.out\.print|System\.err\.print|\.printStackTrace|Thread\.dumpStack)"/>
+        value="(System\.out\.print|System\.err\.print|\.printStackTrace\(\)|Thread\.dumpStack)"/>
       <property name="illegalPattern" value="true"/>
     </module>
   </module>
