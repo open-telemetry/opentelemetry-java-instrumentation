@@ -33,4 +33,7 @@ tasks.withType<ShadowJar>().configureEach {
 
   // this is for instrumentation on opentelemetry-api itself
   relocate("application.io.opentelemetry", "io.opentelemetry")
+
+  // this is for instrumentation on java.util.logging (since java.util.logging itself is shaded above)
+  relocate("application.java.util.logging", "java.util.logging")
 }
