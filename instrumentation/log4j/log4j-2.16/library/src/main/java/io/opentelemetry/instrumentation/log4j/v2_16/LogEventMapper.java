@@ -31,7 +31,6 @@ final class LogEventMapper {
    *   <li>Thread name - {@link LogEvent#getThreadName()}
    *   <li>Thread id - {@link LogEvent#getThreadId()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
    *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
