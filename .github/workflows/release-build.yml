@@ -30,13 +30,13 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }} for running tests
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Restore cache
@@ -91,7 +91,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Restore cache
@@ -124,7 +124,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Cache Gradle Wrapper
@@ -167,7 +167,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Build and publish artifacts
