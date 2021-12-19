@@ -15,8 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JavaUtilLoggingInstrumentationModule extends InstrumentationModule {
   public JavaUtilLoggingInstrumentationModule() {
-    // this name is important currently because it's used to disable this instrumentation
-    super("java-util-logging-spans");
+    super("java-util-logging");
   }
 
   @Override
