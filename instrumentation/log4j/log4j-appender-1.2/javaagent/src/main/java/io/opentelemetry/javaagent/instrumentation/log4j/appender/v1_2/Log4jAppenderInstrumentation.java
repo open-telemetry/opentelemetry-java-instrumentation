@@ -35,10 +35,10 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(isProtected())
             .and(named("forcedLog"))
             .and(takesArguments(4))
-            .and(takesArgument(0, named("java.lang.String")))
+            .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("org.apache.log4j.Priority")))
-            .and(takesArgument(2, named("java.lang.Object")))
-            .and(takesArgument(3, named("java.lang.Throwable"))),
+            .and(takesArgument(2, Object.class))
+            .and(takesArgument(3, Throwable.class)),
         Log4jAppenderInstrumentation.class.getName() + "$ForcedLogAdvice");
   }
 

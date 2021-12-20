@@ -7,6 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.log4j.Logger
+import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
@@ -16,6 +17,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
 
   private static final Logger logger = Logger.getLogger("abc")
 
+  @Unroll
   def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
@@ -65,7 +67,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
         assertThat(log.getSpanContext().isValid()).isFalse()
       }
     } else {
-      Thread.sleep(500) // sleep a bit just to make sure no span is captured
+      Thread.sleep(500) // sleep a bit just to make sure no log is captured
       logs.size() == 0
     }
 
