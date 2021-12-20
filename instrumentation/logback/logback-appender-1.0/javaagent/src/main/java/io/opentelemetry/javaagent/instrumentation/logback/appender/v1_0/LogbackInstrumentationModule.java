@@ -14,6 +14,7 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class LogbackInstrumentationModule extends InstrumentationModule {
+
   public LogbackInstrumentationModule() {
     super("logback-appender", "logback-appender-1.0");
   }
