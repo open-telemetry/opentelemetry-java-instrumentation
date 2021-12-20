@@ -375,6 +375,15 @@
     <module name="SuppressWarningsHolder"/>
     <!-- this enables CHECKSTYLE:OFF and CHECKSTYLE:ON comments -->
     <module name="SuppressionCommentFilter"/>
+    <module name="Regexp">
+      <!-- see comment in otel.errorprone-conventions.gradle.kts for why we disable the SystemOut
+           rule there and rely on this check -->
+      <property name="id" value="SystemOut"/>
+      <!-- . matches any character, so we need to escape it and use \. to match dots. -->
+      <property name="format"
+        value="(System\.out\.print|System\.err\.print|\.printStackTrace\(\)|Thread\.dumpStack)"/>
+      <property name="illegalPattern" value="true"/>
+    </module>
   </module>
   <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
   <module name="SuppressWarningsFilter"/>
