@@ -7,6 +7,5 @@ dependencies {
 
   compileOnly(project(":instrumentation-api-appender"))
 
-  testLibrary("org.jboss.logmanager:jboss-logmanager:1.0.0.GA")
   testImplementation("org.awaitility:awaitility")
 }
