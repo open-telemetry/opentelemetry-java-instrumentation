@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import static io.opentelemetry.instrumentation.log4j.v2_16.LogEventMapper.ATTR_THROWABLE_MESSAGE;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -22,6 +21,7 @@ import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -116,6 +116,12 @@ class OpenTelemetryAppenderConfigTest {
         .isLessThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
-    assertThat(logData.getAttributes()).isEqualTo(Attributes.of(ATTR_THROWABLE_MESSAGE, "Error!"));
+    assertThat(logData.getAttributes().size()).isEqualTo(3);
+    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE))
+        .isEqualTo("Error!");
+    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE))
+        .contains("logWithExtras");
   }
 }

@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_16;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.Severity;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
@@ -18,10 +20,6 @@ import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
 
 final class LogEventMapper {
-
-  // Visible for testing
-  static final AttributeKey<String> ATTR_THROWABLE_MESSAGE =
-      AttributeKey.stringKey("throwable.message");
 
   /**
    * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
@@ -31,17 +29,12 @@ final class LogEventMapper {
    *   <li>Thread name - {@link LogEvent#getThreadName()}
    *   <li>Thread id - {@link LogEvent#getThreadId()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Thrown details (stack trace, class name) - {@link LogEvent#getThrown()}
    *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
    * </ul>
    */
   static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
-    // TODO: map the LogEvent more completely when semantic conventions allow it
-    AttributesBuilder attributes = Attributes.builder();
-
     // message
     Message message = logEvent.getMessage();
     if (message != null) {
@@ -67,21 +60,27 @@ final class LogEventMapper {
     // throwable
     Throwable throwable = logEvent.getThrown();
     if (throwable != null) {
-      attributes.put(ATTR_THROWABLE_MESSAGE, throwable.getMessage());
+      AttributesBuilder attributes = Attributes.builder();
+
+      // TODO (trask) extract method for recording exception into instrumentation-api-appender
+      attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      StringWriter writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+      attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
+
+      builder.setAttributes(attributes.build());
     }
 
     // span context
     builder.setContext(Context.current());
-
-    builder.setAttributes(attributes.build());
   }
 
   private static Severity levelToSeverity(Level level) {
     switch (level.getStandardLevel()) {
       case ALL:
-        return Severity.TRACE;
       case TRACE:
-        return Severity.TRACE2;
+        return Severity.TRACE;
       case DEBUG:
         return Severity.DEBUG;
       case INFO:
