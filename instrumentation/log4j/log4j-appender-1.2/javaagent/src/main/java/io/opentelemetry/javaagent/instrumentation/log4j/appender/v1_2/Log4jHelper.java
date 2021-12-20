@@ -17,7 +17,7 @@ import java.io.StringWriter;
 import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 
-public class Log4jHelper {
+public final class Log4jHelper {
 
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
