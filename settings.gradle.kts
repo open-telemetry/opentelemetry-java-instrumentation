@@ -271,6 +271,7 @@ include(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2.7:ja
 include(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2.16:javaagent")
 include(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2.16:library-autoconfigure")
 include(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2-common:testing")
+include(":instrumentation:log4j:log4j-appender-2.16:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.16:library")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")

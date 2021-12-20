@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.log4j.v2_16;
+package io.opentelemetry.instrumentation.log4j.appender.v2_16.internal;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -19,7 +19,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
 
-final class LogEventMapper {
+public final class LogEventMapper {
 
   /**
    * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
@@ -34,12 +34,11 @@ final class LogEventMapper {
    *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
    * </ul>
    */
-  static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
-    // message
-    Message message = logEvent.getMessage();
-    if (message != null) {
-      builder.setBody(message.getFormattedMessage());
-    }
+  public static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
+    setBody(builder, logEvent.getMessage());
+    setSeverity(builder, logEvent.getLevel());
+    setThrowable(builder, logEvent.getThrown());
+    setContext(builder);
 
     // time
     Instant instant = logEvent.getInstant();
@@ -49,16 +48,22 @@ final class LogEventMapper {
               + instant.getNanoOfMillisecond(),
           TimeUnit.NANOSECONDS);
     }
+  }
 
-    // level
-    Level level = logEvent.getLevel();
+  public static void setBody(LogBuilder builder, Message message) {
+    if (message != null) {
+      builder.setBody(message.getFormattedMessage());
+    }
+  }
+
+  public static void setSeverity(LogBuilder builder, Level level) {
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(logEvent.getLevel().name());
+      builder.setSeverityText(level.name());
     }
+  }
 
-    // throwable
-    Throwable throwable = logEvent.getThrown();
+  public static void setThrowable(LogBuilder builder, Throwable throwable) {
     if (throwable != null) {
       AttributesBuilder attributes = Attributes.builder();
 
@@ -71,8 +76,9 @@ final class LogEventMapper {
 
       builder.setAttributes(attributes.build());
     }
+  }
 
-    // span context
+  public static void setContext(LogBuilder builder) {
     builder.setContext(Context.current());
   }
 

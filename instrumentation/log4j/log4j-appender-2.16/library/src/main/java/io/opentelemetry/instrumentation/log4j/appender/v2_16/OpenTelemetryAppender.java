@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.log4j.v2_16;
+package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
 import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
+import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
 import java.io.Serializable;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
