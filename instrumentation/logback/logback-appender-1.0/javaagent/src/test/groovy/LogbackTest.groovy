@@ -8,6 +8,7 @@ import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
@@ -18,6 +19,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
   private static final Logger abcLogger = LoggerFactory.getLogger("abc");
   private static final Logger defLogger = LoggerFactory.getLogger("def");
 
+  @Unroll
   def "test logger=#loggerName method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
