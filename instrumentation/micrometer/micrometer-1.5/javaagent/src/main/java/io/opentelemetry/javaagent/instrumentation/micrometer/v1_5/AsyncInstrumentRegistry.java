@@ -15,14 +15,10 @@ import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
 
-@ThreadSafe
 final class AsyncInstrumentRegistry {
 
   private final Meter meter;
@@ -40,9 +36,8 @@ final class AsyncInstrumentRegistry {
       @Nullable T obj,
       ToDoubleFunction<T> objMetric) {
 
-    GaugeMeasurementsRecorder recorder;
     synchronized (gauges) {
-      recorder =
+      GaugeMeasurementsRecorder recorder =
           gauges.computeIfAbsent(
               meterId.getName(),
               n -> {
@@ -54,37 +49,36 @@ final class AsyncInstrumentRegistry {
                     .buildWithCallback(recorderCallback);
                 return recorderCallback;
               });
+      recorder.addGaugeMeasurement(attributes, obj, objMetric);
     }
-
-    // kept outside the synchronized block to avoid holding two locks at once
-    recorder.addGaugeMeasurement(attributes, obj, objMetric);
   }
 
   void removeGauge(String name, Attributes attributes) {
-    GaugeMeasurementsRecorder recorder;
     synchronized (gauges) {
-      recorder = gauges.get(name);
-      // if this is the last measurement then let's remove the whole recorder
-      if (recorder != null && recorder.size() == 1) {
-        gauges.remove(name);
+      GaugeMeasurementsRecorder recorder = gauges.get(name);
+      if (recorder != null) {
+        recorder.removeGaugeMeasurement(attributes);
+        // if this was the last measurement then let's remove the whole recorder
+        if (recorder.isEmpty()) {
+          gauges.remove(name);
+        }
       }
-    }
-
-    // kept outside the synchronized block to avoid holding two locks at once
-    if (recorder != null) {
-      recorder.removeGaugeMeasurement(attributes);
     }
   }
 
-  @ThreadSafe
-  private static final class GaugeMeasurementsRecorder
-      implements Consumer<ObservableDoubleMeasurement> {
+  private final class GaugeMeasurementsRecorder implements Consumer<ObservableDoubleMeasurement> {
 
-    private final ConcurrentMap<Attributes, GaugeInfo> measurements = new ConcurrentHashMap<>();
+    @GuardedBy("gauges")
+    private final Map<Attributes, GaugeInfo> measurements = new HashMap<>();
 
     @Override
     public void accept(ObservableDoubleMeasurement measurement) {
-      measurements.forEach(
+      Map<Attributes, GaugeInfo> measurementsCopy;
+      synchronized (gauges) {
+        measurementsCopy = new HashMap<>(measurements);
+      }
+
+      measurementsCopy.forEach(
           (attributes, gauge) -> {
             Object obj = gauge.objWeakRef.get();
             if (obj != null) {
@@ -95,15 +89,21 @@ final class AsyncInstrumentRegistry {
 
     <T> void addGaugeMeasurement(
         Attributes attributes, @Nullable T obj, ToDoubleFunction<T> objMetric) {
-      measurements.put(attributes, new GaugeInfo(obj, (ToDoubleFunction<Object>) objMetric));
+      synchronized (gauges) {
+        measurements.put(attributes, new GaugeInfo(obj, (ToDoubleFunction<Object>) objMetric));
+      }
     }
 
     void removeGaugeMeasurement(Attributes attributes) {
-      measurements.remove(attributes);
+      synchronized (gauges) {
+        measurements.remove(attributes);
+      }
     }
 
-    int size() {
-      return measurements.size();
+    boolean isEmpty() {
+      synchronized (gauges) {
+        return measurements.isEmpty();
+      }
     }
   }
 
