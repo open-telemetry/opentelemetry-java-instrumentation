@@ -14,6 +14,7 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class JavaUtilLoggingInstrumentationModule extends InstrumentationModule {
+
   public JavaUtilLoggingInstrumentationModule() {
     super("java-util-logging");
   }

@@ -24,7 +24,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     Logger.getLogger(name)
   }
 
-  def "test method=#testMethod with exception=#exception with parent=#parent"() {
+  def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
       runUnderTrace("parent") {
