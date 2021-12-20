@@ -2,7 +2,7 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-base.archivesName.set("${base.archivesName.get()}-autoconfigure")
+base.archivesName.set("log4j-thread-context-autoconfigure-2.16")
 
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.16.0")

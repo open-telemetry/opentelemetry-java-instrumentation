@@ -2,7 +2,7 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-base.archivesName.set("${base.archivesName.get()}-autoconfigure")
+base.archivesName.set("aws-sdk-autoconfigure-1.11")
 
 dependencies {
   implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:library"))
