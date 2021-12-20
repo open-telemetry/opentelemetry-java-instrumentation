@@ -18,7 +18,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
   private static final Logger abcLogger = LoggerFactory.getLogger("abc");
   private static final Logger defLogger = LoggerFactory.getLogger("def");
 
-  def "test logger=#loggerName method=#testMethod with exception=#exception with parent=#parent"() {
+  def "test logger=#loggerName method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
       runUnderTrace("parent") {
