@@ -68,7 +68,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
         assertThat(log.getSpanContext().isValid()).isFalse()
       }
     } else {
-      Thread.sleep(500) // sleep a bit just to make sure no span is captured
+      Thread.sleep(500) // sleep a bit just to make sure no log is captured
       logs.size() == 0
     }
 
