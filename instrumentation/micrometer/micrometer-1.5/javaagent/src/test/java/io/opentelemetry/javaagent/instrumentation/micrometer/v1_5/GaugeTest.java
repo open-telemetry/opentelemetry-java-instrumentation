@@ -33,7 +33,7 @@ class GaugeTest {
   }
 
   @Test
-  void testGauge() {
+  void testGauge() throws Exception {
     // when
     Gauge gauge =
         Gauge.builder("testGauge", () -> 42)
@@ -60,12 +60,14 @@ class GaugeTest {
                                     .hasValue(42)
                                     .attributes()
                                     .containsOnly(attributeEntry("tag", "value")))));
-    testing.clearData();
 
     // when
     Metrics.globalRegistry.remove(gauge);
+    Thread.sleep(10); // give time for any inflight metric export to be received
+    testing.clearData();
 
     // then
+    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testGauge", AbstractIterableAssert::isEmpty);
   }
@@ -137,6 +139,7 @@ class GaugeTest {
     GcUtils.awaitGc(numWeakRef);
 
     // then
+    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testWeakRefGauge", AbstractIterableAssert::isEmpty);
   }

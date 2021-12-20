@@ -21,7 +21,7 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
@@ -30,7 +30,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   private final Attributes attributes;
   private final Measurements measurements;
 
-  volatile boolean removed = false;
+  private volatile boolean removed = false;
 
   OpenTelemetryTimer(
       Id id,
@@ -44,7 +44,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
         otelMeter
             .histogramBuilder(id.getName())
             .setDescription(description(id))
-            .setUnit("milliseconds")
+            .setUnit("ms")
             .ofLongs()
             .build();
     this.attributes = toAttributes(id.getTags());
@@ -132,8 +132,8 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   // kinda similar to how DropwizardTimer does that
   private static final class MicrometerHistogramMeasurements implements Measurements {
 
-    private final AtomicLong count = new AtomicLong(0);
-    private final AtomicLong totalTime = new AtomicLong(0);
+    private final LongAdder count = new LongAdder();
+    private final LongAdder totalTime = new LongAdder();
     private final TimeWindowMax max;
 
     MicrometerHistogramMeasurements(
@@ -144,19 +144,19 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     @Override
     public void record(long amount, TimeUnit unit) {
       long nanos = unit.toNanos(amount);
-      count.incrementAndGet();
-      totalTime.addAndGet(nanos);
+      count.increment();
+      totalTime.add(nanos);
       max.record(nanos, TimeUnit.NANOSECONDS);
     }
 
     @Override
     public long count() {
-      return count.get();
+      return count.sum();
     }
 
     @Override
     public double totalTime(TimeUnit unit) {
-      return TimeUtils.nanosToUnit(totalTime.get(), unit);
+      return TimeUtils.nanosToUnit(totalTime.sum(), unit);
     }
 
     @Override

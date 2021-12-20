@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.baseUnit;
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.toAttributes;
 
 import io.micrometer.core.instrument.Gauge;
@@ -14,6 +12,7 @@ import io.micrometer.core.instrument.Measurement;
 import io.opentelemetry.api.common.Attributes;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
@@ -23,15 +22,14 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   OpenTelemetryGauge(
       Id id,
-      T obj,
+      @Nullable T obj,
       ToDoubleFunction<T> objMetric,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
     this.attributes = toAttributes(id.getTags());
     this.asyncInstrumentRegistry = asyncInstrumentRegistry;
 
-    asyncInstrumentRegistry.buildGauge(
-        id.getName(), description(id), baseUnit(id), attributes, obj, objMetric);
+    asyncInstrumentRegistry.buildGauge(id, attributes, obj, objMetric);
   }
 
   @Override

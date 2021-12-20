@@ -23,7 +23,7 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
   private final DoubleCounter otelCounter;
   private final Attributes attributes;
 
-  volatile boolean removed = false;
+  private volatile boolean removed = false;
 
   OpenTelemetryCounter(Id id, Meter otelMeter) {
     this.id = id;

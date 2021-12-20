@@ -19,19 +19,20 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
+import javax.annotation.Nullable;
 
 public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
-  public static MeterRegistry create() {
+  public static MeterRegistry create(OpenTelemetry openTelemetry) {
     OpenTelemetryMeterRegistry openTelemetryMeterRegistry =
         new OpenTelemetryMeterRegistry(
-            Clock.SYSTEM, GlobalOpenTelemetry.get().getMeterProvider().get(INSTRUMENTATION_NAME));
+            Clock.SYSTEM, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
     openTelemetryMeterRegistry.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
     return openTelemetryMeterRegistry;
   }
@@ -46,7 +47,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   }
 
   @Override
-  protected <T> Gauge newGauge(Meter.Id id, T t, ToDoubleFunction<T> toDoubleFunction) {
+  protected <T> Gauge newGauge(Meter.Id id, @Nullable T t, ToDoubleFunction<T> toDoubleFunction) {
     return new OpenTelemetryGauge<>(id, t, toDoubleFunction, asyncInstrumentRegistry);
   }
 

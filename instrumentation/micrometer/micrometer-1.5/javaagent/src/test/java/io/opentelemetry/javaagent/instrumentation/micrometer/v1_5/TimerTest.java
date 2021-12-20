@@ -52,7 +52,7 @@ class TimerTest {
                 metric ->
                     assertThat(metric)
                         .hasDescription("This is a test timer")
-                        .hasUnit("milliseconds")
+                        .hasUnit("ms")
                         .hasDoubleHistogram()
                         .points()
                         .satisfiesExactly(

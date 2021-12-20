@@ -32,7 +32,7 @@ public class MetricsInstrumentation implements TypeInstrumentation {
   public static class StaticInitializerAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {
-      Metrics.addRegistry(OpenTelemetryMeterRegistry.create());
+      Metrics.addRegistry(MicrometerSingletons.meterRegistry());
     }
   }
 }
