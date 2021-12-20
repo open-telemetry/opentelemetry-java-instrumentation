@@ -47,13 +47,13 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
 
   @Override
   public double count() {
-    // OpenTelemetry metrics bridge does not support reading measurements
+    UnsupportedReadLogger.logWarning();
     return Double.NaN;
   }
 
   @Override
   public Iterable<Measurement> measure() {
-    // OpenTelemetry metrics bridge does not support reading measurements
+    UnsupportedReadLogger.logWarning();
     return Collections.emptyList();
   }
 

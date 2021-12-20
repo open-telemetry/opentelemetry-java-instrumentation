@@ -34,13 +34,13 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   @Override
   public double value() {
-    // OpenTelemetry metrics bridge does not support reading measurements
+    UnsupportedReadLogger.logWarning();
     return Double.NaN;
   }
 
   @Override
   public Iterable<Measurement> measure() {
-    // OpenTelemetry metrics bridge does not support reading measurements
+    UnsupportedReadLogger.logWarning();
     return Collections.emptyList();
   }
 

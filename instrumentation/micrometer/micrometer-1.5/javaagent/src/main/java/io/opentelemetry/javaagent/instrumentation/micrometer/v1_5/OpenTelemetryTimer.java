@@ -85,7 +85,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   @Override
   public Iterable<Measurement> measure() {
-    // OpenTelemetry metrics bridge does not support reading measurements
+    UnsupportedReadLogger.logWarning();
     return Collections.emptyList();
   }
 
@@ -114,16 +114,19 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
     @Override
     public long count() {
+      UnsupportedReadLogger.logWarning();
       return 0;
     }
 
     @Override
     public double totalTime(TimeUnit unit) {
+      UnsupportedReadLogger.logWarning();
       return Double.NaN;
     }
 
     @Override
     public double max(TimeUnit unit) {
+      UnsupportedReadLogger.logWarning();
       return Double.NaN;
     }
   }
