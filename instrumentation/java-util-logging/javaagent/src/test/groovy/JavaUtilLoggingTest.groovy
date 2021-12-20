@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import spock.lang.Shared
 
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -17,12 +17,7 @@ import static org.awaitility.Awaitility.await
 
 class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
 
-  @Shared
-  private final Object logger = createLogger("abc")
-
-  Object createLogger(String name) {
-    Logger.getLogger(name)
-  }
+  private static final Logger logger = Logger.getLogger("abc")
 
   def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
