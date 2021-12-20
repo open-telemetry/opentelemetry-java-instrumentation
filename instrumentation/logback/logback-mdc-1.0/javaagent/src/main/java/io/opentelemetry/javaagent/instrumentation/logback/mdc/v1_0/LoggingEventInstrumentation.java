@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
+package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:logback-1.0:library"))
+  compileOnly(project(":instrumentation:logback:logback-mdc-1.0:library"))
 
   api(project(":testing-common"))
 

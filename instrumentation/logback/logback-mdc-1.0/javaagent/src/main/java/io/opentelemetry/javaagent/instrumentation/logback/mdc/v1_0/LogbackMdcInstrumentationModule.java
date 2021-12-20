@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
+package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
 import static java.util.Arrays.asList;
 
@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class LogbackInstrumentationModule extends InstrumentationModule {
-  public LogbackInstrumentationModule() {
-    super("logback", "logback-1.0");
+public class LogbackMdcInstrumentationModule extends InstrumentationModule {
+  public LogbackMdcInstrumentationModule() {
+    super("logback-mdc", "logback-mdc-1.0");
   }
 
   @Override
