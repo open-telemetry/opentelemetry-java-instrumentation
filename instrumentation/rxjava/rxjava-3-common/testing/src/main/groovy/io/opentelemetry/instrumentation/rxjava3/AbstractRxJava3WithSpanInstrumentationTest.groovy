@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.instrumentation.rxjava3
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
