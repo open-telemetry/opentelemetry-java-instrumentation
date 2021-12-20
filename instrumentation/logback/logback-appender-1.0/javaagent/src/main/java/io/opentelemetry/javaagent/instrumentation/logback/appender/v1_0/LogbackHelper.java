@@ -55,7 +55,7 @@ public final class LogbackHelper {
     Level level = loggingEvent.getLevel();
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(loggingEvent.getLevel().levelStr);
+      builder.setSeverityText(level.levelStr);
     }
 
     // throwable
