@@ -17,7 +17,6 @@ dependencies {
 
   implementation(project(":instrumentation:rxjava:rxjava-3.1.1:library"))
 
-  testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
 
   testInstrumentation(project(":instrumentation:rxjava:rxjava-3.0:javaagent"))
