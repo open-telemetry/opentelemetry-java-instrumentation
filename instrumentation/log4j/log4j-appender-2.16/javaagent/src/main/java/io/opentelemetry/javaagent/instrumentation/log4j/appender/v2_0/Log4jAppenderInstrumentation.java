@@ -41,18 +41,6 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(isPublic())
-            .and(named("logMessage"))
-            .and(takesArguments(5))
-            .and(takesArgument(0, named("java.lang.String")))
-            .and(takesArgument(1, named("org.apache.logging.log4j.Level")))
-            .and(takesArgument(2, named("org.apache.logging.log4j.Marker")))
-            .and(takesArgument(3, named("org.apache.logging.log4j.message.Message")))
-            .and(takesArgument(4, named("java.lang.Throwable"))),
-        Log4jAppenderInstrumentation.class.getName() + "$LogMessageAdvice");
-    // log4j 2.12.1 introduced and started using this new log() method
-    transformer.applyAdviceToMethod(
-        isMethod()
             .and(isProtected().or(isPublic()))
             .and(named("log"))
             .and(takesArguments(6))
@@ -63,30 +51,6 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(4, named("org.apache.logging.log4j.message.Message")))
             .and(takesArgument(5, named("java.lang.Throwable"))),
         Log4jAppenderInstrumentation.class.getName() + "$LogAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class LogMessageAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This final Logger logger,
-        @Advice.Argument(1) final Level level,
-        @Advice.Argument(3) final Message message,
-        @Advice.Argument(4) final Throwable t,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      // need to track call depth across all loggers in order to avoid double capture when one
-      // logging framework delegates to another
-      callDepth = CallDepth.forClass(LogEmitterProvider.class);
-      if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, message, t);
-      }
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth.decrementAndGet();
-    }
   }
 
   @SuppressWarnings("unused")

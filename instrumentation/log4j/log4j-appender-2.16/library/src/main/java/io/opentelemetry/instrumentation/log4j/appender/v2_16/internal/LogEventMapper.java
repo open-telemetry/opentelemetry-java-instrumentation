@@ -3,40 +3,67 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_0;
+package io.opentelemetry.instrumentation.log4j.appender.v2_16.internal;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.Severity;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
 
-public class Log4jHelper {
+public final class LogEventMapper {
 
-  public static void capture(Logger logger, Level level, Message message, Throwable throwable) {
+  /**
+   * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   *
+   * <ul>
+   *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
+   *   <li>Thread name - {@link LogEvent#getThreadName()}
+   *   <li>Thread id - {@link LogEvent#getThreadId()}
+   *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
+   *   <li>Marker - {@link LogEvent#getMarker()}
+   *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
+   *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
+   * </ul>
+   */
+  public static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
+    setBody(builder, logEvent.getMessage());
+    setSeverity(builder, logEvent.getLevel());
+    setThrowable(builder, logEvent.getThrown());
+    setContext(builder);
 
-    LogBuilder builder =
-        GlobalLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+    // time
+    Instant instant = logEvent.getInstant();
+    if (instant != null) {
+      builder.setEpoch(
+          TimeUnit.MILLISECONDS.toNanos(instant.getEpochMillisecond())
+              + instant.getNanoOfMillisecond(),
+          TimeUnit.NANOSECONDS);
+    }
+  }
 
-    // message
+  public static void setBody(LogBuilder builder, Message message) {
     if (message != null) {
       builder.setBody(message.getFormattedMessage());
     }
+  }
 
-    // level
+  public static void setSeverity(LogBuilder builder, Level level) {
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(level.toString());
+      builder.setSeverityText(level.name());
     }
+  }
 
-    // throwable
+  public static void setThrowable(LogBuilder builder, Throwable throwable) {
     if (throwable != null) {
       AttributesBuilder attributes = Attributes.builder();
 
@@ -49,19 +76,17 @@ public class Log4jHelper {
 
       builder.setAttributes(attributes.build());
     }
+  }
 
-    // span context
+  public static void setContext(LogBuilder builder) {
     builder.setContext(Context.current());
-
-    builder.emit();
   }
 
   private static Severity levelToSeverity(Level level) {
     switch (level.getStandardLevel()) {
       case ALL:
-        return Severity.TRACE;
       case TRACE:
-        return Severity.TRACE2;
+        return Severity.TRACE;
       case DEBUG:
         return Severity.DEBUG;
       case INFO:
@@ -77,4 +102,6 @@ public class Log4jHelper {
     }
     return Severity.UNDEFINED_SEVERITY_NUMBER;
   }
+
+  private LogEventMapper() {}
 }

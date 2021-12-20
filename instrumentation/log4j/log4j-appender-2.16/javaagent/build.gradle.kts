@@ -6,20 +6,17 @@ muzzle {
   pass {
     group.set("org.apache.logging.log4j")
     module.set("log4j-core")
-    versions.set("(,)")
-  }
-
-  pass {
-    group.set("org.apache.logging.log4j")
-    module.set("log4j-api")
-    versions.set("(,)")
+    versions.set("[2.11.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.0")
+  library("org.apache.logging.log4j:log4j-core:2.16.0")
 
   compileOnly(project(":instrumentation-api-appender"))
+
+  implementation(project(":instrumentation:log4j:log4j-appender-2.16:library"))
 
   testImplementation("org.awaitility:awaitility")
 

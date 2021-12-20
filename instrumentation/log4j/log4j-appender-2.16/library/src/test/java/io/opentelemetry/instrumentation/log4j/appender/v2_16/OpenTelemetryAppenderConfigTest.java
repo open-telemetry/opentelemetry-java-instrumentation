@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.log4j.v2_16;
+package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
