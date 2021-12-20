@@ -20,6 +20,7 @@ dependencies {
 
   testImplementation("org.awaitility:awaitility")
 
+  // this is needed for the async logging test
   testImplementation("com.lmax:disruptor:3.4.2")
 }
 
