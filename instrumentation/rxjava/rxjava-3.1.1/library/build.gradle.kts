@@ -3,13 +3,11 @@ plugins {
 }
 
 dependencies {
-  library("io.reactivex.rxjava3:rxjava:3.0.12")
+  library("io.reactivex.rxjava3:rxjava:3.1.1")
   implementation(project(":instrumentation-api-annotation-support"))
   implementation(project(":instrumentation:rxjava:rxjava-3-common:library"))
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
-
-  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0")
 }
 
 tasks.withType<Test>().configureEach {

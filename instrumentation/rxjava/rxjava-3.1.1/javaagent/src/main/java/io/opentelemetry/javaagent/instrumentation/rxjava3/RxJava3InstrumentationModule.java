@@ -18,12 +18,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   public RxJava3InstrumentationModule() {
-    super("rxjava3");
+    super("rxjava3.1.1", "rxjava3");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber");
+    return hasClassesNamed("io.reactivex.rxjava3.operators.ConditionalSubscriber");
   }
 
   @Override
