@@ -19,5 +19,7 @@ dependencies {
 
   compileOnly(project(":instrumentation-api-appender"))
 
+  latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
+
   testImplementation("org.awaitility:awaitility")
 }
