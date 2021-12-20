@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
-public class LogbackHelper {
+public final class LogbackHelper {
 
   public static void capture(final ILoggingEvent event) {
     LogBuilder builder =
