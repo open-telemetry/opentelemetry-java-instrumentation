@@ -8,6 +8,7 @@ import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
@@ -17,6 +18,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
 
   private static final Logger logger = LogManager.getLogger("abc")
 
+  @Unroll
   def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {

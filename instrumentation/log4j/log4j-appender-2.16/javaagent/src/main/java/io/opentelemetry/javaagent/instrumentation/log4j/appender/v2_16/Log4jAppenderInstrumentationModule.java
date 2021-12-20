@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_0;
+package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_16;
 
 import static java.util.Collections.singletonList;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public class Log4jAppenderInstrumentationModule extends InstrumentationModule {
 
   public Log4jAppenderInstrumentationModule() {
-    super("log4j-appender", "log4j-appender-2.0");
+    super("log4j-appender", "log4j-appender-2.16");
   }
 
   @Override

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_0;
+package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_16;
 
 import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.Message;
 
-public class Log4jHelper {
+public final class Log4jHelper {
 
   public static void capture(Logger logger, Level level, Message message, Throwable throwable) {
 
@@ -26,4 +26,6 @@ public class Log4jHelper {
 
     builder.emit();
   }
+
+  private Log4jHelper() {}
 }

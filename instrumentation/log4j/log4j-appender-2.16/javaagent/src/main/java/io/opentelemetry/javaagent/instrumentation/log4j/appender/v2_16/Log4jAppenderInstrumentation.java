@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_0;
+package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_16;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -46,10 +46,10 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(takesArguments(6))
             .and(takesArgument(0, named("org.apache.logging.log4j.Level")))
             .and(takesArgument(1, named("org.apache.logging.log4j.Marker")))
-            .and(takesArgument(2, named("java.lang.String")))
-            .and(takesArgument(3, named("java.lang.StackTraceElement")))
+            .and(takesArgument(2, String.class))
+            .and(takesArgument(3, StackTraceElement.class))
             .and(takesArgument(4, named("org.apache.logging.log4j.message.Message")))
-            .and(takesArgument(5, named("java.lang.Throwable"))),
+            .and(takesArgument(5, Throwable.class)),
         Log4jAppenderInstrumentation.class.getName() + "$LogAdvice");
   }
 
