@@ -24,6 +24,12 @@ tasks {
 
         excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
 
+        // it's very convenient to debug stuff in the javaagent using System.out.println
+        // and we don't want to conditionally only check this in CI
+        // because then the remote gradle cache won't work for local builds
+        // so we check this via checkstyle instead
+        disable("SystemOut")
+
         disable("BooleanParameter")
 
         // Doesn't work well with Java 8
