@@ -32,7 +32,10 @@ public final class JavaUtilLoggingHelper {
     }
 
     LogBuilder builder =
-        GlobalLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+        GlobalLogEmitterProvider.get()
+            .logEmitterBuilder(logRecord.getLoggerName())
+            .build()
+            .logBuilder();
     mapLogRecord(builder, logRecord);
     builder.emit();
   }
