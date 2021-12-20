@@ -33,7 +33,7 @@ plugins {
 }
 
 // Select a random set of versions to test
-val RANGE_COUNT_LIMIT = 10
+val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit", 10)
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
