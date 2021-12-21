@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.metro.MetroSingletons.instrumenter;
 
 import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.server.WSEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 
 public final class MetroHelper {
   private static final String REQUEST_KEY = MetroHelper.class.getName() + ".Request";
@@ -26,8 +24,7 @@ public final class MetroHelper {
     Context parentContext = Context.current();
 
     MetroRequest request = new MetroRequest(endpoint, packet);
-    ServerSpanNaming.updateServerSpanName(
-        parentContext, CONTROLLER, MetroServerSpanNaming.SERVER_SPAN_NAME, request);
+    MetroServerSpanNaming.updateServerSpanName(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;

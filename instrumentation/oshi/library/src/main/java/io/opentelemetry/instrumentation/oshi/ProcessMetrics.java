@@ -28,8 +28,7 @@ public class ProcessMetrics {
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
 
     meter
-        .gaugeBuilder("runtime.java.memory")
-        .ofLongs()
+        .upDownCounterBuilder("runtime.java.memory")
         .setDescription("Runtime Java memory")
         .setUnit("bytes")
         .buildWithCallback(

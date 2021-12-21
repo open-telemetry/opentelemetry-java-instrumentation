@@ -94,25 +94,4 @@ class ClassLoadingTest extends Specification {
     loader2.count > 0
     loader1.count == loader2.count
   }
-
-  def "can find classes but not resources loaded onto the bootstrap classpath"() {
-    expect:
-    Class.forName(name) != null
-
-    // Resources from bootstrap injected jars can't be loaded.
-    // https://github.com/raphw/byte-buddy/pull/496
-    if (onTestClasspath) {
-      assert ClassLoader.getSystemClassLoader().getResource(resource) != null
-    } else {
-      assert ClassLoader.getSystemClassLoader().getResource(resource) == null
-    }
-
-
-    where:
-    name                                                                 | onTestClasspath
-    "io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge" | true
-    // This test case fails on ibm j9.  Perhaps this rule only applies to OpenJdk based jvms?
-//    "io.opentelemetry.javaagent.instrumentation.api.concurrent.State" | false
-    resource = name.replace(".", "/") + ".class"
-  }
 }
