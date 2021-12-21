@@ -106,8 +106,8 @@ public abstract class InstrumentationModule implements Ordered {
    * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
    * automatically injected into the application classloader if they're used in any type
    * instrumentation. The classes for which this predicate returns {@code true} will be treated as
-   * helper classes, in addition to the default ones defined in the {@code
-   * InstrumentationClassPredicate} class.
+   * helper classes, in addition to the default ones defined in the {@code HelperClassPredicate}
+   * class.
    *
    * @param className The name of the class that may or may not be a helper class.
    */
