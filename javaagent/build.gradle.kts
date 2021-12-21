@@ -94,9 +94,8 @@ dependencies {
 
   testImplementation("com.google.guava:guava")
   testImplementation("io.opentelemetry:opentelemetry-sdk")
-  // TODO(anuraaga): Remove after github.com/open-telemetry/opentelemetry-java/issues/3999
-  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
+  testImplementation("org.assertj:assertj-core")
 }
 
 val javaagentDependencies = dependencies
