@@ -143,7 +143,6 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getAttributes().size()).isEqualTo(2);
-    System.out.println(logData.getAttributes());
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1")))
         .isEqualTo("val1");
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2")))
