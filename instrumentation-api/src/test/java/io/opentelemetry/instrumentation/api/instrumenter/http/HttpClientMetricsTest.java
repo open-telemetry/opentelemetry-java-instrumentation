@@ -93,6 +93,7 @@ class HttpClientMetricsTest {
                       metric ->
                           assertThat(metric)
                               .hasName("http.client.duration")
+                              .hasUnit("ms")
                               .hasDoubleHistogram()
                               .points()
                               .satisfiesExactly(

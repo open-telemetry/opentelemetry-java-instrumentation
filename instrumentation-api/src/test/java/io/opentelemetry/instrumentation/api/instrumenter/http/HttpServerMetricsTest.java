@@ -132,6 +132,7 @@ class HttpServerMetricsTest {
                       metric ->
                           assertThat(metric)
                               .hasName("http.server.duration")
+                              .hasUnit("ms")
                               .hasDoubleHistogram()
                               .points()
                               .satisfiesExactly(

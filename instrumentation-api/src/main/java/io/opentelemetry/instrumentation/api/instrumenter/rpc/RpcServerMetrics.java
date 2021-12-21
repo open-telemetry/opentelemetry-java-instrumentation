@@ -45,7 +45,7 @@ public final class RpcServerMetrics implements RequestListener {
         meter
             .histogramBuilder("rpc.server.duration")
             .setDescription("The duration of an inbound RPC invocation")
-            .setUnit("milliseconds")
+            .setUnit("ms")
             .build();
   }
 
