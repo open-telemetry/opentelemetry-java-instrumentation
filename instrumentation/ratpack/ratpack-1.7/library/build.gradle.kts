@@ -6,7 +6,7 @@ plugins {
 dependencies {
   library("io.ratpack:ratpack-core:1.7.0")
 
-  testImplementation(project(":instrumentation:ratpack-1.4:testing"))
+  testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
 
   testLibrary("io.ratpack:ratpack-test:1.7.0")
   testLibrary("io.ratpack:ratpack-guice:1.7.0")
