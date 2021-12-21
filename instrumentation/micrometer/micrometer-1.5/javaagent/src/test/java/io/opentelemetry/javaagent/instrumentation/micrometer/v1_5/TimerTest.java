@@ -82,6 +82,29 @@ class TimerTest {
   }
 
   @Test
+  void testNanoPrecision() {
+    // given
+    Timer timer = Timer.builder("testNanoTimer").register(Metrics.globalRegistry);
+
+    // when
+    timer.record(1_234_000, TimeUnit.NANOSECONDS);
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testNanoTimer",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("ms")
+                        .hasDoubleHistogram()
+                        .points()
+                        .satisfiesExactly(
+                            point -> assertThat(point).hasSum(1.234).hasCount(1).attributes())));
+  }
+
+  @Test
   void testMicrometerHistogram() {
     // given
     Timer timer =

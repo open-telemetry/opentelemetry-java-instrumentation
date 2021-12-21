@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.cache.Cache;
 
 final class Bridging {
 
-  private static final Cache<String, AttributeKey<String>> tagsCache = Cache.bounded(64);
+  private static final Cache<String, AttributeKey<String>> tagsCache = Cache.bounded(1024);
 
   static Attributes toAttributes(Iterable<Tag> tags) {
     if (!tags.iterator().hasNext()) {

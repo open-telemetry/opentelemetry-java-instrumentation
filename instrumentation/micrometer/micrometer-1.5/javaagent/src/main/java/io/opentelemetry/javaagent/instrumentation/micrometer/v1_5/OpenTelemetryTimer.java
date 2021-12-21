@@ -17,7 +17,7 @@ import io.micrometer.core.instrument.distribution.TimeWindowMax;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -25,8 +25,10 @@ import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
+  private static final long NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+
   // TODO: use bound instruments when they're available
-  private final LongHistogram otelHistogram;
+  private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
   private final Measurements measurements;
 
@@ -45,7 +47,6 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
             .histogramBuilder(id.getName())
             .setDescription(description(id))
             .setUnit("ms")
-            .ofLongs()
             .build();
     this.attributes = toAttributes(id.getTags());
 
@@ -63,8 +64,14 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   @Override
   protected void recordNonNegative(long amount, TimeUnit unit) {
     if (amount >= 0 && !removed) {
-      otelHistogram.record(unit.toMillis(amount), attributes);
-      measurements.record(amount, unit);
+      long nanos = unit.toNanos(amount);
+
+      long millisPart = nanos / NANOS_PER_MS;
+      long nanosPart = nanos % NANOS_PER_MS;
+      double time = millisPart + nanosPart / (double) NANOS_PER_MS;
+
+      otelHistogram.record(time, attributes);
+      measurements.record(nanos);
     }
   }
 
@@ -95,7 +102,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   }
 
   private interface Measurements {
-    void record(long amount, TimeUnit unit);
+    void record(long nanos);
 
     long count();
 
@@ -110,7 +117,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     INSTANCE;
 
     @Override
-    public void record(long amount, TimeUnit unit) {}
+    public void record(long nanos) {}
 
     @Override
     public long count() {
@@ -145,8 +152,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     }
 
     @Override
-    public void record(long amount, TimeUnit unit) {
-      long nanos = unit.toNanos(amount);
+    public void record(long nanos) {
       count.increment();
       totalTime.add(nanos);
       max.record(nanos, TimeUnit.NANOSECONDS);
