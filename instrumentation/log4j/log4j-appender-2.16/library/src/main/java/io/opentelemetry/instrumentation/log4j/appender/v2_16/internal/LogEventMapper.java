@@ -5,21 +5,32 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_16.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.Severity;
+import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.util.BiConsumer;
 
 public final class LogEventMapper {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES =
+      Config.get()
+          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+
+  private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   /**
    * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
@@ -31,55 +42,62 @@ public final class LogEventMapper {
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
    *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
-   *   <li>Mapped diagnostic context - {@link LogEvent#getContextData()}
    * </ul>
    */
-  public static void mapLogEvent(LogBuilder builder, LogEvent logEvent) {
-    setBody(builder, logEvent.getMessage());
-    setSeverity(builder, logEvent.getLevel());
-    setThrowable(builder, logEvent.getThrown());
-    setContext(builder);
+  public static <T> void mapLogEvent(
+      LogBuilder builder,
+      Message message,
+      Level level,
+      @Nullable Throwable throwable,
+      @Nullable Instant timestamp,
+      T contextData,
+      // passing this is just an optimization to avoid creating AttributesBuilder when not necessary
+      boolean contextDataIsEmpty,
+      BiConsumer<AttributesBuilder, T> contextDataMapper) {
 
-    // time
-    Instant instant = logEvent.getInstant();
-    if (instant != null) {
-      builder.setEpoch(
-          TimeUnit.MILLISECONDS.toNanos(instant.getEpochMillisecond())
-              + instant.getNanoOfMillisecond(),
-          TimeUnit.NANOSECONDS);
-    }
-  }
-
-  public static void setBody(LogBuilder builder, Message message) {
     if (message != null) {
       builder.setBody(message.getFormattedMessage());
     }
-  }
 
-  public static void setSeverity(LogBuilder builder, Level level) {
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(level.name());
     }
-  }
 
-  public static void setThrowable(LogBuilder builder, Throwable throwable) {
-    if (throwable != null) {
+    // conditional is an optimization to avoid creating AttributesBuilder when not necessary
+    if (throwable != null || (CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES && !contextDataIsEmpty)) {
       AttributesBuilder attributes = Attributes.builder();
-
-      // TODO (trask) extract method for recording exception into instrumentation-api-appender
-      attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
-
+      if (throwable != null) {
+        setThrowable(attributes, throwable);
+      }
+      if (CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES && !contextDataIsEmpty) {
+        contextDataMapper.accept(attributes, contextData);
+      }
       builder.setAttributes(attributes.build());
+    }
+
+    builder.setContext(Context.current());
+
+    if (timestamp != null) {
+      builder.setEpoch(
+          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
+              + timestamp.getNanoOfMillisecond(),
+          TimeUnit.NANOSECONDS);
     }
   }
 
-  public static void setContext(LogBuilder builder) {
-    builder.setContext(Context.current());
+  public static AttributeKey<String> getMdcAttributeKey(String key) {
+    return mdcAttributeKeys.computeIfAbsent(
+        key, k -> AttributeKey.stringKey("log4j.context_data." + k));
+  }
+
+  private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
+    // TODO (trask) extract method for recording exception into instrumentation-api-appender
+    attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+    attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+    StringWriter writer = new StringWriter();
+    throwable.printStackTrace(new PrintWriter(writer));
+    attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
   }
 
   private static Severity levelToSeverity(Level level) {

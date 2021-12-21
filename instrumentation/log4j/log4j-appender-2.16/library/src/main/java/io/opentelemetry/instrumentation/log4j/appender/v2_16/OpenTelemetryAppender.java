@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
@@ -18,6 +19,8 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
+import org.apache.logging.log4j.util.BiConsumer;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 @Plugin(
     name = OpenTelemetryAppender.PLUGIN_NAME,
@@ -58,7 +61,27 @@ public class OpenTelemetryAppender extends AbstractAppender {
             .logEmitterBuilder(event.getLoggerName())
             .build()
             .logBuilder();
-    LogEventMapper.mapLogEvent(builder, event);
+    ReadOnlyStringMap contextData = event.getContextData();
+    LogEventMapper.mapLogEvent(
+        builder,
+        event.getMessage(),
+        event.getLevel(),
+        event.getThrown(),
+        event.getInstant(),
+        contextData,
+        contextData.isEmpty(),
+        ContextDataMapper.INSTANCE);
     builder.emit();
+  }
+
+  private enum ContextDataMapper implements BiConsumer<AttributesBuilder, ReadOnlyStringMap> {
+    INSTANCE;
+
+    @Override
+    public void accept(AttributesBuilder attributesBuilder, ReadOnlyStringMap contextData) {
+      contextData.forEach(
+          (key, value) ->
+              attributesBuilder.put(LogEventMapper.getMdcAttributeKey(key), String.valueOf(value)));
+    }
   }
 }
