@@ -58,7 +58,7 @@ class GlobalLogEmitterProviderTest {
     // pass
   }
 
-  private void setLogEmitterProvider() {
+  private static void setLogEmitterProvider() {
     GlobalLogEmitterProvider.set(mock(LogEmitterProvider.class));
   }
 }
