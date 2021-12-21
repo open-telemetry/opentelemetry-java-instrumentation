@@ -20,7 +20,7 @@ public class SystemMetricsTest extends AbstractMetricsTest {
             metric
                 .hasName("system.memory.usage")
                 .hasUnit("By")
-                .hasLongGauge()
+                .hasLongSum()
                 .points()
                 .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
         metric ->
@@ -30,9 +30,9 @@ public class SystemMetricsTest extends AbstractMetricsTest {
                 .hasDoubleGauge()
                 .points()
                 .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
-        metric -> metric.hasName("system.network.io").hasUnit("By").hasLongGauge(),
-        metric -> metric.hasName("system.network.packets").hasUnit("packets").hasLongGauge(),
-        metric -> metric.hasName("system.network.errors").hasUnit("errors").hasLongGauge(),
-        metric -> metric.hasName("system.disk.operations").hasUnit("operations").hasLongGauge());
+        metric -> metric.hasName("system.network.io").hasUnit("By").hasLongSum(),
+        metric -> metric.hasName("system.network.packets").hasUnit("packets").hasLongSum(),
+        metric -> metric.hasName("system.network.errors").hasUnit("errors").hasLongSum(),
+        metric -> metric.hasName("system.disk.operations").hasUnit("operations").hasLongSum());
   }
 }
