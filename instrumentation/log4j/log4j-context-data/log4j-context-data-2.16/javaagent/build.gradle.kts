@@ -23,11 +23,11 @@ testSets {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
-  implementation(project(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2.16:library-autoconfigure"))
+  implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.16:library-autoconfigure"))
 
-  testInstrumentation(project(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2.7:javaagent"))
+  testInstrumentation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent"))
 
-  testImplementation(project(":instrumentation:log4j:log4j-thread-context:log4j-thread-context-2-common:testing"))
+  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2-common:testing"))
 }
 
 tasks {

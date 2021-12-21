@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Log4j2InstrumentationModule extends InstrumentationModule {
   public Log4j2InstrumentationModule() {
-    super("log4j-thread-context", "log4j-thread-context-2.16");
+    super("log4j-context-data", "log4j-context-data-2.16");
   }
 
   @Override
