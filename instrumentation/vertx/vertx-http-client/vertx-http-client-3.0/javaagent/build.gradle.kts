@@ -17,7 +17,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:vertx-http-client:vertx-http-client-common:javaagent"))
+  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
   // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))

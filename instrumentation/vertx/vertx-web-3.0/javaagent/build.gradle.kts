@@ -31,7 +31,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
-  testImplementation(project(":instrumentation:vertx-web-3.0:testing"))
+  testImplementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
   add("version3TestImplementation", "io.vertx:vertx-web:3.0.0")
   add("version3TestImplementation", "io.vertx:vertx-jdbc-client:3.0.0")

@@ -32,9 +32,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx-http-client:vertx-http-client-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx-http-client:vertx-http-client-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx-web-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 
