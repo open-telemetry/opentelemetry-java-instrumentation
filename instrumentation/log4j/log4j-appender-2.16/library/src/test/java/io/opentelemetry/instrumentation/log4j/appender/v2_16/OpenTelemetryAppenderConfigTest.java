@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -123,5 +124,28 @@ class OpenTelemetryAppenderConfigTest {
         .isEqualTo("Error!");
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE))
         .contains("logWithExtras");
+  }
+
+  @Test
+  void logContextData() {
+    ThreadContext.put("key1", "val1");
+    ThreadContext.put("key2", "val2");
+    try {
+      logger.info("log message 1");
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).hasSize(1);
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
+    assertThat(logData.getAttributes().size()).isEqualTo(2);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1")))
+        .isEqualTo("val1");
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2")))
+        .isEqualTo("val2");
   }
 }

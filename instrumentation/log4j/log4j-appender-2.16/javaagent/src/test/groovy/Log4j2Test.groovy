@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.apache.logging.log4j.ThreadContext
 import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -87,5 +89,32 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     testMethod = args[0]
     severity = args[1]
     severityText = args[2]
+  }
+
+  def "test context data"() {
+    when:
+    ThreadContext.put("key1", "val1");
+    ThreadContext.put("key2", "val2");
+    try {
+      logger.info("xyz")
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    then:
+
+    await()
+      .untilAsserted(
+        () -> {
+          assertThat(logs).hasSize(1)
+        })
+    def log = logs.get(0)
+    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
+    assertThat(log.getSeverityText()).isEqualTo("INFO")
+    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1"))).isEqualTo("val1")
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2"))).isEqualTo("val2")
   }
 }

@@ -7,8 +7,11 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
 import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.LogBuilder;
+import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
 import java.io.Serializable;
+import java.util.function.BiConsumer;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
@@ -18,6 +21,7 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 @Plugin(
     name = OpenTelemetryAppender.PLUGIN_NAME,
@@ -26,6 +30,9 @@ import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 public class OpenTelemetryAppender extends AbstractAppender {
 
   static final String PLUGIN_NAME = "OpenTelemetry";
+
+  private static final LogEventMapper<ReadOnlyStringMap> mapper =
+      new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE);
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
@@ -58,7 +65,29 @@ public class OpenTelemetryAppender extends AbstractAppender {
             .logEmitterBuilder(event.getLoggerName())
             .build()
             .logBuilder();
-    LogEventMapper.mapLogEvent(builder, event);
+    ReadOnlyStringMap contextData = event.getContextData();
+    mapper.mapLogEvent(
+        builder,
+        event.getMessage(),
+        event.getLevel(),
+        event.getThrown(),
+        event.getInstant(),
+        contextData);
     builder.emit();
+  }
+
+  private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {
+    INSTANCE;
+
+    @Override
+    @Nullable
+    public Object getValue(ReadOnlyStringMap contextData, String key) {
+      return contextData.getValue(key);
+    }
+
+    @Override
+    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
+      contextData.forEach(action::accept);
+    }
   }
 }
