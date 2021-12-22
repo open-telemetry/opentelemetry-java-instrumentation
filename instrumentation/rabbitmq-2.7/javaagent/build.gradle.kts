@@ -21,7 +21,7 @@ dependencies {
     exclude("com.rabbitmq", "amqp-client")
   }
 
-  testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
   testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
   // since reactor-rabbitmq:1.5.4 there is only a runtime dependency to reactor-core but spock

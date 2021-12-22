@@ -36,7 +36,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:akka-http-10.0:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 
   // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
