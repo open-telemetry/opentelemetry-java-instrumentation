@@ -25,7 +25,7 @@ public class LogEventMapperTest {
   public void testDefault() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, emptyList());
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, emptyList());
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -42,7 +42,7 @@ public class LogEventMapperTest {
   public void testSome() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, singletonList("key2"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("key2"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -60,7 +60,7 @@ public class LogEventMapperTest {
   public void testAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");

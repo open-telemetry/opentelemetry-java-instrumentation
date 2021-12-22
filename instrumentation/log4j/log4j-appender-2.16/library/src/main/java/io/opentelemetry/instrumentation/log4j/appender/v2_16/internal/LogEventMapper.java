@@ -24,12 +24,15 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
+import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
 public final class LogEventMapper<T> {
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeys =
       Cache.bounded(100);
+
+  private final boolean captureMapMessageAttributes;
 
   private final List<String> captureContextDataAttributes;
 
@@ -42,6 +45,10 @@ public final class LogEventMapper<T> {
     this(
         contextDataAccessor,
         Config.get()
+            .getBoolean(
+                "otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes",
+                false),
+        Config.get()
             .getList(
                 "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
                 emptyList()));
@@ -49,8 +56,12 @@ public final class LogEventMapper<T> {
 
   // visible for testing
   LogEventMapper(
-      ContextDataAccessor<T> contextDataAccessor, List<String> captureContextDataAttributes) {
+      ContextDataAccessor<T> contextDataAccessor,
+      boolean captureMapMessageAttributes,
+      List<String> captureContextDataAttributes) {
+
     this.contextDataAccessor = contextDataAccessor;
+    this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
@@ -76,16 +87,21 @@ public final class LogEventMapper<T> {
       @Nullable Instant timestamp,
       T contextData) {
 
+    AttributesBuilder attributes = Attributes.builder();
+
     if (message != null) {
-      builder.setBody(message.getFormattedMessage());
+      if (message instanceof MapMessage) {
+        builder.setBody(message.getFormat());
+        captureMapMessageAttributes(attributes, (MapMessage<?, ?>) message);
+      } else {
+        builder.setBody(message.getFormattedMessage());
+      }
     }
 
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(level.name());
     }
-
-    AttributesBuilder attributes = Attributes.builder();
 
     if (throwable != null) {
       setThrowable(attributes, throwable);
@@ -102,6 +118,17 @@ public final class LogEventMapper<T> {
           TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
               + timestamp.getNanoOfMillisecond(),
           TimeUnit.NANOSECONDS);
+    }
+  }
+
+  private void captureMapMessageAttributes(AttributesBuilder attributes, MapMessage<?, ?> message) {
+    if (captureMapMessageAttributes) {
+      message.forEach(
+          (key, value) -> {
+            if (value != null) {
+              attributes.put(key, value.toString());
+            }
+          });
     }
   }
 

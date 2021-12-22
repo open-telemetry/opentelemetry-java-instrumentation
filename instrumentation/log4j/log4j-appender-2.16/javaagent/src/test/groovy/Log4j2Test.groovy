@@ -10,6 +10,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.apache.logging.log4j.ThreadContext
+import org.apache.logging.log4j.message.StringMapMessage
+import org.apache.logging.log4j.message.StructuredDataMessage
 import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -116,5 +118,53 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getAttributes().size()).isEqualTo(2)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2"))).isEqualTo("val2")
+  }
+
+  def "test string map message"() {
+    when:
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+    logger.info(message);
+
+    then:
+
+    await()
+      .untilAsserted(
+        () -> {
+          assertThat(logs).hasSize(1)
+        })
+    def log = logs.get(0)
+    assertThat(log.getBody().asString()).isEqualTo("")
+    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
+    assertThat(log.getSeverityText()).isEqualTo("INFO")
+    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
+  }
+
+  def "test structured data map message"() {
+    when:
+    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+    logger.info(message);
+
+    then:
+
+    await()
+      .untilAsserted(
+        () -> {
+          assertThat(logs).hasSize(1)
+        })
+    def log = logs.get(0)
+    assertThat(log.getBody().asString()).isEqualTo("a message")
+    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
+    assertThat(log.getSeverityText()).isEqualTo("INFO")
+    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
   }
 }
