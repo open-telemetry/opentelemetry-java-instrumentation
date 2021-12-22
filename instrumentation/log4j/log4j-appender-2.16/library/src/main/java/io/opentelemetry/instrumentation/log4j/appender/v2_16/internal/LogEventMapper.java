@@ -29,8 +29,7 @@ import org.apache.logging.log4j.message.Message;
 
 public final class LogEventMapper<T> {
 
-  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeys =
-      Cache.bounded(100);
+  private static final Cache<String, AttributeKey<String>> attributeKeyCache = Cache.bounded(100);
 
   private final boolean captureMapMessageAttributes;
 
@@ -126,7 +125,9 @@ public final class LogEventMapper<T> {
       message.forEach(
           (key, value) -> {
             if (value != null) {
-              attributes.put(key, value.toString());
+              attributes.put(
+                  attributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
+                  value.toString());
             }
           });
     }
@@ -155,7 +156,7 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return contextDataAttributeKeys.computeIfAbsent(
+    return attributeKeyCache.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.context_data." + k));
   }
 
