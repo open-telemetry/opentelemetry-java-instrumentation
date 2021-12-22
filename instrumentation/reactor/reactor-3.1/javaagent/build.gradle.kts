@@ -18,7 +18,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-  implementation(project(":instrumentation:reactor-3.1:library"))
+  implementation(project(":instrumentation:reactor:reactor-3.1:library"))
   library("io.projectreactor:reactor-core:3.1.0.RELEASE")
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
@@ -28,7 +28,7 @@ dependencies {
   compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
-  testImplementation(project(":instrumentation:reactor-3.1:testing"))
+  testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
