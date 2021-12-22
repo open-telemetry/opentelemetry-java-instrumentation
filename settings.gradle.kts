@@ -114,9 +114,9 @@ include(":testing-common:library-for-integration-tests")
 // smoke tests
 include(":smoke-tests")
 
-include(":instrumentation:akka-actor-2.5:javaagent")
-include(":instrumentation:akka-actor-fork-join-2.5:javaagent")
-include(":instrumentation:akka-http-10.0:javaagent")
+include(":instrumentation:akka:akka-actor-2.5:javaagent")
+include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
+include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:apache-camel-2.20:javaagent")
 include(":instrumentation:apache-camel-2.20:javaagent-unit-tests")
 include(":instrumentation:apache-dubbo-2.7:javaagent")
