@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_16.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -16,21 +18,43 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
-import org.apache.logging.log4j.util.BiConsumer;
 
-public final class LogEventMapper {
+public final class LogEventMapper<T> {
 
-  private static final boolean CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES =
-      Config.get()
-          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeys =
+      Cache.bounded(100);
 
-  private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
+  private final List<String> captureContextDataAttributes;
+
+  // cached as an optimization
+  private final boolean captureAllContextDataAttributes;
+
+  private final ContextDataAccessor<T> contextDataAccessor;
+
+  public LogEventMapper(ContextDataAccessor<T> contextDataAccessor) {
+    this(
+        contextDataAccessor,
+        Config.get()
+            .getList(
+                "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
+                emptyList()));
+  }
+
+  // visible for testing
+  LogEventMapper(
+      ContextDataAccessor<T> contextDataAccessor, List<String> captureContextDataAttributes) {
+    this.contextDataAccessor = contextDataAccessor;
+    this.captureContextDataAttributes = captureContextDataAttributes;
+    this.captureAllContextDataAttributes =
+        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
+  }
 
   /**
    * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
@@ -44,16 +68,13 @@ public final class LogEventMapper {
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    * </ul>
    */
-  public static <T> void mapLogEvent(
+  public void mapLogEvent(
       LogBuilder builder,
       Message message,
       Level level,
       @Nullable Throwable throwable,
       @Nullable Instant timestamp,
-      T contextData,
-      // passing this is just an optimization to avoid creating AttributesBuilder when not necessary
-      boolean contextDataIsEmpty,
-      BiConsumer<AttributesBuilder, T> contextDataMapper) {
+      T contextData) {
 
     if (message != null) {
       builder.setBody(message.getFormattedMessage());
@@ -64,17 +85,15 @@ public final class LogEventMapper {
       builder.setSeverityText(level.name());
     }
 
-    // conditional is an optimization to avoid creating AttributesBuilder when not necessary
-    if (throwable != null || (CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES && !contextDataIsEmpty)) {
-      AttributesBuilder attributes = Attributes.builder();
-      if (throwable != null) {
-        setThrowable(attributes, throwable);
-      }
-      if (CAPTURE_EXPERIMENTAL_LOG_ATTRIBUTES && !contextDataIsEmpty) {
-        contextDataMapper.accept(attributes, contextData);
-      }
-      builder.setAttributes(attributes.build());
+    AttributesBuilder attributes = Attributes.builder();
+
+    if (throwable != null) {
+      setThrowable(attributes, throwable);
     }
+
+    captureContextDataAttributes(attributes, contextData);
+
+    builder.setAttributes(attributes.build());
 
     builder.setContext(Context.current());
 
@@ -86,8 +105,30 @@ public final class LogEventMapper {
     }
   }
 
-  public static AttributeKey<String> getMdcAttributeKey(String key) {
-    return mdcAttributeKeys.computeIfAbsent(
+  // visible for testing
+  void captureContextDataAttributes(AttributesBuilder attributes, T contextData) {
+
+    if (captureAllContextDataAttributes) {
+      contextDataAccessor.forEach(
+          contextData,
+          (key, value) -> {
+            if (value != null) {
+              attributes.put(getContextDataAttributeKey(key), value.toString());
+            }
+          });
+      return;
+    }
+
+    for (String key : captureContextDataAttributes) {
+      Object value = contextDataAccessor.getValue(contextData, key);
+      if (value != null) {
+        attributes.put(getContextDataAttributeKey(key), value.toString());
+      }
+    }
+  }
+
+  public static AttributeKey<String> getContextDataAttributeKey(String key) {
+    return contextDataAttributeKeys.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.context_data." + k));
   }
 
@@ -120,6 +161,4 @@ public final class LogEventMapper {
     }
     return Severity.UNDEFINED_SEVERITY_NUMBER;
   }
-
-  private LogEventMapper() {}
 }
