@@ -22,12 +22,12 @@ import java.time.Duration
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
-class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
+class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
   def "test kafka produce and consume with streams in-between"() {
     setup:
     def config = new Properties()
-    config.putAll(producerProps(kafka.bootstrapServers))
+    config.putAll(producerProps(KafkaStreamsBaseTest.kafka.bootstrapServers))
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-application")
     config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName())
     config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName())
@@ -65,11 +65,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
     when:
     String greeting = "TESTING TESTING 123!"
-    producer.send(new ProducerRecord<>(STREAM_PENDING, greeting))
+    KafkaStreamsBaseTest.producer.send(new ProducerRecord<>(STREAM_PENDING, greeting))
 
     then:
-    awaitUntilConsumerIsReady()
-    def records = consumer.poll(Duration.ofSeconds(10).toMillis())
+    // check that the message was received
+    def records = KafkaStreamsBaseTest.consumer.poll(Duration.ofSeconds(10).toMillis())
     Headers receivedHeaders = null
     for (record in records) {
       Span.current().setAttribute("testing", 123)
@@ -82,15 +82,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       }
     }
 
-    assertTraces(3) {
-      traces.sort(orderByRootSpanName(
-        STREAM_PENDING + " send",
-        STREAM_PENDING + " receive",
-        STREAM_PROCESSED + " receive"))
+    SpanData streamSendSpan
 
-      SpanData producerPending, producerProcessed
-
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 4) {
         // kafka-clients PRODUCER
         span(0) {
           name STREAM_PENDING + " send"
@@ -102,28 +97,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
-
-        producerPending = span(0)
-      }
-      trace(1, 3) {
-        // kafka-clients CONSUMER receive
-        span(0) {
-          name STREAM_PENDING + " receive"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-          }
-        }
         // kafka-stream CONSUMER
         span(1) {
           name STREAM_PENDING + " process"
           kind CONSUMER
           childOf span(0)
-          hasLink(producerPending)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
@@ -136,6 +114,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "asdf" "testing"
           }
         }
+
+        streamSendSpan = span(2)
+
         // kafka-clients PRODUCER
         span(2) {
           name STREAM_PROCESSED + " send"
@@ -147,28 +128,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
-
-        producerProcessed = span(2)
-      }
-      trace(2, 2) {
-        // kafka-clients CONSUMER receive
-        span(0) {
-          name STREAM_PROCESSED + " receive"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-          }
-        }
         // kafka-clients CONSUMER process
-        span(1) {
+        span(3) {
           name STREAM_PROCESSED + " process"
           kind CONSUMER
-          childOf span(0)
-          hasLink producerProcessed
+          childOf span(2)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
@@ -201,8 +165,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    def streamTrace = traces.find { it.size() == 3 }
-    def streamSendSpan = streamTrace[2]
     spanContext.traceId == streamSendSpan.traceId
     spanContext.spanId == streamSendSpan.spanId
   }

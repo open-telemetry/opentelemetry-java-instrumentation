@@ -7,7 +7,7 @@ dependencies {
 
   implementation("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
   implementation("org.testcontainers:kafka")
 }

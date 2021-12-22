@@ -15,13 +15,13 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  bootstrap(project(":instrumentation:kafka-clients:kafka-clients-0.11:bootstrap"))
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
+  bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
   testImplementation("org.testcontainers:kafka")
-  testImplementation(project(":instrumentation:kafka-clients:kafka-clients-0.11:testing"))
+  testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 
 tasks {

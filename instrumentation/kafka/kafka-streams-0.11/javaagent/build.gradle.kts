@@ -12,13 +12,13 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:kafka-clients:kafka-clients-0.11:bootstrap"))
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
+  bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
   library("org.apache.kafka:kafka-streams:0.11.0.0")
 
   // Include kafka-clients instrumentation for tests.
-  testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
+  testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
   testImplementation("org.testcontainers:kafka")
 }

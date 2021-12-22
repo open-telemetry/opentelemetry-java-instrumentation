@@ -191,7 +191,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     when: "receive messages"
     awaitUntilConsumerIsReady()
     def consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis())
-    def recordsInPartition = consumerRecords.records(topicPartition)
+    def recordsInPartition = consumerRecords.records(KafkaClientBaseTest.topicPartition)
     recordsInPartition.size() == 1
 
     // iterate over records to generate spans
