@@ -16,8 +16,8 @@ import static org.awaitility.Awaitility.await
 
 class LogbackTest extends AgentInstrumentationSpecification {
 
-  private static final Logger abcLogger = LoggerFactory.getLogger("abc");
-  private static final Logger defLogger = LoggerFactory.getLogger("def");
+  private static final Logger abcLogger = LoggerFactory.getLogger("abc")
+  private static final Logger defLogger = LoggerFactory.getLogger("def")
 
   @Unroll
   def "test logger=#loggerName method=#testMethod with exception=#exception and parent=#parent"() {
@@ -55,7 +55,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.class.getName())
+        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(LogbackTest.name)
       } else {
