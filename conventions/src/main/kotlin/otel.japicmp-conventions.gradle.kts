@@ -73,7 +73,7 @@ tasks {
     packageExcludes = listOf("*.internal", "*.internal.*")
     val baseVersionString = if (apiBaseVersion == null) "latest" else baselineVersion
     val newVersionString = if (apiNewVersion == null) "current" else apiNewVersion
-    txtOutputFile = file("$rootDir/docs/apidiffs/${newVersionString}_vs_${baseVersionString}/${base.archivesName.get()}.txt")
+    txtOutputFile = file("$buildDir/apidiffs/${newVersionString}_vs_${baseVersionString}/${base.archivesName.get()}.txt")
   }
   // have the check task depend on the api comparison task, to make it more likely it will get used.
   named("check") {
