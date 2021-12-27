@@ -2,4 +2,4 @@
 
 | System property | Type | Default | Description |
 |---|---|---|---|
-| `otel.instrumentation.aws-sdk.experimental-span-attributes` | Boolean | `false` | Enables the capture of span attributes (experimental). |
+| `otel.instrumentation.aws-sdk.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental). |
