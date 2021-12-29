@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.ratpack.client;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
