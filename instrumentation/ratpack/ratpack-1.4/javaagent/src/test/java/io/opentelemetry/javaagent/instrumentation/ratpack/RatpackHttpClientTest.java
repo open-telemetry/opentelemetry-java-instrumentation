@@ -13,5 +13,5 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
+  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 }

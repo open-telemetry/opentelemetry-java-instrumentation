@@ -49,6 +49,11 @@ class InstrumentedHttpClientTest extends Specification {
   def "propagate trace with http calls"() {
     expect:
     def otherApp = EmbeddedApp.of { spec ->
+      spec.registry(
+        Guice.registry { bindings ->
+          ratpackTracing.configureServerRegistry(bindings)
+        }
+      )
       spec.handlers {
         it.get("bar") { ctx -> ctx.render("foo") }
       }
@@ -78,9 +83,11 @@ class InstrumentedHttpClientTest extends Specification {
 
     new PollingConditions().eventually {
       def spanData = spanExporter.finishedSpanItems.find { it.name == "/foo" }
-      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "/bar" }
+      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "/bar" && it.kind == SpanKind.CLIENT }
+      def spanDataApi = spanExporter.finishedSpanItems.find { it.name == "/bar" && it.kind == SpanKind.SERVER }
 
       spanData.traceId == spanClientData.traceId
+      spanData.traceId == spanDataApi.traceId
 
       spanData.kind == SpanKind.SERVER
       spanClientData.kind == SpanKind.CLIENT
@@ -94,6 +101,12 @@ class InstrumentedHttpClientTest extends Specification {
       attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
       attributes[SemanticAttributes.HTTP_METHOD] == "GET"
       attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+
+      def attsApi = spanDataApi.attributes.asMap()
+      attsApi[SemanticAttributes.HTTP_ROUTE] == "/bar"
+      attsApi[SemanticAttributes.HTTP_TARGET] == "/bar"
+      attsApi[SemanticAttributes.HTTP_METHOD] == "GET"
+      attsApi[SemanticAttributes.HTTP_STATUS_CODE] == 200L
     }
   }
 
