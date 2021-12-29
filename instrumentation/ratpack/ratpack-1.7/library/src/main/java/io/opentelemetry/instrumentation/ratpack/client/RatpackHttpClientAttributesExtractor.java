@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.util.List;
 import javax.annotation.Nullable;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
@@ -28,7 +29,7 @@ final class RatpackHttpClientAttributesExtractor
   @Nullable
   @Override
   protected String flavor(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
+    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Nullable

@@ -28,10 +28,16 @@ final class OpenTelemetryHttpClient {
         httpClientSpec -> {
           httpClientSpec.requestIntercept(
               requestSpec -> {
-                Context otelCtx = instrumenter.start(Context.current(), requestSpec);
+                Context parentOtelCtx = Context.current();
+                if (!instrumenter.shouldStart(parentOtelCtx, requestSpec)) {
+                  return;
+                }
+
+                Context otelCtx = instrumenter.start(parentOtelCtx, requestSpec);
                 Span span = Span.fromContext(otelCtx);
                 String path = requestSpec.getUri().getPath();
-                span.updateName(path);
+//                span.updateName(path);
+                span.updateName("HTTP " + requestSpec.getMethod().getName());
                 span.setAttribute(SemanticAttributes.HTTP_ROUTE, path);
                 Execution.current()
                     .add(new OpenTelemetryExecInitializer.ContextHolder(otelCtx, requestSpec));
