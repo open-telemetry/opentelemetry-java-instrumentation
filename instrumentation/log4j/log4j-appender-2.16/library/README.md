@@ -7,6 +7,9 @@ the [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java
 
 To use it, add the following modules to your application's classpath.
 
+Replace `OPENTELEMETRY_VERSION` with the latest
+stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+
 **Maven**
 
 ```xml
@@ -14,14 +17,14 @@ To use it, add the following modules to your application's classpath.
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-appender-2.16</artifactId>
-    <version>{version}</version>
+    <version>OPENTELEMETRY_VERSION</version>
     <scope>runtime</scope>
   </dependency>
   <dependency>
     <!-- The SDK appender is required to configure the appender with the OpenTelemetry Log SDK -->
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-instrumentation-sdk-appender</artifactId>
-    <version>{version}</version>
+    <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
 ```
@@ -30,13 +33,13 @@ To use it, add the following modules to your application's classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.16:{version}")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.16:OPENTELEMETRY_VERSION")
   // The SDK appender is required to configure the appender with the OpenTelemetry Log SDK
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-sdk-appender:{version}")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-sdk-appender:OPENTELEMETRY_VERSION")
 }
 ```
 
-The following demonstrates how you might configure the appender in your `logback.xml` configuration:
+The following demonstrates how you might configure the appender in your `log4j2.xml` configuration:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
