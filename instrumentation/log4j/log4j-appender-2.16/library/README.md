@@ -8,7 +8,7 @@ the [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java
 To use it, add the following modules to your application's classpath.
 
 Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
 
 **Maven**
 
@@ -60,7 +60,8 @@ The following demonstrates how you might configure the appender in your `log4j2.
 </Configuration>
 ```
 
-Next, associate the `OpenTelemetryAppender` with a `SdkLogEmitterProvider` in your application:
+Next, associate the `OpenTelemetryAppender` configured via `log4j2.xml` with
+a `SdkLogEmitterProvider` in your application:
 
 ```
 SdkLogEmitterProvider logEmitterProvider =
