@@ -32,7 +32,10 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(isStatic()).and(named("getCurrentPlatformEnum")),
+        isMethod()
+            .and(isPublic())
+            .and(isStatic())
+            .and(named("getCurrentPlatformEnum").or(named("getCurrentPlatform"))),
         this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 

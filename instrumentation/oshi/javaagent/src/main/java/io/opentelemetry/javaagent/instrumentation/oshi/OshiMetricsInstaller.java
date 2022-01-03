@@ -26,12 +26,21 @@ public class OshiMetricsInstaller implements AgentListener {
         // Oshi instrumentation will intercept this call and enable SystemMetrics.
         Class<?> oshiSystemInfoClass =
             ClassLoader.getSystemClassLoader().loadClass("oshi.SystemInfo");
-        Method getCurrentPlatformEnumMethod =
-            oshiSystemInfoClass.getMethod("getCurrentPlatformEnum");
+        Method getCurrentPlatformEnumMethod = getCurrentPlatformMethod(oshiSystemInfoClass);
         getCurrentPlatformEnumMethod.invoke(null);
       } catch (Throwable ex) {
         // OK
       }
+    }
+  }
+
+  private static Method getCurrentPlatformMethod(Class<?> oshiSystemInfoClass)
+      throws NoSuchMethodException {
+    try {
+      return oshiSystemInfoClass.getMethod("getCurrentPlatformEnum");
+    } catch (NoSuchMethodException exception) {
+      // renamed in oshi 6.0.0
+      return oshiSystemInfoClass.getMethod("getCurrentPlatform");
     }
   }
 }
