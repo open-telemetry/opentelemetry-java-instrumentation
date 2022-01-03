@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
-  private static final long NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
@@ -65,11 +65,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   protected void recordNonNegative(long amount, TimeUnit unit) {
     if (amount >= 0 && !removed) {
       long nanos = unit.toNanos(amount);
-
-      long millisPart = nanos / NANOS_PER_MS;
-      long nanosPart = nanos % NANOS_PER_MS;
-      double time = millisPart + nanosPart / (double) NANOS_PER_MS;
-
+      double time = nanos / NANOS_PER_MS;
       otelHistogram.record(time, attributes);
       measurements.record(nanos);
     }
