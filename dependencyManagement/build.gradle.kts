@@ -14,6 +14,7 @@ rootProject.extra["versions"] = dependencyVersions
 val otelVersion = "1.10.0-rc.1"
 val otelAlphaVersion = "1.10.0-alpha-rc.1"
 rootProject.extra["otelVersion"] = otelVersion
+rootProject.extra["otelAlphaVersion"] = otelAlphaVersion
 
 // Need both BOM and -all
 val groovyVersion = "3.0.9"
