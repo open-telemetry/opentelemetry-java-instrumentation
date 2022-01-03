@@ -2,5 +2,5 @@
 
 | System property | Type | Default | Description |
 |---|---|---|---|
-| `otel.instrumentation.rocketmq-client.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental). |
-| `otel.instrumentation.rocketmq-client.propagation` | Boolean | `true` | Enable propagation. |
+| `otel.instrumentation.rocketmq-client.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |
+| `otel.instrumentation.rocketmq-client.propagation` | Boolean | `true` | Enables remote context propagation via Kafka message headers. |

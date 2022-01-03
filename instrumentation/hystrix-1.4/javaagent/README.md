@@ -2,4 +2,4 @@
 
 | System property | Type | Default | Description |
 |---|---|---|---|
-| `otel.instrumentation.hystrix.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental). |
+| `otel.instrumentation.hystrix.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |

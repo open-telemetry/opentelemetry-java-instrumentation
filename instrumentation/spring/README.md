@@ -17,8 +17,8 @@ In this guide we will be using a running example. In section one and two, we wil
 | System property | Type | Default | Description |
 |---|---|---|---|
 | `otel.instrumentation.spring-integration.global-channel-interceptor-patterns` | List | `*` | List of Spring singletons to be captured. |
-| `otel.instrumentation.spring-webflux.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental) for Spring WebFlux version 5.0. |
-| `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental) for Sprinv Web MVC 3.1. |
+| `otel.instrumentation.spring-webflux.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring WebFlux version 5.0. |
+| `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Sprinv Web MVC 3.1. |
 
 # Manual Instrumentation Guide
 

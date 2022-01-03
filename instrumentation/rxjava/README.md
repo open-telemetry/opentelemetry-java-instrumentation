@@ -2,4 +2,4 @@
 
 | System property | Type | Default | Description |
 |---|---|---|---|
-| `otel.instrumentation.rxjava.experimental-span-attributes` | Boolean | `false` | Enable the capture of span attributes (experimental) for RxJava 2 and 3 instrumentation. |
+| `otel.instrumentation.rxjava.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for RxJava 2 and 3 instrumentation. |
