@@ -276,6 +276,7 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2-common:t
 include(":instrumentation:log4j:log4j-appender-2.16:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.16:library")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
+include(":instrumentation:logback:logback-appender-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")

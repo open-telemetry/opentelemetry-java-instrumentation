@@ -19,7 +19,14 @@ dependencies {
 
   compileOnly(project(":instrumentation-api-appender"))
 
+  implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+
   latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
 
   testImplementation("org.awaitility:awaitility")
+}
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental log attributes
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
 }

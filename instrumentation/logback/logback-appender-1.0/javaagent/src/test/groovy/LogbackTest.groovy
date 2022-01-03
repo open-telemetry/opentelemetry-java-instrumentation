@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import spock.lang.Unroll
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -94,5 +96,32 @@ class LogbackTest extends AgentInstrumentationSpecification {
     testMethod = args[2]
     severity = args[3]
     severityText = args[4]
+  }
+
+  def "test mdc"() {
+    when:
+    MDC.put("key1", "val1")
+    MDC.put("key2", "val2")
+    try {
+      abcLogger.info("xyz")
+    } finally {
+      MDC.clear()
+    }
+
+    then:
+
+    await()
+      .untilAsserted(
+        () -> {
+          assertThat(logs).hasSize(1)
+        })
+    def log = logs.get(0)
+    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
+    assertThat(log.getSeverityText()).isEqualTo("INFO")
+    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1"))).isEqualTo("val1")
+    assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2"))).isEqualTo("val2")
   }
 }
