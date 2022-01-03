@@ -2,8 +2,7 @@
 
 This module provides a Log4j2 [appender](https://logging.apache.org/log4j/2.x/manual/appenders.html)
 which forwards Log4j2 log events to
-the [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs)
-.
+the [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs).
 
 To use it, add the following modules to your application's classpath.
 
