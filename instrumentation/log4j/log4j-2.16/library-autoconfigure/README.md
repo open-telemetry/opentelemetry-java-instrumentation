@@ -1,8 +1,12 @@
-# Log4j 2 Integration
+# Log4j2 Autoconfigure Integration
 
-This module provides Log4j2 extensions related to OpenTelemetry.
+This module provides a Log4j2 `ContextDataProvider` that injects trace context from active spans
+into log context.
 
 To use it, add the module to your application's runtime classpath.
+
+Replace `OPENTELEMETRY_VERSION` with the latest
+stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
 
 **Maven**
 
@@ -11,8 +15,8 @@ To use it, add the module to your application's runtime classpath.
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-log4j-thread-context-2.16-autoconfigure</artifactId>
-    <version>1.10.0-alpha</version>
+    <artifactId>opentelemetry-log4j-2.16-autoconfigure</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -22,11 +26,9 @@ To use it, add the module to your application's runtime classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-thread-context-2.16-autoconfigure:1.10.0-alpha")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.16-autoconfigure:OPENTELEMETRY_VERSION")
 }
 ```
-
-## OpenTelemetry Context Data Provider
 
 `OpenTelemetryContextDataProvider` implements the Log4j2 `ContextDataProvider` SPI, and injects the
 trace ID and span ID from an active span into
