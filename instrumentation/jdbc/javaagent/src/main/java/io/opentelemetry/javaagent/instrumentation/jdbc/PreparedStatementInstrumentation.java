@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -62,7 +63,16 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       // using CallDepth prevents this, because this check happens before Connection#getMetadata()
       // is called - the first recursive Statement call is just skipped and we do not create a span
       // for it
-      callDepth = CallDepth.forClass(Statement.class);
+      // the call depth should be anchored to the specific connection of this statement to avoid
+      // suppressing spans for layered JDBC drivers (that should be performed by semantic
+      // suppression)
+      // it's possible however that getting the connection throws an SQLException hence falling back
+      // to the call depth of a generic Statement.
+      try {
+        callDepth = CallDepth.forClass(statement.getConnection().getClass());
+      } catch (SQLException e) {
+        callDepth = CallDepth.forClass(Statement.class);
+      }
       if (callDepth.getAndIncrement() > 0) {
         return;
       }

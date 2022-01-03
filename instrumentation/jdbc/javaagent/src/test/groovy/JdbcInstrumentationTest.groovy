@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.javaagent.instrumentation.jdbc.excluded.TwoLayerDbCallingConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
@@ -789,6 +790,53 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "testdb"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "table"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+          }
+        }
+      }
+    }
+
+    where:
+    desc                                                           | usePreparedStatementInConnection | executeQueryFunction
+    "getMetaData() uses Statement, test Statement"                 | false                            | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses PreparedStatement, test Statement"         | true                             | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses Statement, test PreparedStatement"         | false                            | { con, query -> con.prepareStatement(query).executeQuery() }
+    "getMetaData() uses PreparedStatement, test PreparedStatement" | true                             | { con, query -> con.prepareStatement(query).executeQuery() }
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4974
+  def "call depth suppression should not hide layered drivers: #desc"() {
+    given:
+    def innerConnection = new DbCallingConnection(usePreparedStatementInConnection)
+    innerConnection.url = "jdbc:testdb://localhost/inner"
+
+    def outerConnection = new TwoLayerDbCallingConnection(innerConnection)
+    outerConnection.url = "jdbc:testdb://localhost/outer"
+
+    when:
+    runWithSpan("parent") {
+      executeQueryFunction(outerConnection, "SELECT * FROM table")
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "SELECT inner.table"
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$SemanticAttributes.DB_NAME" "inner"
             "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "table"

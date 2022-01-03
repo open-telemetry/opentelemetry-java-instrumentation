@@ -33,4 +33,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+  // this is needed to guarantee that if a layered JDBC driver is excluded then
+  // the underlying driver is still correctly instrumented
+  jvmArgs("-Dotel.javaagent.exclude-classes=io.opentelemetry.javaagent.instrumentation.jdbc.excluded.*")
 }
