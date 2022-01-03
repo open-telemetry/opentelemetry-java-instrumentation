@@ -5,21 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("PreferJavaTimeOverload")
-class TimerTest {
+class DistributionSummaryTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
@@ -32,103 +29,79 @@ class TimerTest {
   }
 
   @Test
-  void testTimer() {
+  void testDistributionSummary() {
     // given
-    Timer timer =
-        Timer.builder("testTimer")
-            .description("This is a test timer")
+    DistributionSummary summary =
+        DistributionSummary.builder("testSummary")
+            .description("This is a test distribution summary")
+            .baseUnit("things")
+            .scale(2.0)
             .tags("tag", "value")
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(42, TimeUnit.SECONDS);
+    summary.record(21);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testTimer",
+        "testSummary",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription("This is a test timer")
-                        .hasUnit("ms")
+                        .hasDescription("This is a test distribution summary")
+                        .hasUnit("things")
                         .hasDoubleHistogram()
                         .points()
                         .satisfiesExactly(
                             point ->
                                 assertThat(point)
-                                    .hasSum(42_000)
+                                    .hasSum(42)
                                     .hasCount(1)
                                     .attributes()
                                     .containsOnly(attributeEntry("tag", "value")))));
     testing.clearData();
 
     // when
-    Metrics.globalRegistry.remove(timer);
-    timer.record(12, TimeUnit.SECONDS);
+    Metrics.globalRegistry.remove(summary);
+    summary.record(6);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testTimer",
+        "testSummary",
         metrics ->
             metrics.allSatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDoubleHistogram()
                         .points()
-                        .noneSatisfy(point -> assertThat(point).hasSum(54_000).hasCount(2))));
-  }
-
-  @Test
-  void testNanoPrecision() {
-    // given
-    Timer timer = Timer.builder("testNanoTimer").register(Metrics.globalRegistry);
-
-    // when
-    timer.record(1_234_000, TimeUnit.NANOSECONDS);
-
-    // then
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testNanoTimer",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("ms")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point -> assertThat(point).hasSum(1.234).hasCount(1).attributes())));
+                        .noneSatisfy(point -> assertThat(point).hasSum(54).hasCount(2))));
   }
 
   @Test
   void testMicrometerHistogram() {
     // given
-    Timer timer =
-        Timer.builder("testTimerHistogram")
-            .description("This is a test timer")
+    DistributionSummary summary =
+        DistributionSummary.builder("testSummaryHistogram")
+            .description("This is a test distribution summary")
+            .baseUnit("things")
             .tags("tag", "value")
-            .serviceLevelObjectives(
-                Duration.ofSeconds(1),
-                Duration.ofSeconds(10),
-                Duration.ofSeconds(100),
-                Duration.ofSeconds(1000))
+            .serviceLevelObjectives(1, 10, 100, 1000)
             .distributionStatisticBufferLength(10)
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(500, TimeUnit.MILLISECONDS);
-    timer.record(5, TimeUnit.SECONDS);
-    timer.record(50, TimeUnit.SECONDS);
-    timer.record(500, TimeUnit.SECONDS);
+    summary.record(0.5);
+    summary.record(5);
+    summary.record(50);
+    summary.record(500);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testTimerHistogram.histogram",
+        "testSummaryHistogram.histogram",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -137,48 +110,46 @@ class TimerTest {
                         .points()
                         .anySatisfy(
                             point ->
-                                assertThat(point)
-                                    .hasValue(1)
-                                    .attributes()
-                                    .containsEntry("le", "1000"))
+                                assertThat(point).hasValue(1).attributes().containsEntry("le", "1"))
                         .anySatisfy(
                             point ->
                                 assertThat(point)
                                     .hasValue(2)
                                     .attributes()
-                                    .containsEntry("le", "10000"))
+                                    .containsEntry("le", "10"))
                         .anySatisfy(
                             point ->
                                 assertThat(point)
                                     .hasValue(3)
                                     .attributes()
-                                    .containsEntry("le", "100000"))
+                                    .containsEntry("le", "100"))
                         .anySatisfy(
                             point ->
                                 assertThat(point)
                                     .hasValue(4)
                                     .attributes()
-                                    .containsEntry("le", "1000000"))));
+                                    .containsEntry("le", "1000"))));
   }
 
   @Test
   void testMicrometerPercentiles() {
     // given
-    Timer timer =
-        Timer.builder("testTimerPercentiles")
-            .description("This is a test timer")
+    DistributionSummary summary =
+        DistributionSummary.builder("testSummaryPercentiles")
+            .description("This is a test distribution summary")
+            .baseUnit("things")
             .tags("tag", "value")
             .publishPercentiles(0.5, 0.95, 0.99)
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(50, TimeUnit.MILLISECONDS);
-    timer.record(100, TimeUnit.MILLISECONDS);
+    summary.record(50);
+    summary.record(100);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testTimerPercentiles.percentile",
+        "testSummaryPercentiles.percentile",
         metrics ->
             metrics.anySatisfy(
                 metric ->

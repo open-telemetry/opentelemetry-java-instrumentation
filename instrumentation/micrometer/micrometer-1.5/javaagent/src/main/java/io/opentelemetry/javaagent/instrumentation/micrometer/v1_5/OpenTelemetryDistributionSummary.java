@@ -5,27 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
-import io.micrometer.core.instrument.AbstractTimer;
+import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.NoopHistogram;
 import io.micrometer.core.instrument.distribution.TimeWindowMax;
-import io.micrometer.core.instrument.distribution.pause.PauseDetector;
-import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
-final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
-
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
+    implements DistributionSummary, RemovableMeter {
 
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
@@ -34,19 +33,19 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   private volatile boolean removed = false;
 
-  OpenTelemetryTimer(
+  OpenTelemetryDistributionSummary(
       Id id,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
-      PauseDetector pauseDetector,
+      double scale,
       Meter otelMeter) {
-    super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
+    super(id, clock, distributionStatisticConfig, scale, false);
 
     this.otelHistogram =
         otelMeter
             .histogramBuilder(id.getName())
             .setDescription(description(id))
-            .setUnit("ms")
+            .setUnit(baseUnit(id))
             .build();
     this.attributes = tagsAsAttributes(id);
 
@@ -62,12 +61,10 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   }
 
   @Override
-  protected void recordNonNegative(long amount, TimeUnit unit) {
+  protected void recordNonNegative(double amount) {
     if (amount >= 0 && !removed) {
-      long nanos = unit.toNanos(amount);
-      double time = nanos / NANOS_PER_MS;
-      otelHistogram.record(time, attributes);
-      measurements.record(nanos);
+      otelHistogram.record(amount, attributes);
+      measurements.record(amount);
     }
   }
 
@@ -77,13 +74,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   }
 
   @Override
-  public double totalTime(TimeUnit unit) {
-    return measurements.totalTime(unit);
+  public double totalAmount() {
+    return measurements.totalAmount();
   }
 
   @Override
-  public double max(TimeUnit unit) {
-    return measurements.max(unit);
+  public double max() {
+    return measurements.max();
   }
 
   @Override
@@ -98,13 +95,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   }
 
   private interface Measurements {
-    void record(long nanos);
+    void record(double amount);
 
     long count();
 
-    double totalTime(TimeUnit unit);
+    double totalAmount();
 
-    double max(TimeUnit unit);
+    double max();
   }
 
   // if micrometer histograms are not being used then there's no need to keep any local state
@@ -113,7 +110,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     INSTANCE;
 
     @Override
-    public void record(long nanos) {}
+    public void record(double amount) {}
 
     @Override
     public long count() {
@@ -122,24 +119,24 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     }
 
     @Override
-    public double totalTime(TimeUnit unit) {
+    public double totalAmount() {
       UnsupportedReadLogger.logWarning();
       return Double.NaN;
     }
 
     @Override
-    public double max(TimeUnit unit) {
+    public double max() {
       UnsupportedReadLogger.logWarning();
       return Double.NaN;
     }
   }
 
-  // calculate count, totalTime and max value for the use of micrometer histograms
-  // kinda similar to how DropwizardTimer does that
+  // calculate count, totalAmount and max value for the use of micrometer histograms
+  // kinda similar to how DropwizardDistributionSummary does that
   private static final class MicrometerHistogramMeasurements implements Measurements {
 
     private final LongAdder count = new LongAdder();
-    private final LongAdder totalTime = new LongAdder();
+    private final DoubleAdder totalAmount = new DoubleAdder();
     private final TimeWindowMax max;
 
     MicrometerHistogramMeasurements(
@@ -148,10 +145,10 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     }
 
     @Override
-    public void record(long nanos) {
+    public void record(double amount) {
       count.increment();
-      totalTime.add(nanos);
-      max.record(nanos, TimeUnit.NANOSECONDS);
+      totalAmount.add(amount);
+      max.record(amount);
     }
 
     @Override
@@ -160,13 +157,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     }
 
     @Override
-    public double totalTime(TimeUnit unit) {
-      return TimeUtils.nanosToUnit(totalTime.sum(), unit);
+    public double totalAmount() {
+      return totalAmount.sum();
     }
 
     @Override
-    public double max(TimeUnit unit) {
-      return max.poll(unit);
+    public double max() {
+      return max.poll();
     }
   }
 }
