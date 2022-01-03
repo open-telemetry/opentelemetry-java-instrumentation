@@ -8,7 +8,7 @@ into log context.
 To use it, add the module to your application's runtime classpath.
 
 Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
 
 **Maven**
 
