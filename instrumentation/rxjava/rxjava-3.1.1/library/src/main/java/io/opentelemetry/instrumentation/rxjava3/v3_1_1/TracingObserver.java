@@ -20,28 +20,21 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.reactivex.rxjava3.internal.subscribers.BasicFuseableConditionalSubscriber;
-import io.reactivex.rxjava3.operators.ConditionalSubscriber;
-import io.reactivex.rxjava3.operators.QueueSubscription;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.internal.observers.BasicFuseableObserver;
+import io.reactivex.rxjava3.operators.QueueDisposable;
 
-class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber<T, T> {
+class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   private final Context context;
 
-  TracingConditionalSubscriber(ConditionalSubscriber<? super T> downstream, Context context) {
+  TracingObserver(Observer<? super T> downstream, Context context) {
     super(downstream);
     this.context = context;
-  }
-
-  @Override
-  public boolean tryOnNext(T t) {
-    try (Scope ignored = context.makeCurrent()) {
-      return downstream.tryOnNext(t);
-    }
   }
 
   @Override
@@ -67,9 +60,9 @@ class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber
 
   @Override
   public int requestFusion(int mode) {
-    QueueSubscription<T> qs = this.qs;
-    if (qs != null) {
-      int m = qs.requestFusion(mode);
+    QueueDisposable<T> qd = this.qd;
+    if (qd != null) {
+      int m = qd.requestFusion(mode);
       sourceMode = m;
       return m;
     }
@@ -78,6 +71,6 @@ class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber
 
   @Override
   public T poll() throws Throwable {
-    return qs.poll();
+    return qd.poll();
   }
 }

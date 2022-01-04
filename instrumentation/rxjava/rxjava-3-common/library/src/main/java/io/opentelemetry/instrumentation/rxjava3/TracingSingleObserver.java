@@ -28,13 +28,13 @@ import io.reactivex.rxjava3.core.SingleObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
+public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
 
   private final SingleObserver<T> actual;
   private final Context context;
   private Disposable disposable;
 
-  TracingSingleObserver(SingleObserver<T> actual, Context context) {
+  public TracingSingleObserver(SingleObserver<T> actual, Context context) {
     this.actual = actual;
     this.context = context;
   }

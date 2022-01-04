@@ -20,21 +20,28 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.reactivex.rxjava3.internal.subscribers.BasicFuseableSubscriber;
+import io.reactivex.rxjava3.internal.subscribers.BasicFuseableConditionalSubscriber;
+import io.reactivex.rxjava3.operators.ConditionalSubscriber;
 import io.reactivex.rxjava3.operators.QueueSubscription;
-import org.reactivestreams.Subscriber;
 
-class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
+class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber<T, T> {
 
   private final Context context;
 
-  TracingSubscriber(Subscriber<? super T> downstream, Context context) {
+  TracingConditionalSubscriber(ConditionalSubscriber<? super T> downstream, Context context) {
     super(downstream);
     this.context = context;
+  }
+
+  @Override
+  public boolean tryOnNext(T t) {
+    try (Scope ignored = context.makeCurrent()) {
+      return downstream.tryOnNext(t);
+    }
   }
 
   @Override

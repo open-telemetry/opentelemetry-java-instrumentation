@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.rxjava3.AbstractRxJava3Test
-import io.opentelemetry.instrumentation.rxjava3.TracingAssembly
+import io.opentelemetry.instrumentation.rxjava3.v3_1_1.TracingAssembly
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import spock.lang.Shared
 

@@ -20,12 +20,16 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
+import io.opentelemetry.instrumentation.rxjava3.RxJava3AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.rxjava3.TracingCompletableObserver;
+import io.opentelemetry.instrumentation.rxjava3.TracingMaybeObserver;
+import io.opentelemetry.instrumentation.rxjava3.TracingSingleObserver;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Flowable;

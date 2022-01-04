@@ -28,13 +28,13 @@ import io.reactivex.rxjava3.core.MaybeObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
+public class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
 
   private final MaybeObserver<T> actual;
   private final Context context;
   private Disposable disposable;
 
-  TracingMaybeObserver(MaybeObserver<T> actual, Context context) {
+  public TracingMaybeObserver(MaybeObserver<T> actual, Context context) {
     this.actual = actual;
     this.context = context;
   }

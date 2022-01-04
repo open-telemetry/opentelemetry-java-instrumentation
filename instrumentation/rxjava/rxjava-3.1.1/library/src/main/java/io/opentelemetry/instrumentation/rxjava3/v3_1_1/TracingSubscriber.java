@@ -20,19 +20,19 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.internal.observers.BasicFuseableObserver;
-import io.reactivex.rxjava3.operators.QueueDisposable;
+import io.reactivex.rxjava3.internal.subscribers.BasicFuseableSubscriber;
+import io.reactivex.rxjava3.operators.QueueSubscription;
+import org.reactivestreams.Subscriber;
 
-class TracingObserver<T> extends BasicFuseableObserver<T, T> {
+class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
   private final Context context;
 
-  TracingObserver(Observer<? super T> downstream, Context context) {
+  TracingSubscriber(Subscriber<? super T> downstream, Context context) {
     super(downstream);
     this.context = context;
   }
@@ -60,9 +60,9 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   @Override
   public int requestFusion(int mode) {
-    QueueDisposable<T> qd = this.qd;
-    if (qd != null) {
-      int m = qd.requestFusion(mode);
+    QueueSubscription<T> qs = this.qs;
+    if (qs != null) {
+      int m = qs.requestFusion(mode);
       sourceMode = m;
       return m;
     }
@@ -71,6 +71,6 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   @Override
   public T poll() throws Throwable {
-    return qd.poll();
+    return qs.poll();
   }
 }

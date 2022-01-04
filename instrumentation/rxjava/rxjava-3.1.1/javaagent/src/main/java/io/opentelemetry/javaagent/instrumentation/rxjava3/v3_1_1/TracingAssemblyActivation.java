@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rxjava3;
+package io.opentelemetry.javaagent.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.rxjava3.TracingAssembly;
+import io.opentelemetry.instrumentation.rxjava3.v3_1_1.TracingAssembly;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class TracingAssemblyActivation {

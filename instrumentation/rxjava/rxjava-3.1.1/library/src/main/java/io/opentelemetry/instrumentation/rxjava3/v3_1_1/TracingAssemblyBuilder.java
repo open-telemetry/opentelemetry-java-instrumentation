@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 public final class TracingAssemblyBuilder {
   private boolean captureExperimentalSpanAttributes;

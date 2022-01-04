@@ -20,7 +20,7 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
