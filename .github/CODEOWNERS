@@ -1,15 +1,10 @@
-#####################################################
-#
-# List of approvers and maintainers
-#
-#####################################################
 #
 # Learn about membership in OpenTelemetry community:
-#  https://github.com/open-telemetry/community/blob/master/community-membership.md
+#  https://github.com/open-telemetry/community/blob/main/community-membership.md
 # 
 #
 # Learn about CODEOWNERS file format: 
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-* @anuraaga @iNikem @jkwatson @laurit @mateuszrzeszutek @pavolloffay @trask
+* @open-telemetry/java-instrumentation-approvers
