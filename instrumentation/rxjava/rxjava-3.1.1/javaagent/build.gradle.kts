@@ -6,23 +6,20 @@ muzzle {
   pass {
     group.set("io.reactivex.rxjava3")
     module.set("rxjava")
-    versions.set("[3.0.0,3.1.0]")
+    versions.set("[3.1.1,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("io.reactivex.rxjava3:rxjava:3.0.0")
+  library("io.reactivex.rxjava3:rxjava:3.1.1")
   compileOnly(project(":instrumentation-api-annotation-support"))
 
-  implementation(project(":instrumentation:rxjava:rxjava-3.0:library"))
+  implementation(project(":instrumentation:rxjava:rxjava-3.1.1:library"))
 
-  testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
 
-  testInstrumentation(project(":instrumentation:rxjava:rxjava-3.1.1:javaagent"))
-
-  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0")
+  testInstrumentation(project(":instrumentation:rxjava:rxjava-3.0:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {

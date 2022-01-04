@@ -20,62 +20,57 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava3;
+package io.opentelemetry.instrumentation.rxjava3.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.reactivex.rxjava3.core.MaybeObserver;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
+import io.reactivex.rxjava3.internal.subscribers.BasicFuseableSubscriber;
+import io.reactivex.rxjava3.operators.QueueSubscription;
+import org.reactivestreams.Subscriber;
 
-class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
+class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
-  private final MaybeObserver<T> actual;
   private final Context context;
-  private Disposable disposable;
 
-  TracingMaybeObserver(MaybeObserver<T> actual, Context context) {
-    this.actual = actual;
+  TracingSubscriber(Subscriber<? super T> downstream, Context context) {
+    super(downstream);
     this.context = context;
   }
 
   @Override
-  public void onSubscribe(Disposable d) {
-    if (!DisposableHelper.validate(disposable, d)) {
-      return;
-    }
-    disposable = d;
-    actual.onSubscribe(this);
-  }
-
-  @Override
-  public void onSuccess(T t) {
+  public void onNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onSuccess(t);
+      downstream.onNext(t);
     }
   }
 
   @Override
-  public void onError(Throwable e) {
+  public void onError(Throwable t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onError(e);
+      downstream.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onComplete();
+      downstream.onComplete();
     }
   }
 
   @Override
-  public void dispose() {
-    disposable.dispose();
+  public int requestFusion(int mode) {
+    QueueSubscription<T> qs = this.qs;
+    if (qs != null) {
+      int m = qs.requestFusion(mode);
+      sourceMode = m;
+      return m;
+    }
+    return NONE;
   }
 
   @Override
-  public boolean isDisposed() {
-    return disposable.isDisposed();
+  public T poll() throws Throwable {
+    return qs.poll();
   }
 }

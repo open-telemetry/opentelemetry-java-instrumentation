@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rxjava3;
+package io.opentelemetry.javaagent.instrumentation.rxjava3.v3_1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 
@@ -18,12 +18,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   public RxJava3InstrumentationModule() {
-    super("rxjava3");
+    super("rxjava3.1.1", "rxjava3");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber");
+    return hasClassesNamed("io.reactivex.rxjava3.operators.ConditionalSubscriber");
   }
 
   @Override
