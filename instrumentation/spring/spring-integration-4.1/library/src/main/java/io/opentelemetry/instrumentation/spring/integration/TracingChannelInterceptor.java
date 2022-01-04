@@ -214,6 +214,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   private static MethodHandle getChannelAttributeMh(Class<?> directWithAttributesChannelClass) {
+    if (directWithAttributesChannelClass == null) {
+      return null;
+    }
+
     try {
       return MethodHandles.lookup()
           .findVirtual(
