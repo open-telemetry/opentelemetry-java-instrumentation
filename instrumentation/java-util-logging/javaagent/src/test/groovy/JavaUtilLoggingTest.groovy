@@ -55,7 +55,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.class.getName())
+        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(JavaUtilLoggingTest.name)
       } else {

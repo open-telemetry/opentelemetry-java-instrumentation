@@ -58,7 +58,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.class.getName())
+        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(Log4j2Test.name)
       } else {
@@ -95,12 +95,12 @@ class Log4j2Test extends AgentInstrumentationSpecification {
 
   def "test context data"() {
     when:
-    ThreadContext.put("key1", "val1");
-    ThreadContext.put("key2", "val2");
+    ThreadContext.put("key1", "val1")
+    ThreadContext.put("key2", "val2")
     try {
       logger.info("xyz")
     } finally {
-      ThreadContext.clearMap();
+      ThreadContext.clearMap()
     }
 
     then:

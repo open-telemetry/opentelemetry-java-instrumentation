@@ -4,7 +4,7 @@ pluginManagement {
     id("com.github.jk1.dependency-license-report") version "2.0"
     id("com.gradle.plugin-publish") version "0.18.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.5.0"
   }
@@ -276,10 +276,12 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2-common:t
 include(":instrumentation:log4j:log4j-appender-2.16:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.16:library")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
+include(":instrumentation:logback:logback-appender-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")
 include(":instrumentation:methods:javaagent")
+include(":instrumentation:micrometer:micrometer-1.5:javaagent")
 include(":instrumentation:mongo:mongo-3.1:javaagent")
 include(":instrumentation:mongo:mongo-3.1:library")
 include(":instrumentation:mongo:mongo-3.1:testing")
@@ -387,15 +389,14 @@ include(":instrumentation:undertow-1.4:bootstrap")
 include(":instrumentation:undertow-1.4:javaagent")
 include(":instrumentation:vaadin-14.2:javaagent")
 include(":instrumentation:vaadin-14.2:testing")
-include(":instrumentation:vertx-http-client:vertx-http-client-3.0:javaagent")
-include(":instrumentation:vertx-http-client:vertx-http-client-4.0:javaagent")
-include(":instrumentation:vertx-http-client:vertx-http-client-common:javaagent")
-include(":instrumentation:vertx-reactive-3.5:javaagent")
-include(":instrumentation:vertx-web-3.0:javaagent")
-include(":instrumentation:vertx-web-3.0:testing")
+include(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent")
+include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
+include(":instrumentation:vertx:vertx-reactive-3.5:javaagent")
+include(":instrumentation:vertx:vertx-web-3.0:javaagent")
+include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark
-include(":benchmark-e2e")
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
