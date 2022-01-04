@@ -86,7 +86,6 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     // 2. another messaging instrumentation has already created a CONSUMER span, in which case this
     //    instrumentation should not create another one
     if (!createProducerSpan && shouldStartConsumer(parentContext, messageWithChannel)) {
-      // if (instrumenter.shouldStart(parentContext, messageWithChannel)) {
       context = consumerInstrumenter.start(parentContext, messageWithChannel);
       localMap.put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
     } else if (createProducerSpan
