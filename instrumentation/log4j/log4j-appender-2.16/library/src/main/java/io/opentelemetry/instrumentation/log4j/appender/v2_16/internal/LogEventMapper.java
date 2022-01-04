@@ -29,6 +29,8 @@ import org.apache.logging.log4j.message.Message;
 
 public final class LogEventMapper<T> {
 
+  private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
+
   private static final Cache<String, AttributeKey<String>> attributeKeyCache = Cache.bounded(100);
 
   private final boolean captureMapMessageAttributes;
@@ -88,14 +90,7 @@ public final class LogEventMapper<T> {
 
     AttributesBuilder attributes = Attributes.builder();
 
-    if (message != null) {
-      if (message instanceof MapMessage) {
-        builder.setBody(message.getFormat());
-        captureMapMessageAttributes(attributes, (MapMessage<?, ?>) message);
-      } else {
-        builder.setBody(message.getFormattedMessage());
-      }
-    }
+    captureMessage(builder, attributes, message);
 
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
@@ -120,11 +115,31 @@ public final class LogEventMapper<T> {
     }
   }
 
-  private void captureMapMessageAttributes(AttributesBuilder attributes, MapMessage<?, ?> message) {
+  private void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
+    if (message == null) {
+      return;
+    }
+    if (!(message instanceof MapMessage)) {
+      builder.setBody(message.getFormattedMessage());
+      return;
+    }
+
+    MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
+
+    String body = mapMessage.getFormat();
+    final boolean ignoreSpecialMapMessageAttribute = false;
+    if (body == null || body.isEmpty()) {
+      body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
+      ignoreSpecialMapMessageAttribute = true;
+    }
+
+    builder.setBody(body);
     if (captureMapMessageAttributes) {
-      message.forEach(
+      mapMessage.forEach(
           (key, value) -> {
-            if (value != null) {
+            if (value != null
+                && (!ignoreSpecialMapMessageAttribute
+                    || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
               attributes.put(
                   attributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
                   value.toString());

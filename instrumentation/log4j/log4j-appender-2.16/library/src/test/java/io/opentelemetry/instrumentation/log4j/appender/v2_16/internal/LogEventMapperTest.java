@@ -76,6 +76,26 @@ public class LogEventMapperTest {
             entry(AttributeKey.stringKey("log4j.context_data.key2"), "value2"));
   }
 
+  @Test
+  public void testMapMessageAttributeWithSpecial() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("message", "value2");
+    AttributesBuilder attributes = Attributes.builder();
+
+    // when
+    mapper.captureMapMessageAttributes(attributes, contextData, true);
+
+    // then
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(AttributeKey.stringKey("log4j.context_data.key1"), "value1"),
+            entry(AttributeKey.stringKey("log4j.context_data.key2"), "value2"));
+  }
+
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
     INSTANCE;
 
