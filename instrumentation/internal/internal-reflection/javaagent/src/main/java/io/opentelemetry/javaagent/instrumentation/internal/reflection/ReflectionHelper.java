@@ -70,6 +70,10 @@ public final class ReflectionHelper {
       }
       result.add(interfaceClass);
     }
+    if (result.size() != interfaces.length) {
+      // for classes that have removed interfaces remember what they really have
+      RealInterfaces.set(containingClass, interfaces);
+    }
     return result.toArray(new Class<?>[0]);
   }
 }

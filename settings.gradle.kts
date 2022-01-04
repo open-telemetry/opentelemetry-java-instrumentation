@@ -153,6 +153,7 @@ include(":instrumentation:internal:internal-class-loader:javaagent-integration-t
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
 include(":instrumentation:internal:internal-lambda:javaagent")
 include(":instrumentation:internal:internal-lambda-java9:javaagent")
+include(":instrumentation:internal:internal-reflection:bootstrap")
 include(":instrumentation:internal:internal-reflection:javaagent")
 include(":instrumentation:internal:internal-reflection:javaagent-integration-tests")
 include(":instrumentation:internal:internal-url-class-loader:javaagent")
