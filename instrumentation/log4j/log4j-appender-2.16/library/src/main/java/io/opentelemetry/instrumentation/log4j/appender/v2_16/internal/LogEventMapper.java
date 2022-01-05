@@ -131,7 +131,6 @@ public final class LogEventMapper<T> {
     MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
 
     String body = mapMessage.getFormat();
-    System.out.println("HERE: " + body);
     boolean checkSpecialMapMessageAttribute = (body == null || body.isEmpty());
     if (checkSpecialMapMessageAttribute) {
       body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
