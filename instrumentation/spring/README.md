@@ -17,8 +17,9 @@ In this guide we will be using a running example. In section one and two, we wil
 | System property | Type | Default | Description |
 |---|---|---|---|
 | `otel.instrumentation.spring-integration.global-channel-interceptor-patterns` | List | `*` | An array of Spring channel name patterns that will be intercepted. See [Spring Integration docs](https://docs.spring.io/spring-integration/reference/html/channel.html#global-channel-configuration-interceptors) for more details. |
+| `otel.instrumentation.spring-integration.producer.enabled` | Boolean | `false` | Create producer spans when  messages are sent to an output channel. Enable when you're using a messaging library that doesn't have its own instrumentation for generating producer spans. Note that the detection of output channels only works for [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream) `DirectWithAttributesChannel`.  |
 | `otel.instrumentation.spring-webflux.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring WebFlux version 5.0. |
-| `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Sprinv Web MVC 3.1. |
+| `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring Web MVC 3.1. |
 
 # Manual Instrumentation Guide
 
