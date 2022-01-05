@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -25,7 +24,6 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
   private final Function<REQUEST, String> contextPathExtractor;
-  private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -34,10 +32,6 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
-    this.parameterExtractor =
-        ServletRequestParametersExtractor.enabled()
-            ? new ServletRequestParametersExtractor<>(accessor)
-            : null;
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -88,21 +82,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
 
-    captureServletAttributes(context, request);
-
     return result;
-  }
-
-  private void captureServletAttributes(Context context, REQUEST request) {
-    if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
-      return;
-    }
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
-    if (serverSpan == null) {
-      return;
-    }
-
-    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
   }
 
   /*
