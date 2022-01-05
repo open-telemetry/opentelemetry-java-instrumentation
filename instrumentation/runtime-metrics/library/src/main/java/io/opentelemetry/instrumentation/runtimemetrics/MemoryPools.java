@@ -63,8 +63,7 @@ public final class MemoryPools {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
     Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(MemoryPools.class.getName());
     meter
-        .gaugeBuilder("runtime.jvm.memory.area")
-        .ofLongs()
+        .upDownCounterBuilder("runtime.jvm.memory.area")
         .setDescription("Bytes of a given JVM memory area.")
         .setUnit("By")
         .buildWithCallback(
@@ -88,8 +87,7 @@ public final class MemoryPools {
       maxLabelSets.add(Attributes.of(TYPE_KEY, MAX, POOL_KEY, pool.getName()));
     }
     meter
-        .gaugeBuilder("runtime.jvm.memory.pool")
-        .ofLongs()
+        .upDownCounterBuilder("runtime.jvm.memory.pool")
         .setDescription("Bytes of a given JVM memory pool.")
         .setUnit("By")
         .buildWithCallback(

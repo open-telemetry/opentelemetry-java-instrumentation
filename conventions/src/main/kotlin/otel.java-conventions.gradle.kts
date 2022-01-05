@@ -121,6 +121,9 @@ dependencies {
   testImplementation("org.slf4j:jcl-over-slf4j")
   testImplementation("org.slf4j:jul-to-slf4j")
   testImplementation("com.github.stefanbirkner:system-rules")
+
+  codenarc("org.codenarc:CodeNarc:2.2.0")
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
 }
 
 tasks {
@@ -283,7 +286,6 @@ afterEvaluate {
 
 codenarc {
   configFile = rootProject.file("buildscripts/codenarc.groovy")
-  toolVersion = "2.0.0"
 }
 
 checkstyle {

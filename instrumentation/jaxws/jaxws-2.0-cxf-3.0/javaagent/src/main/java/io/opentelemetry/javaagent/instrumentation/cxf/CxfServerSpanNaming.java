@@ -5,29 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.servlet.http.HttpServletRequest;
 
-public class CxfServerSpanNaming {
+public final class CxfServerSpanNaming {
 
-  public static final ServerSpanNameSupplier<CxfRequest> SERVER_SPAN_NAME =
-      (context, cxfRequest) -> {
-        String spanName = cxfRequest.spanName();
-        if (spanName == null) {
-          return null;
-        }
+  public static void updateServerSpanName(Context context, CxfRequest cxfRequest) {
+    String spanName = cxfRequest.spanName();
+    if (spanName == null) {
+      return;
+    }
 
-        HttpServletRequest request = (HttpServletRequest) cxfRequest.message().get("HTTP.REQUEST");
-        if (request != null) {
-          String servletPath = request.getServletPath();
-          if (!servletPath.isEmpty()) {
-            spanName = servletPath + "/" + spanName;
-          }
-        }
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan == null) {
+      return;
+    }
 
-        return ServletContextPath.prepend(context, spanName);
-      };
+    HttpServletRequest request = (HttpServletRequest) cxfRequest.message().get("HTTP.REQUEST");
+    if (request != null) {
+      String servletPath = request.getServletPath();
+      if (!servletPath.isEmpty()) {
+        spanName = servletPath + "/" + spanName;
+      }
+    }
+
+    serverSpan.updateName(ServletContextPath.prepend(context, spanName));
+  }
 
   private CxfServerSpanNaming() {}
 }

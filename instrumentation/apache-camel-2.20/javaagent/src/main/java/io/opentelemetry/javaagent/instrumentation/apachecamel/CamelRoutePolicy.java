@@ -23,6 +23,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.getSpanDecorator;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -36,23 +39,30 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private static final Logger logger = LoggerFactory.getLogger(CamelRoutePolicy.class);
 
-  private static Span spanOnExchangeBegin(
-      Route route, Exchange exchange, SpanDecorator sd, Context parentContext, SpanKind spanKind) {
+  private static Context spanOnExchangeBegin(
+      Route route, Exchange exchange, SpanDecorator sd, Context parentContext) {
     Span activeSpan = Span.fromContext(parentContext);
     if (!activeSpan.getSpanContext().isValid()) {
       parentContext =
           CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
     }
 
-    String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
-    Context context = CamelTracer.TRACER.startSpan(parentContext, name, spanKind);
-    return Span.fromContext(context);
+    SpanKind spanKind = spanKind(activeSpan, sd);
+    CamelRequest request =
+        CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, spanKind);
+    sd.updateServerSpanName(parentContext, exchange, route.getEndpoint(), CamelDirection.INBOUND);
+
+    if (!instrumenter().shouldStart(parentContext, request)) {
+      return null;
+    }
+    Context context = instrumenter().start(parentContext, request);
+    ActiveContextManager.activate(context, request);
+    return context;
   }
 
-  private static SpanKind spanKind(Context context, SpanDecorator sd) {
-    Span activeSpan = Span.fromContext(context);
+  private static SpanKind spanKind(Span activeSpan, SpanDecorator sd) {
     // if there's an active span, this is not a root span which we always mark as INTERNAL
-    return (activeSpan.getSpanContext().isValid() ? SpanKind.INTERNAL : sd.getReceiverSpanKind());
+    return activeSpan.getSpanContext().isValid() ? SpanKind.INTERNAL : sd.getReceiverSpanKind();
   }
 
   /**
@@ -61,35 +71,16 @@ final class CamelRoutePolicy extends RoutePolicySupport {
    */
   @Override
   public void onExchangeBegin(Route route, Exchange exchange) {
-    try {
-      SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
-      Context parentContext = Context.current();
-      SpanKind spanKind = spanKind(parentContext, sd);
-      Span span = spanOnExchangeBegin(route, exchange, sd, parentContext, spanKind);
-      sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
-      ActiveSpanManager.activate(exchange, span, spanKind);
-      logger.debug("[Route start] Receiver span started {}", span);
-    } catch (Throwable t) {
-      logger.warn("Failed to capture tracing data", t);
-    }
+    SpanDecorator sd = getSpanDecorator(route.getEndpoint());
+    Context parentContext = Context.current();
+    Context context = spanOnExchangeBegin(route, exchange, sd, parentContext);
+    logger.debug("[Route start] Receiver span started {}", context);
   }
 
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
-    try {
-      Span span = ActiveSpanManager.getSpan(exchange);
-      if (span != null) {
-
-        logger.debug("[Route finished] Receiver span finished {}", span);
-        SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
-        sd.post(span, exchange, route.getEndpoint());
-        ActiveSpanManager.deactivate(exchange);
-      } else {
-        logger.warn("Could not find managed span for exchange={}", exchange);
-      }
-    } catch (Throwable t) {
-      logger.warn("Failed to capture tracing data", t);
-    }
+    Context context = ActiveContextManager.deactivate(exchange);
+    logger.debug("[Route finished] Receiver span finished {}", context);
   }
 }

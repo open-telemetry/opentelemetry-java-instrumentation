@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.axis2;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.axis2.Axis2Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import org.apache.axis2.jaxws.core.MessageContext;
 
 public final class Axis2Helper {
@@ -24,8 +22,7 @@ public final class Axis2Helper {
     Context parentContext = Context.current();
 
     Axis2Request request = new Axis2Request(message);
-    ServerSpanNaming.updateServerSpanName(
-        parentContext, CONTROLLER, Axis2ServerSpanNaming.SERVER_SPAN_NAME, request);
+    Axis2ServerSpanNaming.updateServerSpan(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;

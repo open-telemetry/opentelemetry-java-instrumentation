@@ -23,6 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
@@ -81,20 +82,19 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    super.pre(span, exchange, endpoint, camelDirection);
+  public void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection) {
+    super.pre(attributes, exchange, endpoint, camelDirection);
 
     String httpUrl = getHttpUrl(exchange, endpoint);
     if (httpUrl != null) {
-      span.setAttribute(SemanticAttributes.HTTP_URL, httpUrl);
+      attributes.put(SemanticAttributes.HTTP_URL, httpUrl);
     }
 
-    span.setAttribute(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
-
-    Span serverSpan = ServerSpan.fromContextOrNull(Context.current());
-    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
-      updateServerSpanName(serverSpan, exchange, endpoint);
-    }
+    attributes.put(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
   }
 
   private static boolean shouldSetPathAsName(CamelDirection camelDirection) {
@@ -125,6 +125,15 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  @Override
+  public void updateServerSpanName(
+      Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
+      updateServerSpanName(serverSpan, exchange, endpoint);
+    }
+  }
+
   protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {
     Object url = exchange.getIn().getHeader(Exchange.HTTP_URL);
     if (url instanceof String) {
@@ -145,13 +154,13 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void post(Span span, Exchange exchange, Endpoint endpoint) {
-    super.post(span, exchange, endpoint);
+  public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
+    super.post(attributes, exchange, endpoint);
 
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
       }
     }
   }

@@ -64,7 +64,7 @@ public final class HttpServerMetrics implements RequestListener {
     duration =
         meter
             .histogramBuilder("http.server.duration")
-            .setUnit("milliseconds")
+            .setUnit("ms")
             .setDescription("The duration of the inbound HTTP request")
             .build();
   }

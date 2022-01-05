@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
@@ -18,12 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsServerSpanNaming;
 import javax.xml.ws.Provider;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -66,8 +63,6 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       request = new JaxWsRequest(target.getClass(), methodName);
-      ServerSpanNaming.updateServerSpanName(
-          parentContext, CONTROLLER, JaxWsServerSpanNaming.SERVER_SPAN_NAME, request);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }

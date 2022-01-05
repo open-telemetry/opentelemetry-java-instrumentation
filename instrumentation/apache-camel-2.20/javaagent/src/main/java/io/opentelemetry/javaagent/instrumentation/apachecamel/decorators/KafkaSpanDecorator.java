@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
@@ -53,31 +53,35 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    super.pre(span, exchange, endpoint, camelDirection);
+  public void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection) {
+    super.pre(attributes, exchange, endpoint, camelDirection);
 
-    span.setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process");
-    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
+    attributes.put(SemanticAttributes.MESSAGING_OPERATION, "process");
+    attributes.put(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
 
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
-      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
       if (partitionKey != null) {
-        span.setAttribute("apache-camel.kafka.partitionKey", partitionKey);
+        attributes.put("apache-camel.kafka.partitionKey", partitionKey);
       }
 
       String key = (String) exchange.getIn().getHeader(KEY);
       if (key != null) {
-        span.setAttribute("apache-camel.kafka.key", key);
+        attributes.put("apache-camel.kafka.key", key);
       }
 
       String offset = getValue(exchange, OFFSET, Long.class);
       if (offset != null) {
-        span.setAttribute("apache-camel.kafka.offset", offset);
+        attributes.put("apache-camel.kafka.offset", offset);
       }
     }
   }

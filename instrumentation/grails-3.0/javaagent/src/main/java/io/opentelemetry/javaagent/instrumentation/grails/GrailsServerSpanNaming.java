@@ -17,6 +17,7 @@ public class GrailsServerSpanNaming {
             info.getActionName() != null
                 ? info.getActionName()
                 : info.getControllerClass().getDefaultAction();
+        // this is not the actual route/mapping, but it's the best thing that we have access to
         return ServletContextPath.prepend(context, "/" + info.getControllerName() + "/" + action);
       };
 
