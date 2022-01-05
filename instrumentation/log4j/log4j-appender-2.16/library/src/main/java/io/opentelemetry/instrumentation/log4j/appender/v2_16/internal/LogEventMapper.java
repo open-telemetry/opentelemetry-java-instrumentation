@@ -31,7 +31,10 @@ public final class LogEventMapper<T> {
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
-  private static final Cache<String, AttributeKey<String>> attributeKeyCache = Cache.bounded(100);
+  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
+      Cache.bounded(100);
+  private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
+      Cache.bounded(100);
 
   private final boolean captureMapMessageAttributes;
 
@@ -115,7 +118,8 @@ public final class LogEventMapper<T> {
     }
   }
 
-  private void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
+  // visible for testing
+  void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
     if (message == null) {
       return;
     }
@@ -127,21 +131,21 @@ public final class LogEventMapper<T> {
     MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
 
     String body = mapMessage.getFormat();
-    final boolean ignoreSpecialMapMessageAttribute = false;
-    if (body == null || body.isEmpty()) {
+    boolean checkSpecialMapMessageAttribute = (body == null || body.isEmpty());
+    if (checkSpecialMapMessageAttribute) {
       body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
-      ignoreSpecialMapMessageAttribute = true;
     }
 
     builder.setBody(body);
+
     if (captureMapMessageAttributes) {
       mapMessage.forEach(
           (key, value) -> {
             if (value != null
-                && (!ignoreSpecialMapMessageAttribute
+                && (!checkSpecialMapMessageAttribute
                     || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
               attributes.put(
-                  attributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
+                  mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
                   value.toString());
             }
           });
@@ -171,7 +175,7 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return attributeKeyCache.computeIfAbsent(
+    return contextDataAttributeKeyCache.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.context_data." + k));
   }
 

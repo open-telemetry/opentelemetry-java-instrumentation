@@ -9,14 +9,19 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.appender.LogBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.message.StringMapMessage;
+import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.Test;
 
 public class LogEventMapperTest {
@@ -77,23 +82,69 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testMapMessageAttributeWithSpecial() {
+  public void testCaptureMapMessageDisabled() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
-    Map<String, String> contextData = new HashMap<>();
-    contextData.put("key1", "value1");
-    contextData.put("message", "value2");
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "value1");
+    message.put("message", "value2");
+
+    LogBuilder logBuilder = mock(LogBuilder.class);
     AttributesBuilder attributes = Attributes.builder();
 
     // when
-    mapper.captureMapMessageAttributes(attributes, contextData, true);
+    mapper.captureMessage(logBuilder, attributes, message);
 
     // then
+    verify(logBuilder).setBody("value2");
+    assertThat(attributes.build()).isEmpty();
+  }
+
+  @Test
+  public void testCaptureMapMessageWithNoFormat() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "value1");
+    message.put("message", "value2");
+
+    LogBuilder logBuilder = mock(LogBuilder.class);
+    AttributesBuilder attributes = Attributes.builder();
+
+    // when
+    mapper.captureMessage(logBuilder, attributes, message);
+
+    // then
+    verify(logBuilder).setBody("value2");
+    assertThat(attributes.build()).containsOnly(entry(AttributeKey.stringKey("key1"), "value1"));
+  }
+
+  @Test
+  public void testCaptureMapMessageWithFormat() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+
+    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
+    message.put("key1", "value1");
+    message.put("message", "value2");
+
+    LogBuilder logBuilder = mock(LogBuilder.class);
+    AttributesBuilder attributes = Attributes.builder();
+
+    // when
+    mapper.captureMessage(logBuilder, attributes, message);
+
+    // then
+    verify(logBuilder).setBody("a message");
     assertThat(attributes.build())
         .containsOnly(
-            entry(AttributeKey.stringKey("log4j.context_data.key1"), "value1"),
-            entry(AttributeKey.stringKey("log4j.context_data.key2"), "value2"));
+            entry(AttributeKey.stringKey("key1"), "value1"),
+            entry(AttributeKey.stringKey("message"), "value2"));
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
