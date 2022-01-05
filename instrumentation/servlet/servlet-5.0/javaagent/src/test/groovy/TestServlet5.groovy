@@ -58,6 +58,11 @@ class TestServlet5 {
             resp.writer.print(endpoint.body)
             break
           case CAPTURE_PARAMETERS:
+            req.setCharacterEncoding("UTF8")
+            def value = req.getParameter("test-parameter")
+            if (value != "test value õäöü") {
+              throw new ServletException("request parameter does not have expected value " + value)
+            }
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
             break
@@ -112,6 +117,11 @@ class TestServlet5 {
                 context.complete()
                 break
               case CAPTURE_PARAMETERS:
+                req.setCharacterEncoding("UTF8")
+                def value = req.getParameter("test-parameter")
+                if (value != "test value õäöü") {
+                  throw new ServletException("request parameter does not have expected value " + value)
+                }
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
                 context.complete()
@@ -173,6 +183,11 @@ class TestServlet5 {
               resp.writer.print(endpoint.body)
               break
             case CAPTURE_PARAMETERS:
+              req.setCharacterEncoding("UTF8")
+              def value = req.getParameter("test-parameter")
+              if (value != "test value õäöü") {
+                throw new ServletException("request parameter does not have expected value " + value)
+              }
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               break

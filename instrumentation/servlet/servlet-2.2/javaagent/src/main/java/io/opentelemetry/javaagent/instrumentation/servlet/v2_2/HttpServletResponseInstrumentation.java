@@ -30,9 +30,9 @@ import net.bytebuddy.matcher.ElementMatcher;
  * created span using just response object.
  *
  * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and
- * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletResponse,
- * Throwable, CallDepth, ServletRequestContext, Context, Scope)} can get it from context and set
- * required span attribute.
+ * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletRequest,
+ * ServletResponse, Throwable, CallDepth, ServletRequestContext, Context, Scope)} can get it from
+ * context and set required span attribute.
  */
 public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override

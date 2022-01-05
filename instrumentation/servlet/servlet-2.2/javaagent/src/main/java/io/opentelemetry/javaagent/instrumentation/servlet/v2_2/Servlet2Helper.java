@@ -23,7 +23,7 @@ public class Servlet2Helper extends BaseServletHelper<HttpServletRequest, HttpSe
     super(instrumenter, Servlet2Accessor.INSTANCE);
   }
 
-  public void stopSpan(
+  public void end(
       Context context,
       ServletRequestContext<HttpServletRequest> requestContext,
       HttpServletResponse response,

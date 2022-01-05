@@ -32,14 +32,15 @@ public class Servlet2Advice {
       @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
-    callDepth.getAndIncrement();
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
+    callDepth.getAndIncrement();
 
     Context serverContext = helper().getServerContext(httpServletRequest);
     if (serverContext != null) {
@@ -67,6 +68,7 @@ public class Servlet2Advice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
+      @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
@@ -74,19 +76,24 @@ public class Servlet2Advice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    int depth = callDepth.decrementAndGet();
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
+      return;
+    }
 
     if (scope != null) {
       scope.close();
     }
 
-    if (context == null && depth == 0) {
+    boolean topLevel = callDepth.decrementAndGet() == 0;
+    if (context == null && topLevel) {
       Context currentContext = Java8BytecodeBridge.currentContext();
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
       if (throwable != null) {
         helper().recordException(currentContext, throwable);
       }
+      // also capture request parameters as servlet attributes
+      helper().captureServletAttributes(currentContext, (HttpServletRequest) request);
     }
 
     if (scope == null || context == null) {
@@ -100,7 +107,7 @@ public class Servlet2Advice {
     }
 
     helper()
-        .stopSpan(
+        .end(
             context, requestContext, (HttpServletResponse) response, responseStatusCode, throwable);
   }
 }

@@ -88,12 +88,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
 
-    captureServletAttributes(context, request);
-
     return result;
   }
 
-  private void captureServletAttributes(Context context, REQUEST request) {
+  public void captureServletAttributes(Context context, REQUEST request) {
     if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
       return;
     }

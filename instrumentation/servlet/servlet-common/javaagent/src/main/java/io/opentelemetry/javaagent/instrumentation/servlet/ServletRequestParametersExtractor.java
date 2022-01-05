@@ -50,17 +50,18 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, ServletRequestContext<REQUEST> requestContext) {
-    REQUEST request = requestContext.request();
-    setAttributes(request, (key, value) -> set(attributes, key, value));
-  }
+  public void onStart(
+      AttributesBuilder attributes, ServletRequestContext<REQUEST> requestContext) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    REQUEST request = requestContext.request();
+    setAttributes(request, (key, value) -> set(attributes, key, value));
+  }
 
   private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
     return parameterKeysCache.computeIfAbsent(headerName, n -> createKey(n));
