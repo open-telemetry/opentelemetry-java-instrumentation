@@ -60,20 +60,23 @@ public final class ReflectionHelper {
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
+    boolean hasVirtualFieldMarker = false;
     for (Class<?> interfaceClass : interfaces) {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class
           || (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
               && interfaceClass.isSynthetic()
               && interfaceClass.getName().contains("VirtualFieldAccessor$"))) {
+        hasVirtualFieldMarker = true;
         continue;
       }
       result.add(interfaceClass);
     }
-    if (result.size() != interfaces.length) {
-      // for classes that have removed interfaces remember what they really have
-      RealInterfaces.set(containingClass, interfaces);
+
+    if (hasVirtualFieldMarker) {
+      VirtualFieldDetector.markVirtualFieldsPresent(containingClass);
     }
+
     return result.toArray(new Class<?>[0]);
   }
 }
