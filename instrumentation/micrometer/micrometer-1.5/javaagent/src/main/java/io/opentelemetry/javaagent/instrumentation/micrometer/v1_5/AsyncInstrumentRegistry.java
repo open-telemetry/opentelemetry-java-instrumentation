@@ -44,18 +44,7 @@ final class AsyncInstrumentRegistry {
       @Nullable T obj,
       ToDoubleFunction<T> objMetric) {
 
-    buildGauge(
-        meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
-  }
-
-  <T> void buildGauge(
-      String name,
-      String description,
-      String baseUnit,
-      Attributes attributes,
-      @Nullable T obj,
-      ToDoubleFunction<T> objMetric) {
-
+    String name = meterId.getName();
     synchronized (gauges) {
       // use the gauges map as lock for the recorder state - this way all gauge-related mutable
       // state will always be accessed in synchronized(gauges)
@@ -69,8 +58,8 @@ final class AsyncInstrumentRegistry {
                     new DoubleMeasurementsRecorder(recorderLock);
                 meter
                     .gaugeBuilder(name)
-                    .setDescription(description)
-                    .setUnit(baseUnit)
+                    .setDescription(description(meterId))
+                    .setUnit(baseUnit(meterId))
                     .buildWithCallback(recorderCallback);
                 return recorderCallback;
               });
@@ -90,6 +79,17 @@ final class AsyncInstrumentRegistry {
       Attributes attributes,
       T obj,
       ToDoubleFunction<T> objMetric) {
+    buildDoubleCounter(
+        meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
+  }
+
+  <T> void buildDoubleCounter(
+      String name,
+      String description,
+      String baseUnit,
+      Attributes attributes,
+      @Nullable T obj,
+      ToDoubleFunction<T> objMetric) {
 
     synchronized (doubleCounters) {
       // use the counters map as lock for the recorder state - this way all double counter-related
@@ -98,14 +98,14 @@ final class AsyncInstrumentRegistry {
 
       DoubleMeasurementsRecorder recorder =
           doubleCounters.computeIfAbsent(
-              meterId.getName(),
+              name,
               n -> {
                 DoubleMeasurementsRecorder recorderCallback =
                     new DoubleMeasurementsRecorder(recorderLock);
                 meter
-                    .counterBuilder(meterId.getName())
-                    .setDescription(description(meterId))
-                    .setUnit(baseUnit(meterId))
+                    .counterBuilder(name)
+                    .setDescription(description)
+                    .setUnit(baseUnit)
                     .ofDoubles()
                     .buildWithCallback(recorderCallback);
                 return recorderCallback;

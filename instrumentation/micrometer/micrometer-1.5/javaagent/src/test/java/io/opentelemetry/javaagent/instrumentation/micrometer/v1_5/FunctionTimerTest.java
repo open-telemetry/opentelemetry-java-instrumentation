@@ -77,7 +77,7 @@ class FunctionTimerTest {
                     assertThat(metric)
                         .hasDescription("This is a test function timer")
                         .hasUnit("ms")
-                        .hasDoubleGauge()
+                        .hasDoubleSum()
                         .points()
                         .satisfiesExactly(
                             point ->
@@ -124,7 +124,7 @@ class FunctionTimerTest {
                 metric ->
                     assertThat(metric)
                         .hasUnit("ms")
-                        .hasDoubleGauge()
+                        .hasDoubleSum()
                         .points()
                         .satisfiesExactly(
                             point -> assertThat(point).hasValue(1.234).attributes())));
@@ -167,7 +167,7 @@ class FunctionTimerTest {
                 metric ->
                     assertThat(metric)
                         .hasUnit("ms")
-                        .hasDoubleGauge()
+                        .hasDoubleSum()
                         .points()
                         .anySatisfy(
                             point ->

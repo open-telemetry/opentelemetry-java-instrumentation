@@ -45,7 +45,7 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
     asyncInstrumentRegistry.buildLongCounter(
         countMeterName, description(id), /* baseUnit = */ "1", attributes, obj, countFunction);
 
-    asyncInstrumentRegistry.buildGauge(
+    asyncInstrumentRegistry.buildDoubleCounter(
         totalTimeMeterName,
         description(id),
         /* baseUnit = */ "ms",
@@ -85,7 +85,7 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
   @Override
   public void onRemove() {
     asyncInstrumentRegistry.removeLongCounter(countMeterName, attributes);
-    asyncInstrumentRegistry.removeGauge(totalTimeMeterName, attributes);
+    asyncInstrumentRegistry.removeDoubleCounter(totalTimeMeterName, attributes);
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
