@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.sdk.appender.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
-import io.opentelemetry.sdk.logs.data.Body;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
@@ -164,10 +163,27 @@ class OpenTelemetryAppenderConfigTest {
     LogData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
-    assertThat(logData.getBody().getType()).isEqualTo(Body.Type.EMPTY);
+    assertThat(logData.getBody().asString()).isEmpty();
     assertThat(logData.getAttributes().size()).isEqualTo(2);
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
+  }
+
+  @Test
+  void logStringMapMessageWithSpecialAttribute() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "val1");
+    message.put("message", "val2");
+    logger.info(message);
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).hasSize(1);
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getBody().asString()).isEqualTo("val2");
+    assertThat(logData.getAttributes().size()).isEqualTo(1);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
   }
 
   @Test

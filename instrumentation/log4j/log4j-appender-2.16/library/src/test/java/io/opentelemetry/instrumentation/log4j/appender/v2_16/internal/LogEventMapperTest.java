@@ -9,7 +9,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -103,7 +105,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureMapMessageWithNoFormat() {
+  public void testCaptureMapMessageWithSpecialAttribute() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
@@ -124,7 +126,31 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureMapMessageWithFormat() {
+  public void testCaptureMapMessageWithoutSpecialAttribute() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "value1");
+    message.put("key2", "value2");
+
+    LogBuilder logBuilder = mock(LogBuilder.class);
+    AttributesBuilder attributes = Attributes.builder();
+
+    // when
+    mapper.captureMessage(logBuilder, attributes, message);
+
+    // then
+    verify(logBuilder, never()).setBody(anyString());
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(AttributeKey.stringKey("key1"), "value1"),
+            entry(AttributeKey.stringKey("key2"), "value2"));
+  }
+
+  @Test
+  public void testCaptureStructuredDataMessage() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
