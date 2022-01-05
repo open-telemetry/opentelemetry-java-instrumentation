@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

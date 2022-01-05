@@ -18,7 +18,6 @@ dependencies {
   implementation(project(":instrumentation-api-appender"))
   implementation(project(":instrumentation-sdk-appender"))
   implementation(project(":muzzle"))
-  implementation(project(":instrumentation:internal:internal-reflection:bootstrap"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-api-metrics")

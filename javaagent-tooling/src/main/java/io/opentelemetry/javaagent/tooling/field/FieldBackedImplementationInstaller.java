@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.instrumentation.internal.reflection.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;

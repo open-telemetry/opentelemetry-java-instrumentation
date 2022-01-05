@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.internal.reflection;
+package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
 
@@ -29,7 +29,7 @@ public final class VirtualFieldDetector {
     return classesWithVirtualFields.get(clazz) != null;
   }
 
-  static void markVirtualFieldsPresent(Class<?> clazz) {
+  public static void markVirtualFieldsPresent(Class<?> clazz) {
     classesWithVirtualFields.put(clazz, Boolean.TRUE);
   }
 }
