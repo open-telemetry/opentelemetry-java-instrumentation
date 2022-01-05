@@ -7,6 +7,8 @@ dependencies {
 
   library("ch.qos.logback:logback-classic:0.9.16")
 
+  latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
+
   testImplementation(project(":instrumentation-sdk-appender"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
