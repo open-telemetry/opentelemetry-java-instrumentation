@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
+import java.util.Arrays;
 
 /** Helper class for detecting whether given class has virtual fields. */
 public final class VirtualFieldDetector {
@@ -25,7 +26,12 @@ public final class VirtualFieldDetector {
     // clazz.getInterfaces() needs to be called before reading from classesWithVirtualFields
     // as the call to clazz.getInterfaces() triggers adding clazz to that map via instrumentation
     // calling VirtualFieldDetector#markVirtualFieldsPresent() from Class#getInterfaces()
-    clazz.getInterfaces();
+    Class<?>[] interfaces = clazz.getInterfaces();
+    // to avoid breaking in case internal-reflection instrumentation is disabled check whether
+    // interfaces array contains virtual field marker interface
+    if (Arrays.asList(interfaces).contains(VirtualFieldInstalledMarker.class)) {
+      return true;
+    }
     return classesWithVirtualFields.get(clazz) != null;
   }
 
