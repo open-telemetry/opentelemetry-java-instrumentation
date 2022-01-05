@@ -20,6 +20,8 @@ public class GreetingEntryPoint implements EntryPoint {
   private final MessageServiceAsync messageServiceAsync = GWT.create(MessageService.class);
 
   @Override
+  // GWT compiler still expects pre-Java 8 semantics
+  @SuppressWarnings("UnnecessaryFinal")
   public void onModuleLoad() {
     Button greetingButton = new Button("Greeting");
     greetingButton.addStyleName("greeting.button");
@@ -30,7 +32,7 @@ public class GreetingEntryPoint implements EntryPoint {
     RootPanel.get("buttonContainer").add(greetingButton);
     RootPanel.get("buttonContainer").add(errorButton);
 
-    Label messageLabel = new Label();
+    final Label messageLabel = new Label();
     RootPanel.get("messageContainer").add(messageLabel);
 
     class MyHandler implements ClickHandler {
