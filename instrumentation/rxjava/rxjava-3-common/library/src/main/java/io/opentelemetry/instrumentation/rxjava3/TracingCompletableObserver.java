@@ -28,13 +28,13 @@ import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-class TracingCompletableObserver implements CompletableObserver, Disposable {
+public class TracingCompletableObserver implements CompletableObserver, Disposable {
 
   private final CompletableObserver actual;
   private final Context context;
   private Disposable disposable;
 
-  TracingCompletableObserver(CompletableObserver actual, Context context) {
+  public TracingCompletableObserver(CompletableObserver actual, Context context) {
     this.actual = actual;
     this.context = context;
   }

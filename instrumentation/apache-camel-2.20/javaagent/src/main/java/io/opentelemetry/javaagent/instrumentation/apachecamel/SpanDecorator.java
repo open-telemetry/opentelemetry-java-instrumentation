@@ -23,8 +23,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -52,25 +53,32 @@ public interface SpanDecorator {
    * This method adds appropriate details (tags/logs) to the supplied span based on the pre
    * processing of the exchange.
    *
-   * @param span The span
+   * @param attributes The span attributes
    * @param exchange The exchange
    * @param endpoint The endpoint
    */
-  void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection);
+  void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection);
 
   /**
    * This method adds appropriate details (tags/logs) to the supplied span based on the post
    * processing of the exchange.
    *
-   * @param span The span
+   * @param attributes The span attributes
    * @param exchange The exchange
    * @param endpoint The endpoint
    */
-  void post(Span span, Exchange exchange, Endpoint endpoint);
+  void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint);
 
   /** Returns the 'span.kind' value for use when the component is initiating a communication. */
   SpanKind getInitiatorSpanKind();
 
   /** Returns the 'span.kind' value for use when the component is receiving a communication. */
   SpanKind getReceiverSpanKind();
+
+  void updateServerSpanName(
+      Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection);
 }
