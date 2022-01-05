@@ -47,10 +47,10 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.This final Category logger,
-        @Advice.Argument(1) final Priority level,
-        @Advice.Argument(2) final Object message,
-        @Advice.Argument(3) final Throwable t,
+        @Advice.This Category logger,
+        @Advice.Argument(1) Priority level,
+        @Advice.Argument(2) Object message,
+        @Advice.Argument(3) Throwable t,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // need to track call depth across all loggers to avoid double capture when one logging
       // framework delegates to another

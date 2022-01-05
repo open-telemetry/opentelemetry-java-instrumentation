@@ -379,7 +379,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     URI uri = resolveAddress("/circular-redirect");
 
     Throwable thrown = catchThrowable(() -> doRequest(method, uri));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -502,7 +502,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -543,7 +543,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     method, uri, () -> testing.runWithSpan("callback", () -> {})));
 
     Throwable thrown = catchThrowable(result::get);
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -573,7 +573,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -606,7 +606,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {

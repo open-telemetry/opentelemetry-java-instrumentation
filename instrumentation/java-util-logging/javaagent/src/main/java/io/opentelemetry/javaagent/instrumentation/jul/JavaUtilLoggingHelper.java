@@ -117,7 +117,7 @@ public final class JavaUtilLoggingHelper {
   private static class AccessibleFormatter extends Formatter {
 
     @Override
-    public String format(final LogRecord record) {
+    public String format(LogRecord record) {
       throw new UnsupportedOperationException();
     }
   }

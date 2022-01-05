@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,7 +36,7 @@ class MethodDeclaringTypeMatcher<T extends MethodDescription>
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

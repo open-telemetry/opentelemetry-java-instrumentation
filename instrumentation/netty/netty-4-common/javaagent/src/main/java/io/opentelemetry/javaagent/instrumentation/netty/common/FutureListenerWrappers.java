@@ -67,7 +67,7 @@ public final class FutureListenerWrappers {
       // to the key, that means it's no longer used (referenced) by the netty future anyways.
     }
 
-    final GenericFutureListener<? extends Future<?>> wrapper;
+    GenericFutureListener<? extends Future<?>> wrapper;
     if (delegate instanceof GenericProgressiveFutureListener) {
       wrapper =
           new WrappedProgressiveFutureListener(

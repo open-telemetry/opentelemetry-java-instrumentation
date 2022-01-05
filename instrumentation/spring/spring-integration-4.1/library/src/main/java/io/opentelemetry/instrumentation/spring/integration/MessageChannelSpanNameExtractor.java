@@ -12,7 +12,7 @@ import org.springframework.messaging.MessageChannel;
 final class MessageChannelSpanNameExtractor implements SpanNameExtractor<MessageWithChannel> {
   @Override
   public String extract(MessageWithChannel messageWithChannel) {
-    final String channelName;
+    String channelName;
     MessageChannel channel = messageWithChannel.getMessageChannel();
     if (channel instanceof AbstractMessageChannel) {
       channelName = ((AbstractMessageChannel) channel).getFullChannelName();

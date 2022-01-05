@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeList;
@@ -78,7 +79,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == this) {
       return true;
     }

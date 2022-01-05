@@ -89,6 +89,7 @@ public class TestClasses {
   }
 
   public static class LdcAdvice {
+    @SuppressWarnings("ReturnValueIgnored")
     public static void ldcMethod() {
       MethodBodyAdvice.A.class.getName();
     }

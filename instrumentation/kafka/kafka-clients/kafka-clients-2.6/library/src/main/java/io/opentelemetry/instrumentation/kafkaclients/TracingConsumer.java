@@ -169,7 +169,7 @@ class TracingConsumer<K, V> implements Consumer<K, V> {
 
   @Override
   public Map<TopicPartition, OffsetAndMetadata> committed(
-      Set<TopicPartition> partitions, final Duration timeout) {
+      Set<TopicPartition> partitions, Duration timeout) {
     return consumer.committed(partitions, timeout);
   }
 

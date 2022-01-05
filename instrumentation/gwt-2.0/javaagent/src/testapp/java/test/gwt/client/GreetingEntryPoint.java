@@ -30,7 +30,7 @@ public class GreetingEntryPoint implements EntryPoint {
     RootPanel.get("buttonContainer").add(greetingButton);
     RootPanel.get("buttonContainer").add(errorButton);
 
-    final Label messageLabel = new Label();
+    Label messageLabel = new Label();
     RootPanel.get("messageContainer").add(messageLabel);
 
     class MyHandler implements ClickHandler {
