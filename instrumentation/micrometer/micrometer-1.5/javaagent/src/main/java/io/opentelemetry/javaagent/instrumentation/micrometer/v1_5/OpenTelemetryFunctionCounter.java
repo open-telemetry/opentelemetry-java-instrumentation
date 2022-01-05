@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridgin
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.util.MeterEquivalence;
-import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
@@ -19,8 +19,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, RemovableMeter {
 
   private final Id id;
-  private final Attributes attributes;
-  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
+  private final AsyncMeasurementHandle countMeasurementHandle;
 
   OpenTelemetryFunctionCounter(
       Id id,
@@ -28,10 +27,9 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
       ToDoubleFunction<T> countFunction,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
-    this.attributes = tagsAsAttributes(id);
-    this.asyncInstrumentRegistry = asyncInstrumentRegistry;
 
-    asyncInstrumentRegistry.buildDoubleCounter(id, attributes, obj, countFunction);
+    countMeasurementHandle =
+        asyncInstrumentRegistry.buildDoubleCounter(id, tagsAsAttributes(id), obj, countFunction);
   }
 
   @Override
@@ -53,7 +51,7 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
 
   @Override
   public void onRemove() {
-    asyncInstrumentRegistry.removeDoubleCounter(id.getName(), attributes);
+    countMeasurementHandle.remove();
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

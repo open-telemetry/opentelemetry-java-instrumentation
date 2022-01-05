@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridgin
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.util.MeterEquivalence;
-import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
@@ -19,8 +19,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   private final Id id;
-  private final Attributes attributes;
-  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
+  private final AsyncMeasurementHandle gaugeMeasurementHandle;
 
   OpenTelemetryGauge(
       Id id,
@@ -28,10 +27,9 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
       ToDoubleFunction<T> objMetric,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
-    this.attributes = tagsAsAttributes(id);
-    this.asyncInstrumentRegistry = asyncInstrumentRegistry;
 
-    asyncInstrumentRegistry.buildGauge(id, attributes, obj, objMetric);
+    gaugeMeasurementHandle =
+        asyncInstrumentRegistry.buildGauge(id, tagsAsAttributes(id), obj, objMetric);
   }
 
   @Override
@@ -53,7 +51,7 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   @Override
   public void onRemove() {
-    asyncInstrumentRegistry.removeGauge(id.getName(), attributes);
+    gaugeMeasurementHandle.remove();
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

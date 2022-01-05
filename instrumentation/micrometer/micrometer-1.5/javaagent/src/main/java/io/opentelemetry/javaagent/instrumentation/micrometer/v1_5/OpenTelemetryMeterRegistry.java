@@ -58,8 +58,12 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
-    // TODO
-    throw new UnsupportedOperationException("Not implemented yet");
+    OpenTelemetryLongTaskTimer timer =
+        new OpenTelemetryLongTaskTimer(id, clock, distributionStatisticConfig, otelMeter);
+    if (timer.isUsingMicrometerHistograms()) {
+      HistogramGauges.registerWithCommonFormat(timer, this);
+    }
+    return timer;
   }
 
   @Override
@@ -88,9 +92,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   }
 
   @Override
-  protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> iterable) {
-    // TODO
-    throw new UnsupportedOperationException("Not implemented yet");
+  protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
+    return new OpenTelemetryMeter(id, measurements, asyncInstrumentRegistry);
   }
 
   @Override

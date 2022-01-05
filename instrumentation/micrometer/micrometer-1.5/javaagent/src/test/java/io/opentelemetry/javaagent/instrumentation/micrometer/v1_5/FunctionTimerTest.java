@@ -70,7 +70,7 @@ class FunctionTimerTest {
                                     .containsOnly(attributeEntry("tag", "value")))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testFunctionTimer.total",
+        "testFunctionTimer.total_time",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -96,7 +96,7 @@ class FunctionTimerTest {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testFunctionTimer.count", AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "testFunctionTimer.total", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testFunctionTimer.total_time", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -118,7 +118,7 @@ class FunctionTimerTest {
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testNanoFunctionTimer.total",
+        "testNanoFunctionTimer.total_time",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -161,7 +161,7 @@ class FunctionTimerTest {
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testFunctionTimerWithTags.total",
+        "testFunctionTimerWithTags.total_time",
         metrics ->
             metrics.anySatisfy(
                 metric ->

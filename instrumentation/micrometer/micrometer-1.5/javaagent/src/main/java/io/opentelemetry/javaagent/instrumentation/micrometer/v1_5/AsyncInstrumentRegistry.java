@@ -21,6 +21,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
 
+// TODO: refactor this class, there's too much copy-paste here
 final class AsyncInstrumentRegistry {
 
   private final Meter meter;
@@ -34,17 +35,30 @@ final class AsyncInstrumentRegistry {
   @GuardedBy("longCounters")
   private final Map<String, LongMeasurementsRecorder> longCounters = new HashMap<>();
 
+  @GuardedBy("upDownDoubleCounters")
+  private final Map<String, DoubleMeasurementsRecorder> upDownDoubleCounters = new HashMap<>();
+
   AsyncInstrumentRegistry(Meter meter) {
     this.meter = meter;
   }
 
-  <T> void buildGauge(
+  <T> AsyncMeasurementHandle buildGauge(
       io.micrometer.core.instrument.Meter.Id meterId,
       Attributes attributes,
       @Nullable T obj,
       ToDoubleFunction<T> objMetric) {
+    return buildGauge(
+        meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
+  }
 
-    String name = meterId.getName();
+  <T> AsyncMeasurementHandle buildGauge(
+      String name,
+      String description,
+      String baseUnit,
+      Attributes attributes,
+      @Nullable T obj,
+      ToDoubleFunction<T> objMetric) {
+
     synchronized (gauges) {
       // use the gauges map as lock for the recorder state - this way all gauge-related mutable
       // state will always be accessed in synchronized(gauges)
@@ -58,32 +72,28 @@ final class AsyncInstrumentRegistry {
                     new DoubleMeasurementsRecorder(recorderLock);
                 meter
                     .gaugeBuilder(name)
-                    .setDescription(description(meterId))
-                    .setUnit(baseUnit(meterId))
+                    .setDescription(description)
+                    .setUnit(baseUnit)
                     .buildWithCallback(recorderCallback);
                 return recorderCallback;
               });
       recorder.addMeasurement(
-          attributes, new DoubleMetricInfo(obj, (ToDoubleFunction<Object>) objMetric));
+          attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+
+      return new AsyncMeasurementHandle(gauges, name, attributes);
     }
   }
 
-  void removeGauge(String name, Attributes attributes) {
-    synchronized (gauges) {
-      removeMeasurement(gauges, name, attributes);
-    }
-  }
-
-  <T> void buildDoubleCounter(
+  <T> AsyncMeasurementHandle buildDoubleCounter(
       io.micrometer.core.instrument.Meter.Id meterId,
       Attributes attributes,
       T obj,
       ToDoubleFunction<T> objMetric) {
-    buildDoubleCounter(
+    return buildDoubleCounter(
         meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
   }
 
-  <T> void buildDoubleCounter(
+  <T> AsyncMeasurementHandle buildDoubleCounter(
       String name,
       String description,
       String baseUnit,
@@ -111,17 +121,13 @@ final class AsyncInstrumentRegistry {
                 return recorderCallback;
               });
       recorder.addMeasurement(
-          attributes, new DoubleMetricInfo(obj, (ToDoubleFunction<Object>) objMetric));
+          attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+
+      return new AsyncMeasurementHandle(doubleCounters, name, attributes);
     }
   }
 
-  void removeDoubleCounter(String name, Attributes attributes) {
-    synchronized (doubleCounters) {
-      removeMeasurement(doubleCounters, name, attributes);
-    }
-  }
-
-  <T> void buildLongCounter(
+  <T> AsyncMeasurementHandle buildLongCounter(
       String name,
       String description,
       String baseUnit,
@@ -148,39 +154,54 @@ final class AsyncInstrumentRegistry {
                 return recorderCallback;
               });
       recorder.addMeasurement(
-          attributes, new LongMetricInfo(obj, (ToLongFunction<Object>) objMetric));
+          attributes, new LongMeasurementSource(obj, (ToLongFunction<Object>) objMetric));
+
+      return new AsyncMeasurementHandle(longCounters, name, attributes);
     }
   }
 
-  void removeLongCounter(String name, Attributes attributes) {
-    synchronized (longCounters) {
-      removeMeasurement(longCounters, name, attributes);
-    }
-  }
-
-  private static void removeMeasurement(
-      Map<String, ? extends MutableMeasurementsRecorder<?>> registry,
+  <T> AsyncMeasurementHandle buildUpDownDoubleCounter(
       String name,
-      Attributes attributes) {
+      String description,
+      String baseUnit,
+      Attributes attributes,
+      T obj,
+      ToDoubleFunction<T> objMetric) {
 
-    MutableMeasurementsRecorder<?> recorder = registry.get(name);
-    if (recorder != null) {
-      recorder.removeMeasurement(attributes);
-      // if this was the last measurement then let's remove the whole recorder
-      if (recorder.isEmpty()) {
-        registry.remove(name);
-      }
+    synchronized (upDownDoubleCounters) {
+      // use the counters map as lock for the recorder state - this way all double counter-related
+      // mutable state will always be accessed in synchronized(upDownDoubleCounters)
+      Object recorderLock = upDownDoubleCounters;
+
+      DoubleMeasurementsRecorder recorder =
+          upDownDoubleCounters.computeIfAbsent(
+              name,
+              n -> {
+                DoubleMeasurementsRecorder recorderCallback =
+                    new DoubleMeasurementsRecorder(recorderLock);
+                meter
+                    .upDownCounterBuilder(name)
+                    .setDescription(description)
+                    .setUnit(baseUnit)
+                    .ofDoubles()
+                    .buildWithCallback(recorderCallback);
+                return recorderCallback;
+              });
+      recorder.addMeasurement(
+          attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+
+      return new AsyncMeasurementHandle(upDownDoubleCounters, name, attributes);
     }
   }
 
-  private abstract static class MutableMeasurementsRecorder<I> {
+  private abstract static class MeasurementsRecorder<I> {
 
     private final Object lock;
 
     @GuardedBy("lock")
     private final Map<Attributes, I> measurements = new HashMap<>();
 
-    protected MutableMeasurementsRecorder(Object lock) {
+    protected MeasurementsRecorder(Object lock) {
       this.lock = lock;
     }
 
@@ -210,7 +231,7 @@ final class AsyncInstrumentRegistry {
   }
 
   private static final class DoubleMeasurementsRecorder
-      extends MutableMeasurementsRecorder<DoubleMetricInfo>
+      extends MeasurementsRecorder<DoubleMeasurementSource>
       implements Consumer<ObservableDoubleMeasurement> {
 
     private DoubleMeasurementsRecorder(Object lock) {
@@ -231,7 +252,7 @@ final class AsyncInstrumentRegistry {
   }
 
   private static final class LongMeasurementsRecorder
-      extends MutableMeasurementsRecorder<LongMetricInfo>
+      extends MeasurementsRecorder<LongMeasurementSource>
       implements Consumer<ObservableLongMeasurement> {
 
     private LongMeasurementsRecorder(Object lock) {
@@ -251,25 +272,56 @@ final class AsyncInstrumentRegistry {
     }
   }
 
-  private static final class DoubleMetricInfo {
+  private static final class DoubleMeasurementSource {
 
     private final WeakReference<Object> objWeakRef;
     private final ToDoubleFunction<Object> metricFunction;
 
-    private DoubleMetricInfo(@Nullable Object obj, ToDoubleFunction<Object> metricFunction) {
+    private DoubleMeasurementSource(@Nullable Object obj, ToDoubleFunction<Object> metricFunction) {
       this.objWeakRef = new WeakReference<>(obj);
       this.metricFunction = metricFunction;
     }
   }
 
-  private static final class LongMetricInfo {
+  private static final class LongMeasurementSource {
 
     private final WeakReference<Object> objWeakRef;
     private final ToLongFunction<Object> metricFunction;
 
-    private LongMetricInfo(@Nullable Object obj, ToLongFunction<Object> metricFunction) {
+    private LongMeasurementSource(@Nullable Object obj, ToLongFunction<Object> metricFunction) {
       this.objWeakRef = new WeakReference<>(obj);
       this.metricFunction = metricFunction;
+    }
+  }
+
+  static final class AsyncMeasurementHandle {
+
+    @GuardedBy("instrumentRegistry")
+    private final Map<String, ? extends MeasurementsRecorder<?>> instrumentRegistry;
+
+    private final String name;
+    private final Attributes attributes;
+
+    AsyncMeasurementHandle(
+        Map<String, ? extends MeasurementsRecorder<?>> instrumentRegistry,
+        String name,
+        Attributes attributes) {
+      this.instrumentRegistry = instrumentRegistry;
+      this.name = name;
+      this.attributes = attributes;
+    }
+
+    void remove() {
+      synchronized (instrumentRegistry) {
+        MeasurementsRecorder<?> recorder = instrumentRegistry.get(name);
+        if (recorder != null) {
+          recorder.removeMeasurement(attributes);
+          // if this was the last measurement then let's remove the whole recorder
+          if (recorder.isEmpty()) {
+            instrumentRegistry.remove(name);
+          }
+        }
+      }
     }
   }
 }
