@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.sdk.appender.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import io.opentelemetry.sdk.logs.data.Body;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
@@ -163,7 +164,7 @@ class OpenTelemetryAppenderConfigTest {
     LogData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("");
+    assertThat(logData.getBody().getType()).isEqualTo(Body.Type.EMPTY);
     assertThat(logData.getAttributes().size()).isEqualTo(2);
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");

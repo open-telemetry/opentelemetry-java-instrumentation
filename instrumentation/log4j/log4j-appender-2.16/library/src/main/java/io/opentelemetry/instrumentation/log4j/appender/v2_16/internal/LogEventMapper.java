@@ -136,7 +136,9 @@ public final class LogEventMapper<T> {
       body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
     }
 
-    builder.setBody(body);
+    if (body != null && !body.isEmpty()) {
+      builder.setBody(body);
+    }
 
     if (captureMapMessageAttributes) {
       mapMessage.forEach(
