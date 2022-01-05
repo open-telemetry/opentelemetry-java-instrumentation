@@ -122,10 +122,10 @@ class Log4j2Test extends AgentInstrumentationSpecification {
 
   def "test string map message"() {
     when:
-    StringMapMessage message = new StringMapMessage();
-    message.put("key1", "val1");
-    message.put("key2", "val2");
-    logger.info(message);
+    StringMapMessage message = new StringMapMessage()
+    message.put("key1", "val1")
+    message.put("key2", "val2")
+    logger.info(message)
 
     then:
 
@@ -146,10 +146,10 @@ class Log4j2Test extends AgentInstrumentationSpecification {
 
   def "test structured data map message"() {
     when:
-    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
-    message.put("key1", "val1");
-    message.put("key2", "val2");
-    logger.info(message);
+    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type")
+    message.put("key1", "val1")
+    message.put("key2", "val2")
+    logger.info(message)
 
     then:
 
