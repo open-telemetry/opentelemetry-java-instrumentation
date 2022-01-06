@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.ktor.v1_0
 
-import io.ktor.features.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor
@@ -16,15 +15,23 @@ internal class KtorNetServerAttributesExtractor : NetServerAttributesExtractor<A
     return SemanticAttributes.NetTransportValues.IP_TCP
   }
 
-  override fun peerName(request: ApplicationRequest): String {
-    return request.origin.host
+  override fun peerName(request: ApplicationRequest): String? {
+    var remote = request.local.remoteHost
+    if (remote != null && "unknown" != remote && !isIpAddress(remote)) {
+      return remote
+    }
+    return null
   }
 
-  override fun peerPort(request: ApplicationRequest): Int {
-    return request.origin.port
+  override fun peerPort(request: ApplicationRequest): Int? {
+    return null
   }
 
-  override fun peerIp(request: ApplicationRequest): String {
-    return request.origin.remoteHost
+  override fun peerIp(request: ApplicationRequest): String? {
+    var remote = request.local.remoteHost
+    if (remote != null && "unknown" != remote && isIpAddress(remote)) {
+      return remote
+    }
+    return null
   }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.ktor.v1_0
 
-import io.ktor.application.*
 import io.ktor.request.*
 import io.opentelemetry.context.propagation.TextMapGetter
 
