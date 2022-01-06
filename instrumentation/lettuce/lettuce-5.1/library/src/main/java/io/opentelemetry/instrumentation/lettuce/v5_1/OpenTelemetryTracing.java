@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -16,14 +15,14 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -35,6 +34,8 @@ import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
 
+  private static final LettuceNetAttributesExtractor netAttributesExtractor =
+      new LettuceNetAttributesExtractor();
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer) {
@@ -108,7 +109,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private static class OpenTelemetryEndpoint implements Endpoint {
+  static class OpenTelemetryEndpoint implements Endpoint {
     @Nullable final String ip;
     final int port;
     @Nullable final String name;
@@ -191,11 +192,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
-        if (span != null) {
-          fillEndpoint(span::setAttribute, (OpenTelemetryEndpoint) endpoint);
-        } else {
-          fillEndpoint(spanBuilder::setAttribute, (OpenTelemetryEndpoint) endpoint);
-        }
+        fillEndpoint(span, spanBuilder, (OpenTelemetryEndpoint) endpoint);
       }
       return this;
     }
@@ -316,8 +313,14 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private static void fillEndpoint(AttributeSetter span, OpenTelemetryEndpoint endpoint) {
-    span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP);
-    NetPeerAttributes.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
+  private static void fillEndpoint(
+      @Nullable Span span, SpanBuilder spanBuilder, OpenTelemetryEndpoint endpoint) {
+    AttributesBuilder attributesBuilder = Attributes.builder();
+    netAttributesExtractor.onEnd(attributesBuilder, endpoint, null, null);
+    if (span != null) {
+      span.setAllAttributes(attributesBuilder.build());
+    } else {
+      spanBuilder.setAllAttributes(attributesBuilder.build());
+    }
   }
 }
