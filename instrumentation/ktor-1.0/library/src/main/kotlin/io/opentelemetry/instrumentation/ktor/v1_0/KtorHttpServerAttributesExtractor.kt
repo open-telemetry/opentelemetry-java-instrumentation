@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.ktor.v1_0
 
-import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.request.*
 import io.ktor.response.*
-import io.ktor.routing.*
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
