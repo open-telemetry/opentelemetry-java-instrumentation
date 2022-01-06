@@ -22,7 +22,7 @@ public abstract class MessageWithChannel {
   }
 
   public String getChannelName() {
-    final String channelName;
+    String channelName;
     MessageChannel channel = getMessageChannel();
     if (channel instanceof AbstractMessageChannel) {
       channelName = ((AbstractMessageChannel) channel).getFullChannelName();
