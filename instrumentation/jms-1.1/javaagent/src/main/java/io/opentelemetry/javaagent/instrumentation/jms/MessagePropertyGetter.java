@@ -24,7 +24,7 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   @Override
   public String get(MessageWithDestination carrier, String key) {
     String propName = key.replace("-", MessagePropertySetter.DASH);
-    final Object value;
+    Object value;
     try {
       value = carrier.message().getObjectProperty(propName);
     } catch (JMSException e) {

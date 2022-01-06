@@ -15,6 +15,7 @@ public class DeclaredFieldTestClass {
   public static class Helper extends LibraryBaseClass {
     private String helperField;
 
+    @SuppressWarnings("ReturnValueIgnored")
     public void foo() {
       superField.toString();
     }

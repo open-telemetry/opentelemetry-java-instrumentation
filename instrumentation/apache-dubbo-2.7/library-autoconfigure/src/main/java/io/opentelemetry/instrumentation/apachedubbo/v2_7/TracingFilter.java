@@ -46,7 +46,7 @@ final class TracingFilter implements Filter {
     }
     Context context = instrumenter.start(parentContext, request);
 
-    final Result result;
+    Result result;
     boolean isSynchronous = true;
     try (Scope ignored = context.makeCurrent()) {
       result = invoker.invoke(invocation);

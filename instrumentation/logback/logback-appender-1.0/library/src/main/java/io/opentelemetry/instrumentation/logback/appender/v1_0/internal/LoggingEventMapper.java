@@ -52,7 +52,7 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void capture(final ILoggingEvent event) {
+  public void capture(ILoggingEvent event) {
     LogBuilder builder =
         GlobalLogEmitterProvider.get()
             .logEmitterBuilder(event.getLoggerName())

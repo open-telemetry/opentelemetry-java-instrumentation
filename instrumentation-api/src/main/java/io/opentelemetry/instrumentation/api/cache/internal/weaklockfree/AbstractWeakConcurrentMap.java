@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.annotation.Nullable;
 
 /**
  * A thread-safe map with weak keys. Entries are based on a key's system hash code and keys are
@@ -293,7 +294,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
       if (other instanceof WeakKey<?>) {
         return ((WeakKey<?>) other).get() == get();
       } else {

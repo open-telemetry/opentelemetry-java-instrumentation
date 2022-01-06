@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.lang.ref.WeakReference;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.method.MethodDescription;
@@ -123,7 +124,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (obj == this) {
         return true;
       }

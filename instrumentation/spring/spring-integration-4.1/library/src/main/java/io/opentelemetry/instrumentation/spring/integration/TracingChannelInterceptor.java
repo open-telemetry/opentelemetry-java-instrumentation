@@ -72,7 +72,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     Context parentContext = Context.current();
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
 
-    final Context context;
+    Context context;
     MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
 
     // only start a new CONSUMER span when there is no span in the context: this situation happens

@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
+import javax.annotation.Nullable;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.core.Ordered;
@@ -57,7 +58,7 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
   // TracingJobExecutionListener will be present in an ordered set of listeners
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

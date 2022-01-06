@@ -14,7 +14,7 @@ final class LambdaUtils {
 
   static void forceFlush(OpenTelemetrySdk openTelemetrySdk, long flushTimeout, TimeUnit unit) {
     CompletableResultCode traceFlush = openTelemetrySdk.getSdkTracerProvider().forceFlush();
-    final CompletableResultCode metricsFlush = openTelemetrySdk.getSdkMeterProvider().forceFlush();
+    CompletableResultCode metricsFlush = openTelemetrySdk.getSdkMeterProvider().forceFlush();
     CompletableResultCode.ofAll(Arrays.asList(traceFlush, metricsFlush)).join(flushTimeout, unit);
   }
 
