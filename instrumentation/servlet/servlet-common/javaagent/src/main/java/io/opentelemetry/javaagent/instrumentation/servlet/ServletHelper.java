@@ -49,6 +49,8 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
           recordAsyncException(request, throwable);
         }
       }
+      // also capture request parameters as servlet attributes
+      captureServletAttributes(currentContext, request);
     }
 
     if (scope == null || context == null) {

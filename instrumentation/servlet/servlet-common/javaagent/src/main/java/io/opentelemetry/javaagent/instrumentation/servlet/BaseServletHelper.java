@@ -88,12 +88,18 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
 
-    captureServletAttributes(context, request);
-
     return result;
   }
 
-  private void captureServletAttributes(Context context, REQUEST request) {
+  /**
+   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
+   * instrumentation.
+   *
+   * <p>When SERVER span is created by servlet instrumentation we register {@link
+   * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
+   * by servlet instrumentation we call this method on exit from the last servlet or filter.
+   */
+  public void captureServletAttributes(Context context, REQUEST request) {
     if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
       return;
     }

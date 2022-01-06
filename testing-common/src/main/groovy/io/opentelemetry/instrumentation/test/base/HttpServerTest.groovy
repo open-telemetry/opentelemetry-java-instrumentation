@@ -456,7 +456,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     assumeTrue(testCapturedRequestParameters())
 
     QueryParams formBody = QueryParams.builder()
-      .add("test-parameter", "test value")
+      .add("test-parameter", "test value õäöü")
       .build()
     def request = AggregatedHttpRequest.of(
       RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
@@ -717,7 +717,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "http.response.header.x_test_response" { it == ["test"] }
         }
         if (endpoint == CAPTURE_PARAMETERS) {
-          "servlet.request.parameter.test_parameter" { it == ["test value"] }
+          "servlet.request.parameter.test_parameter" { it == ["test value õäöü"] }
         }
       }
     }
