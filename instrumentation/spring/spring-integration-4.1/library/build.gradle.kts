@@ -17,7 +17,25 @@ dependencies {
 }
 
 tasks {
+  val testWithProducerInstrumentation by registering(Test::class) {
+    filter {
+      includeTestsMatching("SpringCloudStreamProducerTest")
+      isFailOnNoMatchingTests = false
+    }
+    include("**/SpringCloudStreamProducerTest.*")
+    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
+  }
+
   test {
+    dependsOn(testWithProducerInstrumentation)
+
+    filter {
+      excludeTestsMatching("SpringCloudStreamProducerTest")
+      isFailOnNoMatchingTests = false
+    }
+  }
+
+  withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }

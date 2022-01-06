@@ -12,13 +12,12 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.lang.instrument.Instrumentation;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -216,14 +215,10 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       /*
        * The idea here is that we can add fields if class is just being loaded
        * (classBeingRedefined == null) and we have to add same fields again if class we added
-       * fields before is being transformed again. Note: here we assume that Class#getInterfaces()
-       * returns list of interfaces defined immediately on a given class, not inherited from its
-       * parents. It looks like current JVM implementation does exactly this but javadoc is not
-       * explicit about that.
+       * fields before is being transformed again.
        */
       return classBeingRedefined == null
-          || Arrays.asList(classBeingRedefined.getInterfaces())
-              .contains(VirtualFieldInstalledMarker.class);
+          || VirtualFieldDetector.hasVirtualFields(classBeingRedefined);
     };
   }
 

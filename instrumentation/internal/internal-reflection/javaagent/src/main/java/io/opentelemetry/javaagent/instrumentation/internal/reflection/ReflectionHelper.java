@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -60,16 +61,23 @@ public final class ReflectionHelper {
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
+    boolean hasVirtualFieldMarker = false;
     for (Class<?> interfaceClass : interfaces) {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class
           || (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
               && interfaceClass.isSynthetic()
               && interfaceClass.getName().contains("VirtualFieldAccessor$"))) {
+        hasVirtualFieldMarker = true;
         continue;
       }
       result.add(interfaceClass);
     }
+
+    if (hasVirtualFieldMarker) {
+      VirtualFieldDetector.markVirtualFieldsPresent(containingClass);
+    }
+
     return result.toArray(new Class<?>[0]);
   }
 }

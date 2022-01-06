@@ -31,12 +31,16 @@ public final class SpringIntegrationTracing {
   }
 
   private final ContextPropagators propagators;
-  private final Instrumenter<MessageWithChannel, Void> instrumenter;
+  private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
+  private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
 
   SpringIntegrationTracing(
-      ContextPropagators propagators, Instrumenter<MessageWithChannel, Void> instrumenter) {
+      ContextPropagators propagators,
+      Instrumenter<MessageWithChannel, Void> consumerInstrumenter,
+      Instrumenter<MessageWithChannel, Void> producerInstrumenter) {
     this.propagators = propagators;
-    this.instrumenter = instrumenter;
+    this.consumerInstrumenter = consumerInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
   }
 
   /**
@@ -49,6 +53,6 @@ public final class SpringIntegrationTracing {
    * @see org.springframework.integration.config.GlobalChannelInterceptor
    */
   public ChannelInterceptor newChannelInterceptor() {
-    return new TracingChannelInterceptor(propagators, instrumenter);
+    return new TracingChannelInterceptor(propagators, consumerInstrumenter, producerInstrumenter);
   }
 }
