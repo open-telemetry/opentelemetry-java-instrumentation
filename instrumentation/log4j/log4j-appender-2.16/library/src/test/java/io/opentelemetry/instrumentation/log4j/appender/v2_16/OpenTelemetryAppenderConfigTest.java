@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.message.StringMapMessage;
+import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -147,5 +149,58 @@ class OpenTelemetryAppenderConfigTest {
         .isEqualTo("val1");
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2")))
         .isEqualTo("val2");
+  }
+
+  @Test
+  void logStringMapMessage() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+    logger.info(message);
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).hasSize(1);
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getBody().asString()).isEmpty();
+    assertThat(logData.getAttributes().size()).isEqualTo(2);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
+  }
+
+  @Test
+  void logStringMapMessageWithSpecialAttribute() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "val1");
+    message.put("message", "val2");
+    logger.info(message);
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).hasSize(1);
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getBody().asString()).isEqualTo("val2");
+    assertThat(logData.getAttributes().size()).isEqualTo(1);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+  }
+
+  @Test
+  void logStructuredDataMessage() {
+    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+    logger.info(message);
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).hasSize(1);
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getBody().asString()).isEqualTo("a message");
+    assertThat(logData.getAttributes().size()).isEqualTo(2);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
   }
 }

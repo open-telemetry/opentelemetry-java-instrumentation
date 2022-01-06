@@ -24,12 +24,19 @@ import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.time.Instant;
+import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
 public final class LogEventMapper<T> {
 
-  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeys =
+  private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
+
+  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
       Cache.bounded(100);
+  private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
+      Cache.bounded(100);
+
+  private final boolean captureMapMessageAttributes;
 
   private final List<String> captureContextDataAttributes;
 
@@ -42,6 +49,10 @@ public final class LogEventMapper<T> {
     this(
         contextDataAccessor,
         Config.get()
+            .getBoolean(
+                "otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes",
+                false),
+        Config.get()
             .getList(
                 "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
                 emptyList()));
@@ -49,8 +60,12 @@ public final class LogEventMapper<T> {
 
   // visible for testing
   LogEventMapper(
-      ContextDataAccessor<T> contextDataAccessor, List<String> captureContextDataAttributes) {
+      ContextDataAccessor<T> contextDataAccessor,
+      boolean captureMapMessageAttributes,
+      List<String> captureContextDataAttributes) {
+
     this.contextDataAccessor = contextDataAccessor;
+    this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
@@ -76,16 +91,14 @@ public final class LogEventMapper<T> {
       @Nullable Instant timestamp,
       T contextData) {
 
-    if (message != null) {
-      builder.setBody(message.getFormattedMessage());
-    }
+    AttributesBuilder attributes = Attributes.builder();
+
+    captureMessage(builder, attributes, message);
 
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
       builder.setSeverityText(level.name());
     }
-
-    AttributesBuilder attributes = Attributes.builder();
 
     if (throwable != null) {
       setThrowable(attributes, throwable);
@@ -102,6 +115,42 @@ public final class LogEventMapper<T> {
           TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
               + timestamp.getNanoOfMillisecond(),
           TimeUnit.NANOSECONDS);
+    }
+  }
+
+  // visible for testing
+  void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
+    if (message == null) {
+      return;
+    }
+    if (!(message instanceof MapMessage)) {
+      builder.setBody(message.getFormattedMessage());
+      return;
+    }
+
+    MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
+
+    String body = mapMessage.getFormat();
+    boolean checkSpecialMapMessageAttribute = (body == null || body.isEmpty());
+    if (checkSpecialMapMessageAttribute) {
+      body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
+    }
+
+    if (body != null && !body.isEmpty()) {
+      builder.setBody(body);
+    }
+
+    if (captureMapMessageAttributes) {
+      mapMessage.forEach(
+          (key, value) -> {
+            if (value != null
+                && (!checkSpecialMapMessageAttribute
+                    || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+              attributes.put(
+                  mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
+                  value.toString());
+            }
+          });
     }
   }
 
@@ -128,7 +177,7 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return contextDataAttributeKeys.computeIfAbsent(
+    return contextDataAttributeKeyCache.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.context_data." + k));
   }
 
