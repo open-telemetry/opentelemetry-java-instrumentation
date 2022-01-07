@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-class AkkaHttpNetAttributesAdapter implements NetAttributesAdapter<HttpRequest, HttpResponse> {
+class AkkaHttpNetAttributesAdapter implements
+    NetClientAttributesAdapter<HttpRequest, HttpResponse> {
 
   @Override
   public String transport(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {

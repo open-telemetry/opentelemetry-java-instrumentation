@@ -14,8 +14,7 @@ import static org.mockito.BDDMockito.given;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PeerServiceAttributesExtractorTest {
-  @Mock NetAttributesAdapter<String, String> netAttributesExtractor;
+  @Mock
+  NetClientAttributesAdapter<String, String> netAttributesExtractor;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {

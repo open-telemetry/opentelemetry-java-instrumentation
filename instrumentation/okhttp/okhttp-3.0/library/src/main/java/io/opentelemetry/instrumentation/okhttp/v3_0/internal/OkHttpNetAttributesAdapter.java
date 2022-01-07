@@ -5,15 +5,14 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public final class OkHttpNetAttributesAdapter
-    implements NetAttributesAdapter<Request, Response> {
+    implements NetClientAttributesAdapter<Request, Response> {
 
   @Override
   public String transport(Request request, @Nullable Response response) {

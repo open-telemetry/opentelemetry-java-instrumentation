@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesEx
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -24,7 +24,7 @@ public final class VertxClientInstrumenterFactory {
       String instrumentationName,
       AbstractVertxHttpAttributesExtractor httpAttributesExtractor,
       @Nullable
-          NetAttributesAdapter<HttpClientRequest, HttpClientResponse>
+          NetClientAttributesAdapter<HttpClientRequest, HttpClientResponse>
               netAttributesAdapter) {
 
     InstrumenterBuilder<HttpClientRequest, HttpClientResponse> builder =

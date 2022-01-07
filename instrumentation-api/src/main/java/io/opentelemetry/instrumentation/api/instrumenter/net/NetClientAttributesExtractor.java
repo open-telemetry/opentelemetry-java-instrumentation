@@ -15,19 +15,22 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
  * it is more convenient to use {@link InetSocketAddressNetClientAttributesAdapter}.
+ *
+ * This class delegates to a type-specific {@link NetClientAttributesAdapter} for individual
+ * attribute extraction from request/response objects.
  */
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetAttributesAdapter<REQUEST,RESPONSE> adapter;
+  private final NetClientAttributesAdapter<REQUEST,RESPONSE> adapter;
 
   public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
-      NetAttributesAdapter<REQUEST, RESPONSE> adapter) {
+      NetClientAttributesAdapter<REQUEST, RESPONSE> adapter) {
     return new NetClientAttributesExtractor<>(adapter);
   }
 
   private NetClientAttributesExtractor(
-      NetAttributesAdapter<REQUEST, RESPONSE> adapter) {this.adapter = adapter;}
+      NetClientAttributesAdapter<REQUEST, RESPONSE> adapter) {this.adapter = adapter;}
 
   @Override
   public void onStart(AttributesBuilder attributes, REQUEST request) {}

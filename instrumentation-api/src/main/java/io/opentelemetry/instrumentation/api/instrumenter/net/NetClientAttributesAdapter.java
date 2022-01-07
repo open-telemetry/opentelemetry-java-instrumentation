@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
- * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
- * it is more convenient to use {@link InetSocketAddressNetClientAttributesAdapter}.
+ * A type adapter for client-based network attributes. It adapts from a type-specific
+ * request and response into the 4 common network attribute values.
+ *
+ * Instrumentation authors will create implementations of this interface for their
+ * specific library/framework. It will be used by the NetworkClientAttributesExtractor
+ * to
  */
-public interface NetAttributesAdapter<REQUEST, RESPONSE> {
+public interface NetClientAttributesAdapter<REQUEST, RESPONSE> {
 
   @Nullable
   String transport(REQUEST request, @Nullable RESPONSE response);

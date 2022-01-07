@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
 final class ApacheHttpAsyncClientNetAttributesAdapter
-    implements NetAttributesAdapter<ApacheHttpClientRequest, HttpResponse> {
+    implements NetClientAttributesAdapter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {

@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
  * NetClientAttributesExtractor}. There is no meaning to implement both in the same instrumentation.
  */
 public abstract class InetSocketAddressNetClientAttributesAdapter<REQUEST, RESPONSE>
-    implements NetAttributesAdapter<REQUEST, RESPONSE> {
+    implements NetClientAttributesAdapter<REQUEST, RESPONSE> {
 
   @Nullable
   public abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);

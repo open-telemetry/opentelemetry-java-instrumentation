@@ -5,15 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 
 final class ApacheHttpClientNetAttributesAdapter
-    implements NetAttributesAdapter<HttpMethod, HttpMethod> {
+    implements NetClientAttributesAdapter<HttpMethod, HttpMethod> {
 
   @Override
   public String transport(HttpMethod request, @Nullable HttpMethod response) {

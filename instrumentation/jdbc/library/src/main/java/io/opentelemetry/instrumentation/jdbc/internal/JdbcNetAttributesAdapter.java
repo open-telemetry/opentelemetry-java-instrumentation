@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import javax.annotation.Nullable;
 
 public final class JdbcNetAttributesAdapter
-    implements NetAttributesAdapter<DbRequest, Void> {
+    implements NetClientAttributesAdapter<DbRequest, Void> {
 
   @Nullable
   @Override

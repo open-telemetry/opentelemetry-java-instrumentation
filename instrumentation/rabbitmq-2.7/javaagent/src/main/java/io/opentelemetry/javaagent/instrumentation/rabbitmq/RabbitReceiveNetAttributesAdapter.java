@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import javax.annotation.Nullable;
 
 public class RabbitReceiveNetAttributesAdapter
-    implements NetAttributesAdapter<ReceiveRequest, GetResponse> {
+    implements NetClientAttributesAdapter<ReceiveRequest, GetResponse> {
 
   @Nullable
   @Override

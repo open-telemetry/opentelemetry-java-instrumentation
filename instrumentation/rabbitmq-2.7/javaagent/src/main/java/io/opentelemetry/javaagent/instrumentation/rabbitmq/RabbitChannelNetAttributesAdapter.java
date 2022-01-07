@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import javax.annotation.Nullable;
 
-public class RabbitChannelNetAttributesAdapter implements NetAttributesAdapter<ChannelAndMethod, Void> {
+public class RabbitChannelNetAttributesAdapter implements
+    NetClientAttributesAdapter<ChannelAndMethod, Void> {
 
   @Nullable
   @Override

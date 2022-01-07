@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class NetClientAttributesExtractorTest {
 
   static class TestNetClientAttributesAdapter
-      implements NetAttributesAdapter<Map<String, String>, Map<String, String>> {
+      implements NetClientAttributesAdapter<Map<String, String>, Map<String, String>> {
 
     @Override
     public String transport(Map<String, String> request, Map<String, String> response) {

@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import io.kubernetes.client.openapi.ApiResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 
-class KubernetesNetAttributesAdapter implements NetAttributesAdapter<Request, ApiResponse<?>> {
+class KubernetesNetAttributesAdapter implements
+    NetClientAttributesAdapter<Request, ApiResponse<?>> {
 
     @Override
   public String transport(Request request, @Nullable ApiResponse<?> response) {

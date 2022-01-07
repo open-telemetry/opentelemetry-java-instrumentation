@@ -5,15 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 final class SpringWebfluxNetAttributesAdapter
-    implements NetAttributesAdapter<ClientRequest, ClientResponse> {
+    implements NetClientAttributesAdapter<ClientRequest, ClientResponse> {
 
   @Override
   public String transport(ClientRequest request, @Nullable ClientResponse response) {
