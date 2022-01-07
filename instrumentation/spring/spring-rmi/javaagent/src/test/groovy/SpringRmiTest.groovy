@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
@@ -28,22 +28,22 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
 
   static class ServerConfig {
     @Bean
-    RemoteExporter registerRMIExporter() {
-      RmiServiceExporter exporter = new RmiServiceExporter();
-      exporter.setServiceName("springRmiGreeter");
-      exporter.setServiceInterface(SpringRmiGreeter.class);
-      exporter.setService(new SpringRmiGreeterImpl());
-      return exporter;
+    static RemoteExporter registerRMIExporter() {
+      RmiServiceExporter exporter = new RmiServiceExporter()
+      exporter.setServiceName("springRmiGreeter")
+      exporter.setServiceInterface(SpringRmiGreeter.class)
+      exporter.setService(new SpringRmiGreeterImpl())
+      return exporter
     }
   }
 
   static class ClientConfig {
     @Bean
-    RmiProxyFactoryBean rmiProxy() {
-      RmiProxyFactoryBean bean = new RmiProxyFactoryBean();
-      bean.setServiceInterface(SpringRmiGreeter.class);
-      bean.setServiceUrl("rmi://localhost:1099/springRmiGreeter");
-      return bean;
+    static RmiProxyFactoryBean rmiProxy() {
+      RmiProxyFactoryBean bean = new RmiProxyFactoryBean()
+      bean.setServiceInterface(SpringRmiGreeter.class)
+      bean.setServiceUrl("rmi://localhost:1099/springRmiGreeter")
+      return bean
     }
   }
 
@@ -100,7 +100,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
     given:
     SpringRmiGreeter client = clientAppContext.getBean(SpringRmiGreeter.class)
     when:
-    def response = runWithSpan("parent") { client.exceptional() }
+    runWithSpan("parent") { client.exceptional() }
     then:
     def error = thrown(IllegalStateException)
     assertTraces(1) {
