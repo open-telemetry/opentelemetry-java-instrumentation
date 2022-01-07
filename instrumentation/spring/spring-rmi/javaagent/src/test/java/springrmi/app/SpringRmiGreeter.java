@@ -1,8 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package springrmi.app;
 
 import java.rmi.RemoteException;
 
 public interface SpringRmiGreeter {
-	public String hello(String msg) throws RemoteException;
-  public void exceptional() throws RemoteException;
+  String hello(String name) throws RemoteException;
+
+  void exceptional() throws RemoteException;
 }
