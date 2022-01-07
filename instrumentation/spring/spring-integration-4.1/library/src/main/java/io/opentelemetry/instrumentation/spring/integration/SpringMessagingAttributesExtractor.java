@@ -13,9 +13,23 @@ import javax.annotation.Nullable;
 final class SpringMessagingAttributesExtractor
     extends MessagingAttributesExtractor<MessageWithChannel, Void> {
 
+  private final MessageOperation messageOperation;
+
+  private SpringMessagingAttributesExtractor(MessageOperation messageOperation) {
+    this.messageOperation = messageOperation;
+  }
+
+  static SpringMessagingAttributesExtractor process() {
+    return new SpringMessagingAttributesExtractor(MessageOperation.PROCESS);
+  }
+
+  static SpringMessagingAttributesExtractor send() {
+    return new SpringMessagingAttributesExtractor(MessageOperation.SEND);
+  }
+
   @Override
   public MessageOperation operation() {
-    return MessageOperation.PROCESS;
+    return messageOperation;
   }
 
   @Override

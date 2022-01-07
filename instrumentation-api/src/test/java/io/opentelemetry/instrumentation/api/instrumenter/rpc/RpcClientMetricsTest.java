@@ -99,6 +99,7 @@ class RpcClientMetricsTest {
                       metric ->
                           MetricAssertions.assertThat(metric)
                               .hasName("rpc.client.duration")
+                              .hasUnit("ms")
                               .hasDoubleHistogram()
                               .points()
                               .satisfiesExactly(
@@ -132,6 +133,7 @@ class RpcClientMetricsTest {
                       metric ->
                           MetricAssertions.assertThat(metric)
                               .hasName("rpc.client.duration")
+                              .hasUnit("ms")
                               .hasDoubleHistogram()
                               .points()
                               .satisfiesExactly(

@@ -20,7 +20,7 @@ public final class NettyServerInstrumenterFactory {
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> create(
       String instrumentationName) {
 
-    final NettyHttpServerAttributesExtractor httpAttributesExtractor =
+    NettyHttpServerAttributesExtractor httpAttributesExtractor =
         new NettyHttpServerAttributesExtractor();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(

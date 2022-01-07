@@ -104,6 +104,7 @@ class RmiTest {
   }
 
   @Test
+  @SuppressWarnings("ReturnValueIgnored")
   void serverBuiltinMethods() throws Exception {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);

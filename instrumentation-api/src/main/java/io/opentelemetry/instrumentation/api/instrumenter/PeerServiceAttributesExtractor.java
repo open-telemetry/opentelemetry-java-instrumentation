@@ -69,6 +69,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     }
   }
 
+  @Nullable
   private String mapToPeerService(String endpoint) {
     if (endpoint == null) {
       return null;

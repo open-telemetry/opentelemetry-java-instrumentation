@@ -36,8 +36,7 @@ public class SystemMetrics {
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
     meter
-        .gaugeBuilder("system.memory.usage")
-        .ofLongs()
+        .upDownCounterBuilder("system.memory.usage")
         .setDescription("System memory usage")
         .setUnit("By")
         .buildWithCallback(
@@ -61,8 +60,7 @@ public class SystemMetrics {
             });
 
     meter
-        .gaugeBuilder("system.network.io")
-        .ofLongs()
+        .counterBuilder("system.network.io")
         .setDescription("System network IO")
         .setUnit("By")
         .buildWithCallback(
@@ -78,8 +76,7 @@ public class SystemMetrics {
             });
 
     meter
-        .gaugeBuilder("system.network.packets")
-        .ofLongs()
+        .counterBuilder("system.network.packets")
         .setDescription("System network packets")
         .setUnit("packets")
         .buildWithCallback(
@@ -95,8 +92,7 @@ public class SystemMetrics {
             });
 
     meter
-        .gaugeBuilder("system.network.errors")
-        .ofLongs()
+        .counterBuilder("system.network.errors")
         .setDescription("System network errors")
         .setUnit("errors")
         .buildWithCallback(
@@ -112,8 +108,7 @@ public class SystemMetrics {
             });
 
     meter
-        .gaugeBuilder("system.disk.io")
-        .ofLongs()
+        .counterBuilder("system.disk.io")
         .setDescription("System disk IO")
         .setUnit("By")
         .buildWithCallback(
@@ -128,8 +123,7 @@ public class SystemMetrics {
             });
 
     meter
-        .gaugeBuilder("system.disk.operations")
-        .ofLongs()
+        .counterBuilder("system.disk.operations")
         .setDescription("System disk operations")
         .setUnit("operations")
         .buildWithCallback(

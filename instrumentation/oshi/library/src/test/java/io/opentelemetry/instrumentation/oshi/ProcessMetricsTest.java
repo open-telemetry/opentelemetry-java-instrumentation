@@ -20,7 +20,7 @@ public class ProcessMetricsTest extends AbstractMetricsTest {
             metric
                 .hasName("runtime.java.memory")
                 .hasUnit("bytes")
-                .hasLongGauge()
+                .hasLongSum()
                 .points()
                 .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
         metric ->

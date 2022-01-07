@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -109,17 +109,21 @@ class DbSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    super.pre(span, exchange, endpoint, camelDirection);
+  public void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection) {
+    super.pre(attributes, exchange, endpoint, camelDirection);
 
-    span.setAttribute(SemanticAttributes.DB_SYSTEM, system);
+    attributes.put(SemanticAttributes.DB_SYSTEM, system);
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
-      span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+      attributes.put(SemanticAttributes.DB_STATEMENT, statement);
     }
     String dbName = getDbName(endpoint);
     if (dbName != null) {
-      span.setAttribute(SemanticAttributes.DB_NAME, dbName);
+      attributes.put(SemanticAttributes.DB_NAME, dbName);
     }
   }
 }

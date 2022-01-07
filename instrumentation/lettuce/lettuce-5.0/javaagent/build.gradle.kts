@@ -17,7 +17,7 @@ dependencies {
   implementation(project(":instrumentation:lettuce:lettuce-common:library"))
 
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
-  testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {

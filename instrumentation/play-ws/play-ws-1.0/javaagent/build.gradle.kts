@@ -34,8 +34,8 @@ dependencies {
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:akka-http-10.0:javaagent"))
-  testInstrumentation(project(":instrumentation:akka-actor-2.5:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
 
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.+")
 }

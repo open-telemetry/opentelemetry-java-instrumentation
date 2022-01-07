@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 
+@SuppressWarnings("ReturnValueIgnored")
 public class VirtualFieldTestClasses {
   public static class ValidAdvice {
     public static void advice() {

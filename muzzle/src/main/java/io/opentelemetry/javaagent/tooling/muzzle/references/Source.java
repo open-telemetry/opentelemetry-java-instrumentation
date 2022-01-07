@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle.references;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Represents the source (file name, line number) of a reference.
@@ -31,7 +32,7 @@ public final class Source {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == this) {
       return true;
     }

@@ -99,6 +99,7 @@ public final class NetPeerAttributes {
     }
   }
 
+  @Nullable
   private String mapToPeerService(String endpoint) {
     if (endpoint == null) {
       return null;

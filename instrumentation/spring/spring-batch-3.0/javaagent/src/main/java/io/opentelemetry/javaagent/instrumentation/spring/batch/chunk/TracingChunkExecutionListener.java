@@ -76,7 +76,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
   // TracingJobExecutionListener will be present in an ordered set of listeners
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

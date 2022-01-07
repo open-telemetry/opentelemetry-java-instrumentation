@@ -23,7 +23,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.getSpanDecorator;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import java.util.EventObject;
 import org.apache.camel.management.event.ExchangeSendingEvent;
@@ -38,51 +40,52 @@ final class CamelEventNotifier extends EventNotifierSupport {
 
   @Override
   public void notify(EventObject event) {
-
-    try {
-      if (event instanceof ExchangeSendingEvent) {
-        onExchangeSending((ExchangeSendingEvent) event);
-      } else if (event instanceof ExchangeSentEvent) {
-        onExchangeSent((ExchangeSentEvent) event);
-      }
-    } catch (Throwable t) {
-      logger.warn("Failed to capture tracing data", t);
+    if (event instanceof ExchangeSendingEvent) {
+      onExchangeSending((ExchangeSendingEvent) event);
+    } else if (event instanceof ExchangeSentEvent) {
+      onExchangeSent((ExchangeSentEvent) event);
     }
   }
 
   /** Camel about to send (outbound). */
   private static void onExchangeSending(ExchangeSendingEvent ese) {
-    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
+    SpanDecorator sd = getSpanDecorator(ese.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
     }
 
-    String name =
-        sd.getOperationName(ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
-    Context context = CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind());
-    Span span = Span.fromContext(context);
-    sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
-    ActiveSpanManager.activate(ese.getExchange(), span, sd.getInitiatorSpanKind());
+    CamelRequest request =
+        CamelRequest.create(
+            sd,
+            ese.getExchange(),
+            ese.getEndpoint(),
+            CamelDirection.OUTBOUND,
+            sd.getInitiatorSpanKind());
+    Context context = startOnExchangeSending(request);
+
+    ActiveContextManager.activate(context, request);
     CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
 
-    logger.debug("[Exchange sending] Initiator span started: {}", span);
+    logger.debug("[Exchange sending] Initiator span started: {}", context);
+  }
+
+  private static Context startOnExchangeSending(CamelRequest request) {
+    Context parentContext = Context.current();
+    if (!instrumenter().shouldStart(parentContext, request)) {
+      return null;
+    }
+    return instrumenter().start(parentContext, request);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
   private static void onExchangeSent(ExchangeSentEvent event) {
-    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(event.getEndpoint());
+    SpanDecorator sd = getSpanDecorator(event.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
     }
 
-    Span span = ActiveSpanManager.getSpan(event.getExchange());
-    if (span != null) {
-      logger.debug("[Exchange sent] Initiator span finished: {}", span);
-      sd.post(span, event.getExchange(), event.getEndpoint());
-      ActiveSpanManager.deactivate(event.getExchange());
-    } else {
-      logger.warn("Could not find managed span for exchange: {}", event.getExchange());
-    }
+    Context context = ActiveContextManager.deactivate(event.getExchange());
+    logger.debug("[Exchange sent] Initiator span finished: {}", context);
   }
 
   @Override

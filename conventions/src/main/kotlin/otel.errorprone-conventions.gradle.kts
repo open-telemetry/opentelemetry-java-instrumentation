@@ -44,9 +44,21 @@ tasks {
         // consider for future.
         disable("Var")
 
-        // Don't support Android without desugar
+        // We use animal sniffer
         disable("AndroidJdkLibsChecker")
         disable("Java7ApiChecker")
+        disable("Java8ApiChecker")
+
+        // Prevents defensive null checks and we have nullaway anyways
+        disable("ParameterMissingNullable")
+
+        // javax.annotation.Nullable doesn't support type parameter assertions
+        disable("VoidMissingNullable")
+
+        // Overlaps with nullaway
+        disable("FieldMissingNullable")
+        disable("ReturnMissingNullable")
+
         disable("StaticOrDefaultInterfaceMethod")
 
         // Great check, but for bytecode manipulation it's too common to separate over

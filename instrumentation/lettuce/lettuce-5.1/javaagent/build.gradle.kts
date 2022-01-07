@@ -20,7 +20,7 @@ dependencies {
 
   // Only 5.2+ will have command arguments in the db.statement tag.
   testLibrary("io.lettuce:lettuce-core:5.2.0.RELEASE")
-  testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
 tasks {

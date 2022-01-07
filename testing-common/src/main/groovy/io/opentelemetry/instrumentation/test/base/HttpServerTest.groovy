@@ -456,7 +456,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     assumeTrue(testCapturedRequestParameters())
 
     QueryParams formBody = QueryParams.builder()
-      .add("test-parameter", "test value")
+      .add("test-parameter", "test value õäöü")
       .build()
     def request = AggregatedHttpRequest.of(
       RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
@@ -679,7 +679,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
         // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
         "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+        "$SemanticAttributes.NET_PEER_PORT" { it == null || (it instanceof Long && it != port) }
         "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
@@ -717,7 +717,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "http.response.header.x_test_response" { it == ["test"] }
         }
         if (endpoint == CAPTURE_PARAMETERS) {
-          "servlet.request.parameter.test_parameter" { it == ["test value"] }
+          "servlet.request.parameter.test_parameter" { it == ["test value õäöü"] }
         }
       }
     }

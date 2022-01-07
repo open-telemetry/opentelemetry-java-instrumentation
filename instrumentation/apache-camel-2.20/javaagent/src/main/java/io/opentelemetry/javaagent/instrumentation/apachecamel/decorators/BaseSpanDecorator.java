@@ -23,9 +23,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
@@ -96,21 +96,18 @@ class BaseSpanDecorator implements SpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+  public void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection) {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      span.setAttribute("apache-camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
+      attributes.put("apache-camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
     }
   }
 
   @Override
-  public void post(Span span, Exchange exchange, Endpoint endpoint) {
-    if (exchange.isFailed()) {
-      span.setStatus(StatusCode.ERROR);
-      if (exchange.getException() != null) {
-        span.recordException(exchange.getException());
-      }
-    }
-  }
+  public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {}
 
   @Override
   public SpanKind getInitiatorSpanKind() {
@@ -121,4 +118,8 @@ class BaseSpanDecorator implements SpanDecorator {
   public SpanKind getReceiverSpanKind() {
     return SpanKind.SERVER;
   }
+
+  @Override
+  public void updateServerSpanName(
+      Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {}
 }
