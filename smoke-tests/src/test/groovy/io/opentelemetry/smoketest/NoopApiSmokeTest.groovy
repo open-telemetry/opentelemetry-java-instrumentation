@@ -12,7 +12,7 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class NoopApiSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

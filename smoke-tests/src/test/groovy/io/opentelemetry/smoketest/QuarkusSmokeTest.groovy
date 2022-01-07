@@ -14,7 +14,7 @@ import java.util.jar.JarFile
 
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class QuarkusSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

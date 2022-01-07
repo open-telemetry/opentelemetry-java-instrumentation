@@ -42,11 +42,11 @@ abstract class PropagationTest extends SmokeTest {
 
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class DefaultPropagationTest extends PropagationTest {
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class W3CPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -54,7 +54,7 @@ class W3CPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class B3PropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -62,7 +62,7 @@ class B3PropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class B3MultiPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -70,7 +70,7 @@ class B3MultiPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class JaegerPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -78,7 +78,7 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
@@ -114,7 +114,7 @@ class OtTracePropagationTest extends SmokeTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class XRayPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {

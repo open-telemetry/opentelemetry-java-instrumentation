@@ -16,7 +16,7 @@ import java.util.jar.JarFile
 
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

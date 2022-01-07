@@ -139,13 +139,10 @@ abstract class SmokeTest extends Specification {
   }
 
   private static TestContainerManager createContainerManager() {
-    boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
-
-    if (isWindows && "1" != System.getenv("USE_LINUX_CONTAINERS")) {
-      return new WindowsTestContainerManager()
-    }
-
-    return new LinuxTestContainerManager()
+    return useLinuxContainers() ? new LinuxTestContainerManager() : new WindowsTestContainerManager();
   }
 
+  public static boolean useLinuxContainers() {
+    return System.getenv("USE_LINUX_CONTAINERS") == "1" || !System.getProperty("os.name").toLowerCase().contains("windows")
+  }
 }

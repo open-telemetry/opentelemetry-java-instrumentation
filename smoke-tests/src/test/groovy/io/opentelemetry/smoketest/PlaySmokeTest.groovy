@@ -8,7 +8,7 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ !useLinuxContainers() })
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
