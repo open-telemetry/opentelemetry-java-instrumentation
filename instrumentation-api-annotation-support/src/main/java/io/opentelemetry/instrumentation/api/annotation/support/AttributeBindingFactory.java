@@ -25,27 +25,27 @@ class AttributeBindingFactory {
     // Simple scalar parameter types
     if (type == String.class) {
       AttributeKey<String> key = AttributeKey.stringKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (String) arg);
+      return (setter, arg) -> setter.put(key, (String) arg);
     }
     if (type == long.class || type == Long.class) {
       AttributeKey<Long> key = AttributeKey.longKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (Long) arg);
+      return (setter, arg) -> setter.put(key, (Long) arg);
     }
     if (type == double.class || type == Double.class) {
       AttributeKey<Double> key = AttributeKey.doubleKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (Double) arg);
+      return (setter, arg) -> setter.put(key, (Double) arg);
     }
     if (type == boolean.class || type == Boolean.class) {
       AttributeKey<Boolean> key = AttributeKey.booleanKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (Boolean) arg);
+      return (setter, arg) -> setter.put(key, (Boolean) arg);
     }
     if (type == int.class || type == Integer.class) {
       AttributeKey<Long> key = AttributeKey.longKey(name);
-      return (setter, arg) -> setter.setAttribute(key, ((Integer) arg).longValue());
+      return (setter, arg) -> setter.put(key, ((Integer) arg).longValue());
     }
     if (type == float.class || type == Float.class) {
       AttributeKey<Double> key = AttributeKey.doubleKey(name);
-      return (setter, arg) -> setter.setAttribute(key, ((Float) arg).doubleValue());
+      return (setter, arg) -> setter.put(key, ((Float) arg).doubleValue());
     }
 
     if (isArrayType(type)) {
@@ -74,19 +74,19 @@ class AttributeBindingFactory {
     // Simple array attribute types without conversion
     if (type == String[].class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, Arrays.asList((String[]) arg));
+      return (setter, arg) -> setter.put(key, Arrays.asList((String[]) arg));
     }
     if (type == Long[].class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, Arrays.asList((Long[]) arg));
+      return (setter, arg) -> setter.put(key, Arrays.asList((Long[]) arg));
     }
     if (type == Double[].class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, Arrays.asList((Double[]) arg));
+      return (setter, arg) -> setter.put(key, Arrays.asList((Double[]) arg));
     }
     if (type == Boolean[].class) {
       AttributeKey<List<Boolean>> key = AttributeKey.booleanArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, Arrays.asList((Boolean[]) arg));
+      return (setter, arg) -> setter.put(key, Arrays.asList((Boolean[]) arg));
     }
 
     if (type == long[].class) {
@@ -118,19 +118,19 @@ class AttributeBindingFactory {
   private static AttributeBinding listBinding(String name, Type componentType) {
     if (componentType == String.class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (List<String>) arg);
+      return (setter, arg) -> setter.put(key, (List<String>) arg);
     }
     if (componentType == Long.class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (List<Long>) arg);
+      return (setter, arg) -> setter.put(key, (List<Long>) arg);
     }
     if (componentType == Double.class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (List<Double>) arg);
+      return (setter, arg) -> setter.put(key, (List<Double>) arg);
     }
     if (componentType == Boolean.class) {
       AttributeKey<List<Boolean>> key = AttributeKey.booleanArrayKey(name);
-      return (setter, arg) -> setter.setAttribute(key, (List<Boolean>) arg);
+      return (setter, arg) -> setter.put(key, (List<Boolean>) arg);
     }
     if (componentType == Integer.class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
@@ -160,7 +160,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -181,7 +181,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -201,7 +201,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -221,7 +221,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -242,7 +242,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -262,7 +262,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -282,7 +282,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -303,7 +303,7 @@ class AttributeBindingFactory {
               return array.length;
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -325,7 +325,7 @@ class AttributeBindingFactory {
               return list.size();
             }
           };
-      setter.setAttribute(key, wrapper);
+      setter.put(key, wrapper);
     };
   }
 
@@ -336,6 +336,6 @@ class AttributeBindingFactory {
 
   private static AttributeBinding defaultBinding(String name) {
     AttributeKey<String> key = AttributeKey.stringKey(name);
-    return (setter, arg) -> setter.setAttribute(key, arg.toString());
+    return (setter, arg) -> setter.put(key, arg.toString());
   }
 }

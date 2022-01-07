@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import javax.annotation.Nullable;
@@ -51,7 +50,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     AttributeBindings bindings = cache.computeIfAbsent(method, this::bind);
     if (!bindings.isEmpty()) {
       Object[] args = methodArgumentsExtractor.extract(request);
-      bindings.apply(attributes::put, args);
+      bindings.apply(attributes, args);
     }
   }
 
@@ -108,7 +107,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {}
+    public void apply(AttributesBuilder target, Object[] args) {}
   }
 
   private static final class CombinedAttributeBindings implements AttributeBindings {
@@ -129,12 +128,12 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {
-      parent.apply(setter, args);
+    public void apply(AttributesBuilder target, Object[] args) {
+      parent.apply(target, args);
       if (args != null && args.length > index) {
         Object arg = args[index];
         if (arg != null) {
-          binding.apply(setter, arg);
+          binding.apply(target, arg);
         }
       }
     }
