@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.api.internal.SpanKey
-import io.opentelemetry.instrumentation.api.servlet.ServerSpan
+import io.opentelemetry.instrumentation.api.server.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.concurrent.CountDownLatch
