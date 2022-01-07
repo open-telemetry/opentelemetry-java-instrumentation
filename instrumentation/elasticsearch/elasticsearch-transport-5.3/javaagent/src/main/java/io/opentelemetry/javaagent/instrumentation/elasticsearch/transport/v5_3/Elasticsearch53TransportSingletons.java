@@ -18,7 +18,7 @@ public final class Elasticsearch53TransportSingletons {
       ElasticsearchTransportInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-transport-5.3",
           new Elasticsearch53TransportExperimentalAttributesExtractor(),
-          new NetClientAttributesExtractor<>(new ElasticTransportNetResponseAttributesAdapter()));
+          NetClientAttributesExtractor.create(new ElasticTransportNetResponseAttributesAdapter()));
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
     return INSTRUMENTER;

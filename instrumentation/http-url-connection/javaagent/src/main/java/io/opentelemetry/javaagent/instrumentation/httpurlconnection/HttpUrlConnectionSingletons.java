@@ -24,7 +24,7 @@ public class HttpUrlConnectionSingletons {
     SpanNameExtractor<HttpURLConnection> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
-    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor = new NetClientAttributesExtractor<>(
+    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor = NetClientAttributesExtractor.create(
         netAttributesAdapter);
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(

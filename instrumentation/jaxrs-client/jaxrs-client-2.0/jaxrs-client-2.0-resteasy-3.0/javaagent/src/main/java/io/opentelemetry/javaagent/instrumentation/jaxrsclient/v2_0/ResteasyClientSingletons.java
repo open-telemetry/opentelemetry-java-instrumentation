@@ -35,7 +35,7 @@ public class ResteasyClientSingletons {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ResteasyClientNetAttributesAdapter netAttributesAdapter =
         new ResteasyClientNetAttributesAdapter();
-    NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor = new NetClientAttributesExtractor<>(
+    NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor = NetClientAttributesExtractor.create(
         netAttributesAdapter);
 
     INSTRUMENTER =

@@ -31,7 +31,7 @@ public final class ApacheHttpAsyncClientSingletons {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpAsyncClientNetAttributesAdapter netAttributesAdapter =
         new ApacheHttpAsyncClientNetAttributesAdapter();
-    NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor = new NetClientAttributesExtractor<>(
+    NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor = NetClientAttributesExtractor.create(
         netAttributesAdapter);
 
     INSTRUMENTER =

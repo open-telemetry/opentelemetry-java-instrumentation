@@ -62,8 +62,7 @@ public final class OkHttpTracingBuilder {
     OkHttpAttributesExtractor httpAttributesExtractor =
         new OkHttpAttributesExtractor(capturedHttpHeaders);
     OkHttpNetAttributesAdapter attributesAdapter = new OkHttpNetAttributesAdapter();
-    NetClientAttributesExtractor<Request, Response> attributesExtractor = new NetClientAttributesExtractor<>(
-        attributesAdapter);
+    NetClientAttributesExtractor<Request, Response> attributesExtractor = NetClientAttributesExtractor.create(attributesAdapter);
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(

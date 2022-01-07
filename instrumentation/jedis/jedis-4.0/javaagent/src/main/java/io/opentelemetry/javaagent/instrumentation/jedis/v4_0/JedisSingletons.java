@@ -29,7 +29,7 @@ public final class JedisSingletons {
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new NetClientAttributesExtractor<>(netAttributesAdapter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesAdapter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

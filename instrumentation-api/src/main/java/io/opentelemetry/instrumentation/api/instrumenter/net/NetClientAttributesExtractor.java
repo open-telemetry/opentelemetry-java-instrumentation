@@ -21,7 +21,12 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final NetAttributesAdapter<REQUEST,RESPONSE> adapter;
 
-  public NetClientAttributesExtractor(
+  public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
+      NetAttributesAdapter<REQUEST, RESPONSE> adapter) {
+    return new NetClientAttributesExtractor<>(adapter);
+  }
+
+  private NetClientAttributesExtractor(
       NetAttributesAdapter<REQUEST, RESPONSE> adapter) {this.adapter = adapter;}
 
   @Override

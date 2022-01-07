@@ -34,7 +34,7 @@ class InetSocketAddressNetClientAttributesAdapterTest {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };
-  private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor = new NetClientAttributesExtractor<>(adapter);
+  private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor = NetClientAttributesExtractor.create(adapter);
 
   @Test
   void noInetSocketAddress() {

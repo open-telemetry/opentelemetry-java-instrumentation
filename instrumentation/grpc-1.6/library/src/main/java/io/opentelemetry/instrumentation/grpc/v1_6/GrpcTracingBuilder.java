@@ -83,7 +83,7 @@ public final class GrpcTracingBuilder {
     GrpcNetClientAttributesAdapter netClientAttributesExtractor =
         new GrpcNetClientAttributesAdapter();
 
-    clientInstrumenterBuilder.addAttributesExtractor(new NetClientAttributesExtractor<>(netClientAttributesExtractor));
+    clientInstrumenterBuilder.addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesExtractor));
     serverInstrumenterBuilder.addAttributesExtractor(new GrpcNetServerAttributesExtractor());
 
     if (peerService != null) {

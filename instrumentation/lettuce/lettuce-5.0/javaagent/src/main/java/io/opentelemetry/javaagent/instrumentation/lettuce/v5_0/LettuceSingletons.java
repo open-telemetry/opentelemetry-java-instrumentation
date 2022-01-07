@@ -41,8 +41,7 @@ public final class LettuceSingletons {
 
     LettuceConnectNetAttributesAdapter connectNetAttributesAdapter =
         new LettuceConnectNetAttributesAdapter();
-    NetClientAttributesExtractor<RedisURI, Void> netAttributesExtractor = new NetClientAttributesExtractor<>(
-        connectNetAttributesAdapter);
+    NetClientAttributesExtractor<RedisURI, Void> netAttributesExtractor = NetClientAttributesExtractor.create(connectNetAttributesAdapter);
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")

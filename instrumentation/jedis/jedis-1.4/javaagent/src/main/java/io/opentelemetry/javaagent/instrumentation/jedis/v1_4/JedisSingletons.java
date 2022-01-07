@@ -24,7 +24,7 @@ public final class JedisSingletons {
         new JedisDbAttributesExtractor();
     SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
     JedisNetAttributesAdapter netAttributesAdapter = new JedisNetAttributesAdapter();
-    NetClientAttributesExtractor<JedisRequest, Void> netAttributesExtractor = new NetClientAttributesExtractor<>(
+    NetClientAttributesExtractor<JedisRequest, Void> netAttributesExtractor = NetClientAttributesExtractor.create(
         netAttributesAdapter);
 
     INSTRUMENTER =
