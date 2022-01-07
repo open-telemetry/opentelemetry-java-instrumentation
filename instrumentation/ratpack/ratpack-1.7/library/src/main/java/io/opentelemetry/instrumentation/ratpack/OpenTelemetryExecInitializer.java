@@ -17,7 +17,8 @@ public final class OpenTelemetryExecInitializer implements ExecInitializer {
     // Adds current Context to Execution
     execution.add(Context.current());
 
-    // Propagates ContextHolder to child execution because response interceptor are triggered in different execution
+    // Propagates ContextHolder to child execution because response interceptor are triggered in
+    // different execution
     execution
         .maybeParent()
         .flatMap(parent -> parent.maybeGet(ContextHolder.class))

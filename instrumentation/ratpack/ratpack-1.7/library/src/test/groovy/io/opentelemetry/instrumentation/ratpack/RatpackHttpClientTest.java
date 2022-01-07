@@ -13,7 +13,7 @@ import ratpack.func.Action;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpClientSpec;
 
-class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
+class RatpackHttpClientTest extends AbstractRatpackHttpClientSpec {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();

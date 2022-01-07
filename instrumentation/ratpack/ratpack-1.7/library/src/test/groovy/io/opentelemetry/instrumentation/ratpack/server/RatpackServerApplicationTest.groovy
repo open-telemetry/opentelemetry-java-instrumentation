@@ -20,7 +20,6 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.exec.ExecInterceptor
 import ratpack.guice.Guice
 import ratpack.http.client.HttpClient
@@ -29,6 +28,11 @@ import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
 import javax.inject.Singleton
+
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET
 
 class RatpackServerApplicationTest extends Specification {
 
@@ -43,10 +47,10 @@ class RatpackServerApplicationTest extends Specification {
       def attributes = spanData.attributes.asMap()
 
       spanData.kind == SpanKind.SERVER
-      attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-      attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-      attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+      attributes[HTTP_ROUTE] == "/foo"
+      attributes[HTTP_TARGET] == "/foo"
+      attributes[HTTP_METHOD] == "GET"
+      attributes[HTTP_STATUS_CODE] == 200L
     }
   }
 
@@ -56,23 +60,22 @@ class RatpackServerApplicationTest extends Specification {
 
     new PollingConditions().eventually {
       def spanData = app.spanExporter.finishedSpanItems.find { it.name == "/bar" }
-      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "/other" }
+      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "HTTP GET" }
       def attributes = spanData.attributes.asMap()
 
       spanData.traceId == spanDataClient.traceId
 
       spanData.kind == SpanKind.SERVER
-      attributes[SemanticAttributes.HTTP_ROUTE] == "/bar"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/bar"
-      attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-      attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+      attributes[HTTP_ROUTE] == "/bar"
+      attributes[HTTP_TARGET] == "/bar"
+      attributes[HTTP_METHOD] == "GET"
+      attributes[HTTP_STATUS_CODE] == 200L
 
       spanDataClient.kind == SpanKind.CLIENT
       def attributesClient = spanDataClient.attributes.asMap()
-      attributesClient[SemanticAttributes.HTTP_ROUTE] == "/other"
-      attributesClient[SemanticAttributes.HTTP_METHOD] == "GET"
-      attributesClient[SemanticAttributes.HTTP_STATUS_CODE] == 200L
-
+      attributesClient[HTTP_ROUTE] == "/other"
+      attributesClient[HTTP_METHOD] == "GET"
+      attributesClient[HTTP_STATUS_CODE] == 200L
     }
   }
 
@@ -92,6 +95,7 @@ class OpenTelemetryModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SpanExporter).toInstance(InMemorySpanExporter.create())
+    bind(OpenTelemetryExecInitializer)
   }
 
   @Singleton
@@ -130,7 +134,7 @@ class OpenTelemetryModule extends AbstractModule {
   @Singleton
   @Provides
   HttpClient instrumentedHttpClient(RatpackHttpTracing ratpackHttpTracing) {
-    return ratpackHttpTracing.instrumentedHttpClient(HttpClient.of { it.poolQueueSize(10) })
+    return ratpackHttpTracing.instrumentedHttpClient(HttpClient.of {})
   }
 }
 
@@ -145,13 +149,7 @@ class RatpackApp {
 
     RatpackServer.start { server ->
       server
-        .registry(
-          Guice.registry { bindings ->
-            bindings
-              .module(OpenTelemetryModule)
-              .bind(OpenTelemetryExecInitializer)
-          }
-        )
+        .registry(Guice.registry { b -> b.module(OpenTelemetryModule) })
         .handlers { chain ->
           chain
             .get("ignore") { ctx -> ctx.render("ignored") }
@@ -166,4 +164,3 @@ class RatpackApp {
     }
   }
 }
-
