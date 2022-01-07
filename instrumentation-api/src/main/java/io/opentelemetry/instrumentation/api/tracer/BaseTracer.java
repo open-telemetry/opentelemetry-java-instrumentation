@@ -20,6 +20,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.ExecutionException;

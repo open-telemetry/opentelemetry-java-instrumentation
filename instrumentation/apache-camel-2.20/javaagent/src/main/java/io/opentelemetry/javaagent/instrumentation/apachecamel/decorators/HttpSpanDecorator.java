@@ -26,7 +26,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.MalformedURLException;

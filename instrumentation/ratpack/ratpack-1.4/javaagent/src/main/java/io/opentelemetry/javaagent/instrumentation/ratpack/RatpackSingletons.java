@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import ratpack.handling.Context;
 
 public final class RatpackSingletons {

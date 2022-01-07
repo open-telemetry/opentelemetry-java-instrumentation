@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

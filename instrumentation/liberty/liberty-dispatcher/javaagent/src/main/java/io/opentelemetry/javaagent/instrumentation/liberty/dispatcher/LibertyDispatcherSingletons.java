@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 
 public final class LibertyDispatcherSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-dispatcher";

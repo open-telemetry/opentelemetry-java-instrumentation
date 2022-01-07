@@ -19,7 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;

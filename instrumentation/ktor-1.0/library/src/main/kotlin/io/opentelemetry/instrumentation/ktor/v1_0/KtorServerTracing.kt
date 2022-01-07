@@ -22,7 +22,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(

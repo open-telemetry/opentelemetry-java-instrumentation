@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.servlet;
+package io.opentelemetry.instrumentation.api.server;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import javax.annotation.Nullable;
 
 /** Helper container for tracking whether instrumentation should update server span name or not. */

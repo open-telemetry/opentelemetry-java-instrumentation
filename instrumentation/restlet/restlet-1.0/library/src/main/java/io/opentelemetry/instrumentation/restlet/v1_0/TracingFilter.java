@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import org.restlet.Filter;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
