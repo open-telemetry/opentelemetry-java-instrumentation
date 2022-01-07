@@ -18,7 +18,7 @@ import spock.lang.Specification
 
 import java.time.Duration
 
-import static io.opentelemetry.smoketest.SmokeTest.useLinuxContainers
+import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
 
 // Hotspot versions before 8u40 crash in jit compiled lambdas when javaagent initializes
 // java.lang.invoke.CallSite

@@ -14,6 +14,7 @@ import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
 import static java.util.stream.Collectors.toSet
 
 @IgnoreIf({ !useLinuxContainers() })

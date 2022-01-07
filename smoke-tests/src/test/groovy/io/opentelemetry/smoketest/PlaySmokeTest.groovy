@@ -8,6 +8,8 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
+import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
+
 @IgnoreIf({ !useLinuxContainers() })
 class PlaySmokeTest extends SmokeTest {
 

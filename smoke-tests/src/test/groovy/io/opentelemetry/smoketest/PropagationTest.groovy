@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
+import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
 import static java.util.stream.Collectors.toSet
 
 abstract class PropagationTest extends SmokeTest {
