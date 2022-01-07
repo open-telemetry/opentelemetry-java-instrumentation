@@ -48,7 +48,8 @@ public class RabbitSingletons {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractors(
-            new RabbitChannelAttributesExtractor(), NetClientAttributesExtractor.create(new RabbitChannelNetAttributesAdapter()))
+            new RabbitChannelAttributesExtractor(),
+            NetClientAttributesExtractor.create(new RabbitChannelNetAttributesAdapter()))
         .newInstrumenter(
             channelAndMethod ->
                 channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);

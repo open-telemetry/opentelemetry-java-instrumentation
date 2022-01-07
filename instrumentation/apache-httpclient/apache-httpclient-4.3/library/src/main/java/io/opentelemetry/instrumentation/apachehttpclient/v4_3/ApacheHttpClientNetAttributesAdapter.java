@@ -10,8 +10,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
-final class ApacheHttpClientNetAttributesAdapter implements
-    NetClientAttributesAdapter<ApacheHttpClientRequest, HttpResponse> {
+final class ApacheHttpClientNetAttributesAdapter
+    implements NetClientAttributesAdapter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {

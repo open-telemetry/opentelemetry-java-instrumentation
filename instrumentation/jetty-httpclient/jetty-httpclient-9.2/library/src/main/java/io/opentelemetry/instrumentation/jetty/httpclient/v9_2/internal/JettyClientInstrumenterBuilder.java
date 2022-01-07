@@ -16,9 +16,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
@@ -57,8 +57,8 @@ public final class JettyClientInstrumenterBuilder {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     JettyHttpClientNetAttributesAdapter netAttributesAdapter =
         new JettyHttpClientNetAttributesAdapter();
-    NetClientAttributesExtractor<Request, Response> attributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<Request, Response> attributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
 
     return Instrumenter.<Request, Response>builder(
             this.openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)

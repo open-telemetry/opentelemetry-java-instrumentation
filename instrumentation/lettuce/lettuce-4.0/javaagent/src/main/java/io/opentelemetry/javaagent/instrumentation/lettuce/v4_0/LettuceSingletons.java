@@ -39,8 +39,8 @@ public final class LettuceSingletons {
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
-    NetClientAttributesExtractor<RedisURI, Void> netClientAttributesExtractor = NetClientAttributesExtractor.create(
-        new LettuceConnectNetAttributesAdapter());
+    NetClientAttributesExtractor<RedisURI, Void> netClientAttributesExtractor =
+        NetClientAttributesExtractor.create(new LettuceConnectNetAttributesAdapter());
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")

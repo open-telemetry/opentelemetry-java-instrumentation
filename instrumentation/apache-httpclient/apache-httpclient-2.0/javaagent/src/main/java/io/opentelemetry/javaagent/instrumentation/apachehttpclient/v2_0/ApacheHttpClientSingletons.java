@@ -31,7 +31,8 @@ public final class ApacheHttpClientSingletons {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpClientNetAttributesAdapter netAttributesAdapter =
         new ApacheHttpClientNetAttributesAdapter();
-    NetClientAttributesExtractor<HttpMethod, HttpMethod> netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesAdapter);
+    NetClientAttributesExtractor<HttpMethod, HttpMethod> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
     INSTRUMENTER =
         Instrumenter.<HttpMethod, HttpMethod>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)

@@ -32,8 +32,8 @@ public class GoogleHttpClientSingletons {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     GoogleHttpClientNetAttributesAdapter netAttributesAdapter =
         new GoogleHttpClientNetAttributesAdapter();
-    NetClientAttributesExtractor<HttpRequest, HttpResponse> netAttributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<HttpRequest, HttpResponse> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse>builder(

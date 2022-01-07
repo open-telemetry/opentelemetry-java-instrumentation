@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-class AkkaHttpNetAttributesAdapter implements
-    NetClientAttributesAdapter<HttpRequest, HttpResponse> {
+class AkkaHttpNetAttributesAdapter
+    implements NetClientAttributesAdapter<HttpRequest, HttpResponse> {
 
   @Override
   public String transport(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {

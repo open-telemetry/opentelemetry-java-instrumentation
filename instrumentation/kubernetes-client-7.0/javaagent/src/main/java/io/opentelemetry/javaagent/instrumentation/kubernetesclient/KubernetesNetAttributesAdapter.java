@@ -11,10 +11,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 
-class KubernetesNetAttributesAdapter implements
-    NetClientAttributesAdapter<Request, ApiResponse<?>> {
+class KubernetesNetAttributesAdapter
+    implements NetClientAttributesAdapter<Request, ApiResponse<?>> {
 
-    @Override
+  @Override
   public String transport(Request request, @Nullable ApiResponse<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }

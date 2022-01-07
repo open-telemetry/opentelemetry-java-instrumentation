@@ -26,8 +26,8 @@ public final class JdbcSingletons {
     DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
     JdbcNetAttributesAdapter netAttributesAdapter = new JdbcNetAttributesAdapter();
-    NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)

@@ -15,9 +15,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 public class ResteasyClientSingletons {
@@ -35,8 +35,8 @@ public class ResteasyClientSingletons {
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ResteasyClientNetAttributesAdapter netAttributesAdapter =
         new ResteasyClientNetAttributesAdapter();
-    NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<ClientInvocation, Response>builder(

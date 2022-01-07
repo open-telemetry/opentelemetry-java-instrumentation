@@ -24,8 +24,8 @@ public class HttpUrlConnectionSingletons {
     SpanNameExtractor<HttpURLConnection> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
-    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),

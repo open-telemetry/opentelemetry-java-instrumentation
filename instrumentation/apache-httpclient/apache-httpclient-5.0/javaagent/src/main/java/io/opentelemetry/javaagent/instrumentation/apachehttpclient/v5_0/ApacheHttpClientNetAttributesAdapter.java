@@ -13,8 +13,8 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class ApacheHttpClientNetAttributesAdapter implements
-    NetClientAttributesAdapter<ClassicHttpRequest, HttpResponse> {
+final class ApacheHttpClientNetAttributesAdapter
+    implements NetClientAttributesAdapter<ClassicHttpRequest, HttpResponse> {
 
   private static final Logger logger =
       LoggerFactory.getLogger(ApacheHttpClientNetAttributesAdapter.class);

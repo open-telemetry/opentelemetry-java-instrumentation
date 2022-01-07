@@ -21,8 +21,7 @@ class InetSocketAddressNetClientAttributesAdapterTest {
 
   private final InetSocketAddressNetClientAttributesAdapter<InetSocketAddress, InetSocketAddress>
       adapter =
-          new InetSocketAddressNetClientAttributesAdapter<
-                        InetSocketAddress, InetSocketAddress>() {
+          new InetSocketAddressNetClientAttributesAdapter<InetSocketAddress, InetSocketAddress>() {
             @Override
             public InetSocketAddress getAddress(
                 InetSocketAddress request, InetSocketAddress response) {
@@ -34,7 +33,8 @@ class InetSocketAddressNetClientAttributesAdapterTest {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };
-  private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor = NetClientAttributesExtractor.create(adapter);
+  private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
+      NetClientAttributesExtractor.create(adapter);
 
   @Test
   void noInetSocketAddress() {

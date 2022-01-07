@@ -8,8 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesAdapter;
 import javax.annotation.Nullable;
 
-public final class JdbcNetAttributesAdapter
-    implements NetClientAttributesAdapter<DbRequest, Void> {
+public final class JdbcNetAttributesAdapter implements NetClientAttributesAdapter<DbRequest, Void> {
 
   @Nullable
   @Override

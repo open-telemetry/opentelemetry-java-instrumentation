@@ -16,21 +16,22 @@ import javax.annotation.Nullable;
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
  * it is more convenient to use {@link InetSocketAddressNetClientAttributesAdapter}.
  *
- * This class delegates to a type-specific {@link NetClientAttributesAdapter} for individual
+ * <p>This class delegates to a type-specific {@link NetClientAttributesAdapter} for individual
  * attribute extraction from request/response objects.
  */
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetClientAttributesAdapter<REQUEST,RESPONSE> adapter;
+  private final NetClientAttributesAdapter<REQUEST, RESPONSE> adapter;
 
   public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
       NetClientAttributesAdapter<REQUEST, RESPONSE> adapter) {
     return new NetClientAttributesExtractor<>(adapter);
   }
 
-  private NetClientAttributesExtractor(
-      NetClientAttributesAdapter<REQUEST, RESPONSE> adapter) {this.adapter = adapter;}
+  private NetClientAttributesExtractor(NetClientAttributesAdapter<REQUEST, RESPONSE> adapter) {
+    this.adapter = adapter;
+  }
 
   @Override
   public void onStart(AttributesBuilder attributes, REQUEST request) {}

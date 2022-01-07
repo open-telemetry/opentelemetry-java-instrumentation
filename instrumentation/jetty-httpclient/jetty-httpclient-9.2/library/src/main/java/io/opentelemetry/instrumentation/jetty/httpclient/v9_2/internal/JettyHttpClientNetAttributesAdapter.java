@@ -11,8 +11,8 @@ import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClientNetAttributesAdapter implements
-    NetClientAttributesAdapter<Request, Response> {
+public class JettyHttpClientNetAttributesAdapter
+    implements NetClientAttributesAdapter<Request, Response> {
 
   @Override
   public String transport(Request request, @Nullable Response response) {

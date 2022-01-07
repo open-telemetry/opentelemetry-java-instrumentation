@@ -59,7 +59,8 @@ public final class DubboTracingBuilder {
 
     DubboNetClientAttributesAdapter netClientAttributesAdapter =
         new DubboNetClientAttributesAdapter();
-    NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor = NetClientAttributesExtractor.create(netClientAttributesAdapter);
+    NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor =
+        NetClientAttributesExtractor.create(netClientAttributesAdapter);
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);

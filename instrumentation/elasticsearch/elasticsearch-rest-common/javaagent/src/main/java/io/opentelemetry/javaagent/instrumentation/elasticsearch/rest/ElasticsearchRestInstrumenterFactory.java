@@ -22,7 +22,8 @@ public final class ElasticsearchRestInstrumenterFactory {
     SpanNameExtractor<String> spanNameExtractor = DbSpanNameExtractor.create(attributesExtractor);
     ElasticsearchRestNetResponseAttributesAdapter netAttributesAdapter =
         new ElasticsearchRestNetResponseAttributesAdapter();
-    NetClientAttributesExtractor<String, Response> netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesAdapter);
+    NetClientAttributesExtractor<String, Response> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
 
     return Instrumenter.<String, Response>builder(
             GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)

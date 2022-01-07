@@ -47,7 +47,8 @@ public final class OkHttp2Singletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netClientAttributesAdapter))
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(netClientAttributesAdapter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());
 

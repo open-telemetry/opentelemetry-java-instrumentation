@@ -21,7 +21,8 @@ public final class JdbcSingletons {
   static {
     DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
-    NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor = NetClientAttributesExtractor.create(new JdbcNetAttributesAdapter());
+    NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor =
+        NetClientAttributesExtractor.create(new JdbcNetAttributesAdapter());
 
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(

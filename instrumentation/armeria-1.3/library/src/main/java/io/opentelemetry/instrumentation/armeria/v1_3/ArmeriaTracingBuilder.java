@@ -123,8 +123,8 @@ public final class ArmeriaTracingBuilder {
 
     ArmeriaNetClientAttributesAdapter netClientAttributesAdapter =
         new ArmeriaNetClientAttributesAdapter();
-    NetClientAttributesExtractor<RequestContext, RequestLog> netClientAttributesExtractor = NetClientAttributesExtractor.create(
-        netClientAttributesAdapter);
+    NetClientAttributesExtractor<RequestContext, RequestLog> netClientAttributesExtractor =
+        NetClientAttributesExtractor.create(netClientAttributesAdapter);
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(

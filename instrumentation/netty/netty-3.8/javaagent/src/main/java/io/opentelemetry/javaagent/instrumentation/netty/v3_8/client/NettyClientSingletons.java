@@ -31,7 +31,8 @@ public final class NettyClientSingletons {
         new NettyHttpClientAttributesExtractor();
     NettyNetClientAttributesAdapter netClientAttributesAdapter =
         new NettyNetClientAttributesAdapter();
-    NetClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> netClientAttributesExtractor = NetClientAttributesExtractor.create(netClientAttributesAdapter);
+    NetClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> netClientAttributesExtractor =
+        NetClientAttributesExtractor.create(netClientAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
@@ -50,8 +51,8 @@ public final class NettyClientSingletons {
 
     NettyConnectNetAttributesAdapter nettyConnectAttributesAdapter =
         new NettyConnectNetAttributesAdapter();
-    NetClientAttributesExtractor<NettyConnectionRequest, Channel> nettyConnectAttributesExtractor = NetClientAttributesExtractor.create(
-        nettyConnectAttributesAdapter);
+    NetClientAttributesExtractor<NettyConnectionRequest, Channel> nettyConnectAttributesExtractor =
+        NetClientAttributesExtractor.create(nettyConnectAttributesAdapter);
     CONNECTION_INSTRUMENTER =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)

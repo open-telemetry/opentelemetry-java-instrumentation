@@ -30,8 +30,8 @@ public class JdkHttpClientSingletons {
     SpanStatusExtractor<HttpRequest, HttpResponse<?>> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     JdkHttpNetAttributesAdapter netAttributesAdapter = new JdkHttpNetAttributesAdapter();
-    NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> netAttributesExtractor = NetClientAttributesExtractor.create(
-        netAttributesAdapter);
+    NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse<?>>builder(

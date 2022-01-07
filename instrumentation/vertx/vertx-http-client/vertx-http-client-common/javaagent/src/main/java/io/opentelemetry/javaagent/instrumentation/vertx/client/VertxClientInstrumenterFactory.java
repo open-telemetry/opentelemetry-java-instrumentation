@@ -24,8 +24,7 @@ public final class VertxClientInstrumenterFactory {
       String instrumentationName,
       AbstractVertxHttpAttributesExtractor httpAttributesExtractor,
       @Nullable
-          NetClientAttributesAdapter<HttpClientRequest, HttpClientResponse>
-              netAttributesAdapter) {
+          NetClientAttributesAdapter<HttpClientRequest, HttpClientResponse> netAttributesAdapter) {
 
     InstrumenterBuilder<HttpClientRequest, HttpClientResponse> builder =
         Instrumenter.<HttpClientRequest, HttpClientResponse>builder(
@@ -37,7 +36,8 @@ public final class VertxClientInstrumenterFactory {
             .addRequestMetrics(HttpClientMetrics.get());
 
     if (netAttributesAdapter != null) {
-      NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse> netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesAdapter);
+      NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse> netAttributesExtractor =
+          NetClientAttributesExtractor.create(netAttributesAdapter);
       builder
           .addAttributesExtractor(netAttributesExtractor)
           .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter));

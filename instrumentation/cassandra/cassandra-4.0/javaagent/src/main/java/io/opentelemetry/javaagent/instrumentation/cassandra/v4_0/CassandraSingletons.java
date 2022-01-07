@@ -29,7 +29,8 @@ public final class CassandraSingletons {
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(new CassandraNetAttributesAdapter()))
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(new CassandraNetAttributesAdapter()))
             .addAttributesExtractor(new CassandraAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
