@@ -131,7 +131,6 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE" Boolean
         "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE" 5000
         "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT" 0
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE" keyspace
         // the SqlStatementSanitizer can't handle CREATE statements yet
         "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }
