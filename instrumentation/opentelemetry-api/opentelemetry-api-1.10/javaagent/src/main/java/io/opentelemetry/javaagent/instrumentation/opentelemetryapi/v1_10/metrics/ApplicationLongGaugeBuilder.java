@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
 import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
+import application.io.opentelemetry.api.metrics.ObservableLongGauge;
 import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
@@ -30,9 +31,12 @@ final class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
   }
 
   @Override
-  public void buildWithCallback(Consumer<ObservableLongMeasurement> applicationCallback) {
-    agentBuilder.buildWithCallback(
-        agentMeasurement ->
-            applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement)));
+  public ObservableLongGauge buildWithCallback(
+      Consumer<ObservableLongMeasurement> applicationCallback) {
+    return new ApplicationObservableLongGauge(
+        agentBuilder.buildWithCallback(
+            agentMeasurement ->
+                applicationCallback.accept(
+                    new ApplicationObservableLongMeasurement(agentMeasurement))));
   }
 }
