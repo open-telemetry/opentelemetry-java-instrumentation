@@ -35,6 +35,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   void setUpClient() throws Exception {
     exec.run {
         (exec.controller as DefaultExecController).setInitializers(ImmutableList.of(new OpenTelemetryExecInitializer()))
+        (exec.controller as DefaultExecController).setInterceptors(ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE))
         client = buildHttpClient()
         singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1))
       }

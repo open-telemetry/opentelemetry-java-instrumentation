@@ -36,9 +36,6 @@ final class OpenTelemetryHttpClient {
                 Context otelCtx = instrumenter.start(parentOtelCtx, requestSpec);
                 Span span = Span.fromContext(otelCtx);
                 String path = requestSpec.getUri().getPath();
-                span.updateName(path);
-                //                span.updateName("HTTP " + requestSpec.getMethod().getName()); //
-                // TODO use path instead of [HTTP method]
                 span.setAttribute(SemanticAttributes.HTTP_ROUTE, path);
                 Execution.current()
                     .add(new OpenTelemetryExecInitializer.ContextHolder(otelCtx, requestSpec));
