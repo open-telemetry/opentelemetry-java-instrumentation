@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.9.2 - 2022-01-07
+
+### 🛠️ Bug fixes
+
+- Fix reactor-netty memory/connection leak
+  ([#4867](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4867))
+
 ## Version 1.9.1 - 2021-12-01
 
 ### 🛠️ Bug fixes
