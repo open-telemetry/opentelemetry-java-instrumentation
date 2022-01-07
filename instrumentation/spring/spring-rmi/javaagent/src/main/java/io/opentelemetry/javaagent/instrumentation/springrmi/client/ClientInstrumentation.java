@@ -15,12 +15,13 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import java.lang.reflect.Method;
+
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 import org.aopalliance.intercept.MethodInvocation;
-import java.lang.reflect.Method;
 
 public class ClientInstrumentation implements TypeInstrumentation {
   @Override

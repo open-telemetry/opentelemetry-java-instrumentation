@@ -3,25 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.api.trace.SpanKind;
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.shaded.org.bouncycastle.asn1.x509.qualified.SemanticsInformation
-import spock.lang.Shared
 
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.remoting.rmi.RmiProxyFactoryBean
 import org.springframework.context.annotation.Bean
+import org.springframework.remoting.rmi.RmiProxyFactoryBean
 import org.springframework.remoting.rmi.RmiServiceExporter
 import org.springframework.remoting.support.RemoteExporter
+import spock.lang.Shared
 
 import springrmi.app.SpringRmiGreeter
 import springrmi.app.SpringRmiGreeterImpl
-
-import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class SpringRmiTest extends AgentInstrumentationSpecification{
 
