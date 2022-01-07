@@ -57,6 +57,9 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
 
       // TODO review and unify with all other SERVER instrumentation
       Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+      if (parentContext == null) {
+        return;
+      }
       request = ClassAndMethod.create(declaringClass, methodName);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
