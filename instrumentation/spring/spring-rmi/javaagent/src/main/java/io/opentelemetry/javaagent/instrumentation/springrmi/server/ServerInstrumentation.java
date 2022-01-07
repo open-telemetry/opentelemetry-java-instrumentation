@@ -19,7 +19,6 @@ import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-
 import org.springframework.remoting.rmi.RmiBasedExporter;
 import org.springframework.remoting.support.RemoteInvocation;
 
