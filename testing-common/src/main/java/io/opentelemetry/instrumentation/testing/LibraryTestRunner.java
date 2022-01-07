@@ -45,7 +45,7 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
             .setTracerProvider(
                 SdkTracerProvider.builder()
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
-                    .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+                    .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
                     .build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))

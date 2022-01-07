@@ -42,7 +42,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     if (Config.get().isAgentDebugEnabled()) {
       // don't install another instance if the user has already explicitly requested it.
       if (loggingExporterIsNotAlreadyConfigured()) {
-        builder.addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()));
+        builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));
       }
     }
   }

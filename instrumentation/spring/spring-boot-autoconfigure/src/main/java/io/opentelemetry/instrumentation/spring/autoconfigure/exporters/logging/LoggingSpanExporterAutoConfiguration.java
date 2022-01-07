@@ -26,6 +26,6 @@ public class LoggingSpanExporterAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   public LoggingSpanExporter otelLoggingSpanExporter() {
-    return new LoggingSpanExporter();
+    return LoggingSpanExporter.create();
   }
 }
