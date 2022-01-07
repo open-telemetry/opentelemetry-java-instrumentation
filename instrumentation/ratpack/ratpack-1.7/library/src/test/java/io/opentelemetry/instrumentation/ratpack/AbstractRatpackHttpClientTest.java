@@ -25,7 +25,7 @@ import ratpack.http.client.HttpClientSpec;
 import ratpack.http.client.ReceivedResponse;
 import ratpack.test.exec.ExecHarness;
 
-abstract class AbstractRatpackHttpClientSpec extends AbstractHttpClientTest<Void> {
+abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
 
   final ExecHarness exec = ExecHarness.harness();
 
