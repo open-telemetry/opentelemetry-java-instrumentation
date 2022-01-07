@@ -65,7 +65,7 @@ tasks {
 
 fun createLanguageTask(
   compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
-  return tasks.register<ByteBuddyTask>(name) {
+  return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
     classFileVersion = ClassFileVersion.JAVA_V8
@@ -91,14 +91,5 @@ fun createLanguageTask(
 fun createTransformation(classPath: FileCollection, pluginClassName: String): Transformation {
   return ClasspathTransformation(classPath, pluginClassName).apply {
     plugin = ClasspathByteBuddyPlugin::class.java
-  }
-}
-
-//TODO remove when https://github.com/raphw/byte-buddy/issues/1169 is fixed
-open class ByteBuddyTask : ByteBuddySimpleTask() {
-  @InputDirectory
-  @PathSensitive(PathSensitivity.RELATIVE)
-  override fun getSource(): File? {
-    return super.getSource()
   }
 }
