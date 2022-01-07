@@ -14,6 +14,10 @@ public final class OpenTelemetryExecInitializer implements ExecInitializer {
 
   @Override
   public void init(Execution execution) {
+    // Adds current Context to Execution
+    execution.add(Context.current());
+
+    // Propagates ContextHolder to child execution because response interceptor are triggered in different execution
     execution
         .maybeParent()
         .flatMap(parent -> parent.maybeGet(ContextHolder.class))
