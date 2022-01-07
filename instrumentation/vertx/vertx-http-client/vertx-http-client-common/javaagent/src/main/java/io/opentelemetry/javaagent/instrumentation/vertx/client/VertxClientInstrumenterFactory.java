@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesEx
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -23,8 +24,8 @@ public final class VertxClientInstrumenterFactory {
       String instrumentationName,
       AbstractVertxHttpAttributesExtractor httpAttributesExtractor,
       @Nullable
-          NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse>
-              netAttributesExtractor) {
+          NetAttributesAdapter<HttpClientRequest, HttpClientResponse>
+              netAttributesAdapter) {
 
     InstrumenterBuilder<HttpClientRequest, HttpClientResponse> builder =
         Instrumenter.<HttpClientRequest, HttpClientResponse>builder(
@@ -35,10 +36,12 @@ public final class VertxClientInstrumenterFactory {
             .addAttributesExtractor(httpAttributesExtractor)
             .addRequestMetrics(HttpClientMetrics.get());
 
-    if (netAttributesExtractor != null) {
+    if (netAttributesAdapter != null) {
+      NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse> netAttributesExtractor = new NetClientAttributesExtractor<>(
+          netAttributesAdapter);
       builder
           .addAttributesExtractor(netAttributesExtractor)
-          .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor));
+          .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter));
     }
 
     return builder.newClientInstrumenter(new HttpRequestHeaderSetter());

@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.apache.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTracing}. */
@@ -70,14 +71,14 @@ public final class ApacheHttpClientTracingBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
+    ApacheHttpClientNetAttributesExtractor netAttributesAdapter =
         new ApacheHttpClientNetAttributesExtractor();
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(new NetClientAttributesExtractor<>(netAttributesAdapter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.
             .newInstrumenter(SpanKindExtractor.alwaysClient());

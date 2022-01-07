@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -12,7 +13,7 @@ import javax.ws.rs.core.Response;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 final class ResteasyClientNetAttributesExtractor
-    extends NetClientAttributesExtractor<ClientInvocation, Response> {
+    implements NetAttributesAdapter<ClientInvocation, Response> {
 
   @Override
   public String transport(ClientInvocation request, @Nullable Response response) {

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -56,8 +57,10 @@ public final class DubboTracingBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
-    DubboNetClientAttributesExtractor netClientAttributesExtractor =
+    DubboNetClientAttributesExtractor netClientAttributesAdapter =
         new DubboNetClientAttributesExtractor();
+    NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor = new NetClientAttributesExtractor<>(
+        netClientAttributesAdapter);
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
@@ -79,7 +82,7 @@ public final class DubboTracingBuilder {
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     } else {
       clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesExtractor));
+          PeerServiceAttributesExtractor.create(netClientAttributesAdapter));
     }
 
     return new DubboTracing(

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.apache.http.HttpResponse;
 
 public final class ApacheHttpAsyncClientSingletons {
@@ -28,8 +29,10 @@ public final class ApacheHttpAsyncClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpAsyncClientNetAttributesExtractor netAttributesExtractor =
+    ApacheHttpAsyncClientNetAttributesExtractor netAttributesAdapter =
         new ApacheHttpAsyncClientNetAttributesExtractor();
+    NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor = new NetClientAttributesExtractor<>(
+        netAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
@@ -37,7 +40,7 @@ public final class ApacheHttpAsyncClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

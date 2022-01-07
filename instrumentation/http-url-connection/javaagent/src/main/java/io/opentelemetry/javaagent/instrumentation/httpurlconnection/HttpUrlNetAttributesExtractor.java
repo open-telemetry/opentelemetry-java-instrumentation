@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import javax.annotation.Nullable;
 
 class HttpUrlNetAttributesExtractor
-    extends NetClientAttributesExtractor<HttpURLConnection, Integer> {
+    implements NetAttributesAdapter<HttpURLConnection, Integer> {
+
   @Override
   @Nullable
   public String transport(HttpURLConnection connection, @Nullable Integer status) {

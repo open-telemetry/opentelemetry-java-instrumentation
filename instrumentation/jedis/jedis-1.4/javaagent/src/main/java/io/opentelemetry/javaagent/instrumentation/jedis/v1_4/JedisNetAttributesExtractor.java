@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import javax.annotation.Nullable;
 
-final class JedisNetAttributesExtractor extends NetClientAttributesExtractor<JedisRequest, Void> {
+final class JedisNetAttributesExtractor implements NetAttributesAdapter<JedisRequest, Void> {
 
   @Override
   @Nullable

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClientNetAttributesExtractor
-    extends NetClientAttributesExtractor<Request, Response> {
+public class JettyHttpClientNetAttributesExtractor implements NetAttributesAdapter<Request, Response> {
 
   @Override
   public String transport(Request request, @Nullable Response response) {

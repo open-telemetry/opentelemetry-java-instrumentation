@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import okhttp3.Request;
 
 public class KubernetesClientSingletons {
@@ -39,7 +40,7 @@ public class KubernetesClientSingletons {
                 spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new KubernetesNetAttributesExtractor());
+            .addAttributesExtractor(new NetClientAttributesExtractor<>(new KubernetesNetAttributesExtractor()));
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(new KubernetesExperimentalAttributesExtractor());

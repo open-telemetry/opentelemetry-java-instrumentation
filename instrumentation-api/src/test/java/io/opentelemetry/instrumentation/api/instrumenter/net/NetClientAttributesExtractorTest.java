@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class NetClientAttributesExtractorTest {
 
   static class TestNetClientAttributesExtractor
-      extends NetClientAttributesExtractor<Map<String, String>, Map<String, String>> {
+      implements NetAttributesAdapter<Map<String, String>, Map<String, String>> {
 
     @Override
     public String transport(Map<String, String> request, Map<String, String> response) {
@@ -64,7 +64,8 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesExtractor adapter = new TestNetClientAttributesExtractor();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor = new NetClientAttributesExtractor<>(adapter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -97,7 +98,8 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesExtractor adapter = new TestNetClientAttributesExtractor();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor = new NetClientAttributesExtractor<>(adapter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -124,7 +126,8 @@ class NetClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("peerPort", "-1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesExtractor adapter = new TestNetClientAttributesExtractor();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor = new NetClientAttributesExtractor<>(adapter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();

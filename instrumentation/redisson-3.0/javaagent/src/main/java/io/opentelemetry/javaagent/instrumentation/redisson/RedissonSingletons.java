@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class RedissonSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-3.0";
@@ -20,14 +21,15 @@ public final class RedissonSingletons {
   static {
     DbAttributesExtractor<RedissonRequest, Void> dbAttributesExtractor =
         new RedissonDbAttributesExtractor();
-    RedissonNetAttributesExtractor netAttributesExtractor = new RedissonNetAttributesExtractor();
+    NetClientAttributesExtractor<RedissonRequest, Void> netAttributeExtractor = new NetClientAttributesExtractor<>(
+        new RedissonNetAttributesExtractor());
     SpanNameExtractor<RedissonRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     INSTRUMENTER =
         Instrumenter.<RedissonRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(netAttributeExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

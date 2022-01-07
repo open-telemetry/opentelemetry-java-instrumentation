@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
@@ -31,8 +32,10 @@ public class JaxRsClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClientRequestContext, ? super ClientResponseContext>
         spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JaxRsClientNetAttributesExtractor netAttributesExtractor =
+    JaxRsClientNetAttributesExtractor netAttributesAdapter =
         new JaxRsClientNetAttributesExtractor();
+    NetClientAttributesExtractor<ClientRequestContext, ClientResponseContext> netClientAttributesExtractor = new NetClientAttributesExtractor<>(
+        netAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<ClientRequestContext, ClientResponseContext>builder(
@@ -46,8 +49,8 @@ public class JaxRsClientSingletons {
                   return ErrorCauseExtractor.jdk().extractCause(throwable);
                 })
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(netClientAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(ClientRequestContextHeaderSetter.INSTANCE);
   }

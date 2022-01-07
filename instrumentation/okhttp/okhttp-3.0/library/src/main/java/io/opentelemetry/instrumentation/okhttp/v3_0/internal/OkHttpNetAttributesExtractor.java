@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -12,7 +13,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public final class OkHttpNetAttributesExtractor
-    extends NetClientAttributesExtractor<Request, Response> {
+    implements NetAttributesAdapter<Request, Response> {
+
   @Override
   public String transport(Request request, @Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

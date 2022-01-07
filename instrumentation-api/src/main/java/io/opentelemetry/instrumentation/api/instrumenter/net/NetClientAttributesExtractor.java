@@ -16,44 +16,37 @@ import javax.annotation.Nullable;
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
  * it is more convenient to use {@link InetSocketAddressNetClientAttributesExtractor}.
  */
-public abstract class NetClientAttributesExtractor<REQUEST, RESPONSE>
+public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {}
+  private final NetAttributesAdapter<REQUEST,RESPONSE> adapter;
+
+  public NetClientAttributesExtractor(
+      NetAttributesAdapter<REQUEST, RESPONSE> adapter) {this.adapter = adapter;}
 
   @Override
-  public final void onEnd(
+  public void onStart(AttributesBuilder attributes, REQUEST request) {}
+
+  @Override
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request, response));
+    set(attributes, SemanticAttributes.NET_TRANSPORT, adapter.transport(request, response));
 
-    String peerIp = peerIp(request, response);
-    String peerName = peerName(request, response);
+    String peerIp = adapter.peerIp(request, response);
+    String peerName = adapter.peerName(request, response);
 
     if (peerName != null && !peerName.equals(peerIp)) {
       set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
     }
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
-    Integer peerPort = peerPort(request, response);
+    Integer peerPort = adapter.peerPort(request, response);
     if (peerPort != null && peerPort > 0) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }
   }
-
-  @Nullable
-  public abstract String transport(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  public abstract String peerName(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  public abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  public abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

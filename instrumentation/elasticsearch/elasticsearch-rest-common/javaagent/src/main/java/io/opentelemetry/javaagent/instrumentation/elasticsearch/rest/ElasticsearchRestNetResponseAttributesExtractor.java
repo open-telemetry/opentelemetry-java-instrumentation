@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetResponseAttributesExtractor
-    extends NetClientAttributesExtractor<String, Response> {
+    implements NetAttributesAdapter<String, Response> {
+
   @Override
   public String transport(String operation, Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

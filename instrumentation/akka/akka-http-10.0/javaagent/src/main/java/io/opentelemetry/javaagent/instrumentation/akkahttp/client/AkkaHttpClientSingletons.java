@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
 public class AkkaHttpClientSingletons {
@@ -25,7 +26,7 @@ public class AkkaHttpClientSingletons {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
     AkkaHttpClientAttributesExtractor httpAttributesExtractor =
         new AkkaHttpClientAttributesExtractor();
-    AkkaHttpNetAttributesExtractor netAttributesExtractor = new AkkaHttpNetAttributesExtractor();
+    AkkaHttpNetAttributesExtractor netAttributesAdapter = new AkkaHttpNetAttributesExtractor();
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
@@ -33,8 +34,8 @@ public class AkkaHttpClientSingletons {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(new NetClientAttributesExtractor<>(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

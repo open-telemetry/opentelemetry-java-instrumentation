@@ -9,6 +9,7 @@ import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
@@ -29,14 +30,14 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
 
   private final Map<String, String> peerServiceMapping;
-  private final NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor;
+  private final NetAttributesAdapter<REQUEST, RESPONSE> attributesAdapter;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor) {
+      NetAttributesAdapter<REQUEST, RESPONSE> netAttributesAdapter) {
     this.peerServiceMapping = peerServiceMapping;
-    this.netClientAttributesExtractor = netClientAttributesExtractor;
+    this.attributesAdapter = netAttributesAdapter;
   }
 
   /**
@@ -44,9 +45,9 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetClientAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
+      NetAttributesAdapter<REQUEST, RESPONSE> netAttributesAdapter) {
     return new PeerServiceAttributesExtractor<>(
-        JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesExtractor);
+        JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesAdapter);
   }
 
   @Override
@@ -64,10 +65,10 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String peerName = netClientAttributesExtractor.peerName(request, response);
+    String peerName = attributesAdapter.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String peerIp = netClientAttributesExtractor.peerIp(request, response);
+      String peerIp = attributesAdapter.peerIp(request, response);
       peerService = mapToPeerService(peerIp);
     }
     if (peerService != null) {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -13,7 +14,8 @@ import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 class AwsSdkNetAttributesExtractor
-    extends NetClientAttributesExtractor<ExecutionAttributes, SdkHttpResponse> {
+    implements NetAttributesAdapter<ExecutionAttributes, SdkHttpResponse> {
+
   @Override
   public String transport(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

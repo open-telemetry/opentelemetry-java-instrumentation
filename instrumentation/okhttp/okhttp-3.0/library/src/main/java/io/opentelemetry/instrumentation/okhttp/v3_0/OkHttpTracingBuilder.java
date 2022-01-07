@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +61,9 @@ public final class OkHttpTracingBuilder {
   public OkHttpTracing build() {
     OkHttpAttributesExtractor httpAttributesExtractor =
         new OkHttpAttributesExtractor(capturedHttpHeaders);
-    OkHttpNetAttributesExtractor netAttributesExtractor = new OkHttpNetAttributesExtractor();
+    OkHttpNetAttributesExtractor attributesAdapter = new OkHttpNetAttributesExtractor();
+    NetClientAttributesExtractor<Request, Response> attributesExtractor = new NetClientAttributesExtractor<>(
+        attributesAdapter);
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(
@@ -69,7 +72,7 @@ public final class OkHttpTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());

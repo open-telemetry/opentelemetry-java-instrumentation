@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
@@ -28,8 +29,10 @@ public final class NettyClientSingletons {
   static {
     NettyHttpClientAttributesExtractor httpClientAttributesExtractor =
         new NettyHttpClientAttributesExtractor();
-    NettyNetClientAttributesExtractor netClientAttributesExtractor =
+    NettyNetClientAttributesExtractor netClientAttributesAdapter =
         new NettyNetClientAttributesExtractor();
+    NetClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> netClientAttributesExtractor = new NetClientAttributesExtractor<>(
+        netClientAttributesAdapter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
@@ -40,20 +43,22 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(httpClientAttributesExtractor)
             .addAttributesExtractor(netClientAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
+                PeerServiceAttributesExtractor.create(netClientAttributesAdapter))
             .addRequestMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
 
-    NettyConnectNetAttributesExtractor nettyConnectAttributesExtractor =
+    NettyConnectNetAttributesExtractor nettyConnectAttributesAdapter =
         new NettyConnectNetAttributesExtractor();
+    NetClientAttributesExtractor<NettyConnectionRequest, Channel> nettyConnectAttributesExtractor = new NetClientAttributesExtractor<>(
+        nettyConnectAttributesAdapter);
     CONNECTION_INSTRUMENTER =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
             .addAttributesExtractor(nettyConnectAttributesExtractor)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(nettyConnectAttributesExtractor))
+                PeerServiceAttributesExtractor.create(nettyConnectAttributesAdapter))
             .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

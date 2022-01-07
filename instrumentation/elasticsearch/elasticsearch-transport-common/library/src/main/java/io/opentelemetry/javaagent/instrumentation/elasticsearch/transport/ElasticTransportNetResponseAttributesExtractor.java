@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
 public class ElasticTransportNetResponseAttributesExtractor
-    extends NetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
+    implements NetAttributesAdapter<ElasticTransportRequest, ActionResponse> {
+
   @Override
   @Nullable
   public String transport(ElasticTransportRequest request, @Nullable ActionResponse response) {

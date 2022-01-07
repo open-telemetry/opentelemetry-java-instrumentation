@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -63,8 +64,10 @@ public final class SpringWebfluxTracingBuilder {
   public SpringWebfluxTracing build() {
     SpringWebfluxHttpAttributesExtractor httpAttributesExtractor =
         new SpringWebfluxHttpAttributesExtractor(capturedHttpHeaders);
-    SpringWebfluxNetAttributesExtractor netAttributesExtractor =
+    SpringWebfluxNetAttributesExtractor attributesAdapter =
         new SpringWebfluxNetAttributesExtractor();
+    NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor = new NetClientAttributesExtractor<>(
+        attributesAdapter);
 
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
@@ -73,8 +76,8 @@ public final class SpringWebfluxTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(attributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesAdapter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get());
 

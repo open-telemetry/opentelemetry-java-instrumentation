@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientInstrumenterFactory;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;

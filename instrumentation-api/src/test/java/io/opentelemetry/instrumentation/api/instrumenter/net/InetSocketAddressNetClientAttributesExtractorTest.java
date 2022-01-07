@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class InetSocketAddressNetClientAttributesExtractorTest {
 
   private final InetSocketAddressNetClientAttributesExtractor<InetSocketAddress, InetSocketAddress>
-      extractor =
+      adapter =
           new InetSocketAddressNetClientAttributesExtractor<
               InetSocketAddress, InetSocketAddress>() {
             @Override
@@ -34,9 +34,11 @@ class InetSocketAddressNetClientAttributesExtractorTest {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };
+  private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor = new NetClientAttributesExtractor<>(adapter);
 
   @Test
   void noInetSocketAddress() {
+
     AttributesBuilder attributes = Attributes.builder();
     extractor.onEnd(attributes, null, null, null);
     assertThat(attributes.build())

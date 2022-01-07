@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientNetAttributesExtractor;
 import org.eclipse.jetty.client.api.Request;

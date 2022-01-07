@@ -10,13 +10,14 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 class MongoInstrumenterFactory {
 
   private static final MongoAttributesExtractor attributesExtractor =
       new MongoAttributesExtractor();
-  private static final MongoNetAttributesExtractor netAttributesExtractor =
-      new MongoNetAttributesExtractor();
+  private static final NetClientAttributesExtractor<CommandStartedEvent, Void> netAttributesExtractor =
+      new NetClientAttributesExtractor<>(new MongoNetAttributesExtractor());
 
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {

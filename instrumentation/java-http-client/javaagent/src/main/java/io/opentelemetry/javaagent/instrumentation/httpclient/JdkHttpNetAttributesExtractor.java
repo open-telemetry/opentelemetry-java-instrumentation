@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpRequest;
@@ -14,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JdkHttpNetAttributesExtractor
-    extends NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> {
+    implements NetAttributesAdapter<HttpRequest, HttpResponse<?>> {
 
   private static final Logger logger = LoggerFactory.getLogger(JdkHttpNetAttributesExtractor.class);
 

@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesAdapter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import javax.annotation.Nullable;
 
 final class LettuceConnectNetAttributesExtractor
-    extends NetClientAttributesExtractor<RedisURI, Void> {
+    implements NetAttributesAdapter<RedisURI, Void> {
 
   @Override
   @Nullable
