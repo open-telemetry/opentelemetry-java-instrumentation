@@ -20,8 +20,8 @@ public final class ElasticsearchRestInstrumenterFactory {
     ElasticsearchRestAttributesExtractor attributesExtractor =
         new ElasticsearchRestAttributesExtractor();
     SpanNameExtractor<String> spanNameExtractor = DbSpanNameExtractor.create(attributesExtractor);
-    ElasticsearchRestNetResponseAttributesExtractor netAttributesAdapter =
-        new ElasticsearchRestNetResponseAttributesExtractor();
+    ElasticsearchRestNetResponseAttributesAdapter netAttributesAdapter =
+        new ElasticsearchRestNetResponseAttributesAdapter();
     NetClientAttributesExtractor<String, Response> netAttributesExtractor = new NetClientAttributesExtractor<>(netAttributesAdapter);
 
     return Instrumenter.<String, Response>builder(

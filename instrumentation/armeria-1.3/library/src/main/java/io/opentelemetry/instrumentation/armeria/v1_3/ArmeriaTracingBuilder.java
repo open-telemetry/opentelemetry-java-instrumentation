@@ -121,8 +121,8 @@ public final class ArmeriaTracingBuilder {
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
-    ArmeriaNetClientAttributesExtractor netClientAttributesAdapter =
-        new ArmeriaNetClientAttributesExtractor();
+    ArmeriaNetClientAttributesAdapter netClientAttributesAdapter =
+        new ArmeriaNetClientAttributesAdapter();
     NetClientAttributesExtractor<RequestContext, RequestLog> netClientAttributesExtractor = new NetClientAttributesExtractor<>(
         netClientAttributesAdapter);
 

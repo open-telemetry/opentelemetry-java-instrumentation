@@ -23,7 +23,7 @@ public final class JedisSingletons {
     DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
         new JedisDbAttributesExtractor();
     SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
-    JedisNetAttributesExtractor netAttributesAdapter = new JedisNetAttributesExtractor();
+    JedisNetAttributesAdapter netAttributesAdapter = new JedisNetAttributesAdapter();
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(

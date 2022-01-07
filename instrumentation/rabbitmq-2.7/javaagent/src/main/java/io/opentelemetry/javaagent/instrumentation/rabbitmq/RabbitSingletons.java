@@ -48,7 +48,7 @@ public class RabbitSingletons {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractors(
-            new RabbitChannelAttributesExtractor(), new NetClientAttributesExtractor<>(new RabbitChannelNetAttributesExtractor()))
+            new RabbitChannelAttributesExtractor(), new NetClientAttributesExtractor<>(new RabbitChannelNetAttributesAdapter()))
         .newInstrumenter(
             channelAndMethod ->
                 channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);
@@ -57,7 +57,7 @@ public class RabbitSingletons {
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(new RabbitReceiveAttributesExtractor());
-    extractors.add(new NetClientAttributesExtractor<>(new RabbitReceiveNetAttributesExtractor()));
+    extractors.add(new NetClientAttributesExtractor<>(new RabbitReceiveNetAttributesAdapter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }

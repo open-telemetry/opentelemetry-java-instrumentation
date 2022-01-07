@@ -39,8 +39,8 @@ public final class LettuceSingletons {
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
-    LettuceConnectNetAttributesExtractor connectNetAttributesAdapter =
-        new LettuceConnectNetAttributesExtractor();
+    LettuceConnectNetAttributesAdapter connectNetAttributesAdapter =
+        new LettuceConnectNetAttributesAdapter();
     NetClientAttributesExtractor<RedisURI, Void> netAttributesExtractor = new NetClientAttributesExtractor<>(
         connectNetAttributesAdapter);
     CONNECT_INSTRUMENTER =

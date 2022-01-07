@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
- * it is more convenient to use {@link InetSocketAddressNetClientAttributesExtractor}.
+ * it is more convenient to use {@link InetSocketAddressNetClientAttributesAdapter}.
  */
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {

@@ -17,7 +17,7 @@ class MongoInstrumenterFactory {
   private static final MongoAttributesExtractor attributesExtractor =
       new MongoAttributesExtractor();
   private static final NetClientAttributesExtractor<CommandStartedEvent, Void> netAttributesExtractor =
-      new NetClientAttributesExtractor<>(new MongoNetAttributesExtractor());
+      new NetClientAttributesExtractor<>(new MongoNetAttributesAdapter());
 
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {

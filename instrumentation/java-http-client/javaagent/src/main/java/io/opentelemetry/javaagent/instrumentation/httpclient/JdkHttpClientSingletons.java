@@ -29,7 +29,7 @@ public class JdkHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpRequest, HttpResponse<?>> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JdkHttpNetAttributesExtractor netAttributesAdapter = new JdkHttpNetAttributesExtractor();
+    JdkHttpNetAttributesAdapter netAttributesAdapter = new JdkHttpNetAttributesAdapter();
     NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> netAttributesExtractor = new NetClientAttributesExtractor(
         netAttributesAdapter);
 

@@ -40,7 +40,7 @@ public class KubernetesClientSingletons {
                 spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new NetClientAttributesExtractor<>(new KubernetesNetAttributesExtractor()));
+            .addAttributesExtractor(new NetClientAttributesExtractor<>(new KubernetesNetAttributesAdapter()));
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(new KubernetesExperimentalAttributesExtractor());

@@ -30,8 +30,8 @@ public class JaxRsClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClientRequest, ? super ClientResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JaxRsClientNetAttributesExtractor netAttributesAdapter =
-        new JaxRsClientNetAttributesExtractor();
+    JaxRsClientNetAttributesAdapter netAttributesAdapter =
+        new JaxRsClientNetAttributesAdapter();
     NetClientAttributesExtractor<ClientRequest, ClientResponse> netAttributesExtractor = new NetClientAttributesExtractor<>(
         netAttributesAdapter);
 

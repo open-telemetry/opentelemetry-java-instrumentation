@@ -20,7 +20,7 @@ public class HttpUrlConnectionSingletons {
 
   static {
     HttpUrlHttpAttributesExtractor httpAttributesExtractor = new HttpUrlHttpAttributesExtractor();
-    HttpUrlNetAttributesExtractor netAttributesAdapter = new HttpUrlNetAttributesExtractor();
+    HttpUrlNetAttributesAdapter netAttributesAdapter = new HttpUrlNetAttributesAdapter();
     SpanNameExtractor<HttpURLConnection> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 

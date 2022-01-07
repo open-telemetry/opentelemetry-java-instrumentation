@@ -29,8 +29,8 @@ public final class ApacheHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpMethod, ? super HttpMethod> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesExtractor netAttributesAdapter =
-        new ApacheHttpClientNetAttributesExtractor();
+    ApacheHttpClientNetAttributesAdapter netAttributesAdapter =
+        new ApacheHttpClientNetAttributesAdapter();
     NetClientAttributesExtractor<HttpMethod, HttpMethod> netAttributesExtractor = new NetClientAttributesExtractor<>(netAttributesAdapter);
     INSTRUMENTER =
         Instrumenter.<HttpMethod, HttpMethod>builder(

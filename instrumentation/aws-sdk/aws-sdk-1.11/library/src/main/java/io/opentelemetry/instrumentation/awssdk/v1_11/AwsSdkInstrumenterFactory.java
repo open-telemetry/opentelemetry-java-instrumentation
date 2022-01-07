@@ -23,7 +23,7 @@ final class AwsSdkInstrumenterFactory {
   private static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
       new AwsSdkRpcAttributesExtractor();
   private static final AttributesExtractor<Request<?>, Response<?>> netAttributesExtractor =
-      new NetClientAttributesExtractor<>(new AwsSdkNetAttributesExtractor());
+      new NetClientAttributesExtractor<>(new AwsSdkNetAttributesAdapter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();

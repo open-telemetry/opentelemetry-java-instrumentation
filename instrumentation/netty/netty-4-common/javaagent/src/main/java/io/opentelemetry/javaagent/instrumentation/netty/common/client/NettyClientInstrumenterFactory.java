@@ -34,8 +34,8 @@ public final class NettyClientInstrumenterFactory {
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter() {
     NettyHttpClientAttributesExtractor httpClientAttributesExtractor =
         new NettyHttpClientAttributesExtractor();
-    NettyNetClientAttributesExtractor netClientAttributesExtractor =
-        new NettyNetClientAttributesExtractor();
+    NettyNetClientAttributesAdapter netClientAttributesExtractor =
+        new NettyNetClientAttributesAdapter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             GlobalOpenTelemetry.get(),
@@ -50,8 +50,8 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
-    NettyConnectNetAttributesExtractor netAttributesExtractor =
-        new NettyConnectNetAttributesExtractor();
+    NettyConnectNetAttributesAdapter netAttributesExtractor =
+        new NettyConnectNetAttributesAdapter();
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
@@ -69,7 +69,7 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettySslInstrumenter createSslInstrumenter() {
-    NettySslNetAttributesExtractor netAttributesExtractor = new NettySslNetAttributesExtractor();
+    NettySslNetAttributesAdapter netAttributesExtractor = new NettySslNetAttributesAdapter();
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)

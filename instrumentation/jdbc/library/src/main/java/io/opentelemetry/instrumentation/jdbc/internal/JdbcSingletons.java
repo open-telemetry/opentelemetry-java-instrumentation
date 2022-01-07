@@ -22,7 +22,7 @@ public final class JdbcSingletons {
     DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
     NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor = new NetClientAttributesExtractor<>(
-        new JdbcNetAttributesExtractor());
+        new JdbcNetAttributesAdapter());
 
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(

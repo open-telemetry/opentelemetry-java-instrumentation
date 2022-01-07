@@ -30,8 +30,8 @@ public class GoogleHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    GoogleHttpClientNetAttributesExtractor netAttributesAdapter =
-        new GoogleHttpClientNetAttributesExtractor();
+    GoogleHttpClientNetAttributesAdapter netAttributesAdapter =
+        new GoogleHttpClientNetAttributesAdapter();
     NetClientAttributesExtractor<HttpRequest, HttpResponse> netAttributesExtractor = new NetClientAttributesExtractor<>(
         netAttributesAdapter);
 

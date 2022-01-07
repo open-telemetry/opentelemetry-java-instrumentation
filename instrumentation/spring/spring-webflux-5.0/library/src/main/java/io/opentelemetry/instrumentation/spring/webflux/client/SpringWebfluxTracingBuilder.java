@@ -64,8 +64,8 @@ public final class SpringWebfluxTracingBuilder {
   public SpringWebfluxTracing build() {
     SpringWebfluxHttpAttributesExtractor httpAttributesExtractor =
         new SpringWebfluxHttpAttributesExtractor(capturedHttpHeaders);
-    SpringWebfluxNetAttributesExtractor attributesAdapter =
-        new SpringWebfluxNetAttributesExtractor();
+    SpringWebfluxNetAttributesAdapter attributesAdapter =
+        new SpringWebfluxNetAttributesAdapter();
     NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor = new NetClientAttributesExtractor<>(
         attributesAdapter);
 

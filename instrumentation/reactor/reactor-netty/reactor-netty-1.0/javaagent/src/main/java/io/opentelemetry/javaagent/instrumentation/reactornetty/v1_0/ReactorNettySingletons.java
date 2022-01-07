@@ -33,8 +33,8 @@ public final class ReactorNettySingletons {
   static {
     ReactorNettyHttpClientAttributesExtractor httpAttributesExtractor =
         new ReactorNettyHttpClientAttributesExtractor();
-    ReactorNettyNetClientAttributesExtractor netAttributesAdapter =
-        new ReactorNettyNetClientAttributesExtractor();
+    ReactorNettyNetClientAttributesAdapter netAttributesAdapter =
+        new ReactorNettyNetClientAttributesAdapter();
 
     INSTRUMENTER =
         Instrumenter.<HttpClientConfig, HttpClientResponse>builder(

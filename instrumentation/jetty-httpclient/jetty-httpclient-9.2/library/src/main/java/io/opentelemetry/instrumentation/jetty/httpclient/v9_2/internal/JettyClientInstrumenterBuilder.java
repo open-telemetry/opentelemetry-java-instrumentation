@@ -55,8 +55,8 @@ public final class JettyClientInstrumenterBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JettyHttpClientNetAttributesExtractor netAttributesAdapter =
-        new JettyHttpClientNetAttributesExtractor();
+    JettyHttpClientNetAttributesAdapter netAttributesAdapter =
+        new JettyHttpClientNetAttributesAdapter();
     NetClientAttributesExtractor<Request, Response> attributesExtractor = new NetClientAttributesExtractor<>(
         netAttributesAdapter);
 
