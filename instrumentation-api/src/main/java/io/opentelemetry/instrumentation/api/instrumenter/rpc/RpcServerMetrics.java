@@ -24,9 +24,6 @@ import org.slf4j.LoggerFactory;
  * {@link RequestListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server">RPC
  * server metrics</a>.
- *
- * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
- * dependencies.
  */
 @UnstableApi
 public final class RpcServerMetrics implements RequestListener {

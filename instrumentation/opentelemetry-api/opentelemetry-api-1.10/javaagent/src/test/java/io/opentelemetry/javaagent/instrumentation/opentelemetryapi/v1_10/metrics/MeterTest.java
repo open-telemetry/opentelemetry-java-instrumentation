@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
-import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -237,7 +237,7 @@ class MeterTest {
         .setDescription("d")
         .setUnit("u")
         .buildWithCallback(
-            result -> result.observe(123, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            result -> result.record(123, Attributes.of(AttributeKey.stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -267,7 +267,7 @@ class MeterTest {
         .setDescription("d")
         .setUnit("u")
         .buildWithCallback(
-            result -> result.observe(1.23, Attributes.of(AttributeKey.stringKey("q"), "r")));
+            result -> result.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,

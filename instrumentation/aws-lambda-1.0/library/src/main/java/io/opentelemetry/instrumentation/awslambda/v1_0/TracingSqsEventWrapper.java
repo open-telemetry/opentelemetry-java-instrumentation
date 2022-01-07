@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -18,7 +18,9 @@ public class TracingSqsEventWrapper extends TracingSqsEventHandler {
   private final Method targetMethod;
 
   public TracingSqsEventWrapper() {
-    this(OpenTelemetrySdkAutoConfiguration.initialize(), WrappedLambda.fromConfiguration());
+    this(
+        AutoConfiguredOpenTelemetrySdk.initialize().getOpenTelemetrySdk(),
+        WrappedLambda.fromConfiguration());
   }
 
   // Visible for testing

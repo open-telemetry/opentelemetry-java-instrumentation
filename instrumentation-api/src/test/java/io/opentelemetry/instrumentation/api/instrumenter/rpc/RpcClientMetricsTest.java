@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.testing.InMemoryMetricReader;
-import io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions;
+import io.opentelemetry.sdk.testing.assertj.MetricAssertions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
