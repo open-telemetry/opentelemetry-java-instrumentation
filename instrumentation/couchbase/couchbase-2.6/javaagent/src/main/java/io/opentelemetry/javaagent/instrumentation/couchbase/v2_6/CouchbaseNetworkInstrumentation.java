@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -65,9 +64,12 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
       VirtualField<CouchbaseRequest, Span> virtualField =
           VirtualField.find(CouchbaseRequest.class, Span.class);
 
+      // TODO add support for peer service name
       Span span = virtualField.get(request);
       if (span != null) {
-        NetPeerAttributes.INSTANCE.setNetPeer(span, remoteHostname, null);
+        if (remoteHostname != null) {
+          span.setAttribute(SemanticAttributes.NET_PEER_NAME, remoteHostname);
+        }
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");
