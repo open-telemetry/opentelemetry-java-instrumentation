@@ -18,7 +18,7 @@ import spock.lang.Specification
 import java.util.regex.Pattern
 import java.util.stream.Stream
 
-import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
 abstract class SmokeTest extends Specification {
@@ -140,6 +140,6 @@ abstract class SmokeTest extends Specification {
   }
 
   private static TestContainerManager createContainerManager() {
-    return useLinuxContainers() ? new LinuxTestContainerManager() : new WindowsTestContainerManager()
+    return useWindowsContainers() ? new LinuxTestContainerManager() : new WindowsTestContainerManager()
   }
 }

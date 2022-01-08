@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
-import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
 abstract class PropagationTest extends SmokeTest {
@@ -43,11 +43,11 @@ abstract class PropagationTest extends SmokeTest {
 
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class DefaultPropagationTest extends PropagationTest {
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class W3CPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -55,7 +55,7 @@ class W3CPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class B3PropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -63,7 +63,7 @@ class B3PropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class B3MultiPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -71,7 +71,7 @@ class B3MultiPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class JaegerPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -79,7 +79,7 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
@@ -115,7 +115,7 @@ class OtTracePropagationTest extends SmokeTest {
   }
 }
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class XRayPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {

@@ -12,10 +12,10 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class QuarkusSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

@@ -29,8 +29,8 @@ public interface TestContainerManager {
 
   void stopTarget();
 
-  static boolean useLinuxContainers() {
-    return "1".equals(System.getenv("USE_LINUX_CONTAINERS"))
-        || !System.getProperty("os.name").toLowerCase().contains("windows");
+  static boolean useWindowsContainers() {
+    return !"1".equals(System.getenv("USE_LINUX_CONTAINERS"))
+        && System.getProperty("os.name").toLowerCase().contains("windows");
   }
 }

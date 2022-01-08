@@ -18,12 +18,12 @@ import spock.lang.Specification
 
 import java.time.Duration
 
-import static io.opentelemetry.smoketest.TestContainerManager.useLinuxContainers
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 
 // Hotspot versions before 8u40 crash in jit compiled lambdas when javaagent initializes
 // java.lang.invoke.CallSite
 // This test verifies that such jvm does not crash with opentelemetry agent
-@IgnoreIf({ !useLinuxContainers() })
+@IgnoreIf({ useWindowsContainers() })
 class CrashEarlyJdk8Test extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(CrashEarlyJdk8Test)
 
