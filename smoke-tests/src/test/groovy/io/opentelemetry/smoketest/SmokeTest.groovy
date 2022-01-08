@@ -140,6 +140,6 @@ abstract class SmokeTest extends Specification {
   }
 
   private static TestContainerManager createContainerManager() {
-    return useWindowsContainers() ? new LinuxTestContainerManager() : new WindowsTestContainerManager()
+    return useWindowsContainers() ? new WindowsTestContainerManager() : new LinuxTestContainerManager()
   }
 }
