@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
-import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.Attributes;

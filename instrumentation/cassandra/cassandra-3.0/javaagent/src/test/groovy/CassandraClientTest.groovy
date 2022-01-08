@@ -152,7 +152,6 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_NAME" keyspace
         "$SemanticAttributes.DB_STATEMENT" statement
         "$SemanticAttributes.DB_OPERATION" operation
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE" keyspace
         "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }
     }

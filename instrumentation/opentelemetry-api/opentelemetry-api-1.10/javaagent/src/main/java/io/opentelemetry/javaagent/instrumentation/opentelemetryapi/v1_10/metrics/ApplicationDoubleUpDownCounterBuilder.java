@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import application.io.opentelemetry.api.metrics.DoubleUpDownCounter;
 import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import application.io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 import java.util.function.Consumer;
 
 final class ApplicationDoubleUpDownCounterBuilder implements DoubleUpDownCounterBuilder {
@@ -37,10 +38,12 @@ final class ApplicationDoubleUpDownCounterBuilder implements DoubleUpDownCounter
   }
 
   @Override
-  public void buildWithCallback(Consumer<ObservableDoubleMeasurement> applicationCallback) {
-    agentBuilder.buildWithCallback(
-        agentMeasurement ->
-            applicationCallback.accept(
-                new ApplicationObservableDoubleMeasurement(agentMeasurement)));
+  public ObservableDoubleUpDownCounter buildWithCallback(
+      Consumer<ObservableDoubleMeasurement> applicationCallback) {
+    return new ApplicationObservableDoubleUpDownCounter(
+        agentBuilder.buildWithCallback(
+            agentMeasurement ->
+                applicationCallback.accept(
+                    new ApplicationObservableDoubleMeasurement(agentMeasurement))));
   }
 }

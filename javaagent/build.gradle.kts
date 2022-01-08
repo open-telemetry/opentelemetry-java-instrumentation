@@ -46,7 +46,6 @@ listOf(baseJavaagentLibs, javaagentLibs, exporterLibs, exporterSlimLibs).forEach
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
-    exclude("io.opentelemetry", "opentelemetry-api-metrics")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
 }

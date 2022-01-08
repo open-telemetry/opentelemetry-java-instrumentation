@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
 import application.io.opentelemetry.api.metrics.LongCounter;
 import application.io.opentelemetry.api.metrics.LongCounterBuilder;
+import application.io.opentelemetry.api.metrics.ObservableLongCounter;
 import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
@@ -42,9 +43,12 @@ final class ApplicationLongCounterBuilder implements LongCounterBuilder {
   }
 
   @Override
-  public void buildWithCallback(Consumer<ObservableLongMeasurement> applicationCallback) {
-    agentBuilder.buildWithCallback(
-        agentMeasurement ->
-            applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement)));
+  public ObservableLongCounter buildWithCallback(
+      Consumer<ObservableLongMeasurement> applicationCallback) {
+    return new ApplicationObservableLongCounter(
+        agentBuilder.buildWithCallback(
+            agentMeasurement ->
+                applicationCallback.accept(
+                    new ApplicationObservableLongMeasurement(agentMeasurement))));
   }
 }
