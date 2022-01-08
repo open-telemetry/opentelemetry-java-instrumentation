@@ -18,7 +18,7 @@ import spock.lang.Shared
 import springrmi.app.SpringRmiGreeter
 import springrmi.app.SpringRmiGreeterImpl
 
-class SpringRmiTest extends AgentInstrumentationSpecification{
+class SpringRmiTest extends AgentInstrumentationSpecification {
 
   @Shared
   ConfigurableApplicationContext serverAppContext
@@ -31,7 +31,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
     static RemoteExporter registerRMIExporter() {
       RmiServiceExporter exporter = new RmiServiceExporter()
       exporter.setServiceName("springRmiGreeter")
-      exporter.setServiceInterface(SpringRmiGreeter.class)
+      exporter.setServiceInterface(SpringRmiGreeter)
       exporter.setService(new SpringRmiGreeterImpl())
       return exporter
     }
@@ -41,7 +41,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
     @Bean
     static RmiProxyFactoryBean rmiProxy() {
       RmiProxyFactoryBean bean = new RmiProxyFactoryBean()
-      bean.setServiceInterface(SpringRmiGreeter.class)
+      bean.setServiceInterface(SpringRmiGreeter)
       bean.setServiceUrl("rmi://localhost:1099/springRmiGreeter")
       return bean
     }
@@ -61,13 +61,13 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
 
   def "Client call creates spans"() {
     given:
-    SpringRmiGreeter client = clientAppContext.getBean(SpringRmiGreeter.class)
+    SpringRmiGreeter client = clientAppContext.getBean(SpringRmiGreeter)
     when:
     def response = runWithSpan("parent") { client.hello("Test Name") }
     then:
     response == "Hello Test Name"
     assertTraces(1) {
-      trace(0, 3){
+      trace(0, 3) {
         span(0) {
           name "parent"
           kind SpanKind.INTERNAL
@@ -98,13 +98,13 @@ class SpringRmiTest extends AgentInstrumentationSpecification{
 
   def "Throws exception"() {
     given:
-    SpringRmiGreeter client = clientAppContext.getBean(SpringRmiGreeter.class)
+    SpringRmiGreeter client = clientAppContext.getBean(SpringRmiGreeter)
     when:
     runWithSpan("parent") { client.exceptional() }
     then:
     def error = thrown(IllegalStateException)
     assertTraces(1) {
-      trace(0,3) {
+      trace(0, 3) {
         span(0) {
           name "parent"
           kind SpanKind.INTERNAL
