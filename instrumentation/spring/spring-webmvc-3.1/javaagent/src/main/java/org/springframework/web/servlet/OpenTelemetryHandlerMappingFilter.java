@@ -5,11 +5,11 @@
 
 package org.springframework.web.servlet;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;

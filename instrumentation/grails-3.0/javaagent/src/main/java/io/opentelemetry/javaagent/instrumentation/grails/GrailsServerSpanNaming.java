@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 

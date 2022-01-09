@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSinglet
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;

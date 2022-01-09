@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import play.api.mvc.Request;
 import scala.Option;
 

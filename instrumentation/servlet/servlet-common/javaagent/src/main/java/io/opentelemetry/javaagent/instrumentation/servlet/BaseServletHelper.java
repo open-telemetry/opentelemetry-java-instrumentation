@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.FILTER;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.SERVLET;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;

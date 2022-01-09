@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;

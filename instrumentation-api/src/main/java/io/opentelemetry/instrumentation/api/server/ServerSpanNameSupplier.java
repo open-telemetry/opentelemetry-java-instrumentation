@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.servlet;
+package io.opentelemetry.instrumentation.api.server;
 
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 @FunctionalInterface
-public interface ServerSpanNameTwoArgSupplier<T, U> {
+public interface ServerSpanNameSupplier<T> {
 
   @Nullable
-  String get(Context context, T arg1, U arg2);
+  String get(Context context, T arg);
 }

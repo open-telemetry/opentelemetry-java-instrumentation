@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;

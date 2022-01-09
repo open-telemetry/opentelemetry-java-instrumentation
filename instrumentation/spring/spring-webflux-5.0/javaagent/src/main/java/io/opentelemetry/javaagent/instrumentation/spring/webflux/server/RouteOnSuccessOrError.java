@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;

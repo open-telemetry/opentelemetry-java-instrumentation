@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.restlet.Request;
