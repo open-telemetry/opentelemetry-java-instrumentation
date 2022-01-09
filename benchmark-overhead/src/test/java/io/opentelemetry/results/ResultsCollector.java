@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
 
 import com.jayway.jsonpath.JsonPath;
@@ -27,7 +28,6 @@ public class ResultsCollector {
     this.runDurations = runDurations;
   }
 
-
   public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
         .map(a -> readAgentResults(a, config))
@@ -36,10 +36,11 @@ public class ResultsCollector {
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
     try {
-      AppPerfResults.Builder builder = AppPerfResults.builder()
-          .agent(agent)
-          .runDurationMs(runDurations.get(agent.getName()))
-          .config(config);
+      AppPerfResults.Builder builder =
+          AppPerfResults.builder()
+              .agent(agent)
+              .runDurationMs(runDurations.get(agent.getName()))
+              .config(config);
 
       builder = addStartupTime(builder, agent);
       builder = addK6Results(builder, agent);
@@ -134,5 +135,4 @@ public class ResultsCollector {
   private long computeTotalGcPauseNanos(Path jfrFile) throws IOException {
     return JFRUtils.sumLongEventValues(jfrFile, "jdk.GCPhasePause", "duration");
   }
-
 }

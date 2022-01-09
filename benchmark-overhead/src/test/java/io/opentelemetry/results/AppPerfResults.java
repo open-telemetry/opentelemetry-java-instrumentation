@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
 
 import io.opentelemetry.agents.Agent;
@@ -55,11 +56,11 @@ public class AppPerfResults {
     return bytesToMegs(this.totalAllocated);
   }
 
-  double getMinHeapUsedMB(){
+  double getMinHeapUsedMB() {
     return bytesToMegs(this.heapUsed.min);
   }
 
-  double getMaxHeapUsedMB(){
+  double getMaxHeapUsedMB() {
     return bytesToMegs(this.heapUsed.max);
   }
 
@@ -70,6 +71,7 @@ public class AppPerfResults {
   String getAgentName() {
     return agent.getName();
   }
+
   static Builder builder() {
     return new Builder();
   }
@@ -164,32 +166,32 @@ public class AppPerfResults {
       return this;
     }
 
-    Builder averageNetworkWrite(long averageNetworkWrite){
+    Builder averageNetworkWrite(long averageNetworkWrite) {
       this.averageNetworkWrite = averageNetworkWrite;
       return this;
     }
 
-    Builder averageJvmUserCpu(float averageJvmUserCpu){
+    Builder averageJvmUserCpu(float averageJvmUserCpu) {
       this.averageJvmUserCpu = averageJvmUserCpu;
       return this;
     }
 
-    Builder maxJvmUserCpu(float maxJvmUserCpu){
+    Builder maxJvmUserCpu(float maxJvmUserCpu) {
       this.maxJvmUserCpu = maxJvmUserCpu;
       return this;
     }
 
-    Builder averageMachineCpuTotal(float averageMachineCpuTotal){
+    Builder averageMachineCpuTotal(float averageMachineCpuTotal) {
       this.averageMachineCpuTotal = averageMachineCpuTotal;
       return this;
     }
 
-    Builder runDurationMs(long runDurationMs){
+    Builder runDurationMs(long runDurationMs) {
       this.runDurationMs = runDurationMs;
       return this;
     }
 
-    Builder totalGcPauseNanos(long totalGcPauseNanos){
+    Builder totalGcPauseNanos(long totalGcPauseNanos) {
       this.totalGcPauseNanos = totalGcPauseNanos;
       return this;
     }
@@ -199,20 +201,20 @@ public class AppPerfResults {
     public final long min;
     public final long max;
 
-    public MinMax(){
+    public MinMax() {
       this(Long.MAX_VALUE, Long.MIN_VALUE);
     }
 
-    public MinMax(long min, long max){
+    public MinMax(long min, long max) {
       this.min = min;
       this.max = max;
     }
 
-    public MinMax withMin(long min){
+    public MinMax withMin(long min) {
       return new MinMax(min, max);
     }
 
-    public MinMax withMax(long max){
+    public MinMax withMax(long max) {
       return new MinMax(min, max);
     }
   }

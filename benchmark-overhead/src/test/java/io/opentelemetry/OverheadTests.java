@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -41,7 +42,7 @@ public class OverheadTests {
   private static final Network NETWORK = Network.newNetwork();
   private static GenericContainer<?> collector;
   private final NamingConventions namingConventions = new NamingConventions();
-  private final Map<String,Long> runDurations = new HashMap<>();
+  private final Map<String, Long> runDurations = new HashMap<>();
 
   @BeforeAll
   static void setUp() {
@@ -71,7 +72,8 @@ public class OverheadTests {
                 fail("Unhandled exception in " + config.getName(), e);
               }
             });
-    List<AppPerfResults> results = new ResultsCollector(namingConventions.local, runDurations).collect(config);
+    List<AppPerfResults> results =
+        new ResultsCollector(namingConventions.local, runDurations).collect(config);
     new MainResultsPersister(config).write(results);
   }
 
