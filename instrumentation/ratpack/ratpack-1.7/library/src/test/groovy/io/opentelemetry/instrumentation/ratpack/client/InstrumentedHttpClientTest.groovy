@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.instrumentation.ratpack.OpenTelemetryExecInitializer
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
@@ -66,8 +65,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          bindings.bind(OpenTelemetryExecInitializer)
           ratpackTracing.configureServerRegistry(bindings)
+          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
           bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
         }
       )
@@ -128,8 +127,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          bindings.bind(OpenTelemetryExecInitializer)
           ratpackTracing.configureServerRegistry(bindings)
+          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
           bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
         }
       )
@@ -194,8 +193,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          bindings.bind(OpenTelemetryExecInitializer)
           ratpackTracing.configureServerRegistry(bindings)
+          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
           bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(
             HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
           )
@@ -212,8 +211,7 @@ class InstrumentedHttpClientTest extends Specification {
       }
     }
 
-    app.test { httpClient ->
-      "error" == httpClient.get("path-name").body.text
+    app.test { httpClient -> "error" == httpClient.get("path-name").body.text
     }
 
     new PollingConditions().eventually {

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.client;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.ratpack.OpenTelemetryExecInitializer;
+import io.opentelemetry.instrumentation.ratpack.client.internal.ContextHolder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import ratpack.exec.Execution;
 import ratpack.http.client.HttpClient;
@@ -37,22 +37,19 @@ final class OpenTelemetryHttpClient {
                 Span span = Span.fromContext(otelCtx);
                 String path = requestSpec.getUri().getPath();
                 span.setAttribute(SemanticAttributes.HTTP_ROUTE, path);
-                Execution.current()
-                    .add(new OpenTelemetryExecInitializer.ContextHolder(otelCtx, requestSpec));
+                Execution.current().add(new ContextHolder(otelCtx, requestSpec));
               });
 
           httpClientSpec.responseIntercept(
               httpResponse -> {
-                OpenTelemetryExecInitializer.ContextHolder contextHolder =
-                    Execution.current().get(OpenTelemetryExecInitializer.ContextHolder.class);
+                ContextHolder contextHolder = Execution.current().get(ContextHolder.class);
                 instrumenter.end(
                     contextHolder.context(), contextHolder.requestSpec(), httpResponse, null);
               });
 
           httpClientSpec.errorIntercept(
               ex -> {
-                OpenTelemetryExecInitializer.ContextHolder contextHolder =
-                    Execution.current().get(OpenTelemetryExecInitializer.ContextHolder.class);
+                ContextHolder contextHolder = Execution.current().get(ContextHolder.class);
                 instrumenter.end(contextHolder.context(), contextHolder.requestSpec(), null, ex);
               });
         });

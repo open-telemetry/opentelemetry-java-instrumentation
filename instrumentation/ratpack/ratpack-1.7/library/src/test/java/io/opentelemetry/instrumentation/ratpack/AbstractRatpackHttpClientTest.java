@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.ratpack;
 
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.ratpack.client.OpenTelemetryExecInitializer;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
@@ -37,7 +39,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     exec.run(
         unused -> {
           ((DefaultExecController) exec.getController())
-              .setInitializers(ImmutableList.of(new OpenTelemetryExecInitializer()));
+              .setInitializers(ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE));
           ((DefaultExecController) exec.getController())
               .setInterceptors(ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE));
           client = buildHttpClient();
@@ -68,7 +70,9 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   @Override
   protected final int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    return exec.yield(unused -> internalSendRequest(client, method, uri, headers))
+    return exec.yield(
+            r -> r.add(Context.class, Context.current()),
+            execution -> internalSendRequest(client, method, uri, headers))
         .getValueOrThrow();
   }
 
@@ -80,13 +84,19 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
       Map<String, String> headers,
       RequestResult requestResult)
       throws Exception {
-    exec.execute(
-        Operation.of(
-            () ->
-                internalSendRequest(client, method, uri, headers)
-                    .result(
-                        result ->
-                            requestResult.complete(result::getValue, result.getThrowable()))));
+    // ratpack-test 1.8 supports execute with an Action of registrySpec
+    exec.yield(
+            r -> r.add(Context.class, Context.current()),
+            (e) ->
+                Operation.of(
+                        () ->
+                            internalSendRequest(client, method, uri, headers)
+                                .result(
+                                    result ->
+                                        requestResult.complete(
+                                            result::getValue, result.getThrowable())))
+                    .promise())
+        .getValueOrThrow();
   }
 
   // overridden in RatpackForkedHttpClientTest
@@ -116,6 +126,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
             (path, headers) -> {
               URI uri = resolveAddress(path);
               return exec.yield(
+                      r -> r.add(Context.class, Context.current()),
                       unused -> internalSendRequest(singleConnectionClient, "GET", uri, headers))
                   .getValueOrThrow();
             });

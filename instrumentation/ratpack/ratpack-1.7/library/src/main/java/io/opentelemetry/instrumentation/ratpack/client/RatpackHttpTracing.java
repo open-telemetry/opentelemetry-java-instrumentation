@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.ratpack.client;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import ratpack.exec.ExecInitializer;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
@@ -35,5 +36,10 @@ public final class RatpackHttpTracing {
 
   public HttpClient instrumentedHttpClient(HttpClient httpClient) throws Exception {
     return new OpenTelemetryHttpClient(instrumenter).instrument(httpClient);
+  }
+
+  /** Returns instance of {@link ExecInitializer} to support Ratpack Registry binding. */
+  public ExecInitializer getOpenTelemetryExecInitializer() {
+    return OpenTelemetryExecInitializer.INSTANCE;
   }
 }

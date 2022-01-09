@@ -10,7 +10,6 @@ import com.google.inject.Provides
 import groovy.transform.CompileStatic
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.ratpack.OpenTelemetryExecInitializer
 import io.opentelemetry.instrumentation.ratpack.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.RatpackFunctionalTest
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
@@ -20,6 +19,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
+import ratpack.exec.ExecInitializer
 import ratpack.exec.ExecInterceptor
 import ratpack.guice.Guice
 import ratpack.http.client.HttpClient
@@ -95,7 +95,6 @@ class OpenTelemetryModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SpanExporter).toInstance(InMemorySpanExporter.create())
-    bind(OpenTelemetryExecInitializer)
   }
 
   @Singleton
@@ -136,6 +135,13 @@ class OpenTelemetryModule extends AbstractModule {
   HttpClient instrumentedHttpClient(RatpackHttpTracing ratpackHttpTracing) {
     return ratpackHttpTracing.instrumentedHttpClient(HttpClient.of {})
   }
+
+  @Singleton
+  @Provides
+  ExecInitializer ratpackExecInitializer(RatpackHttpTracing ratpackTracing) {
+    return ratpackTracing.getOpenTelemetryExecInitializer()
+  }
+
 }
 
 class RatpackApp {
