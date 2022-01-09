@@ -8,12 +8,15 @@
       </pattern>
     </encoder>
   </appender>
-  <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+  <appender name="OpenTelemetry"
+    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
   </appender>
+
+  <logger name="DebugLogger" level="DEBUG"/>
 
   <root level="INFO">
     <appender-ref ref="console"/>
-    <appender-ref ref="OpenTelemetry" />
+    <appender-ref ref="OpenTelemetry"/>
   </root>
 
 </configuration>

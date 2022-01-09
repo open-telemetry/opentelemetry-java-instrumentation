@@ -124,4 +124,12 @@ class LogbackTest extends AgentInstrumentationSpecification {
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2"))).isEqualTo("val2")
   }
+
+  def "test level configuration"() {
+    when:
+    LoggerFactory.getLogger("DebugLogger").debug("xyz")
+
+    then:
+    assertThat(logs).isEmpty()
+  }
 }

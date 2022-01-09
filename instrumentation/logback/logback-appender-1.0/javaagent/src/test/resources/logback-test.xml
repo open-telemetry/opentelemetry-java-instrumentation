@@ -12,10 +12,11 @@
   <logger name="abc" level="INFO"/>
   <logger name="def" level="WARN"/>
 
+  <logger name="DebugLogger" level="DEBUG"/>
+
   <root level="INFO">
     <appender-ref ref="console"/>
   </root>
 
-  <logger name="org.testcontainers" level="WARN"/>
   <logger name="io.opentelemetry.testing.internal" level="WARN"/>
 </configuration>

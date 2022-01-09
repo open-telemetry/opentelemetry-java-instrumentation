@@ -32,6 +32,7 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  private final Level captureLevel;
   private final List<String> captureMdcAttributes;
 
   // cached as an optimization
@@ -39,6 +40,7 @@ public final class LoggingEventMapper {
 
   private LoggingEventMapper() {
     this(
+        getLevel(),
         Config.get()
             .getList(
                 "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
@@ -46,13 +48,18 @@ public final class LoggingEventMapper {
   }
 
   // visible for testing
-  LoggingEventMapper(List<String> captureMdcAttributes) {
+  LoggingEventMapper(Level captureLevel, List<String> captureMdcAttributes) {
+    this.captureLevel = captureLevel;
     this.captureMdcAttributes = captureMdcAttributes;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
   public void capture(ILoggingEvent event) {
+    Level level = event.getLevel();
+    if (level.toInt() < this.captureLevel.toInt()) {
+      return;
+    }
     LogBuilder builder =
         GlobalLogEmitterProvider.get()
             .logEmitterBuilder(event.getLoggerName())
@@ -159,5 +166,11 @@ public final class LoggingEventMapper {
       default:
         return Severity.UNDEFINED_SEVERITY_NUMBER;
     }
+  }
+
+  private static Level getLevel() {
+    String levelStr =
+        Config.get().getString("otel.instrumentation.logback-appender.experimental.level");
+    return Level.toLevel(levelStr, Level.ALL);
   }
 }

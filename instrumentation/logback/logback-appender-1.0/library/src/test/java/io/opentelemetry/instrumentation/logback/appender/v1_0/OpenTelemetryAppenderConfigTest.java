@@ -150,4 +150,12 @@ class OpenTelemetryAppenderConfigTest {
             logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2")))
         .isEqualTo("val2");
   }
+
+  @Test
+  void shouldNotLogDueToLevelConfiguration() {
+    LoggerFactory.getLogger("DebugLogger").debug("log message 1");
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    assertThat(logDataList).isEmpty();
+  }
 }
