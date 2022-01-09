@@ -54,7 +54,6 @@ class CounterTest {
                         .hasUnit("items")
                         .hasDoubleSum()
                         .isMonotonic()
-                        .isCumulative()
                         .points()
                         .satisfiesExactly(
                             point ->
