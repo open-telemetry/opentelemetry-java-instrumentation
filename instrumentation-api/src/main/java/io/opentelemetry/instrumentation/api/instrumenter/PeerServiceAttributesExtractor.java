@@ -58,6 +58,12 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+
+    if (peerServiceMapping.isEmpty()) {
+      // optimization for common case
+      return;
+    }
+
     String peerName = netClientAttributesExtractor.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
