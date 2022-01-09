@@ -20,5 +20,4 @@ public class SpringRmiGreeterImpl implements SpringRmiGreeter {
   public void exceptional() {
     throw new IllegalStateException("expected");
   }
-
 }

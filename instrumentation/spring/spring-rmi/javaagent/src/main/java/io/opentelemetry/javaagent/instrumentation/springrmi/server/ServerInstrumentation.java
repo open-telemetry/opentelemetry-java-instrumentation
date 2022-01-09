@@ -31,8 +31,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("invoke")),
-        this.getClass().getName() + "$InvokeMethodAdvice");
+        isMethod().and(named("invoke")), this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")

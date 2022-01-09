@@ -3,10 +3,10 @@ plugins {
 }
 
 muzzle {
-  pass{
+  pass {
     group.set("org.springframework")
     module.set("spring-context")
-    versions.set("[5.0.4.RELEASE,6.0.0)")
+    versions.set("[5.0.4.RELEASE,5.4)")
   }
 }
 
