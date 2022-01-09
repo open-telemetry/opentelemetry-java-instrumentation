@@ -8,6 +8,7 @@ plugins {
   id "java"
   id "io.quarkus"
   id "com.google.cloud.tools.jib" version "3.1.4"
+  id "com.diffplug.spotless" version "6.1.2"
 }
 
 group = "io.opentelemetry"
@@ -16,6 +17,14 @@ version = "0.0.1-SNAPSHOT"
 repositories {
   mavenCentral()
   mavenLocal()
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("../../../buildscripts/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
+  }
 }
 
 dependencies {
