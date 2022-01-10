@@ -1,6 +1,7 @@
 plugins {
   id "org.gradle.playframework" version "0.12"
   id "com.google.cloud.tools.jib" version "3.1.4"
+  id "com.diffplug.spotless" version "6.1.2"
 }
 
 ext {
@@ -27,6 +28,14 @@ repositories {
 }
 
 description = "Play Integration Tests."
+
+spotless {
+  scala {
+    scalafmt()
+    licenseHeaderFile(rootProject.file("../../../buildscripts/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.scala")
+  }
+}
 
 dependencies {
   implementation "com.typesafe.play:play-guice_$scalaVersion:$playVersion"

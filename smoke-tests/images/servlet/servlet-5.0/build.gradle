@@ -1,5 +1,6 @@
 plugins {
   id "war"
+  id "com.diffplug.spotless" version "6.1.2"
 }
 
 compileJava {
@@ -8,6 +9,14 @@ compileJava {
 
 repositories {
   mavenCentral()
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("../../../buildscripts/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
+  }
 }
 
 dependencies {
