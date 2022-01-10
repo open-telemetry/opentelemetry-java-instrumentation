@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.AsyncInstrumen
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("HashCodeToString")
 final class OpenTelemetryMeter implements Meter, RemovableMeter {
@@ -84,7 +85,7 @@ final class OpenTelemetryMeter implements Meter, RemovableMeter {
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     return MeterEquivalence.equals(this, o);
   }
 
