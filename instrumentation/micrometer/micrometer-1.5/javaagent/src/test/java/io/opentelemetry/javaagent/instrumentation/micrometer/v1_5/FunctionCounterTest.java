@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
-import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Metrics;
