@@ -16,7 +16,8 @@ final class Bridging {
 
   private static final Cache<String, AttributeKey<String>> tagsCache = Cache.bounded(1024);
 
-  static Attributes toAttributes(Iterable<Tag> tags) {
+  static Attributes tagsAsAttributes(Meter.Id id) {
+    Iterable<Tag> tags = id.getTagsAsIterable();
     if (!tags.iterator().hasNext()) {
       return Attributes.empty();
     }

@@ -29,12 +29,10 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
+  // TODO: extract a library instrumentation
   public static MeterRegistry create(OpenTelemetry openTelemetry) {
-    OpenTelemetryMeterRegistry openTelemetryMeterRegistry =
-        new OpenTelemetryMeterRegistry(
-            Clock.SYSTEM, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
-    openTelemetryMeterRegistry.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
-    return openTelemetryMeterRegistry;
+    return new OpenTelemetryMeterRegistry(
+        Clock.SYSTEM, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
   }
 
   private final io.opentelemetry.api.metrics.Meter otelMeter;
@@ -44,11 +42,12 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     super(clock);
     this.otelMeter = otelMeter;
     this.asyncInstrumentRegistry = new AsyncInstrumentRegistry(otelMeter);
+    this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 
   @Override
-  protected <T> Gauge newGauge(Meter.Id id, @Nullable T t, ToDoubleFunction<T> toDoubleFunction) {
-    return new OpenTelemetryGauge<>(id, t, toDoubleFunction, asyncInstrumentRegistry);
+  protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
+    return new OpenTelemetryGauge<>(id, obj, valueFunction, asyncInstrumentRegistry);
   }
 
   @Override
@@ -59,6 +58,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
+    // TODO
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
@@ -77,29 +77,37 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected DistributionSummary newDistributionSummary(
-      Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double v) {
-    throw new UnsupportedOperationException("Not implemented yet");
+      Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
+    OpenTelemetryDistributionSummary distributionSummary =
+        new OpenTelemetryDistributionSummary(
+            id, clock, distributionStatisticConfig, scale, otelMeter);
+    if (distributionSummary.isUsingMicrometerHistograms()) {
+      HistogramGauges.registerWithCommonFormat(distributionSummary, this);
+    }
+    return distributionSummary;
   }
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> iterable) {
+    // TODO
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
   protected <T> FunctionTimer newFunctionTimer(
       Meter.Id id,
-      T t,
-      ToLongFunction<T> toLongFunction,
-      ToDoubleFunction<T> toDoubleFunction,
-      TimeUnit timeUnit) {
-    throw new UnsupportedOperationException("Not implemented yet");
+      T obj,
+      ToLongFunction<T> countFunction,
+      ToDoubleFunction<T> totalTimeFunction,
+      TimeUnit totalTimeFunctionUnit) {
+    return new OpenTelemetryFunctionTimer<>(
+        id, obj, countFunction, totalTimeFunction, totalTimeFunctionUnit, asyncInstrumentRegistry);
   }
 
   @Override
   protected <T> FunctionCounter newFunctionCounter(
-      Meter.Id id, T t, ToDoubleFunction<T> toDoubleFunction) {
-    throw new UnsupportedOperationException("Not implemented yet");
+      Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
+    return new OpenTelemetryFunctionCounter<>(id, obj, countFunction, asyncInstrumentRegistry);
   }
 
   @Override
