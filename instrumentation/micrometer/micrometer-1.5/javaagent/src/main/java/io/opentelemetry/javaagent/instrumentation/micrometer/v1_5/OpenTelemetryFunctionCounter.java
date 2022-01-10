@@ -13,6 +13,7 @@ import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.api.common.Attributes;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("HashCodeToString")
 final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, RemovableMeter {
@@ -57,7 +58,7 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     return MeterEquivalence.equals(this, o);
   }
 

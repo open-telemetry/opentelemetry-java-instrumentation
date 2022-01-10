@@ -58,7 +58,7 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     return MeterEquivalence.equals(this, o);
   }
 

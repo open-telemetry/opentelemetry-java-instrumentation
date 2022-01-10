@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("HashCodeToString")
 final class OpenTelemetryCounter implements Counter, RemovableMeter {
@@ -71,7 +72,7 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     return MeterEquivalence.equals(this, o);
   }
 

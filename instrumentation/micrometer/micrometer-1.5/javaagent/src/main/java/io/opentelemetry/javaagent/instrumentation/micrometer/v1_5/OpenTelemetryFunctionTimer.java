@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("HashCodeToString")
 final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMeter {
@@ -100,7 +101,7 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     return MeterEquivalence.equals(this, o);
   }
 
