@@ -115,8 +115,8 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getEpochNanos())
-        .isGreaterThan(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
-        .isLessThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+        .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
+        .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     assertThat(logData.getAttributes().size()).isEqualTo(3);
