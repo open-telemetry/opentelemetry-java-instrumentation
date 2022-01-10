@@ -51,17 +51,27 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
         /* baseUnit = */ "ms",
         attributes,
         obj,
-        new ConvertToMillisDecorator<>(totalTimeFunction, totalTimeFunctionUnit));
+        val ->
+            TimeUtils.convert(
+                totalTimeFunction.applyAsDouble(val),
+                totalTimeFunctionUnit,
+                TimeUnit.MILLISECONDS));
   }
 
   @Override
   public double count() {
     UnsupportedReadLogger.logWarning();
-    return 0;
+    return Double.NaN;
   }
 
   @Override
   public double totalTime(TimeUnit unit) {
+    UnsupportedReadLogger.logWarning();
+    return Double.NaN;
+  }
+
+  @Override
+  public double mean(TimeUnit unit) {
     UnsupportedReadLogger.logWarning();
     return Double.NaN;
   }
@@ -97,22 +107,5 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
   @Override
   public int hashCode() {
     return MeterEquivalence.hashCode(this);
-  }
-
-  private static final class ConvertToMillisDecorator<T> implements ToDoubleFunction<T> {
-
-    private final ToDoubleFunction<T> original;
-    private final TimeUnit originalUnit;
-
-    private ConvertToMillisDecorator(ToDoubleFunction<T> original, TimeUnit originalUnit) {
-      this.original = original;
-      this.originalUnit = originalUnit;
-    }
-
-    @Override
-    public double applyAsDouble(T value) {
-      double time = original.applyAsDouble(value);
-      return TimeUtils.convert(time, originalUnit, TimeUnit.MILLISECONDS);
-    }
   }
 }

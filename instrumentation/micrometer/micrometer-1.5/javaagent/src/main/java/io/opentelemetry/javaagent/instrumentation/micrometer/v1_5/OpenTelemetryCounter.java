@@ -50,7 +50,7 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
   @Override
   public double count() {
     UnsupportedReadLogger.logWarning();
-    return 0;
+    return Double.NaN;
   }
 
   @Override

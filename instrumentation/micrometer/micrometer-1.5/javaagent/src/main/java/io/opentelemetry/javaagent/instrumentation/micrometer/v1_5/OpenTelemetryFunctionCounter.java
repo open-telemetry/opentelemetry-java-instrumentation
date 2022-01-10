@@ -36,7 +36,7 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
   @Override
   public double count() {
     UnsupportedReadLogger.logWarning();
-    return 0;
+    return Double.NaN;
   }
 
   @Override
