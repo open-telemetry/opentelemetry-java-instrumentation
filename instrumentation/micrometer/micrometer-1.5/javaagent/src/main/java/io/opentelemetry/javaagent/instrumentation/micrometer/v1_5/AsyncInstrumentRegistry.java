@@ -26,6 +26,12 @@ final class AsyncInstrumentRegistry {
 
   private final Meter meter;
 
+  // we're always locking lock on the whole instrument map; the add/remove methods aren't called
+  // that often, so it's probably better to opt for correctness in that case - there is a small
+  // window between removing a single measurement and removing the whole instrument (if it has no
+  // more measurements) when potentially a new measurement could be added; a ConcurrentHashMap
+  // wouldn't be enough in this case
+
   @GuardedBy("gauges")
   private final Map<String, DoubleMeasurementsRecorder> gauges = new HashMap<>();
 
