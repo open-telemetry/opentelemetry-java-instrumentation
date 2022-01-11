@@ -19,6 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
+import org.redisson.misc.RPromise;
 
 public class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
@@ -39,7 +40,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This RedisConnection connection,
         @Advice.Argument(0) Object arg,
-        @Advice.Local("otelRedissonRequest") RedissonRequest request,
+        @Advice.Local("otelRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
@@ -56,15 +57,22 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRedissonRequest") RedissonRequest request,
+        @Advice.Local("otelRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
       if (scope == null) {
         return;
       }
-
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+
+      RPromise<?> promise = request.getPromise();
+      if (promise == null || throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      } else {
+        // span ended in EndOperationListener
+        promise.whenComplete(new EndOperationListener<>(context, request));
+      }
     }
   }
 }
