@@ -32,6 +32,6 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new JedisConnectionInstrumentation());
+    return singletonList(new JedisMethodInstrumentation());
   }
 }
