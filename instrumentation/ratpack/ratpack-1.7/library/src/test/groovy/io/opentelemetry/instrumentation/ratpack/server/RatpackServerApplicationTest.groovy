@@ -138,21 +138,15 @@ class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  ExecInitializer ratpackExecInitializer(RatpackHttpTracing ratpackTracing) {
-    return ratpackTracing.getOpenTelemetryExecInitializer()
+  ExecInitializer ratpackExecInitializer(RatpackHttpTracing ratpackHttpTracing) {
+    return ratpackHttpTracing.getOpenTelemetryExecInitializer()
   }
-
 }
 
+@CompileStatic
 class RatpackApp {
 
   static void main(String... args) {
-    def other = RatpackServer.start { server ->
-      server.handlers { chain ->
-        chain.get("other") { ctx -> ctx.render("hi-other") }
-      }
-    }
-
     RatpackServer.start { server ->
       server
         .registry(Guice.registry { b -> b.module(OpenTelemetryModule) })
@@ -162,8 +156,7 @@ class RatpackApp {
             .all(OpenTelemetryServerHandler)
             .get("foo") { ctx -> ctx.render("hi-foo") }
             .get("bar") { ctx ->
-              def instrumentedHttpClient = ctx.get(HttpClient)
-              instrumentedHttpClient.get(new URI("http://${other.bindHost}:${other.bindPort}/other"))
+              ctx.get(HttpClient).get(ctx.get(URI))
                 .then { ctx.render("hi-bar") }
             }
         }
