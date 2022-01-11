@@ -49,6 +49,7 @@ spotless {
   }
 }
 
+// Use root declared tool deps to avoid issues with high concurrency.
 if (project == rootProject) {
   spotless {
     predeclareDeps()
