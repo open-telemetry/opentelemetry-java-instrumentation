@@ -17,7 +17,6 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-2.16-autoconfigure</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```

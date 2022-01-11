@@ -1,8 +1,8 @@
 # Log4j2 Appender
 
 This module provides a Log4j2 [appender](https://logging.apache.org/log4j/2.x/manual/appenders.html)
-which forwards Log4j2 log events to
-the [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs).
+which forwards Log4j2 log events to the
+[OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs).
 
 To use it, add the following modules to your application's classpath.
 
@@ -18,13 +18,6 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-2.16</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-    <scope>runtime</scope>
-  </dependency>
-  <dependency>
-    <!-- The SDK appender is required to configure the appender with the OpenTelemetry Log SDK -->
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-instrumentation-appender-sdk-internal</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
 ```
@@ -34,8 +27,6 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
 ```kotlin
 dependencies {
   runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.16:OPENTELEMETRY_VERSION")
-  // The SDK appender is required to configure the appender with the OpenTelemetry Log SDK
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-sdk-internal:OPENTELEMETRY_VERSION")
 }
 ```
 
@@ -61,7 +52,7 @@ The following demonstrates how you might configure the appender in your `log4j.x
 ```
 
 Next, associate the `OpenTelemetryAppender` configured via `log4j2.xml` with
-a `SdkLogEmitterProvider` in your application:
+an `SdkLogEmitterProvider` in your application:
 
 ```
 SdkLogEmitterProvider logEmitterProvider =
@@ -69,10 +60,10 @@ SdkLogEmitterProvider logEmitterProvider =
     .setResource(Resource.create(...))
     .addLogProcessor(...)
     .build();
-GlobalLogEmitterProvider.set(DelegatingLogEmitterProvider.from(logEmitterProvider));
+OpenTelemetryAppender.setSdkLogEmitterProvider(logEmitterProvider);
 ```
 
 In this example Log4j2 log events will be sent to both the console appender and
-the `OpenTelemetryAppender`, which will drop the logs until `GlobalLogEmitterProvider.set(..)` is
-called. Once initialized, logs will be emitted to a `LogEmitter` obtained from
-the `SdkLogEmitterProvider`.
+the `OpenTelemetryAppender`, which will drop the logs until
+`OpenTelemetryAppender.setSdkLogEmitterProvider(..)` is called. Once initialized, logs will be
+emitted to a `LogEmitter` obtained from the `SdkLogEmitterProvider`.
