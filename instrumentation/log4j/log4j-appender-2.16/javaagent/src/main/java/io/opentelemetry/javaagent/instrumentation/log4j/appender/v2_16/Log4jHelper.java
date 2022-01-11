@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_16;
 
-import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.AgentLogEmitterProvider;
 import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
@@ -25,7 +25,7 @@ public final class Log4jHelper {
   public static void capture(Logger logger, Level level, Message message, Throwable throwable) {
 
     LogBuilder builder =
-        GlobalLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
     mapper.mapLogEvent(builder, message, level, throwable, null, contextData);
     builder.emit();

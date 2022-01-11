@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.AgentLogEmitterProvider;
 import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
 import io.opentelemetry.instrumentation.appender.api.internal.Severity;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -25,7 +25,7 @@ public final class Log4jHelper {
   // TODO (trask) capture MDC
   public static void capture(Category logger, Priority level, Object message, Throwable throwable) {
     LogBuilder builder =
-        GlobalLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
 
     // message
     if (message != null) {

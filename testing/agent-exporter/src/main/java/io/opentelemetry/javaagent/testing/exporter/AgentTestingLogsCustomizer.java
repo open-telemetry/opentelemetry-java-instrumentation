@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.appender.api.internal.AgentLogEmitterProvider;
 import io.opentelemetry.instrumentation.appender.sdk.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -28,6 +28,6 @@ public class AgentTestingLogsCustomizer implements AgentListener {
                 BatchLogProcessor.builder(AgentTestingExporterFactory.logExporter).build())
             .build();
 
-    GlobalLogEmitterProvider.set(DelegatingLogEmitterProvider.from(logEmitterProvider));
+    AgentLogEmitterProvider.set(DelegatingLogEmitterProvider.from(logEmitterProvider));
   }
 }

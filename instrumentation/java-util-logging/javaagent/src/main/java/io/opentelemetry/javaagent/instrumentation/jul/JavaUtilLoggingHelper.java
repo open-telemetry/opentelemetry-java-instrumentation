@@ -9,7 +9,7 @@ import application.java.util.logging.Logger;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.AgentLogEmitterProvider;
 import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
 import io.opentelemetry.instrumentation.appender.api.internal.Severity;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -32,7 +32,7 @@ public final class JavaUtilLoggingHelper {
     }
 
     LogBuilder builder =
-        GlobalLogEmitterProvider.get()
+        AgentLogEmitterProvider.get()
             .logEmitterBuilder(logRecord.getLoggerName())
             .build()
             .logBuilder();

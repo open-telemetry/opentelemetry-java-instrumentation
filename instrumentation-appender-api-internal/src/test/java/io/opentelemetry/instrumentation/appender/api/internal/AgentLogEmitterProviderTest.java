@@ -14,51 +14,51 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class GlobalLogEmitterProviderTest {
+class AgentLogEmitterProviderTest {
 
   @BeforeAll
   static void beforeClass() {
-    GlobalLogEmitterProvider.resetForTest();
+    AgentLogEmitterProvider.resetForTest();
   }
 
   @AfterEach
   void after() {
-    GlobalLogEmitterProvider.resetForTest();
+    AgentLogEmitterProvider.resetForTest();
   }
 
   @Test
   void testGlobalBeforeSet() {
-    assertThat(GlobalLogEmitterProvider.get()).isSameAs(NoopLogEmitterProvider.INSTANCE);
+    assertThat(AgentLogEmitterProvider.get()).isSameAs(NoopLogEmitterProvider.INSTANCE);
   }
 
   @Test
   void setThenSet() {
     setLogEmitterProvider();
-    assertThatThrownBy(() -> GlobalLogEmitterProvider.set(mock(LogEmitterProvider.class)))
+    assertThatThrownBy(() -> AgentLogEmitterProvider.set(mock(LogEmitterProvider.class)))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("GlobalLogEmitterProvider.set has already been called")
+        .hasMessageContaining("LogEmitterProviderHolder.set has already been called")
         .hasStackTraceContaining("setLogEmitterProvider");
   }
 
   @Test
   void getThenSet() {
-    LogEmitterProvider existingProvider = GlobalLogEmitterProvider.get();
+    LogEmitterProvider existingProvider = AgentLogEmitterProvider.get();
     assertSame(existingProvider, NoopLogEmitterProvider.INSTANCE);
     LogEmitterProvider newProvider = mock(LogEmitterProvider.class);
-    GlobalLogEmitterProvider.set(newProvider);
-    assertSame(newProvider, GlobalLogEmitterProvider.get());
+    AgentLogEmitterProvider.set(newProvider);
+    assertSame(newProvider, AgentLogEmitterProvider.get());
   }
 
   @Test
   void okToSetNoopMultipleTimes() {
-    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
-    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
-    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
-    GlobalLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    AgentLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    AgentLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    AgentLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
+    AgentLogEmitterProvider.set(NoopLogEmitterProvider.INSTANCE);
     // pass
   }
 
   private static void setLogEmitterProvider() {
-    GlobalLogEmitterProvider.set(mock(LogEmitterProvider.class));
+    AgentLogEmitterProvider.set(mock(LogEmitterProvider.class));
   }
 }

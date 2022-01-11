@@ -14,11 +14,11 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
-import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
-import io.opentelemetry.instrumentation.appender.api.internal.Severity;
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
+import io.opentelemetry.instrumentation.appender.api.internal.LogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.Severity;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -52,12 +52,9 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void capture(ILoggingEvent event) {
+  public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {
     LogBuilder builder =
-        GlobalLogEmitterProvider.get()
-            .logEmitterBuilder(event.getLoggerName())
-            .build()
-            .logBuilder();
+        logEmitterProvider.logEmitterBuilder(event.getLoggerName()).build().logBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }
