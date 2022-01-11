@@ -3,13 +3,13 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation-api-appender"))
+  api(project(":instrumentation-appender-api-internal"))
 
   library("ch.qos.logback:logback-classic:0.9.16")
 
   latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
 
-  testImplementation(project(":instrumentation-sdk-appender"))
+  testImplementation(project(":instrumentation-appender-sdk-internal"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 

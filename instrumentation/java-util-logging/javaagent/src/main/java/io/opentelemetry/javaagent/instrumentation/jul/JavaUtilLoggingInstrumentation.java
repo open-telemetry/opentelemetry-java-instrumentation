@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import application.java.util.logging.Logger;
-import io.opentelemetry.instrumentation.api.appender.LogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.LogEmitterProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;

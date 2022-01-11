@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
-  compileOnly(project(":instrumentation-api-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.16:library"))
 

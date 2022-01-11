@@ -15,8 +15,8 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-annotation-support"))
-  implementation(project(":instrumentation-api-appender"))
-  implementation(project(":instrumentation-sdk-appender"))
+  implementation(project(":instrumentation-appender-api-internal"))
+  implementation(project(":instrumentation-appender-sdk-internal"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")

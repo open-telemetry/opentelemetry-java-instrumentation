@@ -9,9 +9,9 @@ import application.java.util.logging.Logger;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.Severity;
+import io.opentelemetry.instrumentation.appender.api.internal.GlobalLogEmitterProvider;
+import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
+import io.opentelemetry.instrumentation.appender.api.internal.Severity;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -73,7 +73,8 @@ public final class JavaUtilLoggingHelper {
     if (throwable != null) {
       AttributesBuilder attributes = Attributes.builder();
 
-      // TODO (trask) extract method for recording exception into instrumentation-api-appender
+      // TODO (trask) extract method for recording exception into
+      // instrumentation-appender-api-internal
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();

@@ -22,7 +22,7 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
   <dependency>
     <!-- The SDK appender is required to configure the appender with the OpenTelemetry Log SDK -->
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-instrumentation-sdk-appender</artifactId>
+    <artifactId>opentelemetry-instrumentation-appender-sdk-internal</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -34,7 +34,7 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
 dependencies {
   runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:OPENTELEMETRY_VERSION")
   // The SDK appender is required to configure the appender with the OpenTelemetry Log SDK
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-sdk-appender:OPENTELEMETRY_VERSION")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-sdk-internal:OPENTELEMETRY_VERSION")
 }
 ```
 

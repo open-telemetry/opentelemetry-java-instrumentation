@@ -15,8 +15,8 @@ dependencies {
   compileOnly(project(":javaagent-instrumentation-api"))
   compileOnly(project(":javaagent-tooling"))
 
-  compileOnly(project(":instrumentation-api-appender"))
-  compileOnly(project(":instrumentation-sdk-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly(project(":instrumentation-appender-sdk-internal"))
 
   implementation("io.grpc:grpc-core:1.33.1")
   implementation("io.grpc:grpc-protobuf:1.33.1")

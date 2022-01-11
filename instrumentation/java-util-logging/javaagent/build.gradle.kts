@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly(project(":instrumentation:java-util-logging:shaded-stub-for-instrumenting"))
 
-  compileOnly(project(":instrumentation-api-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
 
   testImplementation("org.awaitility:awaitility")
 }
