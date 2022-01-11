@@ -1,3 +1,5 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
+
 plugins {
   id("com.diffplug.spotless")
 }
@@ -44,5 +46,26 @@ spotless {
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()
+  }
+}
+
+if (project == rootProject) {
+  spotless {
+    predeclareDeps()
+  }
+
+  with(extensions["spotlessPredeclare"] as SpotlessExtension) {
+    java {
+      googleJavaFormat()
+    }
+    scala {
+      scalafmt()
+    }
+    kotlin {
+      ktlint()
+    }
+    kotlinGradle {
+      ktlint()
+    }
   }
 }
