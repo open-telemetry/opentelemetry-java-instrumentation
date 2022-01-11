@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack
 
-
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import ratpack.guice.BindingsImposition
@@ -20,7 +19,7 @@ class RatpackFunctionalTest extends MainClassApplicationUnderTest {
 
   Registry registry
   @Lazy InMemorySpanExporter spanExporter = registry.get(SpanExporter) as InMemorySpanExporter
-  @Lazy EmbeddedApp app =  EmbeddedApp.of { server ->
+  EmbeddedApp app =  EmbeddedApp.of { server ->
     server.handlers { chain ->
       chain.get("other") { ctx -> ctx.render("hi-other") }
     }
