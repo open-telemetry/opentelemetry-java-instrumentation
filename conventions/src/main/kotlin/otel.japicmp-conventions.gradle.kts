@@ -75,9 +75,5 @@ tasks {
     val newVersionString = if (apiNewVersion == null) "current" else apiNewVersion
     txtOutputFile = file("$rootDir/docs/apidiffs/${newVersionString}_vs_${baseVersionString}/${base.archivesName.get()}.txt")
   }
-  // have the check task depend on the api comparison task, to make it more likely it will get used.
-  named("check") {
-    dependsOn(jApiCmp)
-  }
 }
 
