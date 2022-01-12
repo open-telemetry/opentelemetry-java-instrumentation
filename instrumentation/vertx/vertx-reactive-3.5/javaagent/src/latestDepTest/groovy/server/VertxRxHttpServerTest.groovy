@@ -63,6 +63,13 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:

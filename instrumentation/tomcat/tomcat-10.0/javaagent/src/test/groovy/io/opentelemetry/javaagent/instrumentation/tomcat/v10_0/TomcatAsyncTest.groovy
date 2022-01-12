@@ -100,6 +100,16 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
+  String expectedHttpRoute(ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case NOT_FOUND:
+        return getContextPath() + "/*"
+      default:
+        return super.expectedHttpRoute(endpoint)
+    }
+  }
+
+  @Override
   List<AttributeKey<?>> extraAttributes() {
     [
       SemanticAttributes.HTTP_SERVER_NAME,

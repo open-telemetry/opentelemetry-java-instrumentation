@@ -66,11 +66,16 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
+    def route = expectedHttpRoute(endpoint)
+    return route == null ? getContextPath() + "/*" : route
+  }
+
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
+      case NOT_FOUND:
+        return null
       case PATH_PARAM:
         return getContextPath() + "/path/:id/param"
-      case NOT_FOUND:
-        return getContextPath() + "/*"
       default:
         return endpoint.resolvePath(address).path
     }
@@ -152,6 +157,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     return true
   }
 
+  /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    [SemanticAttributes.HTTP_ROUTE] as Set
+  }
+
+  // TODO: remove that method and use httpAttributes everywhere; similar to HttpClientTest
   List<AttributeKey<?>> extraAttributes() {
     []
   }
@@ -650,7 +661,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    def extraAttributes = extraAttributes()
+    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
@@ -674,7 +685,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
       attributes {
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+        if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
         // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
@@ -692,26 +703,25 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "$SemanticAttributes.HTTP_SCHEME" "http"
         "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-          // currently reports '/*' which is a fallback route.
-          "$SemanticAttributes.HTTP_ROUTE" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "$SemanticAttributes.HTTP_SERVER_NAME" String
         }
+        if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          "$SemanticAttributes.HTTP_ROUTE" { it == expectedHttpRoute(endpoint) }
+        }
+
         if (endpoint == CAPTURE_HEADERS) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
@@ -724,14 +734,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
-    def extraAttributes = extraAttributes()
     ServerEndpoint endpoint = INDEXED_CHILD
+    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
     trace.span(1) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       childOf((SpanData) parent)
       attributes {
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+        if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
         // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
@@ -749,25 +759,28 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "$SemanticAttributes.HTTP_SCHEME" "http"
         "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "?id=$requestId"
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
           // currently reports '/*' which is a fallback route.
           "$SemanticAttributes.HTTP_ROUTE" String
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+        if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "$SemanticAttributes.HTTP_SERVER_NAME" String
+        }
+        if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          "$SemanticAttributes.HTTP_ROUTE" { it == expectedHttpRoute(endpoint) }
         }
       }
     }

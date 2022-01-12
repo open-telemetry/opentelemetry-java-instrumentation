@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -23,6 +21,7 @@ import java.nio.file.Files
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 //TODO should this be HttpServerTest?
 class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
@@ -85,15 +84,17 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
+          def route = "/$jspWebappContext/$jspFileName"
+
           hasNoParent()
-          name "/$jspWebappContext/$jspFileName"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$jspFileName"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
@@ -101,6 +102,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long } // Optional
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -140,21 +142,24 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
+          def route = "/$jspWebappContext/getQuery.jsp"
+
           hasNoParent()
-          name "/$jspWebappContext/getQuery.jsp"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/getQuery.jsp?$queryString"
+            "$SemanticAttributes.HTTP_TARGET" "$route?$queryString"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -190,15 +195,17 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
+          def route = "/$jspWebappContext/post.jsp"
+
           hasNoParent()
-          name "/$jspWebappContext/post.jsp"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/post.jsp"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
@@ -206,6 +213,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -237,8 +245,10 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
+          def route = "/$jspWebappContext/$jspFileName"
+
           hasNoParent()
-          name "/$jspWebappContext/$jspFileName"
+          name route
           kind SERVER
           status ERROR
           event(0) {
@@ -258,13 +268,14 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$jspFileName"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -314,21 +325,24 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
+          def route = "/$jspWebappContext/includes/includeHtml.jsp"
+
           hasNoParent()
-          name "/$jspWebappContext/includes/includeHtml.jsp"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/includes/includeHtml.jsp"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -359,21 +373,24 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 7) {
         span(0) {
+          def route = "/$jspWebappContext/includes/includeMulti.jsp"
+
           hasNoParent()
-          name "/$jspWebappContext/includes/includeMulti.jsp"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/includes/includeMulti.jsp"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -434,8 +451,10 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
+          def route = "/$jspWebappContext/$jspFileName"
+
           hasNoParent()
-          name "/$jspWebappContext/$jspFileName"
+          name route
           kind SERVER
           status ERROR
           errorEvent(JasperException, String)
@@ -444,13 +463,14 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$jspFileName"
+            "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
         span(1) {
@@ -482,8 +502,10 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
+          def route = "/$jspWebappContext/*"
+
           hasNoParent()
-          name "/$jspWebappContext/*"
+          name route
           kind SERVER
           attributes {
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
@@ -497,6 +519,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" route
           }
         }
       }
