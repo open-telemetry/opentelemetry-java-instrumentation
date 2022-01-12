@@ -1,5 +1,71 @@
 # Changelog
 
+## Version 1.10.0 - Unreleased
+
+### 🌟 New javaagent instrumentation
+
+- Logback appender instrumentation (#4939, #4968)
+- Log4j 2.x appender instrumentation (#4944, #4959, #4966)
+- Log4j 1.2 appender instrumentation (#4943)
+- java.util.logging instrumentation (#4941)
+- Micrometer instrumentation (#4919, #5001, #5017)
+
+### 🌟 New library instrumentation
+
+- Logback appender (#4984)
+- Log4j 2.x appender (#4375, #4907)
+- Ktor instrumentation (#4983)
+
+### 📈 Enhancements
+
+- Renamed Apache Dubbo and Log4j MDC library artifacts (#4779)
+- Added http4 handler to apache-camel instrumentation (#4650)
+- Capture servlet request parameters (#4703)
+- Propagate Context instead of SpanContext in Kafka instrumentation (#4806)
+- Instrument ContextPropagationOperator to bridge lib/agent calls (#4786)
+- Add shouldStart() call to Armeria server instrumentation (#4843)
+- Capture RPC metrics (#4838)
+- Update log4j library base version (#4914)
+- Rename log4j-thread-context modules to log4j-context-data (#4957)
+- Support latest oshi version (#4993)
+- Support latest RxJava version (#4954)
+- Create producer span from spring integration instrumentation (#4932)
+- Capture servlet request parameters at the end of the request (#5019)
+- Don't extract deprecated cassandra keyspace attribute (#5041)
+- Add OTLP logs exporters (#5060)
+- End redisson span when the operation actually ends (#5073)
+- Don't capture high-cardinality http.target as metrics attribute (#5081)
+
+### 🛠️ Bug fixes
+
+- Remove virtual field interfaces from reflection results (#4722)
+- Work around jvm crash on early 1.8 (#4345)
+- Fix http.url handing in vert.x 3 http client (#4739)
+- Capture missing RMI spans (#4764)
+- Avoid crashing on early 1.8 openjdk vms (#4789)
+- Fix Quarkus correlation (#4883)
+- Fix RabbitMQ instrumentation consumption on empty headers (#4903)
+- Fix NPE in Apache HttpClient 4.0 instrumentation (#4913)
+- Fix NPE in RocketMQ instrumentation (#4901)
+- Fix time units in HTTP & RPC metrics (#4963)
+- Fix some gauge types (#4962)
+- Fix context propagation for undertow async dispatch (#4950)
+- Fix redefinition failure on openj9 (#5009)
+- Fix NPE in rmi server instrumentation (#5042)
+
+### 🧰 Tooling
+
+- Merge start and end time extractors (#4692)
+- Move cache implementations to internal package (#4746)
+- Reorganize shared servlet code (intro to #4317) (#4785)
+- Move `AppServerBridge` and `MappingResolver` to `servlet-common:bootstrap` (#4817)
+- Move `ServletContextPath` to `servlet-common:bootstrap` (#4824)
+- Expose AutoConfiguredOpenTelemetrySdk to AgentListener (#4831)
+- Deprecate the Tracer API (#4868)
+- Remove ConfigPropertiesAdapter as it's no longer needed (#4888)
+- Refactor `ServerSpanNaming` (in preparation for `http.route`) (#4852)
+- Move SpanKey to internal package (#4869)
+
 ## Version 1.9.2 - 2022-01-07
 
 ### 🛠️ Bug fixes
