@@ -143,7 +143,6 @@ class HttpServerMetricsTest {
                                         .containsOnly(
                                             attributeEntry("http.scheme", "https"),
                                             attributeEntry("http.host", "host"),
-                                            attributeEntry("http.target", "/"),
                                             attributeEntry("http.method", "GET"),
                                             attributeEntry("http.status_code", 200),
                                             attributeEntry("http.flavor", "2.0"));

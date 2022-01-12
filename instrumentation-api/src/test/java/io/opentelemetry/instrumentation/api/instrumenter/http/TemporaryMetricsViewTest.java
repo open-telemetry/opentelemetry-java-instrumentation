@@ -136,8 +136,6 @@ public class TemporaryMetricsViewTest {
         .containsOnly(
             attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
             attributeEntry(SemanticAttributes.HTTP_HOST.getKey(), "somehost"),
-            attributeEntry(
-                SemanticAttributes.HTTP_TARGET.getKey(), "/somehost/high/cardinality/12345"),
             attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
             attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
   }
