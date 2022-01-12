@@ -86,6 +86,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
   private final class OpenTelemetrySample extends Sample {
 
     private final Sample original;
+    private volatile boolean stopped = false;
 
     private OpenTelemetrySample(Sample original) {
       this.original = original;
@@ -93,6 +94,10 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
     @Override
     public long stop() {
+      if (stopped) {
+        return -1;
+      }
+      stopped = true;
       long durationNanos = original.stop();
       if (!removed) {
         otelActiveTasksCounter.add(-1, attributes);
@@ -104,7 +109,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
     @Override
     public double duration(TimeUnit unit) {
-      return original.duration(unit);
+      return stopped ? -1 : original.duration(unit);
     }
   }
 }

@@ -81,7 +81,7 @@ class LongTaskTimerTest {
                         .satisfiesExactly(
                             point ->
                                 assertThat(point)
-                                    /* .hasSumGreaterThan(100) */
+                                    .hasSumGreaterThan(100)
                                     .hasCount(1)
                                     .attributes()
                                     .containsOnly(attributeEntry("tag", "value")))));
@@ -102,11 +102,11 @@ class LongTaskTimerTest {
                                     .containsOnly(attributeEntry("tag", "value")))));
     testing.clearData();
 
-    // when
+    // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);
-    timer.start();
+    sample = timer.start();
 
-    // then
+    // then no tasks are active after starting a new sample
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testLongTaskTimer.active",
@@ -127,7 +127,7 @@ class LongTaskTimerTest {
     TimeUnit.MILLISECONDS.sleep(100);
     sample.stop();
 
-    // then
+    // then sample of a removed timer does not record any data
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testLongTaskTimer",
@@ -138,10 +138,36 @@ class LongTaskTimerTest {
                         .hasDoubleHistogram()
                         .points()
                         .noneSatisfy(
-                            point ->
-                                assertThat(point)
-                                    /* .hasSumGreaterThan(200) */
-                                    .hasCount(2))));
+                            point -> assertThat(point).hasSumGreaterThan(200).hasCount(2))));
+  }
+
+  @Test
+  void testMultipleSampleStopCalls() throws InterruptedException {
+    // given
+    LongTaskTimer timer =
+        LongTaskTimer.builder("testLongTaskTimerSampleStop").register(Metrics.globalRegistry);
+
+    // when stop() is called multiple times
+    LongTaskTimer.Sample sample = timer.start();
+
+    TimeUnit.MILLISECONDS.sleep(100);
+
+    sample.stop();
+    sample.stop();
+    sample.stop();
+
+    // then only the first time is recorded
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "testLongTaskTimerSampleStop",
+        metrics ->
+            metrics.allSatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleHistogram()
+                        .points()
+                        .satisfiesExactly(
+                            point -> assertThat(point).hasSumGreaterThan(100).hasCount(1))));
   }
 
   @Test
