@@ -30,9 +30,7 @@ val groovyVersion = "3.0.9"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  // wait to upgrade to jackson 2.13.x until after 2.13.1 is released
-  // due to https://github.com/FasterXML/jackson-databind/issues/3328
-  "com.fasterxml.jackson:jackson-bom:2.12.6",
+  "com.fasterxml.jackson:jackson-bom:2.13.1",
   "com.google.guava:guava-bom:31.0.1-jre",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
@@ -43,7 +41,7 @@ val DEPENDENCY_BOMS = listOf(
 val DEPENDENCY_SETS = listOf(
   DependencySet(
     "com.google.auto.value",
-    "1.8.1",
+    "1.9",
     listOf("auto-value", "auto-value-annotations")
   ),
   DependencySet(
@@ -53,7 +51,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "io.prometheus",
-    "0.12.0",
+    "0.14.1",
     listOf("simpleclient", "simpleclient_common", "simpleclient_httpserver")
   ),
   DependencySet(
@@ -64,17 +62,17 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.openjdk.jmh",
-    "1.32",
+    "1.34",
     listOf("jmh-core", "jmh-generator-bytecode")
   ),
   DependencySet(
     "org.mockito",
-    "3.11.1",
+    "4.2.0",
     listOf("mockito-core", "mockito-junit-jupiter")
   ),
   DependencySet(
     "org.slf4j",
-    "1.7.30",
+    "1.7.32",
     listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
   ),
   DependencySet(
@@ -85,25 +83,25 @@ val DEPENDENCY_SETS = listOf(
 )
 
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.2.3",
-  "com.github.stefanbirkner:system-lambda:1.2.0",
+  "ch.qos.logback:logback-classic:1.2.10",
+  "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "com.google.auto.service:auto-service:1.0",
-  "com.uber.nullaway:nullaway:0.9.1",
+  "com.google.auto.service:auto-service:1.0.1",
+  "com.uber.nullaway:nullaway:0.9.5",
   "commons-beanutils:commons-beanutils:1.9.4",
-  "commons-cli:commons-cli:1.4",
+  "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.4",
-  "commons-io:commons-io:2.10.0",
+  "commons-io:commons-io:2.11.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.proto:opentelemetry-proto:0.11.0-alpha",
   "org.assertj:assertj-core:3.22.0",
-  "org.awaitility:awaitility:4.1.0",
+  "org.awaitility:awaitility:4.1.1",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.2",
