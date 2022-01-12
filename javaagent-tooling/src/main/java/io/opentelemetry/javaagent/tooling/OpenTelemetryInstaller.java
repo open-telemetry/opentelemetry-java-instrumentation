@@ -51,9 +51,10 @@ public class OpenTelemetryInstaller {
               .join(timeout, unit);
         });
 
-    SdkLogEmitterProvider sdkLogEmitterProvider = autoConfiguredSdk.getOpenTelemetrySdk()
-        .getSdkLogEmitterProvider();
-    LogEmitterProvider logEmitterProvider = DelegatingLogEmitterProvider.from(sdkLogEmitterProvider);
+    SdkLogEmitterProvider sdkLogEmitterProvider =
+        autoConfiguredSdk.getOpenTelemetrySdk().getSdkLogEmitterProvider();
+    LogEmitterProvider logEmitterProvider =
+        DelegatingLogEmitterProvider.from(sdkLogEmitterProvider);
     AgentLogEmitterProvider.set(logEmitterProvider);
 
     return autoConfiguredSdk;
