@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.FunctionTimer;
@@ -14,6 +15,7 @@ import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
@@ -24,10 +26,8 @@ import javax.annotation.Nullable;
 final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMeter {
 
   private final Id id;
-  private final Attributes attributes;
-  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
-  private final String countMeterName;
-  private final String totalTimeMeterName;
+  private final AsyncMeasurementHandle countMeasurementHandle;
+  private final AsyncMeasurementHandle totalTimeMeasurementHandle;
 
   OpenTelemetryFunctionTimer(
       Id id,
@@ -37,26 +37,27 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
       TimeUnit totalTimeFunctionUnit,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
-    this.attributes = tagsAsAttributes(id);
-    this.asyncInstrumentRegistry = asyncInstrumentRegistry;
 
-    countMeterName = id.getName() + "." + Statistic.COUNT.getTagValueRepresentation();
-    totalTimeMeterName = id.getName() + "." + Statistic.TOTAL_TIME.getTagValueRepresentation();
+    String countMeterName = statisticInstrumentName(id, Statistic.COUNT);
+    String totalTimeMeterName = statisticInstrumentName(id, Statistic.TOTAL_TIME);
+    Attributes attributes = tagsAsAttributes(id);
 
-    asyncInstrumentRegistry.buildLongCounter(
-        countMeterName, description(id), /* baseUnit = */ "1", attributes, obj, countFunction);
+    countMeasurementHandle =
+        asyncInstrumentRegistry.buildLongCounter(
+            countMeterName, description(id), /* baseUnit = */ "1", attributes, obj, countFunction);
 
-    asyncInstrumentRegistry.buildDoubleCounter(
-        totalTimeMeterName,
-        description(id),
-        /* baseUnit = */ "ms",
-        attributes,
-        obj,
-        val ->
-            TimeUtils.convert(
-                totalTimeFunction.applyAsDouble(val),
-                totalTimeFunctionUnit,
-                TimeUnit.MILLISECONDS));
+    totalTimeMeasurementHandle =
+        asyncInstrumentRegistry.buildDoubleCounter(
+            totalTimeMeterName,
+            description(id),
+            /* baseUnit = */ "ms",
+            attributes,
+            obj,
+            val ->
+                TimeUtils.convert(
+                    totalTimeFunction.applyAsDouble(val),
+                    totalTimeFunctionUnit,
+                    TimeUnit.MILLISECONDS));
   }
 
   @Override
@@ -95,8 +96,8 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
 
   @Override
   public void onRemove() {
-    asyncInstrumentRegistry.removeLongCounter(countMeterName, attributes);
-    asyncInstrumentRegistry.removeDoubleCounter(totalTimeMeterName, attributes);
+    countMeasurementHandle.remove();
+    totalTimeMeasurementHandle.remove();
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

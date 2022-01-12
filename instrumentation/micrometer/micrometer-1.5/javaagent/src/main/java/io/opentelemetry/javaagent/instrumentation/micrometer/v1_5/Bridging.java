@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.Tag;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -36,6 +37,14 @@ final class Bridging {
   static String baseUnit(Meter.Id id) {
     String baseUnit = id.getBaseUnit();
     return baseUnit == null ? "1" : baseUnit;
+  }
+
+  static String statisticInstrumentName(Meter.Id id, Statistic statistic) {
+    String prefix = id.getName() + ".";
+    // use "total_time" instead of "total" to avoid clashing with Statistic.TOTAL
+    String statisticStr =
+        statistic == Statistic.TOTAL_TIME ? "total_time" : statistic.getTagValueRepresentation();
+    return prefix + statisticStr;
   }
 
   private Bridging() {}
