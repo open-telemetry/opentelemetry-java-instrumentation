@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-context")
-    versions.set("[5.0.4.RELEASE,5.4)")
+    versions.set("[4.0.0.RELEASE,)")
   }
 }
 
@@ -17,7 +17,7 @@ dependencies {
   bootstrap(project(":instrumentation:rmi:bootstrap"))
   testInstrumentation(project(":instrumentation:rmi:javaagent"))
 
-  library("org.springframework:spring-context:5.2.9.RELEASE")
-  library("org.springframework:spring-aop:5.2.9.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot:2.3.4.RELEASE")
+  library("org.springframework:spring-context:4.0.0.RELEASE")
+  library("org.springframework:spring-aop:4.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
 }

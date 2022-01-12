@@ -3,33 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springrmi.client;
+package io.opentelemetry.javaagent.instrumentation.springrmi.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
-import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
-public final class ClientSingletons {
+public final class ServerSingletons {
 
-  private static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    ClientAttributesExtractor attributesExtractor = new ClientAttributesExtractor();
+    ServerAttributesExtractor attributesExtractor = new ServerAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<Method, Void>builder(
+        Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
-                "io.opentelemetry.springrmi",
+                "io.opentelemetry.spring-rmi-4.0",
                 RpcSpanNameExtractor.create(attributesExtractor))
             .addAttributesExtractor(attributesExtractor)
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .newInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
-  public static Instrumenter<Method, Void> instrumenter() {
+  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
     return INSTRUMENTER;
   }
 
-  private ClientSingletons() {}
+  private ServerSingletons() {}
 }

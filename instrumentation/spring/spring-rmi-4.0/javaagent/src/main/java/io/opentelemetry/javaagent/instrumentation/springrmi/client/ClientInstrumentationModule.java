@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springrmi.server;
+package io.opentelemetry.javaagent.instrumentation.springrmi.client;
 
 import static java.util.Collections.singletonList;
 
@@ -13,14 +13,14 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ServerInstrumentationModule extends InstrumentationModule {
+public class ClientInstrumentationModule extends InstrumentationModule {
 
-  public ServerInstrumentationModule() {
-    super("spring-rmi", "spring-rmi-server");
+  public ClientInstrumentationModule() {
+    super("spring-rmi", "spring-rmi-4.0", "spring-rmi-client");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ServerInstrumentation());
+    return singletonList(new ClientInstrumentation());
   }
 }
