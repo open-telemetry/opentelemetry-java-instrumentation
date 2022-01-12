@@ -15,7 +15,6 @@ To use it, add the module to your application's runtime classpath and add the ap
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-logback-1.0</artifactId>
     <version>0.17.0-alpha</version>
-    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
