@@ -50,6 +50,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     Config config = new Config()
     SingleServerConfig singleServerConfig = config.useSingleServer()
     singleServerConfig.setAddress(address)
+    singleServerConfig.setTimeout(30_000)
     // disable connection ping if it exists
     singleServerConfig.metaClass.getMetaMethod("setPingConnectionInterval", int)?.invoke(singleServerConfig, 0)
     redisson = Redisson.create(config)
@@ -60,7 +61,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     when:
     RBucket<String> keyObject = redisson.getBucket("foo")
     RFuture future = keyObject.setAsync("bar")
-    future.get(3, TimeUnit.SECONDS)
+    future.get(30, TimeUnit.SECONDS)
 
     then:
     assertTraces(1) {
@@ -91,7 +92,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     })
 
     then:
-    result.get(3, TimeUnit.SECONDS)
+    result.get(30, TimeUnit.SECONDS)
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
