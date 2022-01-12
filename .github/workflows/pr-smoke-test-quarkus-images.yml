@@ -20,22 +20,24 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: quarkus-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/quarkus/gradle/wrapper/gradle-wrapper.properties') }}
-
-      - name: Build Docker Image
         # Quarkus 2.0+ does not support Java 8
-        run: |
-          ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
-          ./gradlew jibDockerBuild -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
-          ./gradlew jibDockerBuild -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: smoke-tests/images/quarkus
+      - name: Build Java 11 Docker Image
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/quarkus
+          cache-read-only: true
+
+      - name: Build Java 17 Docker Image
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/quarkus
+          cache-read-only: true
+
+      - name: Build Java 18 Docker Image
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/quarkus
+          cache-read-only: true

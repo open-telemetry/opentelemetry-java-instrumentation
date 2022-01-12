@@ -20,22 +20,30 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
+      - name: Build Java 8 Docker Image
+        uses: gradle/gradle-build-action@v2
         with:
-          job-id: grpc-smoke
-          read-only: true
+          arguments: jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/grpc
+          cache-read-only: true
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
+      - name: Build Java 11 Docker Image
+        uses: gradle/gradle-build-action@v2
         with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/grpc/gradle/wrapper/gradle-wrapper.properties') }}
+          arguments: jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/grpc
+          cache-read-only: true
 
-      - name: Build Docker Image
-        run: |
-          ./gradlew jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
-          ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
-          ./gradlew jibDockerBuild -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
-          ./gradlew jibDockerBuild -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: smoke-tests/images/grpc
+      - name: Build Java 17 Docker Image
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/grpc
+          cache-read-only: true
+
+      - name: Build Java 18 Docker Image
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/grpc
+          cache-read-only: true
