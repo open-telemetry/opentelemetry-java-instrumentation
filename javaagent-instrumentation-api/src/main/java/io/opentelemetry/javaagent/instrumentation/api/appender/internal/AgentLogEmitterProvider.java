@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.appender.internal;
+package io.opentelemetry.javaagent.instrumentation.api.appender.internal;
+
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
 
 public final class AgentLogEmitterProvider {
 
@@ -15,22 +18,12 @@ public final class AgentLogEmitterProvider {
   }
 
   /**
-   * Sets the {@link LogEmitterProvider} that should be the agent instance. Future calls to {@link
+   * Sets the {@link LogEmitterProvider} that should be used by the agent. Future calls to {@link
    * #get()} will return the provided {@link LogEmitterProvider} instance. It should only be called
-   * once - an attempt to call it a second time will result in an error. If trying to set the agent
-   * {@link LogEmitterProvider} multiple times in tests, use {@link
-   * AgentLogEmitterProvider#resetForTest()} between them.
+   * once - an attempt to call it a second time will result in an error.
    */
   public static void set(LogEmitterProvider logEmitterProvider) {
     delegate.set(logEmitterProvider);
-  }
-
-  /**
-   * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
-   * need to reconfigure {@link LogEmitterProvider}.
-   */
-  public static void resetForTest() {
-    delegate.resetForTest();
   }
 
   private AgentLogEmitterProvider() {}

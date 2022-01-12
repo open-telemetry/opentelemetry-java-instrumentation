@@ -12,6 +12,8 @@ dependencies {
 
   implementation("org.slf4j:slf4j-api")
 
+  compileOnly(project(":instrumentation-appender-api-internal"))
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
