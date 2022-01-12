@@ -22,15 +22,15 @@ import javax.annotation.Nullable;
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetClientAttributesGetter<REQUEST, RESPONSE> adapter;
+  private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
 
   public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
-      NetClientAttributesGetter<REQUEST, RESPONSE> adapter) {
-    return new NetClientAttributesExtractor<>(adapter);
+      NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new NetClientAttributesExtractor<>(getter);
   }
 
-  private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> adapter) {
-    this.adapter = adapter;
+  private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    this.getter = getter;
   }
 
   @Override
@@ -43,17 +43,17 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    set(attributes, SemanticAttributes.NET_TRANSPORT, adapter.transport(request, response));
+    set(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
-    String peerIp = adapter.peerIp(request, response);
-    String peerName = adapter.peerName(request, response);
+    String peerIp = getter.peerIp(request, response);
+    String peerName = getter.peerName(request, response);
 
     if (peerName != null && !peerName.equals(peerIp)) {
       set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
     }
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
-    Integer peerPort = adapter.peerPort(request, response);
+    Integer peerPort = getter.peerPort(request, response);
     if (peerPort != null && peerPort > 0) {
       set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }

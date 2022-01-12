@@ -29,14 +29,14 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
 
   private final Map<String, String> peerServiceMapping;
-  private final NetClientAttributesGetter<REQUEST, RESPONSE> attributesAdapter;
+  private final NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       Map<String, String> peerServiceMapping,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesAdapter) {
+      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     this.peerServiceMapping = peerServiceMapping;
-    this.attributesAdapter = netAttributesAdapter;
+    this.attributesGetter = attributesGetter;
   }
 
   /**
@@ -44,9 +44,8 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesAdapter) {
-    return new PeerServiceAttributesExtractor<>(
-        JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesAdapter);
+      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return new PeerServiceAttributesExtractor<>(JAVAAGENT_PEER_SERVICE_MAPPING, attributesGetter);
   }
 
   @Override
@@ -64,10 +63,10 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String peerName = attributesAdapter.peerName(request, response);
+    String peerName = attributesGetter.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String peerIp = attributesAdapter.peerIp(request, response);
+      String peerIp = attributesGetter.peerIp(request, response);
       peerService = mapToPeerService(peerIp);
     }
     if (peerService != null) {
