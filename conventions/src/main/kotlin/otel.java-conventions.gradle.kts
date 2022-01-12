@@ -213,7 +213,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
-  jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
+  jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
@@ -247,7 +247,8 @@ class KeystoreArgumentsProvider(
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
-    "-Djavax.net.ssl.trustStorePassword=testing")
+    "-Djavax.net.ssl.trustStorePassword=testing"
+  )
 }
 
 afterEvaluate {
@@ -256,19 +257,23 @@ afterEvaluate {
     ?: false
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
-      javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
-        implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
-      })
+      javaLauncher.set(
+        javaToolchains.launcherFor {
+          languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+          implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
+        }
+      )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
       // of Java version.
       if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && otelJava.maxJavaVersionForTests.isPresent) {
-        javaLauncher.set(javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
-        })
+        javaLauncher.set(
+          javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
+          }
+        )
       }
     }
 
