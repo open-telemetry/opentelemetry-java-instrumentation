@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.appender.api.internal.AgentLogEmitterProvider;
-import io.opentelemetry.instrumentation.appender.sdk.internal.DelegatingLogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.AgentLogEmitterProvider;
+import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;

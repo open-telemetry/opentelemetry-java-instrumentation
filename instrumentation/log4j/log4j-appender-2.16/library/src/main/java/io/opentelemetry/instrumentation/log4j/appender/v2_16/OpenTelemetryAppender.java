@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
-import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
-import io.opentelemetry.instrumentation.appender.api.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.appender.api.internal.LogEmitterProviderHolder;
-import io.opentelemetry.instrumentation.appender.sdk.internal.DelegatingLogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
+import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;

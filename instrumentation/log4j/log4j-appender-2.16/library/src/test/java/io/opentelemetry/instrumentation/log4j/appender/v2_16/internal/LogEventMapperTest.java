@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.appender.api.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;

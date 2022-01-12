@@ -17,8 +17,6 @@ public final class HelperClassPredicate {
   // library instrumentation packages (both shaded in the agent)
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
   private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
-  private static final String INSTRUMENTATION_INTERNAL_API_PACKAGE =
-      "io.opentelemetry.instrumentation.appender.api.internal";
 
   private final Predicate<String> additionalLibraryHelperClassPredicate;
 
@@ -51,7 +49,6 @@ public final class HelperClassPredicate {
   private static boolean isBootstrapClass(String className) {
     return className.startsWith(JAVAAGENT_API_PACKAGE)
         || className.startsWith(INSTRUMENTATION_API_PACKAGE)
-        || className.startsWith(INSTRUMENTATION_INTERNAL_API_PACKAGE)
         || className.startsWith("io.opentelemetry.javaagent.bootstrap.")
         || className.startsWith("io.opentelemetry.api.")
         || className.startsWith("io.opentelemetry.context.")
@@ -66,7 +63,6 @@ public final class HelperClassPredicate {
 
   private static boolean isLibraryHelperClass(String className) {
     return className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE)
-        && !className.startsWith(INSTRUMENTATION_API_PACKAGE)
-        && !className.startsWith(INSTRUMENTATION_INTERNAL_API_PACKAGE);
+        && !className.startsWith(INSTRUMENTATION_API_PACKAGE);
   }
 }

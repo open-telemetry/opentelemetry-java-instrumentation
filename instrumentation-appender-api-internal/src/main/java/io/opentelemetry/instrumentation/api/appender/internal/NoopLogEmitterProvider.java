@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.appender.api.internal;
+package io.opentelemetry.instrumentation.api.appender.internal;
 
 final class NoopLogEmitterProvider implements LogEmitterProvider {
 

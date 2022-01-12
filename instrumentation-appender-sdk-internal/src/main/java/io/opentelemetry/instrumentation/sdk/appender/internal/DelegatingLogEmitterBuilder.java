@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.appender.sdk.internal;
+package io.opentelemetry.instrumentation.sdk.appender.internal;
 
-import io.opentelemetry.instrumentation.appender.api.internal.LogEmitter;
-import io.opentelemetry.instrumentation.appender.api.internal.LogEmitterBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitter;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterBuilder;
 
 final class DelegatingLogEmitterBuilder implements LogEmitterBuilder {
 
