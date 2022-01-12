@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientNetAttributesAdapter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientNetAttributesGetter;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
@@ -24,7 +24,7 @@ public class JettyHttpClientSingletons {
         new JettyClientInstrumenterBuilder(GlobalOpenTelemetry.get());
 
     PeerServiceAttributesExtractor<Request, Response> peerServiceAttributesExtractor =
-        PeerServiceAttributesExtractor.create(new JettyHttpClientNetAttributesAdapter());
+        PeerServiceAttributesExtractor.create(new JettyHttpClientNetAttributesGetter());
     INSTRUMENTER = builder.addAttributeExtractor(peerServiceAttributesExtractor).build();
   }
 

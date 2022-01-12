@@ -29,8 +29,8 @@ public final class NettyClientSingletons {
   static {
     NettyHttpClientAttributesExtractor httpClientAttributesExtractor =
         new NettyHttpClientAttributesExtractor();
-    NettyNetClientAttributesAdapter netClientAttributesAdapter =
-        new NettyNetClientAttributesAdapter();
+    NettyNetClientAttributesGetter netClientAttributesAdapter =
+        new NettyNetClientAttributesGetter();
     NetClientAttributesExtractor<HttpRequestAndChannel, HttpResponse> netClientAttributesExtractor =
         NetClientAttributesExtractor.create(netClientAttributesAdapter);
 
@@ -49,8 +49,8 @@ public final class NettyClientSingletons {
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
 
-    NettyConnectNetAttributesAdapter nettyConnectAttributesAdapter =
-        new NettyConnectNetAttributesAdapter();
+    NettyConnectNetAttributesGetter nettyConnectAttributesAdapter =
+        new NettyConnectNetAttributesGetter();
     NetClientAttributesExtractor<NettyConnectionRequest, Channel> nettyConnectAttributesExtractor =
         NetClientAttributesExtractor.create(nettyConnectAttributesAdapter);
     CONNECTION_INSTRUMENTER =

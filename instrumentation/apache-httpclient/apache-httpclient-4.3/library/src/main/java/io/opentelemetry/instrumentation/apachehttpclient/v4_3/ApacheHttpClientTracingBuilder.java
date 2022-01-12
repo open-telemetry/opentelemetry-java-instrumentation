@@ -71,8 +71,8 @@ public final class ApacheHttpClientTracingBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesAdapter netAttributesAdapter =
-        new ApacheHttpClientNetAttributesAdapter();
+    ApacheHttpClientNetAttributesGetter netAttributesAdapter =
+        new ApacheHttpClientNetAttributesGetter();
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)

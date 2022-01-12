@@ -30,8 +30,8 @@ public final class AsyncHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    AsyncHttpClientNetAttributesAdapter netAttributesAdapter =
-        new AsyncHttpClientNetAttributesAdapter();
+    AsyncHttpClientNetAttributesGetter netAttributesAdapter =
+        new AsyncHttpClientNetAttributesGetter();
     NetClientAttributesExtractor<Request, Response> netAttributesExtractor =
         NetClientAttributesExtractor.create(netAttributesAdapter);
     INSTRUMENTER =

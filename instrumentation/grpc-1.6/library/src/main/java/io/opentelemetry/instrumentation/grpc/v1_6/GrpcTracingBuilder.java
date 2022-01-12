@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesAdapter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -80,8 +80,8 @@ public final class GrpcTracingBuilder {
                         new GrpcRpcAttributesExtractor(), new GrpcAttributesExtractor())
                     .addAttributesExtractors(additionalExtractors));
 
-    GrpcNetClientAttributesAdapter netClientAttributesExtractor =
-        new GrpcNetClientAttributesAdapter();
+    GrpcNetClientAttributesGetter netClientAttributesExtractor =
+        new GrpcNetClientAttributesGetter();
 
     clientInstrumenterBuilder.addAttributesExtractor(
         NetClientAttributesExtractor.create(netClientAttributesExtractor));

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetClientAttributesAdapter;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -57,8 +57,8 @@ public final class DubboTracingBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
-    DubboNetClientAttributesAdapter netClientAttributesAdapter =
-        new DubboNetClientAttributesAdapter();
+    DubboNetClientAttributesGetter netClientAttributesAdapter =
+        new DubboNetClientAttributesGetter();
     NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor =
         NetClientAttributesExtractor.create(netClientAttributesAdapter);
 

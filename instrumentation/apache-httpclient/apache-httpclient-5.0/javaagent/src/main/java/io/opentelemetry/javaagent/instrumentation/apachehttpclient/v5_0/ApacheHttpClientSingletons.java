@@ -30,8 +30,8 @@ public final class ApacheHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClassicHttpRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesAdapter netAttributesExtractor =
-        new ApacheHttpClientNetAttributesAdapter();
+    ApacheHttpClientNetAttributesGetter netAttributesExtractor =
+        new ApacheHttpClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<ClassicHttpRequest, HttpResponse>builder(

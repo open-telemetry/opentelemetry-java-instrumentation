@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesExtractor;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesAdapter;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
@@ -25,7 +25,7 @@ public final class JdbcSingletons {
   static {
     DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
-    JdbcNetAttributesAdapter netAttributesAdapter = new JdbcNetAttributesAdapter();
+    JdbcNetAttributesGetter netAttributesAdapter = new JdbcNetAttributesGetter();
     NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor =
         NetClientAttributesExtractor.create(netAttributesAdapter);
     INSTRUMENTER =

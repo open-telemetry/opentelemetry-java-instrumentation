@@ -22,7 +22,7 @@ public final class RedissonSingletons {
     DbAttributesExtractor<RedissonRequest, Void> dbAttributesExtractor =
         new RedissonDbAttributesExtractor();
     NetClientAttributesExtractor<RedissonRequest, Void> netAttributeExtractor =
-        NetClientAttributesExtractor.create(new RedissonNetAttributesAdapter());
+        NetClientAttributesExtractor.create(new RedissonNetAttributesGetter());
     SpanNameExtractor<RedissonRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     INSTRUMENTER =

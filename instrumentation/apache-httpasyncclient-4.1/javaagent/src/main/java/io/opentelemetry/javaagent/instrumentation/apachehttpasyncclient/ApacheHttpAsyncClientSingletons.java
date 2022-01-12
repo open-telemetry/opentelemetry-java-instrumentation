@@ -29,8 +29,8 @@ public final class ApacheHttpAsyncClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpAsyncClientNetAttributesAdapter netAttributesAdapter =
-        new ApacheHttpAsyncClientNetAttributesAdapter();
+    ApacheHttpAsyncClientNetAttributesGetter netAttributesAdapter =
+        new ApacheHttpAsyncClientNetAttributesGetter();
     NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor =
         NetClientAttributesExtractor.create(netAttributesAdapter);
 
