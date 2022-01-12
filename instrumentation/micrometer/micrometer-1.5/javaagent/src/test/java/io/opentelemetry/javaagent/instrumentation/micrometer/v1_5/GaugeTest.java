@@ -131,7 +131,6 @@ class GaugeTest {
                         .hasDoubleGauge()
                         .points()
                         .satisfiesExactly(point -> assertThat(point).hasValue(42))));
-    testing.clearData();
 
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);
@@ -139,6 +138,7 @@ class GaugeTest {
     GcUtils.awaitGc(numWeakRef);
 
     // then
+    testing.clearData();
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testWeakRefGauge", AbstractIterableAssert::isEmpty);
