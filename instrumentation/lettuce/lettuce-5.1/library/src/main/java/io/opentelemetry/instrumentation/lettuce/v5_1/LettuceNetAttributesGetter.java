@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.v5_1.OpenTelemetryTracing.OpenTelemetryEndpoint;
 import javax.annotation.Nullable;
 
-final class LettuceNetAttributesExtractor
-    extends NetClientAttributesExtractor<OpenTelemetryEndpoint, Void> {
+final class LettuceNetAttributesGetter
+    implements NetClientAttributesGetter<OpenTelemetryEndpoint, Void> {
 
   @Override
   public String transport(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {

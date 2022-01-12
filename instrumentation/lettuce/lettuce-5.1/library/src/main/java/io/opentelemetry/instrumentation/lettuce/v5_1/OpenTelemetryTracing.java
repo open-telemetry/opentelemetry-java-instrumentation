@@ -34,8 +34,8 @@ import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
 
-  private static final LettuceNetAttributesExtractor netAttributesExtractor =
-      new LettuceNetAttributesExtractor();
+  private static final LettuceNetAttributesGetter netAttributesExtractor =
+      new LettuceNetAttributesGetter();
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer) {
