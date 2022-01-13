@@ -53,8 +53,12 @@ public final class LoggingEventMapper {
   }
 
   public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {
+    String instrumentationName = event.getLoggerName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        logEmitterProvider.logEmitterBuilder(event.getLoggerName()).build().logBuilder();
+        logEmitterProvider.logEmitterBuilder(instrumentationName).build().logBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }

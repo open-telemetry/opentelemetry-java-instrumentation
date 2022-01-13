@@ -23,9 +23,12 @@ public final class Log4jHelper {
       new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE);
 
   public static void capture(Logger logger, Level level, Message message, Throwable throwable) {
-
+    String instrumentationName = logger.getName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        AgentLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
     mapper.mapLogEvent(builder, message, level, throwable, null, contextData);
     builder.emit();
