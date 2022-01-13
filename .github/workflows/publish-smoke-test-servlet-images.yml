@@ -62,14 +62,14 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          working-directory: smoke-tests/images/servlet
+          build-root-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
         uses: gradle/gradle-build-action@v2
         with:
           arguments: buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          working-directory: smoke-tests/images/servlet
+          build-root-directory: smoke-tests/images/servlet
 
   issue:
     name: Open issue on failure
