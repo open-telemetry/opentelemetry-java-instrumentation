@@ -26,7 +26,10 @@ final class AsyncInstrumentRegistry {
 
   // using a weak ref so that the AsyncInstrumentRegistry (which is stored in a static maps) does
   // not hold strong references to Meter (and thus make it impossible to collect Meter garbage).
-  // in practice this should never return null
+  // in practice this should never return null - OpenTelemetryMeterRegistry maintains a strong
+  // reference to both Meter and AsyncInstrumentRegistry; if the meter registry is GC'd then its
+  // corresponding AsyncInstrumentRegistry cannot possibly be used; and Meter cannot be GC'd until
+  // OpentelemetryMeterRegistry is GC'd
   private final WeakReference<Meter> meter;
 
   // we're always locking lock on the whole instrument map; the add/remove methods aren't called
