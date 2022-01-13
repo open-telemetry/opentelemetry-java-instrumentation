@@ -15,9 +15,8 @@ import static java.util.stream.Collectors.toList
 @IgnoreIf({ useWindowsContainers() })
 class LogsSmokeTest extends SmokeTest {
 
-  @Override
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk11-20211213.1570880324"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
   }
 
   @Override
@@ -30,9 +29,9 @@ class LogsSmokeTest extends SmokeTest {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }
 
-  def "Should export logs"() {
+  def "Should export logs"(int jdk) {
     setup:
-    startTarget(11)
+    startTarget(jdk)
 
     when:
     client().get("/greeting").aggregate().join()
@@ -50,6 +49,9 @@ class LogsSmokeTest extends SmokeTest {
 
     cleanup:
     stopTarget()
+
+    where:
+    jdk << [8, 11, 17]
 
   }
 
