@@ -35,7 +35,7 @@ class LogsSmokeTest extends SmokeTest {
     startTarget(11)
 
     when:
-    def response = client().get("/greeting").aggregate().join()
+    client().get("/greeting").aggregate().join()
     Collection<ExportLogsServiceRequest> logs = waitForLogs()
 
     then:
