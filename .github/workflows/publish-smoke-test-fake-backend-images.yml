@@ -31,12 +31,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Tag
-        run: echo "::set-env name=TAG::$(date '+%Y%m%d').$GITHUB_RUN_ID"
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Docker Image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=$TAG
+          arguments: jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
           build-root-directory: smoke-tests/images/fake-backend
 
   publishWindows:
@@ -66,12 +66,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Tag
-        run: echo "::set-env name=TAG::$(date '+%Y%m%d').$GITHUB_RUN_ID"
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Docker Image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: dockerPush -PextraTag=$TAG
+          arguments: dockerPush -PextraTag=${{ env.TAG }}
           build-root-directory: smoke-tests/images/fake-backend
 
   issue:
