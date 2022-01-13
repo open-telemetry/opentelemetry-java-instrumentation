@@ -24,7 +24,10 @@ import javax.annotation.Nullable;
 // TODO: refactor this class, there's too much copy-paste here
 final class AsyncInstrumentRegistry {
 
-  private final Meter meter;
+  // using a weak ref so that the AsyncInstrumentRegistry (which is stored in a static maps) does
+  // not hold strong references to Meter (and thus make it impossible to collect Meter garbage).
+  // in practice this should never return null
+  private final WeakReference<Meter> meter;
 
   // we're always locking lock on the whole instrument map; the add/remove methods aren't called
   // that often, so it's probably better to opt for correctness in that case - there is a small
@@ -45,7 +48,7 @@ final class AsyncInstrumentRegistry {
   private final Map<String, DoubleMeasurementsRecorder> upDownDoubleCounters = new HashMap<>();
 
   AsyncInstrumentRegistry(Meter meter) {
-    this.meter = meter;
+    this.meter = new WeakReference<>(meter);
   }
 
   <T> AsyncMeasurementHandle buildGauge(
@@ -76,7 +79,7 @@ final class AsyncInstrumentRegistry {
               n -> {
                 DoubleMeasurementsRecorder recorderCallback =
                     new DoubleMeasurementsRecorder(recorderLock);
-                meter
+                otelMeter()
                     .gaugeBuilder(name)
                     .setDescription(description)
                     .setUnit(baseUnit)
@@ -118,7 +121,7 @@ final class AsyncInstrumentRegistry {
               n -> {
                 DoubleMeasurementsRecorder recorderCallback =
                     new DoubleMeasurementsRecorder(recorderLock);
-                meter
+                otelMeter()
                     .counterBuilder(name)
                     .setDescription(description)
                     .setUnit(baseUnit)
@@ -152,7 +155,7 @@ final class AsyncInstrumentRegistry {
               n -> {
                 LongMeasurementsRecorder recorderCallback =
                     new LongMeasurementsRecorder(recorderLock);
-                meter
+                otelMeter()
                     .counterBuilder(name)
                     .setDescription(description)
                     .setUnit(baseUnit)
@@ -185,7 +188,7 @@ final class AsyncInstrumentRegistry {
               n -> {
                 DoubleMeasurementsRecorder recorderCallback =
                     new DoubleMeasurementsRecorder(recorderLock);
-                meter
+                otelMeter()
                     .upDownCounterBuilder(name)
                     .setDescription(description)
                     .setUnit(baseUnit)
@@ -198,6 +201,15 @@ final class AsyncInstrumentRegistry {
 
       return new AsyncMeasurementHandle(upDownDoubleCounters, name, attributes);
     }
+  }
+
+  private Meter otelMeter() {
+    Meter otelMeter = meter.get();
+    if (otelMeter == null) {
+      throw new IllegalStateException(
+          "OpenTelemetry Meter was garbage-collected, but the async instrument registry was not");
+    }
+    return otelMeter;
   }
 
   private abstract static class MeasurementsRecorder<I> {
