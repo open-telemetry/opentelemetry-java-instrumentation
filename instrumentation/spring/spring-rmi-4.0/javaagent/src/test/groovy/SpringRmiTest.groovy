@@ -86,6 +86,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
         span(2) {
           name "springrmi.app.SpringRmiGreeterImpl/hello"
           kind SpanKind.SERVER
+          childOf span(1)
           attributes {
             "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
             "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
@@ -141,6 +142,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
         span(2) {
           name "springrmi.app.SpringRmiGreeterImpl/exceptional"
           kind SpanKind.SERVER
+          childOf span(1)
           status ERROR
           event(0) {
             eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
