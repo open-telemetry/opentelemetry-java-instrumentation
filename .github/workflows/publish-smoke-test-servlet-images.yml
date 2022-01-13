@@ -55,20 +55,20 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Tag
-        run: echo "::set-env name=TAG::$(date '+%Y%m%d').$GITHUB_RUN_ID"
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: buildLinuxTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          arguments: buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
           working-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: buildWindowsTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          arguments: buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
           working-directory: smoke-tests/images/servlet
 
   issue:
