@@ -99,7 +99,8 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.HTTP_ROUTE" String
+            // TODO: camel instrumentation does not use ServerSpanNaming to update the route, so the matched route is provided by the servlet instrumentation
+            "$SemanticAttributes.HTTP_ROUTE" "/*"
           }
         }
         it.span(3) {

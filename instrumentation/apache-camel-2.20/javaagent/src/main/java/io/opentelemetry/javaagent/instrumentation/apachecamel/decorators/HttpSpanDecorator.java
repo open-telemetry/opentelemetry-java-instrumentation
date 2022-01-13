@@ -121,6 +121,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   private void updateServerSpanName(Span serverSpan, Exchange exchange, Endpoint endpoint) {
     String path = getPath(exchange, endpoint);
     if (path != null) {
+      // TODO should update SERVER span name/route using ServerSpanNaming
       serverSpan.updateName(path);
     }
   }

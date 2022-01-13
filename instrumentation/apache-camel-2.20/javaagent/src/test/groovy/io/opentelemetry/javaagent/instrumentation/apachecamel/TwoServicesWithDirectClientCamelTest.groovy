@@ -135,7 +135,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
-            "$SemanticAttributes.HTTP_ROUTE" String
+            // TODO: camel instrumentation does not use ServerSpanNaming to update the route, so the matched route is provided by the servlet instrumentation
+            "$SemanticAttributes.HTTP_ROUTE" "/*"
           }
         }
         it.span(5) {
