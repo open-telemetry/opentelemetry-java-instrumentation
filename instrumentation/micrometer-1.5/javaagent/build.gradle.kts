@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
 
-  implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+  implementation(project(":instrumentation:micrometer-1.5:library"))
 
-  testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
+  testImplementation(project(":instrumentation:micrometer-1.5:testing"))
 }
