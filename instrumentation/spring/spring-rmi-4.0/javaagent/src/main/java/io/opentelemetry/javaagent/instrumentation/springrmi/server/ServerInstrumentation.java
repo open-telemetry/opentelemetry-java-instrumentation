@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.springrmi.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.springrmi.server.ServerSingletons.instrumenter;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.springrmi.SpringRmiSingletons.serverInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -31,7 +33,10 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("invoke")), this.getClass().getName() + "$InvokeMethodAdvice");
+        isMethod()
+            .and(named("invoke"))
+            .and(takesArgument(0, named("org.springframework.remoting.support.RemoteInvocation"))),
+        this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -56,11 +61,11 @@ public class ServerInstrumentation implements TypeInstrumentation {
       String methodName = remoteInv.getMethodName();
       request = ClassAndMethod.create(serverClass, methodName);
 
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!serverInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = serverInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -79,7 +84,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      serverInstrumenter().end(context, request, null, throwable);
     }
   }
 }

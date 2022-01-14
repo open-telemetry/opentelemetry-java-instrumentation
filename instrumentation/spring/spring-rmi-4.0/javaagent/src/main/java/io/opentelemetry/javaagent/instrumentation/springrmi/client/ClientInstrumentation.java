@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.springrmi.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.springrmi.client.ClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.springrmi.SpringRmiSingletons.clientInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -23,6 +25,11 @@ import org.aopalliance.intercept.MethodInvocation;
 
 public class ClientInstrumentation implements TypeInstrumentation {
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.springframework.remoting.rmi.RmiClientInterceptor");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("org.springframework.remoting.rmi.RmiClientInterceptor"));
   }
@@ -30,7 +37,10 @@ public class ClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("invoke")), this.getClass().getName() + "$InvokeMethodAdvice");
+        isMethod()
+            .and(named("invoke"))
+            .and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
+        this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -45,11 +55,11 @@ public class ClientInstrumentation implements TypeInstrumentation {
 
       method = methodInv.getMethod();
       Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!instrumenter().shouldStart(parentContext, method)) {
+      if (!clientInstrumenter().shouldStart(parentContext, method)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, method);
+      context = clientInstrumenter().start(parentContext, method);
       scope = context.makeCurrent();
     }
 
@@ -64,7 +74,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      instrumenter().end(context, method, null, throwable);
+      clientInstrumenter().end(context, method, null, throwable);
     }
   }
 }

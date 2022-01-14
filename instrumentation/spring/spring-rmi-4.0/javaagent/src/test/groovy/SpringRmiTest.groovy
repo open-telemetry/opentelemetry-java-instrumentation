@@ -7,6 +7,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
@@ -26,6 +27,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
   @Shared
   ConfigurableApplicationContext clientAppContext
 
+  @Shared
+  static int registryPort
+
   static class ServerConfig {
     @Bean
     static RemoteExporter registerRMIExporter() {
@@ -33,6 +37,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
       exporter.setServiceName("springRmiGreeter")
       exporter.setServiceInterface(SpringRmiGreeter)
       exporter.setService(new SpringRmiGreeterImpl())
+      exporter.setRegistryPort(registryPort)
       return exporter
     }
   }
@@ -42,12 +47,13 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
     static RmiProxyFactoryBean rmiProxy() {
       RmiProxyFactoryBean bean = new RmiProxyFactoryBean()
       bean.setServiceInterface(SpringRmiGreeter)
-      bean.setServiceUrl("rmi://localhost:1099/springRmiGreeter")
+      bean.setServiceUrl("rmi://localhost:" + registryPort + "/springRmiGreeter")
       return bean
     }
   }
 
   def setupSpec() {
+    registryPort = PortUtils.findOpenPort()
     def serverApp = new SpringApplication(ServerConfig)
     serverAppContext = serverApp.run()
     def clientApp = new SpringApplication(ClientConfig)

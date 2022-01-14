@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.springrmi.server;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
-final class ServerAttributesExtractor extends RpcAttributesExtractor<ClassAndMethod, Void> {
+public final class ServerAttributesExtractor extends RpcAttributesExtractor<ClassAndMethod, Void> {
 
   @Override
   protected String system(ClassAndMethod classAndMethod) {
