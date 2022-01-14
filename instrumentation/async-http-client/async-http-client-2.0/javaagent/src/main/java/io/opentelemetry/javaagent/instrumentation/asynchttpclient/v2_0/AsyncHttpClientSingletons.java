@@ -29,10 +29,10 @@ public final class AsyncHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<RequestContext, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    AsyncHttpClientNetAttributesGetter netAttributeAdapter =
+    AsyncHttpClientNetAttributesGetter netAttributeGetter =
         new AsyncHttpClientNetAttributesGetter();
     NetClientAttributesExtractor<RequestContext, Response> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributeAdapter);
+        NetClientAttributesExtractor.create(netAttributeGetter);
 
     INSTRUMENTER =
         Instrumenter.<RequestContext, Response>builder(
@@ -40,7 +40,7 @@ public final class AsyncHttpClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributeAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(new AsyncHttpClientAdditionalAttributesExtractor())
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);

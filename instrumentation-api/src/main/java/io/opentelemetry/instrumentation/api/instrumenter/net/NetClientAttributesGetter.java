@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
  * response into the 4 common network attribute values.
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
- * library/framework. It will be used by the NetworkClientAttributesExtractor to obtain the various
+ * library/framework. It will be used by the NetClientAttributesExtractor to obtain the various
  * network attributes in a type-generic way.
  */
 public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
