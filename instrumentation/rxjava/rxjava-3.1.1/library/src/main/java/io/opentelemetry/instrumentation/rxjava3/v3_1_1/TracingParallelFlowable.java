@@ -45,6 +45,7 @@ class TracingParallelFlowable<T> extends ParallelFlowable<T> {
       return;
     }
     int n = subscribers.length;
+    @SuppressWarnings("rawtypes")
     Subscriber<? super T>[] parents = new Subscriber[n];
     for (int i = 0; i < n; i++) {
       Subscriber<? super T> z = subscribers[i];

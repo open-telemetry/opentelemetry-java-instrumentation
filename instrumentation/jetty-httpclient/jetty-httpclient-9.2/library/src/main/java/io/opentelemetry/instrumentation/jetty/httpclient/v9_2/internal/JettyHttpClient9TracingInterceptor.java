@@ -112,7 +112,7 @@ public class JettyHttpClient9TracingInterceptor
           (Request.RequestListener)
               Proxy.newProxyInstance(
                   listenerClass.getClassLoader(),
-                  interfaces.toArray(new Class[0]),
+                  interfaces.toArray(new Class<?>[0]),
                   (proxy, method, args) -> {
                     try (Scope ignored = context.makeCurrent()) {
                       return method.invoke(listener, args);

@@ -50,7 +50,8 @@ import javax.annotation.concurrent.NotThreadSafe;
  *     http://code.google.com/p/concurrentlinkedhashmap/</a>
  */
 @NotThreadSafe
-final class LinkedDeque<E extends LinkedDeque.Linked<E>> extends AbstractCollection<E> implements Deque<E> {
+final class LinkedDeque<E extends LinkedDeque.Linked<E>> extends AbstractCollection<E>
+    implements Deque<E> {
 
   // This class provides a doubly-linked list that is optimized for the virtual
   // machine. The first and last elements are manipulated instead of a slightly
@@ -429,8 +430,8 @@ final class LinkedDeque<E extends LinkedDeque.Linked<E>> extends AbstractCollect
   interface Linked<T extends Linked<T>> {
 
     /**
-     * Retrieves the previous element or <tt>null</tt> if either the element is unlinked or the first
-     * element on the deque.
+     * Retrieves the previous element or <tt>null</tt> if either the element is unlinked or the
+     * first element on the deque.
      */
     T getPrevious();
 

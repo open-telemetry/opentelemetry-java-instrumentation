@@ -21,12 +21,12 @@ public class TracingRequestWrapper extends TracingRequestWrapperBase<Object, Obj
   TracingRequestWrapper(
       OpenTelemetrySdk openTelemetrySdk,
       WrappedLambda wrappedLambda,
-      BiFunction<Object, Class, Object> mapper) {
+      BiFunction<Object, Class<?>, Object> mapper) {
     super(openTelemetrySdk, wrappedLambda, mapper);
   }
 
   // Visible for testing
-  static Object map(Object jsonMap, Class clazz) {
+  static <T> T map(Object jsonMap, Class<T> clazz) {
     try {
       return OBJECT_MAPPER.convertValue(jsonMap, clazz);
     } catch (IllegalArgumentException e) {

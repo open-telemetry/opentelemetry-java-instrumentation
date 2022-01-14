@@ -40,7 +40,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
-  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes;
+  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
+      netPeerAttributes;
 
   protected HttpClientTracer(
       io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
@@ -48,7 +49,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     this.netPeerAttributes = netPeerAttributes;
   }
 
-  protected HttpClientTracer(OpenTelemetry openTelemetry,
+  protected HttpClientTracer(
+      OpenTelemetry openTelemetry,
       io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
     this.netPeerAttributes = netPeerAttributes;

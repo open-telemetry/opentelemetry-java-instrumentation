@@ -48,7 +48,8 @@ public final class NetPeerAttributes {
     setNetPeer(span::setAttribute, remoteConnection);
   }
 
-  public void setNetPeer(io.opentelemetry.instrumentation.api.tracer.AttributeSetter span,
+  public void setNetPeer(
+      io.opentelemetry.instrumentation.api.tracer.AttributeSetter span,
       @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
@@ -79,8 +80,10 @@ public final class NetPeerAttributes {
   }
 
   public void setNetPeer(
-      io.opentelemetry.instrumentation.api.tracer.AttributeSetter span, @Nullable String peerName,
-      @Nullable String peerIp, int port) {
+      io.opentelemetry.instrumentation.api.tracer.AttributeSetter span,
+      @Nullable String peerName,
+      @Nullable String peerIp,
+      int port) {
     if (peerName != null && !peerName.equals(peerIp)) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }

@@ -29,13 +29,17 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
     extends BaseTracer {
   private static final String DB_QUERY = "DB Query";
 
-  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes;
+  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
+      netPeerAttributes;
 
-  protected DatabaseClientTracer(io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(
+      io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     this.netPeerAttributes = netPeerAttributes;
   }
 
-  protected DatabaseClientTracer(OpenTelemetry openTelemetry, io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(
+      OpenTelemetry openTelemetry,
+      io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
     this.netPeerAttributes = netPeerAttributes;
   }

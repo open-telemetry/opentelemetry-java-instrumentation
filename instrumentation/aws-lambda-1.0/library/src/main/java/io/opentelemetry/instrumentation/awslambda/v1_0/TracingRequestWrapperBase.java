@@ -22,9 +22,9 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WrappedLambda wrappedLambda;
   private final Method targetMethod;
-  private final BiFunction<I, Class, Object> parameterMapper;
+  private final BiFunction<I, Class<?>, Object> parameterMapper;
 
-  protected TracingRequestWrapperBase(BiFunction<I, Class, Object> parameterMapper) {
+  protected TracingRequestWrapperBase(BiFunction<I, Class<?>, Object> parameterMapper) {
     this(
         AutoConfiguredOpenTelemetrySdk.initialize().getOpenTelemetrySdk(),
         WrappedLambda.fromConfiguration(),
@@ -35,7 +35,7 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
   TracingRequestWrapperBase(
       OpenTelemetrySdk openTelemetrySdk,
       WrappedLambda wrappedLambda,
-      BiFunction<I, Class, Object> parameterMapper) {
+      BiFunction<I, Class<?>, Object> parameterMapper) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
     this.wrappedLambda = wrappedLambda;
     this.targetMethod = wrappedLambda.getRequestTargetMethod();
@@ -43,6 +43,7 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected O doHandleRequest(I input, Context context) {
     Object[] parameters = LambdaParameters.toArray(targetMethod, input, context, parameterMapper);
     O result;
