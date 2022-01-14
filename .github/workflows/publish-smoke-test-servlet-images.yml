@@ -47,18 +47,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: matrix-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/servlet/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
         with:
@@ -66,21 +54,22 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
       - name: Build Linux docker images
-        working-directory: smoke-tests/images/servlet
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew buildLinuxTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os != 'windows-latest'
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          build-root-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
-        working-directory: smoke-tests/images/servlet
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew buildWindowsTestImages pushMatrix -PextraTag=$TAG -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os == 'windows-latest'
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          build-root-directory: smoke-tests/images/servlet
 
   issue:
     name: Open issue on failure

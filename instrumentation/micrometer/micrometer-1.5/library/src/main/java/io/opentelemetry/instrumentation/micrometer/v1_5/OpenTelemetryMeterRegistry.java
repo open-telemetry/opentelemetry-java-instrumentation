@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
+package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Counter;
@@ -20,28 +20,49 @@ import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
 
+/**
+ * A {@link MeterRegistry} implementation that forwards all the captured metrics to the {@linkplain
+ * io.opentelemetry.api.metrics.Meter OpenTelemetry Meter} obtained from the passed {@link
+ * OpenTelemetry} instance.
+ */
 public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
-
-  // TODO: extract a library instrumentation
+  /**
+   * Returns a new {@link OpenTelemetryMeterRegistry} configured with the given {@link
+   * OpenTelemetry}.
+   */
   public static MeterRegistry create(OpenTelemetry openTelemetry) {
-    return new OpenTelemetryMeterRegistry(
-        Clock.SYSTEM, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
+    return builder(openTelemetry).build();
   }
+
+  /**
+   * Returns a new {@link OpenTelemetryMeterRegistryBuilder} configured with the given {@link
+   * OpenTelemetry}.
+   */
+  public static OpenTelemetryMeterRegistryBuilder builder(OpenTelemetry openTelemetry) {
+    return new OpenTelemetryMeterRegistryBuilder(openTelemetry);
+  }
+
+  // we need to re-use instrument registries per OpenTelemetry instance so that async instruments
+  // that were created by other OpenTelemetryMeterRegistries can be reused; otherwise the SDK will
+  // start logging errors and async measurements will not be recorded
+  private static final Cache<io.opentelemetry.api.metrics.Meter, AsyncInstrumentRegistry>
+      asyncInstrumentRegistries = Cache.weak();
 
   private final io.opentelemetry.api.metrics.Meter otelMeter;
   private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
-  private OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
+  OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.otelMeter = otelMeter;
-    this.asyncInstrumentRegistry = new AsyncInstrumentRegistry(otelMeter);
+    this.asyncInstrumentRegistry =
+        asyncInstrumentRegistries.computeIfAbsent(otelMeter, AsyncInstrumentRegistry::new);
     this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 

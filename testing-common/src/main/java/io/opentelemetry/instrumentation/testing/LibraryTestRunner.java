@@ -15,7 +15,10 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -23,6 +26,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,20 +37,30 @@ import java.util.List;
 public final class LibraryTestRunner implements InstrumentationTestRunner {
 
   private static final OpenTelemetrySdk openTelemetry;
-  private static final InMemorySpanExporter testExporter;
+  private static final InMemorySpanExporter testSpanExporter;
+  private static final InMemoryMetricExporter testMetricExporter;
   private static boolean forceFlushCalled;
 
   static {
     GlobalOpenTelemetry.resetForTest();
 
-    testExporter = InMemorySpanExporter.create();
+    testSpanExporter = InMemorySpanExporter.create();
+    testMetricExporter = InMemoryMetricExporter.create();
+
     openTelemetry =
         OpenTelemetrySdk.builder()
             .setTracerProvider(
                 SdkTracerProvider.builder()
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
                     .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
-                    .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
+                    .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
+                    .build())
+            .setMeterProvider(
+                SdkMeterProvider.builder()
+                    .registerMetricReader(
+                        PeriodicMetricReader.builder(testMetricExporter)
+                            .setInterval(Duration.ofMillis(100))
+                            .newMetricReaderFactory())
                     .build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .buildAndRegisterGlobal();
@@ -78,7 +92,8 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
 
   @Override
   public void clearAllExportedData() {
-    testExporter.reset();
+    testSpanExporter.reset();
+    testMetricExporter.reset();
     forceFlushCalled = false;
   }
 
@@ -93,13 +108,12 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
 
   @Override
   public List<SpanData> getExportedSpans() {
-    return testExporter.getFinishedSpanItems();
+    return testSpanExporter.getFinishedSpanItems();
   }
 
   @Override
   public List<MetricData> getExportedMetrics() {
-    // no metrics support yet
-    return Collections.emptyList();
+    return testMetricExporter.getFinishedMetricItems();
   }
 
   @Override

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest
 
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
@@ -119,6 +120,10 @@ abstract class SmokeTest extends Specification {
 
   protected Collection<ExportMetricsServiceRequest> waitForMetrics() {
     return telemetryRetriever.waitForMetrics()
+  }
+
+  protected Collection<ExportLogsServiceRequest> waitForLogs() {
+    return telemetryRetriever.waitForLogs()
   }
 
   protected static Set<String> getLoggedTraceIds(ToStringConsumer output) {

@@ -20,21 +20,12 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: fakebackend-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Build Docker Image
-        run: ./gradlew jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: smoke-tests/images/fake-backend
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
+          build-root-directory: smoke-tests/images/fake-backend
+          cache-read-only: true
 
   buildWindows:
     runs-on: windows-latest
@@ -55,17 +46,9 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: fakebackend-smoke
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Build Docker Image
-        run: ./gradlew windowsBackendImageBuild
-        working-directory: smoke-tests/images/fake-backend
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: windowsBackendImageBuild
+          build-root-directory: smoke-tests/images/fake-backend
+          cache-read-only: true

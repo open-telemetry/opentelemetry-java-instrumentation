@@ -23,18 +23,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: fakebackend-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
         with:
@@ -42,12 +30,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
       - name: Build Docker Image
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=$TAG
-        working-directory: smoke-tests/images/fake-backend
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
+          build-root-directory: smoke-tests/images/fake-backend
 
   publishWindows:
     runs-on: windows-latest
@@ -68,17 +58,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: fakebackend-smoke
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Login to GitHub Package Registry
         uses: azure/docker-login@v1
         with:
@@ -86,12 +65,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
       - name: Build Docker Image
-        run: |
-          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
-          echo "Using extra tag $TAG"
-          ./gradlew dockerPush -PextraTag=$TAG
-        working-directory: smoke-tests/images/fake-backend
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: dockerPush -PextraTag=${{ env.TAG }}
+          build-root-directory: smoke-tests/images/fake-backend
 
   issue:
     name: Open issue on failure

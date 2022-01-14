@@ -28,6 +28,7 @@ public class AgentTestingLogsCustomizer implements AgentListener {
                 BatchLogProcessor.builder(AgentTestingExporterFactory.logExporter).build())
             .build();
 
+    AgentLogEmitterProvider.resetForTest();
     AgentLogEmitterProvider.set(DelegatingLogEmitterProvider.from(logEmitterProvider));
   }
 }

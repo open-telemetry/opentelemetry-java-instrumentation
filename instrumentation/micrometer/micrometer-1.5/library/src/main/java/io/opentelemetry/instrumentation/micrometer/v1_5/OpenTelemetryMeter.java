@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
+package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.baseUnit;
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.description;
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.instrumentation.micrometer.v1_5.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

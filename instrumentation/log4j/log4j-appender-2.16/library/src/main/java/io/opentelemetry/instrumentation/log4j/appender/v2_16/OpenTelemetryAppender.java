@@ -66,12 +66,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   @Override
   public void append(LogEvent event) {
+    String instrumentationName = event.getLoggerName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        logEmitterProviderHolder
-            .get()
-            .logEmitterBuilder(event.getLoggerName())
-            .build()
-            .logBuilder();
+        logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
         builder,
