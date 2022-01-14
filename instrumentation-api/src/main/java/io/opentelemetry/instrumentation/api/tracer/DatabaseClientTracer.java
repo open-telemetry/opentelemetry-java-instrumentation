@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -30,13 +29,13 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
     extends BaseTracer {
   private static final String DB_QUERY = "DB Query";
 
-  protected final NetPeerAttributes netPeerAttributes;
+  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes;
 
-  protected DatabaseClientTracer(NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     this.netPeerAttributes = netPeerAttributes;
   }
 
-  protected DatabaseClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(OpenTelemetry openTelemetry, io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
     this.netPeerAttributes = netPeerAttributes;
   }
