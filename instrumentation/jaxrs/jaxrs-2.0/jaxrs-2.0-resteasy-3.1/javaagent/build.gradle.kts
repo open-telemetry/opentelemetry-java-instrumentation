@@ -18,7 +18,7 @@ muzzle {
   pass {
     group.set("org.jboss.resteasy")
     module.set("resteasy-core")
-    versions.set("[4.0.0.Final,)")
+    versions.set("[4.0.0.Final,6)")
   }
 }
 
