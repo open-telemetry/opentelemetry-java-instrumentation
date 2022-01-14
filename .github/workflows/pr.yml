@@ -167,7 +167,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: true
-          arguments: :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest

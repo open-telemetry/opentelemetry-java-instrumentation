@@ -149,7 +149,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest

@@ -87,7 +87,7 @@ jobs:
       - name: Test
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,

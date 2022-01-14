@@ -171,7 +171,7 @@ jobs:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-build-cache
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-build-cache"
 
   # muzzle is intentionally not included in the nightly-no-cache build because
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
