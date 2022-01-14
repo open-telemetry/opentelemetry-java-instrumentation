@@ -4,32 +4,32 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Logback appender instrumentation
+- Logback appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4939](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4939),
    [#4968](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4968))
-- Log4j 2.x appender instrumentation
+- Log4j 2.x appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4944),
    [#4959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4959),
    [#4966](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4966))
-- Log4j 1.2 appender instrumentation
+- Log4j 1.2 appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4943))
-- java.util.logging instrumentation
+- java.util.logging instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4941](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4941))
-- Micrometer instrumentation
+- Micrometer instrumentation to send micrometer metrics through the OpenTelemetry metrics pipeline
   ([#4919](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4919),
    [#5001](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5001),
    [#5017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5017))
 
 ### 🌟 New library instrumentation
 
-- Logback appender
+- Logback appender to send logs through the OpenTelemetry logging pipeline
   ([#4984](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4984))
-- Log4j 2.x appender
+- Log4j 2.x appender to send logs through the OpenTelemetry logging pipeline
   ([#4375](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4375),
    [#4907](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4907))
 - Ktor instrumentation
   ([#4983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4983))
-- Micrometer instrumentation
+- Micrometer instrumentation to send micrometer metrics through the OpenTelemetry metrics pipeline
   ([#5063](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5063))
 
 ### 📈 Enhancements
