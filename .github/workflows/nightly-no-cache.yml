@@ -161,32 +161,36 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
 
       - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ../gradlew publishToMavenLocal -x javadoc
-        working-directory: gradle-plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
+          build-root-directory: gradle-plugins
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/distro
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
+          build-root-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
+          build-root-directory: examples/extension
 
       - name: Run muzzle check against extension
-        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
 
   issue:
     name: Open issue on failure
