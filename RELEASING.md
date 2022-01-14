@@ -14,6 +14,8 @@ as the last step, which publishes a snapshot build to
 Before making the release:
 
 * Merge a PR to `main` updating the `CHANGELOG.md`
+  * Use the script at `buildscripts/draft-change-log-entries.sh` to help create an initial draft.
+    We typically only include end-user facing changes in the change log.
 * Create a release branch, e.g. `v1.9.x`
   ```
   git checkout -b v1.9.x upstream/main
@@ -52,7 +54,8 @@ After making the release:
 Once the GitHub workflow completes, go to Github [release
 page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
 `Draft a new release` to write release notes about the new release. If there is already a draft
-release notes, just point it at the created tag.
+release notes, just point it at the created tag. Use the script at
+`buildscripts/draft-release-notes.sh` to generate release notes from the change log.
 
 ## Patch Release
 
