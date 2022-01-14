@@ -39,20 +39,10 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk${{ matrix.test-java-version }}
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   # testLatestDeps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
@@ -94,20 +84,10 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: smokeTests
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
@@ -134,29 +114,40 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
 
       - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ../gradlew publishToMavenLocal -x javadoc
-        working-directory: gradle-plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
+          build-root-directory: gradle-plugins
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/distro
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
 
       - name: Run muzzle check against extension
-        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
+          cache-read-only: true
 
   release:
-    runs-on: ubuntu-latest
     needs: [ test, smoke-test, examples ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -170,10 +161,8 @@ jobs:
           java-version: 11
 
       - name: Build and publish artifacts
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: gradle/gradle-build-action@v2
         with:
-          job-id: jdk11
-          remote-build-cache-proxy-enabled: false
           arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}

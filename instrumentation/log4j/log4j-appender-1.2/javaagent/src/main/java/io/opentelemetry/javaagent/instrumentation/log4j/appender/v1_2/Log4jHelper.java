@@ -24,8 +24,12 @@ public final class Log4jHelper {
 
   // TODO (trask) capture MDC
   public static void capture(Category logger, Priority level, Object message, Throwable throwable) {
+    String instrumentationName = logger.getName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        AgentLogEmitterProvider.get().logEmitterBuilder(logger.getName()).build().logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
 
     // message
     if (message != null) {

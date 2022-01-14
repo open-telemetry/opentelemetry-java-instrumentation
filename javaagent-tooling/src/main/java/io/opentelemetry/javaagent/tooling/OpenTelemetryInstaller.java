@@ -5,13 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
 
 public class OpenTelemetryInstaller {
@@ -46,6 +50,12 @@ public class OpenTelemetryInstaller {
           CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
               .join(timeout, unit);
         });
+
+    SdkLogEmitterProvider sdkLogEmitterProvider =
+        autoConfiguredSdk.getOpenTelemetrySdk().getSdkLogEmitterProvider();
+    LogEmitterProvider logEmitterProvider =
+        DelegatingLogEmitterProvider.from(sdkLogEmitterProvider);
+    AgentLogEmitterProvider.set(logEmitterProvider);
 
     return autoConfiguredSdk;
   }

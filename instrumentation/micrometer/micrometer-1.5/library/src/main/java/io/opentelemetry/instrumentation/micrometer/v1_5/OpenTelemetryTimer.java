@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
+package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.description;
-import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;

@@ -31,11 +31,12 @@ public final class JavaUtilLoggingHelper {
       return;
     }
 
+    String instrumentationName = logRecord.getLoggerName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        AgentLogEmitterProvider.get()
-            .logEmitterBuilder(logRecord.getLoggerName())
-            .build()
-            .logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     mapLogRecord(builder, logRecord);
     builder.emit();
   }
