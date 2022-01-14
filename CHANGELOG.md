@@ -63,7 +63,8 @@
 - Don't extract deprecated cassandra keyspace attribute
   ([#5041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5041))
 - Add OTLP logs exporters
-  ([#5060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5060))
+  ([#5060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5060),
+   [#5088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5088))
 - End redisson span when the operation actually ends
   ([#5073](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5073))
 - Don't capture high-cardinality http.target as metrics attribute
