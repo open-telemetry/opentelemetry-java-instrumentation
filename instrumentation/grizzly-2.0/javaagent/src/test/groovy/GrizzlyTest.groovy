@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.Request
@@ -40,6 +42,18 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
     server.start()
 
     return server
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
   }
 
   @Override
@@ -106,11 +120,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
         Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build()
       }
     }
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
   }
 
   static class ExceptionHttpHandler extends HttpHandler {

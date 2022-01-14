@@ -106,6 +106,13 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
   }

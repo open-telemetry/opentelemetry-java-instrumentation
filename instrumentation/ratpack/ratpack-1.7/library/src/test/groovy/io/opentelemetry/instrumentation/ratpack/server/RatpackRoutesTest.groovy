@@ -28,7 +28,6 @@ class RatpackRoutesTest extends AbstractRatpackRoutesTest implements LibraryTest
   @Override
   List<AttributeKey<?>> extraAttributes() {
     return [
-      SemanticAttributes.HTTP_ROUTE,
       SemanticAttributes.NET_TRANSPORT
     ]
   }

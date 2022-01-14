@@ -36,11 +36,11 @@ class AttributesAssert {
     assertedAttributes.add(name)
     def value = attributes.get(name)
     if (expected instanceof Pattern) {
-      assert value =~ expected
+      assert value =~ expected, "value '$value' does not match regex '$expected'"
     } else if (expected instanceof Class) {
-      assert ((Class) expected).isInstance(value)
+      assert ((Class) expected).isInstance(value), "value '$value' is not an instance of $expected.name"
     } else if (expected instanceof Closure) {
-      assert ((Closure) expected).call(value)
+      assert ((Closure) expected).call(value), "value '$value' fails the passed predicate"
     } else {
       assert value == expected
     }
