@@ -22,7 +22,6 @@ These are the supported libraries and frameworks:
 | Library/Framework                                                                                                                 | Versions                       |
 |-----------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka Actors](https://doc.akka.io/docs/akka/current/typed/index.html)                                                             | 2.5+                           |
-| [Akka ForkJoinPool](https://doc.akka.io/api/akka/2.5/akka/dispatch/forkjoin/ForkJoinPool.html)                                    | 2.5+                           |
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                | 10.0+                          |
 | [Apache Axis2](https://axis.apache.org/axis2/java/core/)                                                                          | 1.6+                           |
 | [Apache Camel](https://camel.apache.org/)                                                                                         | 2.20+                          |
@@ -77,12 +76,9 @@ These are the supported libraries and frameworks:
 | [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)                                                         | 1.0+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                    | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                             | 4.0+                           |
-| [Log4j 1 Appender](https://logging.apache.org/log4j/1.2/)                                                                         | 1.2+                           |
-| [Log4j 1 MDC injection](https://logging.apache.org/log4j/1.2/)                                                                    | 1.2+                           |
-| [Log4j 2 Appender](https://logging.apache.org/log4j/2.x/)                                                                         | 2.11+                          |
-| [Log4j 2 ContextData injection](https://logging.apache.org/log4j/2.x/)                                                            | 2.7+                           |
-| [Logback Appender](http://logback.qos.ch/)                                                                                        | 1.0+                           |
-| [Logback MDC injection](http://logback.qos.ch/)                                                                                   | 1.0+                           |
+| [Log4j 1](https://logging.apache.org/log4j/1.2/)                                                                                  | 1.2+                           |
+| [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                  | 2.11+                          |
+| [Logback](http://logback.qos.ch/)                                                                                                 | 1.0+                           |
 | [Micrometer](https://micrometer.io/)                                                                                              | 1.5+                           |
 | [MongoDB Driver](https://mongodb.github.io/mongo-java-driver/)                                                                    | 3.1+                           |
 | [Netty](https://github.com/netty/netty)                                                                                           | 3.8+                           |
