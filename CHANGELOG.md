@@ -29,6 +29,8 @@
    [#4907](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4907))
 - Ktor instrumentation
   ([#4983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4983))
+- Micrometer instrumentation
+  ([#5063](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5063))
 
 ### 📈 Enhancements
 
