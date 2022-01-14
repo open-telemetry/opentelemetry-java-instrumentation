@@ -43,6 +43,7 @@ java {
 tasks.withType<JavaCompile>().configureEach {
   with(options) {
     release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })
+    compilerArgs.add("-Werror")
   }
 }
 
