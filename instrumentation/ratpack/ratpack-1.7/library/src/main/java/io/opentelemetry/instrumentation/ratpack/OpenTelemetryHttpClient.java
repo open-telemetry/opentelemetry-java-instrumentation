@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.client;
+package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.ratpack.client.internal.ContextHolder;
+import io.opentelemetry.instrumentation.ratpack.internal.ContextHolder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import ratpack.exec.Execution;
 import ratpack.http.client.HttpClient;

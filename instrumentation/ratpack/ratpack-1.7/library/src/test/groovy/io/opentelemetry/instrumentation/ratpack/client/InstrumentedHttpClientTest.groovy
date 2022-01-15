@@ -42,8 +42,7 @@ class InstrumentedHttpClientTest extends Specification {
     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     .setTracerProvider(tracerProvider).build()
 
-  def ratpackTracing = RatpackTracing.create(openTelemetry)
-  def ratpackHttpTracing = RatpackHttpTracing.create(openTelemetry)
+  RatpackTracing ratpackTracing = RatpackTracing.create(openTelemetry)
 
   def cleanup() {
     spanExporter.reset()
@@ -66,8 +65,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
-          bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -128,8 +126,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
-          bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -194,8 +191,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(ratpackHttpTracing.getOpenTelemetryExecInitializer())
-          bindings.bindInstance(HttpClient, ratpackHttpTracing.instrumentedHttpClient(
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(
             HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
           )
         }

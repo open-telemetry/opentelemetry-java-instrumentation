@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.client;
+package io.opentelemetry.instrumentation.ratpack;
 
-import io.opentelemetry.instrumentation.ratpack.client.internal.ContextHolder;
+import io.opentelemetry.instrumentation.ratpack.internal.ContextHolder;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.Execution;
 
-public final class OpenTelemetryExecInitializer implements ExecInitializer {
+final class OpenTelemetryExecInitializer implements ExecInitializer {
   public static final ExecInitializer INSTANCE = new OpenTelemetryExecInitializer();
 
   @Override

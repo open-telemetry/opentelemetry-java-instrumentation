@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.ratpack;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.ratpack.client.OpenTelemetryExecInitializer;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;

@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.ratpack.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.RatpackFunctionalTest
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
-import io.opentelemetry.instrumentation.ratpack.client.RatpackHttpTracing
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -126,20 +125,14 @@ class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  RatpackHttpTracing ratpackHttpTracing(OpenTelemetry openTelemetry) {
-    return RatpackHttpTracing.create(openTelemetry)
+  HttpClient instrumentedHttpClient(RatpackTracing ratpackTracing) {
+    return ratpackTracing.instrumentedHttpClient(HttpClient.of {})
   }
 
   @Singleton
   @Provides
-  HttpClient instrumentedHttpClient(RatpackHttpTracing ratpackHttpTracing) {
-    return ratpackHttpTracing.instrumentedHttpClient(HttpClient.of {})
-  }
-
-  @Singleton
-  @Provides
-  ExecInitializer ratpackExecInitializer(RatpackHttpTracing ratpackHttpTracing) {
-    return ratpackHttpTracing.getOpenTelemetryExecInitializer()
+  ExecInitializer ratpackExecInitializer(RatpackTracing ratpackTracing) {
+    return ratpackTracing.getOpenTelemetryExecInitializer()
   }
 }
 

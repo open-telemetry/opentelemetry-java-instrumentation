@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
-import io.opentelemetry.instrumentation.ratpack.client.RatpackHttpTracing;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -20,13 +19,13 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
   @Override
   protected HttpClient buildHttpClient() throws Exception {
-    return RatpackHttpTracing.create(testing.getOpenTelemetry())
+    return RatpackTracing.create(testing.getOpenTelemetry())
         .instrumentedHttpClient(HttpClient.of(Action.noop()));
   }
 
   @Override
   protected HttpClient buildHttpClient(Action<? super HttpClientSpec> action) throws Exception {
-    return RatpackHttpTracing.create(testing.getOpenTelemetry())
+    return RatpackTracing.create(testing.getOpenTelemetry())
         .instrumentedHttpClient(HttpClient.of(action));
   }
 }

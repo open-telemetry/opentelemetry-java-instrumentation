@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.client;
+package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import ratpack.api.Nullable;

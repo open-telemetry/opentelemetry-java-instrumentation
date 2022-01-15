@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.client.internal;
+package io.opentelemetry.instrumentation.ratpack.internal;
 
 import io.opentelemetry.context.Context;
 import ratpack.http.client.RequestSpec;
