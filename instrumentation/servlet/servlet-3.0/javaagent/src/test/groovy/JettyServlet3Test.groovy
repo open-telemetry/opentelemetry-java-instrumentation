@@ -14,8 +14,10 @@ import javax.servlet.http.HttpServletRequest
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -41,9 +43,13 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
     ServletException
   }
 
+  boolean isAsyncTest() {
+    false
+  }
+
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (IS_BEFORE_94 && endpoint == EXCEPTION) || super.hasResponseSpan(endpoint)
+    return (IS_BEFORE_94 && endpoint == EXCEPTION && !isAsyncTest()) || super.hasResponseSpan(endpoint)
   }
 
   @Override
@@ -124,11 +130,6 @@ class JettyServlet3TestSync extends JettyServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.Sync
   }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
 }
 
 class JettyServlet3TestAsync extends JettyServlet3Test {
@@ -144,14 +145,8 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
   }
 
   @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
+  boolean isAsyncTest() {
+    true
   }
 }
 
@@ -160,17 +155,6 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
   }
 }
 
@@ -191,6 +175,8 @@ class JettyServlet3TestForward extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -225,6 +211,8 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -233,6 +221,11 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.Sync
+  }
+
+  @Override
+  boolean isAsyncTest() {
+    true
   }
 
   @Override
@@ -246,13 +239,9 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 
@@ -260,6 +249,11 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.Async
+  }
+
+  @Override
+  boolean isAsyncTest() {
+    true
   }
 
   @Override
@@ -273,18 +267,14 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
   }
 
   @Override
   boolean errorEndpointUsesSendError() {
     false
-  }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
   }
 }
 

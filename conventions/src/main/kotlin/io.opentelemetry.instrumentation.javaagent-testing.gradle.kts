@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
   `java-library`
 
@@ -19,7 +17,6 @@ dependencies {
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
 
-
 dependencies {
   // Integration tests may need to define custom instrumentation modules so we include the standard
   // instrumentation infrastructure for testing too.
@@ -31,11 +28,13 @@ dependencies {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling") {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
@@ -81,7 +80,12 @@ class JavaagentTestArgumentsProvider(
     // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
-    "-Dotel.metrics.exporter=otlp"
+    "-Dotel.metrics.exporter=otlp",
+    // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO"
   )
 }
 
@@ -101,22 +105,24 @@ afterEvaluate {
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
     classpath = classpath.filter {
-      // The sources are packaged into the testing jar so we need to make sure to exclude from the test
-      // classpath, which automatically inherits them, to ensure our shaded versions are used.
-      if (file("${buildDir}/resources/main").equals(it) || file("${buildDir}/classes/java/main").equals(it)) {
+      if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
+        // The sources are packaged into the testing jar, so we need to exclude them from the test
+        // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false
       }
 
-      // TODO(anuraaga): Better not to have this folder structure constraints, we can likely use
+      // TODO(anuraaga): Better not to have this naming constraint, we can likely use
       // plugin identification instead.
 
-      // If agent depends on some shared instrumentation module that is not a testing module, it will
-      // be packaged into the testing jar so we need to make sure to exclude from the test classpath.
       val lib = it.absoluteFile
-      val instrumentationDir = file("${rootDir}/instrumentation/").absoluteFile
-      if (lib.startsWith(instrumentationDir) &&
-        lib.extension == "jar" &&
-        !lib.absolutePath.substring(instrumentationDir.absolutePath.length).contains("testing")) {
+      if (lib.name.startsWith("opentelemetry-javaagent-")) {
+        // These dependencies are packaged into the testing jar, so we need to exclude them from the test
+        // classpath, which automatically inherits them, to ensure our shaded versions are used.
+        return@filter false
+      }
+      if (lib.name.startsWith("opentelemetry-") && lib.name.contains("-autoconfigure-")) {
+        // These dependencies should not be on the test classpath, because they will auto-instrument
+        // the library and the tests could pass even if the javaagent instrumentation fails to apply
         return@filter false
       }
       return@filter true

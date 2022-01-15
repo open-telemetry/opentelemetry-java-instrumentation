@@ -5,8 +5,7 @@
 
 package io.opentelemetry.smoketest
 
-@AppServer(version = "20.0.0.12", jdk = "8")
-class LibertyServletOnlySmokeTest extends LibertySmokeTest {
+abstract class LibertyServletOnlySmokeTest extends LibertySmokeTest {
 
   @Override
   protected List<ResourceMapping> getExtraResources() {
@@ -27,4 +26,11 @@ class LibertyServletOnlySmokeTest extends LibertySmokeTest {
     }
     return super.getSpanName(path)
   }
+}
+
+@AppServer(version = "20.0.0.12", jdk = "11")
+class LibertyServletOnly20Jdk11 extends LibertySmokeTest {
+}
+@AppServer(version = "21.0.0.10", jdk = "11")
+class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
 }

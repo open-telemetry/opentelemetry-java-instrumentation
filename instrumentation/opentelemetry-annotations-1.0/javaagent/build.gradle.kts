@@ -2,7 +2,15 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-// TODO: add muzzle once 1.4.0 is released
+muzzle {
+  pass {
+    group.set("io.opentelemetry")
+    module.set("opentelemetry-extension-annotations")
+    versions.set("[0.16.0,)")
+    skip("0.13.0") // opentelemetry-api has a bad dependency on non-alpha api-metric 0.13.0
+    assertInverse.set(true)
+  }
+}
 
 val versions: Map<String, String> by project
 
@@ -19,7 +27,7 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation-api-annotation-support"))
-  testImplementation("net.bytebuddy:byte-buddy:${versions["net.bytebuddy"]}")
+  testImplementation("net.bytebuddy:byte-buddy")
 }
 
 tasks {

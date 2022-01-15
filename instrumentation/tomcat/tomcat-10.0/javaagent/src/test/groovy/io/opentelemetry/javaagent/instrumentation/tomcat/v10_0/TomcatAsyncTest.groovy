@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
 import org.apache.catalina.Context
@@ -98,14 +100,22 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
+  String expectedHttpRoute(ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case NOT_FOUND:
+        return getContextPath() + "/*"
+      default:
+        return super.expectedHttpRoute(endpoint)
+    }
   }
 
   @Override
-  boolean testConcurrency() {
-    return true
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
   }
 
   @Override

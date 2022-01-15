@@ -11,8 +11,9 @@ import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
+import muzzle.TestClasses
 import muzzle.TestClasses.MethodBodyAdvice
-import net.bytebuddy.jar.asm.Type
+import org.objectweb.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -96,9 +97,9 @@ class ReferenceMatcherTest extends Specification {
     cl.count == countAfterFirstMatch
   }
 
-  def "matching ref #referenceName #referenceFlags against #classToCheck produces #expectedMismatches"() {
+  def "matching ref #referenceName #referenceFlag against #classToCheck produces #expectedMismatches"() {
     setup:
-    def ref = ClassRef.newBuilder(referenceName)
+    def ref = ClassRef.builder(referenceName)
       .addFlag(referenceFlag)
       .build()
 
@@ -117,7 +118,7 @@ class ReferenceMatcherTest extends Specification {
   def "method match #methodTestDesc"() {
     setup:
     def methodType = Type.getMethodType(methodDesc)
-    def reference = ClassRef.newBuilder(classToCheck.name)
+    def reference = ClassRef.builder(classToCheck.name)
       .addMethod(new Source[0], methodFlags as Flag[], methodName, methodType.returnType, methodType.argumentTypes)
       .build()
 
@@ -141,7 +142,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "field match #fieldTestDesc"() {
     setup:
-    def reference = ClassRef.newBuilder(classToCheck.name)
+    def reference = ClassRef.builder(classToCheck.name)
       .addField(new Source[0], fieldFlags as Flag[], fieldName, Type.getType(fieldType), false)
       .build()
 
@@ -166,7 +167,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should not check abstract #desc helper classes"() {
     given:
-    def reference = ClassRef.newBuilder(className)
+    def reference = ClassRef.builder(className)
       .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
       .addFlag(ABSTRACT)
       .addMethod(new Source[0], [ABSTRACT] as Flag[], "unimplemented", Type.VOID_TYPE)
@@ -187,7 +188,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should not check #desc helper classes with no supertypes"() {
     given:
-    def reference = ClassRef.newBuilder(className)
+    def reference = ClassRef.builder(className)
       .setSuperClassName(Object.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
@@ -207,7 +208,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should fail #desc helper classes that does not implement all abstract methods"() {
     given:
-    def reference = ClassRef.newBuilder(className)
+    def reference = ClassRef.builder(className)
       .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
@@ -227,9 +228,9 @@ class ReferenceMatcherTest extends Specification {
 
   def "should fail #desc helper classes that do not implement all abstract methods - even if empty abstract class reference exists"() {
     given:
-    def emptySuperClassRef = ClassRef.newBuilder(TestHelperClasses.HelperSuperClass.name)
+    def emptySuperClassRef = ClassRef.builder(TestHelperClasses.HelperSuperClass.name)
       .build()
-    def reference = ClassRef.newBuilder(className)
+    def reference = ClassRef.builder(className)
       .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
@@ -251,13 +252,13 @@ class ReferenceMatcherTest extends Specification {
 
   def "should check #desc helper class whether interface methods are implemented in the super class"() {
     given:
-    def baseHelper = ClassRef.newBuilder("io.opentelemetry.instrumentation.BaseHelper")
+    def baseHelper = ClassRef.builder("io.opentelemetry.instrumentation.BaseHelper")
       .setSuperClassName(Object.name)
       .addInterfaceName(TestHelperClasses.HelperInterface.name)
       .addMethod(new Source[0], [] as Flag[], "foo", Type.VOID_TYPE)
       .build()
     // abstract HelperInterface#foo() is implemented by BaseHelper
-    def helper = ClassRef.newBuilder(className)
+    def helper = ClassRef.builder(className)
       .setSuperClassName(baseHelper.className)
       .addInterfaceName(TestHelperClasses.AnotherHelperInterface.name)
       .addMethod(new Source[0], [] as Flag[], "bar", Type.VOID_TYPE)
@@ -280,7 +281,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should check #desc helper class whether used fields are declared in the super class"() {
     given:
-    def helper = ClassRef.newBuilder(className)
+    def helper = ClassRef.builder(className)
       .setSuperClassName(LibraryBaseClass.name)
       .addField(new Source[0], new Flag[0], "field", Type.getType("Ljava/lang/Integer;"), false)
       .build()
@@ -300,7 +301,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should fail helper class when it uses fields undeclared in the super class: #desc"() {
     given:
-    def helper = ClassRef.newBuilder(className)
+    def helper = ClassRef.builder(className)
       .setSuperClassName(DeclaredFieldTestClass.LibraryBaseClass.name)
       .addField(new Source[0], new Flag[0], fieldName, Type.getType(fieldType), false)
       .build()
@@ -318,6 +319,30 @@ class ReferenceMatcherTest extends Specification {
     "internal helper, different field type" | "io.opentelemetry.instrumentation.Helper"         | "field"          | "Lcom/external/DifferentType;"
     "external helper, different field name" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "differentField" | "Ljava/lang/Integer;"
     "external helper, different field type" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "field"          | "Lcom/external/DifferentType;"
+  }
+
+  def "should fail #desc helper class when the library parent class has different constructor"() {
+    given:
+    def helper = ClassRef.builder(className)
+      .setSuperClassName(TestClasses.BaseClassWithConstructor.name)
+      .build()
+    // muzzle codegen plugin has captured a no-arg constructor reference;
+    // the actual constructor of the base class on the classpath requires a long
+    def baseClassRef = ClassRef.builder(TestClasses.BaseClassWithConstructor.name)
+      .addMethod(new Source[0], new Flag[0], "<init>", Type.VOID_TYPE)
+      .build()
+
+    when:
+    def mismatches = createMatcher([(helper.className): helper, (baseClassRef.className): baseClassRef], [helper.className])
+      .getMismatchedReferenceSources(this.class.classLoader)
+
+    then:
+    getMismatchClassSet(mismatches) == [Mismatch.MissingMethod] as Set
+
+    where:
+    desc       | className
+    "internal" | "io.opentelemetry.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
   private static ReferenceMatcher createMatcher(Map<String, ClassRef> references = [:],

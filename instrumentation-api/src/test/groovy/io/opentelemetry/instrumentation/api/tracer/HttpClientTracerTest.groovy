@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.propagation.TextMapSetter
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpStatusConverter
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
@@ -111,7 +112,7 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onResponse"() {
     setup:
     def tracer = newTracer()
-    def statusCode = status != null ? HttpStatusConverter.statusFromHttpStatus(status) : null
+    def statusCode = status != null ? HttpStatusConverter.CLIENT.statusFromHttpStatus(status) : null
 
     when:
     tracer.onResponse(span, resp)

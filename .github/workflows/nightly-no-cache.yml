@@ -27,7 +27,11 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
-        run: ./gradlew build --stacktrace --no-build-cache
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --no-build-cache
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
@@ -49,7 +53,7 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
-        run: ../gradlew build --stacktrace --no-build-cache
+        run: ../gradlew build --no-build-cache
         working-directory: gradle-plugins
 
   test:
@@ -89,7 +93,11 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false --no-build-cache
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false --no-build-cache
 
   testLatestDeps:
     runs-on: ubuntu-latest
@@ -111,7 +119,11 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        run: ./gradlew test -PtestLatestDeps=true --stacktrace --no-build-cache
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestLatestDeps=true --no-build-cache
 
   smoke-test:
     runs-on: ${{ matrix.os }}
@@ -121,13 +133,17 @@ jobs:
           - windows-latest
           - ubuntu-latest
         smoke-test-suite:
-          - glassfish
           - jetty
           - liberty
+          - payara
           - tomcat
           - tomee
+          - websphere
           - wildfly
           - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -151,7 +167,11 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-build-cache
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} --no-build-cache"
 
   # muzzle is intentionally not included in the nightly-no-cache build because
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
@@ -175,9 +195,14 @@ jobs:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Local publish
+      - name: Local publish of artifacts
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal --no-build-cache -x javadoc
+        run: ./gradlew publishToMavenLocal -x javadoc
+
+      - name: Local publish of gradle plugins
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ../gradlew publishToMavenLocal -x javadoc
+        working-directory: gradle-plugins
 
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
@@ -185,6 +210,10 @@ jobs:
 
       - name: Build extension
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
+        working-directory: examples/extension
+
+      - name: Run muzzle check against extension
+        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
   issue:

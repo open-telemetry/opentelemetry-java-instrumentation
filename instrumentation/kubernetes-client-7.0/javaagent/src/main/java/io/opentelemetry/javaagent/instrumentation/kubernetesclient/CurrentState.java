@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 import okhttp3.Request;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Kubernetes instrumentation starts and ends spans in two different methods - the only way to pass

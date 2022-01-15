@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -46,15 +48,17 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_SCHEME.key}" "http"
-            "${SemanticAttributes.HTTP_HOST.key}" "localhost:$port"
-            "${SemanticAttributes.HTTP_TARGET.key}" "/param/asdf1234"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/param/asdf1234"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
           }
         }
       }

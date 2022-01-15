@@ -9,9 +9,9 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 
 public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
-  private final Trie.Builder<IgnoreAllow> ignoredTypesTrie = Trie.newBuilder();
-  private final Trie.Builder<IgnoreAllow> ignoredClassLoadersTrie = Trie.newBuilder();
-  private final Trie.Builder<Boolean> ignoredTasksTrie = Trie.newBuilder();
+  private final Trie.Builder<IgnoreAllow> ignoredTypesTrie = Trie.builder();
+  private final Trie.Builder<IgnoreAllow> ignoredClassLoadersTrie = Trie.builder();
+  private final Trie.Builder<Boolean> ignoredTasksTrie = Trie.builder();
 
   @Override
   public IgnoredTypesBuilder ignoreClass(String classNameOrPrefix) {

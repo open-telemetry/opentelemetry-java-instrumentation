@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -46,28 +46,28 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      // TODO replace with client span check
-      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
+      Context parentContext = Java8BytecodeBridge.currentContext();
+
+      if (!instrumenter().shouldStart(parentContext, method)) {
         return;
       }
-      context = tracer().startSpan(method);
+
+      context = instrumenter().start(parentContext, method);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(value = 1) Method method,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
       if (scope == null) {
         return;
       }
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, method, null, throwable);
     }
   }
 }

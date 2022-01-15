@@ -17,6 +17,7 @@ public final class TestAgentListenerAccess {
 
   private static final MethodHandle reset;
   private static final MethodHandle getInstrumentationErrorCount;
+  private static final MethodHandle getMuzzleFailureCount;
   private static final MethodHandle getIgnoredButTransformedClassNames;
   private static final MethodHandle addSkipTransformationCondition;
   private static final MethodHandle addSkipErrorCondition;
@@ -31,6 +32,9 @@ public final class TestAgentListenerAccess {
       getInstrumentationErrorCount =
           lookup.findStatic(
               testAgentListenerClass, "getInstrumentationErrorCount", methodType(int.class));
+      getMuzzleFailureCount =
+          lookup.findStatic(
+              testAgentListenerClass, "getAndResetMuzzleFailureCount", methodType(int.class));
       getIgnoredButTransformedClassNames =
           lookup.findStatic(
               testAgentListenerClass, "getIgnoredButTransformedClassNames", methodType(List.class));
@@ -63,6 +67,14 @@ public final class TestAgentListenerAccess {
     } catch (Throwable t) {
       throw new AssertionError(
           "Could not invoke TestAgentListener.getInstrumentationErrorCount", t);
+    }
+  }
+
+  public static int getAndResetMuzzleFailureCount() {
+    try {
+      return (int) getMuzzleFailureCount.invokeExact();
+    } catch (Throwable t) {
+      throw new AssertionError("Could not invoke TestAgentListener.getMuzzleFailureCount", t);
     }
   }
 

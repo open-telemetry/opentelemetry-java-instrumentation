@@ -32,14 +32,14 @@ public final class ApacheHttpClientSingletons {
         new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpMethod, HttpMethod>newBuilder(
+        Instrumenter.<HttpMethod, HttpMethod>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new HttpHeaderSetter());
+            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<HttpMethod, HttpMethod> instrumenter() {

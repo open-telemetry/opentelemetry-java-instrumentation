@@ -81,7 +81,7 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady()
 
     when:
-    def observer = client.conversation(new StreamObserver<Helloworld.Response>() {
+    def observer2 = client.conversation(new StreamObserver<Helloworld.Response>() {
       @Override
       void onNext(Helloworld.Response value) {
         clientReceived << value.message
@@ -99,9 +99,9 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
 
     clientRange.each {
       def message = Helloworld.Response.newBuilder().setMessage("call $it").build()
-      observer.onNext(message)
+      observer2.onNext(message)
     }
-    observer.onCompleted()
+    observer2.onCompleted()
 
     then:
     assertTraces(1) {
@@ -111,11 +111,11 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
-            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
-            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
-            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
+            "$SemanticAttributes.RPC_SYSTEM" "grpc"
+            "$SemanticAttributes.RPC_SERVICE" "example.Greeter"
+            "$SemanticAttributes.RPC_METHOD" "Conversation"
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
           }
           (1..(clientMessageCount * serverMessageCount + clientMessageCount)).each {
             def messageId = it
@@ -133,15 +133,15 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
-            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "$SemanticAttributes.RPC_SYSTEM" "grpc"
+            "$SemanticAttributes.RPC_SERVICE" "example.Greeter"
+            "$SemanticAttributes.RPC_METHOD" "Conversation"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == null }
-            "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
-            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
           }
           (1..(clientMessageCount * serverMessageCount + clientMessageCount)).each {
             def messageId = it

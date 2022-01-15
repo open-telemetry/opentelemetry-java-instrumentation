@@ -11,7 +11,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
-import org.openqa.selenium.firefox.FirefoxOptions
+import org.openqa.selenium.chrome.ChromeOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
@@ -51,10 +51,12 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   }
 
   def setupSpec() {
+    setupServer()
+
     Testcontainers.exposeHostPorts(port)
 
     browser = new BrowserWebDriverContainer<>()
-      .withCapabilities(new FirefoxOptions())
+      .withCapabilities(new ChromeOptions())
       .withLogConsumer(new Slf4jLogConsumer(logger))
     browser.start()
 
@@ -62,6 +64,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   }
 
   def cleanupSpec() {
+    cleanupServer()
     browser?.stop()
   }
 
@@ -123,9 +126,9 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
           kind SpanKind.INTERNAL
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
-            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
-            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+            "$SemanticAttributes.RPC_SYSTEM" "gwt"
+            "$SemanticAttributes.RPC_SERVICE" "test.gwt.shared.MessageService"
+            "$SemanticAttributes.RPC_METHOD" "sendMessage"
           }
         }
       }
@@ -148,9 +151,9 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
           childOf(span(0))
           errorEvent(IOException)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
-            "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"
-            "${SemanticAttributes.RPC_METHOD.key}" "sendMessage"
+            "$SemanticAttributes.RPC_SYSTEM" "gwt"
+            "$SemanticAttributes.RPC_SERVICE" "test.gwt.shared.MessageService"
+            "$SemanticAttributes.RPC_METHOD" "sendMessage"
           }
         }
       }

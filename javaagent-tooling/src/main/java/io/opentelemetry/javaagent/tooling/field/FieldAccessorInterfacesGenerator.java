@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealGetterName;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealSetterName;
 
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,10 +55,18 @@ final class FieldAccessorInterfacesGenerator {
         .makeInterface()
         .merge(SyntheticState.SYNTHETIC)
         .name(getFieldAccessorInterfaceName(typeName, fieldTypeName))
-        .defineMethod(getRealGetterName(typeName, fieldTypeName), fieldTypeDesc, Visibility.PUBLIC)
+        .implement(VirtualFieldAccessorMarker.class)
+        .defineMethod(
+            getRealGetterName(typeName, fieldTypeName),
+            fieldTypeDesc,
+            Visibility.PUBLIC,
+            SyntheticState.SYNTHETIC)
         .withoutCode()
         .defineMethod(
-            getRealSetterName(typeName, fieldTypeName), TypeDescription.VOID, Visibility.PUBLIC)
+            getRealSetterName(typeName, fieldTypeName),
+            TypeDescription.VOID,
+            Visibility.PUBLIC,
+            SyntheticState.SYNTHETIC)
         .withParameter(fieldTypeDesc, "value")
         .withoutCode()
         .make();

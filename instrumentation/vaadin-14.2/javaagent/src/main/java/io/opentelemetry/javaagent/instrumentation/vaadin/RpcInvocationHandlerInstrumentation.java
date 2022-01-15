@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vaadin;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinSingletons.rpcInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,7 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,23 +51,34 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This RpcInvocationHandler rpcInvocationHandler,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Argument(1) JsonObject jsonObject,
+        @Advice.Local("otelRequest") VaadinRpcRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context = tracer().startRpcInvocationHandlerSpan(rpcInvocationHandler, method, jsonObject);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = VaadinRpcRequest.create(rpcInvocationHandler, methodName, jsonObject);
+      if (!rpcInstrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = rpcInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") VaadinRpcRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
-      tracer().endSpan(context, throwable);
+      rpcInstrumenter().end(context, request, null, throwable);
     }
   }
 }

@@ -26,7 +26,7 @@ dependencies {
   implementation(platform("io.grpc:grpc-bom:1.33.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-proto")
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("com.google.protobuf:protobuf-java-util:3.12.4")
@@ -56,12 +56,13 @@ tasks {
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
     val suites = mapOf(
-      "glassfish" to listOf("**/GlassFishSmokeTest.*"),
-      "jetty" to listOf("**/JettySmokeTest.*"),
-      "liberty" to listOf("**/LibertySmokeTest.*", "**/LibertyServletOnlySmokeTest.*"),
-      "tomcat" to listOf("**/TomcatSmokeTest.*"),
-      "tomee" to listOf("**/TomeeSmokeTest.*"),
-      "wildfly" to listOf("**/WildflySmokeTest.*")
+      "payara" to listOf("**/Payara*.*"),
+      "jetty" to listOf("**/Jetty*.*"),
+      "liberty" to listOf("**/Liberty*.*"),
+      "tomcat" to listOf("**/Tomcat*.*"),
+      "tomee" to listOf("**/Tomee*.*"),
+      "websphere" to listOf("**/Websphere*.*"),
+      "wildfly" to listOf("**/Wildfly*.*")
     )
 
     val smokeTestSuite: String? by project

@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription.InDefinedShape;
 import net.bytebuddy.description.type.TypeDescription;
@@ -74,7 +75,7 @@ interface HelperReferenceWrapper {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (obj == this) {
         return true;
       }
@@ -126,7 +127,7 @@ interface HelperReferenceWrapper {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) {
         return true;
       }

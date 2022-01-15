@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-public class TestClass implements Runnable {
+import java.io.Serializable;
+
+public class TestClass implements Runnable, Serializable {
 
   @Override
   public void run() {}

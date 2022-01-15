@@ -19,16 +19,16 @@ import org.junit.jupiter.api.Test;
 class AttributesExtractorTest {
 
   static class TestAttributesExtractor
-      extends AttributesExtractor<Map<String, String>, Map<String, String>> {
+      implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
       set(attributes, AttributeKey.stringKey("animal"), request.get("animal"));
       set(attributes, AttributeKey.stringKey("country"), request.get("country"));
     }
 
     @Override
-    protected void onEnd(
+    public void onEnd(
         AttributesBuilder attributes,
         Map<String, String> request,
         @Nullable Map<String, String> response,

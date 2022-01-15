@@ -14,7 +14,7 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.testcontainers.containers.FixedHostPortGenericContainer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -23,25 +23,19 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import static java.nio.charset.StandardCharsets.UTF_8
 
 abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecification {
-  public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
+  public static final String loopback = "127.0.0.1"
 
-  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   abstract RedisClient createClient(String uri)
 
   @Shared
+  String expectedHostAttributeValue
+  @Shared
   int port
   @Shared
-  int incorrectPort
-  @Shared
-  String dbAddr
-  @Shared
-  String dbAddrNonExistent
-  @Shared
   String dbUriNonExistent
-  @Shared
-  String embeddedDbUri
   @Shared
   String embeddedDbLocalhostUri
 
@@ -56,23 +50,23 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   StatefulConnection connection
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
-    port = PortUtils.findOpenPort()
-    incorrectPort = PortUtils.findOpenPort()
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
-    dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
-    dbUriNonExistent = "redis://" + dbAddrNonExistent
-    embeddedDbUri = "redis://" + dbAddr
-    embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
-
-    redisServer = redisServer.withFixedExposedPort(port, 6379)
-  }
-
   def setup() {
+    redisServer.start()
+
+    port = redisServer.getMappedPort(6379)
+    String host = redisServer.getHost()
+    String dbAddr = host + ":" + port + "/" + DB_INDEX
+    String embeddedDbUri = "redis://" + dbAddr
+    embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
+    expectedHostAttributeValue = host == loopback ? null : host
+
+    int incorrectPort = PortUtils.findOpenPort()
+    String dbAddrNonExistent = host + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
+
     redisClient = createClient(embeddedDbUri)
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
-    redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
 
@@ -85,16 +79,13 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
   def cleanup() {
     connection.close()
+    redisClient.shutdown()
     redisServer.stop()
   }
 
   def "connect"() {
-    setup:
-    RedisClient testConnectionClient = createClient(embeddedDbUri)
-    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
-
     when:
-    StatefulConnection connection = testConnectionClient.connect()
+    StatefulConnection connection = redisClient.connect()
 
     then:
     // Lettuce tracing does not trace connect
@@ -116,6 +107,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
     thrown RedisConnectionException
     // Lettuce tracing does not trace connect
     assertTraces(0) {}
+
+    cleanup:
+    testConnectionClient.shutdown()
   }
 
   def "set command"() {
@@ -130,11 +124,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SET TESTSETKEY ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -162,12 +157,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SET TESTSETKEY ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -178,6 +173,10 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         }
       }
     }
+
+    cleanup:
+    connection.close()
+    testConnectionClient.shutdown()
   }
 
   def "get command"() {
@@ -192,11 +191,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "GET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET TESTKEY"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -221,11 +221,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "GET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET NON_EXISTENT_KEY"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -250,11 +251,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -279,11 +281,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "LPUSH"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH TESTLIST ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "LPUSH TESTLIST ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -308,11 +311,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "HMSET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HMSET user firstname ? lastname ? age ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "HMSET user firstname ? lastname ? age ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -337,11 +341,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "HGETALL"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL TESTHM"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "HGETALL TESTHM"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -371,11 +376,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "EVAL"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "EVAL $b64Script 1 TESTLIST ? ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "EVAL $b64Script 1 TESTLIST ? ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -404,11 +410,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "MSET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "MSET key1 ? key2 ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "MSET key1 ? key2 ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -433,21 +440,21 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           // Disconnect not an actual error even though an exception is recorded.
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG SEGFAULT"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "DEBUG SEGFAULT"
           }
-          event(0) {
-            eventName "redis.encode.start"
-          }
-          event(1) {
-            eventName "redis.encode.end"
-          }
-          if (Boolean.getBoolean("testLatestDeps")) {
-            // Seems to only be recorded with Lettuce 6+
-            errorEvent(RedisException, "Connection disconnected", 2)
+          if (!Boolean.getBoolean("testLatestDeps")) {
+            // these are no longer recorded since Lettuce 6.1.6
+            event(0) {
+              eventName "redis.encode.start"
+            }
+            event(1) {
+              eventName "redis.encode.end"
+            }
           }
         }
       }
@@ -469,11 +476,12 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             status ERROR
           }
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN NOSAVE"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" loopback
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SHUTDOWN NOSAVE"
             if (!Boolean.getBoolean("testLatestDeps")) {
               // Lettuce adds this tag before 6.0
               // TODO(anuraaga): Filter this out?

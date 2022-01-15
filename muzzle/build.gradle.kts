@@ -13,17 +13,13 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  api("net.bytebuddy:byte-buddy")
+  api("net.bytebuddy:byte-buddy-dep")
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":instrumentation-api"))
   implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-extension-api"))
   implementation("org.slf4j:slf4j-api")
-
-  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-  // inclusion of this artifact inside of :instrumentation-api
-  compileOnly(project(":instrumentation-api-caching"))
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")

@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import io.opentelemetry.instrumentation.api.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class CouchbaseQuerySanitizer {
   @Nullable private static final Class<?> QUERY_CLASS;
@@ -115,7 +116,7 @@ public final class CouchbaseQuerySanitizer {
   }
 
   private static SqlStatementInfo sanitizeString(String query) {
-    return SqlStatementSanitizer.sanitize(query);
+    return SqlStatementSanitizer.sanitize(query, SqlDialect.COUCHBASE);
   }
 
   private CouchbaseQuerySanitizer() {}

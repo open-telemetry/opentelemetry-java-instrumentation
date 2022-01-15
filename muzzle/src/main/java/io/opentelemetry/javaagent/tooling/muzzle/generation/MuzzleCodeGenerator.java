@@ -30,12 +30,12 @@ import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.Opcodes;
-import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,7 +213,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       /*
        * public Map<String, ClassRef> getMuzzleReferences() {
        *   Map<String, ClassRef> references = new HashMap<>(...);
-       *   references.put("reference class name", ClassRef.newBuilder(...)
+       *   references.put("reference class name", ClassRef.builder(...)
        *       ...
        *       .build());
        *   return references;
@@ -242,7 +242,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitMethodInsn(
                 Opcodes.INVOKESTATIC,
                 referenceType.getInternalName(),
-                "newBuilder",
+                "builder",
                 Type.getMethodDescriptor(referenceBuilderType, stringType),
                 /* isInterface= */ false);
             // stack: map, className, builder

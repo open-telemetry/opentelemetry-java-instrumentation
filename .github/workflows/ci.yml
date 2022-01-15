@@ -20,22 +20,14 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Build
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew build --stacktrace
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
@@ -50,14 +42,8 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Build
-        run: ../gradlew build --stacktrace
+        run: ../gradlew build
         working-directory: gradle-plugins
 
   test:
@@ -90,23 +76,14 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk${{ matrix.test-java-version }}
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDeps:
     runs-on: ubuntu-latest
@@ -121,29 +98,14 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      # Workaround https://github.com/burrunan/gradle-cache-action/issues/46
-      - name: Set dependencies cache key
-        shell: bash
-        run: echo "testLatestDeps" > gradle/otel-gradle-dependencies-key
-
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: latestDepTest
-          gradle-dependencies-cache-key: |
-            gradle/otel-gradle-dependencies-key
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestLatestDeps=true --stacktrace
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestLatestDeps=true
 
   smoke-test:
     runs-on: ${{ matrix.os }}
@@ -153,13 +115,17 @@ jobs:
           - windows-latest
           - ubuntu-latest
         smoke-test-suite:
-          - glassfish
           - jetty
           - liberty
+          - payara
           - tomcat
           - tomee
+          - websphere
           - wildfly
           - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -176,23 +142,14 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: smokeTests
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Test
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
@@ -245,7 +202,7 @@ jobs:
 
       - name: Run muzzle
         # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.5.0
+        uses: nick-invision/retry@v2.6.0
         with:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
@@ -265,27 +222,45 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
+      - name: Local publish of artifacts
+        uses: gradle/gradle-build-action@v2
         with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
 
-      - name: Local publish
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
+      - name: Local publish of gradle plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
+          build-root-directory: gradle-plugins
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/distro
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
+
+      - name: Run muzzle check against extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: true
+          arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
 
   snapshot:
     runs-on: ubuntu-latest
-    needs: [ build, test, testLatestDeps, smoke-test, examples, muzzle ]
+    # intentionally not blocking snapshot publishing on testLatestDeps
+    # because any time a new library version is released to maven central
+    # it can fail due to test code incompatibility with the new library version,
+    # or due to slight changes in emitted telemetry
+    needs: [ build, test, smoke-test, examples, muzzle ]
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     steps:
       - uses: actions/checkout@v2.3.4
@@ -298,24 +273,25 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
-      - name: Publish snapshot
+      - name: Build and publish artifact snapshots
         env:
-          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
-          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew snapshot --stacktrace
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assemble publishToSonatype
+
+      - name: Build and publish gradle plugin snapshots
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build publishToSonatype
+          build-root-directory: gradle-plugins

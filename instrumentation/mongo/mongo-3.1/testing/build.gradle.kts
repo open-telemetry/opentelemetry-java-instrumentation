@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation:mongo:mongo-testing"))
+  api(project(":instrumentation:mongo:mongo-common:testing"))
 
   compileOnly("org.mongodb:mongo-java-driver:3.1.0")
 

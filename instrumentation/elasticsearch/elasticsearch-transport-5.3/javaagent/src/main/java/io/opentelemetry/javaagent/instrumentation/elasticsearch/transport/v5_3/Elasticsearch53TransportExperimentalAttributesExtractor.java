@@ -14,7 +14,7 @@ public class Elasticsearch53TransportExperimentalAttributesExtractor
     extends ElasticsearchTransportExperimentalAttributesExtractor {
 
   @Override
-  protected void onStart(AttributesBuilder attributes, ElasticTransportRequest transportRequest) {
+  public void onStart(AttributesBuilder attributes, ElasticTransportRequest transportRequest) {
     super.onStart(attributes, transportRequest);
 
     Object request = transportRequest.getRequest();

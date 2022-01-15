@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -35,34 +35,34 @@ public final class GarbageCollector {
 
   /** Register all observers provided by this module. */
   public static void registerObservers() {
+    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
-    Meter meter = GlobalMeterProvider.get().get(GarbageCollector.class.getName());
+    Meter meter =
+        GlobalOpenTelemetry.get().getMeterProvider().get(GarbageCollector.class.getName());
     List<Attributes> labelSets = new ArrayList<>(garbageCollectors.size());
     for (GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Attributes.of(GC_KEY, gc.getName()));
     }
     meter
-        .gaugeBuilder("runtime.jvm.gc.time")
-        .ofLongs()
+        .counterBuilder("runtime.jvm.gc.time")
         .setDescription("Time spent in a given JVM garbage collector in milliseconds.")
         .setUnit("ms")
         .buildWithCallback(
             resultLongObserver -> {
               for (int i = 0; i < garbageCollectors.size(); i++) {
-                resultLongObserver.observe(
+                resultLongObserver.record(
                     garbageCollectors.get(i).getCollectionTime(), labelSets.get(i));
               }
             });
     meter
-        .gaugeBuilder("runtime.jvm.gc.count")
-        .ofLongs()
+        .counterBuilder("runtime.jvm.gc.count")
         .setDescription(
             "The number of collections that have occurred for a given JVM garbage collector.")
         .setUnit("collections")
         .buildWithCallback(
             resultLongObserver -> {
               for (int i = 0; i < garbageCollectors.size(); i++) {
-                resultLongObserver.observe(
+                resultLongObserver.record(
                     garbageCollectors.get(i).getCollectionCount(), labelSets.get(i));
               }
             });

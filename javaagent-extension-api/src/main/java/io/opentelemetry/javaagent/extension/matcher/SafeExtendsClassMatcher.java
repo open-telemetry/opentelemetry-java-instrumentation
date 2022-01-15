@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
 
+import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,7 +40,7 @@ class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == this) {
       return true;
     }

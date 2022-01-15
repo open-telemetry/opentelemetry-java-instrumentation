@@ -9,9 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.A
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpAsyncClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> {

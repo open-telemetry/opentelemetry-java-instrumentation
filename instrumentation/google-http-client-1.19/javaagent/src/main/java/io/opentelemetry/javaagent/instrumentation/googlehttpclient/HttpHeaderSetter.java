@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import com.google.api.client.http.HttpRequest;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-public class HttpHeaderSetter implements TextMapSetter<HttpRequest> {
+enum HttpHeaderSetter implements TextMapSetter<HttpRequest> {
+  INSTANCE;
 
   @Override
   public void set(HttpRequest carrier, String key, String value) {

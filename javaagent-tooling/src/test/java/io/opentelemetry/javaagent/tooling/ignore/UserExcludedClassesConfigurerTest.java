@@ -27,7 +27,7 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldAddNothingToBuilderWhenPropertyIsEmpty() {
     // when
-    underTest.configure(Config.newBuilder().build(), builder);
+    underTest.configure(Config.builder().build(), builder);
 
     // then
     verifyNoInteractions(builder);
@@ -37,7 +37,7 @@ class UserExcludedClassesConfigurerTest {
   void shouldIgnoreClassesAndPackages() {
     // given
     Config config =
-        Config.newBuilder()
+        Config.builder()
             .readProperties(
                 singletonMap(
                     EXCLUDED_CLASSES_CONFIG,

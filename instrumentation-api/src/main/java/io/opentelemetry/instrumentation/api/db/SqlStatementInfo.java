@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.db;
 
 import com.google.auto.value.AutoValue;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class SqlStatementInfo {

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -15,7 +17,17 @@ import spock.lang.IgnoreIf
 class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
+    if (ServerEndpoint.CAPTURE_PARAMETERS == endpoint) {
+      return "HTTP POST"
+    }
     "HTTP GET"
   }
 

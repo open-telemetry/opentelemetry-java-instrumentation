@@ -18,6 +18,7 @@ import java.util.concurrent.Executors
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -38,9 +39,15 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     false
   }
 
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the JAX-RS controller spans
+    return false
+  }
+
   @Path("/")
   static class AsyncServiceResource {
-    private ExecutorService executor = Executors.newSingleThreadExecutor()
+    private ExecutorService executor = Executors.newCachedThreadPool()
 
     @GET
     @Path("success")
@@ -55,8 +62,10 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     @GET
     @Path("query")
     Response query_param(@QueryParam("some") String param, @Suspended AsyncResponse ar) {
-      controller(QUERY_PARAM) {
-        ar.resume(Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build())
+      executor.execute {
+        controller(QUERY_PARAM) {
+          ar.resume(Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build())
+        }
       }
     }
 
@@ -90,6 +99,17 @@ class GrizzlyAsyncTest extends GrizzlyTest {
           }
         } catch (Exception e) {
           ar.resume(e)
+        }
+      }
+    }
+
+    @GET
+    @Path("child")
+    void exception(@QueryParam("id") String id, @Suspended AsyncResponse ar) {
+      executor.execute {
+        controller(INDEXED_CHILD) {
+          INDEXED_CHILD.collectSpanAttributes { it == "id" ? id : null }
+          ar.resume(Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build())
         }
       }
     }

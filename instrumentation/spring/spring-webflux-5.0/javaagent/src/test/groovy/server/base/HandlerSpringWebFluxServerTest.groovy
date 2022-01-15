@@ -39,4 +39,12 @@ abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
       childOf((SpanData) parent)
     }
   }
+
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // TODO (trask) it seems like in this case ideally the handler span (which ends when the Mono
+    //  that the handler returns completes) should end before the server span (which needs the
+    //  result of the Mono)
+    false
+  }
 }

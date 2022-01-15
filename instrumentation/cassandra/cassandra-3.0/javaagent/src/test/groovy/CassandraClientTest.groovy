@@ -145,15 +145,14 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT.key" cassandraPort
-        "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
-        "$SemanticAttributes.DB_NAME.key" keyspace
-        "$SemanticAttributes.DB_STATEMENT.key" statement
-        "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE.key" keyspace
-        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" table
+        "$SemanticAttributes.NET_PEER_NAME" "localhost"
+        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT" cassandraPort
+        "$SemanticAttributes.DB_SYSTEM" "cassandra"
+        "$SemanticAttributes.DB_NAME" keyspace
+        "$SemanticAttributes.DB_STATEMENT" statement
+        "$SemanticAttributes.DB_OPERATION" operation
+        "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }
     }
   }

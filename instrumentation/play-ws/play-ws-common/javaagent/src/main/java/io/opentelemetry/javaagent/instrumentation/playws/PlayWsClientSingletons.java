@@ -33,14 +33,14 @@ public class PlayWsClientSingletons {
         new PlayWsClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<Request, Response>newBuilder(
+        Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new HttpHeaderSetter());
+            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<Request, Response> instrumenter() {

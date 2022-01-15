@@ -44,11 +44,12 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SET a ?"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET a ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -62,11 +63,12 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "GET a"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "GET a"
           }
           event(0) {
             eventName "redis.encode.start"

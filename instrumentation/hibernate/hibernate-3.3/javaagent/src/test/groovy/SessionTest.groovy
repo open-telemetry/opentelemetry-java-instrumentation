@@ -28,25 +28,28 @@ class SessionTest extends AbstractHibernateTest {
 
     // Test for each implementation of Session.
     for (def buildSession : sessionImplementations) {
-      def session = buildSession()
-      session.beginTransaction()
+      runWithSpan("parent") {
+        def session = buildSession()
+        session.beginTransaction()
 
-      try {
-        sessionMethodTest.call(session, prepopulated.get(0))
-      } catch (Exception e) {
-        // We expected this, we should see the error field set on the span.
+        try {
+          sessionMethodTest.call(session, prepopulated.get(0))
+        } catch (Exception e) {
+          // We expected this, we should see the error field set on the span.
+        }
+
+        session.getTransaction().commit()
+        session.close()
       }
-
-      session.getTransaction().commit()
-      session.close()
     }
 
     expect:
+    def sessionId
     assertTraces(sessionImplementations.size()) {
       for (int i = 0; i < sessionImplementations.size(); i++) {
         trace(i, 4) {
           span(0) {
-            name "Session"
+            name "parent"
             kind INTERNAL
             hasNoParent()
             attributes {
@@ -57,6 +60,10 @@ class SessionTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" {
+                sessionId = it
+                it instanceof String
+              }
             }
           }
           span(2) {
@@ -64,13 +71,13 @@ class SessionTest extends AbstractHibernateTest {
             kind CLIENT
             childOf span(1)
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
-              "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" ~/^select /
+              "$SemanticAttributes.DB_OPERATION" "SELECT"
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
           span(3) {
@@ -78,6 +85,7 @@ class SessionTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" sessionId
             }
           }
         }
@@ -100,24 +108,27 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate statless action #testName"() {
     setup:
 
-    // Test for each implementation of Session.
-    def session = statelessSessionBuilder()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      // Test for each implementation of Session.
+      def session = statelessSessionBuilder()
+      session.beginTransaction()
 
-    try {
-      sessionMethodTest.call(session, prepopulated.get(0))
-    } catch (Exception e) {
-      // We expected this, we should see the error field set on the span.
+      try {
+        sessionMethodTest.call(session, prepopulated.get(0))
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
+
+      session.getTransaction().commit()
+      session.close()
     }
 
-    session.getTransaction().commit()
-    session.close()
-
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -128,6 +139,10 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -135,19 +150,20 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
         span(3) {
           kind CLIENT
           childOf span(2)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" String
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" String
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
       }
@@ -174,24 +190,27 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate replicate: #testName"() {
     setup:
 
-    // Test for each implementation of Session.
-    def session = sessionFactory.openSession()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      // Test for each implementation of Session.
+      def session = sessionFactory.openSession()
+      session.beginTransaction()
 
-    try {
-      sessionMethodTest.call(session, prepopulated.get(0))
-    } catch (Exception e) {
-      // We expected this, we should see the error field set on the span.
+      try {
+        sessionMethodTest.call(session, prepopulated.get(0))
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
+
+      session.getTransaction().commit()
+      session.close()
     }
 
-    session.getTransaction().commit()
-    session.close()
-
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -202,6 +221,10 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -209,13 +232,13 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" ~/^select /
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {
@@ -223,19 +246,20 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
         span(4) {
           kind CLIENT
           childOf span(3)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" String
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" String
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
       }
@@ -259,24 +283,27 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate failed replicate"() {
     setup:
 
-    // Test for each implementation of Session.
-    def session = sessionFactory.openSession()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      // Test for each implementation of Session.
+      def session = sessionFactory.openSession()
+      session.beginTransaction()
 
-    try {
-      session.replicate(new Long(123) /* Not a valid entity */, ReplicationMode.OVERWRITE)
-    } catch (Exception e) {
-      // We expected this, we should see the error field set on the span.
+      try {
+        session.replicate(new Long(123) /* Not a valid entity */, ReplicationMode.OVERWRITE)
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
+
+      session.getTransaction().commit()
+      session.close()
     }
 
-    session.getTransaction().commit()
-    session.close()
-
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -288,12 +315,19 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(0)
           status ERROR
           errorEvent(MappingException, "Unknown entity: java.lang.Long")
+          attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
+          }
         }
         span(2) {
           name "Transaction.commit"
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -305,23 +339,26 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate commit action #testName"() {
     setup:
 
-    def session = sessionBuilder()
-    session.beginTransaction()
+    runWithSpan("parent") {
+      def session = sessionBuilder()
+      session.beginTransaction()
 
-    try {
-      sessionMethodTest.call(session, prepopulated.get(0))
-    } catch (Exception e) {
-      // We expected this, we should see the error field set on the span.
+      try {
+        sessionMethodTest.call(session, prepopulated.get(0))
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
+
+      session.getTransaction().commit()
+      session.close()
     }
 
-    session.getTransaction().commit()
-    session.close()
-
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -332,6 +369,10 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -339,19 +380,20 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
         span(3) {
           kind CLIENT
           childOf span(2)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" String
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" String
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
       }
@@ -391,18 +433,21 @@ class SessionTest extends AbstractHibernateTest {
 
   def "test attaches State to query created via #queryMethodName"() {
     setup:
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
-    Query query = queryBuildMethod(session)
-    query.list()
-    session.getTransaction().commit()
-    session.close()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
+      Query query = queryBuildMethod(session)
+      query.list()
+      session.getTransaction().commit()
+      session.close()
+    }
 
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -413,19 +458,23 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {
@@ -433,6 +482,7 @@ class SessionTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -468,99 +518,96 @@ class SessionTest extends AbstractHibernateTest {
     }
 
     expect:
+    def sessionId1
+    def sessionId2
+    def sessionId3
     assertTraces(1) {
-      trace(0, 11) {
+      trace(0, 8) {
         span(0) {
           name "overlapping Sessions"
           attributes {
           }
         }
         span(1) {
-          name "Session"
+          name "Session.save Value"
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId1 = it
+              it instanceof String
+            }
           }
         }
         span(2) {
-          name "Session.save Value"
+          name "Session.insert Value"
           kind INTERNAL
-          childOf span(1)
+          childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId2 = it
+              it instanceof String
+            }
           }
         }
         span(3) {
-          name "Session.delete Value"
+          name "Session.save Value"
           kind INTERNAL
-          childOf span(1)
+          childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId3 = it
+              it instanceof String
+            }
           }
         }
         span(4) {
-          name "Transaction.commit"
+          name "Session.delete Value"
           kind INTERNAL
-          childOf span(1)
+          childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId1
           }
         }
         span(5) {
-          name "INSERT db1.Value"
-          kind CLIENT
-          childOf span(4)
+          name "Transaction.commit"
+          kind INTERNAL
+          childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^insert /
-            "${SemanticAttributes.DB_OPERATION.key}" "INSERT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "hibernate.session_id" sessionId1
           }
         }
         span(6) {
-          name "DELETE db1.Value"
+          name "INSERT db1.Value"
           kind CLIENT
-          childOf span(4)
+          childOf span(5)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^delete /
-            "${SemanticAttributes.DB_OPERATION.key}" "DELETE"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" ~/^insert /
+            "$SemanticAttributes.DB_OPERATION" "INSERT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(7) {
-          name "Session"
-          kind INTERNAL
-          childOf span(0)
+          name "DELETE db1.Value"
+          kind CLIENT
+          childOf span(5)
           attributes {
-          }
-        }
-        span(8) {
-          name "Session.insert Value"
-          kind INTERNAL
-          childOf span(7)
-          attributes {
-          }
-        }
-        span(9) {
-          name "Session"
-          kind INTERNAL
-          childOf span(0)
-          attributes {
-          }
-        }
-        span(10) {
-          name "Session.save Value"
-          kind INTERNAL
-          childOf span(9)
-          attributes {
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" ~/^delete /
+            "$SemanticAttributes.DB_OPERATION" "DELETE"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
       }
     }
+    sessionId1 != sessionId2 != sessionId3
   }
 }
 

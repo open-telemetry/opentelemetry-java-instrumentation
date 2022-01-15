@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
@@ -22,9 +24,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * comma-separated list of {@code host=name} pairs.
  */
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
-      Config.get().getMap("otel.instrumentation.common.peer-service-mapping");
+      Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
 
   private final Map<String, String> peerServiceMapping;
   private final NetClientAttributesExtractor<REQUEST, RESPONSE> netClientAttributesExtractor;
@@ -48,14 +50,20 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, REQUEST request) {}
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+
+    if (peerServiceMapping.isEmpty()) {
+      // optimization for common case
+      return;
+    }
+
     String peerName = netClientAttributesExtractor.peerName(request, response);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
@@ -67,6 +75,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     }
   }
 
+  @Nullable
   private String mapToPeerService(String endpoint) {
     if (endpoint == null) {
       return null;

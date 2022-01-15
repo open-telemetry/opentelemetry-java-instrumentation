@@ -186,15 +186,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbNameLower
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -246,15 +246,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbNameLower
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -298,15 +298,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbNameLower
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -350,15 +350,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbName.toLowerCase()
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -402,13 +402,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbNameLower
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" query
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
+            "$SemanticAttributes.DB_STATEMENT" query
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
           }
         }
       }
@@ -455,13 +455,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbName.toLowerCase()
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" query
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
+            "$SemanticAttributes.DB_STATEMENT" query
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
           }
         }
       }
@@ -495,15 +495,20 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
       connection = driver.connect(jdbcUrl, null)
     }
 
-    def (Statement statement, ResultSet rs) = runWithSpan("parent") {
+    // TODO: def (Statement statement, ResultSet rs) fails to compile, switch back when this is fixed in spock
+    // https://github.com/spockframework/spock/pull/1333
+    // def (Statement statement, ResultSet rs) = runWithSpan("parent") {
+    Tuple tuple = runWithSpan("parent") {
       if (prepareStatement) {
-        def statement = connection.prepareStatement(query)
-        return new Tuple(statement, statement.executeQuery())
+        def stmt = connection.prepareStatement(query)
+        return new Tuple(stmt, stmt.executeQuery())
       }
 
-      def statement = connection.createStatement()
-      return new Tuple(statement, statement.executeQuery(query))
+      def stmt = connection.createStatement()
+      return new Tuple(stmt, stmt.executeQuery(query))
     }
+    Statement statement = tuple.get(0)
+    ResultSet rs = tuple.get(1)
 
     then:
     rs.next()
@@ -520,15 +525,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" system
-            "$SemanticAttributes.DB_NAME.key" dbNameLower
+            "$SemanticAttributes.DB_SYSTEM" system
+            "$SemanticAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER.key" username
+              "$SemanticAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" url
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -577,8 +582,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE.key" datasource.class.name
-            "$SemanticAttributes.CODE_FUNCTION.key" "getConnection"
+            "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
+            "$SemanticAttributes.CODE_FUNCTION" "getConnection"
           }
         }
         if (recursive) {
@@ -587,8 +592,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(1)
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE.key" datasource.class.name
-              "$SemanticAttributes.CODE_FUNCTION.key" "getConnection"
+              "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
+              "$SemanticAttributes.CODE_FUNCTION" "getConnection"
             }
           }
         }
@@ -635,10 +640,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
-            "$SemanticAttributes.DB_STATEMENT.key" "testing ?"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_STATEMENT" "testing ?"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
           }
         }
       }
@@ -676,13 +681,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
-            "$SemanticAttributes.DB_NAME.key" databaseName
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION.key" operation
-            "$SemanticAttributes.DB_SQL_TABLE.key" table
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_NAME" databaseName
+            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
+            "$SemanticAttributes.DB_OPERATION" operation
+            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
           }
         }
       }
@@ -733,13 +738,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             name "SELECT INFORMATION_SCHEMA.SYSTEM_USERS"
             kind CLIENT
             attributes {
-              "$SemanticAttributes.DB_SYSTEM.key" "hsqldb"
-              "$SemanticAttributes.DB_NAME.key" dbNameLower
-              "$SemanticAttributes.DB_USER.key" "SA"
-              "$SemanticAttributes.DB_CONNECTION_STRING.key" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT.key" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-              "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE.key" "INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
+              "$SemanticAttributes.DB_NAME" dbNameLower
+              "$SemanticAttributes.DB_USER" "SA"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$SemanticAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$SemanticAttributes.DB_OPERATION" "SELECT"
+              "$SemanticAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
             }
           }
         }
@@ -782,12 +787,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM table"
-            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE.key" "table"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "table"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
           }
         }
       }

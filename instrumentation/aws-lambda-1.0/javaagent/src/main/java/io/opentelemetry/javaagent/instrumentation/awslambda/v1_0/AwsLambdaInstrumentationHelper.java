@@ -5,23 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaSqsInstrumenterFactory;
 
 public final class AwsLambdaInstrumentationHelper {
 
-  private static final AwsLambdaTracer FUNCTION_TRACER =
-      new AwsLambdaTracer(GlobalOpenTelemetry.get());
+  private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
+      AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
 
-  public static AwsLambdaTracer functionTracer() {
-    return FUNCTION_TRACER;
+  public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
+    return FUNCTION_INSTRUMENTER;
   }
 
-  private static final AwsLambdaMessageTracer MESSAGE_TRACER =
-      new AwsLambdaMessageTracer(GlobalOpenTelemetry.get());
+  private static final Instrumenter<SQSEvent, Void> MESSAGE_TRACER =
+      AwsLambdaSqsInstrumenterFactory.forEvent(GlobalOpenTelemetry.get());
 
-  public static AwsLambdaMessageTracer messageTracer() {
+  public static Instrumenter<SQSEvent, Void> messageInstrumenter() {
     return MESSAGE_TRACER;
   }
 

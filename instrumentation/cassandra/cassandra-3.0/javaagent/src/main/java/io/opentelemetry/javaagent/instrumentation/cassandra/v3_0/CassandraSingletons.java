@@ -26,11 +26,10 @@ public final class CassandraSingletons {
     SpanNameExtractor<CassandraRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<CassandraRequest, ExecutionInfo>newBuilder(
+        Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new CassandraNetAttributesExtractor())
-            .addAttributesExtractor(new CassandraKeyspaceExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

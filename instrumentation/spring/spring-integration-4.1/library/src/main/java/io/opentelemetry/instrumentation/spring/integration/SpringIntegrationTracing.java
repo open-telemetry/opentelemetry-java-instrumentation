@@ -19,24 +19,28 @@ public final class SpringIntegrationTracing {
    * Returns a new {@link SpringIntegrationTracing} configured with the given {@link OpenTelemetry}.
    */
   public static SpringIntegrationTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
    * Returns a new {@link SpringIntegrationTracingBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static SpringIntegrationTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static SpringIntegrationTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringIntegrationTracingBuilder(openTelemetry);
   }
 
   private final ContextPropagators propagators;
-  private final Instrumenter<MessageWithChannel, Void> instrumenter;
+  private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
+  private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
 
   SpringIntegrationTracing(
-      ContextPropagators propagators, Instrumenter<MessageWithChannel, Void> instrumenter) {
+      ContextPropagators propagators,
+      Instrumenter<MessageWithChannel, Void> consumerInstrumenter,
+      Instrumenter<MessageWithChannel, Void> producerInstrumenter) {
     this.propagators = propagators;
-    this.instrumenter = instrumenter;
+    this.consumerInstrumenter = consumerInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
   }
 
   /**
@@ -49,6 +53,6 @@ public final class SpringIntegrationTracing {
    * @see org.springframework.integration.config.GlobalChannelInterceptor
    */
   public ChannelInterceptor newChannelInterceptor() {
-    return new TracingChannelInterceptor(propagators, instrumenter);
+    return new TracingChannelInterceptor(propagators, consumerInstrumenter, producerInstrumenter);
   }
 }

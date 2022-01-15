@@ -27,6 +27,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   @Override
   int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
+    if (uri.toString().contains("/read-timeout")) {
+      connection.readTimeout = READ_TIMEOUT_MS
+    }
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }
@@ -63,6 +66,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   @Override
   boolean testCallback() {
     return false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Unroll
@@ -106,13 +114,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(2) {
@@ -127,13 +135,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(4) {
@@ -154,11 +162,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     setup:
     def url = resolveAddress("/success").toURL()
     HttpURLConnection connection = runWithSpan("someTrace") {
-      HttpURLConnection connection = url.openConnection()
-      connection.setRequestProperty("Connection", "close")
+      HttpURLConnection con = url.openConnection()
+      con.setRequestProperty("Connection", "close")
       assert Span.current().getSpanContext().isValid()
-      assert connection.getResponseCode() == STATUS
-      return connection
+      assert con.getResponseCode() == STATUS
+      return con
     }
 
     expect:
@@ -175,13 +183,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         serverSpan(it, 2, span(1))
@@ -233,13 +241,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "POST"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
           }
         }
         span(2) {

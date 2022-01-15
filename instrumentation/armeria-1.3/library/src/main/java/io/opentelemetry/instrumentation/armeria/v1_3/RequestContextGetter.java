@@ -10,9 +10,10 @@ import io.netty.util.AsciiString;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
-final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {

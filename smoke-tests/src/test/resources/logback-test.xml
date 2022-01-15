@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+  <appender name="backend" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="console"/>
+  </root>
+
+  <logger name="org.testcontainers" level="WARN" />
+  <logger name="io.opentelemetry.testing.internal.armeria" level="WARN"/>
+
+  <logger name="Backend" level="debug" additivity="false">
+    <appender-ref ref="backend" />
+  </logger>
+
+  <logger name="App" level="debug" additivity="false">
+    <appender-ref ref="backend" />
+  </logger>
+
+</configuration>

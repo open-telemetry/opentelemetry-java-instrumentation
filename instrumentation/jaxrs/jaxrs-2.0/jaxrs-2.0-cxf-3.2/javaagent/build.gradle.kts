@@ -21,7 +21,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+  bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
@@ -32,7 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 

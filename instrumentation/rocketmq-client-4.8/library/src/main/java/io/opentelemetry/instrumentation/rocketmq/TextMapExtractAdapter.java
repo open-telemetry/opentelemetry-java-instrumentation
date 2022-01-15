@@ -6,19 +6,20 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Map;
+import javax.annotation.Nullable;
+import org.apache.rocketmq.common.message.MessageExt;
 
-final class TextMapExtractAdapter implements TextMapGetter<Map<String, String>> {
-
-  public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
+enum TextMapExtractAdapter implements TextMapGetter<MessageExt> {
+  INSTANCE;
 
   @Override
-  public Iterable<String> keys(Map<String, String> carrier) {
-    return carrier.keySet();
+  public Iterable<String> keys(MessageExt carrier) {
+    return carrier.getProperties().keySet();
   }
 
+  @Nullable
   @Override
-  public String get(Map<String, String> carrier, String key) {
-    return carrier.get(key);
+  public String get(@Nullable MessageExt carrier, String key) {
+    return carrier == null ? null : carrier.getProperties().get(key);
   }
 }

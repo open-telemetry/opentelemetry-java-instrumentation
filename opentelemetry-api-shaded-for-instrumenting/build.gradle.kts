@@ -9,7 +9,6 @@ group = "io.opentelemetry.javaagent"
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-api-metrics")
 }
 
 // OpenTelemetry API shaded so that it can be used in instrumentation of OpenTelemetry API itself,

@@ -36,14 +36,15 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" paramName
           }
         }
         span(1) {
           name "${className}.call"
           childOf span(0)
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" obj.getClass().getName()
-            "${SemanticAttributes.CODE_FUNCTION.key}" "call"
+            "$SemanticAttributes.CODE_NAMESPACE" obj.getClass().getName()
+            "$SemanticAttributes.CODE_FUNCTION" "call"
           }
         }
       }

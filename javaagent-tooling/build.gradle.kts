@@ -1,6 +1,9 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
+  id("otel.jmh-conventions")
 }
 
 group = "io.opentelemetry.javaagent"
@@ -12,13 +15,15 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-annotation-support"))
+  implementation(project(":instrumentation-appender-api-internal"))
+  implementation(project(":instrumentation-appender-sdk-internal"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-api-metrics")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")
+  implementation("io.opentelemetry:opentelemetry-sdk-logs")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -29,7 +34,7 @@ dependencies {
   // Other exporters are in javaagent-exporters
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
-  api("net.bytebuddy:byte-buddy")
+  api("net.bytebuddy:byte-buddy-dep")
   implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")
@@ -40,10 +45,6 @@ dependencies {
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
-
-  // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-  // inclusion of this artifact inside of :instrumentation-api
-  compileOnly(project(":instrumentation-api-caching"))
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in
@@ -52,5 +53,12 @@ tasks {
   withType<Test>().configureEach {
     environment("OTEL_TRACES_EXPORTER", "none")
     environment("OTEL_METRICS_EXPORTER", "none")
+  }
+
+  // TODO this should live in jmh-conventions
+  named<JavaCompile>("jmhCompileGeneratedClasses") {
+    options.errorprone {
+      isEnabled.set(false)
+    }
   }
 }

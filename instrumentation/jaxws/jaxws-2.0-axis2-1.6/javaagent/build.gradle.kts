@@ -17,21 +17,22 @@ muzzle {
 }
 
 configurations.configureEach {
-  if (!name.contains("muzzle")) {
-    // axis has a dependency on servlet api, get rid of it
+  if (name.contains("test")) {
+    // axis has a dependency on servlet2 api, get rid of it - otherwise the servlet3 instrumentation
+    // will fail during tests
     exclude("javax.servlet", "servlet-api")
   }
 }
 
 dependencies {
-  implementation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:library"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   val axis2Version = "1.6.0"
   library("org.apache.axis2:axis2-jaxws:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-local:$axis2Version")
 
-  testImplementation(project(":instrumentation:jaxws:jaxws-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxws:jaxws-2.0-common-testing"))
 
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))

@@ -16,25 +16,30 @@ class QueryTest extends AbstractHibernateTest {
     setup:
 
     // With Transaction
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
-    queryInteraction(session)
-    session.getTransaction().commit()
-    session.close()
-
-    // Without Transaction
-    if (!requiresTransaction) {
-      session = sessionFactory.openSession()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
       queryInteraction(session)
+      session.getTransaction().commit()
       session.close()
     }
 
+    // Without Transaction
+    if (!requiresTransaction) {
+      runWithSpan("parent2") {
+        Session session = sessionFactory.openSession()
+        queryInteraction(session)
+        session.close()
+      }
+    }
+
     expect:
+    def sessionId
     assertTraces(requiresTransaction ? 1 : 2) {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -45,19 +50,23 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" String
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" String
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {
@@ -65,6 +74,7 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }
@@ -72,7 +82,7 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            name "Session"
+            name "parent2"
             kind INTERNAL
             hasNoParent()
             attributes {
@@ -83,6 +93,7 @@ class QueryTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" String
             }
           }
           span(2) {
@@ -90,13 +101,13 @@ class QueryTest extends AbstractHibernateTest {
             kind CLIENT
             childOf span(1)
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
-              "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" ~/^select /
+              "$SemanticAttributes.DB_OPERATION" "SELECT"
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
         }
@@ -132,21 +143,24 @@ class QueryTest extends AbstractHibernateTest {
   def "test hibernate query.iterate"() {
     setup:
 
-    Session session = sessionFactory.openSession()
-    session.beginTransaction()
-    Query q = session.createQuery("from Value")
-    Iterator it = q.iterate()
-    while (it.hasNext()) {
-      it.next()
+    runWithSpan("parent") {
+      Session session = sessionFactory.openSession()
+      session.beginTransaction()
+      Query q = session.createQuery("from Value")
+      Iterator iterator = q.iterate()
+      while (iterator.hasNext()) {
+        iterator.next()
+      }
+      session.getTransaction().commit()
+      session.close()
     }
-    session.getTransaction().commit()
-    session.close()
 
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -157,6 +171,10 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -164,13 +182,13 @@ class QueryTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" ~/^select /
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {
@@ -178,6 +196,7 @@ class QueryTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }

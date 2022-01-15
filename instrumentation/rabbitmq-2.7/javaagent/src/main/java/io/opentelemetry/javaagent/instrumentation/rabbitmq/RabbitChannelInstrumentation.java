@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitInstrumenterHelper.helper;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.channelInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.receiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -94,13 +96,21 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Origin("Channel.#m") String method,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") ChannelAndMethod request) {
       callDepth = CallDepth.forClass(Channel.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
-      context = tracer().startSpan(method, channel.getConnection());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = ChannelAndMethod.create(channel, method);
+
+      if (!channelInstrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = channelInstrumenter().start(parentContext, request);
       CURRENT_RABBIT_CONTEXT.set(context);
       scope = context.makeCurrent();
     }
@@ -110,7 +120,8 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelRequest") ChannelAndMethod request) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -118,11 +129,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       scope.close();
 
       CURRENT_RABBIT_CONTEXT.remove();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      channelInstrumenter().end(context, request, null, throwable);
     }
   }
 
@@ -139,7 +146,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       Span span = Java8BytecodeBridge.spanFromContext(context);
 
       if (span.getSpanContext().isValid()) {
-        tracer().onPublish(span, exchange, routingKey);
+        helper().onPublish(span, exchange, routingKey);
         if (body != null) {
           span.setAttribute(
               SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
@@ -149,13 +156,13 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
         }
-        tracer().onProps(span, props);
+        helper().onProps(span, props);
 
         // We need to copy the BasicProperties and provide a header map we can modify
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        tracer().inject(context, headers, TextMapInjectAdapter.SETTER);
+        helper().inject(context, headers, MapSetter.INSTANCE);
 
         props =
             new AMQP.BasicProperties(
@@ -181,32 +188,37 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelGetAdvice {
 
     @Advice.OnMethodEnter
-    public static long takeTimestamp(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void takeTimestamp(
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelTimer") Timer timer) {
       callDepth = CallDepth.forClass(Channel.class);
       callDepth.getAndIncrement();
-      return System.currentTimeMillis();
+      timer = Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
-        @Advice.Enter long startTime,
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelTimer") Timer timer) {
       if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      ReceiveRequest request =
+          ReceiveRequest.create(queue, timer, response, channel.getConnection());
+      if (!receiveInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Context context = tracer().startGetSpan(queue, startTime, response, channel.getConnection());
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      Context context = receiveInstrumenter().start(parentContext, request);
+      receiveInstrumenter().end(context, request, null, throwable);
     }
   }
 

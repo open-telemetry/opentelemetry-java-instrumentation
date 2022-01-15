@@ -195,9 +195,9 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         errorEvent exception.class, exception.message
       }
       attributes {
-        "$SemanticAttributes.HTTP_URL.key" url
-        "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-        "$SemanticAttributes.HTTP_METHOD.key" "GET"
+        "$SemanticAttributes.HTTP_URL" url
+        "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+        "$SemanticAttributes.HTTP_METHOD" "GET"
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP

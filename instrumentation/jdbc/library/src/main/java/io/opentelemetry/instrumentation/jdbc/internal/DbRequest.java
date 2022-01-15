@@ -12,7 +12,7 @@ import com.google.auto.value.AutoValue;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class DbRequest {

@@ -5,20 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyServerSingletons.instrumenter;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
+import javax.annotation.Nullable;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
-    Context context = tracer().getServerContext(ctx.channel());
+    Context context = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
     if (context == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
       return;
@@ -26,10 +31,18 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
+      end(ctx.channel(), (HttpResponse) msg, null);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(context, throwable);
+      end(ctx.channel(), (HttpResponse) msg, throwable);
       throw throwable;
     }
-    tracer().end(context, (HttpResponse) msg);
+  }
+
+  // make sure to remove the server context on end() call
+  private static void end(Channel channel, HttpResponse response, @Nullable Throwable error) {
+    Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndRemove();
+    HttpRequestAndChannel request = channel.attr(AttributeKeys.SERVER_REQUEST).getAndRemove();
+    error = NettyErrorHolder.getOrDefault(context, error);
+    instrumenter().end(context, request, response, error);
   }
 }

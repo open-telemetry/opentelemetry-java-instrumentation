@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.grpc.v1_6.GrpcInjectAdapter.SETTER;
-
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -47,7 +45,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
     GrpcRequest request = new GrpcRequest(method, null, null);
     Context parentContext = Context.current();
     Context context = instrumenter.start(parentContext, request);
-    final ClientCall<REQUEST, RESPONSE> result;
+    ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
@@ -88,7 +86,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
-      propagators.getTextMapPropagator().inject(context, headers, SETTER);
+      propagators.getTextMapPropagator().inject(context, headers, MetadataSetter.INSTANCE);
       try (Scope ignored = context.makeCurrent()) {
         super.start(
             new TracingClientCallListener(responseListener, parentContext, context, request),

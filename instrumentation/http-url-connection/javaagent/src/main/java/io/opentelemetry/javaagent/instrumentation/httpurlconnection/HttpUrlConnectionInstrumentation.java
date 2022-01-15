@@ -15,17 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -74,6 +69,11 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         // top-level HttpURLConnection calls
         return;
       }
+      // double increment on first entry is used to prevent infinite recursion in case end()
+      // captures response headers due to HttpUrlConnection.getHeaderField() calling
+      // HttpUrlConnection.getInputStream() which then enters this advice again
+      callDepth.getAndIncrement();
+
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, connection)) {
         return;
@@ -108,35 +108,45 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+      // checking against 1 instead of against 0, because of the double increment which is used to
+      // prevent infinite recursion in case end() captures response headers
+      if (callDepth.decrementAndGet() > 1) {
         return;
       }
       if (scope == null) {
+        // need to perform the second decrement here since bailing out early
+        callDepth.decrementAndGet();
         return;
       }
-      scope.close();
+      try {
+        scope.close();
 
-      if (throwable != null) {
-        if (responseCode >= 400) {
-          // HttpURLConnection unnecessarily throws exception on error response.
-          // None of the other http clients do this, so not recording the exception on the span
-          // to be consistent with the telemetry for other http clients.
+        if (throwable != null) {
+          if (responseCode >= 400) {
+            // HttpURLConnection unnecessarily throws exception on error response.
+            // None of the other http clients do this, so not recording the exception on the span
+            // to be consistent with the telemetry for other http clients.
+            instrumenter().end(httpUrlState.context, connection, responseCode, null);
+          } else {
+            instrumenter()
+                .end(
+                    httpUrlState.context,
+                    connection,
+                    responseCode > 0 ? responseCode : httpUrlState.statusCode,
+                    throwable);
+          }
+          httpUrlState.finished = true;
+        } else if (methodName.equals("getInputStream") && responseCode > 0) {
+          // responseCode field is sometimes not populated.
+          // We can't call getResponseCode() due to some unwanted side-effects
+          // (e.g. breaks getOutputStream).
           instrumenter().end(httpUrlState.context, connection, responseCode, null);
-        } else {
-          instrumenter()
-              .end(
-                  httpUrlState.context,
-                  connection,
-                  responseCode > 0 ? responseCode : null,
-                  throwable);
+          httpUrlState.finished = true;
         }
-        httpUrlState.finished = true;
-      } else if (methodName.equals("getInputStream") && responseCode > 0) {
-        // responseCode field is sometimes not populated.
-        // We can't call getResponseCode() due to some unwanted side-effects
-        // (e.g. breaks getOutputStream).
-        instrumenter().end(httpUrlState.context, connection, responseCode, null);
-        httpUrlState.finished = true;
+      } finally {
+        // double increment is used to prevent infinite recursion in case end() captures response
+        // headers
+        callDepth.decrementAndGet();
       }
     }
   }
@@ -152,12 +162,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
       HttpUrlState httpUrlState = storage.get(connection);
       if (httpUrlState != null) {
-        Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, returnValue);
-        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(returnValue);
-        if (statusCode != StatusCode.UNSET) {
-          span.setStatus(statusCode);
-        }
+        httpUrlState.statusCode = returnValue;
       }
     }
   }

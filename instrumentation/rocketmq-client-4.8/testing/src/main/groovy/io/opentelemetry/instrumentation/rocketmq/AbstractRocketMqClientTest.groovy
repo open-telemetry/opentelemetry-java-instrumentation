@@ -21,6 +21,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
+//TODO add tests for propagationEnabled flag
 @Unroll
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
@@ -39,6 +40,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   @Shared
   def msgs = new ArrayList<Message>()
 
+  @Shared
+  TracingMessageListener tracingMessageListener = new TracingMessageListener()
+
   abstract void configureMQProducer(DefaultMQProducer producer)
 
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
@@ -52,7 +56,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     msgs.add(msg2)
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new TracingMessageListener())
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", tracingMessageListener)
     configureMQPushConsumer(consumer)
   }
 
@@ -81,10 +85,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           name sharedTopic + " send"
           kind PRODUCER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
@@ -95,12 +99,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind CONSUMER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
@@ -134,10 +138,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
@@ -148,12 +152,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind CONSUMER
           childOf span(1)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
@@ -174,8 +178,26 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     consumer.setConsumeMessageBatchMaxSize(2)
 
     when:
-    runWithSpan("parent") {
-      producer.send(msgs)
+    // This test assumes that messages are sent and received as a batch. Occasionally it happens
+    // that the messages are not received as a batch, but one by one. This doesn't match what the
+    // assertion expects. To reduce flakiness we retry the test when messages weren't received as
+    // a batch.
+    def maxAttempts = 5
+    for (i in 1..maxAttempts) {
+      tracingMessageListener.reset()
+
+      runWithSpan("parent") {
+        producer.send(msgs)
+      }
+
+      tracingMessageListener.waitForMessages()
+      if (tracingMessageListener.getLastBatchSize() == 2) {
+        break
+      } else if (i < maxAttempts) {
+        // if messages weren't received as a batch we get 1 trace instead of 2
+        ignoreTracesAndClear(1)
+        System.err.println("Messages weren't received as batch, retrying")
+      }
     }
 
     then:
@@ -194,10 +216,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
           }
@@ -209,20 +231,20 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           name "multiple_sources receive"
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         span(1) {
           name sharedTopic + " process"
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
@@ -235,12 +257,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           name sharedTopic + " process"
           kind CONSUMER
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.tags" "TagB"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long

@@ -13,11 +13,14 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
   static final boolean VAADIN_19 = Version.majorVersion >= 6
   static final boolean VAADIN_21 = Version.majorVersion >= 8
+  static final boolean VAADIN_22 = Version.majorVersion >= 9
 
   @Override
   List<String> getRequestHandlers() {
     List<String> handlers = []
-    if (VAADIN_21) {
+    if (VAADIN_22) {
+      handlers.add("WebpackHandler")
+    } else if (VAADIN_21) {
       handlers.add("DevModeHandlerImpl")
     }
     handlers.add("PushRequestHandler")
@@ -38,6 +41,9 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   @Override
   void assertFirstRequest() {
     assertTraces(VAADIN_17 ? 9 : 8) {
+      traces.sort(orderByRootSpanName("IndexHtmlRequestHandler.handleRequest",
+        getContextPath() + "/main", getContextPath(), getContextPath() + "/*"))
+
       def handlers = getRequestHandlers("IndexHtmlRequestHandler")
       trace(0, 2 + handlers.size()) {
         serverSpan(it, 0, "IndexHtmlRequestHandler.handleRequest")
@@ -55,52 +61,8 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           }
         }
       }
-      // /xyz/VAADIN/build/vaadin-bundle-*.cache.js
-      trace(1, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      if (VAADIN_17) {
-        // /xyz/VAADIN/build/vaadin-devmodeGizmo-*.cache.js
-        trace(2, 1) {
-          serverSpan(it, 0, getContextPath() + "/*")
-        }
-      }
-      int traceIndex = VAADIN_17 ? 3 : 2
-      handlers = getRequestHandlers("JavaScriptBootstrapHandler")
-      trace(traceIndex, 2 + handlers.size()) {
-        serverSpan(it, 0, getContextPath())
-        span(1) {
-          name "SpringVaadinServletService.handleRequest"
-          kind SpanKind.INTERNAL
-          childOf span(0)
-        }
-        int spanIndex = 2
-        handlers.each { handler ->
-          span(spanIndex++) {
-            name handler + ".handleRequest"
-            kind SpanKind.INTERNAL
-            childOf span(1)
-          }
-        }
-      }
-      // /xyz/VAADIN/build/vaadin-?-*.cache.js
-      trace(traceIndex + 1, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      // /xyz/VAADIN/build/vaadin-?-*.cache.js
-      trace(traceIndex + 2, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      // /xyz/VAADIN/build/vaadin-?-*.cache.js
-      trace(traceIndex + 3, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
-      // /xyz/VAADIN/build/vaadin-?-*.cache.js
-      trace(traceIndex + 4, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
-      }
       handlers = getRequestHandlers("UidlRequestHandler")
-      trace(traceIndex + 5, 2 + handlers.size() + 2) {
+      trace(1, 2 + handlers.size() + 2) {
         serverSpan(it, 0, getContextPath() + "/main")
         span(1) {
           name "SpringVaadinServletService.handleRequest"
@@ -126,6 +88,30 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           name "JavaScriptBootstrapUI.connectClient"
           kind SpanKind.INTERNAL
           childOf span(spanIndex)
+        }
+      }
+      handlers = getRequestHandlers("JavaScriptBootstrapHandler")
+      trace(2, 2 + handlers.size()) {
+        serverSpan(it, 0, getContextPath())
+        span(1) {
+          name "SpringVaadinServletService.handleRequest"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+        int spanIndex = 2
+        handlers.each { handler ->
+          span(spanIndex++) {
+            name handler + ".handleRequest"
+            kind SpanKind.INTERNAL
+            childOf span(1)
+          }
+        }
+      }
+      // following traces are for javascript files used on page
+      def count = VAADIN_17 ? 5 : 4
+      for (i in 0..count) {
+        trace(3 + i, 1) {
+          serverSpan(it, 0, getContextPath() + "/*")
         }
       }
     }

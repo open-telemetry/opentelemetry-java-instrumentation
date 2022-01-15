@@ -30,7 +30,7 @@ public class BodyHandlerWrapper<T> implements BodyHandler<T> {
     if (subscriber instanceof BodySubscriberWrapper) {
       return subscriber;
     }
-    return new BodySubscriberWrapper<>(delegate.apply(responseInfo), context);
+    return new BodySubscriberWrapper<>(subscriber, context);
   }
 
   public static class BodySubscriberWrapper<T> implements BodySubscriber<T> {

@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +128,10 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     return io.opentelemetry.context.Context.root();
   }
 
+  public static Context toApplicationContext(io.opentelemetry.context.Context agentContext) {
+    return new AgentContextWrapper(agentContext);
+  }
+
   public static Context newContextWrapper(
       io.opentelemetry.context.Context agentContext, Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
@@ -164,8 +168,8 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   private static ContextKeyBridge<Span, io.opentelemetry.api.trace.Span> bridgeSpanKey(
       String name) {
     return new ContextKeyBridge<>(
-        "application.io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
-        "io.opentelemetry.instrumentation.api.instrumenter.SpanKey",
+        "application.io.opentelemetry.instrumentation.api.internal.SpanKey",
+        "io.opentelemetry.instrumentation.api.internal.SpanKey",
         name,
         Bridging::toApplication,
         Bridging::toAgentOrNull);
@@ -227,6 +231,10 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     final io.opentelemetry.context.Context agentContext;
     final Context applicationContext;
 
+    AgentContextWrapper(io.opentelemetry.context.Context agentContext) {
+      this(agentContext, agentContext.get(APPLICATION_CONTEXT));
+    }
+
     AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
       if (applicationContext instanceof AgentContextWrapper) {
         throw new IllegalStateException("Expected unwrapped context");
@@ -267,7 +275,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
     @Override
     public String toString() {
-      return "{agentContext=" + agentContext + ", applicationContext=" + applicationContext + "}";
+      return "AgentContextWrapper{agentContext="
+          + agentContext
+          + ", applicationContext="
+          + applicationContext
+          + "}";
     }
   }
 

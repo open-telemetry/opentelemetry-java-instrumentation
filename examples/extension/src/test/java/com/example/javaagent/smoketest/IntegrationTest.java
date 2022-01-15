@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.example.javaagent.smoketest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -80,7 +85,7 @@ abstract class IntegrationTest {
 
   private GenericContainer<?> buildTargetContainer(String agentPath, String extensionLocation) {
     GenericContainer<?> result =
-        new GenericContainer<>(getTargetImage(11))
+        new GenericContainer<>(getTargetImage(8))
             .withExposedPorts(8080)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))

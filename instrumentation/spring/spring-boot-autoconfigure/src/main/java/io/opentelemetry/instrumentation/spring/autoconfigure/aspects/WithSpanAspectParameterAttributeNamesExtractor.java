@@ -9,7 +9,7 @@ import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.springframework.core.ParameterNameDiscoverer;
 
 class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttributeNamesExtractor {
@@ -21,7 +21,8 @@ class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttribu
   }
 
   @Override
-  public @Nullable String[] extract(Method method, Parameter[] parameters) {
+  @Nullable
+  public String[] extract(Method method, Parameter[] parameters) {
     String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
     String[] attributeNames = new String[parameters.length];
 

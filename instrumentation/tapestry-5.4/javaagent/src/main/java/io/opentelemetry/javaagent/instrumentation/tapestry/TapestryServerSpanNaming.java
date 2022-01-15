@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class TapestryServerSpanNaming {
 

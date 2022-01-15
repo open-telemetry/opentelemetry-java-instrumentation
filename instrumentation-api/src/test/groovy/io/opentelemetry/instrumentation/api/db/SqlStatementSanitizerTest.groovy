@@ -37,6 +37,7 @@ class SqlStatementSanitizerTest extends Specification {
     "+7"                                                                       | "?"
     "SELECT 0x0af764"                                                          | "SELECT ?"
     "SELECT 0xdeadBEEF"                                                        | "SELECT ?"
+    "SELECT * FROM \"TABLE\""                                                  | "SELECT * FROM \"TABLE\""
 
     // Not numbers but could be confused as such
     "SELECT A + B"                                                             | "SELECT A + B"
@@ -59,15 +60,6 @@ class SqlStatementSanitizerTest extends Specification {
     "SELECT * FROM TABLE WHERE FIELD = '\"\$\$\$\$\"'"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'"       | "SELECT * FROM TABLE WHERE FIELD = ?"
 
-    // Some databases support/encourage " instead of ' with same escape rules
-    "SELECT * FROM TABLE WHERE FIELD = \"\""                                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\""                  | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"" | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"\\\\\""                               | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\""                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"'\$\$\$\$'\""                         | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\""      | "SELECT * FROM TABLE WHERE FIELD = ?"
-
     // Some databases allow using dollar-quoted strings
     "SELECT * FROM TABLE WHERE FIELD = \$\$\$\$"                               | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = \$\$words and spaces\$\$"               | "SELECT * FROM TABLE WHERE FIELD = ?"
@@ -83,6 +75,25 @@ class SqlStatementSanitizerTest extends Specification {
 
     // hibernate/jpa query language
     "FROM TABLE WHERE FIELD=1234"                                              | "FROM TABLE WHERE FIELD=?"
+  }
+
+  def "normalize couchbase #originalSql"() {
+    setup:
+    def actualSanitized = SqlStatementSanitizer.sanitize(originalSql, SqlDialect.COUCHBASE)
+
+    expect:
+    actualSanitized.getFullStatement() == sanitizedSql
+
+    where:
+    originalSql                                                                | sanitizedSql
+    // Some databases support/encourage " instead of ' with same escape rules
+    "SELECT * FROM TABLE WHERE FIELD = \"\""                                   | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\""                  | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"" | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"\\\\\""                               | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\""                   | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"'\$\$\$\$'\""                         | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\""      | "SELECT * FROM TABLE WHERE FIELD = ?"
   }
 
   @Unroll

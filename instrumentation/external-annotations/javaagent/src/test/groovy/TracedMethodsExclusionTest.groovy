@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentInstrumentationSpecification {
@@ -45,6 +46,8 @@ class TracedMethodsExclusionTest extends AgentInstrumentationSpecification {
         span(0) {
           name "TestClass.annotated"
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TestClass.name
+            "$SemanticAttributes.CODE_FUNCTION" "annotated"
           }
         }
       }

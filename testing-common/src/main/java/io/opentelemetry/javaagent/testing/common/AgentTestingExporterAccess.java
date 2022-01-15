@@ -20,12 +20,17 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.logs.v1.InstrumentationLibraryLogs;
+import io.opentelemetry.proto.logs.v1.LogRecord;
+import io.opentelemetry.proto.logs.v1.ResourceLogs;
+import io.opentelemetry.proto.logs.v1.SeverityNumber;
 import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
 import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.Metric;
@@ -39,6 +44,9 @@ import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.logs.data.LogDataBuilder;
+import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
 import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
@@ -63,6 +71,7 @@ import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -74,6 +83,7 @@ public final class AgentTestingExporterAccess {
 
   private static final MethodHandle getSpanExportRequests;
   private static final MethodHandle getMetricExportRequests;
+  private static final MethodHandle getLogExportRequests;
   private static final MethodHandle reset;
   private static final MethodHandle forceFlushCalled;
 
@@ -92,6 +102,11 @@ public final class AgentTestingExporterAccess {
           lookup.findStatic(
               agentTestingExporterFactoryClass,
               "getMetricExportRequests",
+              MethodType.methodType(List.class));
+      getLogExportRequests =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "getLogExportRequests",
               MethodType.methodType(List.class));
       reset =
           lookup.findStatic(
@@ -124,7 +139,7 @@ public final class AgentTestingExporterAccess {
 
   @SuppressWarnings("unchecked")
   public static List<SpanData> getExportedSpans() {
-    final List<byte[]> exportRequests;
+    List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getSpanExportRequests.invokeExact();
     } catch (Throwable t) {
@@ -217,7 +232,7 @@ public final class AgentTestingExporterAccess {
 
   @SuppressWarnings("unchecked")
   public static List<MetricData> getExportedMetrics() {
-    final List<byte[]> exportRequests;
+    List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
     } catch (Throwable t) {
@@ -254,6 +269,46 @@ public final class AgentTestingExporterAccess {
       }
     }
     return metrics;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<LogData> getExportedLogs() {
+    List<byte[]> exportRequests;
+    try {
+      exportRequests = (List<byte[]>) getLogExportRequests.invokeExact();
+    } catch (Throwable t) {
+      throw new AssertionError("Could not invoke getMetricExportRequests", t);
+    }
+
+    List<ResourceLogs> allResourceLogs =
+        exportRequests.stream()
+            .map(
+                serialized -> {
+                  try {
+                    return ExportLogsServiceRequest.parseFrom(serialized);
+                  } catch (InvalidProtocolBufferException e) {
+                    throw new AssertionError(e);
+                  }
+                })
+            .flatMap(request -> request.getResourceLogsList().stream())
+            .collect(toList());
+    List<LogData> logs = new ArrayList<>();
+    for (ResourceLogs resourceLogs : allResourceLogs) {
+      Resource resource = resourceLogs.getResource();
+      for (InstrumentationLibraryLogs ilLogs : resourceLogs.getInstrumentationLibraryLogsList()) {
+        InstrumentationLibrary instrumentationLibrary = ilLogs.getInstrumentationLibrary();
+        for (LogRecord logRecord : ilLogs.getLogsList()) {
+          logs.add(
+              createLogData(
+                  logRecord,
+                  io.opentelemetry.sdk.resources.Resource.create(
+                      fromProto(resource.getAttributesList())),
+                  InstrumentationLibraryInfo.create(
+                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion())));
+        }
+      }
+    }
+    return logs;
   }
 
   private static MetricData createMetricData(
@@ -329,6 +384,26 @@ public final class AgentTestingExporterAccess {
     }
   }
 
+  private static LogData createLogData(
+      LogRecord logRecord,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationLibraryInfo instrumentationLibraryInfo) {
+    return LogDataBuilder.create(resource, instrumentationLibraryInfo)
+        .setEpoch(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+        .setSpanContext(
+            SpanContext.create(
+                bytesToHex(logRecord.getTraceId().toByteArray()),
+                bytesToHex(logRecord.getSpanId().toByteArray()),
+                TraceFlags.getDefault(),
+                TraceState.getDefault()))
+        .setSeverity(fromProto(logRecord.getSeverityNumber()))
+        .setSeverityText(logRecord.getSeverityText())
+        .setName(logRecord.getName())
+        .setBody(logRecord.getBody().getStringValue())
+        .setAttributes(fromProto(logRecord.getAttributesList()))
+        .build();
+  }
+
   private static boolean isDouble(List<NumberDataPoint> points) {
     if (points.isEmpty()) {
       return true;
@@ -340,7 +415,7 @@ public final class AgentTestingExporterAccess {
     return points.stream()
         .map(
             point -> {
-              final double value;
+              double value;
               switch (point.getValueCase()) {
                 case AS_INT:
                   value = point.getAsInt();
@@ -363,7 +438,7 @@ public final class AgentTestingExporterAccess {
     return points.stream()
         .map(
             point -> {
-              final long value;
+              long value;
               switch (point.getValueCase()) {
                 case AS_INT:
                   value = point.getAsInt();
@@ -491,7 +566,7 @@ public final class AgentTestingExporterAccess {
   }
 
   private static StatusData fromProto(Status status) {
-    final StatusCode code;
+    StatusCode code;
     switch (status.getCode()) {
       case STATUS_CODE_OK:
         code = StatusCode.OK;
@@ -521,6 +596,15 @@ public final class AgentTestingExporterAccess {
       default:
         throw new IllegalArgumentException("Unexpected span kind: " + kind);
     }
+  }
+
+  private static Severity fromProto(SeverityNumber proto) {
+    for (Severity severity : Severity.values()) {
+      if (severity.getSeverityNumber() == proto.getNumber()) {
+        return severity;
+      }
+    }
+    throw new IllegalArgumentException("Unexpected SeverityNumber: " + proto);
   }
 
   private static TraceState extractTraceState(String traceStateHeader) {

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,25 +19,62 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
 
-  private static final Set<AttributeKey> durationView = buildDurationView();
+  // TODO (trask) remove this once http.route is captured consistently
+  //
+  // this is not enabled by default because it falls back to http.target (which can be high
+  // cardinality) when http.route is not available
+  private static final boolean USE_HTTP_TARGET_FALLBACK =
+      Config.get()
+          .getBoolean("otel.instrumentation.metrics.experimental.use-http-target-fallback", false);
 
+  private static final Set<AttributeKey> durationAlwaysInclude = buildDurationAlwaysInclude();
+  private static final Set<AttributeKey> durationClientView = buildDurationClientView();
+  private static final Set<AttributeKey> durationServerView = buildDurationServerView();
+  private static final Set<AttributeKey> durationServerFallbackView =
+      buildDurationServerFallbackView();
   private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
 
-  private static Set<AttributeKey> buildDurationView() {
+  private static Set<AttributeKey> buildDurationAlwaysInclude() {
     // the list of included metrics is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
     Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.HTTP_METHOD);
-    view.add(SemanticAttributes.HTTP_HOST);
+    view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
+    view.add(SemanticAttributes.HTTP_FLAVOR); // Optional
+    return view;
+  }
+
+  private static Set<AttributeKey> buildDurationClientView() {
+    // We pull identifying attributes according to:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
+    view.add(SemanticAttributes.HTTP_URL);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildDurationServerView() {
+    // We pull identifying attributes according to:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    // With the following caveat:
+    // - we always rely on http.route + http.host in this repository.
+    // - we prefer http.route (which is scrubbed) over http.target (which is not scrubbed).
+    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
     view.add(SemanticAttributes.HTTP_SCHEME);
-    view.add(SemanticAttributes.HTTP_STATUS_CODE);
-    view.add(SemanticAttributes.HTTP_FLAVOR);
-    view.add(SemanticAttributes.NET_PEER_NAME);
-    view.add(SemanticAttributes.NET_PEER_PORT);
-    view.add(SemanticAttributes.NET_PEER_IP);
-    view.add(SemanticAttributes.HTTP_SERVER_NAME);
-    view.add(SemanticAttributes.NET_HOST_NAME);
-    view.add(SemanticAttributes.NET_HOST_PORT);
+    view.add(SemanticAttributes.HTTP_HOST);
+    view.add(SemanticAttributes.HTTP_ROUTE);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildDurationServerFallbackView() {
+    // We pull identifying attributes according to:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    // With the following caveat:
+    // - we always rely on http.route + http.host in this repository.
+    // - we prefer http.route (which is scrubbed) over http.target (which is not scrubbed).
+    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
+    view.add(SemanticAttributes.HTTP_SCHEME);
+    view.add(SemanticAttributes.HTTP_HOST);
+    view.add(SemanticAttributes.HTTP_TARGET);
     return view;
   }
 
@@ -52,25 +90,68 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  static Attributes applyDurationView(Attributes attributes) {
-    return applyView(attributes, durationView);
+  static Attributes applyClientDurationView(Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, durationClientView);
+    applyView(filtered, endAttributes, durationClientView);
+    return filtered.build();
+  }
+
+  private static <T> boolean containsAttribute(
+      AttributeKey<T> key, Attributes startAttributes, Attributes endAttributes) {
+    return startAttributes.get(key) != null || endAttributes.get(key) != null;
+  }
+
+  static Attributes applyServerDurationView(Attributes startAttributes, Attributes endAttributes) {
+    Set<AttributeKey> fullSet = durationServerView;
+    // Use http.target when http.route is not available.
+    if (USE_HTTP_TARGET_FALLBACK
+        && !containsAttribute(SemanticAttributes.HTTP_ROUTE, startAttributes, endAttributes)) {
+      fullSet = durationServerFallbackView;
+    }
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, fullSet);
+    applyView(filtered, endAttributes, fullSet);
+    return filtered.build();
   }
 
   static Attributes applyActiveRequestsView(Attributes attributes) {
-    return applyView(attributes, activeRequestsView);
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, attributes, activeRequestsView);
+    return filtered.build();
   }
 
   @SuppressWarnings("unchecked")
-  private static Attributes applyView(Attributes attributes, Set<AttributeKey> view) {
-    AttributesBuilder filtered = Attributes.builder();
+  private static void applyView(
+      AttributesBuilder filtered, Attributes attributes, Set<AttributeKey> view) {
     attributes.forEach(
         (BiConsumer<AttributeKey, Object>)
             (key, value) -> {
               if (view.contains(key)) {
-                filtered.put(key, value);
+                // For now, we filter query parameters out of URLs in metrics.
+                if (SemanticAttributes.HTTP_URL.equals(key)
+                    || SemanticAttributes.HTTP_TARGET.equals(key)) {
+                  filtered.put(key, removeQueryParamFromUrlOrTarget(value.toString()));
+                } else {
+                  filtered.put(key, value);
+                }
               }
             });
-    return filtered.build();
+  }
+
+  // Attempt to handle cleaning URLs like http://myServer;jsessionId=1 or targets like
+  // /my/path?queryParam=2
+  private static String removeQueryParamFromUrlOrTarget(String urlOrTarget) {
+    // Note: Maybe not the most robust, but purely to limit cardinality.
+    int idx = -1;
+    for (int i = 0; i < urlOrTarget.length(); ++i) {
+      char ch = urlOrTarget.charAt(i);
+      if (ch == '?' || ch == ';') {
+        idx = i;
+        break;
+      }
+    }
+    return idx == -1 ? urlOrTarget : urlOrTarget.substring(0, idx);
   }
 
   private TemporaryMetricsView() {}

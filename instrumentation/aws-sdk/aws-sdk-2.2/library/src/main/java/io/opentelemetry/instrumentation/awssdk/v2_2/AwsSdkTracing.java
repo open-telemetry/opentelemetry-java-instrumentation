@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -26,19 +29,21 @@ public class AwsSdkTracing {
 
   /** Returns a new {@link AwsSdkTracing} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link AwsSdkTracingBuilder} configured with the given {@link OpenTelemetry}. */
-  public static AwsSdkTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+  public static AwsSdkTracingBuilder builder(OpenTelemetry openTelemetry) {
     return new AwsSdkTracingBuilder(openTelemetry);
   }
 
-  private final AwsSdkHttpClientTracer tracer;
+  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> tracer;
   private final boolean captureExperimentalSpanAttributes;
 
   AwsSdkTracing(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    this.tracer = new AwsSdkHttpClientTracer(openTelemetry);
+    this.tracer =
+        AwsSdkInstrumenterFactory.createInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 

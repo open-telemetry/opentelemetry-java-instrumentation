@@ -89,6 +89,41 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     "executorChannel" | "executorChannel process"
   }
 
+  def "should not add interceptor twice"() {
+    given:
+    def channel = applicationContext.getBean("directChannel1", SubscribableChannel)
+
+    def messageHandler = new CapturingMessageHandler()
+    channel.subscribe(messageHandler)
+
+    when:
+    channel.send(MessageBuilder.withPayload("test")
+      .build())
+
+    then:
+    def capturedMessage = messageHandler.join()
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          // the channel name is overwritten by the last bean registration
+          name "application.directChannel2 process"
+          kind CONSUMER
+        }
+        span(1) {
+          name "handler"
+          childOf span(0)
+        }
+
+        def interceptorSpan = span(0)
+        verifyCorrectSpanWasPropagated(capturedMessage, interceptorSpan)
+      }
+    }
+
+    cleanup:
+    channel.unsubscribe(messageHandler)
+  }
+
   def "should not create a span when there is already a span in the context"() {
     given:
     def channel = applicationContext.getBean("directChannel", SubscribableChannel)
@@ -165,9 +200,22 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
   @SpringBootConfiguration
   @EnableAutoConfiguration
   static class MessageChannelsConfig {
+
+    SubscribableChannel problematicSharedChannel = new DirectChannel()
+
     @Bean
     SubscribableChannel directChannel() {
       new DirectChannel()
+    }
+
+    @Bean
+    SubscribableChannel directChannel1() {
+      problematicSharedChannel
+    }
+
+    @Bean
+    SubscribableChannel directChannel2() {
+      problematicSharedChannel
     }
 
     @Bean

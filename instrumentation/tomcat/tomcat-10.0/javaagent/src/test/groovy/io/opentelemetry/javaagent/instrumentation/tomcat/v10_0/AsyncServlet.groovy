@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import jakarta.servlet.ServletException
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
@@ -28,6 +29,9 @@ class AsyncServlet extends HttpServlet {
     HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
     def latch = new CountDownLatch(1)
     def context = req.startAsync()
+    if (endpoint == EXCEPTION) {
+      context.setTimeout(5000)
+    }
     context.start {
       try {
         HttpServerTest.controller(endpoint) {
@@ -36,41 +40,40 @@ class AsyncServlet extends HttpServlet {
             case SUCCESS:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
-              context.complete()
               break
             case INDEXED_CHILD:
               endpoint.collectSpanAttributes { req.getParameter(it) }
               resp.status = endpoint.status
-              context.complete()
               break
             case QUERY_PARAM:
               resp.status = endpoint.status
               resp.writer.print(req.queryString)
-              context.complete()
               break
             case REDIRECT:
               resp.sendRedirect(endpoint.body)
-              context.complete()
               break
             case CAPTURE_HEADERS:
               resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"))
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
-              context.complete()
               break
             case ERROR:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
-              context.complete()
               break
             case EXCEPTION:
               resp.status = endpoint.status
-              resp.writer.print(endpoint.body)
-              context.complete()
-              throw new Exception(endpoint.body)
+              def writer = resp.writer
+              writer.print(endpoint.body)
+              writer.close()
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {
+        // complete at the end so the server span will end after the controller span
+        if (endpoint != EXCEPTION) {
+          context.complete()
+        }
         latch.countDown()
       }
     }

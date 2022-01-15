@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -40,18 +41,21 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     protected List<String> requestHeader(Map<String, String> request, String name) {
-      return asList(request.get("header." + name).split(","));
+      String value = request.get("header." + name);
+      return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
     protected Long requestContentLength(Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(request.get("requestContentLength"));
+      String value = request.get("requestContentLength");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected Long requestContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(request.get("requestContentLengthUncompressed"));
+      String value = request.get("requestContentLengthUncompressed");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
@@ -67,19 +71,22 @@ class HttpClientAttributesExtractorTest {
     @Override
     protected Long responseContentLength(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(response.get("responseContentLength"));
+      String value = response.get("responseContentLength");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected Long responseContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(response.get("responseContentLengthUncompressed"));
+      String value = response.get("responseContentLengthUncompressed");
+      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
     protected List<String> responseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
-      return asList(response.get("header." + name).split(","));
+      String value = response.get("header." + name);
+      return value == null ? emptyList() : asList(value.split(","));
     }
   }
 
@@ -134,5 +141,23 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
+  }
+
+  @Test
+  void invalidStatusCode() {
+    Map<String, String> request = new HashMap<>();
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "0");
+
+    TestHttpClientAttributesExtractor extractor =
+        new TestHttpClientAttributesExtractor(CapturedHttpHeaders.empty());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, request);
+    assertThat(attributes.build()).isEmpty();
+
+    extractor.onEnd(attributes, request, response, null);
+    assertThat(attributes.build()).isEmpty();
   }
 }

@@ -40,7 +40,9 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
     try {
       def body = BODY_METHODS.contains(method) ? Entity.text("") : null
       def response = request.build(method, body).invoke()
-      response.close()
+      try {
+        response.close()
+      } catch (IOException ignore) {}
       return response.status
     } catch (ProcessingException exception) {
       throw exception.getCause()
@@ -97,15 +99,15 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           kind CLIENT
           status ERROR
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
-            "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-            "${SemanticAttributes.HTTP_URL.key}" "${uri}"
-            "${SemanticAttributes.HTTP_METHOD.key}" method
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key}" Long
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
+            "$SemanticAttributes.HTTP_URL" "${uri}"
+            "$SemanticAttributes.HTTP_METHOD" method
+            "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         serverSpan(it, 1, span(0))

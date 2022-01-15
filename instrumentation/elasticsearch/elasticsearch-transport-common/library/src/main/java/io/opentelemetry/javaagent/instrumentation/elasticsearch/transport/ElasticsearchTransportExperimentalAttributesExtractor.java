@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.IndicesRequest;
 import org.elasticsearch.action.bulk.BulkShardResponse;
@@ -19,9 +19,9 @@ import org.elasticsearch.action.support.nodes.BaseNodesResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 
 public class ElasticsearchTransportExperimentalAttributesExtractor
-    extends AttributesExtractor<ElasticTransportRequest, ActionResponse> {
+    implements AttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
-  protected void onStart(AttributesBuilder attributes, ElasticTransportRequest transportRequest) {
+  public void onStart(AttributesBuilder attributes, ElasticTransportRequest transportRequest) {
     Object request = transportRequest.getRequest();
     attributes.put("elasticsearch.action", transportRequest.getAction().getClass().getSimpleName());
     attributes.put("elasticsearch.request", request.getClass().getSimpleName());
@@ -43,7 +43,7 @@ public class ElasticsearchTransportExperimentalAttributesExtractor
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       ElasticTransportRequest request,
       ActionResponse response,

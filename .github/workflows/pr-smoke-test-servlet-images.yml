@@ -20,7 +20,11 @@ jobs:
           - payara
           - tomcat
           - tomee
+          - websphere
           - wildfly
+        exclude:
+          - os: windows-latest
+            smoke-test-server: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -37,24 +41,18 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: matrix-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/servlet/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Build Linux docker images
-        working-directory: smoke-tests/images/servlet
-        run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os != 'windows-latest'
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          build-root-directory: smoke-tests/images/servlet
+          cache-read-only: true
 
       - name: Build Windows docker images
-        working-directory: smoke-tests/images/servlet
-        run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
         if: matrix.os == 'windows-latest'
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+          build-root-directory: smoke-tests/images/servlet
+          cache-read-only: true

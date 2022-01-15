@@ -17,6 +17,7 @@ import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,7 +142,7 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == this) {
       return true;
     }
@@ -150,6 +151,11 @@ class ApplicationSpan implements Span {
     }
     ApplicationSpan other = (ApplicationSpan) obj;
     return agentSpan.equals(other.agentSpan);
+  }
+
+  @Override
+  public String toString() {
+    return "ApplicationSpan{agentSpan=" + agentSpan + '}';
   }
 
   @Override

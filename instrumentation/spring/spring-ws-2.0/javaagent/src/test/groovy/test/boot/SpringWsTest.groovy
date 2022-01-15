@@ -35,8 +35,14 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
   private Jaxb2Marshaller marshaller = new Jaxb2Marshaller()
 
   def setupSpec() {
+    setupServer()
+
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest))
     marshaller.afterPropertiesSet()
+  }
+
+  def cleanupSpec() {
+    cleanupServer()
   }
 
   @Override
@@ -146,8 +152,8 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
         errorEvent(exception.class, exception.message)
       }
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "test.boot.HelloEndpoint"
-        "${SemanticAttributes.CODE_FUNCTION.key}" methodName
+        "$SemanticAttributes.CODE_NAMESPACE" "test.boot.HelloEndpoint"
+        "$SemanticAttributes.CODE_FUNCTION" methodName
       }
     }
   }

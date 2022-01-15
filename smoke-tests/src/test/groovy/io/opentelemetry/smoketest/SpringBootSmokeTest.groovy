@@ -10,21 +10,28 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20210918.1248928124"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
   }
 
   @Override
   protected Map<String, String> getExtraEnv() {
     return Collections.singletonMap("OTEL_METRICS_EXPORTER", "otlp")
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }
 
   @Unroll
@@ -79,6 +86,6 @@ class SpringBootSmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 16]
+    jdk << [8, 11, 17]
   }
 }

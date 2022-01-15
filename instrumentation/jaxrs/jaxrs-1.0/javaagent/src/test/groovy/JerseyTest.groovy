@@ -38,9 +38,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedSpanName
+          name expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
 
@@ -48,15 +49,15 @@ class JerseyTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controllerName
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-            "${SemanticAttributes.CODE_FUNCTION.key}" "hello"
+            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$SemanticAttributes.CODE_FUNCTION" "hello"
           }
         }
       }
     }
 
     where:
-    resource           | expectedSpanName      | controllerName | expectedResponse
+    resource           | expectedRoute         | controllerName | expectedResponse
     "/test/hello/bob"  | "/test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
     "/test2/hello/bob" | "/test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
     "/test3/hi/bob"    | "/test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
@@ -76,9 +77,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedSpanName
+          name expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
         span(1) {
@@ -86,15 +88,15 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
-            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
-            "${SemanticAttributes.CODE_FUNCTION.key}" "nested"
+            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$SemanticAttributes.CODE_FUNCTION" "nested"
           }
         }
       }
     }
 
     where:
-    resource        | expectedSpanName | controller1Name | expectedResponse
-    "/test3/nested" | "/test3/nested"  | "Test3.nested"  | "Test3 nested!"
+    resource        | expectedRoute   | controller1Name | expectedResponse
+    "/test3/nested" | "/test3/nested" | "Test3.nested"  | "Test3 nested!"
   }
 }

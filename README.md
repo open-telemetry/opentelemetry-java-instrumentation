@@ -25,8 +25,6 @@
     <a href="CONTRIBUTING.md">Contributing<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="docs/scope.md">Scope<a/>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="docs/ga-requirements.md">Roadmap<a/>
   </strong>
 </p>
 
@@ -42,7 +40,6 @@
 * [Manually instrumenting](#manually-instrumenting)
 * [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
-* [Roadmap to 1.0 (GA)](#roadmap-to-10-ga)
 * [Contributing](#contributing)
 
 ## About
@@ -62,7 +59,7 @@ if you are looking for documentation on using those.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.9.1/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
@@ -70,20 +67,20 @@ The package provides a completely automatic, out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
 ```
-java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 By default, the OpenTelemetry Java agent uses
-[OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
+[OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp)
 configured to send data to
-[OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
+[OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md)
 at `http://localhost:4317`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See [the configuration documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/agent-config.md)
 for the full list of configuration items. For example:
 ```
-java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent.jar \
      -Dotel.resource.attributes=service.name=your-service-name \
      -Dotel.traces.exporter=zipkin \
      -jar myapp.jar
@@ -137,18 +134,14 @@ To turn on the agent's internal debug logging:
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
 
-## Roadmap to 1.0 (GA)
-
-See [GA Requirements](docs/ga-requirements.md)
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
 
+- [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
-- [Sergei Malafeev](https://github.com/malafeev), Lightstep
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
@@ -162,9 +155,8 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
-- [Tyler Benson](https://github.com/tylerbenson), DataDog
 
-Learn more about roles in the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md).
+Learn more about roles in the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
 
 Thanks to all the people who already contributed!
 

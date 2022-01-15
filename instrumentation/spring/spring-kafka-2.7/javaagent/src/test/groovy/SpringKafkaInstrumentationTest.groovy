@@ -83,9 +83,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
         span(2) {
@@ -93,9 +93,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
 
@@ -108,10 +108,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         span(1) {
@@ -121,10 +121,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           hasLink producer1
           hasLink producer2
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
           }
         }
         span(2) {
@@ -161,9 +161,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
 
@@ -175,10 +175,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
         }
         span(1) {
@@ -189,10 +189,10 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent IllegalArgumentException, "boom"
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
+            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
           }
         }
         span(2) {
@@ -215,14 +215,9 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
         .build()
     }
 
-    @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
-    void listener(List<ConsumerRecord<String, String>> records) {
-      runInternalSpan("consumer")
-      records.forEach({ record ->
-        if (record.value() == "error") {
-          throw new IllegalArgumentException("boom")
-        }
-      })
+    @Bean
+    Listener listener() {
+      return new Listener()
     }
 
     @Bean
@@ -239,6 +234,19 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
         container.setInterceptBeforeTx(true)
       })
       factory
+    }
+  }
+
+  static class Listener {
+
+    @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
+    void listener(List<ConsumerRecord<String, String>> records) {
+      runInternalSpan("consumer")
+      records.forEach({ record ->
+        if (record.value() == "error") {
+          throw new IllegalArgumentException("boom")
+        }
+      })
     }
   }
 }

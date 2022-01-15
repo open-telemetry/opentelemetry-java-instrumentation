@@ -37,7 +37,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -379,7 +379,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     URI uri = resolveAddress("/circular-redirect");
 
     Throwable thrown = catchThrowable(() -> doRequest(method, uri));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -502,7 +502,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -543,7 +543,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     method, uri, () -> testing.runWithSpan("callback", () -> {})));
 
     Throwable thrown = catchThrowable(result::get);
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -569,11 +569,11 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assumeTrue(options.testRemoteConnection);
 
     String method = "HEAD";
-    URI uri = URI.create("https://192.0.2.1/");
+    URI uri = URI.create(options.testHttps ? "https://192.0.2.1/" : "http://192.0.2.1/");
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -606,7 +606,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    final Throwable ex;
+    Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
     } else {
@@ -754,18 +754,24 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       throw new AssertionError(e);
                     }
                     try {
-                      testing.runWithSpan(
-                          "Parent span " + index,
-                          () -> {
-                            Span.current().setAttribute("test.request.id", index);
-                            doRequestWithCallback(
-                                method,
-                                uri,
-                                Collections.singletonMap("test-request-id", String.valueOf(index)),
-                                () -> testing.runWithSpan("child", () -> {}));
-                          });
-                    } catch (Exception e) {
-                      throw new AssertionError(e);
+                      RequestResult result =
+                          testing.runWithSpan(
+                              "Parent span " + index,
+                              () -> {
+                                Span.current().setAttribute("test.request.id", index);
+                                return doRequestWithCallback(
+                                    method,
+                                    uri,
+                                    Collections.singletonMap(
+                                        "test-request-id", String.valueOf(index)),
+                                    () -> testing.runWithSpan("child", () -> {}));
+                              });
+                      assertThat(result.get()).isEqualTo(200);
+                    } catch (Throwable throwable) {
+                      if (throwable instanceof AssertionError) {
+                        throw (AssertionError) throwable;
+                      }
+                      throw new AssertionError(throwable);
                     }
                   };
               pool.submit(job);
@@ -904,7 +910,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                             port -> {
                               // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
                               if (port > 0) {
-                                assertThat(port).isEqualTo(443);
+                                assertThat(port).isEqualTo(options.testHttps ? 443 : 80);
                               }
                             });
                   }
@@ -969,6 +975,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               if (responseCode != null) {
                 assertThat(attrs)
                     .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, (long) responseCode);
+              } else {
+                // worth adding AttributesAssert.doesNotContainKey?
+                assertThat(attrs.get(SemanticAttributes.HTTP_STATUS_CODE)).isNull();
               }
             });
   }

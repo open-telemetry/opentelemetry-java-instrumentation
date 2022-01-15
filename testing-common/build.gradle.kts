@@ -15,7 +15,20 @@ sourceSets {
 
 dependencies {
   api("org.codehaus.groovy:groovy-all")
-  api("org.spockframework:spock-core")
+  api("org.spockframework:spock-core") {
+    // exclude optional dependencies
+    exclude(group = "cglib", module = "cglib-nodep")
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+    exclude(group = "org.junit.platform", module = "junit-platform-testkit")
+    exclude(group = "org.jetbrains", module = "annotations")
+    exclude(group = "org.objenesis", module = "objenesis")
+    exclude(group = "org.ow2.asm", module = "asm")
+  }
+  api("org.spockframework:spock-junit4") {
+    // spock-core is already added as dependency
+    // exclude it here to avoid pulling in optional dependencies
+    exclude(group = "org.spockframework", module = "spock-core")
+  }
   api("org.junit.jupiter:junit-jupiter-api")
   api("org.junit.jupiter:junit-jupiter-params")
 
@@ -25,6 +38,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
+  api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")
@@ -32,16 +46,13 @@ dependencies {
   // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
 
+  api("com.google.guava:guava")
+
   compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
-  implementation("io.opentelemetry:opentelemetry-proto") {
-    // Only need the proto, not gRPC.
-    exclude("io.grpc")
-  }
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
 
-  implementation("com.google.guava:guava")
   implementation("net.bytebuddy:byte-buddy")
-  implementation("net.bytebuddy:byte-buddy-agent")
   implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
   implementation("org.slf4j:log4j-over-slf4j")

@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
@@ -28,6 +29,8 @@ class ConfiguredTraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "AnnotationTracedCallable.call"
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" AnnotationTracedCallable.name
+            "$SemanticAttributes.CODE_FUNCTION" "call"
           }
         }
       }

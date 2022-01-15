@@ -23,7 +23,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+  bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
   library("org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final")
@@ -34,7 +34,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   testLibrary("org.jboss.resteasy:resteasy-undertow:3.0.4.Final") {
@@ -43,8 +43,9 @@ dependencies {
   testLibrary("io.undertow:undertow-servlet:1.4.28.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.4.Final")
 
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.+")
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.+") {
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.0.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") {
     exclude("org.jboss.resteasy", "resteasy-client")
   }
 }

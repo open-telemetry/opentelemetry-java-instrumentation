@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.client.ClientRequestContext;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
-final class ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
+enum ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
+  INSTANCE;
 
   @Override
   public void set(@Nullable ClientRequestContext carrier, String key, String value) {

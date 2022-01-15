@@ -7,26 +7,24 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.processInstrumenter;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.kafka.listener.BatchInterceptor;
 
 public final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
-  private final VirtualField<ConsumerRecords<K, V>, SpanContext> receiveSpanVirtualField;
+  private final VirtualField<ConsumerRecords<K, V>, Context> receiveContextVirtualField;
   private final VirtualField<ConsumerRecords<K, V>, State<K, V>> stateStore;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
   public InstrumentedBatchInterceptor(
-      VirtualField<ConsumerRecords<K, V>, SpanContext> receiveSpanVirtualField,
+      VirtualField<ConsumerRecords<K, V>, Context> receiveContextVirtualField,
       VirtualField<ConsumerRecords<K, V>, State<K, V>> stateStore,
       @Nullable BatchInterceptor<K, V> decorated) {
-    this.receiveSpanVirtualField = receiveSpanVirtualField;
+    this.receiveContextVirtualField = receiveContextVirtualField;
     this.stateStore = stateStore;
     this.decorated = decorated;
   }
@@ -45,13 +43,10 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
   }
 
   private Context getParentContext(ConsumerRecords<K, V> records) {
-    Context parentContext = Context.current();
+    Context receiveContext = receiveContextVirtualField.get(records);
+
     // use the receive CONSUMER span as parent if it's available
-    SpanContext receiveSpanContext = receiveSpanVirtualField.get(records);
-    if (receiveSpanContext != null) {
-      parentContext = parentContext.with(Span.wrap(receiveSpanContext));
-    }
-    return parentContext;
+    return receiveContext != null ? receiveContext : Context.current();
   }
 
   @Override

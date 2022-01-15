@@ -12,7 +12,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import net.bytebuddy.jar.asm.Type;
+import javax.annotation.Nullable;
+import org.objectweb.asm.Type;
 
 /**
  * Represents a reference to a method used in the instrumentation advice or helper class code. Part
@@ -54,6 +55,10 @@ public final class MethodRef {
     return descriptor;
   }
 
+  public boolean isConstructor() {
+    return "<init>".equals(name);
+  }
+
   MethodRef merge(MethodRef anotherMethod) {
     if (!equals(anotherMethod)) {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);
@@ -66,7 +71,7 @@ public final class MethodRef {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (obj == this) {
       return true;
     }

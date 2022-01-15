@@ -36,4 +36,4 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OP
 
 ### Starter Guide
 
-Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.

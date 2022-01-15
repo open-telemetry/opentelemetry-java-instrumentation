@@ -24,10 +24,10 @@ public final class SpringRabbitSingletons {
         MessagingSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<Message, Void>newBuilder(
+        Instrumenter.<Message, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
-            .newConsumerInstrumenter(new MessageHeaderGetter());
+            .newConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
   }
 
   public static Instrumenter<Message, Void> instrumenter() {

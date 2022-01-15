@@ -16,7 +16,7 @@ import org.quartz.JobExecutionContext;
 /** A builder of {@link QuartzTracing}. */
 public final class QuartzTracingBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.quartz-1.7";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.quartz-2.0";
 
   private final OpenTelemetry openTelemetry;
 
@@ -40,9 +40,10 @@ public final class QuartzTracingBuilder {
   /** Returns a new {@link QuartzTracing} with the settings of this {@link QuartzTracingBuilder}. */
   public QuartzTracing build() {
     InstrumenterBuilder<JobExecutionContext, Void> instrumenter =
-        Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
 
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
+    instrumenter.addAttributesExtractor(new QuartzCodeAttributesExtractor());
     instrumenter.addAttributesExtractors(additionalExtractors);
 
     return new QuartzTracing(new TracingJobListener(instrumenter.newInstrumenter()));

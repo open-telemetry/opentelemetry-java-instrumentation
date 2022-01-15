@@ -40,12 +40,14 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   compileOnly("org.springframework:spring-webflux:5.0.0.RELEASE")
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:reactor-netty:reactor-netty-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
 
   // Compile with both old and new netty packages since our test references both for old and
   // latest dep tests.

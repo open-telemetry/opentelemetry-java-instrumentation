@@ -55,7 +55,14 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // clojure
     builder.ignoreClass("clojure.").ignoreClass("$fn__");
 
-    builder.ignoreClass("io.opentelemetry.javaagent.");
+    // all classes in the AgentClassLoader are ignored separately
+    // this is used to ignore agent classes that are in the bootstrap class loader
+    // the reason not to use "io.opentelemetry.javaagent." is so that javaagent instrumentation
+    // tests under "io.opentelemetry.javaagent." will still be instrumented
+    builder.ignoreClass("io.opentelemetry.javaagent.bootstrap.");
+    builder.ignoreClass("io.opentelemetry.javaagent.instrumentation.api.");
+    builder.ignoreClass("io.opentelemetry.javaagent.shaded.");
+    builder.ignoreClass("io.opentelemetry.javaagent.slf4j.");
 
     builder
         .ignoreClass("java.")
@@ -66,6 +73,10 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("java.util.concurrent.")
         .allowClass("java.lang.reflect.Proxy")
         .allowClass("java.lang.ClassLoader")
+        // Ignore inner classes of ClassLoader to avoid
+        // java.lang.ClassCircularityError: java/lang/ClassLoader$1
+        // when SecurityManager is enabled. ClassLoader$1 is used in ClassLoader.checkPackageAccess
+        .ignoreClass("java.lang.ClassLoader$")
         .allowClass("java.lang.invoke.InnerClassLambdaMetafactory")
         // Concurrent instrumentation modifies the structure of
         // Cleaner class incompatibly with java9+ modules.

@@ -15,13 +15,14 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20210917.1246635135"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20211213.1570880329"
   }
 
   @Unroll
@@ -60,6 +61,6 @@ class GrpcSmokeTest extends SmokeTest {
     channel.shutdown()
 
     where:
-    jdk << [8, 11, 16]
+    jdk << [8, 11, 17]
   }
 }

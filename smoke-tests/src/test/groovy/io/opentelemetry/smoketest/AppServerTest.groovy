@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
-import org.junit.runner.RunWith
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -18,7 +17,6 @@ import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.Os
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
 import static org.junit.Assume.assumeTrue
 
-@RunWith(AppServerTestRunner)
 abstract class AppServerTest extends SmokeTest {
   @Shared
   String jdk
@@ -28,13 +26,18 @@ abstract class AppServerTest extends SmokeTest {
   boolean isWindows
 
   def setupSpec() {
-    def appServer = AppServerTestRunner.currentAppServer(this.getClass())
-    serverVersion = appServer.version()
-    jdk = appServer.jdk()
-
+    (serverVersion, jdk) = getAppServer()
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows") &&
       "1" != System.getenv("USE_LINUX_CONTAINERS")
     startTarget(jdk, serverVersion, isWindows)
+  }
+
+  protected Tuple<String> getAppServer() {
+    def appServer = getClass().getAnnotation(AppServer)
+    if (appServer == null) {
+      throw new IllegalStateException("Server not specified, either add @AppServer annotation or override getAppServer method")
+    }
+    return new Tuple(appServer.version(), appServer.jdk())
   }
 
   @Override
@@ -45,7 +48,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20210929.1285231297"
+    String extraTag = "20211216.1584506476"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -69,6 +72,10 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   boolean testRequestWebInfWebXml() {
+    true
+  }
+
+  boolean testRequestOutsideDeployedApp() {
     true
   }
 
@@ -269,6 +276,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "#appServer test request outside deployed application JDK #jdk"(String appServer, String jdk, boolean isWindows) {
+    assumeTrue(testRequestOutsideDeployedApp())
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:

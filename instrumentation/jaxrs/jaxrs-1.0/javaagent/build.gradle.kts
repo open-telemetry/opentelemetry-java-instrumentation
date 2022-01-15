@@ -16,10 +16,12 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:jaxrs:bootstrap"))
+  bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
   compileOnly("javax.ws.rs:jsr311-api:1.1.1")
 
+  // Jackson, used by the test, dropped support for jax 1.x in 2.13+
+  testImplementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.12.6"))
   testImplementation("io.dropwizard:dropwizard-testing:0.7.1")
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
 }

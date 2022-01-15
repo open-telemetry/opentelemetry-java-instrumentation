@@ -2,17 +2,43 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
+
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 class CsvPersister implements ResultsPersister {
+
+  // The fields as they are output, in order, but spread across agents
+  private static final List<FieldSpec> FIELDS =
+      Arrays.asList(
+          FieldSpec.of("startupDurationMs", r -> r.startupDurationMs),
+          FieldSpec.of("minHeapUsed", r -> r.heapUsed.min),
+          FieldSpec.of("maxHeapUsed", r -> r.heapUsed.max),
+          FieldSpec.of("totalAllocatedMB", r -> r.getTotalAllocatedMB()),
+          FieldSpec.of("totalGCTime", r -> r.totalGCTime),
+          FieldSpec.of("maxThreadContextSwitchRate", r -> r.maxThreadContextSwitchRate),
+          FieldSpec.of("iterationAvg", r -> r.iterationAvg),
+          FieldSpec.of("iterationP95", r -> r.iterationP95),
+          FieldSpec.of("requestAvg", r -> r.requestAvg),
+          FieldSpec.of("requestP95", r -> r.requestP95),
+          FieldSpec.of("netReadAvg", r -> r.averageNetworkRead),
+          FieldSpec.of("netWriteAvg", r -> r.averageNetworkWrite),
+          FieldSpec.of("peakThreadCount", r -> r.peakThreadCount),
+          FieldSpec.of("averageCpuUser", r -> r.averageJvmUserCpu),
+          FieldSpec.of("maxCpuUser", r -> r.maxJvmUserCpu),
+          FieldSpec.of("averageMachineCpuTotal", r -> r.averageMachineCpuTotal),
+          FieldSpec.of("runDurationMs", r -> r.runDurationMs),
+          FieldSpec.of("gcPauseMs", r -> NANOSECONDS.toMillis(r.totalGcPauseNanos)));
 
   private final Path resultsFile;
 
@@ -30,25 +56,11 @@ class CsvPersister implements ResultsPersister {
     // Each result is for a given agent run, and we want all the fields for all agents on the same
     // line so that we can create a columnar structure that allows us to more easily compare agent
     // to agent for a given run.
-    doSorted(
-        results,
-        result -> {
-          sb.append(",").append(result.startupDurationMs);
-          sb.append(",").append(result.heapUsed.min);
-          sb.append(",").append(result.heapUsed.max);
-          sb.append(",").append(result.getTotalAllocatedMB());
-          sb.append(",").append(result.totalGCTime);
-          sb.append(",").append(result.maxThreadContextSwitchRate);
-          sb.append(",").append(result.iterationAvg);
-          sb.append(",").append(result.iterationP95);
-          sb.append(",").append(result.requestAvg);
-          sb.append(",").append(result.requestP95);
-          sb.append(",").append(result.averageNetworkRead);
-          sb.append(",").append(result.averageNetworkWrite);
-          sb.append(",").append(result.peakThreadCount);
-          sb.append(",").append(result.averageJvmUserCpu);
-          sb.append(",").append(result.maxJvmUserCpu);
-        });
+    for (FieldSpec field : FIELDS) {
+      for (AppPerfResults result : results) {
+        sb.append(",").append(field.getter.apply(result));
+      }
+    }
     sb.append("\n");
     try {
       Files.writeString(resultsFile, sb.toString(), StandardOpenOption.APPEND);
@@ -75,31 +87,29 @@ class CsvPersister implements ResultsPersister {
     // Each result is for a given agent run, and we want all the fields for all agents on the same
     // line so that we can create a columnar structure that allows us to more easily compare agent
     // to agent for a given run.
-    doSorted(
-        results,
-        result -> {
-          String agent = result.getAgentName();
-          sb.append(",").append(agent).append(":startupTimeMs");
-          sb.append(",").append(agent).append(":minHeapUsed");
-          sb.append(",").append(agent).append(":maxHeapUsed");
-          sb.append(",").append(agent).append(":totalAllocatedMB");
-          sb.append(",").append(agent).append(":totalGCTime");
-          sb.append(",").append(agent).append(":maxThreadContextSwitchRate");
-          sb.append(",").append(agent).append(":iterationAvg");
-          sb.append(",").append(agent).append(":iterationP95");
-          sb.append(",").append(agent).append(":requestAvg");
-          sb.append(",").append(agent).append(":requestP95");
-          sb.append(",").append(agent).append(":netReadAvg");
-          sb.append(",").append(agent).append(":netWriteAvg");
-          sb.append(",").append(agent).append(":peakThreadCount");
-          sb.append(",").append(agent).append(":averageCpuUser");
-          sb.append(",").append(agent).append(":maxCpuUser");
-        });
+
+    List<String> agents = results.stream().map(r -> r.agent.getName()).collect(Collectors.toList());
+    for (FieldSpec field : FIELDS) {
+      for (String agent : agents) {
+        sb.append(",").append(agent).append(':').append(field.name);
+      }
+    }
+
     sb.append("\n");
     return sb.toString();
   }
 
-  private void doSorted(List<AppPerfResults> results, Consumer<AppPerfResults> consumer) {
-    results.stream().sorted(Comparator.comparing(AppPerfResults::getAgentName)).forEach(consumer);
+  static class FieldSpec {
+    private final String name;
+    private final Function<AppPerfResults, Object> getter;
+
+    public FieldSpec(String name, Function<AppPerfResults, Object> getter) {
+      this.name = name;
+      this.getter = getter;
+    }
+
+    static FieldSpec of(String name, Function<AppPerfResults, Object> getter) {
+      return new FieldSpec(name, getter);
+    }
   }
 }

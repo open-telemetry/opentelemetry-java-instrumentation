@@ -10,27 +10,26 @@ import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 
 public class ConnectionCompleteListener implements GenericFutureListener<Future<Void>> {
+  private final NettyConnectionInstrumenter instrumenter;
   private final Context context;
-  private final Context parentContext;
+  private final NettyConnectionRequest request;
 
-  public ConnectionCompleteListener(Context context, Context parentContext) {
+  public ConnectionCompleteListener(
+      NettyConnectionInstrumenter instrumenter, Context context, NettyConnectionRequest request) {
+    this.instrumenter = instrumenter;
     this.context = context;
-    this.parentContext = parentContext;
+    this.request = request;
   }
 
   @Override
   public void operationComplete(Future<Void> future) {
-    AbstractNettyHttpClientTracer tracer = NettyHttpClientTracerAccess.getTracer();
-    if (tracer == null) {
-      return;
-    }
-
     Channel channel = null;
     if (future instanceof ChannelFuture) {
       channel = ((ChannelFuture) future).channel();
     }
-    tracer.endConnectionSpan(context, parentContext, null, channel, future.cause());
+    instrumenter.end(context, request, channel, future.cause());
   }
 }

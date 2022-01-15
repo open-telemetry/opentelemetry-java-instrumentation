@@ -33,6 +33,7 @@ import org.jboss.netty.logging.InternalLoggerFactory
 import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -63,7 +64,8 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
       @Override
       void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
         if (msg.getMessage() instanceof HttpRequest) {
-          def uri = URI.create((msg.getMessage() as HttpRequest).getUri())
+          def request = msg.getMessage() as HttpRequest
+          def uri = URI.create(request.getUri())
           HttpServerTest.ServerEndpoint endpoint = forPath(uri.path)
           ctx.sendDownstream controller(endpoint) {
             HttpResponse response
@@ -91,6 +93,12 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
                 response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
                 response.setContent(responseContent)
                 response.headers().set(LOCATION, endpoint.body)
+                break
+              case CAPTURE_HEADERS:
+                responseContent = ChannelBuffers.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
+                response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
+                response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"))
+                response.setContent(responseContent)
                 break
               case EXCEPTION:
                 throw new Exception(endpoint.body)
@@ -154,24 +162,14 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
-  }
-
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
-  }
-
-  @Override
-  boolean testConcurrency() {
-    return true
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_URL
-    ]
   }
 }

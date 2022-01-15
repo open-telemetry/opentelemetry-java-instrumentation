@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -20,17 +20,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * specification.
  */
 public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.RPC_SYSTEM, system(request));
     set(attributes, SemanticAttributes.RPC_SERVICE, service(request));
     set(attributes, SemanticAttributes.RPC_METHOD, method(request));
   }
 
   @Override
-  protected final void onEnd(
+  public final void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

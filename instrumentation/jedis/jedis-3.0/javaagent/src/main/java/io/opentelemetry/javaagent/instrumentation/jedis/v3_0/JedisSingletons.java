@@ -25,7 +25,7 @@ public final class JedisSingletons {
     JedisNetAttributesExtractor netAttributesExtractor = new JedisNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<JedisRequest, Void>newBuilder(
+        Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)

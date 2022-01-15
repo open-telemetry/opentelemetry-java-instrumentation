@@ -39,7 +39,7 @@ public final class ContextStorageBridge extends Context.Storage {
     }
 
     io.opentelemetry.context.Context base = OTEL_CONTEXT.get(toAttach);
-    final io.opentelemetry.context.Context newOtelContext;
+    io.opentelemetry.context.Context newOtelContext;
     if (base != null) {
       // gRPC context which has an OTel context associated with it via a call to
       // ContextStorageOverride.current(). Using it as the base allows it to be propagated together

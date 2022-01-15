@@ -5,13 +5,16 @@
 
 package server
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import play.BuiltInComponents
 import play.Mode
+import play.mvc.Controller
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -19,8 +22,10 @@ import play.server.Server
 import java.util.function.Supplier
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -55,6 +60,20 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
           throw new Exception(EXCEPTION.getBody())
         }
       } as Supplier)
+        .GET(CAPTURE_HEADERS.getPath()).routeTo({
+        controller(CAPTURE_HEADERS) {
+          Controller.request().header("X-Test-Request").ifPresent({ value ->
+            Controller.response().setHeader("X-Test-Response", value)
+          })
+          Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+        }
+      } as Supplier)
+        .GET(INDEXED_CHILD.getPath()).routeTo({
+        controller(INDEXED_CHILD) {
+          INDEXED_CHILD.collectSpanAttributes { name -> Controller.request().getQueryString(name) }
+          Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody())
+        }
+      } as Supplier)
         .build()
     }
   }
@@ -62,11 +81,6 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   void stopServer(Server server) {
     server.stop()
-  }
-
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
   }
 
   @Override
@@ -85,6 +99,13 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
         errorEvent(Exception, EXCEPTION.body)
       }
     }
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
   }
 
   @Override

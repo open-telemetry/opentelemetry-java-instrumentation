@@ -50,6 +50,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     Config config = new Config()
     SingleServerConfig singleServerConfig = config.useSingleServer()
     singleServerConfig.setAddress(address)
+    singleServerConfig.setTimeout(30_000)
     // disable connection ping if it exists
     singleServerConfig.metaClass.getMetaMethod("setPingConnectionInterval", int)?.invoke(singleServerConfig, 0)
     redisson = Redisson.create(config)
@@ -60,7 +61,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     when:
     RBucket<String> keyObject = redisson.getBucket("foo")
     RFuture future = keyObject.setAsync("bar")
-    future.get(3, TimeUnit.SECONDS)
+    future.get(30, TimeUnit.SECONDS)
 
     then:
     assertTraces(1) {
@@ -69,12 +70,12 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -91,19 +92,19 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     })
 
     then:
-    result.get(3, TimeUnit.SECONDS)
+    result.get(30, TimeUnit.SECONDS)
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
           name "SADD"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "SADD set1 ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SADD"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
+            "$SemanticAttributes.DB_OPERATION" "SADD"
           }
         }
       }
@@ -112,12 +113,12 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           name "RPUSH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "RPUSH list1 ?"
-            "$SemanticAttributes.DB_OPERATION.key" "RPUSH"
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
+            "$SemanticAttributes.DB_STATEMENT" "RPUSH list1 ?"
+            "$SemanticAttributes.DB_OPERATION" "RPUSH"
           }
         }
       }

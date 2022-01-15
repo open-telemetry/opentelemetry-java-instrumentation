@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Tracing Request Handler. */
 final class TracingRequestHandler extends RequestHandler2 {
@@ -40,7 +40,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     }
     Context context = requestInstrumenter.start(parentContext, request);
 
-    AwsXrayPropagator.getInstance().inject(context, request, AwsSdkInjectAdapter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
 
     request.addHandlerContext(CONTEXT, context);
   }

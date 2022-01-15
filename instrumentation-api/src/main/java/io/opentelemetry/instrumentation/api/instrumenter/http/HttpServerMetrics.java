@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationView;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
@@ -26,9 +26,6 @@ import org.slf4j.LoggerFactory;
  * {@link RequestListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">HTTP
  * server metrics</a>.
- *
- * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
- * dependencies.
  */
 @UnstableApi
 public final class HttpServerMetrics implements RequestListener {
@@ -64,14 +61,14 @@ public final class HttpServerMetrics implements RequestListener {
     duration =
         meter
             .histogramBuilder("http.server.duration")
-            .setUnit("milliseconds")
+            .setUnit("ms")
             .setDescription("The duration of the inbound HTTP request")
             .build();
   }
 
   @Override
   public Context start(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes));
+    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
@@ -89,7 +86,8 @@ public final class HttpServerMetrics implements RequestListener {
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyDurationView(state.startAttributes()));
+        applyServerDurationView(state.startAttributes(), endAttributes),
+        context);
   }
 
   @AutoValue

@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Base class for implementing Tracers for database clients.
@@ -21,7 +21,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <CONNECTION> type of the database connection.
  * @param <STATEMENT> type of the database statement being executed.
  * @param <SANITIZEDSTATEMENT> type of the database statement after sanitization.
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.instrumenter.Instrumenter} and
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.db the database semantic
+ *     convention utilities package} instead.
  */
+@Deprecated
 public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATEMENT>
     extends BaseTracer {
   private static final String DB_QUERY = "DB Query";

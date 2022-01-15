@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class ConstantAttributesExtractor<REQUEST, RESPONSE, T>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final AttributeKey<T> attributeKey;
   private final T attributeValue;
@@ -21,12 +21,12 @@ final class ConstantAttributesExtractor<REQUEST, RESPONSE, T>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     attributes.put(attributeKey, attributeValue);
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,

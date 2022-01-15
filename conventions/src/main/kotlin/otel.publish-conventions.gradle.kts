@@ -9,20 +9,16 @@ publishing {
       plugins.withId("java-platform") {
         from(components["javaPlatform"])
       }
-      plugins.withId("java-library") {
-        from(components["java"])
+      if (project.path != ":javaagent") {
+        plugins.withId("java-library") {
+          from(components["java"])
+        }
       }
 
       versionMapping {
         allVariants {
           fromResolutionResult()
         }
-      }
-
-      if (findProperty("otel.stable") != "true") {
-        val versionParts = version.split('-').toMutableList()
-        versionParts[0] += "-alpha"
-        version = versionParts.joinToString("-")
       }
 
       afterEvaluate {
@@ -36,8 +32,10 @@ publishing {
           throw GradleException("groupId is not set for this project or its parent ${project.parent}")
         }
 
-        pom.description.set(project.description
-          ?: "Instrumentation of Java libraries using OpenTelemetry.")
+        pom.description.set(
+          project.description
+            ?: "Instrumentation of Java libraries using OpenTelemetry."
+        )
       }
 
       pom {
@@ -83,10 +81,6 @@ fun artifactPrefix(p: Project, archivesBaseName: String): String {
     return "opentelemetry-javaagent-"
   }
   return "opentelemetry-"
-}
-
-rootProject.tasks.named("release").configure {
-  finalizedBy(tasks["publishToSonatype"])
 }
 
 // Sign only if we have a key to do so

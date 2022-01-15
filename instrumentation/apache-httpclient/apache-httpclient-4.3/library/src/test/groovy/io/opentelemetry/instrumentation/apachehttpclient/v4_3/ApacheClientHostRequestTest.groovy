@@ -11,12 +11,15 @@ import org.apache.http.impl.client.CloseableHttpClient
 
 class ApacheClientHostRequestTest extends AbstractApacheClientHostRequestTest implements LibraryTestTrait {
   @Override
-  protected CloseableHttpClient createClient() {
+  protected CloseableHttpClient createClient(boolean readTimeout) {
     def builder = ApacheHttpClientTracing.create(openTelemetry).newHttpClientBuilder()
-    builder.defaultRequestConfig = RequestConfig.custom()
+    def requestConfigBuilder = RequestConfig.custom()
       .setMaxRedirects(maxRedirects())
       .setConnectTimeout(CONNECT_TIMEOUT_MS)
-      .build()
+    if (readTimeout) {
+      requestConfigBuilder.setSocketTimeout(READ_TIMEOUT_MS)
+    }
+    builder.defaultRequestConfig = requestConfigBuilder.build()
     return builder.build()
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public final class AgentClassLoaderAccess {
 
@@ -16,19 +16,16 @@ public final class AgentClassLoaderAccess {
       Class<?> agentInitializerClass =
           ClassLoader.getSystemClassLoader()
               .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
-      Field agentClassLoaderField = agentInitializerClass.getDeclaredField("agentClassLoader");
-      agentClassLoaderField.setAccessible(true);
-      agentClassLoader = (ClassLoader) agentClassLoaderField.get(null);
+      Method getExtensionsClassLoader =
+          agentInitializerClass.getDeclaredMethod("getExtensionsClassLoader");
+      agentClassLoader = (ClassLoader) getExtensionsClassLoader.invoke(null);
     } catch (Throwable t) {
       throw new AssertionError("Could not access agent classLoader", t);
     }
   }
 
-  public static ClassLoader getAgentClassLoader() {
-    return agentClassLoader;
-  }
-
-  static Class<?> loadClass(String name) {
+  // public for use by downstream distros
+  public static Class<?> loadClass(String name) {
     try {
       return agentClassLoader.loadClass(name);
     } catch (ClassNotFoundException e) {

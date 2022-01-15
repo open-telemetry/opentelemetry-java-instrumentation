@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
-import io.grpc.ManagedChannel;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
@@ -26,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)
 @ConditionalOnProperty(prefix = "otel.exporter.otlp", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass({OtlpGrpcSpanExporter.class, ManagedChannel.class})
+@ConditionalOnClass(OtlpGrpcSpanExporter.class)
 public class OtlpGrpcSpanExporterAutoConfiguration {
 
   @Bean

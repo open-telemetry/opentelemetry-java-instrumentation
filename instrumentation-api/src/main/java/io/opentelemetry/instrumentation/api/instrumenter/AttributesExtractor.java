@@ -10,7 +10,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of {@link io.opentelemetry.api.common.Attributes} for a given request and response.
@@ -24,18 +24,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @see HttpClientAttributesExtractor
  * @see NetServerAttributesExtractor
  */
-public abstract class AttributesExtractor<REQUEST, RESPONSE> {
+public interface AttributesExtractor<REQUEST, RESPONSE> {
   /**
    * Extracts attributes from the {@link REQUEST} into the {@link AttributesBuilder} at the
    * beginning of a request.
    */
-  protected abstract void onStart(AttributesBuilder attributes, REQUEST request);
+  void onStart(AttributesBuilder attributes, REQUEST request);
 
   /**
    * Extracts attributes from the {@link REQUEST} and either {@link RESPONSE} or {@code error} into
    * the {@link AttributesBuilder} at the end of a request.
    */
-  protected abstract void onEnd(
+  void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
@@ -45,8 +45,7 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
    * value} is not {@code null}.
    */
-  protected static <T> void set(
-      AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
+  default <T> void set(AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
     if (value != null) {
       attributes.put(key, value);
     }
@@ -56,7 +55,7 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
    * Returns an {@link AttributesExtractor} implementation that always extracts the provided
    * constant value.
    */
-  public static <REQUEST, RESPONSE, T> AttributesExtractor<REQUEST, RESPONSE> constant(
+  static <REQUEST, RESPONSE, T> AttributesExtractor<REQUEST, RESPONSE> constant(
       AttributeKey<T> attributeKey, T attributeValue) {
     return new ConstantAttributesExtractor<>(attributeKey, attributeValue);
   }

@@ -11,7 +11,8 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import org.openqa.selenium.firefox.FirefoxOptions
+
+import org.openqa.selenium.chrome.ChromeOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
@@ -45,10 +46,12 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   }
 
   def setupSpec() {
+    setupServer()
+
     Testcontainers.exposeHostPorts(port)
 
     browser = new BrowserWebDriverContainer<>()
-      .withCapabilities(new FirefoxOptions())
+      .withCapabilities(new ChromeOptions())
       .withLogConsumer(new Slf4jLogConsumer(logger))
     browser.start()
 
@@ -56,6 +59,7 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   }
 
   def cleanupSpec() {
+    cleanupServer()
     browser?.stop()
   }
 

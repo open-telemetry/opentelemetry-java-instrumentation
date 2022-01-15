@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.Jdk8AsyncOp
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class WeakRefAsyncOperationEndStrategies extends AsyncOperationEndStrategies {
 

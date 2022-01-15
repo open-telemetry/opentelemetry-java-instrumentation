@@ -13,6 +13,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.AbstractBootstrapInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
 import java.util.List;
@@ -32,7 +33,8 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AsyncHttpClientInstrumentation(this.getClass().getName() + "$ClientAdvice"),
-        new HandlerPublisherInstrumentation());
+        new HandlerPublisherInstrumentation(),
+        new AbstractBootstrapInstrumentation());
   }
 
   @SuppressWarnings("unused")

@@ -38,21 +38,24 @@ class EntityManagerTest extends AbstractHibernateTest {
     }
 
     when:
-    try {
-      sessionMethodTest.call(entityManager, entity)
-    } catch (Exception e) {
-      // We expected this, we should see the error field set on the span.
-    }
+    runWithSpan("parent") {
+      try {
+        sessionMethodTest.call(entityManager, entity)
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
 
-    entityTransaction.commit()
-    entityManager.close()
+      entityTransaction.commit()
+      entityManager.close()
+    }
 
     then:
     boolean isPersistTest = "persist" == testName
+    def sessionId
     assertTraces(1) {
       trace(0, 4 + (isPersistTest ? 1 : 0)) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -63,6 +66,10 @@ class EntityManagerTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
 
@@ -75,13 +82,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             childOf span(1)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
         }
@@ -91,13 +98,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             childOf span(1)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
           span(3 + offset) {
@@ -105,6 +112,7 @@ class EntityManagerTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" sessionId
             }
           }
         } else {
@@ -113,19 +121,20 @@ class EntityManagerTest extends AbstractHibernateTest {
             kind INTERNAL
             childOf span(0)
             attributes {
+              "hibernate.session_id" sessionId
             }
           }
           span(3 + offset) {
             childOf span(2 + offset)
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-              "${SemanticAttributes.DB_NAME.key}" "db1"
-              "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-              "${SemanticAttributes.DB_STATEMENT.key}" String
-              "${SemanticAttributes.DB_OPERATION.key}" String
-              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+              "$SemanticAttributes.DB_SYSTEM" "h2"
+              "$SemanticAttributes.DB_NAME" "db1"
+              "$SemanticAttributes.DB_USER" "sa"
+              "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+              "$SemanticAttributes.DB_STATEMENT" String
+              "$SemanticAttributes.DB_OPERATION" String
+              "$SemanticAttributes.DB_SQL_TABLE" "Value"
             }
           }
         }
@@ -158,19 +167,22 @@ class EntityManagerTest extends AbstractHibernateTest {
   @Unroll
   def "test attaches State to query created via #queryMethodName"() {
     setup:
-    EntityManager entityManager = entityManagerFactory.createEntityManager()
-    EntityTransaction entityTransaction = entityManager.getTransaction()
-    entityTransaction.begin()
-    Query query = queryBuildMethod(entityManager)
-    query.getResultList()
-    entityTransaction.commit()
-    entityManager.close()
+    runWithSpan("parent") {
+      EntityManager entityManager = entityManagerFactory.createEntityManager()
+      EntityTransaction entityTransaction = entityManager.getTransaction()
+      entityTransaction.begin()
+      Query query = queryBuildMethod(entityManager)
+      query.getResultList()
+      entityTransaction.commit()
+      entityManager.close()
+    }
 
     expect:
+    def sessionId
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "Session"
+          name "parent"
           kind INTERNAL
           hasNoParent()
           attributes {
@@ -181,6 +193,10 @@ class EntityManagerTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" {
+              sessionId = it
+              it instanceof String
+            }
           }
         }
         span(2) {
@@ -188,13 +204,13 @@ class EntityManagerTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
-            "${SemanticAttributes.DB_NAME.key}" "db1"
-            "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
-            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
-            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
+            "$SemanticAttributes.DB_SYSTEM" "h2"
+            "$SemanticAttributes.DB_NAME" "db1"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
+            "$SemanticAttributes.DB_STATEMENT" String
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE" "Value"
           }
         }
         span(3) {
@@ -202,6 +218,7 @@ class EntityManagerTest extends AbstractHibernateTest {
           kind INTERNAL
           childOf span(0)
           attributes {
+            "hibernate.session_id" sessionId
           }
         }
       }

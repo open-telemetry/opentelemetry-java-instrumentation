@@ -23,21 +23,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
+
+  protected String getProtocol() {
+    return "http";
+  }
 
   protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
     // 1. Use method provided in header.
@@ -77,20 +82,19 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    super.pre(span, exchange, endpoint, camelDirection);
+  public void pre(
+      AttributesBuilder attributes,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection) {
+    super.pre(attributes, exchange, endpoint, camelDirection);
 
     String httpUrl = getHttpUrl(exchange, endpoint);
     if (httpUrl != null) {
-      span.setAttribute(SemanticAttributes.HTTP_URL, httpUrl);
+      attributes.put(SemanticAttributes.HTTP_URL, httpUrl);
     }
 
-    span.setAttribute(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
-
-    Span serverSpan = ServerSpan.fromContextOrNull(Context.current());
-    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
-      updateServerSpanName(serverSpan, exchange, endpoint);
-    }
+    attributes.put(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
   }
 
   private static boolean shouldSetPathAsName(CamelDirection camelDirection) {
@@ -117,7 +121,17 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   private void updateServerSpanName(Span serverSpan, Exchange exchange, Endpoint endpoint) {
     String path = getPath(exchange, endpoint);
     if (path != null) {
+      // TODO should update SERVER span name/route using ServerSpanNaming
       serverSpan.updateName(path);
+    }
+  }
+
+  @Override
+  public void updateServerSpanName(
+      Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
+      updateServerSpanName(serverSpan, exchange, endpoint);
     }
   }
 
@@ -131,7 +145,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
         return (String) uri;
       } else {
         // Try to obtain from endpoint
-        int index = endpoint.getEndpointUri().lastIndexOf("http:");
+        int index = endpoint.getEndpointUri().lastIndexOf(getProtocol() + ":");
         if (index != -1) {
           return endpoint.getEndpointUri().substring(index);
         }
@@ -141,13 +155,13 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void post(Span span, Exchange exchange, Endpoint endpoint) {
-    super.post(span, exchange, endpoint);
+  public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
+    super.post(attributes, exchange, endpoint);
 
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
       }
     }
   }

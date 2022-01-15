@@ -30,8 +30,9 @@ DOLLAR_QUOTED_STR = "$$" [^$]* "$$"
 WHITESPACE        = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement) {
+  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
+    sanitizer.dialect = dialect;
     try {
       while (!sanitizer.yyatEOF()) {
         int token = sanitizer.yylex();
@@ -71,6 +72,7 @@ WHITESPACE        = [ \t\r\n]+
   private boolean insideComment = false;
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
+  private SqlDialect dialect;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
@@ -361,8 +363,17 @@ WHITESPACE        = [ \t\r\n]+
       }
 
   // here is where the actual sanitization happens
-  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOUBLE_QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
           builder.append('?');
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {DOUBLE_QUOTED_STR} {
+          if (dialect == SqlDialect.COUCHBASE) {
+            builder.append('?');
+          } else {
+            appendCurrentFragment();
+          }
           if (isOverLimit()) return YYEOF;
       }
 

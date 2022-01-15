@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
 import org.glassfish.grizzly.filterchain.FilterChainBuilder
@@ -17,17 +19,20 @@ import org.glassfish.grizzly.http.HttpRequestPacket
 import org.glassfish.grizzly.http.HttpResponsePacket
 import org.glassfish.grizzly.http.HttpServerFilter
 import org.glassfish.grizzly.http.server.HttpServer
+import org.glassfish.grizzly.http.util.Parameters
 import org.glassfish.grizzly.nio.transport.TCPNIOServerConnection
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder
 import org.glassfish.grizzly.utils.DelayedExecutor
 import org.glassfish.grizzly.utils.IdleTimeoutFilter
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -59,6 +64,18 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
+  }
+
+  @Override
   boolean testException() {
     // justification: grizzly async closes the channel which
     // looks like a ConnectException to the client when this happens
@@ -68,6 +85,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   @Override
   boolean testCapturedHttpHeaders() {
     false
+  }
+
+  @Override
+  boolean verifyServerSpanEndTime() {
+    // server spans are ended inside of the controller spans
+    return false
   }
 
   void setUpTransport(FilterChain filterChain) {
@@ -117,6 +140,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           responseParameters.fillHeaders(builder)
           HttpResponsePacket responsePacket = builder.build()
           controller(responseParameters.getEndpoint()) {
+            responseParameters.execute()
             ctx.write(HttpContent.builder(responsePacket)
               .content(wrap(ctx.getMemoryManager(), responseParameters.getResponseBody()))
               .build())
@@ -128,13 +152,11 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
     ResponseParameters buildResponse(HttpRequestPacket request) {
       String uri = request.getRequestURI()
-      String requestParams = request.getQueryString()
-      String fullPath = uri + (requestParams != null ? "?" + requestParams : "")
-
       Map<String, String> headers = new HashMap<>()
 
       HttpServerTest.ServerEndpoint endpoint
-      switch (fullPath) {
+      Closure closure
+      switch (uri) {
         case "/success":
           endpoint = SUCCESS
           break
@@ -147,7 +169,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           break
         case "/exception":
           throw new Exception(EXCEPTION.body)
-        case "/query?some=query":
+        case "/query":
           endpoint = QUERY_PARAM
           break
         case "/path/123/param":
@@ -155,6 +177,16 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           break
         case "/authRequired":
           endpoint = AUTH_REQUIRED
+          break
+        case "/child":
+          endpoint = INDEXED_CHILD
+          Parameters parameters = new Parameters()
+          parameters.setQuery(request.getQueryStringDC())
+          parameters.setQueryStringEncoding(StandardCharsets.UTF_8)
+          parameters.handleQueryParameters()
+          closure = {
+            INDEXED_CHILD.collectSpanAttributes { name -> parameters.getParameter(name) }
+          }
           break
         default:
           endpoint = NOT_FOUND
@@ -165,7 +197,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
       String responseBody = endpoint == REDIRECT ? "" : endpoint.body
 
       byte[] responseBodyBytes = responseBody.getBytes(defaultCharset())
-      return new ResponseParameters(endpoint, status, responseBodyBytes, headers)
+      return new ResponseParameters(endpoint, status, responseBodyBytes, headers, closure)
     }
 
     static class ResponseParameters {
@@ -173,15 +205,18 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
       HttpServerTest.ServerEndpoint endpoint
       int status
       byte[] responseBody
+      Closure closure
 
       ResponseParameters(HttpServerTest.ServerEndpoint endpoint,
                          int status,
                          byte[] responseBody,
-                         Map<String, String> headers) {
+                         Map<String, String> headers,
+                         Closure closure) {
         this.endpoint = endpoint
         this.status = status
         this.responseBody = responseBody
         this.headers = headers
+        this.closure = closure
       }
 
       int getStatus() {
@@ -201,11 +236,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           builder.header(header.getKey(), header.getValue())
         }
       }
-    }
-  }
 
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HttpCodecFilter.handleRead"
+      void execute() {
+        if (closure != null) {
+          closure.run()
+        }
+      }
+    }
   }
 }

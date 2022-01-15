@@ -21,8 +21,8 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 public class LinuxTestContainerManager extends AbstractTestContainerManager {
-  private static final Logger logger = LoggerFactory.getLogger(LinuxTestContainerManager.class);
   private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
+  private static final Logger appLogger = LoggerFactory.getLogger("App");
 
   private final Network network = Network.newNetwork();
   private GenericContainer<?> backend = null;
@@ -69,7 +69,8 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
-      TargetWaitStrategy waitStrategy) {
+      TargetWaitStrategy waitStrategy,
+      String[] command) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
     target =
@@ -78,7 +79,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withExposedPorts(TARGET_PORT)
             .withNetwork(network)
             .withLogConsumer(output)
-            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withLogConsumer(new Slf4jLogConsumer(appLogger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/" + TARGET_AGENT_FILENAME)
             .withEnv(getAgentEnvironment(jvmArgsEnvVarName))
@@ -97,6 +98,11 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
                     .withStartupTimeout(waitStrategy.timeout));
       }
     }
+
+    if (command != null) {
+      target = target.withCommand(command);
+    }
+
     target.start();
     return output;
   }

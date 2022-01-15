@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="testServer" class="org.restlet.ext.spring.SpringServer" scope="prototype">
+    <constructor-arg value="http"/>
+  </bean>
+
+  <bean name="testRouter" class="org.restlet.ext.spring.SpringBeanRouter"/>
+
+  <bean name="/success" scope="prototype" id="successResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$SuccessResource"/>
+  <bean name="/error-status" scope="prototype" id="errorResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$ErrorResource"/>
+  <bean name="/exception" scope="prototype" id="exceptionResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$ExceptionResource"/>
+  <bean name="/query" scope="prototype" id="queryParamResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$QueryParamResource"/>
+  <bean name="/path/{id}/param" scope="prototype" id="pathParamResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$PathParamResource"/>
+  <bean name="/redirect" scope="prototype" id="redirectResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$RedirectResource"/>
+  <bean name="/captureHeaders" scope="prototype" id="captureHeadersResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$CaptureHeadersResource"/>
+  <bean name="/child" scope="prototype" id="indexedChildResource"
+    class="io.opentelemetry.instrumentation.restlet.v2_0.RestletAppTestBase$IndexedChildResource"/>
+
+</beans>

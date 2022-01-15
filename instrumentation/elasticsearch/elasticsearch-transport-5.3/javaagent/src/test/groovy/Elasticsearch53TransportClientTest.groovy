@@ -4,12 +4,14 @@
  */
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.TimeUnit
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.env.Environment
+import org.elasticsearch.http.BindHttpException
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
@@ -24,6 +26,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await
 
 class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportClientTest {
   public static final long TIMEOUT = 10000 // 10 seconds
@@ -55,7 +58,16 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
       .put("discovery.type", "single-node")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
-    testNode.start()
+    // retry when starting elasticsearch fails with
+    // org.elasticsearch.http.BindHttpException: Failed to resolve host [[]]
+    // Caused by: java.net.SocketException: No such device (getFlags() failed)
+    await()
+      .atMost(10, TimeUnit.SECONDS)
+      .ignoreException(BindHttpException)
+      .until({
+        testNode.start()
+        true
+      })
     tcpPublishAddress = testNode.injector().getInstance(TransportService).boundAddress().publishAddress()
 
     client = new PreBuiltTransportClient(
@@ -112,11 +124,11 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" tcpPublishAddress.port
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "ClusterHealthAction"
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -160,8 +172,8 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           status ERROR
           errorEvent RemoteTransportException, String
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -228,11 +240,11 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" tcpPublishAddress.port
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "CreateIndexAction"
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -244,11 +256,11 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           name "GetAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" tcpPublishAddress.port
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -263,8 +275,8 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           name "PutMappingAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "PutMappingAction"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -275,11 +287,11 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           name "IndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" tcpPublishAddress.port
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "IndexAction"
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -297,11 +309,11 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
           name "GetAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_IP.key}" tcpPublishAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" tcpPublishAddress.port
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

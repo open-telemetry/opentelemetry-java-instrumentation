@@ -55,7 +55,9 @@ final class TracingInterceptor implements Interceptor {
   // thus we must use Instrumenter<Request, Response>, and Request is immutable
   private Request injectContextToRequest(Request request, Context context) {
     Request.Builder requestBuilder = request.newBuilder();
-    propagators.getTextMapPropagator().inject(context, requestBuilder, RequestHeaderSetter.SETTER);
+    propagators
+        .getTextMapPropagator()
+        .inject(context, requestBuilder, RequestHeaderSetter.INSTANCE);
     return requestBuilder.build();
   }
 }

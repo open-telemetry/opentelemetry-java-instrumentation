@@ -41,8 +41,14 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
+  String userAgent() {
+    return "apachehttpclient"
+  }
+
+  @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
+    request.addHeader("user-agent", userAgent())
     headers.entrySet().each {
       request.setHeader(new BasicHeader(it.key, it.value))
     }

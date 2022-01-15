@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,26 +37,26 @@ public final class RuntimeVirtualFieldSupplier {
     return instance;
   }
 
-  private static final class CacheBasedVirtualFieldSupplier
-      extends ClassValue<Map<Class<?>, VirtualField<?, ?>>> implements VirtualFieldSupplier {
+  private static final class CacheBasedVirtualFieldSupplier implements VirtualFieldSupplier {
+
+    private final Cache<Class<?>, Cache<Class<?>, VirtualField<?, ?>>>
+        ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
     public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
       return (VirtualField<U, F>)
-          get(type).computeIfAbsent(fieldType, k -> new CacheBasedVirtualField<>());
-    }
-
-    @Override
-    protected Map<Class<?>, VirtualField<?, ?>> computeValue(Class<?> type) {
-      return new ConcurrentHashMap<>();
+          ownerToFieldToImplementationMap
+              .computeIfAbsent(type, c -> Cache.weak())
+              .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());
     }
   }
 
   private static final class CacheBasedVirtualField<T, F> extends VirtualField<T, F> {
-    private final Cache<T, F> cache = Cache.newBuilder().setWeakKeys().build();
+    private final Cache<T, F> cache = Cache.weak();
 
     @Override
-    public @Nullable F get(T object) {
+    @Nullable
+    public F get(T object) {
       return cache.get(object);
     }
 
@@ -70,11 +67,6 @@ public final class RuntimeVirtualFieldSupplier {
       } else {
         cache.put(object, fieldValue);
       }
-    }
-
-    @Override
-    public F computeIfNull(T object, Supplier<F> fieldValueSupplier) {
-      return cache.computeIfAbsent(object, k -> fieldValueSupplier.get());
     }
   }
 

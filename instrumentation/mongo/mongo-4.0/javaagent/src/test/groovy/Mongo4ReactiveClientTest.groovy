@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
-import org.junit.AssumptionViolatedException
+import org.opentest4j.TestAbortedException
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
@@ -52,7 +52,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    throw new AssumptionViolatedException("not tested on 4.0")
+    throw new TestAbortedException("not tested on 4.0")
   }
 
   @Override
@@ -157,12 +157,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    throw new AssumptionViolatedException("not tested on reactive")
+    throw new TestAbortedException("not tested on reactive")
   }
 
   @Override
   void getMore(MongoCollection<Document> collection) {
-    throw new AssumptionViolatedException("not tested on reactive")
+    throw new TestAbortedException("not tested on reactive")
   }
 
   @Override

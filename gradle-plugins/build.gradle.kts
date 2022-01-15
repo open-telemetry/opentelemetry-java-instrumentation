@@ -9,23 +9,36 @@ plugins {
 }
 
 group = "io.opentelemetry.instrumentation"
-version = "0.8.0-SNAPSHOT"
+
+apply(from = "../version.gradle.kts")
 
 repositories {
   mavenCentral()
+  gradlePluginPortal()
+}
+
+val bbGradlePlugin by configurations.creating
+configurations.named("compileOnly") {
+  extendsFrom(bbGradlePlugin)
 }
 
 dependencies {
-  implementation("com.google.guava:guava:30.1.1-jre")
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.18")
+  implementation("com.google.guava:guava:31.0.1-jre")
+  // we need to use byte buddy variant that does not shade asm
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.6") {
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+  }
+  implementation("net.bytebuddy:byte-buddy-dep:1.12.3")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  testImplementation("org.assertj:assertj-core:3.19.0")
+  implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.7.2"))
+  testImplementation("org.assertj:assertj-core:3.21.0")
+
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.8.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")

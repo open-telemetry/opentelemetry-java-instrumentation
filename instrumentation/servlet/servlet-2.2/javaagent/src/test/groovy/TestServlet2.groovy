@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -41,6 +42,11 @@ class TestServlet2 {
             break
           case EXCEPTION:
             throw new Exception(endpoint.body)
+          case INDEXED_CHILD:
+            INDEXED_CHILD.collectSpanAttributes {name -> req.getParameter(name) }
+            resp.status = endpoint.status
+            resp.writer.print(endpoint.body)
+            break
         }
       }
     }

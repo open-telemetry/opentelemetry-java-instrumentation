@@ -6,20 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
 public class ElasticTransportNetResponseAttributesExtractor
     extends NetClientAttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
-  public @Nullable String transport(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  @Nullable
+  public String transport(ElasticTransportRequest request, @Nullable ActionResponse response) {
     return null;
   }
 
   @Override
-  public @Nullable String peerName(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  @Nullable
+  public String peerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getHost();
     }
@@ -27,8 +27,8 @@ public class ElasticTransportNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable Integer peerPort(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  @Nullable
+  public Integer peerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getPort();
     }
@@ -36,8 +36,8 @@ public class ElasticTransportNetResponseAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
+  @Nullable
+  public String peerIp(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
     }

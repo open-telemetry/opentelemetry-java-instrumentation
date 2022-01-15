@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class AsyncHttpClientNetAttributesExtractor
     extends InetSocketAddressNetClientAttributesExtractor<RequestContext, Response> {
@@ -20,8 +20,8 @@ final class AsyncHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable InetSocketAddress getAddress(
-      RequestContext request, @Nullable Response response) {
+  @Nullable
+  public InetSocketAddress getAddress(RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

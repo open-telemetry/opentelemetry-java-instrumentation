@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHttpAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Servlet2HttpAttributesExtractor
     extends ServletHttpAttributesExtractor<HttpServletRequest, HttpServletResponse> {
@@ -21,7 +21,8 @@ public class Servlet2HttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Integer statusCode(
+  @Nullable
+  protected Integer statusCode(
       ServletRequestContext<HttpServletRequest> requestContext,
       ServletResponseContext<HttpServletResponse> responseContext) {
     HttpServletResponse response = responseContext.response();

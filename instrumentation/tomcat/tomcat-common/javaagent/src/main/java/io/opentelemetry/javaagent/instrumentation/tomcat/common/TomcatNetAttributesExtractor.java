@@ -6,36 +6,37 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TomcatNetAttributesExtractor extends NetServerAttributesExtractor<Request, Response> {
 
   @Override
-  public @Nullable String transport(Request request) {
-    // return SemanticAttributes.NetTransportValues.IP_TCP;
-    return null;
+  @Nullable
+  public String transport(Request request) {
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public @Nullable String peerName(Request request) {
-    /*
+  @Nullable
+  public String peerName(Request request) {
     request.action(ActionCode.REQ_HOST_ATTRIBUTE, request);
     return request.remoteHost().toString();
-     */
-    return null;
   }
 
   @Override
-  public @Nullable Integer peerPort(Request request) {
+  @Nullable
+  public Integer peerPort(Request request) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Override
-  public @Nullable String peerIp(Request request) {
+  @Nullable
+  public String peerIp(Request request) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return request.remoteAddr().toString();
   }

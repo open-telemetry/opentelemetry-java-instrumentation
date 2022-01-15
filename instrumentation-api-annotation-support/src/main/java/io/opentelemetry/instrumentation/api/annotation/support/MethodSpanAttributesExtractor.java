@@ -6,16 +6,15 @@
 package io.opentelemetry.instrumentation.api.annotation.support;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Extractor of {@link io.opentelemetry.api.common.Attributes} for a traced method. */
 public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
-    extends AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final MethodExtractor<REQUEST> methodExtractor;
   private final MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor;
@@ -46,17 +45,17 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     Method method = methodExtractor.extract(request);
     AttributeBindings bindings = cache.computeIfAbsent(method, this::bind);
     if (!bindings.isEmpty()) {
       Object[] args = methodArgumentsExtractor.extract(request);
-      bindings.apply(attributes::put, args);
+      bindings.apply(attributes, args);
     }
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
@@ -108,7 +107,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {}
+    public void apply(AttributesBuilder target, Object[] args) {}
   }
 
   private static final class CombinedAttributeBindings implements AttributeBindings {
@@ -129,12 +128,12 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {
-      parent.apply(setter, args);
+    public void apply(AttributesBuilder target, Object[] args) {
+      parent.apply(target, args);
       if (args != null && args.length > index) {
         Object arg = args[index];
         if (arg != null) {
-          binding.apply(setter, arg);
+          binding.apply(target, arg);
         }
       }
     }

@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.updateServerSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,10 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -57,17 +56,18 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") Class<?> clazz,
+        @Advice.FieldValue("clazz") Class<?> request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
-      if (serverSpan != null) {
-        serverSpan.updateName(routeInfo.path());
+      updateServerSpanName(parentContext, routeInfo);
+
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
       }
 
-      context = tracer().startSpan(parentContext, clazz);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -75,20 +75,20 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
     public static void setupCallback(
         @Advice.Thrown Throwable throwable,
         @Advice.Return Some<Future<Response>> responseOption,
+        @Advice.FieldValue("clazz") Class<?> request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       if (scope == null) {
         return;
       }
+      scope.close();
 
       if (throwable != null) {
-        scope.close();
-        tracer().endExceptionally(context, throwable);
-        return;
+        instrumenter().end(context, request, null, throwable);
+      } else {
+        responseOption.get().addEventListener(new FinatraResponseListener(context, request));
       }
-
-      responseOption.get().addEventListener(new FinatraResponseListener(context, scope));
     }
   }
 }

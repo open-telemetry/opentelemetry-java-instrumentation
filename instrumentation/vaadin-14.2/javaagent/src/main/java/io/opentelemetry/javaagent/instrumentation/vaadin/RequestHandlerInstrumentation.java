@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vaadin;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -16,7 +16,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,11 +49,13 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This RequestHandler requestHandler,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Local("otelRequest") VaadinHandlerRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      context = tracer().startRequestHandlerSpan(requestHandler, method);
+      request = VaadinHandlerRequest.create(requestHandler.getClass(), methodName);
+      context = helper().startRequestHandlerSpan(request);
       if (context != null) {
         scope = context.makeCurrent();
       }
@@ -64,6 +65,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return boolean handled,
+        @Advice.Local("otelRequest") VaadinHandlerRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -71,7 +73,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      tracer().endRequestHandlerSpan(context, throwable, handled);
+      helper().endRequestHandlerSpan(context, request, throwable, handled);
     }
   }
 }

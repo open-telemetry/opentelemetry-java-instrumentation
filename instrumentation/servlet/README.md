@@ -1,5 +1,12 @@
 # Instrumentation for Java Servlets
 
+# Settings
+
+| System property | Type | Default | Description |
+|---|---|---|---|
+| `otel.instrumentation.servlet.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | List | Empty | Request parameters to be captured (experimental). |
+
 ## A word about version
 
 We support Servlet API starting from version 2.2. 
@@ -77,7 +84,7 @@ In order to alleviate this problem, instrumentations for specific frameworks, su
 _update_ name of the span corresponding to the entry point.
 Each framework instrumentation can decide what is the best span name based on framework implementation details.
 Of course, still adhering to OpenTelemetry
-[semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md).
+[semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md).
 
 ## Additional instrumentations
 `HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`

@@ -34,15 +34,11 @@ dependencies {
 
   implementation(project(":instrumentation:play-ws:play-ws-common:javaagent"))
 
-  testImplementation(project(":instrumentation:play-ws:play-ws-testing"))
+  testImplementation(project(":instrumentation:play-ws:play-ws-common:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:akka-http-10.0:javaagent"))
-  testInstrumentation(project(":instrumentation:akka-actor-2.5:javaagent"))
-}
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+  testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
 }

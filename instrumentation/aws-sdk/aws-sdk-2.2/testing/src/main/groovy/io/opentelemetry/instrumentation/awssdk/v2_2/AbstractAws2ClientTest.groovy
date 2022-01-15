@@ -156,21 +156,21 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.httpUri()}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "aws.service" "DynamoDb"
             "aws.operation" "CreateTable"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_OPERATION.key}" "CreateTable"
+            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
+            "$SemanticAttributes.DB_OPERATION" "CreateTable"
             "aws.dynamodb.global_secondary_indexes" "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"
             "aws.dynamodb.provisioned_throughput.read_capacity_units" "1"
             "aws.dynamodb.provisioned_throughput.write_capacity_units" "1"
@@ -191,21 +191,21 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.httpUri()}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "aws.service" "DynamoDb"
             "aws.operation" "Query"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_OPERATION.key}" "Query"
+            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
+            "$SemanticAttributes.DB_OPERATION" "Query"
             "aws.dynamodb.limit" "10"
             "aws.dynamodb.select" "ALL_ATTRIBUTES"
           }
@@ -225,21 +225,21 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.httpUri()}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
-            "${SemanticAttributes.DB_OPERATION.key}" "${operation}"
+            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
+            "$SemanticAttributes.DB_OPERATION" "${operation}"
           }
         }
       }
@@ -337,14 +337,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.httpUri()}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -426,14 +426,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.httpUri()}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -496,10 +496,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   // the instrumentation to add Events for retries instead.
   def "timeout and retry errors not captured"() {
     setup:
-    def response = HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500))
     // One retry so two requests.
-    server.enqueue(response)
-    server.enqueue(response)
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
     def builder = S3Client.builder()
     configureSdkClient(builder)
     // Because the client builder does not merge overrides, the simplest way to set retry policy
@@ -527,12 +526,12 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}/somebucket/somekey"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}/somebucket/somekey"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "aws.service" "S3"
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"

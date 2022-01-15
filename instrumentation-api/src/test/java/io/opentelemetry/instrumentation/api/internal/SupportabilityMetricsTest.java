@@ -78,7 +78,7 @@ class SupportabilityMetricsTest {
   }
 
   private static Config configWithJavaagentDebug(boolean enabled) {
-    return Config.newBuilder()
+    return Config.builder()
         .readProperties(Collections.singletonMap("otel.javaagent.debug", Boolean.toString(enabled)))
         .build();
   }

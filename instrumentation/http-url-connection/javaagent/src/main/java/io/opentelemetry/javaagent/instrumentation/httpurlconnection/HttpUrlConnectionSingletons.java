@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import java.net.HttpURLConnection;
 
@@ -25,14 +24,15 @@ public class HttpUrlConnectionSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<HttpURLConnection, Integer>newBuilder(
+        Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.http-url-connection",
                 spanNameExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
-            .newClientInstrumenter(SETTER);
+            .addRequestMetrics(HttpClientMetrics.get())
+            .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

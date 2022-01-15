@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -18,11 +20,12 @@ public final class ReflectionHelper {
   public static Field[] filterFields(Class<?> containingClass, Field[] fields) {
     if (fields.length == 0
         || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
       return fields;
     }
     List<Field> result = new ArrayList<>(fields.length);
     for (Field field : fields) {
-      // FieldBackedProvider marks added fields as synthetic
+      // virtual fields are marked as synthetic
       if (field.isSynthetic() && field.getName().startsWith("__opentelemetryVirtualField$")) {
         continue;
       }
@@ -34,18 +37,47 @@ public final class ReflectionHelper {
   public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
     if (methods.length == 0
         || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
       return methods;
     }
     List<Method> result = new ArrayList<>(methods.length);
     for (Method method : methods) {
-      // FieldBackedProvider marks added method as synthetic
+      // virtual field accessor methods are marked as synthetic
       if (method.isSynthetic()
-          && (method.getName().startsWith("get__opentelemetryVirtualField$")
-              || method.getName().startsWith("set__opentelemetryVirtualField$"))) {
+          && (method.getName().startsWith("__get__opentelemetryVirtualField$")
+              || method.getName().startsWith("__set__opentelemetryVirtualField$"))) {
         continue;
       }
       result.add(method);
     }
     return result.toArray(new Method[0]);
+  }
+
+  @SuppressWarnings("unused")
+  public static Class<?>[] filterInterfaces(Class<?>[] interfaces, Class<?> containingClass) {
+    if (interfaces.length == 0
+        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields
+      return interfaces;
+    }
+    List<Class<?>> result = new ArrayList<>(interfaces.length);
+    boolean hasVirtualFieldMarker = false;
+    for (Class<?> interfaceClass : interfaces) {
+      // filter out virtual field marker and accessor interfaces
+      if (interfaceClass == VirtualFieldInstalledMarker.class
+          || (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
+              && interfaceClass.isSynthetic()
+              && interfaceClass.getName().contains("VirtualFieldAccessor$"))) {
+        hasVirtualFieldMarker = true;
+        continue;
+      }
+      result.add(interfaceClass);
+    }
+
+    if (hasVirtualFieldMarker) {
+      VirtualFieldDetector.markVirtualFieldsPresent(containingClass);
+    }
+
+    return result.toArray(new Class<?>[0]);
   }
 }

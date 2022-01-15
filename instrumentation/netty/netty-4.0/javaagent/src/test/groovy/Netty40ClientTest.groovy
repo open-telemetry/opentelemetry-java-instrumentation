@@ -71,8 +71,12 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    HttpHeaders.setHost(request, uri.host)
+    def target = uri.path
+    if (uri.query != null) {
+      target += "?" + uri.query
+    }
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER)
+    HttpHeaders.setHost(request, uri.host + ":" + uri.port)
     request.headers().set("user-agent", userAgent())
     headers.each { k, v -> request.headers().set(k, v) }
     return request
@@ -108,7 +112,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
         return super.expectedClientSpanName(uri, method)
@@ -119,7 +123,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
+      case "http://192.0.2.1/": // non routable address
         return []
     }
     return super.httpAttributes(uri)

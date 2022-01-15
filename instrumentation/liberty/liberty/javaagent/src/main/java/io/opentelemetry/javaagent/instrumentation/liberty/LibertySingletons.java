@@ -5,11 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
-
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
@@ -25,10 +22,8 @@ public final class LibertySingletons {
       INSTRUMENTER =
           ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
-                  (context, request, attributes) -> {
-                    context = ServerSpanNaming.init(context, CONTAINER);
-                    return AppServerBridge.init(context);
-                  })
+                  (context, request, attributes) ->
+                      new AppServerBridge.Builder().recordException().init(context))
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
   private static final LibertyHelper<HttpServletRequest, HttpServletResponse> HELPER =

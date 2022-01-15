@@ -1,6 +1,6 @@
 # Semantic conventions
 
-This document describes which [OpenTelemetry Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/trace/semantic_conventions)
+This document describes which [OpenTelemetry Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/trace/semantic_conventions)
 are implemented by Java autoinstrumentation and which ones are not.
 
 ## Http Server
@@ -23,10 +23,8 @@ are implemented by Java autoinstrumentation and which ones are not.
 | `http.route` | N | - |
 | `http.client_ip` | N | + |
 
-**[1]:** Most server instrumentations capture `http.scheme`, `http.host`, and `http.target`
-(and do not capture `http.url`).
-Netty instrumentation is currently the only exception to this rule. Netty instrumentation
-captures `http.url` (and does not capture `http.scheme`, `http.host`, or `http.target`).
+**[1]:** Server instrumentations capture `http.scheme`, `http.host`, and `http.target` and do not
+capture `http.url`.
 
 **[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
@@ -49,7 +47,8 @@ not values defined by spec.
 | `http.response_content_length` | N | - |
 | `http.response_content_length_uncompressed` | N | - |
 
-**[1]:** `http.scheme`, `http.host` and `http.target` are unnecessary since `http.url` is captured.
+**[1]:** Client instrumentations capture `http.url` and do not capture `http.scheme`, `http.host`
+and `http.target`.
 
 **[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.

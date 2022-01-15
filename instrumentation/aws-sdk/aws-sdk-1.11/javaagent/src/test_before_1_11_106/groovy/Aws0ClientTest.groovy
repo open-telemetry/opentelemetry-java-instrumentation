@@ -105,13 +105,13 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "${operation}"
@@ -129,17 +129,17 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
     request.request().headers().get("traceparent") == null
 
     where:
-    service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                                   | body
-    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
-    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
-    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
+    service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                    | body
+    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { c -> c.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); c.createBucket("testbucket") } | ""
+    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { c -> c.getObject("someBucket", "someKey") }                                                                           | ""
+    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { c -> c.allocateAddress() }                                                                                            | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
                <publicIp>192.0.2.1</publicIp>
                <domain>standard</domain>
             </AllocateAddressResponse>
             """
-    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
+    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("${server.httpUri()}") | [:]                               | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                            | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
@@ -167,12 +167,12 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${UNUSABLE_PORT}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" 61
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "http://localhost:${UNUSABLE_PORT}"
+            "$SemanticAttributes.HTTP_METHOD" "$method"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_PORT" 61
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}"
@@ -215,11 +215,11 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "https://s3.amazonaws.com"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "s3.amazonaws.com"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "GetObject"
@@ -234,10 +234,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
   // TODO(anuraaga): Add events for retries.
   def "timeout and retry errors not captured"() {
     setup:
-    def response = HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500))
     // One retry so two requests.
-    server.enqueue(response)
-    server.enqueue(response)
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
     AmazonS3Client client = new AmazonS3Client(new ClientConfiguration()
       .withRequestTimeout(50 /* ms */)
       .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(1)))
@@ -259,12 +258,12 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
-            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "aws.service" "Amazon S3"
             "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "GetObject"

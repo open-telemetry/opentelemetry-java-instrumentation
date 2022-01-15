@@ -172,7 +172,7 @@
     </module>
     <module name="PackageName">
       <!-- modified from default to support packages like
-           io.opentelemetry.javaagent.instrumentation.log4j.v2_13_2 and
+           io.opentelemetry.javaagent.instrumentation.log4j.v2_16 and
            io.opentelemetry.javaagent.instrumentation.netty.v4_1.client -->
       <property name="format"
         value="^[a-z]+(\.[a-z][a-z0-9]*)*(\.v[0-9]+_[0-9]+(_[0-9]+)?)?(\.[a-z][a-z0-9]*)*$"/>
@@ -373,6 +373,17 @@
     </module>
     <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
     <module name="SuppressWarningsHolder"/>
+    <!-- this enables CHECKSTYLE:OFF and CHECKSTYLE:ON comments -->
+    <module name="SuppressionCommentFilter"/>
+    <module name="Regexp">
+      <!-- see comment in otel.errorprone-conventions.gradle.kts for why we disable the SystemOut
+           rule there and rely on this check -->
+      <property name="id" value="SystemOut"/>
+      <!-- . matches any character, so we need to escape it and use \. to match dots. -->
+      <property name="format"
+        value="(System\.out\.print|System\.err\.print|\.printStackTrace\(\)|Thread\.dumpStack)"/>
+      <property name="illegalPattern" value="true"/>
+    </module>
   </module>
   <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
   <module name="SuppressWarningsFilter"/>

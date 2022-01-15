@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.agents;
 
 import java.net.MalformedURLException;
@@ -10,7 +15,7 @@ import java.util.List;
 public class Agent {
 
   static final String OTEL_LATEST =
-      "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar";
+      "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar";
 
   public static final Agent NONE = new Agent("none", "no agent at all");
   public static final Agent LATEST_RELEASE =

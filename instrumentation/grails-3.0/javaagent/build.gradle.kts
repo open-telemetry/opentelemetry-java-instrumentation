@@ -32,6 +32,8 @@ val grailsVersion = "3.0.6"
 val springBootVersion = "1.2.5.RELEASE"
 
 dependencies {
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
@@ -41,8 +43,4 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
-
-  latestDepTestLibrary("org.grails:grails-plugin-url-mappings:4.0.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.1.17.RELEASE")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.1.17.RELEASE")
 }

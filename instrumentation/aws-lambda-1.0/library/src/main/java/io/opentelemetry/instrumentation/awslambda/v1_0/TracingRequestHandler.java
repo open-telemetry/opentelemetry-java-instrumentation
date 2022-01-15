@@ -8,8 +8,9 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 import java.util.Collections;
@@ -25,7 +26,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
 
   protected static final Duration DEFAULT_FLUSH_TIMEOUT = Duration.ofSeconds(1);
 
-  private final AwsLambdaTracer tracer;
+  private final AwsLambdaFunctionInstrumenter instrumenter;
   private final OpenTelemetrySdk openTelemetrySdk;
   private final long flushTimeoutNanos;
 
@@ -43,47 +44,55 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
    * invocation.
    */
   protected TracingRequestHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
-    this(openTelemetrySdk, flushTimeout, new AwsLambdaTracer(openTelemetrySdk));
+    this(
+        openTelemetrySdk,
+        flushTimeout,
+        AwsLambdaFunctionInstrumenterFactory.createInstrumenter(openTelemetrySdk));
   }
 
   /**
    * Creates a new {@link TracingRequestHandler} which flushes the provided {@link
    * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
-   * invocation, and traces using the provided {@link AwsLambdaTracer}.
+   * invocation, and traces using the provided {@link AwsLambdaFunctionInstrumenter}.
    */
   protected TracingRequestHandler(
-      OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaTracer tracer) {
+      OpenTelemetrySdk openTelemetrySdk,
+      Duration flushTimeout,
+      AwsLambdaFunctionInstrumenter instrumenter) {
     this.openTelemetrySdk = openTelemetrySdk;
     this.flushTimeoutNanos = flushTimeout.toNanos();
-    this.tracer = tracer;
+    this.instrumenter = instrumenter;
   }
 
   private Map<String, String> getHeaders(I input) {
+    Map<String, String> result = null;
     if (input instanceof APIGatewayProxyRequestEvent) {
       APIGatewayProxyRequestEvent event = (APIGatewayProxyRequestEvent) input;
-      return event.getHeaders();
+      result = event.getHeaders();
     }
-    return Collections.emptyMap();
+    return result == null ? Collections.emptyMap() : result;
   }
 
   @Override
   public final O handleRequest(I input, Context context) {
-    io.opentelemetry.context.Context otelContext =
-        tracer.startSpan(context, SpanKind.SERVER, input, getHeaders(input));
+    AwsLambdaRequest request = AwsLambdaRequest.create(context, input, getHeaders(input));
+    io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
+
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return doHandleRequest(input, context);
+    }
+
+    io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
     Throwable error = null;
+    O output = null;
     try (Scope ignored = otelContext.makeCurrent()) {
-      O output = doHandleRequest(input, context);
-      tracer.onOutput(otelContext, output);
+      output = doHandleRequest(input, context);
       return output;
     } catch (Throwable t) {
       error = t;
       throw t;
     } finally {
-      if (error != null) {
-        tracer.endExceptionally(otelContext, error);
-      } else {
-        tracer.end(otelContext);
-      }
+      instrumenter.end(otelContext, request, output, error);
       LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }

@@ -27,4 +27,9 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
   void stopServer(UndertowJaxrsServer server) {
     server.stop()
   }
+
+  // resteasy 3.0.x does not support JAX-RS 2.1
+  boolean shouldTestCompletableStageAsync() {
+    false
+  }
 }

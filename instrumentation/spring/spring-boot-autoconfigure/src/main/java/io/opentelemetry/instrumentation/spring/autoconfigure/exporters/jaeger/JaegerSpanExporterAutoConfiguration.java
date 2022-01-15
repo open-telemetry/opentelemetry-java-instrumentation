@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
-import io.grpc.ManagedChannel;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
@@ -26,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(JaegerSpanExporterProperties.class)
 @ConditionalOnProperty(prefix = "otel.exporter.jaeger", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass({JaegerGrpcSpanExporter.class, ManagedChannel.class})
+@ConditionalOnClass(JaegerGrpcSpanExporter.class)
 public class JaegerSpanExporterAutoConfiguration {
 
   @Bean

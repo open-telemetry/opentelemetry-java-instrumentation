@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class JaxrsServerSpanNaming {
 

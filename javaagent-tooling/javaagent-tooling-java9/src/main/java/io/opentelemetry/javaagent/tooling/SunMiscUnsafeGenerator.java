@@ -5,22 +5,23 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static net.bytebuddy.jar.asm.Opcodes.ACC_FINAL;
-import static net.bytebuddy.jar.asm.Opcodes.ACC_PRIVATE;
-import static net.bytebuddy.jar.asm.Opcodes.ACC_PUBLIC;
-import static net.bytebuddy.jar.asm.Opcodes.ACC_STATIC;
-import static net.bytebuddy.jar.asm.Opcodes.ACC_SUPER;
-import static net.bytebuddy.jar.asm.Opcodes.ALOAD;
-import static net.bytebuddy.jar.asm.Opcodes.DUP;
-import static net.bytebuddy.jar.asm.Opcodes.GETSTATIC;
-import static net.bytebuddy.jar.asm.Opcodes.ILOAD;
-import static net.bytebuddy.jar.asm.Opcodes.INVOKESPECIAL;
-import static net.bytebuddy.jar.asm.Opcodes.INVOKESTATIC;
-import static net.bytebuddy.jar.asm.Opcodes.INVOKEVIRTUAL;
-import static net.bytebuddy.jar.asm.Opcodes.IRETURN;
-import static net.bytebuddy.jar.asm.Opcodes.NEW;
-import static net.bytebuddy.jar.asm.Opcodes.PUTSTATIC;
-import static net.bytebuddy.jar.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.ILOAD;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
+import static org.objectweb.asm.Opcodes.IRETURN;
+import static org.objectweb.asm.Opcodes.NEW;
+import static org.objectweb.asm.Opcodes.PUTSTATIC;
+import static org.objectweb.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.V1_5;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.reflect.Field;
@@ -31,12 +32,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.FieldVisitor;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.Opcodes;
-import net.bytebuddy.jar.asm.Type;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 /**
  * Helper class for generating our own copy of sun.misc.Unsafe that delegates to
@@ -195,8 +195,10 @@ class SunMiscUnsafeGenerator {
     addMethod("arrayIndexScale", int.class, Class.class);
     addMethod("addressSize", int.class);
     addMethod("pageSize", int.class);
-    addMethod("defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     addMethod("getLoadAverage", int.class, double[].class, int.class);
+    // defineAnonymousClass was removed in jdk17
+    addOptionalMethod(
+        "defineAnonymousClass", Class.class, Class.class, byte[].class, Object[].class);
     // this method is missing from internal unsafe in some jdk11 versions
     addOptionalMethod("invokeCleaner", void.class, ByteBuffer.class);
   }
@@ -294,13 +296,7 @@ class SunMiscUnsafeGenerator {
   private byte[] getBytes() {
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     ClassVisitor cv = cw;
-    cv.visit(
-        Opcodes.V1_5,
-        ACC_PUBLIC | ACC_FINAL | ACC_SUPER,
-        UNSAFE_NAME,
-        null,
-        "java/lang/Object",
-        null);
+    cv.visit(V1_5, ACC_PUBLIC | ACC_FINAL | ACC_SUPER, UNSAFE_NAME, null, "java/lang/Object", null);
 
     {
       FieldVisitor fv =

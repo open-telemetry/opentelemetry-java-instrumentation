@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
@@ -35,7 +34,8 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
     if (responseHandled.compareAndSet(false, true)) {
       ServletResponseContext<RESPONSE> responseContext =
           new ServletResponseContext<>(response, null);
-      instrumenter.end(context, requestContext, responseContext, null);
+      Throwable throwable = servletHelper.getAsyncException(requestContext.request());
+      instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }
 
@@ -46,7 +46,8 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
       ServletResponseContext<RESPONSE> responseContext =
           new ServletResponseContext<>(response, null);
       responseContext.setTimeout(timeout);
-      instrumenter.end(context, requestContext, responseContext, null);
+      Throwable throwable = servletHelper.getAsyncException(requestContext.request());
+      instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }
 

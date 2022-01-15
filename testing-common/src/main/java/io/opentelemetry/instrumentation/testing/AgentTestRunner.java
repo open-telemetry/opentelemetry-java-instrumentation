@@ -10,9 +10,9 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
-import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
+import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * AgentTestingExporterAccess} bridge class to retrieve exported traces and metrics data from the
  * agent classloader.
  */
-public final class AgentTestRunner implements InstrumentationTestRunner {
+public final class AgentTestRunner extends InstrumentationTestRunner {
   static {
     LoggerUtils.setLevel(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME), Level.WARN);
     LoggerUtils.setLevel(LoggerFactory.getLogger("io.opentelemetry"), Level.DEBUG);
@@ -36,10 +36,8 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     return INSTANCE;
   }
 
-  private final TestInstrumenters testInstrumenters;
-
   private AgentTestRunner() {
-    testInstrumenters = new TestInstrumenters(getOpenTelemetry());
+    super(GlobalOpenTelemetry.get());
   }
 
   @Override
@@ -53,6 +51,8 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
             + " Instrumentation errors during test";
+    int muzzleFailureCount = TestAgentListenerAccess.getAndResetMuzzleFailureCount();
+    assert muzzleFailureCount == 0 : muzzleFailureCount + " Muzzle failures during test";
     // additional library ignores are ignored during tests, because they can make it really
     // confusing for contributors wondering why their instrumentation is not applied
     //
@@ -84,31 +84,12 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
   }
 
   @Override
+  public List<LogData> getExportedLogs() {
+    return AgentTestingExporterAccess.getExportedLogs();
+  }
+
+  @Override
   public boolean forceFlushCalled() {
     return AgentTestingExporterAccess.forceFlushCalled();
-  }
-
-  @Override
-  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
-      throws E {
-    return testInstrumenters.runWithSpan(spanName, callback);
-  }
-
-  @Override
-  public <T, E extends Throwable> T runWithClientSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithClientSpan(spanName, callback);
-  }
-
-  @Override
-  public <T, E extends Throwable> T runWithServerSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithServerSpan(spanName, callback);
-  }
-
-  @Override
-  public <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
-      throws E {
-    return testInstrumenters.runWithNonRecordingSpan(callback);
   }
 }

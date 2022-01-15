@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
 
 import io.opentelemetry.agents.Agent;
@@ -25,6 +26,9 @@ public class AppPerfResults {
   final long averageNetworkWrite;
   final float averageJvmUserCpu;
   final float maxJvmUserCpu;
+  final float averageMachineCpuTotal;
+  final long runDurationMs;
+  final long totalGcPauseNanos;
 
   private AppPerfResults(Builder builder) {
     this.agent = builder.agent;
@@ -43,10 +47,25 @@ public class AppPerfResults {
     this.averageNetworkWrite = builder.averageNetworkWrite;
     this.averageJvmUserCpu = builder.averageJvmUserCpu;
     this.maxJvmUserCpu = builder.maxJvmUserCpu;
+    this.averageMachineCpuTotal = builder.averageMachineCpuTotal;
+    this.runDurationMs = builder.runDurationMs;
+    this.totalGcPauseNanos = builder.totalGcPauseNanos;
   }
 
   double getTotalAllocatedMB() {
-    return totalAllocated / (1024.0 * 1024.0);
+    return bytesToMegs(this.totalAllocated);
+  }
+
+  double getMinHeapUsedMB() {
+    return bytesToMegs(this.heapUsed.min);
+  }
+
+  double getMaxHeapUsedMB() {
+    return bytesToMegs(this.heapUsed.max);
+  }
+
+  private double bytesToMegs(long x) {
+    return x / (1024.0 * 1024.0);
   }
 
   String getAgentName() {
@@ -74,6 +93,9 @@ public class AppPerfResults {
     public long averageNetworkWrite;
     public float averageJvmUserCpu;
     public float maxJvmUserCpu;
+    public float averageMachineCpuTotal;
+    public long runDurationMs;
+    public long totalGcPauseNanos;
 
     AppPerfResults build() {
       return new AppPerfResults(this);
@@ -156,6 +178,21 @@ public class AppPerfResults {
 
     Builder maxJvmUserCpu(float maxJvmUserCpu) {
       this.maxJvmUserCpu = maxJvmUserCpu;
+      return this;
+    }
+
+    Builder averageMachineCpuTotal(float averageMachineCpuTotal) {
+      this.averageMachineCpuTotal = averageMachineCpuTotal;
+      return this;
+    }
+
+    Builder runDurationMs(long runDurationMs) {
+      this.runDurationMs = runDurationMs;
+      return this;
+    }
+
+    Builder totalGcPauseNanos(long totalGcPauseNanos) {
+      this.totalGcPauseNanos = totalGcPauseNanos;
       return this;
     }
   }

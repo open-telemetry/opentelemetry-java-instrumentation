@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Advice helper methods for concurrent task (e.g. {@link Runnable}) instrumentations. */
 public final class TaskAdviceHelper {

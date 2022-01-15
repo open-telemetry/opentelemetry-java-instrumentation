@@ -51,6 +51,11 @@ tasks {
 }
 
 dependencies {
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   compileOnly("com.vaadin:flow-server:2.2.0")
 
   add("vaadin16TestImplementation", "com.vaadin:vaadin-spring-boot-starter:16.0.0")

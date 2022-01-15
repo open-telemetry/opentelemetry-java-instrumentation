@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -21,7 +22,9 @@ import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -39,6 +42,7 @@ public class OverheadTests {
   private static final Network NETWORK = Network.newNetwork();
   private static GenericContainer<?> collector;
   private final NamingConventions namingConventions = new NamingConventions();
+  private final Map<String, Long> runDurations = new HashMap<>();
 
   @BeforeAll
   static void setUp() {
@@ -57,6 +61,7 @@ public class OverheadTests {
   }
 
   void runTestConfig(TestConfig config) {
+    runDurations.clear();
     config
         .getAgents()
         .forEach(
@@ -67,7 +72,8 @@ public class OverheadTests {
                 fail("Unhandled exception in " + config.getName(), e);
               }
             });
-    List<AppPerfResults> results = new ResultsCollector(namingConventions.local).collect(config);
+    List<AppPerfResults> results =
+        new ResultsCollector(namingConventions.local, runDurations).collect(config);
     new MainResultsPersister(config).write(results);
   }
 
@@ -85,10 +91,14 @@ public class OverheadTests {
       doWarmupPhase(config);
     }
 
+    long testStart = System.currentTimeMillis();
     startRecording(agent, petclinic);
 
     GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
     k6.start();
+
+    long runDuration = System.currentTimeMillis() - testStart;
+    runDurations.put(agent.getName(), runDuration);
 
     // This is required to get a graceful exit of the VM before testcontainers kills it forcibly.
     // Without it, our jfr file will be empty.

@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -54,10 +55,6 @@ class PatchLoggerTest {
       List<String> parameterTypes = new ArrayList<>();
       for (Class<?> clazz : method.getParameterTypes()) {
         parameterTypes.add(clazz.getName());
-      }
-      if (parameterTypes.contains("java.util.function.Supplier")) {
-        // FIXME it would be good to include Java 8 methods
-        continue;
       }
       builder.parameterTypes.addAll(parameterTypes);
       builder.returnType = method.getReturnType().getName();
@@ -849,7 +846,7 @@ class PatchLoggerTest {
     String returnType;
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (obj == this) {
         return true;
       }
@@ -865,6 +862,12 @@ class PatchLoggerTest {
     @Override
     public int hashCode() {
       return Objects.hash(name, parameterTypes, returnType);
+    }
+
+    @Override
+    public String toString() {
+      String params = parameterTypes.stream().reduce((a, b) -> a + ", " + b).orElse("");
+      return name + "(" + params + ")" + returnType;
     }
   }
 }

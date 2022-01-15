@@ -13,8 +13,6 @@ import io.opentelemetry.testing.internal.armeria.client.ClientFactory
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.client.logging.LoggingClient
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,7 +42,6 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static int port
   static URI address
 
-  @BeforeClass
   def setupServer() {
     withRetryOnAddressAlreadyInUse({
       setupSpecUnderRetry()
@@ -64,7 +61,6 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
 
   abstract SERVER startServer(int port)
 
-  @AfterClass
   def cleanupServer() {
     if (server == null) {
       println getClass().name + " can't stop null server"

@@ -13,7 +13,7 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public final class RocketMqClientHooks {
   private static final RocketMqTracing TRACING =
-      RocketMqTracing.newBuilder(GlobalOpenTelemetry.get())
+      RocketMqTracing.builder(GlobalOpenTelemetry.get())
           .setPropagationEnabled(
               Config.get().getBoolean("otel.instrumentation.rocketmq-client.propagation", true))
           .setCaptureExperimentalSpanAttributes(

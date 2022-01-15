@@ -18,6 +18,9 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpURLConnec
     try {
       connection.setRequestMethod(method)
       connection.connectTimeout = CONNECT_TIMEOUT_MS
+      if (uri.toString().contains("/read-timeout")) {
+        connection.readTimeout = READ_TIMEOUT_MS
+      }
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       return connection.getResponseCode()
@@ -45,5 +48,10 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpURLConnec
   @Override
   boolean testCallback() {
     return false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }

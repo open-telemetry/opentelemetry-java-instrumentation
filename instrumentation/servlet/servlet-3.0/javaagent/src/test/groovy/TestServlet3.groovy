@@ -5,7 +5,6 @@
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
@@ -14,6 +13,7 @@ import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -55,6 +55,15 @@ class TestServlet3 {
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
             break
+          case CAPTURE_PARAMETERS:
+            req.setCharacterEncoding("UTF8")
+            def value = req.getParameter("test-parameter")
+            if (value != "test value õäöü") {
+              throw new ServletException("request parameter does not have expected value " + value)
+            }
+            resp.status = endpoint.status
+            resp.writer.print(endpoint.body)
+            break
           case ERROR:
             resp.sendError(endpoint.status, endpoint.body)
             break
@@ -72,6 +81,9 @@ class TestServlet3 {
       HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
       def latch = new CountDownLatch(1)
       def context = req.startAsync()
+      if (endpoint == EXCEPTION) {
+        context.setTimeout(5000)
+      }
       context.start {
         try {
           HttpServerTest.controller(endpoint) {
@@ -102,6 +114,16 @@ class TestServlet3 {
                 resp.writer.print(endpoint.body)
                 context.complete()
                 break
+              case CAPTURE_PARAMETERS:
+                req.setCharacterEncoding("UTF8")
+                def value = req.getParameter("test-parameter")
+                if (value != "test value õäöü") {
+                  throw new ServletException("request parameter does not have expected value " + value)
+                }
+                resp.status = endpoint.status
+                resp.writer.print(endpoint.body)
+                context.complete()
+                break
               case ERROR:
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
@@ -110,9 +132,14 @@ class TestServlet3 {
                 break
               case EXCEPTION:
                 resp.status = endpoint.status
-                resp.writer.print(endpoint.body)
-                context.complete()
-                throw new Exception(endpoint.body)
+                def writer = resp.writer
+                writer.print(endpoint.body)
+                if (req.getClass().getName().contains("catalina")) {
+                  // on tomcat close the writer to ensure response is sent immediately, otherwise
+                  // there is a chance that tomcat resets the connection before the response is sent
+                  writer.close()
+                }
+                throw new ServletException(endpoint.body)
             }
           }
         } finally {
@@ -153,11 +180,22 @@ class TestServlet3 {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               break
+            case CAPTURE_PARAMETERS:
+              req.setCharacterEncoding("UTF8")
+              def value = req.getParameter("test-parameter")
+              if (value != "test value õäöü") {
+                throw new ServletException("request parameter does not have expected value " + value)
+              }
+              resp.status = endpoint.status
+              resp.writer.print(endpoint.body)
+              break
             case ERROR:
               resp.sendError(endpoint.status, endpoint.body)
               break
             case EXCEPTION:
-              throw new Exception(endpoint.body)
+              resp.status = endpoint.status
+              resp.writer.print(endpoint.body)
+              throw new ServletException(endpoint.body)
           }
         }
       } finally {
@@ -171,6 +209,9 @@ class TestServlet3 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       def target = req.servletPath.replace("/dispatch", "")
+      if (req.queryString != null) {
+        target += "?" + req.queryString
+      }
       req.startAsync().dispatch(target)
     }
   }
@@ -180,6 +221,9 @@ class TestServlet3 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       def target = req.servletPath.replace("/dispatch", "")
+      if (req.queryString != null) {
+        target += "?" + req.queryString
+      }
       def context = req.startAsync()
       context.start {
         context.dispatch(target)

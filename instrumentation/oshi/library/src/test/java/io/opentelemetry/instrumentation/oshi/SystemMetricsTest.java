@@ -5,44 +5,34 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.sdk.metrics.data.MetricDataType;
-import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 public class SystemMetricsTest extends AbstractMetricsTest {
 
   @Test
-  public void test() throws Exception {
+  public void test() {
     SystemMetrics.registerObservers();
-    IntervalMetricReader intervalMetricReader = createIntervalMetricReader();
 
-    testMetricExporter.waitForData();
-    intervalMetricReader.shutdown();
-
-    verify("system.memory.usage", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ true);
-    verify(
-        "system.memory.utilization",
-        "1",
-        MetricDataType.DOUBLE_GAUGE,
-        /* checkNonZeroValue= */ true);
-
-    verify("system.network.io", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ false);
-    verify(
-        "system.network.packets",
-        "packets",
-        MetricDataType.LONG_GAUGE,
-        /* checkNonZeroValue= */ false);
-    verify(
-        "system.network.errors",
-        "errors",
-        MetricDataType.LONG_GAUGE,
-        /* checkNonZeroValue= */ false);
-
-    verify("system.disk.io", "By", MetricDataType.LONG_GAUGE, /* checkNonZeroValue= */ false);
-    verify(
-        "system.disk.operations",
-        "operations",
-        MetricDataType.LONG_GAUGE,
-        /* checkNonZeroValue= */ false);
+    waitAndAssertMetrics(
+        metric ->
+            metric
+                .hasName("system.memory.usage")
+                .hasUnit("By")
+                .hasLongSum()
+                .points()
+                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
+        metric ->
+            metric
+                .hasName("system.memory.utilization")
+                .hasUnit("1")
+                .hasDoubleGauge()
+                .points()
+                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
+        metric -> metric.hasName("system.network.io").hasUnit("By").hasLongSum(),
+        metric -> metric.hasName("system.network.packets").hasUnit("packets").hasLongSum(),
+        metric -> metric.hasName("system.network.errors").hasUnit("errors").hasLongSum(),
+        metric -> metric.hasName("system.disk.operations").hasUnit("operations").hasLongSum());
   }
 }

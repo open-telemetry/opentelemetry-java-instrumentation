@@ -8,82 +8,100 @@ dependencies {
   errorprone("com.google.errorprone:error_prone_core")
 }
 
-val disableErrorProne = gradle.startParameter.projectProperties.get("disableErrorProne")?.toBoolean()
-  ?: false
+val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
 
 tasks {
   withType<JavaCompile>().configureEach {
-    options.errorprone {
-      isEnabled.set(!disableErrorProne)
+    with(options) {
+      errorprone {
+        if (disableErrorProne) {
+          logger.warn("Errorprone has been disabled. Build may not result in a valid PR build.")
+          isEnabled.set(false)
+        }
 
-      disableWarningsInGeneratedCode.set(true)
-      allDisabledChecksAsWarnings.set(true)
+        disableWarningsInGeneratedCode.set(true)
+        allDisabledChecksAsWarnings.set(true)
 
-      excludedPaths.set(".*/build/generated/.*")
+        excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
 
-      if (System.getenv("CI") == null) {
+        // it's very convenient to debug stuff in the javaagent using System.out.println
+        // and we don't want to conditionally only check this in CI
+        // because then the remote gradle cache won't work for local builds
+        // so we check this via checkstyle instead
         disable("SystemOut")
-      }
 
-      disable("BooleanParameter")
+        disable("BooleanParameter")
 
-      // Doesn't work well with Java 8
-      disable("FutureReturnValueIgnored")
+        // Doesn't work well with Java 8
+        disable("FutureReturnValueIgnored")
 
-      // Require Guava
-      disable("AutoValueImmutableFields")
-      disable("StringSplitter")
-      disable("ImmutableMemberCollection")
+        // Require Guava
+        disable("AutoValueImmutableFields")
+        disable("StringSplitter")
+        disable("ImmutableMemberCollection")
 
-      // Don't currently use this (to indicate a local variable that's mutated) but could
-      // consider for future.
-      disable("Var")
+        // Don't currently use this (to indicate a local variable that's mutated) but could
+        // consider for future.
+        disable("Var")
 
-      // Don't support Android without desugar
-      disable("AndroidJdkLibsChecker")
-      disable("Java7ApiChecker")
-      disable("StaticOrDefaultInterfaceMethod")
+        // We use animal sniffer
+        disable("AndroidJdkLibsChecker")
+        disable("Java7ApiChecker")
+        disable("Java8ApiChecker")
 
-      // Great check, but for bytecode manipulation it's too common to separate over
-      // onEnter / onExit
-      // TODO(anuraaga): Only disable for auto instrumentation project.
-      disable("MustBeClosedChecker")
+        // Prevents defensive null checks and we have nullaway anyways
+        disable("ParameterMissingNullable")
 
-      // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
-      // disabling entirely.
-      disable("MixedMutabilityReturnType")
+        // javax.annotation.Nullable doesn't support type parameter assertions
+        disable("VoidMissingNullable")
 
-      // We end up using obsolete types if a library we're instrumenting uses them.
-      disable("JdkObsolete")
-      disable("JavaUtilDate")
+        // Overlaps with nullaway
+        disable("FieldMissingNullable")
+        disable("ReturnMissingNullable")
 
-      // Limits API possibilities
-      disable("NoFunctionalReturnType")
+        disable("StaticOrDefaultInterfaceMethod")
 
-      // Storing into a variable in onEnter triggers this unfortunately.
-      // TODO(anuraaga): Only disable for auto instrumentation project.
-      disable("UnusedVariable")
+        // Great check, but for bytecode manipulation it's too common to separate over
+        // onEnter / onExit
+        // TODO(anuraaga): Only disable for auto instrumentation project.
+        disable("MustBeClosedChecker")
 
-      // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
-      // some moving.
-      disable("DefaultPackage")
+        // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
+        // disabling entirely.
+        disable("MixedMutabilityReturnType")
 
-      // TODO(anuraaga): Remove this, all our advice classes miss constructors but probably should
-      // address this.
-      disable("PrivateConstructorForUtilityClass")
+        // We end up using obsolete types if a library we're instrumenting uses them.
+        disable("JdkObsolete")
+        disable("JavaUtilDate")
 
-      // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
-      // with older APIs.
-      disable("InconsistentOverloads")
-      disable("TypeParameterNaming")
+        // Limits API possibilities
+        disable("NoFunctionalReturnType")
 
-      // We don't use tools that recognize.
-      disable("InlineMeSuggester")
-      disable("DoNotCallSuggester")
+        // Storing into a variable in onEnter triggers this unfortunately.
+        // TODO(anuraaga): Only disable for auto instrumentation project.
+        disable("UnusedVariable")
 
-      if (name.contains("Jmh") || name.contains("Test")) {
-        disable("HashCodeToString")
-        disable("MemberName")
+        // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
+        // some moving.
+        disable("DefaultPackage")
+
+        // TODO(anuraaga): Remove this, all our advice classes miss constructors but probably should
+        // address this.
+        disable("PrivateConstructorForUtilityClass")
+
+        // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
+        // with older APIs.
+        disable("InconsistentOverloads")
+        disable("TypeParameterNaming")
+
+        // We don't use tools that recognize.
+        disable("InlineMeSuggester")
+        disable("DoNotCallSuggester")
+
+        if (name.contains("Jmh") || name.contains("Test")) {
+          disable("HashCodeToString")
+          disable("MemberName")
+        }
       }
     }
   }

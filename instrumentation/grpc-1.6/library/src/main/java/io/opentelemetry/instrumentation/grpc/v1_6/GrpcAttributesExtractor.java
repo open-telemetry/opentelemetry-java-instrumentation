@@ -9,16 +9,16 @@ import io.grpc.Status;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
-final class GrpcAttributesExtractor extends AttributesExtractor<GrpcRequest, Status> {
+final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
   @Override
-  protected void onStart(AttributesBuilder attributes, GrpcRequest grpcRequest) {
+  public void onStart(AttributesBuilder attributes, GrpcRequest grpcRequest) {
     // No request attributes
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       GrpcRequest request,
       @Nullable Status status,

@@ -17,5 +17,6 @@ public class ReflectionIgnoredTypesConfigurer implements IgnoredTypesConfigurer 
   public void configure(Config config, IgnoredTypesBuilder builder) {
     builder.allowClass("jdk.internal.reflect.Reflection");
     builder.allowClass("sun.reflect.Reflection");
+    builder.allowClass("java.lang.Class");
   }
 }

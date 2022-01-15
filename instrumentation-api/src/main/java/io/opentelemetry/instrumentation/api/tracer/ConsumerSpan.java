@@ -8,13 +8,17 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKey;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import javax.annotation.Nullable;
 
 /**
  * This class encapsulates the context key for storing the current {@link SpanKind#CONSUMER} span in
  * the {@link Context}.
+ *
+ * @deprecated This class should not be used directly; it's functionality is encapsulated inside the
+ *     {@linkplain io.opentelemetry.instrumentation.api.instrumenter.Instrumenter Instrumenter API}.
  */
+@Deprecated
 public final class ConsumerSpan {
 
   /**

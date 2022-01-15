@@ -20,12 +20,12 @@ import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.FieldVisitor;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.pool.TypePool;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 final class RealFieldInjector implements AsmVisitorWrapper {
 
@@ -124,7 +124,10 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         if (!foundField) {
           cv.visitField(
               // Field should be transient to avoid being serialized with the object.
-              Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC,
+              Opcodes.ACC_PRIVATE
+                  | Opcodes.ACC_VOLATILE
+                  | Opcodes.ACC_TRANSIENT
+                  | Opcodes.ACC_SYNTHETIC,
               fieldName,
               fieldType.getDescriptor(),
               null,

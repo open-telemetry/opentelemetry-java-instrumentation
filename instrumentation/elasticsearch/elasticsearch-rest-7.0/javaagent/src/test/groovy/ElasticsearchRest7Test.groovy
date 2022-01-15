@@ -34,6 +34,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2")
+    // limit memory usage
+    elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m")
     elasticsearch.start()
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
@@ -67,11 +69,11 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GET _cluster/health"
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
+            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
           }
         }
       }
@@ -125,11 +127,11 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
+            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
+            "$SemanticAttributes.DB_OPERATION" "GET _cluster/health"
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
+            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
           }
         }
         span(2) {

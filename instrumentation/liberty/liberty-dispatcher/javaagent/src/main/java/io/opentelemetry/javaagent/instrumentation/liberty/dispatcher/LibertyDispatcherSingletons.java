@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -16,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 
 public final class LibertyDispatcherSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-dispatcher";
@@ -34,15 +32,14 @@ public final class LibertyDispatcherSingletons {
         new LibertyDispatcherNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<LibertyRequest, LibertyResponse>newBuilder(
+        Instrumenter.<LibertyRequest, LibertyResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addContextCustomizer(
-                (context, request, attributes) -> ServerSpanNaming.init(context, CONTAINER))
+            .addContextCustomizer(ServerSpanNaming.get())
             .addRequestMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(LibertyDispatcherRequestGetter.GETTER);
+            .newServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }
 
   public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {

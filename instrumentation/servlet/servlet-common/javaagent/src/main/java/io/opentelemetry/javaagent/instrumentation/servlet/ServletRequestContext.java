@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public class ServletRequestContext<T> {
   private final T request;

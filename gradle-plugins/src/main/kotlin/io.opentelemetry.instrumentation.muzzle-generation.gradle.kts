@@ -1,5 +1,6 @@
 import io.opentelemetry.javaagent.muzzle.generation.ClasspathByteBuddyPlugin
 import io.opentelemetry.javaagent.muzzle.generation.ClasspathTransformation
+import net.bytebuddy.ClassFileVersion
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 import net.bytebuddy.build.gradle.Transformation
 
@@ -67,6 +68,7 @@ fun createLanguageTask(
   return tasks.register<ByteBuddySimpleTask>(name) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
+    classFileVersion = ClassFileVersion.JAVA_V8
     var transformationClassPath = inputClasspath
     val compileTask = compileTaskProvider.get()
     if (compileTask is AbstractCompile) {

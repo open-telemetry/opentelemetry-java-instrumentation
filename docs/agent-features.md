@@ -10,8 +10,8 @@ provides.
   - Zipkin
 - Bundled propagators
   - [W3C TraceContext / Baggage](https://www.w3.org/TR/trace-context/)
-  - All Java [trace propagator extensions](https://github.com/open-telemetry/opentelemetry-java/tree/master/extensions/trace-propagators)
-- Environment variable configuration as per [spec](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md)
+  - All Java [trace propagator extensions](https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators)
+- Environment variable configuration as per [spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md)
   - Additional support for system properties for same variables by transforming UPPER_UNDERSCORE -> lower.dot
   - Ability to disable individual instrumentation, or only enable certain ones.
 - Ability to load a custom exporter via an external JAR library

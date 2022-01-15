@@ -94,7 +94,7 @@ dependencies {
 
   components.all<NettyAlignmentRule>()
 
-  compileOnly("org.checkerframework:checker-qual")
+  compileOnly("com.google.code.findbugs:jsr305")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
@@ -102,13 +102,28 @@ dependencies {
   testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 
   testImplementation("org.objenesis:objenesis")
-  testImplementation("org.spockframework:spock-core")
+  testImplementation("org.spockframework:spock-core") {
+    // exclude optional dependencies
+    exclude(group = "cglib", module = "cglib-nodep")
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+    exclude(group = "org.junit.platform", module = "junit-platform-testkit")
+    exclude(group = "org.jetbrains", module = "annotations")
+    exclude(group = "org.objenesis", module = "objenesis")
+    exclude(group = "org.ow2.asm", module = "asm")
+  }
+  testImplementation("org.spockframework:spock-junit4") {
+    // spock-core is already added as dependency
+    // exclude it here to avoid pulling in optional dependencies
+    exclude(group = "org.spockframework", module = "spock-core")
+  }
   testImplementation("ch.qos.logback:logback-classic")
   testImplementation("org.slf4j:log4j-over-slf4j")
   testImplementation("org.slf4j:jcl-over-slf4j")
   testImplementation("org.slf4j:jul-to-slf4j")
-  testImplementation("info.solidsoft.spock:spock-global-unroll")
   testImplementation("com.github.stefanbirkner:system-rules")
+
+  codenarc("org.codenarc:CodeNarc:2.2.0")
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
 }
 
 tasks {
@@ -198,14 +213,12 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
-  jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
+  jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
-  inputs.file(trustStore)
   // Work around payara not working when this is set for some reason.
   if (project.name != "jaxrs-2.0-payara-testing") {
-    jvmArgs("-Djavax.net.ssl.trustStore=${trustStore.absolutePath}")
-    jvmArgs("-Djavax.net.ssl.trustStorePassword=testing")
+    jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
   // All tests must complete within 15 minutes.
@@ -213,8 +226,9 @@ tasks.withType<Test>().configureEach {
   timeout.set(Duration.ofMinutes(15))
 
   retry {
+    val retryTests = System.getenv("CI") != null || rootProject.hasProperty("retryTests")
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries.set(if (System.getenv("CI") != null) 5 else 0)
+    maxRetries.set(if (retryTests) 5 else 0)
   }
 
   reports {
@@ -226,25 +240,40 @@ tasks.withType<Test>().configureEach {
   }
 }
 
+class KeystoreArgumentsProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val trustStore: File
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
+    "-Djavax.net.ssl.trustStorePassword=testing"
+  )
+}
+
 afterEvaluate {
   val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
   val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
     ?: false
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
-      javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
-        implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
-      })
+      javaLauncher.set(
+        javaToolchains.launcherFor {
+          languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+          implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
+        }
+      )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
       // of Java version.
       if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && otelJava.maxJavaVersionForTests.isPresent) {
-        javaLauncher.set(javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
-        })
+        javaLauncher.set(
+          javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
+          }
+        )
       }
     }
 
@@ -262,7 +291,6 @@ afterEvaluate {
 
 codenarc {
   configFile = rootProject.file("buildscripts/codenarc.groovy")
-  toolVersion = "2.0.0"
 }
 
 checkstyle {
@@ -280,7 +308,7 @@ idea {
 }
 
 when (projectDir.name) {
-  "bootstrap", "javaagent", "library", "testing" -> {
+  "bootstrap", "javaagent", "library", "library-autoconfigure", "testing" -> {
     // We don't use this group anywhere in our config, but we need to make sure it is unique per
     // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
     // https://github.com/gradle/gradle/issues/847
@@ -298,6 +326,7 @@ configurations.configureEach {
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")).using(project(":javaagent-instrumentation-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))

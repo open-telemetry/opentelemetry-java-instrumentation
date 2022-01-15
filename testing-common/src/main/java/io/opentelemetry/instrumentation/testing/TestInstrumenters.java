@@ -25,13 +25,13 @@ final class TestInstrumenters {
 
   TestInstrumenters(OpenTelemetry openTelemetry) {
     testInstrumenter =
-        Instrumenter.<String, Void>newBuilder(openTelemetry, "test", name -> name)
+        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             .newInstrumenter(SpanKindExtractor.alwaysInternal());
     testClientInstrumenter =
-        Instrumenter.<String, Void>newBuilder(openTelemetry, "test", name -> name)
+        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
     testServerInstrumenter =
-        Instrumenter.<String, Void>newBuilder(openTelemetry, "test", name -> name)
+        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             .newInstrumenter(SpanKindExtractor.alwaysServer());
   }
 

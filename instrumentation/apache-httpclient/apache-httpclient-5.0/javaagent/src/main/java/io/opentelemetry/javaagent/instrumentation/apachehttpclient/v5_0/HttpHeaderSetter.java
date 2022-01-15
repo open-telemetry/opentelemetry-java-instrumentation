@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 
-final class HttpHeaderSetter implements TextMapSetter<ClassicHttpRequest> {
+enum HttpHeaderSetter implements TextMapSetter<ClassicHttpRequest> {
+  INSTANCE;
 
   @Override
   public void set(ClassicHttpRequest carrier, String key, String value) {

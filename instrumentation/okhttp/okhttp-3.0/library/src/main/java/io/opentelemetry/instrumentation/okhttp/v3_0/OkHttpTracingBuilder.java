@@ -63,7 +63,7 @@ public final class OkHttpTracingBuilder {
     OkHttpNetAttributesExtractor netAttributesExtractor = new OkHttpNetAttributesExtractor();
 
     Instrumenter<Request, Response> instrumenter =
-        Instrumenter.<Request, Response>newBuilder(
+        Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesExtractor))

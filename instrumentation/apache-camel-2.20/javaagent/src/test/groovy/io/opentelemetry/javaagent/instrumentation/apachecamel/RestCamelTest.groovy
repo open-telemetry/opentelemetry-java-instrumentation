@@ -18,6 +18,7 @@ import spock.lang.Shared
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class RestCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 
@@ -77,8 +78,8 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           kind CLIENT
           parentSpanId(span(0).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "GET"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "apache-camel.uri" "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"
           }
         }
@@ -87,15 +88,19 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           kind SERVER
           parentSpanId(span(1).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_SCHEME.key" "http"
-            "$SemanticAttributes.HTTP_HOST.key" "localhost:$port"
-            "$SemanticAttributes.HTTP_TARGET.key" "/api/firstModule/unit/unitOne"
-            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-            "$SemanticAttributes.HTTP_USER_AGENT.key" String
-            "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-            "$SemanticAttributes.HTTP_METHOD.key" "GET"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT.key" Long
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
+            "$SemanticAttributes.HTTP_TARGET" "/api/firstModule/unit/unitOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_SERVER_NAME" String
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            // TODO: camel instrumentation does not use ServerSpanNaming to update the route, so the matched route is provided by the servlet instrumentation
+            "$SemanticAttributes.HTTP_ROUTE" "/*"
           }
         }
         it.span(3) {
@@ -103,8 +108,8 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           kind INTERNAL
           parentSpanId(span(2).spanId)
           attributes {
-            "$SemanticAttributes.HTTP_METHOD.key" "GET"
-            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_URL" "http://localhost:$port/api/firstModule/unit/unitOne"
             "apache-camel.uri" String
           }
         }

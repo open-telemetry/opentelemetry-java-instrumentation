@@ -25,33 +25,38 @@ dependencies {
 }
 
 tasks {
-  // Extracts manifest from OpenTelemetry Java agent to reuse it later
-  val agentManifest by registering(Copy::class) {
-    dependsOn(agent)
-    from(
-      zipTree(agent.singleFile).matching {
-        include("META-INF/MANIFEST.MF")
-      }
-    )
-    into("$buildDir/tmp")
-  }
-
   jar {
-    dependsOn(agentManifest)
-    manifest.from("$buildDir/tmp/META-INF/MANIFEST.MF")
+    dependsOn(agent)
     from(zipTree(agent.singleFile))
     from(extensionLibs) {
       into("extensions")
+    }
+
+    doFirst {
+      manifest.from(
+        zipTree(agent.singleFile).matching {
+          include("META-INF/MANIFEST.MF")
+        }.singleFile
+      )
     }
   }
 
   afterEvaluate {
     withType<Test>().configureEach {
-      dependsOn(jar)
-
       jvmArgs("-Dotel.javaagent.debug=true")
-      jvmArgs("-javaagent:${jar.get().archiveFile.get().asFile.absolutePath}")
       jvmArgs("-Dotel.metrics.exporter=otlp")
+
+      jvmArgumentProviders.add(JavaagentProvider(jar.flatMap { it.archiveFile }))
     }
   }
+}
+
+class JavaagentProvider(
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  val agentJar: Provider<RegularFile>
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-javaagent:${file(agentJar).absolutePath}"
+  )
 }

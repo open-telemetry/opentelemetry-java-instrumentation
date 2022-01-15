@@ -20,10 +20,10 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
       AttributeKey.booleanKey("guava.canceled");
 
   public static GuavaAsyncOperationEndStrategy create() {
-    return newBuilder().build();
+    return builder().build();
   }
 
-  public static GuavaAsyncOperationEndStrategyBuilder newBuilder() {
+  public static GuavaAsyncOperationEndStrategyBuilder builder() {
     return new GuavaAsyncOperationEndStrategyBuilder();
   }
 

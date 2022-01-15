@@ -8,12 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 class HttpUrlNetAttributesExtractor
     extends NetClientAttributesExtractor<HttpURLConnection, Integer> {
   @Override
-  public @Nullable String transport(HttpURLConnection connection, @Nullable Integer status) {
+  @Nullable
+  public String transport(HttpURLConnection connection, @Nullable Integer status) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
@@ -28,7 +29,8 @@ class HttpUrlNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(HttpURLConnection connection, @Nullable Integer status) {
+  @Nullable
+  public String peerIp(HttpURLConnection connection, @Nullable Integer status) {
     return null;
   }
 }

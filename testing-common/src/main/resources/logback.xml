@@ -2,11 +2,11 @@
 <configuration>
 
   <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>
+    <encoder>
+      <pattern>
         %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-      </Pattern>
-    </layout>
+      </pattern>
+    </encoder>
   </appender>
 
   <root level="INFO">
@@ -14,4 +14,5 @@
   </root>
 
   <logger name="org.testcontainers" level="WARN" />
+  <logger name="io.opentelemetry.testing.internal" level="WARN"/>
 </configuration>

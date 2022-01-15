@@ -1,6 +1,7 @@
 plugins {
   id "org.gradle.playframework" version "0.12"
-  id 'com.google.cloud.tools.jib' version '2.5.0'
+  id "com.google.cloud.tools.jib" version "3.1.4"
+  id "com.diffplug.spotless" version "6.1.2"
 }
 
 ext {
@@ -26,7 +27,15 @@ repositories {
   }
 }
 
-description = 'Play Integration Tests.'
+description = "Play Integration Tests."
+
+spotless {
+  scala {
+    scalafmt()
+    licenseHeaderFile(rootProject.file("../../../buildscripts/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.scala")
+  }
+}
 
 dependencies {
   implementation "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
@@ -39,7 +48,7 @@ def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 def tag = findProperty("tag") ?: new Date().format("yyyyMMdd.HHmmSS")
 
 jib {
-  from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
+  from.image = "openjdk:$targetJDK"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

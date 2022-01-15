@@ -26,7 +26,7 @@ public final class SpringKafkaSingletons {
     SpanNameExtractor<ConsumerRecords<?, ?>> spanNameExtractor =
         MessagingSpanNameExtractor.create(attributesExtractor);
 
-    return Instrumenter.<ConsumerRecords<?, ?>, Void>newBuilder(
+    return Instrumenter.<ConsumerRecords<?, ?>, Void>builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addSpanLinksExtractor(

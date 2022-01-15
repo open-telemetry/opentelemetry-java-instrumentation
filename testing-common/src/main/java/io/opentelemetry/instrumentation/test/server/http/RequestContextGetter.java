@@ -10,7 +10,7 @@ import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext;
 import io.opentelemetry.testing.internal.io.netty.util.AsciiString;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
   INSTANCE;

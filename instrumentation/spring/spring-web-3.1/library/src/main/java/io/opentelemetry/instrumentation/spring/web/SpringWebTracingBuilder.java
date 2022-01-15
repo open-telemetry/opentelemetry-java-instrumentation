@@ -63,7 +63,7 @@ public final class SpringWebTracingBuilder {
     SpringWebNetAttributesExtractor netAttributesExtractor = new SpringWebNetAttributesExtractor();
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
-        Instrumenter.<HttpRequest, ClientHttpResponse>newBuilder(
+        Instrumenter.<HttpRequest, ClientHttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
@@ -72,7 +72,7 @@ public final class SpringWebTracingBuilder {
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(new HttpRequestSetter());
+            .newClientInstrumenter(HttpRequestSetter.INSTANCE);
 
     return new SpringWebTracing(instrumenter);
   }

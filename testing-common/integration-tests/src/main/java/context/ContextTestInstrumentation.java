@@ -53,9 +53,16 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+
       VirtualField<KeyClass, Context> virtualField =
           VirtualField.find(KeyClass.class, Context.class);
-      Context context = virtualField.computeIfNull(thiz, Context.FACTORY);
+
+      Context context = virtualField.get(thiz);
+      if (context == null) {
+        context = new Context();
+        virtualField.set(thiz, context);
+      }
+
       contextCount = ++context.count;
     }
   }

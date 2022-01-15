@@ -8,9 +8,10 @@ package io.opentelemetry.instrumentation.api.db;
 import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)
@@ -19,19 +20,35 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class SqlStatementSanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
-  private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.newBuilder().setMaximumSize(1000).build();
+  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
+      Cache.bounded(1000);
 
   public static SqlStatementInfo sanitize(@Nullable String statement) {
+    return sanitize(statement, SqlDialect.DEFAULT);
+  }
+
+  public static SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
     if (!isStatementSanitizationEnabled() || statement == null) {
       return SqlStatementInfo.create(statement, null, null);
     }
     return sqlToStatementInfoCache.computeIfAbsent(
-        statement,
+        CacheKey.create(statement, dialect),
         k -> {
           supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-          return AutoSqlSanitizer.sanitize(statement);
+          return AutoSqlSanitizer.sanitize(statement, dialect);
         });
+  }
+
+  @AutoValue
+  abstract static class CacheKey {
+
+    static CacheKey create(String statement, SqlDialect dialect) {
+      return new AutoValue_SqlStatementSanitizer_CacheKey(statement, dialect);
+    }
+
+    abstract String getStatement();
+
+    abstract SqlDialect getDialect();
   }
 
   private SqlStatementSanitizer() {}

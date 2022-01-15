@@ -18,7 +18,7 @@ muzzle {
   pass {
     group.set("org.jboss.resteasy")
     module.set("resteasy-core")
-    versions.set("[4.0.0.Final,)")
+    versions.set("[4.0.0.Final,6)")
   }
 }
 
@@ -32,7 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing"))
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   testLibrary("org.jboss.resteasy:resteasy-undertow:3.1.0.Final") {
@@ -41,7 +41,11 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.1.0.Final")
 
   // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-core:+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-core:5.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:5.+")
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:5.+") {
+    exclude("org.jboss.resteasy", "resteasy-client")
+  }
 }
 
 tasks {

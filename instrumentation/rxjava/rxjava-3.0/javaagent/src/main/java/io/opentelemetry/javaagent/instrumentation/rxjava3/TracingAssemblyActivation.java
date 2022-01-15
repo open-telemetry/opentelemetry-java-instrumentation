@@ -21,7 +21,7 @@ public final class TracingAssemblyActivation {
 
   public static void activate(Class<?> clz) {
     if (activated.get(clz).compareAndSet(false, true)) {
-      TracingAssembly.newBuilder()
+      TracingAssembly.builder()
           .setCaptureExperimentalSpanAttributes(
               Config.get()
                   .getBoolean("otel.instrumentation.rxjava.experimental-span-attributes", false))

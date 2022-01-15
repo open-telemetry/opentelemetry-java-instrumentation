@@ -9,7 +9,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesExtractor
     extends SqlAttributesExtractor<CassandraRequest, ExecutionInfo> {

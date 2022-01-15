@@ -29,13 +29,26 @@ import java.util.function.Consumer
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
-  DefaultHttpClient client
+  DefaultHttpClient client = buildClient(false)
 
-  def setupSpec() {
+  @Shared
+  DefaultHttpClient clientWithReadTimeout = buildClient(true)
+
+  DefaultHttpClient buildClient(boolean readTimeout) {
     HttpParams httpParams = new BasicHttpParams()
     HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+    if (readTimeout) {
+      HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
+    }
     httpParams.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME, ThreadSafeClientConnManagerFactory.getName())
     client = new DefaultHttpClient(httpParams)
+  }
+
+  DefaultHttpClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
   }
 
   static class ThreadSafeClientConnManagerFactory implements ClientConnectionManagerFactory {
@@ -47,11 +60,23 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   def cleanupSpec() {
     client.getConnectionManager().shutdown()
+    clientWithReadTimeout.getConnectionManager().shutdown()
+  }
+
+  @Override
+  String userAgent() {
+    return "apachehttpclient"
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 
   @Override
   T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
+    request.addHeader("user-agent", userAgent())
     headers.entrySet().each {
       request.setHeader(new BasicHeader(it.key, it.value))
     }
@@ -120,12 +145,12 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
       callback.accept(it)
     }
   }
@@ -139,12 +164,12 @@ class ApacheClientHostAbsoluteUriRequest extends ApacheHttpClientTest<BasicHttpR
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request)
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request) {
       callback.accept(it)
     }
   }
@@ -159,12 +184,12 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }
@@ -178,12 +203,12 @@ class ApacheClientHostAbsoluteUriRequestContext extends ApacheHttpClientTest<Bas
 
   @Override
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
+    return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
+    getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }
@@ -197,12 +222,12 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request)
+    return getClient(uri).execute(request)
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(request) {
+    getClient(uri).execute(request) {
       callback.accept(it)
     }
   }
@@ -216,12 +241,12 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest>
 
   @Override
   HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, new BasicHttpContext())
+    return getClient(uri).execute(request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    client.execute(request, {
+    getClient(uri).execute(request, {
       callback.accept(it)
     }, new BasicHttpContext())
   }

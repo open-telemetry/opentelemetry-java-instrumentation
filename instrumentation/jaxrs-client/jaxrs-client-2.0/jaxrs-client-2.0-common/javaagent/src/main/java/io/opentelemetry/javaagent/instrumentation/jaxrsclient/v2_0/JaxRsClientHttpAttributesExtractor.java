@@ -10,15 +10,16 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JaxRsClientHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ClientRequestContext, ClientResponseContext> {
 
   @Override
-  protected @Nullable String method(ClientRequestContext httpRequest) {
+  @Nullable
+  protected String method(ClientRequestContext httpRequest) {
     return httpRequest.getMethod();
   }
 
@@ -33,13 +34,15 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLength(
+  @Nullable
+  protected Long requestContentLength(
       ClientRequestContext httpRequest, @Nullable ClientResponseContext httpResponse) {
     return null;
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
+  @Nullable
+  protected Long requestContentLengthUncompressed(
       ClientRequestContext httpRequest, @Nullable ClientResponseContext httpResponse) {
     return null;
   }
@@ -57,14 +60,16 @@ final class JaxRsClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLength(
+  @Nullable
+  protected Long responseContentLength(
       ClientRequestContext httpRequest, ClientResponseContext httpResponse) {
     int length = httpResponse.getLength();
     return length != -1 ? (long) length : null;
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
+  @Nullable
+  protected Long responseContentLengthUncompressed(
       ClientRequestContext httpRequest, ClientResponseContext httpResponse) {
     return null;
   }

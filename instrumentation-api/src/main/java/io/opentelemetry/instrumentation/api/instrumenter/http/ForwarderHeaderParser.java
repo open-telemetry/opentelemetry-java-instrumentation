@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 final class ForwarderHeaderParser {
 

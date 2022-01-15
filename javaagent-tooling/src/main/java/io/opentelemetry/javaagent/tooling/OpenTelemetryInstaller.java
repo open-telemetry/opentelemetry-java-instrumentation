@@ -5,60 +5,58 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesAdapter;
+import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@AutoService(AgentListener.class)
-public class OpenTelemetryInstaller implements AgentListener {
-  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
-
-  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
-
-  @Override
-  public void beforeAgent(Config config) {
-    installAgentTracer(config);
-  }
+public class OpenTelemetryInstaller {
 
   /**
-   * Register agent tracer if no agent tracer is already registered.
+   * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
+   * AutoConfiguredOpenTelemetrySdk}.
    *
-   * @param config Configuration instance
+   * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  @SuppressWarnings("unused")
-  public static synchronized void installAgentTracer(Config config) {
-    if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(Config config) {
+    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
 
-      if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
-        GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
-      } else {
-        System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
+    AutoConfiguredOpenTelemetrySdkBuilder builder =
+        AutoConfiguredOpenTelemetrySdk.builder()
+            .setResultAsGlobal(true)
+            .addPropertiesSupplier(config::getAllProperties);
 
-        OpenTelemetrySdk sdk =
-            OpenTelemetrySdkAutoConfiguration.initialize(true, new ConfigPropertiesAdapter(config));
-        OpenTelemetrySdkAccess.internalSetForceFlush(
-            (timeout, unit) -> {
-              CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-              CompletableResultCode flushResult = IntervalMetricReader.forceFlushGlobal();
-              CompletableResultCode.ofAll(Arrays.asList(traceResult, flushResult))
-                  .join(timeout, unit);
-            });
-      }
-
-    } else {
-      logger.info("Tracing is disabled.");
+    ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
+    if (classLoader != null) {
+      // May be null in unit tests.
+      builder.setServiceClassLoader(classLoader);
     }
+
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = builder.build();
+    OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
+
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        (timeout, unit) -> {
+          CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+          CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
+          CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
+              .join(timeout, unit);
+        });
+
+    SdkLogEmitterProvider sdkLogEmitterProvider =
+        autoConfiguredSdk.getOpenTelemetrySdk().getSdkLogEmitterProvider();
+    LogEmitterProvider logEmitterProvider =
+        DelegatingLogEmitterProvider.from(sdkLogEmitterProvider);
+    AgentLogEmitterProvider.set(logEmitterProvider);
+
+    return autoConfiguredSdk;
   }
 }

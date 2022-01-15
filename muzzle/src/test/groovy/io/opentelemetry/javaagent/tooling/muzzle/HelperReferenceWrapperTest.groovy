@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
 import muzzle.HelperReferenceWrapperTestClasses
-import net.bytebuddy.jar.asm.Type
+import org.objectweb.asm.Type
 import net.bytebuddy.pool.TypePool
 import spock.lang.Shared
 import spock.lang.Specification
@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toList
 class HelperReferenceWrapperTest extends Specification {
 
   @Shared
-  def baseHelperClass = ClassRef.newBuilder(HelperReferenceWrapperTest.name + '$BaseHelper')
+  def baseHelperClass = ClassRef.builder(HelperReferenceWrapperTest.name + '$BaseHelper')
     .setSuperClassName(HelperReferenceWrapperTestClasses.AbstractClasspathType.name)
     .addFlag(ManifestationFlag.ABSTRACT)
     .addMethod(new Source[0], new Flag[0], "foo", Type.VOID_TYPE)
@@ -28,7 +28,7 @@ class HelperReferenceWrapperTest extends Specification {
     .build()
 
   @Shared
-  def helperClass = ClassRef.newBuilder(HelperReferenceWrapperTest.name + '$Helper')
+  def helperClass = ClassRef.builder(HelperReferenceWrapperTest.name + '$Helper')
     .setSuperClassName(baseHelperClass.className)
     .addInterfaceName(HelperReferenceWrapperTestClasses.Interface2.name)
     .addMethod(new Source[0], new Flag[0], "bar", Type.VOID_TYPE)

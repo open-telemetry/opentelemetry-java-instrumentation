@@ -24,7 +24,7 @@ class GuavaAsyncOperationEndStrategyTest extends Specification {
 
   def underTest = GuavaAsyncOperationEndStrategy.create()
 
-  def underTestWithExperimentalAttributes = GuavaAsyncOperationEndStrategy.newBuilder()
+  def underTestWithExperimentalAttributes = GuavaAsyncOperationEndStrategy.builder()
     .setCaptureExperimentalSpanAttributes(true)
     .build()
 

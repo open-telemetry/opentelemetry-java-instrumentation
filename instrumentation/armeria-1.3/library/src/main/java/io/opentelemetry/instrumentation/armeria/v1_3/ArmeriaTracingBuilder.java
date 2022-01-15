@@ -21,14 +21,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 public final class ArmeriaTracingBuilder {
 
@@ -108,12 +107,12 @@ public final class ArmeriaTracingBuilder {
         new ArmeriaHttpServerAttributesExtractor(capturedHttpServerHeaders);
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(httpClientAttributesExtractor));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
-        Instrumenter.newBuilder(
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(serverAttributesExtractor));
@@ -137,7 +136,8 @@ public final class ArmeriaTracingBuilder {
                 HttpSpanStatusExtractor.create(serverAttributesExtractor)))
         .addAttributesExtractor(new ArmeriaNetServerAttributesExtractor())
         .addAttributesExtractor(serverAttributesExtractor)
-        .addRequestMetrics(HttpServerMetrics.get());
+        .addRequestMetrics(HttpServerMetrics.get())
+        .addContextCustomizer(ServerSpanNaming.get());
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
@@ -148,7 +148,7 @@ public final class ArmeriaTracingBuilder {
     }
 
     return new ArmeriaTracing(
-        clientInstrumenterBuilder.newClientInstrumenter(new ClientRequestContextSetter()),
-        serverInstrumenterBuilder.newServerInstrumenter(new RequestContextGetter()));
+        clientInstrumenterBuilder.newClientInstrumenter(ClientRequestContextSetter.INSTANCE),
+        serverInstrumenterBuilder.newServerInstrumenter(RequestContextGetter.INSTANCE));
   }
 }

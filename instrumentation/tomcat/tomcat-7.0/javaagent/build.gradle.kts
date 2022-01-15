@@ -13,9 +13,12 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
   implementation(project(":instrumentation:tomcat:tomcat-common:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
+  compileOnly("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
+
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
@@ -24,4 +27,8 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:[9.+, 10)")
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:[9.+, 10)")
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
 }

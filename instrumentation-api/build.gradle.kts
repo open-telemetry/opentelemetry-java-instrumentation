@@ -1,10 +1,14 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
   id("org.xbib.gradle.plugin.jflex")
 
   id("otel.java-conventions")
+  id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
   id("otel.japicmp-conventions")
   id("otel.publish-conventions")
+  id("otel.jmh-conventions")
 }
 
 sourceSets {
@@ -14,27 +18,20 @@ sourceSets {
       // set to generate into. By default it would be the src/main directory itself.
       srcDir("$buildDir/generated/sources/jflex")
     }
-
-    val cachingShadedDeps = project(":instrumentation-api-caching")
-    output.dir(cachingShadedDeps.file("build/extracted/shadow"), "builtBy" to ":instrumentation-api-caching:extractShadowJar")
   }
 }
 
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
-  compileOnly(project(":instrumentation-api-caching"))
-
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
 
-  implementation("io.opentelemetry:opentelemetry-api-metrics")
   implementation("org.slf4j:slf4j-api")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testCompileOnly(project(":instrumentation-api-caching"))
   testImplementation(project(":testing-common"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
@@ -45,6 +42,10 @@ dependencies {
 }
 
 tasks {
+  named<Checkstyle>("checkstyleMain") {
+    exclude("**/concurrentlinkedhashmap/**")
+  }
+
   sourcesJar {
     dependsOn("generateJflex")
   }
@@ -64,6 +65,13 @@ tasks {
     filter {
       excludeTestsMatching("StatementSanitizationConfigTest")
       isFailOnNoMatchingTests = false
+    }
+  }
+
+  // TODO this should live in jmh-conventions
+  named<JavaCompile>("jmhCompileGeneratedClasses") {
+    options.errorprone {
+      isEnabled.set(false)
     }
   }
 }

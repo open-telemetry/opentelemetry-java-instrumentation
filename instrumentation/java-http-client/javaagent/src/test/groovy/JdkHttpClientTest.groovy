@@ -31,6 +31,9 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
     headers.entrySet().each {
       requestBuilder.header(it.key, it.value)
     }
+    if (uri.toString().contains("/read-timeout")) {
+      requestBuilder.timeout(Duration.of(READ_TIMEOUT_MS, ChronoUnit.MILLIS))
+    }
     return requestBuilder.build()
   }
 
@@ -57,5 +60,10 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   @Override
   boolean testWithClientParent() {
     false
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    true
   }
 }

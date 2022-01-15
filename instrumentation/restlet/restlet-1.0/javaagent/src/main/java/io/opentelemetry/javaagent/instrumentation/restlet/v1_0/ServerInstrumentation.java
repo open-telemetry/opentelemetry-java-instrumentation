@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v1_0;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v1_0.RestletSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.restlet.v1_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.restlet.v1_0.internal.RestletServerSpanNaming;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -76,8 +76,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
-        ServerSpanNaming.updateServerSpanName(
-            context, CONTROLLER, RestletServerSpanNaming.SERVER_SPAN_NAME, "/*");
+        ServerSpanNaming.updateServerSpanName(context, CONTROLLER, serverSpanName(), "/*");
       }
 
       if (exception != null) {

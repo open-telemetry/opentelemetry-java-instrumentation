@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.Request
@@ -20,6 +22,7 @@ import javax.ws.rs.ext.ExceptionMapper
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -39,6 +42,18 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
     server.start()
 
     return server
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
   }
 
   @Override
@@ -96,11 +111,15 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
         Response.status(ERROR.status).entity(ERROR.body).build()
       }
     }
-  }
 
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HttpCodecFilter.handleRead"
+    @GET
+    @Path("child")
+    Response exception(@QueryParam("id") String id) {
+      controller(INDEXED_CHILD) {
+        INDEXED_CHILD.collectSpanAttributes { it == "id" ? id : null }
+        Response.status(INDEXED_CHILD.status).entity(INDEXED_CHILD.body).build()
+      }
+    }
   }
 
   static class ExceptionHttpHandler extends HttpHandler {

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="testServer" class="org.restlet.ext.spring.SpringServer" scope="prototype">
+    <constructor-arg value="http"/>
+  </bean>
+
+  <bean name="testRouter" class="org.restlet.ext.spring.SpringRouter">
+
+    <property name="attachments">
+      <map>
+        <entry key="/success"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$SuccessResource"/>
+        <entry key="/error-status"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ErrorResource"/>
+        <entry key="/exception"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$ExceptionResource"/>
+        <entry key="/query"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$QueryParamResource"/>
+        <entry key="/path/{id}/param"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$PathParamResource"/>
+        <entry key="/redirect"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$RedirectResource"/>
+        <entry key="/captureHeaders"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$CaptureHeadersResource"/>
+        <entry key="/child"
+          value="io.opentelemetry.instrumentation.restlet.v1_0.RestletAppTestBase$IndexedChildResource"/>
+      </map>
+    </property>
+  </bean>
+
+</beans>

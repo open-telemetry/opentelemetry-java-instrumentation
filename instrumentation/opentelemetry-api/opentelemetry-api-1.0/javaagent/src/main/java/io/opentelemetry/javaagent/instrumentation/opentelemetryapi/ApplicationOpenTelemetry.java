@@ -15,7 +15,24 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Applica
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationOpenTelemetry implements OpenTelemetry {
 
-  public static final OpenTelemetry INSTANCE = new ApplicationOpenTelemetry();
+  public static final OpenTelemetry INSTANCE;
+
+  static {
+    OpenTelemetry instance = null;
+    try {
+      // this class is defined in opentelemetry-api-1.10
+      Class<?> clazz =
+          Class.forName(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.ApplicationOpenTelemetry110");
+      instance = (OpenTelemetry) clazz.getField("INSTANCE").get(null);
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
+      // fall through
+    }
+    if (instance == null) {
+      instance = new ApplicationOpenTelemetry();
+    }
+    INSTANCE = instance;
+  }
 
   private final TracerProvider applicationTracerProvider;
 

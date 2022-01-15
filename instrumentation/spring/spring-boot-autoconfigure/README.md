@@ -370,7 +370,7 @@ public class OpenTelemetryConfig {}
 
 #### Exporter Configurations
 
-This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/logging) Span Exporters.
+This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
 If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](/src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
 
@@ -410,4 +410,4 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ### Starter Guide
 
-Check out the opentelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the opentelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.

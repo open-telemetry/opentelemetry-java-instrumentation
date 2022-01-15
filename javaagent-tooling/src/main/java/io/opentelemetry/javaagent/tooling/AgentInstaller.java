@@ -6,14 +6,17 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
+import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
@@ -31,24 +34,22 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,8 @@ public class AgentInstaller {
 
   private static final Logger logger;
 
-  private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -77,23 +79,6 @@ public class AgentInstaller {
     addByteBuddyRawSetting();
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
-
-    // ensure java.lang.reflect.Proxy is loaded, as transformation code uses it internally
-    // loading java.lang.reflect.Proxy after the bytebuddy transformer is set up causes
-    // the internal-proxy instrumentation module to transform it, and then the bytebuddy
-    // transformation code also tries to load it, which leads to a ClassCircularityError
-    // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
-    // internal-proxy instrumentation module after the bytebuddy transformer is set up
-    Proxy.class.getName();
-
-    // caffeine can trigger first access of ForkJoinPool under transform(), which leads ForkJoinPool
-    // not to get transformed itself.
-    // loading it early here still allows it to be retransformed as part of agent installation below
-    ForkJoinPool.class.getName();
-
-    // caffeine uses AtomicReferenceArray, ensure it is loaded to avoid ClassCircularityError during
-    // transform.
-    AtomicReferenceArray.class.getName();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
@@ -130,7 +115,19 @@ public class AgentInstaller {
 
     setBootstrapPackages(config);
 
-    runBeforeAgentListeners(agentListeners, config);
+    // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
+    // called
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = null;
+    if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
+      logger.info("Tracing and metrics are disabled because noop is enabled.");
+      GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
+    } else {
+      autoConfiguredSdk = installOpenTelemetrySdk(config);
+    }
+
+    if (autoConfiguredSdk != null) {
+      runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
+    }
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
@@ -141,6 +138,9 @@ public class AgentInstaller {
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
             .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
+    if (JavaModule.isSupported()) {
+      agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
+    }
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
@@ -174,7 +174,11 @@ public class AgentInstaller {
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
-    runAfterAgentListeners(agentListeners, config);
+
+    if (autoConfiguredSdk != null) {
+      runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
+    }
+
     return resettableClassFileTransformer;
   }
 
@@ -195,9 +199,12 @@ public class AgentInstaller {
   }
 
   private static void runBeforeAgentListeners(
-      Iterable<AgentListener> agentListeners, Config config) {
+      Iterable<AgentListener> agentListeners,
+      Config config,
+      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     for (AgentListener agentListener : agentListeners) {
       agentListener.beforeAgent(config);
+      agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
 
@@ -216,7 +223,9 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners, Config config) {
+      Iterable<AgentListener> agentListeners,
+      Config config,
+      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -240,10 +249,12 @@ public class AgentInstaller {
         && isAppUsingCustomLogManager()) {
       logger.debug("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
-          "java.util.logging.LogManager", new DelayedAfterAgentCallback(config, agentListeners));
+          "java.util.logging.LogManager",
+          new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
     } else {
       for (AgentListener agentListener : agentListeners) {
         agentListener.afterAgent(config);
+        agentListener.afterAgent(config, autoConfiguredSdk);
       }
     }
   }
@@ -287,7 +298,7 @@ public class AgentInstaller {
         int amount, List<Class<?>> types, Map<List<Class<?>>, Throwable> failures) {}
   }
 
-  static class TransformLoggingListener implements AgentBuilder.Listener {
+  static class TransformLoggingListener extends AgentBuilder.Listener.Adapter {
 
     private static final TransformSafeLogger logger =
         TransformSafeLogger.getLogger(TransformLoggingListener.class);
@@ -317,21 +328,6 @@ public class AgentInstaller {
         DynamicType dynamicType) {
       logger.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
-
-    @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {}
-
-    @Override
-    public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
-
-    @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   /**
@@ -358,10 +354,15 @@ public class AgentInstaller {
   private static class DelayedAfterAgentCallback implements Runnable {
     private final Iterable<AgentListener> agentListeners;
     private final Config config;
+    private final AutoConfiguredOpenTelemetrySdk autoConfiguredSdk;
 
-    private DelayedAfterAgentCallback(Config config, Iterable<AgentListener> agentListeners) {
+    private DelayedAfterAgentCallback(
+        Config config,
+        Iterable<AgentListener> agentListeners,
+        AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
       this.agentListeners = agentListeners;
       this.config = config;
+      this.autoConfiguredSdk = autoConfiguredSdk;
     }
 
     @Override
@@ -381,6 +382,7 @@ public class AgentInstaller {
       for (AgentListener agentListener : agentListeners) {
         try {
           agentListener.afterAgent(config);
+          agentListener.afterAgent(config, autoConfiguredSdk);
         } catch (RuntimeException e) {
           logger.error("Failed to execute {}", agentListener.getClass().getName(), e);
         }
@@ -388,30 +390,7 @@ public class AgentInstaller {
     }
   }
 
-  private static class ClassLoadListener implements AgentBuilder.Listener {
-    @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {}
-
-    @Override
-    public void onTransformation(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b,
-        DynamicType dynamicType) {}
-
-    @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b) {}
-
-    @Override
-    public void onError(
-        String s, ClassLoader classLoader, JavaModule javaModule, boolean b, Throwable throwable) {}
-
+  private static class ClassLoadListener extends AgentBuilder.Listener.Adapter {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {

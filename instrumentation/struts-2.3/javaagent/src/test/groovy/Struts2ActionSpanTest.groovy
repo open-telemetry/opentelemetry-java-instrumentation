@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -29,6 +30,14 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
+
+  @Override
   boolean testPathParam() {
     return true
   }
@@ -36,12 +45,6 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   @Override
   boolean testErrorBody() {
     return false
-  }
-
-  // no idea how to test that in struts
-  @Override
-  boolean testCapturedHttpHeaders() {
-    false
   }
 
   @Override
@@ -68,14 +71,14 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     }
   }
 
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
         return getContextPath() + "/*"
       default:
-        return endpoint.resolvePath(address).path
+        return super.expectedHttpRoute(endpoint)
     }
   }
 
@@ -90,8 +93,8 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
       }
       def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.struts.GreetingAction"
-        "${SemanticAttributes.CODE_FUNCTION.key}" expectedMethodName
+        "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.struts.GreetingAction"
+        "$SemanticAttributes.CODE_FUNCTION" expectedMethodName
       }
       childOf((SpanData) parent)
     }

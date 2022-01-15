@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public final class ContextPropagationDebug {
 
   // locations where the context was propagated to another thread (tracking multiple steps is
   // helpful in akka where there is so much recursive async spawning of new work)
-  private static final ContextKey<List<Propagation>> THREAD_PROPAGATION_LOCATIONS =
+  private static final ContextKey<ContextPropagationDebug> THREAD_PROPAGATION_LOCATIONS =
       ContextKey.named("thread-propagation-locations");
 
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
@@ -33,18 +33,30 @@ public final class ContextPropagationDebug {
   private static final boolean FAIL_ON_CONTEXT_LEAK =
       Config.get().getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
 
+  // context to which debug locations were added
+  private final Context sourceContext;
+  private final List<Propagation> locations;
+  // context after adding debug locations
+  private Context wrappedContext;
+
+  private ContextPropagationDebug(Context sourceContext) {
+    this.sourceContext = sourceContext;
+    this.locations = new CopyOnWriteArrayList<>();
+  }
+
   public static boolean isThreadPropagationDebuggerEnabled() {
     return THREAD_PROPAGATION_DEBUGGER;
   }
 
   public static Context appendLocations(
       Context context, StackTraceElement[] locations, Object carrier) {
-    List<Propagation> currentLocations = ContextPropagationDebug.getPropagations(context);
-    if (currentLocations == null) {
-      currentLocations = new CopyOnWriteArrayList<>();
-      context = context.with(THREAD_PROPAGATION_LOCATIONS, currentLocations);
+    ContextPropagationDebug propagationDebug = ContextPropagationDebug.getPropagations(context);
+    if (propagationDebug == null) {
+      propagationDebug = new ContextPropagationDebug(context);
+      context = context.with(THREAD_PROPAGATION_LOCATIONS, propagationDebug);
+      propagationDebug.wrappedContext = context;
     }
-    currentLocations.add(0, new Propagation(carrier.getClass().getName(), locations));
+    propagationDebug.locations.add(0, new Propagation(carrier.getClass().getName(), locations));
     return context;
   }
 
@@ -69,14 +81,29 @@ public final class ContextPropagationDebug {
     }
   }
 
+  public static Context unwrap(Context context) {
+    if (context == null || !isThreadPropagationDebuggerEnabled()) {
+      return context;
+    }
+
+    ContextPropagationDebug propagationDebug = ContextPropagationDebug.getPropagations(context);
+    if (propagationDebug == null) {
+      return context;
+    }
+
+    // unwrap only if debug locations were the last thing that was added to the context
+    return propagationDebug.wrappedContext == context ? propagationDebug.sourceContext : context;
+  }
+
   @Nullable
-  private static List<Propagation> getPropagations(Context context) {
+  private static ContextPropagationDebug getPropagations(Context context) {
     return context.get(THREAD_PROPAGATION_LOCATIONS);
   }
 
   private static void debugContextPropagation(Context context) {
-    List<Propagation> propagations = getPropagations(context);
-    if (propagations != null) {
+    ContextPropagationDebug propagationDebug = getPropagations(context);
+    if (propagationDebug != null) {
+      List<Propagation> propagations = propagationDebug.locations;
       StringBuilder sb = new StringBuilder();
       Iterator<Propagation> i = propagations.iterator();
       while (i.hasNext()) {
@@ -103,6 +130,4 @@ public final class ContextPropagationDebug {
       this.location = location;
     }
   }
-
-  private ContextPropagationDebug() {}
 }

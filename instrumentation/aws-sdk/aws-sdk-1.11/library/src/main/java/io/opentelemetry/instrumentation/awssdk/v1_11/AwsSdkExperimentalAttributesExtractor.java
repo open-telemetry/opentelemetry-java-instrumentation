@@ -21,9 +21,10 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
-class AwsSdkExperimentalAttributesExtractor extends AttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkExperimentalAttributesExtractor
+    implements AttributesExtractor<Request<?>, Response<?>> {
   private static final String COMPONENT_NAME = "java-aws-sdk";
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
@@ -36,7 +37,7 @@ class AwsSdkExperimentalAttributesExtractor extends AttributesExtractor<Request<
       };
 
   @Override
-  protected void onStart(AttributesBuilder attributes, Request<?> request) {
+  public void onStart(AttributesBuilder attributes, Request<?> request) {
     set(attributes, AWS_AGENT, COMPONENT_NAME);
     set(attributes, AWS_SERVICE, request.getServiceName());
     set(attributes, AWS_OPERATION, extractOperationName(request));
@@ -55,7 +56,7 @@ class AwsSdkExperimentalAttributesExtractor extends AttributesExtractor<Request<
   }
 
   @Override
-  protected void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       Request<?> request,
       @Nullable Response<?> response,

@@ -59,8 +59,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public Connection getConnection(final String username, final String password)
-      throws SQLException {
+  public Connection getConnection(String username, String password) throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = computeDbInfo(connection);
     return new OpenTelemetryConnection(connection, dbInfo);
@@ -72,7 +71,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public void setLogWriter(final PrintWriter out) throws SQLException {
+  public void setLogWriter(PrintWriter out) throws SQLException {
     delegate.setLogWriter(out);
   }
 
@@ -82,7 +81,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public void setLoginTimeout(final int seconds) throws SQLException {
+  public void setLoginTimeout(int seconds) throws SQLException {
     delegate.setLoginTimeout(seconds);
   }
 
@@ -92,12 +91,12 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public <T> T unwrap(final Class<T> iface) throws SQLException {
+  public <T> T unwrap(Class<T> iface) throws SQLException {
     return delegate.unwrap(iface);
   }
 
   @Override
-  public boolean isWrapperFor(final Class<?> iface) throws SQLException {
+  public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return delegate.isWrapperFor(iface);
   }
 

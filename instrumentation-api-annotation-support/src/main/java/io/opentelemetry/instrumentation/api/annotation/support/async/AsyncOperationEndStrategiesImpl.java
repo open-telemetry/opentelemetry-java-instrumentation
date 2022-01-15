@@ -9,7 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.Nullable;
 
 /** Default strategies' registry implementation that uses strong references. */
 final class AsyncOperationEndStrategiesImpl extends AsyncOperationEndStrategies {

@@ -9,7 +9,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.jms.JMSException;
 
-public final class MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
+enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(MessageWithDestination message) {
@@ -23,7 +24,7 @@ public final class MessagePropertyGetter implements TextMapGetter<MessageWithDes
   @Override
   public String get(MessageWithDestination carrier, String key) {
     String propName = key.replace("-", MessagePropertySetter.DASH);
-    final Object value;
+    Object value;
     try {
       value = carrier.message().getObjectProperty(propName);
     } catch (JMSException e) {

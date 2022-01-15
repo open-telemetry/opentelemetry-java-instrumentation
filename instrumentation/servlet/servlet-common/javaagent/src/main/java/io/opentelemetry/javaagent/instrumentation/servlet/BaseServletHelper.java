@@ -5,20 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.FILTER;
+import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.SERVLET;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
@@ -27,6 +25,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
   private final Function<REQUEST, String> contextPathExtractor;
+  private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -35,6 +34,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
+    this.parameterExtractor =
+        ServletRequestParametersExtractor.enabled()
+            ? new ServletRequestParametersExtractor<>(accessor)
+            : null;
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -65,12 +68,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   public Context getServerContext(REQUEST request) {
-    Object context = accessor.getRequestAttribute(request, HttpServerTracer.CONTEXT_ATTRIBUTE);
+    Object context = accessor.getRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   private void attachServerContext(Context context, REQUEST request) {
-    accessor.setRequestAttribute(request, HttpServerTracer.CONTEXT_ATTRIBUTE, context);
+    accessor.setRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE, context);
   }
 
   public void recordException(Context context, Throwable throwable) {
@@ -84,7 +87,28 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       ServerSpanNaming.updateServerSpanName(
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
+
     return result;
+  }
+
+  /**
+   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
+   * instrumentation.
+   *
+   * <p>When SERVER span is created by servlet instrumentation we register {@link
+   * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
+   * by servlet instrumentation we call this method on exit from the last servlet or filter.
+   */
+  public void captureServletAttributes(Context context, REQUEST request) {
+    if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
+      return;
+    }
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan == null) {
+      return;
+    }
+
+    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
   }
 
   /*

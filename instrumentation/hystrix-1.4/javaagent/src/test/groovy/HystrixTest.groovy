@@ -4,6 +4,7 @@
  */
 
 import com.netflix.hystrix.HystrixCommand
+import com.netflix.hystrix.HystrixCommandProperties
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.concurrent.BlockingQueue
@@ -17,7 +18,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
 
   def "test command #action"() {
     setup:
-    def command = new HystrixCommand<String>(asKey("ExampleGroup")) {
+    def command = new HystrixCommand<String>(setter("ExampleGroup")) {
       @Override
       protected String run() throws Exception {
         return tracedMethod()
@@ -77,7 +78,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
 
   def "test command #action fallback"() {
     setup:
-    def command = new HystrixCommand<String>(asKey("ExampleGroup")) {
+    def command = new HystrixCommand<String>(setter("ExampleGroup")) {
       @Override
       protected String run() throws Exception {
         throw new IllegalArgumentException()
@@ -137,5 +138,12 @@ class HystrixTest extends AgentInstrumentationSpecification {
       }
       queue.take()
     }
+  }
+
+  def setter(String key) {
+    def setter = new HystrixCommand.Setter(asKey(key))
+    setter.andCommandPropertiesDefaults(new HystrixCommandProperties.Setter()
+      .withExecutionTimeoutInMilliseconds(10_000))
+    return setter
   }
 }

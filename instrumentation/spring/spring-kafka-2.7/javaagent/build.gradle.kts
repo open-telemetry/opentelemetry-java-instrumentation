@@ -15,12 +15,12 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  compileOnly(project(":instrumentation:kafka-clients:kafka-clients-0.11:bootstrap"))
-  implementation(project(":instrumentation:kafka-clients:kafka-clients-common:library"))
+  bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
-  testInstrumentation(project(":instrumentation:kafka-clients:kafka-clients-0.11:javaagent"))
+  testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
   testImplementation("org.testcontainers:kafka")
 

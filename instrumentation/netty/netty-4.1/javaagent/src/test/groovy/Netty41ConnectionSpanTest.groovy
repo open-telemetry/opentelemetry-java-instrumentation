@@ -69,8 +69,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
   }
 
   DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.path, Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host + ":" + uri.port)
     headers.each { k, v -> request.headers().set(k, v) }
     return request
   }
@@ -94,32 +94,42 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 5) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         span(1) {
+          name "RESOLVE"
+          kind INTERNAL
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_PEER_PORT" uri.port
+          }
+        }
+        span(2) {
           name "CONNECT"
           kind INTERNAL
           childOf(span(0))
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
-            "${SemanticAttributes.NET_PEER_PORT.key}" uri.port
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
-        span(2) {
+        span(3) {
           name "HTTP GET"
           kind CLIENT
           childOf(span(0))
         }
-        span(3) {
+        span(4) {
           name "test-http-server"
           kind SERVER
-          childOf(span(2))
+          childOf(span(3))
         }
       }
     }
@@ -138,7 +148,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 3) {
         span(0) {
           name "parent"
           kind INTERNAL
@@ -147,16 +157,26 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           errorEvent(thrownException.class, thrownException.message)
         }
         span(1) {
+          name "RESOLVE"
+          kind INTERNAL
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_PEER_PORT" uri.port
+          }
+        }
+        span(2) {
           name "CONNECT"
           kind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           status ERROR
           errorEvent(thrownException.class, thrownException.message)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
-            "${SemanticAttributes.NET_PEER_PORT.key}" uri.port
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
       }
