@@ -64,7 +64,6 @@ jobs:
           cache-read-only: true
           arguments: build
           build-root-directory: gradle-plugins
-          gradle-executable: ./gradlew
 
   test:
     runs-on: ubuntu-latest
@@ -248,7 +247,6 @@ jobs:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: publishToMavenLocal -x javadoc
           build-root-directory: gradle-plugins
-          gradle-executable: ./gradlew
 
       - name: Build distro
         uses: gradle/gradle-build-action@v2
