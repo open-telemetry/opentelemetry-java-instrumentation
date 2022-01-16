@@ -43,8 +43,10 @@ jobs:
           java-version: 11
 
       - name: Build
-        run: ../gradlew build
-        working-directory: gradle-plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
+          root-build-directory: gradle-plugins
 
   test:
     runs-on: ubuntu-latest
