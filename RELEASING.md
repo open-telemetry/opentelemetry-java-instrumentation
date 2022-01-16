@@ -26,14 +26,10 @@ Before making the release:
     * examples/extension/build.gradle
   * Bump the version in the download link in the root `README.md` file
 
-Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
+Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
-You will see a button that says "Run workflow". Press the button, then enter the following:
-* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
-* The release branch to use: <e.g. `v1.9.x`>
-* The version of the release: <e.g. `1.9.0`>
-
-(Yes there is redundancy between the above inputs that we plan to address.)
+Press the "Run workflow" button, then select the release branch from the dropdown list,
+e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
@@ -73,12 +69,10 @@ Before making the release:
   * examples/distro/build.gradle
   * examples/extension/build.gradle
 
-To make a patch release, open the patch release build workflow in your browser
-[here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
+Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
-You will see a button that says "Run workflow". Press the button, then enter the following:
-* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
-* The release branch to use: <e.g. `v1.9.x`>
-* The version of the release: <e.g. `1.9.1`>
+Press the "Run workflow" button, then select the release branch from the dropdown list,
+e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
-(Yes there is redundancy between the above inputs that we plan to address.)
+This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
+and pushes a git tag with the version number.
