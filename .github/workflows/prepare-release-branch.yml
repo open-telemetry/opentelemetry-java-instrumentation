@@ -1,0 +1,77 @@
+name: Prepare Release Branch
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare-release-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      release-branch-name: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Set release branch name
+        id: set-release-branch-name
+        run: |
+          release_branch_name=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts | sed -E 's/([0-9]+)\.([0-9]+)\.([0-9]+)-SNAPSHOT/v\1.\2.x/')
+          echo "::set-output name=release-branch-name::$release_branch_name"
+
+      - name: Create release branch
+        run: |
+          git checkout -b ${{ steps.set-release-branch-name.outputs.release-branch-name }}
+          git push origin ${{ steps.set-release-branch-name.outputs.release-branch-name }}
+
+  create-pull-request-against-release-branch:
+    needs: prepare-release-branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+
+      - name: Remove SNAPSHOT from version
+        run: |
+          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$v" "$v-alpha"
+
+      - name: Bump download link version
+        run: |
+          new_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+.[0-9]+.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          branch: prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          delete-branch: true
+          title: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          body: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+
+  create-pull-request-against-main:
+    needs: prepare-release-branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Bump SNAPSHOT version
+        run: |
+          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+          else
+            echo "unexpected version: $v"
+            exit 1
+          fi
+          bump="$major.$((minor + 1)).0"
+          .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$bump-SNAPSHOT" "$bump-alpha-SNAPSHOT"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: Bump snapshot version
+          branch: bump-snapshot-version
+          delete-branch: true
+          title: Bump snapshot version
+          body: Bump snapshot version
