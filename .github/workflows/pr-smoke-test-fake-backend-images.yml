@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -37,8 +35,6 @@ jobs:
         run: git config --system core.longpaths true
 
       - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
