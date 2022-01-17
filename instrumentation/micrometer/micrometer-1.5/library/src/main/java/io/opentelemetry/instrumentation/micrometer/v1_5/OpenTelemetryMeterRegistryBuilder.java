@@ -15,9 +15,16 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   private final OpenTelemetry openTelemetry;
+  private Clock clock = Clock.SYSTEM;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /** Sets a custom {@link Clock}. Useful for testing. */
+  public OpenTelemetryMeterRegistryBuilder setClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 
   /**
@@ -26,6 +33,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
    */
   public MeterRegistry build() {
     return new OpenTelemetryMeterRegistry(
-        Clock.SYSTEM, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
+        clock, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
   }
 }
