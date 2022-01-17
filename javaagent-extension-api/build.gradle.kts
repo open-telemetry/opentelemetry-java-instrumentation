@@ -18,4 +18,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")
   // autoconfigure is unstable, do not expose as api
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
 }
