@@ -39,14 +39,23 @@ jobs:
           new_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
           sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+.[0-9]+.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
 
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          commit-message: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
-          branch: prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }}
-          delete-branch: true
-          title: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
-          body: Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}"
+          git add -u
+          git commit -m "$msg"
+          git push origin HEAD:prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          gh pr create --title "$msg" \
+                       --body "$msg" \
+                       --head prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }} \
+                       --base ${{ needs.prepare-release-branch.outputs.release-branch-name }}
 
   create-pull-request-against-main:
     needs: prepare-release-branch
@@ -67,11 +76,17 @@ jobs:
           bump="$major.$((minor + 1)).0"
           .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$bump-SNAPSHOT" "$bump-alpha-SNAPSHOT"
 
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          commit-message: Bump snapshot version
-          branch: bump-snapshot-version
-          delete-branch: true
-          title: Bump snapshot version
-          body: Bump snapshot version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Bump snapshot version"
+          git add -u
+          git commit -m "$msg"
+          git push origin HEAD:bump-snapshot-version
+          gh pr create --title "$msg" --body "$msg" --head bump-snapshot-version --base main
