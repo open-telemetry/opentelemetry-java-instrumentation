@@ -21,6 +21,9 @@ dependencies {
   implementation(project(":javaagent-extension-api"))
   implementation("org.slf4j:slf4j-api")
 
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
+
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.assertj:assertj-core:3.19.0")

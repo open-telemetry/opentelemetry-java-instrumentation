@@ -40,8 +40,10 @@ final class AwsJsonProtocolFactoryAccess {
                   // AwsJsonProtocolFactory requires any URI to be present
                   .option(SdkClientOption.ENDPOINT, URI.create("http://empty"))
                   .build());
+      @SuppressWarnings("rawtypes")
       Class awsJsonProtocolClass =
           Class.forName("software.amazon.awssdk.protocols.json.AwsJsonProtocol");
+      @SuppressWarnings("unchecked")
       Object awsJsonProtocol = Enum.valueOf(awsJsonProtocolClass, "AWS_JSON");
       awsJsonProtocolFactoryBuilder
           .getClass()

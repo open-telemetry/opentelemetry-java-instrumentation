@@ -98,7 +98,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /** Adds {@link AttributesExtractor}s to extract attributes from requests and responses. */
-  public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
