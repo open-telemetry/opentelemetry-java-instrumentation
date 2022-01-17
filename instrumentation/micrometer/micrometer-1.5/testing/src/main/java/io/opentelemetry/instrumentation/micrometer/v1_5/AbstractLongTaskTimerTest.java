@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -171,78 +170,5 @@ public abstract class AbstractLongTaskTimerTest {
                             .points()
                             .satisfiesExactly(
                                 point -> assertThat(point).hasSumGreaterThan(100).hasCount(1))));
-  }
-
-  @Test
-  void testMicrometerHistogram() throws InterruptedException {
-    // given
-    LongTaskTimer timer =
-        LongTaskTimer.builder("testLongTaskTimerHistogram")
-            .description("This is a test timer")
-            .serviceLevelObjectives(Duration.ofMillis(100), Duration.ofMillis(1000))
-            .distributionStatisticBufferLength(10)
-            .register(Metrics.globalRegistry);
-
-    // when
-    LongTaskTimer.Sample sample1 = timer.start();
-    // only active tasks count
-    timer.start().stop();
-    TimeUnit.MILLISECONDS.sleep(100);
-    LongTaskTimer.Sample sample2 = timer.start();
-    LongTaskTimer.Sample sample3 = timer.start();
-    TimeUnit.MILLISECONDS.sleep(10);
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testLongTaskTimerHistogram.histogram",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGauge()
-                            .points()
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(2)
-                                        .attributes()
-                                        .containsEntry("le", "100"))
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(3)
-                                        .attributes()
-                                        .containsEntry("le", "1000"))));
-
-    // when
-    sample1.stop();
-    sample2.stop();
-    sample3.stop();
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testLongTaskTimerHistogram.histogram",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGauge()
-                            .points()
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(0)
-                                        .attributes()
-                                        .containsEntry("le", "100"))
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(0)
-                                        .attributes()
-                                        .containsEntry("le", "1000"))));
   }
 }
