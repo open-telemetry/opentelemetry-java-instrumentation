@@ -40,6 +40,9 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
+
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.assertj:assertj-core")

@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpStatusConverter;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,14 +40,18 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
-  protected final NetPeerAttributes netPeerAttributes;
+  protected final io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
+      netPeerAttributes;
 
-  protected HttpClientTracer(NetPeerAttributes netPeerAttributes) {
+  protected HttpClientTracer(
+      io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     super();
     this.netPeerAttributes = netPeerAttributes;
   }
 
-  protected HttpClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+  protected HttpClientTracer(
+      OpenTelemetry openTelemetry,
+      io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
     this.netPeerAttributes = netPeerAttributes;
   }

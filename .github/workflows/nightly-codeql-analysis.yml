@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
@@ -43,8 +41,6 @@ jobs:
       - uses: technote-space/workflow-conclusion-action@v2.2
 
       - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
 
       - uses: JasonEtco/create-an-issue@v2.6
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure

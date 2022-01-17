@@ -139,6 +139,8 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
   private abstract class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
       implements Action, Consumer<Throwable>, BiConsumer<T, Throwable> {
 
+    private static final long serialVersionUID = 1L;
+
     private final Context context;
 
     protected EndOnFirstNotificationConsumer(Context context) {

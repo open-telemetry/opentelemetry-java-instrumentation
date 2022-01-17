@@ -76,8 +76,7 @@ final class AsyncInstrumentRegistry {
                   .buildWithCallback(recorderCallback);
               return recorderCallback;
             });
-    recorder.addMeasurement(
-        attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+    recorder.addMeasurement(attributes, new DoubleMeasurementSource<>(obj, objMetric));
 
     return new AsyncMeasurementHandle(recorder, attributes);
   }
@@ -112,8 +111,7 @@ final class AsyncInstrumentRegistry {
                   .buildWithCallback(recorderCallback);
               return recorderCallback;
             });
-    recorder.addMeasurement(
-        attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+    recorder.addMeasurement(attributes, new DoubleMeasurementSource<>(obj, objMetric));
 
     return new AsyncMeasurementHandle(recorder, attributes);
   }
@@ -138,8 +136,7 @@ final class AsyncInstrumentRegistry {
                   .buildWithCallback(recorderCallback);
               return recorderCallback;
             });
-    recorder.addMeasurement(
-        attributes, new LongMeasurementSource(obj, (ToLongFunction<Object>) objMetric));
+    recorder.addMeasurement(attributes, new LongMeasurementSource<>(obj, objMetric));
 
     return new AsyncMeasurementHandle(recorder, attributes);
   }
@@ -165,8 +162,7 @@ final class AsyncInstrumentRegistry {
                   .buildWithCallback(recorderCallback);
               return recorderCallback;
             });
-    recorder.addMeasurement(
-        attributes, new DoubleMeasurementSource(obj, (ToDoubleFunction<Object>) objMetric));
+    recorder.addMeasurement(attributes, new DoubleMeasurementSource<>(obj, objMetric));
 
     return new AsyncMeasurementHandle(recorder, attributes);
   }
@@ -194,54 +190,62 @@ final class AsyncInstrumentRegistry {
   }
 
   private static final class DoubleMeasurementsRecorder
-      extends MeasurementsRecorder<DoubleMeasurementSource>
+      extends MeasurementsRecorder<DoubleMeasurementSource<?>>
       implements Consumer<ObservableDoubleMeasurement> {
 
     @Override
     public void accept(ObservableDoubleMeasurement measurement) {
-      measurements.forEach(
-          (attributes, gauge) -> {
-            Object obj = gauge.objWeakRef.get();
-            if (obj != null) {
-              measurement.record(gauge.metricFunction.applyAsDouble(obj), attributes);
-            }
-          });
+      measurements.forEach((attributes, gauge) -> record(measurement, attributes, gauge));
+    }
+
+    private static <T> void record(
+        ObservableDoubleMeasurement measurement,
+        Attributes attributes,
+        DoubleMeasurementSource<T> gauge) {
+      T obj = gauge.objWeakRef.get();
+      if (obj != null) {
+        measurement.record(gauge.metricFunction.applyAsDouble(obj), attributes);
+      }
     }
   }
 
   private static final class LongMeasurementsRecorder
-      extends MeasurementsRecorder<LongMeasurementSource>
+      extends MeasurementsRecorder<LongMeasurementSource<?>>
       implements Consumer<ObservableLongMeasurement> {
 
     @Override
     public void accept(ObservableLongMeasurement measurement) {
-      measurements.forEach(
-          (attributes, gauge) -> {
-            Object obj = gauge.objWeakRef.get();
-            if (obj != null) {
-              measurement.record(gauge.metricFunction.applyAsLong(obj), attributes);
-            }
-          });
+      measurements.forEach((attributes, gauge) -> record(measurement, attributes, gauge));
+    }
+
+    private static <T> void record(
+        ObservableLongMeasurement measurement,
+        Attributes attributes,
+        LongMeasurementSource<T> gauge) {
+      T obj = gauge.objWeakRef.get();
+      if (obj != null) {
+        measurement.record(gauge.metricFunction.applyAsLong(obj), attributes);
+      }
     }
   }
 
-  private static final class DoubleMeasurementSource {
+  private static final class DoubleMeasurementSource<T> {
 
-    private final WeakReference<Object> objWeakRef;
-    private final ToDoubleFunction<Object> metricFunction;
+    private final WeakReference<T> objWeakRef;
+    private final ToDoubleFunction<T> metricFunction;
 
-    private DoubleMeasurementSource(@Nullable Object obj, ToDoubleFunction<Object> metricFunction) {
+    private DoubleMeasurementSource(@Nullable T obj, ToDoubleFunction<T> metricFunction) {
       this.objWeakRef = new WeakReference<>(obj);
       this.metricFunction = metricFunction;
     }
   }
 
-  private static final class LongMeasurementSource {
+  private static final class LongMeasurementSource<T> {
 
-    private final WeakReference<Object> objWeakRef;
-    private final ToLongFunction<Object> metricFunction;
+    private final WeakReference<T> objWeakRef;
+    private final ToLongFunction<T> metricFunction;
 
-    private LongMeasurementSource(@Nullable Object obj, ToLongFunction<Object> metricFunction) {
+    private LongMeasurementSource(@Nullable T obj, ToLongFunction<T> metricFunction) {
       this.objWeakRef = new WeakReference<>(obj);
       this.metricFunction = metricFunction;
     }

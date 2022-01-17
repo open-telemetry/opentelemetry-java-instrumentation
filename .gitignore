@@ -43,6 +43,7 @@ out/
 # Visual Studio Code #
 ######################
 .vscode
+**/bin/
 
 # Others #
 ##########
