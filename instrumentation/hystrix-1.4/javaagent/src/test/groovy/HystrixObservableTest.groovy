@@ -16,7 +16,6 @@ import java.util.concurrent.LinkedBlockingQueue
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class HystrixObservableTest extends AgentInstrumentationSpecification {
 
@@ -27,7 +26,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
     def result = runWithSpan("parent") {
       def val = operation new HystrixObservableCommand<String>(setter("ExampleGroup")) {
         private String tracedMethod() {
-          runInternalSpan("tracedMethod")
+          runWithSpan("tracedMethod") {}
           return "Hello!"
         }
 

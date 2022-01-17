@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rxjava3
 
 import com.google.common.collect.Lists
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.rxjava3.core.BackpressureStrategy
@@ -23,7 +24,6 @@ import org.reactivestreams.Subscription
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
@@ -473,6 +473,19 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
       }
 
       throw new IllegalStateException("Unknown publisher: " + publisher)
+    }
+  }
+
+  def runUnderTraceWithoutExceptionCatch(String spanName, Closure c) {
+    Span span = openTelemetry.getTracer("test")
+      .spanBuilder(spanName)
+      .startSpan()
+    try {
+      return span.makeCurrent().withCloseable {
+        c.call()
+      }
+    } finally {
+      span.end()
     }
   }
 }

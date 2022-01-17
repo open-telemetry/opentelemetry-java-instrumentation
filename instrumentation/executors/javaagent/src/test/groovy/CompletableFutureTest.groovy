@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 @Requires({ javaVersion >= 1.8 })
 class CompletableFutureTest extends AgentInstrumentationSpecification {
 
@@ -26,7 +24,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     def supplier = new Supplier<String>() {
       @Override
       String get() {
-        runInternalSpan("supplier")
+        runWithSpan("supplier") {}
         sleep(1000)
         return "a"
       }
@@ -35,7 +33,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     def function = new Function<String, String>() {
       @Override
       String apply(String s) {
-        runInternalSpan("function")
+        runWithSpan("function") {}
         return s + "c"
       }
     }
@@ -288,7 +286,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
     }
   }
 
-  static class AppendingSupplier implements Supplier<String> {
+  class AppendingSupplier implements Supplier<String> {
     String letter
 
     AppendingSupplier(String letter) {
@@ -297,7 +295,7 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
 
     @Override
     String get() {
-      runInternalSpan("appendingSupplier")
+      runWithSpan("appendingSupplier") {}
       return letter + "b"
     }
   }
