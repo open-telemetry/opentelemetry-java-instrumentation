@@ -81,7 +81,7 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
   private abstract class EndOnFirstNotificationConsumer extends AtomicBoolean
       implements Runnable, Consumer<Throwable> {
 
-    private static final long serialVersionUID = 1920511192203758723L;
+    private static final long serialVersionUID = 1L;
 
     private final Context context;
 

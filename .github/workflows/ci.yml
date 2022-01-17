@@ -43,8 +43,10 @@ jobs:
           java-version: 11
 
       - name: Build
-        run: ../gradlew build
-        working-directory: gradle-plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
+          build-root-directory: gradle-plugins
 
   test:
     runs-on: ubuntu-latest
@@ -234,7 +236,6 @@ jobs:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: publishToMavenLocal -x javadoc
           build-root-directory: gradle-plugins
-          gradle-executable: ./gradlew
 
       - name: Build distro
         uses: gradle/gradle-build-action@v2
@@ -296,4 +297,3 @@ jobs:
         with:
           arguments: build publishToSonatype
           build-root-directory: gradle-plugins
-          gradle-executable: ./gradlew

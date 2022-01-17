@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 final class MuzzleCompilationException extends RuntimeException {
-  private static final long serialVersionUID = 2985678588724230135L;
+  private static final long serialVersionUID = 1L;
 
   MuzzleCompilationException(String message) {
     super(message);

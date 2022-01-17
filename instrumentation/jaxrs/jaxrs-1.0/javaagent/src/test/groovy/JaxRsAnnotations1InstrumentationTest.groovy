@@ -36,6 +36,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" paramName
           }
         }
         span(1) {

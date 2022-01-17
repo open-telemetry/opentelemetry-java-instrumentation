@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.config;
 
 public class ConfigParsingException extends RuntimeException {
-  private static final long serialVersionUID = 384182080843382041L;
+  private static final long serialVersionUID = 1L;
 
   public ConfigParsingException(String message) {
     super(message);

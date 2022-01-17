@@ -21,7 +21,7 @@ import java.util.Map;
 final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
     implements Attributes, AttributesBuilder {
 
-  private static final long serialVersionUID = -5018794111511349502L;
+  private static final long serialVersionUID = 1L;
 
   // Attributes
 

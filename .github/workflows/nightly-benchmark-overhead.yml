@@ -20,8 +20,10 @@ jobs:
         run: |
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
       - name: run tests
-        working-directory: benchmark-overhead
-        run: ./gradlew test
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
+          build-root-directory: benchmark-overhead
       - name: inspect the results dir
         working-directory: benchmark-overhead
         run: ls -lR results

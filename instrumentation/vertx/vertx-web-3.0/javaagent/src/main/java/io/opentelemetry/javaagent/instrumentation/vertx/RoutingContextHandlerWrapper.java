@@ -33,8 +33,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
     Span serverSpan = ServerSpan.fromContextOrNull(Context.current());
     try {
       if (serverSpan != null) {
-        // TODO should update only SERVER span using
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/465
+        // TODO should update SERVER span name/route using ServerSpanNaming
         serverSpan.updateName(context.currentRoute().getPath());
       }
     } catch (RuntimeException ex) {
