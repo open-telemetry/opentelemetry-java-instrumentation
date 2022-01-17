@@ -88,7 +88,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
@@ -97,7 +97,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       case LOGIN:
         return getContextPath() + "/*"
       default:
-        return super.expectedServerSpanName(endpoint)
+        return super.expectedHttpRoute(endpoint)
     }
   }
 

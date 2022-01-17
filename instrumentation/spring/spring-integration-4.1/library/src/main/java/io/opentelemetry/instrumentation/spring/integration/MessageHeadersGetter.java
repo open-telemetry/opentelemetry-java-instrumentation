@@ -23,8 +23,10 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
   @Override
   public Iterable<String> keys(MessageWithChannel carrier) {
     MessageHeaders headers = carrier.getMessage().getHeaders();
+    @SuppressWarnings("unchecked")
     Map<String, List<String>> nativeHeaders =
-        headers.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+        (Map<String, List<String>>)
+            headers.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
     if (nativeHeaders != null) {
       return nativeHeaders.keySet();
     }
@@ -50,8 +52,10 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
 
   @Nullable
   private static String getNativeHeader(MessageHeaders carrier, String key) {
+    @SuppressWarnings("unchecked")
     Map<String, List<String>> nativeMap =
-        carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+        (Map<String, List<String>>)
+            carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
     if (nativeMap == null) {
       return null;
     }

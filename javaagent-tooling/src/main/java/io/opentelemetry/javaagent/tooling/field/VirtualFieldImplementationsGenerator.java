@@ -303,7 +303,7 @@ final class VirtualFieldImplementationsGenerator {
       }
     }
 
-    public static VirtualField getVirtualField(Class keyClass, Class contextClass) {
+    public static VirtualField<?, ?> getVirtualField(Class<?> keyClass, Class<?> contextClass) {
       // We do not actually check the keyClass here - but that should be fine since compiler would
       // check things for us.
       return INSTANCE;

@@ -22,8 +22,10 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-extension-aws")
 
-  // 1.2.0 allows to get the function ARN
-  testLibrary("com.amazonaws:aws-lambda-java-core:1.2.0")
+  // allows to get the function ARN
+  testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
+  // allows to get the default events
+  testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("commons-io:commons-io:2.2")

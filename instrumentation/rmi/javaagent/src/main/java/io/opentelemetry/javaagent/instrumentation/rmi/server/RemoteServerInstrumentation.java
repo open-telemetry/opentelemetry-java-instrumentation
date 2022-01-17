@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerSin
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -28,7 +29,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RemoteServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.rmi.Remote"));
+    return implementsInterface(named("java.rmi.Remote"))
+        .and(not(nameStartsWith("org.springframework.remoting")));
   }
 
   @Override

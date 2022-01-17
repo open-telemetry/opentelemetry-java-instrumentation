@@ -152,7 +152,7 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
   }
 }

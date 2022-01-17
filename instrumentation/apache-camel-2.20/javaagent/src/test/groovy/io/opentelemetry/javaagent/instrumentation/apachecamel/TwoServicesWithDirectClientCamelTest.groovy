@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -22,6 +20,7 @@ import spock.lang.Shared
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 
@@ -136,6 +135,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
+            // TODO: camel instrumentation does not use ServerSpanNaming to update the route, so the matched route is provided by the servlet instrumentation
+            "$SemanticAttributes.HTTP_ROUTE" "/*"
           }
         }
         it.span(5) {

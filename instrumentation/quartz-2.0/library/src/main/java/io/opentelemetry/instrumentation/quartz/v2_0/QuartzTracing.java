@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
+import org.quartz.Matcher;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.matchers.EverythingMatcher;
@@ -51,7 +53,9 @@ public final class QuartzTracing {
     try {
       // We must pass a matcher to work around a bug in Quartz 2.0.0. It's unlikely anyone uses
       // a version before 2.0.2, but it makes muzzle simple.
-      scheduler.getListenerManager().addJobListener(jobListener, EverythingMatcher.allJobs());
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      Matcher<JobKey>[] matchers = new Matcher[] {EverythingMatcher.allJobs()};
+      scheduler.getListenerManager().addJobListener(jobListener, matchers);
     } catch (SchedulerException e) {
       throw new IllegalStateException("Could not add JobListener to Scheduler", e);
     }

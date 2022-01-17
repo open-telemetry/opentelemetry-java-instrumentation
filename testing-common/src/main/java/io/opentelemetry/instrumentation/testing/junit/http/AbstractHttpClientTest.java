@@ -398,7 +398,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           for (int i = 0; i < options.maxRedirects; i++) {
             assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           }
-          trace.hasSpansSatisfyingExactly(assertions.toArray(new Consumer[0]));
+          trace.hasSpansSatisfyingExactly(assertions);
         });
   }
 
@@ -1098,7 +1098,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
-    Map<String, String> headers = new HashMap();
+    Map<String, String> headers = new HashMap<>();
     for (String field :
         testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
       headers.put(field, "12345789");

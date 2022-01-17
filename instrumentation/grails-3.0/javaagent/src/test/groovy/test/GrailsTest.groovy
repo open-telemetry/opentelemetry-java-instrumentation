@@ -66,7 +66,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     if (endpoint == PATH_PARAM) {
       return getContextPath() + "/test/path"
     } else if (endpoint == QUERY_PARAM) {

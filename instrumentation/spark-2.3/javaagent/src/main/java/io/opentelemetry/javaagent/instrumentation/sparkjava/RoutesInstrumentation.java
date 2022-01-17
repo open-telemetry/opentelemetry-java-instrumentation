@@ -43,6 +43,7 @@ public class RoutesInstrumentation implements TypeInstrumentation {
 
       Span span = Java8BytecodeBridge.currentSpan();
       if (span != null && routeMatch != null) {
+        // TODO should update SERVER span name/route using ServerSpanNaming
         span.updateName(routeMatch.getMatchUri());
       }
     }

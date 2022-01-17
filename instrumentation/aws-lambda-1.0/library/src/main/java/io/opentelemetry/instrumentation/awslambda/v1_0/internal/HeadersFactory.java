@@ -27,7 +27,10 @@ final class HeadersFactory {
         String name = jParser.getCurrentName();
         if ("headers".equalsIgnoreCase(name)) {
           jParser.nextToken();
-          return OBJECT_MAPPER.readValue(jParser, Map.class);
+          @SuppressWarnings("unchecked")
+          Map<String, String> map =
+              (Map<String, String>) OBJECT_MAPPER.readValue(jParser, Map.class);
+          return map;
         }
       }
     } catch (Exception e) {
