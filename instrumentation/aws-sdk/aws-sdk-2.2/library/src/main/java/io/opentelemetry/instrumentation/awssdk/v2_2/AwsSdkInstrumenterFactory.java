@@ -17,19 +17,19 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
-  static final AwsSdkAttributesExtractor attributesExtractor = new AwsSdkAttributesExtractor();
+  static final AwsSdkHttpAttributesExtractor httpAttributesExtractor = new AwsSdkHttpAttributesExtractor();
   private static final AwsSdkNetAttributesExtractor netAttributesExtractor =
       new AwsSdkNetAttributesExtractor();
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
-      defaultAttributesExtractors = Arrays.asList(attributesExtractor, netAttributesExtractor);
+      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, netAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       extendedAttributesExtractors =
           Arrays.asList(
-              attributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
+            httpAttributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
 
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {

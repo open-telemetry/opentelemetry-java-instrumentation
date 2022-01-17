@@ -15,7 +15,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-class AwsSdkAttributesExtractor
+class AwsSdkHttpAttributesExtractor
     extends HttpClientAttributesExtractor<ExecutionAttributes, SdkHttpResponse> {
   @Override
   protected String url(ExecutionAttributes request) {
