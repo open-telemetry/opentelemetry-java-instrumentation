@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
+import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import scala.Option;
@@ -80,7 +81,32 @@ class AkkaHttpServerAttributesExtractor
   @Override
   @Nullable
   protected String route(HttpRequest request) {
-    return null;
+    if (request == null || request.getUri() == null || request.getUri().pathSegments() == null) {
+      return "Akka HTTP";
+    }
+
+    StringBuilder route = new StringBuilder().append("/");
+    int count = 0;
+    Iterator<String> it = request.getUri().pathSegments().iterator();
+
+    while (it.hasNext()) {
+      String segment = it.next();
+      route.append(segment);
+      count++;
+      // limit route to two segment to keep low cardinality
+      if (count >= 2) {
+        break;
+      }
+      if (it.hasNext()) {
+        route.append("/");
+      }
+    }
+
+    if (route.length() > 0) {
+      return route.toString();
+    }
+
+    return "Akka HTTP";
   }
 
   @Override
