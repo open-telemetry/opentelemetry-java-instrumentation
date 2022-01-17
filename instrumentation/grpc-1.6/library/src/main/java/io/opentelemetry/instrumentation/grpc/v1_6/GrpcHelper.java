@@ -11,6 +11,8 @@ final class GrpcHelper {
 
   static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
   static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
+  static final AttributeKey<String> RPC_GRPC_AUTHORITY =
+      AttributeKey.stringKey("rpc.grpc.authority");
 
   private GrpcHelper() {}
 }

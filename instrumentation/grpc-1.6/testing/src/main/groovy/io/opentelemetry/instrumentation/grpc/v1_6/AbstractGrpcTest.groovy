@@ -116,6 +116,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {
@@ -236,6 +237,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {
@@ -369,6 +371,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {
@@ -465,6 +468,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" grpcStatus.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(1) {
@@ -565,6 +569,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.UNKNOWN.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(1) {
@@ -740,6 +745,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {
@@ -871,6 +877,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.CANCELLED.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {
@@ -985,6 +992,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "ServerReflectionInfo"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(1) {
@@ -1093,6 +1101,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
         }
         span(2) {

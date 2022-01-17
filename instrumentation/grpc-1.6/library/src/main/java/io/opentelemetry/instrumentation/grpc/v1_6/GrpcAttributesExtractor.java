@@ -14,7 +14,9 @@ import javax.annotation.Nullable;
 final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
   @Override
   public void onStart(AttributesBuilder attributes, GrpcRequest grpcRequest) {
-    // No request attributes
+    if (grpcRequest.getAuthority() != null) {
+      attributes.put(GrpcHelper.RPC_GRPC_AUTHORITY, grpcRequest.getAuthority());
+    }
   }
 
   @Override

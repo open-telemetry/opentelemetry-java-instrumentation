@@ -17,6 +17,8 @@ public final class GrpcRequest {
 
   @Nullable private volatile SocketAddress remoteAddress;
 
+  @Nullable private volatile String authority;
+
   GrpcRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
@@ -42,5 +44,14 @@ public final class GrpcRequest {
 
   void setRemoteAddress(SocketAddress remoteAddress) {
     this.remoteAddress = remoteAddress;
+  }
+
+  @Nullable
+  public String getAuthority() {
+    return authority;
+  }
+
+  void setAuthority(String authority) {
+    this.authority = authority;
   }
 }

@@ -43,6 +43,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
     GrpcRequest request = new GrpcRequest(method, null, null);
+    request.setAuthority(next.authority());
     Context parentContext = Context.current();
     Context context = instrumenter.start(parentContext, request);
     ClientCall<REQUEST, RESPONSE> result;

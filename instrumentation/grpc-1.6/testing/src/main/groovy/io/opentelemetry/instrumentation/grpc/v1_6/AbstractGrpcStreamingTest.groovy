@@ -116,6 +116,7 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "Conversation"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
+            "rpc.grpc.authority" client.getChannel().authority()
           }
           (1..(clientMessageCount * serverMessageCount + clientMessageCount)).each {
             def messageId = it
