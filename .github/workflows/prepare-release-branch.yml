@@ -41,8 +41,8 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name trask
+          git config user.email trask.stalnaker@gmail.com
 
       - name: Create pull request
         env:
@@ -78,8 +78,8 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name trask
+          git config user.email trask.stalnaker@gmail.com
 
       - name: Create pull request
         env:
