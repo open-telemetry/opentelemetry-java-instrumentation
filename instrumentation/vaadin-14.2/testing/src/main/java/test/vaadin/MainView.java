@@ -14,6 +14,8 @@ import com.vaadin.flow.router.Route;
 @Route("main")
 public class MainView extends VerticalLayout {
 
+  private static final long serialVersionUID = 1L;
+
   public MainView() {
     Label label = new Label("Main view");
     label.setId("main.label");

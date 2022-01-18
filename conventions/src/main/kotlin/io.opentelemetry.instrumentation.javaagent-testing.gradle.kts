@@ -37,6 +37,9 @@ dependencies {
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
 
+  // Used by byte-buddy but not brought in as a transitive dependency
+  compileOnly("com.google.code.findbugs:annotations")
+
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }
 

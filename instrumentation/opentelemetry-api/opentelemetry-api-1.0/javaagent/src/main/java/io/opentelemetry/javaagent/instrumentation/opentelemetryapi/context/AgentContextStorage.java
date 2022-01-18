@@ -290,7 +290,6 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     private final Function<APPLICATION, AGENT> toAgent;
     private final Function<AGENT, APPLICATION> toApplication;
 
-    @SuppressWarnings("unchecked")
     ContextKeyBridge(
         String applicationKeyHolderClassName,
         String agentKeyHolderClassName,
@@ -299,6 +298,7 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
       this(applicationKeyHolderClassName, agentKeyHolderClassName, "KEY", toApplication, toAgent);
     }
 
+    @SuppressWarnings("unchecked")
     ContextKeyBridge(
         String applicationKeyHolderClassName,
         String agentKeyHolderClassName,

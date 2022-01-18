@@ -86,7 +86,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
   public static class RememberNettyRequestAdvice {
 
     @Advice.OnMethodExit
-    public static void rememberNettyRequest(@Advice.Return NettyResponseFuture responseFuture) {
+    public static void rememberNettyRequest(@Advice.Return NettyResponseFuture<?> responseFuture) {
       RequestContext requestContext =
           VirtualField.find(AsyncHandler.class, RequestContext.class)
               .get(responseFuture.getAsyncHandler());

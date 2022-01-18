@@ -43,7 +43,25 @@ java {
 tasks.withType<JavaCompile>().configureEach {
   with(options) {
     release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })
-    compilerArgs.add("-Werror")
+
+    if (name != "jmhCompileGeneratedClasses") {
+      compilerArgs.addAll(
+        listOf(
+          "-Xlint:all",
+          // We suppress the "try" warning because it disallows managing an auto-closeable with
+          // try-with-resources without referencing the auto-closeable within the try block.
+          "-Xlint:-try",
+          // We suppress the "processing" warning as suggested in
+          // https://groups.google.com/forum/#!topic/bazel-discuss/_R3A9TJSoPM
+          "-Xlint:-processing",
+          // We suppress the "options" warning because it prevents compilation on modern JDKs
+          "-Xlint:-options",
+
+          // Fail build on any warning
+          "-Werror"
+        )
+      )
+    }
   }
 }
 

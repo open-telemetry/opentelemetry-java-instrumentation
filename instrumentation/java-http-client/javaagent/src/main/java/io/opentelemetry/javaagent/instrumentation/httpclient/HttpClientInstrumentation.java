@@ -101,13 +101,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler bodyHandler,
+        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler<?> bodyHandler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
       parentContext = currentContext();
       if (bodyHandler != null) {
-        bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
+        bodyHandler = new BodyHandlerWrapper<>(bodyHandler, parentContext);
       }
       if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;

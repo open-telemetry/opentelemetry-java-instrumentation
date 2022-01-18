@@ -26,7 +26,13 @@ import org.joda.time.format.DateTimeFormatter;
  *
  * <p>Supporting custom POJOs using Joda is out of the scope of this class.
  */
+// Matches implementation of AWS Lambda runtime which targets an older version of Jackson than we
+// do.
+@SuppressWarnings("deprecation")
 class CustomJodaModule extends SimpleModule {
+
+  private static final long serialVersionUID = 1L;
+
   public CustomJodaModule() {
     super();
     addDeserializer(DateTime.class, new DateTimeDeserialiser());

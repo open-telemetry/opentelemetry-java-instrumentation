@@ -49,8 +49,8 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Action action,
-        @Advice.Argument(1) ActionRequest actionRequest,
+        @Advice.Argument(0) Action<?, ?, ?> action,
+        @Advice.Argument(1) ActionRequest<?> actionRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelRequest") ElasticTransportRequest transportRequest,
