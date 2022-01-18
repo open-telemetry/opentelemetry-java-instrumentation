@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -18,6 +16,8 @@ import org.springframework.remoting.support.RemoteExporter
 import spock.lang.Shared
 import springrmi.app.SpringRmiGreeter
 import springrmi.app.SpringRmiGreeterImpl
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class SpringRmiTest extends AgentInstrumentationSpecification {
 
@@ -54,9 +54,19 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     registryPort = PortUtils.findOpenPort()
+
     def serverApp = new SpringApplication(ServerConfig)
+    serverApp.setDefaultProperties([
+      "spring.jmx.enabled"              : false,
+      "spring.main.web-application-type": "none",
+    ])
     serverAppContext = serverApp.run()
+
     def clientApp = new SpringApplication(ClientConfig)
+    clientApp.setDefaultProperties([
+      "spring.jmx.enabled"              : false,
+      "spring.main.web-application-type": "none",
+    ])
     clientAppContext = clientApp.run()
   }
 
