@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.micrometer.v1_5;
-
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,15 +18,33 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
 
+// TODO: move to instrumentation-api; retry plugin retries tests in new CLs but same JVM; thus
+// micrometer is loaded once again, but two AsyncInstrumentRegistries get created for the same
+// OpenTelemetry Meter (in case of javaagent)
+
 // TODO: refactor this class, there's too much copy-paste here
-final class AsyncInstrumentRegistry {
+public final class AsyncInstrumentRegistry {
+
+  // we need to re-use instrument registries per OpenTelemetry instance so that async instruments
+  // that were created by other OpenTelemetryMeterRegistries can be reused; otherwise the SDK will
+  // start logging errors and async measurements will not be recorded
+  private static final Cache<Meter, AsyncInstrumentRegistry> asyncInstrumentRegistries =
+      Cache.weak();
+
+  /**
+   * Returns the {@link AsyncInstrumentRegistry} for the passed {@link Meter}. There is at most one
+   * {@link AsyncInstrumentRegistry} created for each OpenTelemetry {@link Meter}.
+   */
+  public static AsyncInstrumentRegistry getOrCreate(Meter meter) {
+    return asyncInstrumentRegistries.computeIfAbsent(meter, AsyncInstrumentRegistry::new);
+  }
 
   // using a weak ref so that the AsyncInstrumentRegistry (which is stored in a static maps) does
   // not hold strong references to Meter (and thus make it impossible to collect Meter garbage).
   // in practice this should never return null - OpenTelemetryMeterRegistry maintains a strong
   // reference to both Meter and AsyncInstrumentRegistry; if the meter registry is GC'd then its
   // corresponding AsyncInstrumentRegistry cannot possibly be used; and Meter cannot be GC'd until
-  // OpentelemetryMeterRegistry is GC'd
+  // OpenTelemetryMeterRegistry is GC'd
   private final WeakReference<Meter> meter;
 
   // values from the maps below are never removed - that is because the underlying OpenTelemetry
@@ -47,16 +63,7 @@ final class AsyncInstrumentRegistry {
     this.meter = new WeakReference<>(meter);
   }
 
-  <T> AsyncMeasurementHandle buildGauge(
-      io.micrometer.core.instrument.Meter.Id meterId,
-      Attributes attributes,
-      @Nullable T obj,
-      ToDoubleFunction<T> objMetric) {
-    return buildGauge(
-        meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
-  }
-
-  <T> AsyncMeasurementHandle buildGauge(
+  public <T> AsyncMeasurementHandle buildGauge(
       String name,
       String description,
       String baseUnit,
@@ -81,16 +88,7 @@ final class AsyncInstrumentRegistry {
     return new AsyncMeasurementHandle(recorder, attributes);
   }
 
-  <T> AsyncMeasurementHandle buildDoubleCounter(
-      io.micrometer.core.instrument.Meter.Id meterId,
-      Attributes attributes,
-      T obj,
-      ToDoubleFunction<T> objMetric) {
-    return buildDoubleCounter(
-        meterId.getName(), description(meterId), baseUnit(meterId), attributes, obj, objMetric);
-  }
-
-  <T> AsyncMeasurementHandle buildDoubleCounter(
+  public <T> AsyncMeasurementHandle buildDoubleCounter(
       String name,
       String description,
       String baseUnit,
@@ -116,7 +114,7 @@ final class AsyncInstrumentRegistry {
     return new AsyncMeasurementHandle(recorder, attributes);
   }
 
-  <T> AsyncMeasurementHandle buildLongCounter(
+  public <T> AsyncMeasurementHandle buildLongCounter(
       String name,
       String description,
       String baseUnit,
@@ -141,7 +139,7 @@ final class AsyncInstrumentRegistry {
     return new AsyncMeasurementHandle(recorder, attributes);
   }
 
-  <T> AsyncMeasurementHandle buildUpDownDoubleCounter(
+  public <T> AsyncMeasurementHandle buildUpDownDoubleCounter(
       String name,
       String description,
       String baseUnit,
@@ -251,7 +249,7 @@ final class AsyncInstrumentRegistry {
     }
   }
 
-  static final class AsyncMeasurementHandle {
+  public static final class AsyncMeasurementHandle {
 
     private final MeasurementsRecorder<?> measurementsRecorder;
     private final Attributes attributes;
@@ -261,7 +259,7 @@ final class AsyncInstrumentRegistry {
       this.attributes = attributes;
     }
 
-    void remove() {
+    public void remove() {
       measurementsRecorder.removeMeasurement(attributes);
     }
   }
