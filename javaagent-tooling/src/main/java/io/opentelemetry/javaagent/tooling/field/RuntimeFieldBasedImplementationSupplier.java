@@ -16,14 +16,15 @@ final class RuntimeFieldBasedImplementationSupplier
     implements RuntimeVirtualFieldSupplier.VirtualFieldSupplier {
 
   @Override
-  public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
+  public <U extends T, V extends F, T, F> VirtualField<U, V> find(
+      Class<T> type, Class<F> fieldType) {
     try {
       String virtualFieldImplClassName =
           getVirtualFieldImplementationClassName(type.getName(), fieldType.getName());
       Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
       Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
       @SuppressWarnings("unchecked")
-      VirtualField<U, F> field = (VirtualField<U, F>) method.invoke(null, type, fieldType);
+      VirtualField<U, V> field = (VirtualField<U, V>) method.invoke(null, type, fieldType);
       return field;
     } catch (ClassNotFoundException exception) {
       throw new IllegalStateException("VirtualField not found", exception);
