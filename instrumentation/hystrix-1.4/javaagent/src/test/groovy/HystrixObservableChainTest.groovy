@@ -10,7 +10,6 @@ import rx.Observable
 import rx.schedulers.Schedulers
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class HystrixObservableChainTest extends AgentInstrumentationSpecification {
 
@@ -20,7 +19,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
     def result = runWithSpan("parent") {
       def val = new HystrixObservableCommand<String>(setter("ExampleGroup")) {
         private String tracedMethod() {
-          runInternalSpan("tracedMethod")
+          runWithSpan("tracedMethod") {}
           return "Hello"
         }
 
@@ -38,7 +37,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         }.flatMap { str ->
         new HystrixObservableCommand<String>(setter("OtherGroup")) {
           private String anotherTracedMethod() {
-            runInternalSpan("anotherTracedMethod")
+            runWithSpan("anotherTracedMethod") {}
             return "$str!"
           }
 

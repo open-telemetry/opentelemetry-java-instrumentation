@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.kafka.clients.admin.NewTopic
@@ -24,7 +25,6 @@ import spock.lang.Shared
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
   @Shared
@@ -241,7 +241,7 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
     @KafkaListener(id = "testListener", topics = "testTopic", containerFactory = "batchFactory")
     void listener(List<ConsumerRecord<String, String>> records) {
-      runInternalSpan("consumer")
+      GlobalTraceUtil.runWithSpan("consumer") {}
       records.forEach({ record ->
         if (record.value() == "error") {
           throw new IllegalArgumentException("boom")

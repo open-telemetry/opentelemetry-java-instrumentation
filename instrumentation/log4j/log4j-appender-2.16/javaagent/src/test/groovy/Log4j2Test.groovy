@@ -14,7 +14,6 @@ import org.apache.logging.log4j.message.StringMapMessage
 import org.apache.logging.log4j.message.StructuredDataMessage
 import spock.lang.Unroll
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
@@ -26,7 +25,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
   def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
-      runUnderTrace("parent") {
+      runWithSpan("parent") {
         if (exception) {
           logger."$testMethod"("xyz", new IllegalStateException("hello"))
         } else {

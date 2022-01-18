@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
@@ -40,7 +41,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.util.Collections.singletonList
 import static org.junit.jupiter.api.Assumptions.assumeTrue
@@ -273,7 +273,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
-    return runUnderTrace("controller", closure)
+    return GlobalTraceUtil.runWithSpan("controller") {
+      closure.call()
+    }
   }
 
   def "test success with #count requests"() {
@@ -516,7 +518,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       // Force HTTP/1 via h1c so upgrade requests don't show up as traces
         .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
         .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
-      runUnderTrace("client " + index) {
+      runWithSpan("client " + index) {
         Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
         propagator.inject(Context.current(), request, setter)
         client.execute(request.build()).aggregate().thenRun {

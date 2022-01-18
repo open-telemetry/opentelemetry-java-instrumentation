@@ -22,7 +22,6 @@ import spock.lang.Unroll
 import java.time.Duration
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 @Unroll
 abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
@@ -510,13 +509,13 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     }
   }
 
-  static addOneFunc(int i) {
-    runInternalSpan("add one")
+  int addOneFunc(int i) {
+    runWithSpan("add one") {}
     return i + 1
   }
 
-  static addTwoFunc(int i) {
-    runInternalSpan("add two")
+  int addTwoFunc(int i) {
+    runWithSpan("add two") {}
     return i + 2
   }
 }

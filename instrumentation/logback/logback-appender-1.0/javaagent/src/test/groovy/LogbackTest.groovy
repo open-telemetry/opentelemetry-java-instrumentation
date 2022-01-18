@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import spock.lang.Unroll
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
@@ -25,7 +24,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
   def "test logger=#loggerName method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
-      runUnderTrace("parent") {
+      runWithSpan("parent") {
         if (exception) {
           logger."$testMethod"("xyz", new IllegalStateException("hello"))
         } else {
