@@ -20,12 +20,12 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
   @Override
   protected HttpClient buildHttpClient() throws Exception {
     return RatpackTracing.create(testing.getOpenTelemetry())
-        .instrumentedHttpClient(HttpClient.of(Action.noop()));
+        .instrumentHttpClient(HttpClient.of(Action.noop()));
   }
 
   @Override
   protected HttpClient buildHttpClient(Action<? super HttpClientSpec> action) throws Exception {
     return RatpackTracing.create(testing.getOpenTelemetry())
-        .instrumentedHttpClient(HttpClient.of(action));
+        .instrumentHttpClient(HttpClient.of(action));
   }
 }

@@ -126,7 +126,7 @@ class OpenTelemetryModule extends AbstractModule {
   @Singleton
   @Provides
   HttpClient instrumentedHttpClient(RatpackTracing ratpackTracing) {
-    return ratpackTracing.instrumentedHttpClient(HttpClient.of {})
+    return ratpackTracing.instrumentHttpClient(HttpClient.of {})
   }
 
   @Singleton

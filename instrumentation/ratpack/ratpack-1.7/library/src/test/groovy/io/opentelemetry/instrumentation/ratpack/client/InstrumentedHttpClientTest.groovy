@@ -65,7 +65,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -126,7 +126,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -191,7 +191,7 @@ class InstrumentedHttpClientTest extends Specification {
       spec.registry(
         Guice.registry { bindings ->
           ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentedHttpClient(
+          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(
             HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
           )
         }

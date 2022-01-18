@@ -78,7 +78,7 @@ public final class RatpackTracing {
   }
 
   /** Returns instrumented instance of {@link HttpClient} with OpenTelemetry. */
-  public HttpClient instrumentedHttpClient(HttpClient httpClient) throws Exception {
+  public HttpClient instrumentHttpClient(HttpClient httpClient) throws Exception {
     return httpClientInstrumenter.instrument(httpClient);
   }
 }
