@@ -22,16 +22,19 @@ public abstract class AbstractFunctionTimerTest {
 
   protected abstract InstrumentationExtension testing();
 
+  final MyTimer timerObj = new MyTimer();
+  final MyTimer anotherTimerObj = new MyTimer();
+
   @BeforeEach
   void cleanupMeters() {
+    timerObj.reset();
+    anotherTimerObj.reset();
     Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
   }
 
   @Test
   void testFunctionTimer() throws InterruptedException {
     // given
-    MyTimer timerObj = new MyTimer();
-
     FunctionTimer functionTimer =
         FunctionTimer.builder(
                 "testFunctionTimer",
@@ -103,8 +106,6 @@ public abstract class AbstractFunctionTimerTest {
   @Test
   void testNanoPrecision() {
     // given
-    MyTimer timerObj = new MyTimer();
-
     FunctionTimer.builder(
             "testNanoFunctionTimer",
             timerObj,
@@ -135,12 +136,9 @@ public abstract class AbstractFunctionTimerTest {
   @Test
   void functionTimersWithSameNameAndDifferentTags() {
     // given
-    MyTimer timerObj1 = new MyTimer();
-    MyTimer timerObj2 = new MyTimer();
-
     FunctionTimer.builder(
             "testFunctionTimerWithTags",
-            timerObj1,
+            timerObj,
             MyTimer::getCount,
             MyTimer::getTotalTimeNanos,
             TimeUnit.NANOSECONDS)
@@ -149,7 +147,7 @@ public abstract class AbstractFunctionTimerTest {
 
     FunctionTimer.builder(
             "testFunctionTimerWithTags",
-            timerObj2,
+            anotherTimerObj,
             MyTimer::getCount,
             MyTimer::getTotalTimeNanos,
             TimeUnit.NANOSECONDS)
@@ -157,8 +155,8 @@ public abstract class AbstractFunctionTimerTest {
         .register(Metrics.globalRegistry);
 
     // when
-    timerObj1.add(12, TimeUnit.SECONDS);
-    timerObj2.add(42, TimeUnit.SECONDS);
+    timerObj.add(12, TimeUnit.SECONDS);
+    anotherTimerObj.add(42, TimeUnit.SECONDS);
 
     // then
     testing()
@@ -195,12 +193,17 @@ public abstract class AbstractFunctionTimerTest {
       totalTimeNanos += unit.toNanos(time);
     }
 
-    public int getCount() {
+    int getCount() {
       return count;
     }
 
-    public double getTotalTimeNanos() {
+    double getTotalTimeNanos() {
       return totalTimeNanos;
+    }
+
+    void reset() {
+      count = 0;
+      totalTimeNanos = 0;
     }
   }
 }
