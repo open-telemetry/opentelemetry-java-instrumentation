@@ -99,7 +99,7 @@ public final class AgentInitializer {
    * @return Agent Classloader
    */
   private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile) {
-    return new AgentClassLoader(javaagentFile, innerJarFilename, null);
+    return new AgentClassLoader(javaagentFile, innerJarFilename);
   }
 
   private static AgentStarter createAgentStarter(
