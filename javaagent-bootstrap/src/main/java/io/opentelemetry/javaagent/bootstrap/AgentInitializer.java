@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.bootstrap;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 /**
@@ -100,31 +98,8 @@ public final class AgentInitializer {
    *     classloader
    * @return Agent Classloader
    */
-  private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile)
-      throws Exception {
-    ClassLoader agentParent;
-    if (isJavaBefore9()) {
-      agentParent = null; // bootstrap
-    } else {
-      // platform classloader is parent of system in java 9+
-      agentParent = getPlatformClassLoader();
-    }
-
-    return new AgentClassLoader(javaagentFile, innerJarFilename, agentParent);
-  }
-
-  private static ClassLoader getPlatformClassLoader()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    /*
-     Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
-     compatible with java 8.
-    */
-    Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
-    return (ClassLoader) method.invoke(null);
-  }
-
-  public static boolean isJavaBefore9() {
-    return System.getProperty("java.version").startsWith("1.");
+  private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile) {
+    return new AgentClassLoader(javaagentFile, innerJarFilename, null);
   }
 
   private static AgentStarter createAgentStarter(
