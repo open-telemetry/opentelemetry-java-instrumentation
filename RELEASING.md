@@ -16,6 +16,7 @@ Before making the release:
 * Merge a PR to `main` updating the `CHANGELOG.md`
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
+* Delete the branches from these two PRs since they are created in the main repo
 
 Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
 
