@@ -11,8 +11,6 @@ import io.opentelemetry.api.common.AttributeKey;
 
 final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_AGENT = stringKey("aws.agent");
-  static final AttributeKey<String> AWS_SERVICE = stringKey("aws.service");
-  static final AttributeKey<String> AWS_OPERATION = stringKey("aws.operation");
   static final AttributeKey<String> AWS_ENDPOINT = stringKey("aws.endpoint");
   static final AttributeKey<String> AWS_BUCKET_NAME = stringKey("aws.bucket.name");
   static final AttributeKey<String> AWS_QUEUE_URL = stringKey("aws.queue.url");

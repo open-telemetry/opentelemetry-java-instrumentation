@@ -19,6 +19,8 @@ final class AwsSdkInstrumenterFactory {
 
   private static final AwsSdkHttpAttributesExtractor httpAttributesExtractor =
       new AwsSdkHttpAttributesExtractor();
+  private static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
+      new AwsSdkRpcAttributesExtractor();
   private static final AwsSdkNetAttributesExtractor netAttributesExtractor =
       new AwsSdkNetAttributesExtractor();
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
@@ -26,11 +28,11 @@ final class AwsSdkInstrumenterFactory {
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, netAttributesExtractor);
+      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       extendedAttributesExtractors =
           Arrays.asList(
-            httpAttributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
+            httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
