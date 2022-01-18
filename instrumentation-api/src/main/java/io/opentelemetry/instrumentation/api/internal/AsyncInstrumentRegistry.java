@@ -18,10 +18,6 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
 
-// TODO: move to instrumentation-api; retry plugin retries tests in new CLs but same JVM; thus
-// micrometer is loaded once again, but two AsyncInstrumentRegistries get created for the same
-// OpenTelemetry Meter (in case of javaagent)
-
 // TODO: refactor this class, there's too much copy-paste here
 public final class AsyncInstrumentRegistry {
 
