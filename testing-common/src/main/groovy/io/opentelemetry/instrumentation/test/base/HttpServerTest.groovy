@@ -273,7 +273,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
-    return GlobalTraceUtil.runWithSpan("controller", closure.&call)
+    return GlobalTraceUtil.runWithSpan("controller") {
+      closure.call()
+    }
   }
 
   def "test success with #count requests"() {
