@@ -41,12 +41,12 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name trask
-          git config user.email trask.stalnaker@gmail.com
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
       - name: Create pull request
         env:
-          GITHUB_TOKEN: ${{ secrets.TRASK_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           msg="Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}"
           git add -u
@@ -78,12 +78,12 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name trask
-          git config user.email trask.stalnaker@gmail.com
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
       - name: Create pull request
         env:
-          GITHUB_TOKEN: ${{ secrets.TRASK_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           msg="Bump snapshot version"
           git add -u
