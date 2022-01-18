@@ -22,6 +22,9 @@ public abstract class AbstractFunctionCounterTest {
 
   protected abstract InstrumentationExtension testing();
 
+  final AtomicLong num = new AtomicLong(12);
+  final AtomicLong anotherNum = new AtomicLong(13);
+
   @BeforeEach
   void cleanupMeters() {
     Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
@@ -30,8 +33,6 @@ public abstract class AbstractFunctionCounterTest {
   @Test
   void testFunctionCounter() throws InterruptedException {
     // when
-    AtomicLong num = new AtomicLong(12);
-
     FunctionCounter counter =
         FunctionCounter.builder("testFunctionCounter", num, AtomicLong::get)
             .description("This is a test function counter")
@@ -75,15 +76,12 @@ public abstract class AbstractFunctionCounterTest {
   @Test
   void functionCountersWithSameNameAndDifferentTags() {
     // when
-    AtomicLong num1 = new AtomicLong(12);
-    AtomicLong num2 = new AtomicLong(13);
-
-    FunctionCounter.builder("testFunctionCounterWithTags", num1, AtomicLong::get)
+    FunctionCounter.builder("testFunctionCounterWithTags", num, AtomicLong::get)
         .description("First description wins")
         .tags("tag", "1")
         .baseUnit("items")
         .register(Metrics.globalRegistry);
-    FunctionCounter.builder("testFunctionCounterWithTags", num2, AtomicLong::get)
+    FunctionCounter.builder("testFunctionCounterWithTags", anotherNum, AtomicLong::get)
         .description("ignored")
         .tags("tag", "2")
         .baseUnit("items")
