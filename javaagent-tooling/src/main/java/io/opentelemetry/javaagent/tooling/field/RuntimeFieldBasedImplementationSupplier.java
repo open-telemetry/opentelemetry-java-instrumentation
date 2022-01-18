@@ -22,7 +22,9 @@ final class RuntimeFieldBasedImplementationSupplier
           getVirtualFieldImplementationClassName(type.getName(), fieldType.getName());
       Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
       Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
-      return (VirtualField<U, F>) method.invoke(null, type, fieldType);
+      @SuppressWarnings("unchecked")
+      VirtualField<U, F> field = (VirtualField<U, F>) method.invoke(null, type, fieldType);
+      return field;
     } catch (ClassNotFoundException exception) {
       throw new IllegalStateException("VirtualField not found", exception);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {

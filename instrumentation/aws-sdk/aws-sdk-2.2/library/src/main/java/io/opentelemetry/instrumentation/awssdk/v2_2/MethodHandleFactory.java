@@ -24,7 +24,7 @@ class MethodHandleFactory {
         }
       };
 
-  MethodHandle forField(Class clazz, String fieldName)
+  MethodHandle forField(Class<?> clazz, String fieldName)
       throws NoSuchMethodException, IllegalAccessException {
     MethodHandle methodHandle = getterCache.get(clazz).get(fieldName);
     if (methodHandle == null) {

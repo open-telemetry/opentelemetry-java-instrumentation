@@ -130,7 +130,7 @@ public class OpenTelemetryConnection implements Connection {
       throws SQLException {
     CallableStatement statement =
         delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    return new OpenTelemetryCallableStatement(statement, dbInfo, sql);
+    return new OpenTelemetryCallableStatement<>(statement, dbInfo, sql);
   }
 
   @Override

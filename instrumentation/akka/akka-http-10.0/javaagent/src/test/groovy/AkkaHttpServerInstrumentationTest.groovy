@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -55,6 +54,13 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
     // strip trailing slash
     result.setLength(result.length()-1)
     return result.toString()
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
   }
 }
 

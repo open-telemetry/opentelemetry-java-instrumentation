@@ -66,7 +66,6 @@ class MeterTest {
                             InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
                         .hasLongSum()
                         .isMonotonic()
-                        .isCumulative()
                         .points()
                         .satisfiesExactly(
                             point ->
@@ -97,7 +96,6 @@ class MeterTest {
                             InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
                         .hasLongSum()
                         .isNotMonotonic()
-                        .isCumulative()
                         .points()
                         .satisfiesExactly(
                             point ->
@@ -128,7 +126,6 @@ class MeterTest {
                             InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
                         .hasDoubleSum()
                         .isMonotonic()
-                        .isCumulative()
                         .points()
                         .satisfiesExactly(
                             point ->
@@ -159,7 +156,6 @@ class MeterTest {
                             InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
                         .hasDoubleSum()
                         .isNotMonotonic()
-                        .isCumulative()
                         .points()
                         .satisfiesExactly(
                             point ->

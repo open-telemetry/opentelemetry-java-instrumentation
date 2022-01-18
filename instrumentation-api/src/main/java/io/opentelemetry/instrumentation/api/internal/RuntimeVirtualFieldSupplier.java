@@ -43,6 +43,7 @@ public final class RuntimeVirtualFieldSupplier {
         ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
+    @SuppressWarnings("unchecked")
     public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
       return (VirtualField<U, F>)
           ownerToFieldToImplementationMap

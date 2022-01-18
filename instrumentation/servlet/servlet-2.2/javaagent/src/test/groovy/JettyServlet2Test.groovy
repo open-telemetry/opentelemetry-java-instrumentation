@@ -72,6 +72,13 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   List<AttributeKey<?>> extraAttributes() {
     [
       SemanticAttributes.HTTP_SERVER_NAME,

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 
 public final class MicrometerSingletons {
 

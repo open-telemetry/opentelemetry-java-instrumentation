@@ -3,11 +3,12 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation-api-appender"))
+  implementation(project(":instrumentation-appender-api-internal"))
+  implementation(project(":instrumentation-appender-sdk-internal"))
 
   library("org.apache.logging.log4j:log4j-core:2.16.0")
 
-  testImplementation(project(":instrumentation-sdk-appender"))
+  testImplementation(project(":instrumentation-appender-sdk-internal"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 

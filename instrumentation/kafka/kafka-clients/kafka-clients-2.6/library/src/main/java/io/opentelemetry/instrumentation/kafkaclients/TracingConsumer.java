@@ -153,11 +153,13 @@ class TracingConsumer<K, V> implements Consumer<K, V> {
   }
 
   @Override
+  @Deprecated
   public OffsetAndMetadata committed(TopicPartition partition) {
     return consumer.committed(partition);
   }
 
   @Override
+  @Deprecated
   public OffsetAndMetadata committed(TopicPartition topicPartition, Duration duration) {
     return consumer.committed(topicPartition, duration);
   }

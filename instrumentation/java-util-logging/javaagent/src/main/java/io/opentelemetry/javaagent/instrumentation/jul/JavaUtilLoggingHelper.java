@@ -9,9 +9,9 @@ import application.java.util.logging.Logger;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.Severity;
+import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.Severity;
+import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -31,11 +31,12 @@ public final class JavaUtilLoggingHelper {
       return;
     }
 
+    String instrumentationName = logRecord.getLoggerName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        GlobalLogEmitterProvider.get()
-            .logEmitterBuilder(logRecord.getLoggerName())
-            .build()
-            .logBuilder();
+        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     mapLogRecord(builder, logRecord);
     builder.emit();
   }
@@ -73,7 +74,8 @@ public final class JavaUtilLoggingHelper {
     if (throwable != null) {
       AttributesBuilder attributes = Attributes.builder();
 
-      // TODO (trask) extract method for recording exception into instrumentation-api-appender
+      // TODO (trask) extract method for recording exception into
+      // instrumentation-appender-api-internal
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();

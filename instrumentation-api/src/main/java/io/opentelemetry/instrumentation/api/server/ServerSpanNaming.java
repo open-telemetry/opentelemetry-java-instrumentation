@@ -9,13 +9,15 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
+// TODO: move to ...instrumenter.http and rename to HttpRouteHolder (?)
 /** Helper container for tracking whether instrumentation should update server span name or not. */
 public final class ServerSpanNaming {
 
   private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
-      ContextKey.named("opentelemetry-servlet-span-naming-key");
+      ContextKey.named("opentelemetry-http-server-route-key");
 
   public static <REQUEST> ContextCustomizer<REQUEST> get() {
     return (context, request, startAttributes) -> {
@@ -27,9 +29,7 @@ public final class ServerSpanNaming {
   }
 
   private volatile Source updatedBySource;
-  // Length of the currently set name. This is used when setting name from a servlet filter
-  // to pick the most descriptive (longest) name.
-  private volatile int nameLength;
+  @Nullable private volatile String route;
 
   private ServerSpanNaming(Source initialSource) {
     this.updatedBySource = initialSource;
@@ -78,7 +78,7 @@ public final class ServerSpanNaming {
     if (serverSpanNaming == null) {
       String name = serverSpanName.get(context, arg1, arg2);
       if (name != null && !name.isEmpty()) {
-        serverSpan.updateName(name);
+        updateSpanData(serverSpan, name);
       }
       return;
     }
@@ -91,15 +91,33 @@ public final class ServerSpanNaming {
       if (name != null
           && !name.isEmpty()
           && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
-        serverSpan.updateName(name);
+        updateSpanData(serverSpan, name);
         serverSpanNaming.updatedBySource = source;
-        serverSpanNaming.nameLength = name.length();
+        serverSpanNaming.route = name;
       }
     }
   }
 
+  // TODO: instead of calling setAttribute() consider storing the route in context end retrieving it
+  // in the AttributesExtractor
+  private static void updateSpanData(Span serverSpan, String route) {
+    serverSpan.updateName(route);
+    serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
+  }
+
+  // This is used when setting name from a servlet filter to pick the most descriptive (longest)
+  // route.
   private boolean isBetterName(String name) {
-    return name.length() > nameLength;
+    String route = this.route;
+    int routeLength = route == null ? 0 : route.length();
+    return name.length() > routeLength;
+  }
+
+  // TODO: use that in HttpServerMetrics
+  @Nullable
+  public static String getRoute(Context context) {
+    ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
+    return serverSpanNaming == null ? null : serverSpanNaming.route;
   }
 
   public enum Source {

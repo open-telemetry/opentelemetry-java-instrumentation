@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +18,14 @@ import java.util.function.BiConsumer;
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3962#issuecomment-906606325
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
+
+  // TODO (trask) remove this once http.route is captured consistently
+  //
+  // this is not enabled by default because it falls back to http.target (which can be high
+  // cardinality) when http.route is not available
+  private static final boolean USE_HTTP_TARGET_FALLBACK =
+      Config.get()
+          .getBoolean("otel.instrumentation.metrics.experimental.use-http-target-fallback", false);
 
   private static final Set<AttributeKey> durationAlwaysInclude = buildDurationAlwaysInclude();
   private static final Set<AttributeKey> durationClientView = buildDurationClientView();
@@ -96,7 +105,8 @@ final class TemporaryMetricsView {
   static Attributes applyServerDurationView(Attributes startAttributes, Attributes endAttributes) {
     Set<AttributeKey> fullSet = durationServerView;
     // Use http.target when http.route is not available.
-    if (!containsAttribute(SemanticAttributes.HTTP_ROUTE, startAttributes, endAttributes)) {
+    if (USE_HTTP_TARGET_FALLBACK
+        && !containsAttribute(SemanticAttributes.HTTP_ROUTE, startAttributes, endAttributes)) {
       fullSet = durationServerFallbackView;
     }
     AttributesBuilder filtered = Attributes.builder();

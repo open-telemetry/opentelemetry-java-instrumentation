@@ -135,6 +135,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           kind SERVER
           if (!runsOnServer()) {
             attributes {
+              "$SemanticAttributes.HTTP_ROUTE" parentResourceName
             }
           }
         }

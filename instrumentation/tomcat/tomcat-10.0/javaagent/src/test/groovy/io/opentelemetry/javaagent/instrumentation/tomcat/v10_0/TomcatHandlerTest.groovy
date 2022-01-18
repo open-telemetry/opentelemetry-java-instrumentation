@@ -35,12 +35,8 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case NOT_FOUND:
-        return "HTTP GET"
-      default:
-        return endpoint.resolvePath(address).path
-    }
+    def route = expectedHttpRoute(endpoint)
+    return route == null ? "HTTP GET" : route
   }
 
   @Override

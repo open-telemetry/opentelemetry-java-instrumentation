@@ -13,9 +13,8 @@ muzzle {
 
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
-}
 
-// TODO: disabled by default, since not all instruments are implemented
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+  implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+
+  testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 }

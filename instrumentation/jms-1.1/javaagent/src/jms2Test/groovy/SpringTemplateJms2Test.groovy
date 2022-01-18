@@ -112,7 +112,6 @@ class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    // wait for thread to start, we expect the first span to be from receive
     TextMessage receivedMessage = template.sendAndReceive(destination) {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }

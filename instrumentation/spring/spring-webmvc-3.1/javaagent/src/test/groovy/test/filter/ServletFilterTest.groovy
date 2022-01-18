@@ -90,14 +90,14 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
         return getContextPath() + "/**"
       default:
-        return super.expectedServerSpanName(endpoint)
+        return super.expectedHttpRoute(endpoint)
     }
   }
 

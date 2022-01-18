@@ -1,3 +1,5 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
+
 plugins {
   id("com.diffplug.spotless")
 }
@@ -40,9 +42,32 @@ spotless {
       "src/**/*.md",
       "docs/**/*.md",
       "*.sh",
-      "src/**/*.properties")
+      "src/**/*.properties"
+    )
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()
+  }
+}
+
+// Use root declared tool deps to avoid issues with high concurrency.
+if (project == rootProject) {
+  spotless {
+    predeclareDeps()
+  }
+
+  with(extensions["spotlessPredeclare"] as SpotlessExtension) {
+    java {
+      googleJavaFormat()
+    }
+    scala {
+      scalafmt()
+    }
+    kotlin {
+      ktlint()
+    }
+    kotlinGradle {
+      ktlint()
+    }
   }
 }

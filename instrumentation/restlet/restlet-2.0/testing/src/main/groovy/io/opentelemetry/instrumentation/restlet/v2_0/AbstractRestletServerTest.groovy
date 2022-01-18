@@ -178,14 +178,14 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
         return getContextPath() + "/*"
       default:
-        return endpoint.resolvePath(address).path
+        return super.expectedHttpRoute(endpoint)
     }
   }
 

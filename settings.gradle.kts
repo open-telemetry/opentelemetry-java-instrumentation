@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.41.0"
     id("com.github.jk1.dependency-license-report") version "2.0"
     id("com.gradle.plugin-publish") version "0.18.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
@@ -97,8 +97,8 @@ include(":javaagent")
 
 include(":bom-alpha")
 include(":instrumentation-api")
-include(":instrumentation-api-appender")
-include(":instrumentation-sdk-appender")
+include(":instrumentation-appender-api-internal")
+include(":instrumentation-appender-sdk-internal")
 include(":javaagent-instrumentation-api")
 include(":instrumentation-api-annotation-support")
 
@@ -283,6 +283,8 @@ include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")
 include(":instrumentation:methods:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:javaagent")
+include(":instrumentation:micrometer:micrometer-1.5:library")
+include(":instrumentation:micrometer:micrometer-1.5:testing")
 include(":instrumentation:mongo:mongo-3.1:javaagent")
 include(":instrumentation:mongo:mongo-3.1:library")
 include(":instrumentation:mongo:mongo-3.1:testing")
@@ -367,6 +369,7 @@ include(":instrumentation:spring:spring-integration-4.1:library")
 include(":instrumentation:spring:spring-integration-4.1:testing")
 include(":instrumentation:spring:spring-kafka-2.7:javaagent")
 include(":instrumentation:spring:spring-rabbit-1.0:javaagent")
+include(":instrumentation:spring:spring-rmi-4.0:javaagent")
 include(":instrumentation:spring:spring-scheduling-3.1:javaagent")
 include(":instrumentation:spring:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web-3.1:library")

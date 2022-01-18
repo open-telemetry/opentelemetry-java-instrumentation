@@ -143,6 +143,13 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
   }
 
   @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     "HTTP GET"
   }

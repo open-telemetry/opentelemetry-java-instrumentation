@@ -128,14 +128,10 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             }
-            if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-              // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-              // currently reports '/*' which is a fallback route.
-              "$SemanticAttributes.HTTP_ROUTE" String
-            }
             if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
               "$SemanticAttributes.HTTP_SERVER_NAME" String
             }
+            "$SemanticAttributes.HTTP_ROUTE" "/$route"
           }
         }
         if (hasHandlerSpan()) {
