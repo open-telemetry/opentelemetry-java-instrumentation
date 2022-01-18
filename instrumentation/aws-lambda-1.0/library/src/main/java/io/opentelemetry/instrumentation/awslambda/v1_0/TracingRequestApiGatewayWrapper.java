@@ -27,12 +27,12 @@ public class TracingRequestApiGatewayWrapper
   TracingRequestApiGatewayWrapper(
       OpenTelemetrySdk openTelemetrySdk,
       WrappedLambda wrappedLambda,
-      BiFunction<APIGatewayProxyRequestEvent, Class, Object> mapper) {
+      BiFunction<APIGatewayProxyRequestEvent, Class<?>, Object> mapper) {
     super(openTelemetrySdk, wrappedLambda, mapper);
   }
 
   // Visible for testing
-  static Object map(APIGatewayProxyRequestEvent event, Class clazz) {
+  static <T> T map(APIGatewayProxyRequestEvent event, Class<T> clazz) {
     try {
       return OBJECT_MAPPER.readValue(event.getBody(), clazz);
     } catch (JsonProcessingException e) {
@@ -45,7 +45,7 @@ public class TracingRequestApiGatewayWrapper
   protected APIGatewayProxyResponseEvent doHandleRequest(
       APIGatewayProxyRequestEvent input, Context context) {
     Object result = super.doHandleRequest(input, context);
-    APIGatewayProxyResponseEvent event = null;
+    APIGatewayProxyResponseEvent event;
     // map to response event if needed
     if (result instanceof APIGatewayProxyResponseEvent) {
       event = (APIGatewayProxyResponseEvent) result;
