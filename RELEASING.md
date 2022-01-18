@@ -35,11 +35,9 @@ After making the release:
 
 ## Announcement
 
-Once the GitHub workflow completes, go to Github [release
-page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
-`Draft a new release` to write release notes about the new release. If there is already a draft
-release notes, just point it at the created tag. Use the script at
-`buildscripts/draft-release-notes.sh` to generate release notes from the change log.
+Once the GitHub workflow completes, go to Github
+[release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
+find the draft release created by the release workflow, and copy the change log into it.
 
 ## Patch Release
 
