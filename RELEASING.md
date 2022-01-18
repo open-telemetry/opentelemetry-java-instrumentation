@@ -14,6 +14,8 @@ as the last step, which publishes a snapshot build to
 Before making the release:
 
 * Merge a PR to `main` updating the `CHANGELOG.md`
+  * Use the script at `buildscripts/draft-change-log-entries.sh` to help create an initial draft.
+    We typically only include end-user facing changes in the change log.
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
 * Delete the branches from these two PRs since they are created in the main repo
@@ -33,10 +35,9 @@ After making the release:
 
 ## Announcement
 
-Once the GitHub workflow completes, go to Github [release
-page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
-`Draft a new release` to write release notes about the new release. If there is already a draft
-release notes, just point it at the created tag.
+Once the GitHub workflow completes, go to Github
+[release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
+find the draft release created by the release workflow, and copy the change log into it.
 
 ## Patch Release
 
