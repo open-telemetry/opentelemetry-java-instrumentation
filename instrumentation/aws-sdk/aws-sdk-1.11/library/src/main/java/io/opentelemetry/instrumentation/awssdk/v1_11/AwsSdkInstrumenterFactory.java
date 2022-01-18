@@ -28,11 +28,15 @@ final class AwsSdkInstrumenterFactory {
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor);
+      defaultAttributesExtractors =
+          Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       extendedAttributesExtractors =
           Arrays.asList(
-            httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
+              httpAttributesExtractor,
+              rpcAttributesExtractor,
+              netAttributesExtractor,
+              experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
