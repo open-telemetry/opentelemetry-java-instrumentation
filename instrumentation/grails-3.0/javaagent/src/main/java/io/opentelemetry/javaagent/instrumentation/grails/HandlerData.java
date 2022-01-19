@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
 
 public class HandlerData {
 

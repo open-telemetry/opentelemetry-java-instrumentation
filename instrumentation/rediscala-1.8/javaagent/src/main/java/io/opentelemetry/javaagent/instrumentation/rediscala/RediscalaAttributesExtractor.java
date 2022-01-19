@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames
 import spock.lang.Specification
 
 class ClassNamesTest extends Specification {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNames
 import org.spockframework.util.ReflectionUtil
 import spock.lang.Specification
 

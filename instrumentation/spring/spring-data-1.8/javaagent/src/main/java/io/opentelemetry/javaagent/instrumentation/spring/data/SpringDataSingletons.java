@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
 import java.lang.reflect.Method;
 
 public final class SpringDataSingletons {
