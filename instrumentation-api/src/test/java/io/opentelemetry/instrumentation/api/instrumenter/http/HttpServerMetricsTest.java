@@ -18,7 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.testing.InMemoryMetricReader;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;

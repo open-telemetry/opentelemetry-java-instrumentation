@@ -38,10 +38,11 @@ dependencies {
   implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")
+  testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")

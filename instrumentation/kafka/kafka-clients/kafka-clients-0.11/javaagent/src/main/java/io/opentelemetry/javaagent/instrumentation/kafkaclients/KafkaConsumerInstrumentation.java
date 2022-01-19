@@ -71,7 +71,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
         // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-        VirtualField<ConsumerRecords, Context> consumerRecordsContext =
+        VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
             VirtualField.find(ConsumerRecords.class, Context.class);
         consumerRecordsContext.set(records, context);
       }

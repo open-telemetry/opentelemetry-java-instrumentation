@@ -22,7 +22,7 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
     if (runnable == null || runnable instanceof AsyncRunnableWrapper) {
       return runnable;
     }
-    return new AsyncRunnableWrapper(helper, request, runnable);
+    return new AsyncRunnableWrapper<>(helper, request, runnable);
   }
 
   @Override
