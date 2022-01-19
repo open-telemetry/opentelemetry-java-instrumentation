@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0
 
-
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -59,6 +60,14 @@ abstract class AbstractServletServerTest extends HttpServerTest<Server> {
   @Override
   boolean testPathParam() {
     true
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SERVER_NAME
+    ]
+    super.httpAttributes(endpoint) + extra
   }
 
   @Override
