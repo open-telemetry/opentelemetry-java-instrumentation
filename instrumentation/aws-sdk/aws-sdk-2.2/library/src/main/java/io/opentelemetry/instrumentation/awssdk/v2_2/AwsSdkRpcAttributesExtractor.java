@@ -10,7 +10,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-class AwsSdkRpcAttributesExtractor
+final class AwsSdkRpcAttributesExtractor
     extends RpcAttributesExtractor<ExecutionAttributes, SdkHttpResponse> {
 
   @Override
