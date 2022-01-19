@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.ktor.v1_0
 
 import io.ktor.server.engine.ApplicationEngine
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeUnit
 
@@ -53,13 +51,5 @@ class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements Li
       default:
         return super.expectedHttpRoute(endpoint)
     }
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 }

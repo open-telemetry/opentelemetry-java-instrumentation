@@ -159,12 +159,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    [SemanticAttributes.HTTP_ROUTE] as Set
-  }
-
-  // TODO: remove that method and use httpAttributes everywhere; similar to HttpClientTest
-  List<AttributeKey<?>> extraAttributes() {
-    []
+    [
+      SemanticAttributes.HTTP_ROUTE,
+      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_PEER_PORT
+    ] as Set
   }
 
   enum ServerEndpoint {
@@ -663,7 +663,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
+    def httpAttributes = this.httpAttributes(endpoint)
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
@@ -690,10 +690,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || (it instanceof Long && it != port) }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+          "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
+        } else {
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
+          // Optional
+        }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
         "$SemanticAttributes.HTTP_METHOD" method
@@ -701,8 +710,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "$SemanticAttributes.HTTP_FLAVOR" { it == "1.1" || it == "2.0" }
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
 
-        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
         "$SemanticAttributes.HTTP_SCHEME" "http"
+        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
         "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
         if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
@@ -737,7 +746,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD
-    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
+    def httpAttributes = this.httpAttributes(endpoint)
     trace.span(1) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
@@ -746,10 +755,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { (it == null || it == address.host) }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+          "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
+        } else {
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
+          // Optional
+        }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
         "$SemanticAttributes.HTTP_METHOD" "GET"

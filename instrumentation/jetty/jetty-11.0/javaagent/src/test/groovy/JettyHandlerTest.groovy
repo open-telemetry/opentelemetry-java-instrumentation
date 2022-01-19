@@ -63,11 +63,16 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.HTTP_SERVER_NAME,
-      SemanticAttributes.NET_TRANSPORT
-    ]
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.add(SemanticAttributes.HTTP_SERVER_NAME)
+    attributes
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    "HTTP GET"
   }
 
   @Override
@@ -114,7 +119,7 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
         case EXCEPTION:
           throw new Exception(endpoint.body)
         case INDEXED_CHILD:
-          INDEXED_CHILD.collectSpanAttributes {name -> request.getParameter(name) }
+          INDEXED_CHILD.collectSpanAttributes { name -> request.getParameter(name) }
           response.status = endpoint.status
           response.writer.print(endpoint.body)
           break
@@ -139,17 +144,5 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
         errorHandler.handle(target, baseRequest, request, response)
       }
     }
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HTTP GET"
   }
 }
