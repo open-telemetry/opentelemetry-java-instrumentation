@@ -74,9 +74,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "CreateQueue"
             "aws.queue.name" "testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "rpc.method" "CreateQueue"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -95,9 +96,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "SendMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.method" "SendMessage"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -123,9 +125,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -149,9 +152,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200

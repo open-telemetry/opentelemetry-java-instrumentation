@@ -15,7 +15,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
-class AwsSdkAttributesExtractor extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
+class AwsSdkHttpAttributesExtractor extends HttpClientAttributesExtractor<Request<?>, Response<?>> {
   @Override
   protected String url(Request<?> request) {
     return request.getEndpoint().toString();

@@ -102,9 +102,10 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
             "$SemanticAttributes.HTTP_METHOD" "HEAD"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
-            "aws.service" "Amazon S3"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
+            "$SemanticAttributes.RPC_METHOD" "HeadBucket"
             "aws.endpoint" "https://s3.amazonaws.com"
-            "aws.operation" "HeadBucket"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
           }
