@@ -9,7 +9,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 
-class AwsSdkRpcAttributesExtractor extends RpcAttributesExtractor<Request<?>, Response<?>> {
+final class AwsSdkRpcAttributesExtractor extends RpcAttributesExtractor<Request<?>, Response<?>> {
 
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
