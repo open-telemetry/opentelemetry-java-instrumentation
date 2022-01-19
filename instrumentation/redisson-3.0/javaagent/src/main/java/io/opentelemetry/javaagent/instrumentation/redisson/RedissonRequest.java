@@ -15,8 +15,10 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
+import org.redisson.misc.RPromise;
 
 @AutoValue
 public abstract class RedissonRequest {
@@ -29,6 +31,7 @@ public abstract class RedissonRequest {
 
   public abstract Object getCommand();
 
+  @Nullable
   public String getOperation() {
     Object command = getCommand();
     if (command instanceof CommandData) {
@@ -42,6 +45,7 @@ public abstract class RedissonRequest {
     return null;
   }
 
+  @Nullable
   public String getStatement() {
     List<String> sanitizedStatements = sanitizeStatement();
     switch (sanitizedStatements.size()) {
@@ -91,5 +95,16 @@ public abstract class RedissonRequest {
       }
     }
     return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
+  }
+
+  @Nullable
+  public RPromise<?> getPromise() {
+    Object command = getCommand();
+    if (command instanceof CommandData) {
+      return ((CommandData<?, ?>) command).getPromise();
+    } else if (command instanceof CommandsData) {
+      return ((CommandsData) command).getPromise();
+    }
+    return null;
   }
 }

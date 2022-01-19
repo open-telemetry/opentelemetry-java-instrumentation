@@ -46,6 +46,13 @@ tasks {
     exclude("**/concurrentlinkedhashmap/**")
   }
 
+  // Work around https://github.com/jflex-de/jflex/issues/762
+  compileJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-fallthrough")
+    }
+  }
+
   sourcesJar {
     dependsOn("generateJflex")
   }

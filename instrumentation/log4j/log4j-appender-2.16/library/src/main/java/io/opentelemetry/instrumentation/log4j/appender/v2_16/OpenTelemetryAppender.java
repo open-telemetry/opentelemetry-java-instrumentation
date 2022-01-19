@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_16;
 
-import io.opentelemetry.instrumentation.api.appender.GlobalLogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
+import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
+import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.io.Serializable;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -30,6 +33,9 @@ import org.apache.logging.log4j.util.ReadOnlyStringMap;
 public class OpenTelemetryAppender extends AbstractAppender {
 
   static final String PLUGIN_NAME = "OpenTelemetry";
+
+  private static final LogEmitterProviderHolder logEmitterProviderHolder =
+      new LogEmitterProviderHolder();
 
   private static final LogEventMapper<ReadOnlyStringMap> mapper =
       new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE);
@@ -60,11 +66,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   @Override
   public void append(LogEvent event) {
+    String instrumentationName = event.getLoggerName();
+    if (instrumentationName == null || instrumentationName.isEmpty()) {
+      instrumentationName = "ROOT";
+    }
     LogBuilder builder =
-        GlobalLogEmitterProvider.get()
-            .logEmitterBuilder(event.getLoggerName())
-            .build()
-            .logBuilder();
+        logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
         builder,
@@ -74,6 +81,25 @@ public class OpenTelemetryAppender extends AbstractAppender {
         event.getInstant(),
         contextData);
     builder.emit();
+  }
+
+  /**
+   * This should be called once as early as possible in your application initialization logic, often
+   * in a {@code static} block in your main class. It should only be called once - an attempt to
+   * call it a second time will result in an error. If trying to set the {@link
+   * SdkLogEmitterProvider} multiple times in tests, use {@link
+   * OpenTelemetryAppender#resetSdkLogEmitterProviderForTest()} between them.
+   */
+  public static void setSdkLogEmitterProvider(SdkLogEmitterProvider sdkLogEmitterProvider) {
+    logEmitterProviderHolder.set(DelegatingLogEmitterProvider.from(sdkLogEmitterProvider));
+  }
+
+  /**
+   * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
+   * need to reconfigure {@link LogEmitterProvider}.
+   */
+  public static void resetSdkLogEmitterProviderForTest() {
+    logEmitterProviderHolder.resetForTest();
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {

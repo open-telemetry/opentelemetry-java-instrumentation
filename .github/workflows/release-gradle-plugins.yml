@@ -1,0 +1,165 @@
+# Releases a new minor / major version of gradle plugins from a release branch
+name: Release Gradle Plugins
+on:
+  workflow_dispatch:
+    inputs:
+      release-branch-name:
+        description: The release branch to use, e.g. v1.9.x
+        required: true
+      version:
+        # TODO (trask) this is redundant
+        description: The version of the release, e.g. 1.9.0 (without the "v" prefix)
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-java-version:
+          - 8
+          - 11
+          - 15
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.event.inputs.release-branch-name }}
+
+      - id: setup-test-java
+        name: Set up JDK ${{ matrix.test-java-version }} for running tests
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: ${{ matrix.test-java-version }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Test
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+
+  # testLatestDeps is intentionally not included in the release workflows
+  # because any time a new library version is released to maven central
+  # it can fail due to test code incompatibility with the new library version,
+  # or due to slight changes in emitted telemetry
+
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+        smoke-test-suite:
+          - jetty
+          - liberty
+          - payara
+          - tomcat
+          - tomee
+          - websphere
+          - wildfly
+          - other
+        exclude:
+          - os: windows-latest
+            smoke-test-suite: websphere
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+        if: matrix.os == 'windows-latest'
+
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.event.inputs.release-branch-name }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Test
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
+
+  # muzzle is intentionally not included in the release workflows
+  # because any time a new library version is released to maven central it can fail,
+  # and this is not a reason to hold up the release
+
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.event.inputs.release-branch-name }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Local publish of artifacts
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
+
+      - name: Local publish of gradle plugins
+        uses: gradle/gradle-build-action@v2
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: publishToMavenLocal -x javadoc
+          build-root-directory: gradle-plugins
+
+      - name: Build distro
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/distro
+
+      - name: Build extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
+
+      - name: Run muzzle check against extension
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+          build-root-directory: examples/extension
+          cache-read-only: true
+
+  release:
+    needs: [ test, smoke-test, examples ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.event.inputs.release-branch-name }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+        # TODO (trask) cache gradle wrapper?
+      - name: Build and publish gradle plugins
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        run: ../gradlew build publishPlugins
+        working-directory: gradle-plugins

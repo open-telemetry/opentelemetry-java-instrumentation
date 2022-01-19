@@ -89,8 +89,8 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
       }
     }
 
-    private void queueNewInterfaces(Class[] interfaces) {
-      for (Class clazz : interfaces) {
+    private void queueNewInterfaces(Class<?>[] interfaces) {
+      for (Class<?> clazz : interfaces) {
         if (queuedInterfaces.add(clazz)) {
           classesToExpand.add(clazz);
         }

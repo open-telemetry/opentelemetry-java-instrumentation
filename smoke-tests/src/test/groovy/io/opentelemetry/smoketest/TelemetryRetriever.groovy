@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.util.JsonFormat
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -35,6 +36,10 @@ class TelemetryRetriever {
 
   Collection<ExportMetricsServiceRequest> waitForMetrics() {
     return waitForTelemetry("get-metrics", { ExportMetricsServiceRequest.newBuilder() })
+  }
+
+  Collection<ExportLogsServiceRequest> waitForLogs() {
+    return waitForTelemetry("get-logs", { ExportLogsServiceRequest.newBuilder() })
   }
 
   private <T extends GeneratedMessageV3, B extends GeneratedMessageV3.Builder> Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {

@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.nio.charset.StandardCharsets
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
 import org.glassfish.grizzly.filterchain.FilterChainBuilder
@@ -25,6 +26,7 @@ import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder
 import org.glassfish.grizzly.utils.DelayedExecutor
 import org.glassfish.grizzly.utils.IdleTimeoutFilter
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -59,6 +61,18 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   @Override
   void stopServer(HttpServer httpServer) {
     transport.shutdownNow()
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
   }
 
   @Override
@@ -229,10 +243,5 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
         }
       }
     }
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
   }
 }

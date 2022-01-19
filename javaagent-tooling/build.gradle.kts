@@ -15,8 +15,8 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-annotation-support"))
-  implementation(project(":instrumentation-api-appender"))
-  implementation(project(":instrumentation-sdk-appender"))
+  implementation(project(":instrumentation-appender-api-internal"))
+  implementation(project(":instrumentation-appender-sdk-internal"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
@@ -39,6 +39,9 @@ dependencies {
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
+
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")

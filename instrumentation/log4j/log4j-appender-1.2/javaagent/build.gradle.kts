@@ -16,7 +16,7 @@ dependencies {
   // 1.2 introduces MDC and there's no version earlier than 1.2.4 available
   library("log4j:log4j:1.2.4")
 
-  compileOnly(project(":instrumentation-api-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
 
   testImplementation("org.awaitility:awaitility")
 }

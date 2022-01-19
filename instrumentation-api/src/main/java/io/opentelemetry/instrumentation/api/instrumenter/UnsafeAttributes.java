@@ -21,6 +21,8 @@ import java.util.Map;
 final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
     implements Attributes, AttributesBuilder {
 
+  private static final long serialVersionUID = 1L;
+
   // Attributes
 
   @SuppressWarnings("unchecked")

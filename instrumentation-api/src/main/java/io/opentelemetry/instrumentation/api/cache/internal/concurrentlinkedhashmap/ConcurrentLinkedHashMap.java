@@ -211,7 +211,7 @@ public final class ConcurrentLinkedHashMap<K, V> extends AbstractMap<K, V>
   transient Set<Entry<K, V>> entrySet;
 
   /** Creates an instance based on the builder's configuration. */
-  @SuppressWarnings({"unchecked", "cast"})
+  @SuppressWarnings({"unchecked", "cast", "rawtypes"})
   private ConcurrentLinkedHashMap(Builder<K, V> builder) {
     // The data store and its maximum capacity
     concurrencyLevel = builder.concurrencyLevel;
@@ -1110,7 +1110,7 @@ public final class ConcurrentLinkedHashMap<K, V> extends AbstractMap<K, V>
    */
   @SuppressWarnings("serial")
   static final class Node<K, V> extends AtomicReference<WeightedValue<V>>
-      implements Linked<Node<K, V>> {
+      implements LinkedDeque.Linked<Node<K, V>> {
     final K key;
 
     @GuardedBy("evictionLock")

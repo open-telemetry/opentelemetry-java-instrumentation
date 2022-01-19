@@ -81,7 +81,7 @@ class MuzzleGradlePluginUtil {
 
       val validatedModulesCount = allMismatches.size
       if (validatedModulesCount == 0) {
-        val errorMessage = "Did not found any InstrumentationModule to validate!"
+        val errorMessage = "Did not find any InstrumentationModule(s) to validate!"
         System.err.println(errorMessage)
         throw IllegalStateException(errorMessage)
       }
