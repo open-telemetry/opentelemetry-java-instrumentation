@@ -110,7 +110,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "akka.request"
+    return "HTTP GET"
   }
 
 }
