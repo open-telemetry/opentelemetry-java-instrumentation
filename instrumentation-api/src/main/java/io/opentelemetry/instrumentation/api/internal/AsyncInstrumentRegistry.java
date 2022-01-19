@@ -18,6 +18,12 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
 
+// this class must live in the bootstrap classloader - in case different metrics instrumentations
+// (micrometer) get applied to classes in different classloaders, we want them to share the same
+// async instrument registry - because the underlying OTel Meter is shared too. There is only one
+// OTel SDK in the agent, and therefore there must be only one AsyncInstrumentRegistry too -
+// otherwise some async metrics would get lost because of duplicate instrument registrations.
+
 // TODO: refactor this class, there's too much copy-paste here
 public final class AsyncInstrumentRegistry {
 
