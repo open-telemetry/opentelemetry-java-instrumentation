@@ -14,8 +14,6 @@ import io.reactivex.functions.Consumer
 
 import java.util.concurrent.CountDownLatch
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-
 abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecification {
 
   def "subscribe single test"() {
@@ -62,7 +60,7 @@ abstract class AbstractRxJava2SubscriptionTest extends InstrumentationSpecificat
       }).count().subscribe(new Consumer<Long>() {
         @Override
         void accept(Long count) {
-          runInternalSpan("child")
+          runWithSpan("child") {}
           latch.countDown()
         }
       })

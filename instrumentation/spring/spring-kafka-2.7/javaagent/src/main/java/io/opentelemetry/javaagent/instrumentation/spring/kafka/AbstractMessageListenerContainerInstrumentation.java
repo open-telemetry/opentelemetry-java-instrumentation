@@ -41,7 +41,8 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
   @SuppressWarnings("unused")
   public static class GetBatchInterceptorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void onExit(@Advice.Return(readOnly = false) BatchInterceptor<K, V> interceptor) {
+    public static <K, V> void onExit(
+        @Advice.Return(readOnly = false) BatchInterceptor<K, V> interceptor) {
       if (!(interceptor instanceof InstrumentedBatchInterceptor)) {
         VirtualField<ConsumerRecords<K, V>, Context> receiveContextVirtualField =
             VirtualField.find(ConsumerRecords.class, Context.class);

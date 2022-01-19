@@ -17,14 +17,13 @@ import javax.ws.rs.Path
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecification {
 
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:
-    runUnderServerTrace("test") {
+    runWithServerSpan("test") {
       obj.call()
     }
 
@@ -51,7 +50,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
     }
 
     when: "multiple calls to the same method"
-    runUnderServerTrace("test") {
+    runWithServerSpan("test") {
       (1..10).each {
         obj.call()
       }
@@ -113,7 +112,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
 
   def "no annotations has no effect"() {
     setup:
-    runUnderServerTrace("test") {
+    runWithServerSpan("test") {
       obj.call()
     }
 

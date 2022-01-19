@@ -7,10 +7,14 @@ package io.opentelemetry.instrumentation.ratpack;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import ratpack.exec.ExecInitializer;
 import ratpack.exec.ExecInterceptor;
 import ratpack.handling.HandlerDecorator;
 import ratpack.http.Request;
 import ratpack.http.Response;
+import ratpack.http.client.HttpClient;
+import ratpack.http.client.HttpResponse;
+import ratpack.http.client.RequestSpec;
 import ratpack.registry.RegistrySpec;
 
 /**
@@ -42,9 +46,13 @@ public final class RatpackTracing {
   }
 
   private final OpenTelemetryServerHandler serverHandler;
+  private final OpenTelemetryHttpClient httpClientInstrumenter;
 
-  RatpackTracing(Instrumenter<Request, Response> serverInstrumenter) {
+  RatpackTracing(
+      Instrumenter<Request, Response> serverInstrumenter,
+      Instrumenter<RequestSpec, HttpResponse> clientInstrumenter) {
     serverHandler = new OpenTelemetryServerHandler(serverInstrumenter);
+    httpClientInstrumenter = new OpenTelemetryHttpClient(clientInstrumenter);
   }
 
   /** Returns instance of {@link OpenTelemetryServerHandler} to support Ratpack Registry binding. */
@@ -57,9 +65,20 @@ public final class RatpackTracing {
     return OpenTelemetryExecInterceptor.INSTANCE;
   }
 
+  /** Returns instance of {@link ExecInitializer} to support Ratpack Registry binding. */
+  public ExecInitializer getOpenTelemetryExecInitializer() {
+    return OpenTelemetryExecInitializer.INSTANCE;
+  }
+
   /** Configures the {@link RegistrySpec} with OpenTelemetry. */
   public void configureServerRegistry(RegistrySpec registry) {
     registry.add(HandlerDecorator.prepend(serverHandler));
     registry.add(OpenTelemetryExecInterceptor.INSTANCE);
+    registry.add(OpenTelemetryExecInitializer.INSTANCE);
+  }
+
+  /** Returns instrumented instance of {@link HttpClient} with OpenTelemetry. */
+  public HttpClient instrumentHttpClient(HttpClient httpClient) throws Exception {
+    return httpClientInstrumenter.instrument(httpClient);
   }
 }

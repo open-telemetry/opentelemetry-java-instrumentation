@@ -7,16 +7,14 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.stream.IntStream
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 class ForkJoinTaskTest extends AgentInstrumentationSpecification {
 
   def "test parallel"() {
     when:
-    runUnderTrace("parent") {
+    runWithSpan("parent") {
       IntStream.range(0, 20)
         .parallel()
-        .forEach({ runUnderTrace("child") {} })
+        .forEach({ runWithSpan("child") {} })
     }
 
     then:

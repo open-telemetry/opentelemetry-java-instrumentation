@@ -16,7 +16,7 @@ public final class RuntimeVirtualFieldSupplier {
   private static final Logger logger = LoggerFactory.getLogger(RuntimeVirtualFieldSupplier.class);
 
   public interface VirtualFieldSupplier {
-    <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType);
+    <U extends T, V extends F, T, F> VirtualField<U, V> find(Class<T> type, Class<F> fieldType);
   }
 
   private static final VirtualFieldSupplier DEFAULT = new CacheBasedVirtualFieldSupplier();
@@ -44,8 +44,9 @@ public final class RuntimeVirtualFieldSupplier {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
-      return (VirtualField<U, F>)
+    public <U extends T, V extends F, T, F> VirtualField<U, V> find(
+        Class<T> type, Class<F> fieldType) {
+      return (VirtualField<U, V>)
           ownerToFieldToImplementationMap
               .computeIfAbsent(type, c -> Cache.weak())
               .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());

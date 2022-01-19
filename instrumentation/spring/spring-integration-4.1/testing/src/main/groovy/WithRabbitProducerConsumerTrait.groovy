@@ -19,8 +19,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 
 import java.time.Duration
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan
 
 trait WithRabbitProducerConsumerTrait {
 
@@ -85,7 +84,7 @@ trait WithRabbitProducerConsumerTrait {
     @Bean
     Runnable producer() {
       return {
-        runUnderTrace("producer") {
+        runWithSpan("producer") {
           source.output().send(MessageBuilder.withPayload("test").build())
         }
       }
@@ -98,7 +97,7 @@ trait WithRabbitProducerConsumerTrait {
   static class ConsumerConfig {
     @StreamListener(Sink.INPUT)
     void consume(String ignored) {
-      runInternalSpan("consumer")
+      runWithSpan("consumer") {}
     }
   }
 }

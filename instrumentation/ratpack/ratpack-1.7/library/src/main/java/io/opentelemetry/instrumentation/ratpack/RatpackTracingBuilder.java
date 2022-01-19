@@ -13,11 +13,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.ratpack.internal.RatpackHttpNetAttributesExtractor;
 import io.opentelemetry.instrumentation.ratpack.internal.RatpackNetAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import ratpack.http.Request;
 import ratpack.http.Response;
+import ratpack.http.client.HttpResponse;
+import ratpack.http.client.RequestSpec;
 
 /** A builder for {@link RatpackTracing}. */
 public final class RatpackTracingBuilder {
@@ -30,6 +33,9 @@ public final class RatpackTracingBuilder {
       new ArrayList<>();
   private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.server(Config.get());
 
+  private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
+      additionalHttpClientExtractors = new ArrayList<>();
+
   RatpackTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -41,6 +47,12 @@ public final class RatpackTracingBuilder {
   public RatpackTracingBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  public RatpackTracingBuilder addClientAttributeExtractor(
+      AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
+    additionalHttpClientExtractors.add(attributesExtractor);
     return this;
   }
 
@@ -72,6 +84,21 @@ public final class RatpackTracingBuilder {
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(RatpackGetter.INSTANCE);
 
-    return new RatpackTracing(instrumenter);
+    return new RatpackTracing(instrumenter, httpClientInstrumenter());
+  }
+
+  private Instrumenter<RequestSpec, HttpResponse> httpClientInstrumenter() {
+    RatpackHttpNetAttributesExtractor netAttributes = new RatpackHttpNetAttributesExtractor();
+    RatpackHttpClientAttributesExtractor httpAttributes =
+        new RatpackHttpClientAttributesExtractor(capturedHttpHeaders);
+
+    return Instrumenter.<RequestSpec, HttpResponse>builder(
+            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
+        .addAttributesExtractor(netAttributes)
+        .addAttributesExtractor(httpAttributes)
+        .addAttributesExtractors(additionalHttpClientExtractors)
+        .addRequestMetrics(HttpServerMetrics.get())
+        .newClientInstrumenter(RequestHeaderSetter.INSTANCE);
   }
 }

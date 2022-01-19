@@ -36,7 +36,8 @@ public abstract class VirtualField<T, F> {
    * @param type The type that will contain the new virtual field.
    * @param fieldType The field type that will be added to {@code type}.
    */
-  public static <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
+  public static <U extends T, V extends F, T, F> VirtualField<U, V> find(
+      Class<T> type, Class<F> fieldType) {
     return RuntimeVirtualFieldSupplier.get().find(type, fieldType);
   }
 

@@ -12,7 +12,6 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 class JerseyTest extends AgentInstrumentationSpecification {
 
@@ -28,7 +27,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderServerTrace("test.span") {
+    def response = runWithServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 
@@ -67,7 +66,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
 
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderServerTrace("test.span") {
+    def response = runWithServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 
