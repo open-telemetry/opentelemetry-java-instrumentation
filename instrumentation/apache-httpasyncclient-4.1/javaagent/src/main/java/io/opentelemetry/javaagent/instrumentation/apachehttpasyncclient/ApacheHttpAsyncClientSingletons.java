@@ -29,10 +29,10 @@ public final class ApacheHttpAsyncClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpAsyncClientNetAttributesGetter netAttributesAdapter =
+    ApacheHttpAsyncClientNetAttributesGetter netAttributesGetter =
         new ApacheHttpAsyncClientNetAttributesGetter();
     NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
@@ -40,7 +40,7 @@ public final class ApacheHttpAsyncClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

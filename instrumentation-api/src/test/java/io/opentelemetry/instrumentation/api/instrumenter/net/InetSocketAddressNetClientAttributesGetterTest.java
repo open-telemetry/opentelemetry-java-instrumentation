@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class InetSocketAddressNetClientAttributesGetterTest {
 
   private final InetSocketAddressNetClientAttributesGetter<InetSocketAddress, InetSocketAddress>
-      adapter =
+      getter =
           new InetSocketAddressNetClientAttributesGetter<InetSocketAddress, InetSocketAddress>() {
             @Override
             public InetSocketAddress getAddress(
@@ -34,7 +34,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
             }
           };
   private final NetClientAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
-      NetClientAttributesExtractor.create(adapter);
+      NetClientAttributesExtractor.create(getter);
 
   @Test
   void noInetSocketAddress() {

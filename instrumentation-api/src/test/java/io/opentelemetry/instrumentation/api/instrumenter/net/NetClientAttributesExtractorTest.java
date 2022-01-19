@@ -64,9 +64,9 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesGetter adapter = new TestNetClientAttributesGetter();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        NetClientAttributesExtractor.create(adapter);
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -99,9 +99,9 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesGetter adapter = new TestNetClientAttributesGetter();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        NetClientAttributesExtractor.create(adapter);
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -128,9 +128,9 @@ class NetClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("peerPort", "-1");
 
-    TestNetClientAttributesGetter adapter = new TestNetClientAttributesGetter();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        NetClientAttributesExtractor.create(adapter);
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();

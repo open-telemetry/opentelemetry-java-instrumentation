@@ -33,10 +33,9 @@ public class ResteasyClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClientInvocation, ? super Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ResteasyClientNetAttributesGetter netAttributesAdapter =
-        new ResteasyClientNetAttributesGetter();
+    ResteasyClientNetAttributesGetter netAttributesGetter = new ResteasyClientNetAttributesGetter();
     NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ClientInvocation, Response>builder(
@@ -51,7 +50,7 @@ public class ResteasyClientSingletons {
                 })
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(ClientInvocationHeaderSetter.INSTANCE);
   }

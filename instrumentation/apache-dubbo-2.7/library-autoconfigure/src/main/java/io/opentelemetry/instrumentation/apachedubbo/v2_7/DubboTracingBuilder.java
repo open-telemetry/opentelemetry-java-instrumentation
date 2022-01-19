@@ -57,10 +57,9 @@ public final class DubboTracingBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesExtractor);
 
-    DubboNetClientAttributesGetter netClientAttributesAdapter =
-        new DubboNetClientAttributesGetter();
+    DubboNetClientAttributesGetter netClientAttributesGetter = new DubboNetClientAttributesGetter();
     NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor =
-        NetClientAttributesExtractor.create(netClientAttributesAdapter);
+        NetClientAttributesExtractor.create(netClientAttributesGetter);
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
@@ -82,7 +81,7 @@ public final class DubboTracingBuilder {
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     } else {
       clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesAdapter));
+          PeerServiceAttributesExtractor.create(netClientAttributesGetter));
     }
 
     return new DubboTracing(

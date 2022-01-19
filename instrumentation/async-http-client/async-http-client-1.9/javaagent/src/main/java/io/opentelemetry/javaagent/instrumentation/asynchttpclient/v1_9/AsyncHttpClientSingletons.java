@@ -30,17 +30,17 @@ public final class AsyncHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    AsyncHttpClientNetAttributesGetter netAttributesAdapter =
+    AsyncHttpClientNetAttributesGetter netAttributesGetter =
         new AsyncHttpClientNetAttributesGetter();
     NetClientAttributesExtractor<Request, Response> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
     INSTRUMENTER =
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

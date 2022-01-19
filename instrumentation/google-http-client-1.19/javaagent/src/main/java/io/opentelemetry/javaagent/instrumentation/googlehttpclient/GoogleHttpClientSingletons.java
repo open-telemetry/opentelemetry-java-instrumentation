@@ -30,10 +30,10 @@ public class GoogleHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    GoogleHttpClientNetAttributesGetter netAttributesAdapter =
+    GoogleHttpClientNetAttributesGetter netAttributesGetter =
         new GoogleHttpClientNetAttributesGetter();
     NetClientAttributesExtractor<HttpRequest, HttpResponse> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse>builder(
@@ -41,7 +41,7 @@ public class GoogleHttpClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

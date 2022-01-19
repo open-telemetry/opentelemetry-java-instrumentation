@@ -55,10 +55,10 @@ public final class JettyClientInstrumenterBuilder {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JettyHttpClientNetAttributesGetter netAttributesAdapter =
+    JettyHttpClientNetAttributesGetter netAttributesGetter =
         new JettyHttpClientNetAttributesGetter();
     NetClientAttributesExtractor<Request, Response> attributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     return Instrumenter.<Request, Response>builder(
             this.openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)

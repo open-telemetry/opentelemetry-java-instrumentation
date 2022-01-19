@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import javax.annotation.Nullable;
 
 /**
- * A type adapter for client-based network attributes. It adapts from a type-specific request and
- * response into the 4 common network attribute values.
+ * An interface for getting client-based network attributes. It adapts from a type-specific request
+ * and response into the 4 common network attribute values.
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * library/framework. It will be used by the NetClientAttributesExtractor to obtain the various

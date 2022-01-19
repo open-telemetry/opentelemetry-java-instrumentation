@@ -29,9 +29,9 @@ public class JdkHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<HttpRequest, HttpResponse<?>> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JdkHttpNetAttributesGetter netAttributesAdapter = new JdkHttpNetAttributesGetter();
+    JdkHttpNetAttributesGetter netAttributesGetter = new JdkHttpNetAttributesGetter();
     NetClientAttributesExtractor<HttpRequest, HttpResponse<?>> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse<?>>builder(
@@ -39,7 +39,7 @@ public class JdkHttpClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(SETTER);
   }

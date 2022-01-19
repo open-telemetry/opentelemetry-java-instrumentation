@@ -33,7 +33,7 @@ public final class ReactorNettySingletons {
   static {
     ReactorNettyHttpClientAttributesExtractor httpAttributesExtractor =
         new ReactorNettyHttpClientAttributesExtractor();
-    ReactorNettyNetClientAttributesGetter netAttributesAdapter =
+    ReactorNettyNetClientAttributesGetter netAttributesGetter =
         new ReactorNettyNetClientAttributesGetter();
 
     INSTRUMENTER =
@@ -43,8 +43,8 @@ public final class ReactorNettySingletons {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesAdapter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             // headers are injected in ResponseReceiverInstrumenter
             .newInstrumenter(SpanKindExtractor.alwaysClient());

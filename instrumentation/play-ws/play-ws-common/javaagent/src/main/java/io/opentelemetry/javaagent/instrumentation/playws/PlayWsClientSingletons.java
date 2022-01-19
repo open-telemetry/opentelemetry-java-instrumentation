@@ -30,15 +30,15 @@ public class PlayWsClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    PlayWsClientNetAttributesGetter netAttributesAdapter = new PlayWsClientNetAttributesGetter();
+    PlayWsClientNetAttributesGetter netAttributesGetter = new PlayWsClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesAdapter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

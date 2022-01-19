@@ -23,16 +23,16 @@ public final class JedisSingletons {
     DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
         new JedisDbAttributesExtractor();
     SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
-    JedisNetAttributesGetter netAttributesAdapter = new JedisNetAttributesGetter();
+    JedisNetAttributesGetter netAttributesGetter = new JedisNetAttributesGetter();
     NetClientAttributesExtractor<JedisRequest, Void> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

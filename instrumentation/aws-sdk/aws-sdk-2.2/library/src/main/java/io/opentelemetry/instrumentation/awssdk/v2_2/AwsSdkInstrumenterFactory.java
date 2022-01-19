@@ -22,10 +22,10 @@ final class AwsSdkInstrumenterFactory {
       new AwsSdkHttpAttributesExtractor();
   static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
       new AwsSdkRpcAttributesExtractor();
-  private static final AwsSdkNetAttributesGetter netAttributesAdapter =
+  private static final AwsSdkNetAttributesGetter netAttributesGetter =
       new AwsSdkNetAttributesGetter();
   private static final NetClientAttributesExtractor<ExecutionAttributes, SdkHttpResponse>
-      netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesAdapter);
+      netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesGetter);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 

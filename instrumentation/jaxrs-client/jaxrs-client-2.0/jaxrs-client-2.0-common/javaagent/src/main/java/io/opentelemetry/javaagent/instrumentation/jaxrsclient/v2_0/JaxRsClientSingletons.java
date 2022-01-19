@@ -32,9 +32,9 @@ public class JaxRsClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super ClientRequestContext, ? super ClientResponseContext>
         spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    JaxRsClientNetAttributesGetter netAttributesAdapter = new JaxRsClientNetAttributesGetter();
+    JaxRsClientNetAttributesGetter netAttributesGetter = new JaxRsClientNetAttributesGetter();
     NetClientAttributesExtractor<ClientRequestContext, ClientResponseContext>
-        netClientAttributesExtractor = NetClientAttributesExtractor.create(netAttributesAdapter);
+        netClientAttributesExtractor = NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ClientRequestContext, ClientResponseContext>builder(
@@ -49,7 +49,7 @@ public class JaxRsClientSingletons {
                 })
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netClientAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(ClientRequestContextHeaderSetter.INSTANCE);
   }

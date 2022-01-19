@@ -25,15 +25,15 @@ public final class JdbcSingletons {
   static {
     DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
-    JdbcNetAttributesGetter netAttributesAdapter = new JdbcNetAttributesGetter();
+    JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
     NetClientAttributesExtractor<DbRequest, Void> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

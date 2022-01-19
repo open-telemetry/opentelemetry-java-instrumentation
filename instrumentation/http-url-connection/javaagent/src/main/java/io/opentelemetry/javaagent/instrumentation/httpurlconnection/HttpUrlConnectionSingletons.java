@@ -20,12 +20,12 @@ public class HttpUrlConnectionSingletons {
 
   static {
     HttpUrlHttpAttributesExtractor httpAttributesExtractor = new HttpUrlHttpAttributesExtractor();
-    HttpUrlNetAttributesGetter netAttributesAdapter = new HttpUrlNetAttributesGetter();
+    HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
     SpanNameExtractor<HttpURLConnection> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
     NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
@@ -33,7 +33,7 @@ public class HttpUrlConnectionSingletons {
                 spanNameExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }

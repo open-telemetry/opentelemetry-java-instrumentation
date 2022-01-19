@@ -20,16 +20,16 @@ public final class ElasticsearchRestInstrumenterFactory {
     ElasticsearchRestAttributesExtractor attributesExtractor =
         new ElasticsearchRestAttributesExtractor();
     SpanNameExtractor<String> spanNameExtractor = DbSpanNameExtractor.create(attributesExtractor);
-    ElasticsearchRestNetResponseAttributesGetter netAttributesAdapter =
+    ElasticsearchRestNetResponseAttributesGetter netAttributesGetter =
         new ElasticsearchRestNetResponseAttributesGetter();
     NetClientAttributesExtractor<String, Response> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesAdapter);
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     return Instrumenter.<String, Response>builder(
             GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesAdapter))
+        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
