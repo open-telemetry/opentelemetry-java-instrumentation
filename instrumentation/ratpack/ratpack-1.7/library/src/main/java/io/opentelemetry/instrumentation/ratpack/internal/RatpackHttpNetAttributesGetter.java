@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.ratpack.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-public final class RatpackHttpNetAttributesExtractor
-    extends NetClientAttributesExtractor<RequestSpec, HttpResponse> {
+public final class RatpackHttpNetAttributesGetter
+    implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
   @Override
   public String transport(RequestSpec request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
