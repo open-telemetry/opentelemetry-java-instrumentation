@@ -110,9 +110,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "aws.service" { it.contains(service) }
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
-            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -178,9 +179,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" 61
-            "aws.service" { it.contains(service) }
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -234,9 +236,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "Amazon S3"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
+            "$SemanticAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
-            "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
           }

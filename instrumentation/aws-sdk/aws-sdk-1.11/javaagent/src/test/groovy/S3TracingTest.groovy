@@ -52,9 +52,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateQueue"
+            "rpc.method" "CreateQueue"
             "aws.queue.name" queueName
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -74,8 +75,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateBucket"
-            "aws.service" "Amazon S3"
+            "rpc.method" "CreateBucket"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -96,9 +98,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "GetQueueAttributes"
+            "rpc.method" "GetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -118,9 +121,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetQueueAttributes"
+            "rpc.method" "SetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -140,8 +144,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetBucketNotificationConfiguration"
-            "aws.service" "Amazon S3"
+            "rpc.method" "SetBucketNotificationConfiguration"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -161,9 +166,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -182,8 +188,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PutObject"
-            "aws.service" "Amazon S3"
+            "rpc.method" "PutObject"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -201,9 +208,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -228,9 +236,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -249,8 +258,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ListObjects"
-            "aws.service" "Amazon S3"
+            "rpc.method" "ListObjects"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "GET"
@@ -270,8 +280,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "DeleteObject"
-            "aws.service" "Amazon S3"
+            "rpc.method" "DeleteObject"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "DELETE"
@@ -291,8 +302,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "DeleteBucket"
-            "aws.service" "Amazon S3"
+            "rpc.method" "DeleteBucket"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "DELETE"
@@ -312,9 +324,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PurgeQueue"
+            "rpc.method" "PurgeQueue"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -363,9 +376,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateQueue"
+            "rpc.method" "CreateQueue"
             "aws.queue.name" queueName
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -384,9 +398,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "GetQueueAttributes"
+            "rpc.method" "GetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -405,8 +420,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateBucket"
-            "aws.service" "Amazon S3"
+            "rpc.method" "CreateBucket"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -426,8 +442,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateTopic"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "CreateTopic"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -446,8 +463,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "Subscribe"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "Subscribe"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -466,9 +484,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetQueueAttributes"
+            "rpc.method" "SetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -487,8 +506,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetTopicAttributes"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "SetTopicAttributes"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -507,8 +527,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetBucketNotificationConfiguration"
-            "aws.service" "Amazon S3"
+            "rpc.method" "SetBucketNotificationConfiguration"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -529,9 +550,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -550,8 +572,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PutObject"
-            "aws.service" "Amazon S3"
+            "rpc.method" "PutObject"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "PUT"
@@ -575,9 +598,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -596,9 +620,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -618,8 +643,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ListObjects"
-            "aws.service" "Amazon S3"
+            "rpc.method" "ListObjects"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "GET"
@@ -639,8 +665,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "DeleteObject"
-            "aws.service" "Amazon S3"
+            "rpc.method" "DeleteObject"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "DELETE"
@@ -660,8 +687,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "DeleteBucket"
-            "aws.service" "Amazon S3"
+            "rpc.method" "DeleteBucket"
+            "rpc.system" "aws-api"
+            "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
             "http.flavor" "1.1"
             "http.method" "DELETE"
@@ -681,9 +709,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PurgeQueue"
+            "rpc.method" "PurgeQueue"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200

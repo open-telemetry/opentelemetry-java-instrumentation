@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
 import javax.annotation.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;

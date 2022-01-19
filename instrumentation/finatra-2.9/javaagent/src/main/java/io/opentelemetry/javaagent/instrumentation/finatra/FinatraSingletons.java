@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 
 public final class FinatraSingletons {
 

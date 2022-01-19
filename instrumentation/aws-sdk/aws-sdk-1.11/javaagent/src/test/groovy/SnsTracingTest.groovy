@@ -45,9 +45,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateQueue"
+            "rpc.method" "CreateQueue"
             "aws.queue.name" queueName
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -67,9 +68,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "GetQueueAttributes"
+            "rpc.method" "GetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -89,9 +91,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetQueueAttributes"
+            "rpc.method" "SetQueueAttributes"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -111,8 +114,9 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateTopic"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "CreateTopic"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -132,8 +136,9 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "Subscribe"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "Subscribe"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -152,8 +157,9 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "Publish"
-            "aws.service" "AmazonSNS"
+            "rpc.method" "Publish"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSNS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -170,9 +176,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "rpc.method" "ReceiveMessage"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -196,9 +203,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
             "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "rpc.method" "ReceiveMessage"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200

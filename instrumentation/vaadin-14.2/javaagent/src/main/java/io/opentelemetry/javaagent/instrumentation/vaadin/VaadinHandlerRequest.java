@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
 
 @AutoValue
 public abstract class VaadinHandlerRequest {

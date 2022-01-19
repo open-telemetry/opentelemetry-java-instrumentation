@@ -17,8 +17,10 @@ import java.util.List;
 final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
 
-  private static final AwsSdkAttributesExtractor attributesExtractor =
-      new AwsSdkAttributesExtractor();
+  private static final AwsSdkHttpAttributesExtractor httpAttributesExtractor =
+      new AwsSdkHttpAttributesExtractor();
+  private static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
+      new AwsSdkRpcAttributesExtractor();
   private static final AwsSdkNetAttributesExtractor netAttributesExtractor =
       new AwsSdkNetAttributesExtractor();
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
@@ -26,11 +28,15 @@ final class AwsSdkInstrumenterFactory {
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = Arrays.asList(attributesExtractor, netAttributesExtractor);
+      defaultAttributesExtractors =
+          Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       extendedAttributesExtractors =
           Arrays.asList(
-              attributesExtractor, netAttributesExtractor, experimentalAttributesExtractor);
+              httpAttributesExtractor,
+              rpcAttributesExtractor,
+              netAttributesExtractor,
+              experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   static Instrumenter<Request<?>, Response<?>> requestInstrumenter(

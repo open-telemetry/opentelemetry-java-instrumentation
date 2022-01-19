@@ -177,7 +177,7 @@ jobs:
         with:
           tag_name: v${{ steps.set-release-version.outputs.release-version }}
           commitish: ${{ github.ref_name }}
-          release_name: Release v${{ steps.set-release-version.outputs.release-version }}
+          release_name: Version ${{ steps.set-release-version.outputs.release-version }}
           draft: true
           prerelease: false
 

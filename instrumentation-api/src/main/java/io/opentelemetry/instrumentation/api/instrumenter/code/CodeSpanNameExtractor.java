@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.code;
 
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 import javax.annotation.Nullable;
 
 /**
