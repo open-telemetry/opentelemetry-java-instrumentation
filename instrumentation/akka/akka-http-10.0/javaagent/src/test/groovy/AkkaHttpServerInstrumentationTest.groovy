@@ -27,35 +27,9 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
     false
   }
 
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [SemanticAttributes.HTTP_ROUTE ]
-  }
-
-
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    StringBuilder result = new StringBuilder()
-    String path = endpoint.resolvePath(address).path
-
-    // strip of preceding slash for split()
-    if (path.startsWith("/")) {
-      path = path.substring(1)
-      result.append("/")
-    }
-    String[] segments = path.split("/")
-
-    // limit segments to 2
-    for (int i = 0; i < segments.length && i < 2; i++) {
-      result.append(segments[i]).append("/")
-    }
-
-    if (result.length() <= 0) {
-      return "AKKA HTTP"
-    }
-    // strip trailing slash
-    result.setLength(result.length()-1)
-    return result.toString()
-  }
+      return "HTTP GET"
+   }
 }
 
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
