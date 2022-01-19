@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.ktor.v1_0
 
 import io.ktor.server.engine.ApplicationEngine
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeUnit
 
@@ -35,6 +37,13 @@ class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements Li
   @Override
   boolean testPathParam() {
     true
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes
   }
 
   @Override
