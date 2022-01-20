@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,23 +38,42 @@ class OpenTelemetryAutoConfigurationTest {
   @Test
   @DisplayName(
       "when Application Context contains OpenTelemetry bean should NOT initialize openTelemetry")
-  void customTracer() {
+  void customOpenTelemetry() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
-            context -> {
-              assertThat(context.containsBean("customOpenTelemetry")).isTrue();
-              assertThat(context.containsBean("openTelemetry")).isFalse();
-            });
+            context ->
+                assertThat(context)
+                    .hasBean("customOpenTelemetry")
+                    .doesNotHaveBean("openTelemetry")
+                    .doesNotHaveBean("sdkTracerProvider"));
   }
 
   @Test
   @DisplayName(
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
-  void initializeTracer() {
+  void initializeTracerProviderAndOpenTelemetry() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(context -> assertThat(context.containsBean("openTelemetry")).isTrue());
+        .run(context -> assertThat(context).hasBean("openTelemetry").hasBean("sdkTracerProvider"));
+  }
+
+  @Test
+  @DisplayName(
+      "when Application Context DOES NOT contain OpenTelemetry bean but TracerProvider should initialize openTelemetry")
+  void initializeOpenTelemetry() {
+    this.contextRunner
+        .withBean(
+            "customTracerProvider",
+            SdkTracerProvider.class,
+            () -> SdkTracerProvider.builder().build())
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context ->
+                assertThat(context)
+                    .hasBean("openTelemetry")
+                    .hasBean("customTracerProvider")
+                    .doesNotHaveBean("sdkTracerProvider"));
   }
 }
