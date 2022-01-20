@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.undertow.server.HttpServerExchange;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-public class UndertowNetAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> {
+public class UndertowNetAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<HttpServerExchange> {
 
   @Override
   @Nullable

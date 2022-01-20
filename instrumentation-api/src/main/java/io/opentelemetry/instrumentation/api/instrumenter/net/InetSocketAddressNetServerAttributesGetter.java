@@ -16,8 +16,8 @@ import javax.annotation.Nullable;
  * {@link InetSocketAddress} so this is a convenient alternative to {@link
  * NetServerAttributesExtractor}. There is no meaning to implement both in the same instrumentation.
  */
-public abstract class InetSocketAddressNetServerAttributesExtractor<REQUEST, RESPONSE>
-    extends NetServerAttributesExtractor<REQUEST, RESPONSE> {
+public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
+    implements NetServerAttributesGetter<REQUEST> {
 
   @Nullable
   public abstract InetSocketAddress getAddress(REQUEST request);

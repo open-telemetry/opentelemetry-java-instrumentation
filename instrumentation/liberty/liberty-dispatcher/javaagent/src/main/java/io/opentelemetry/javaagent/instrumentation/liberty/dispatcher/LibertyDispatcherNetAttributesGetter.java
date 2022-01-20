@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-public class LibertyDispatcherNetAttributesExtractor
-    extends NetServerAttributesExtractor<LibertyRequest, LibertyResponse> {
+public class LibertyDispatcherNetAttributesGetter
+    implements NetServerAttributesGetter<LibertyRequest> {
 
   @Override
   public String transport(LibertyRequest libertyRequest) {

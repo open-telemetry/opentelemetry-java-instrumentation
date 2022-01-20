@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +72,8 @@ public final class SpringWebMvcTracingBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(new StatusCodeExtractor())
-            .addAttributesExtractor(new SpringWebMvcNetAttributesExtractor())
+            .addAttributesExtractor(
+                NetServerAttributesExtractor.create(new SpringWebMvcNetAttributesGetter()))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(ServerSpanNaming.get())

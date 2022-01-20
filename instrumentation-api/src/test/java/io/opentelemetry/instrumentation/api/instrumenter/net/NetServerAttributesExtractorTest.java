@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 
 class NetServerAttributesExtractorTest {
 
-  static class TestNetServerAttributesExtractor
-      extends NetServerAttributesExtractor<Map<String, String>, Map<String, String>> {
+  static class TestNetServerAttributesGetter
+      implements NetServerAttributesGetter<Map<String, String>> {
 
     @Override
     public String transport(Map<String, String> request) {
@@ -55,7 +55,8 @@ class NetServerAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetServerAttributesExtractor extractor = new TestNetServerAttributesExtractor();
+    NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        createTestExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -89,7 +90,8 @@ class NetServerAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetServerAttributesExtractor extractor = new TestNetServerAttributesExtractor();
+    NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        createTestExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -117,7 +119,8 @@ class NetServerAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("peerPort", "-1");
 
-    TestNetServerAttributesExtractor extractor = new TestNetServerAttributesExtractor();
+    NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        createTestExtractor();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -129,5 +132,10 @@ class NetServerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build()).isEmpty();
+  }
+
+  private NetServerAttributesExtractor<Map<String, String>, Map<String, String>>
+      createTestExtractor() {
+    return NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
   }
 }

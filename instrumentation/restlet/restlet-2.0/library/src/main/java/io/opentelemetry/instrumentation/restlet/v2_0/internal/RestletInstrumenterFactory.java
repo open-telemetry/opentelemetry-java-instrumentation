@@ -43,7 +43,7 @@ public class RestletInstrumenterFactory {
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
-        new RestletNetAttributesExtractor();
+        NetServerAttributesExtractor.create(new RestletNetAttributesGetter());
 
     return Instrumenter.<Request, Response>builder(
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)

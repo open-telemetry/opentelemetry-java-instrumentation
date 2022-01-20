@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor
 import io.opentelemetry.instrumentation.api.server.ServerSpanNaming
 import kotlinx.coroutines.withContext
 
@@ -98,7 +99,7 @@ class KtorServerTracing private constructor(
 
       with(instrumenterBuilder) {
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor)))
-        addAttributesExtractor(KtorNetServerAttributesExtractor())
+        addAttributesExtractor(NetServerAttributesExtractor.create(KtorNetServerAttributesGetter()))
         addAttributesExtractor(httpAttributesExtractor)
         addRequestMetrics(HttpServerMetrics.get())
         addContextCustomizer(ServerSpanNaming.get())

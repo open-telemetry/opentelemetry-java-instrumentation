@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpRequest;
@@ -60,7 +61,7 @@ public final class SpringWebTracingBuilder {
   public SpringWebTracing build() {
     SpringWebHttpAttributesExtractor httpAttributesExtractor =
         new SpringWebHttpAttributesExtractor(capturedHttpHeaders);
-    SpringWebNetAttributesExtractor netAttributesExtractor = new SpringWebNetAttributesExtractor();
+    SpringWebNetAttributesGetter netAttributesGetter = new SpringWebNetAttributesGetter();
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
@@ -69,7 +70,7 @@ public final class SpringWebTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpRequestSetter.INSTANCE);
