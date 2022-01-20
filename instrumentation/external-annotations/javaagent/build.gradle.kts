@@ -29,6 +29,8 @@ dependencies {
   testImplementation("org.springframework.cloud:spring-cloud-sleuth-core:2.2.4.RELEASE") {
     isTransitive = false
   }
+  // For some annotations used by sleuth
+  testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
 }
 
 tasks {

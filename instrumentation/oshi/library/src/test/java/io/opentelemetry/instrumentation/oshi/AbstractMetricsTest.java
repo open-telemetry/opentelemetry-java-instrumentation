@@ -12,9 +12,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.testing.InMemoryMetricReader;
 import io.opentelemetry.sdk.testing.assertj.MetricAssertions;
 import io.opentelemetry.sdk.testing.assertj.MetricDataAssert;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
@@ -37,7 +37,8 @@ class AbstractMetricsTest {
     GlobalOpenTelemetry.resetForTest();
   }
 
-  protected void waitAndAssertMetrics(Consumer<MetricDataAssert>... assertions) {
+  @SafeVarargs
+  protected final void waitAndAssertMetrics(Consumer<MetricDataAssert>... assertions) {
     await()
         .untilAsserted(
             () -> {

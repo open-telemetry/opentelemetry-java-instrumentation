@@ -39,6 +39,7 @@ dependencies {
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
+  testCompileOnly("com.google.auto.service:auto-service-annotations")
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")

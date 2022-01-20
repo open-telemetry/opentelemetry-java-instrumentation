@@ -15,7 +15,9 @@ dependencies {
   library("io.vertx:vertx-core:3.0.0")
 
   compileOnly("io.vertx:vertx-codegen:3.0.0")
+  testCompileOnly("io.vertx:vertx-codegen:3.0.0")
   compileOnly("io.vertx:vertx-docgen:3.0.0")
+  testCompileOnly("io.vertx:vertx-docgen:3.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

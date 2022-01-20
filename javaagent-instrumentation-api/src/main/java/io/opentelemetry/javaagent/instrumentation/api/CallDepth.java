@@ -53,19 +53,4 @@ public final class CallDepth {
   public int decrementAndGet() {
     return --this.depth;
   }
-
-  /**
-   * Get current call depth. This method may be used by vendor distributions to extend existing
-   * instrumentations.
-   */
-  @Deprecated
-  public int get() {
-    return depth;
-  }
-
-  /** Reset the call depth to its initial value. */
-  @Deprecated
-  public void reset() {
-    depth = 0;
-  }
 }
