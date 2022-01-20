@@ -66,7 +66,14 @@ public final class RedisCommandSanitizer {
 
     // Geo
     for (String command :
-        asList("GEOADD", "GEODIST", "GEOHASH", "GEOPOS", "GEORADIUS", "GEORADIUSBYMEMBER")) {
+        asList(
+            "GEOADD",
+            "GEODIST",
+            "GEOHASH",
+            "GEOPOS",
+            "GEORADIUS",
+            "GEORADIUS_RO",
+            "GEORADIUSBYMEMBER")) {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 

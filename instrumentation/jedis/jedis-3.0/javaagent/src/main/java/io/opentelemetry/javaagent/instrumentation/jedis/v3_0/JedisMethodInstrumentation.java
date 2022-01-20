@@ -5,32 +5,46 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
-import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
+import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.resolver.CommandResolver;
+import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.resolver.DefaultCommandResolver;
+import java.util.Locale;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Protocol;
 
 public class JedisMethodInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Jedis");
+    return named("redis.clients.jedis.Jedis").or(named("redis.clients.jedis.JedisCluster"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(JedisMethodMatch.getJedisMethodMatcher()),
+        isMethod()
+            .and(isPublic())
+            .and(
+                hasSuperMethod(methodIsDeclaredByType(nameEndsWith("Commands")))
+                    .or(named("ping"))
+                    .or(named("pubsubChannels"))
+                    .or(named("pubsubNumPat"))
+                    .or(named("pubsubNumSub"))
+                    .or(named("asking"))),
         this.getClass().getName() + "$JedisMethodAdvice");
   }
 
@@ -41,13 +55,27 @@ public class JedisMethodInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This Jedis jedis,
         @Advice.AllArguments Object[] args,
-        @Advice.Origin Method method,
+        @Advice.Origin("#m") String methodName,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
+      CommandResolver resolver = null;
+      try {
+        Protocol.Command command = Protocol.Command.valueOf(methodName.toUpperCase(Locale.ROOT));
+        resolver = new DefaultCommandResolver(command);
+      } catch (IllegalArgumentException e) {
+        MethodNameNotMatchingCommandMapping mapping =
+            MethodNameNotMatchingCommandMapping.mapping(methodName);
+        if (mapping != null) {
+          resolver = mapping.getResolver();
+        }
+      }
+      if (resolver == null) {
+        return;
+      }
       request =
-          JedisRequest.create(jedis.getClient(), method.getName().toUpperCase(), asList(args));
+          JedisRequest.create(jedis.getClient(), resolver.getCommand(), resolver.resolveArgs(args));
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
