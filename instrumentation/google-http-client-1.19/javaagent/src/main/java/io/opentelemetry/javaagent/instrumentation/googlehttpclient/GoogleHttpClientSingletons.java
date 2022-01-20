@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public class GoogleHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.google-http-client-1.19";
@@ -29,8 +30,10 @@ public class GoogleHttpClientSingletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    GoogleHttpClientNetAttributesExtractor netAttributesExtractor =
-        new GoogleHttpClientNetAttributesExtractor();
+    GoogleHttpClientNetAttributesGetter netAttributesGetter =
+        new GoogleHttpClientNetAttributesGetter();
+    NetClientAttributesExtractor<HttpRequest, HttpResponse> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse>builder(
@@ -38,7 +41,7 @@ public class GoogleHttpClientSingletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

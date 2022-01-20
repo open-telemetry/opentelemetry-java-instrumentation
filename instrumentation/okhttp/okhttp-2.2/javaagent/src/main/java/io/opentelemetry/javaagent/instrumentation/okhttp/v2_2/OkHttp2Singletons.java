@@ -35,8 +35,9 @@ public final class OkHttp2Singletons {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    OkHttp2NetAttributesGetter netClientAttributesGetter = new OkHttp2NetAttributesGetter();
     NetClientAttributesExtractor<Request, Response> netAttributesExtractor =
-        new OkHttp2NetAttributesExtractor();
+        NetClientAttributesExtractor.create(netClientAttributesGetter);
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
@@ -46,7 +47,8 @@ public final class OkHttp2Singletons {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(netClientAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());
 

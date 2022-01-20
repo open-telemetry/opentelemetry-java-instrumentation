@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesEx
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.net.HttpURLConnection;
 
 public class HttpUrlConnectionSingletons {
@@ -19,10 +20,12 @@ public class HttpUrlConnectionSingletons {
 
   static {
     HttpUrlHttpAttributesExtractor httpAttributesExtractor = new HttpUrlHttpAttributesExtractor();
-    HttpUrlNetAttributesExtractor netAttributesExtractor = new HttpUrlNetAttributesExtractor();
+    HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
     SpanNameExtractor<HttpURLConnection> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
 
+    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesGetter);
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
@@ -30,7 +33,7 @@ public class HttpUrlConnectionSingletons {
                 spanNameExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }

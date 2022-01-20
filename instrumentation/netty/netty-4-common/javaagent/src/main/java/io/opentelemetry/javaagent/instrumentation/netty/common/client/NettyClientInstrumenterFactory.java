@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 
@@ -33,8 +34,8 @@ public final class NettyClientInstrumenterFactory {
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter() {
     NettyHttpClientAttributesExtractor httpClientAttributesExtractor =
         new NettyHttpClientAttributesExtractor();
-    NettyNetClientAttributesExtractor netClientAttributesExtractor =
-        new NettyNetClientAttributesExtractor();
+    NettyNetClientAttributesGetter netClientAttributesExtractor =
+        new NettyNetClientAttributesGetter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             GlobalOpenTelemetry.get(),
@@ -42,19 +43,18 @@ public final class NettyClientInstrumenterFactory {
             HttpSpanNameExtractor.create(httpClientAttributesExtractor))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesExtractor))
         .addAttributesExtractor(httpClientAttributesExtractor)
-        .addAttributesExtractor(netClientAttributesExtractor)
+        .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesExtractor))
         .addAttributesExtractor(PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
         .addRequestMetrics(HttpClientMetrics.get())
         .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
-    NettyConnectNetAttributesExtractor netAttributesExtractor =
-        new NettyConnectNetAttributesExtractor();
+    NettyConnectNetAttributesGetter netAttributesExtractor = new NettyConnectNetAttributesGetter();
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesExtractor))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(
@@ -68,11 +68,11 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettySslInstrumenter createSslInstrumenter() {
-    NettySslNetAttributesExtractor netAttributesExtractor = new NettySslNetAttributesExtractor();
+    NettySslNetAttributesGetter netAttributesExtractor = new NettySslNetAttributesGetter();
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesExtractor))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .setTimeExtractor(new NettySslTimeExtractor())
             .newInstrumenter(

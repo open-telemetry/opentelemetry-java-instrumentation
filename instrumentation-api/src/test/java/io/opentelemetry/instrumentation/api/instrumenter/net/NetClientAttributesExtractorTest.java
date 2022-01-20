@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 
 class NetClientAttributesExtractorTest {
 
-  static class TestNetClientAttributesExtractor
-      extends NetClientAttributesExtractor<Map<String, String>, Map<String, String>> {
+  static class TestNetClientAttributesGetter
+      implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
     public String transport(Map<String, String> request, Map<String, String> response) {
@@ -64,7 +64,9 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -97,7 +99,9 @@ class NetClientAttributesExtractorTest {
     response.put("peerPort", "42");
     response.put("peerIp", "4.3.2.1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -124,7 +128,9 @@ class NetClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("peerPort", "-1");
 
-    TestNetClientAttributesExtractor extractor = new TestNetClientAttributesExtractor();
+    TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
+    NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        NetClientAttributesExtractor.create(getter);
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();

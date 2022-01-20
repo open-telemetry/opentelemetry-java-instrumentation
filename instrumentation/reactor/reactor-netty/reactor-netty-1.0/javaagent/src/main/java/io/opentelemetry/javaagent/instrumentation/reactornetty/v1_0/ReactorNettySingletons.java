@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
 import reactor.netty.http.client.HttpClientConfig;
@@ -32,8 +33,8 @@ public final class ReactorNettySingletons {
   static {
     ReactorNettyHttpClientAttributesExtractor httpAttributesExtractor =
         new ReactorNettyHttpClientAttributesExtractor();
-    ReactorNettyNetClientAttributesExtractor netAttributesExtractor =
-        new ReactorNettyNetClientAttributesExtractor();
+    ReactorNettyNetClientAttributesGetter netAttributesGetter =
+        new ReactorNettyNetClientAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpClientConfig, HttpClientResponse>builder(
@@ -42,8 +43,8 @@ public final class ReactorNettySingletons {
                 HttpSpanNameExtractor.create(httpAttributesExtractor))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             // headers are injected in ResponseReceiverInstrumenter
             .newInstrumenter(SpanKindExtractor.alwaysClient());
