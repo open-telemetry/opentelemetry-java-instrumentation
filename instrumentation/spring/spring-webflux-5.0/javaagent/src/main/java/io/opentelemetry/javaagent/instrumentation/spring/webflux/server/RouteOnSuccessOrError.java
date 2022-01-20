@@ -36,6 +36,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         if (context != null) {
           Span serverSpan = ServerSpan.fromContextOrNull(context);
           if (serverSpan != null) {
+            // TODO should update SERVER span name/route using ServerSpanNaming
             serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));
           }
         }
