@@ -28,6 +28,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.api.trace.StatusCode.UNSET
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -79,6 +80,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -144,6 +146,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -229,6 +232,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -292,6 +296,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           status UNSET
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -334,6 +339,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -381,6 +387,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           status ERROR
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -443,6 +450,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -473,6 +481,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
@@ -518,6 +527,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             kind SERVER
             hasNoParent()
             attributes {
+              "$SemanticAttributes.NET_TRANSPORT" IP_TCP
               "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
               "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
               "$SemanticAttributes.NET_PEER_PORT" Long

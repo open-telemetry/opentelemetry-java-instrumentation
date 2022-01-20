@@ -24,6 +24,7 @@ import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   @Shared
@@ -62,6 +63,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
@@ -151,6 +153,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
+              "$SemanticAttributes.NET_TRANSPORT" IP_TCP
               "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
               "$SemanticAttributes.NET_PEER_PORT" Long
               "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"

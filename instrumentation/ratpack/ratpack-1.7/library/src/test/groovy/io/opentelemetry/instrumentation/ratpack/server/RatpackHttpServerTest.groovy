@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.server.RatpackServerSpec
 
 class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements LibraryTestTrait {
@@ -25,13 +23,5 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements Lib
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 }

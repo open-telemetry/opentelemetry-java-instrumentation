@@ -48,6 +48,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.remove(SemanticAttributes.NET_TRANSPORT)
     attributes
   }
 

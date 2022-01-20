@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
+
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
@@ -18,7 +22,7 @@ final class NettyNetServerAttributesExtractor
   @Override
   @Nullable
   public String transport(HttpRequestAndChannel requestAndChannel) {
-    return null;
+    return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Override
