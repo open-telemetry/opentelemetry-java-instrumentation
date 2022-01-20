@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
-public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable {
+public class ScalaAsyncChild extends ForkJoinTask<Object> implements Runnable, Callable<Object> {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;

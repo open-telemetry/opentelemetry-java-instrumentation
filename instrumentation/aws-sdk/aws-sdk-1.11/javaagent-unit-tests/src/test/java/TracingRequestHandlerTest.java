@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TracingRequestHandlerTest {
 
-  private static Response<SendMessageResult> response(Request request) {
+  private static Response<SendMessageResult> response(Request<?> request) {
     return new Response<>(new SendMessageResult(), new HttpResponse(request, new HttpGet()));
   }
 

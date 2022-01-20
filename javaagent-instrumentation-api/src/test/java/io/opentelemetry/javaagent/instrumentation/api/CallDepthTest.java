@@ -19,10 +19,7 @@ class CallDepthTest {
     assertThat(CallDepth.forClass(String.class).getAndIncrement()).isOne();
     assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isOne();
 
-    CallDepth.forClass(String.class).reset();
     assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isEqualTo(2);
-
-    CallDepth.forClass(Integer.class).reset();
 
     assertThat(CallDepth.forClass(String.class).getAndIncrement()).isZero();
     assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isZero();

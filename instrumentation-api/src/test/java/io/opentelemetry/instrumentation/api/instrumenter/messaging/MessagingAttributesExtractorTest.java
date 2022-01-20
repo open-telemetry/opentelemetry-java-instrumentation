@@ -74,7 +74,9 @@ class MessagingAttributesExtractorTest {
         entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES, 10L));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_OPERATION, operation.operationName()));
 
-    assertThat(startAttributes.build()).containsOnly(expectedEntries.toArray(new MapEntry[0]));
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr = expectedEntries.toArray(new MapEntry[0]);
+    assertThat(startAttributes.build()).containsOnly(expectedEntriesArr);
 
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "42"));

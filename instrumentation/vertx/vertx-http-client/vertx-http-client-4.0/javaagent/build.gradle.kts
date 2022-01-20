@@ -15,6 +15,7 @@ dependencies {
   library("io.vertx:vertx-core:4.0.0")
 
   compileOnly("io.vertx:vertx-codegen:4.0.0")
+  testCompileOnly("io.vertx:vertx-codegen:4.0.0")
 
   implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
