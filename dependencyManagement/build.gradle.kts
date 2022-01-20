@@ -40,6 +40,11 @@ val DEPENDENCY_BOMS = listOf(
 
 val DEPENDENCY_SETS = listOf(
   DependencySet(
+    "com.google.auto.service",
+    "1.0.1",
+    listOf("auto-service", "auto-service-annotations")
+  ),
+  DependencySet(
     "com.google.auto.value",
     "1.9",
     listOf("auto-value", "auto-value-annotations")
@@ -86,7 +91,6 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.10",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "com.google.auto.service:auto-service:1.0.1",
   "com.uber.nullaway:nullaway:0.9.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",

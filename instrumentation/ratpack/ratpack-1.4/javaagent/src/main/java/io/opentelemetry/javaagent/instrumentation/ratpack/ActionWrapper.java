@@ -36,6 +36,6 @@ public class ActionWrapper<T> implements Action<T> {
       // Skip wrapping, there is no need to propagate root context.
       return delegate;
     }
-    return new ActionWrapper(delegate, context);
+    return new ActionWrapper<>(delegate, context);
   }
 }

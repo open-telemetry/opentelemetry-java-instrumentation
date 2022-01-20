@@ -5,4 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-class ParseKubernetesResourceException extends Exception {}
+class ParseKubernetesResourceException extends Exception {
+  private static final long serialVersionUID = 1L;
+}

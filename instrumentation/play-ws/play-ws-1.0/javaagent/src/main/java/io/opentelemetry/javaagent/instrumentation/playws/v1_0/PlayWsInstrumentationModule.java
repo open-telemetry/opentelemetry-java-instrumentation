@@ -56,11 +56,11 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
-            new StreamedAsyncHandlerWrapper(
+            new StreamedAsyncHandlerWrapper<>(
                 (StreamedAsyncHandler<?>) asyncHandler, request, context, parentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, request, context, parentContext);
+        asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, request, context, parentContext);
       }
     }
 

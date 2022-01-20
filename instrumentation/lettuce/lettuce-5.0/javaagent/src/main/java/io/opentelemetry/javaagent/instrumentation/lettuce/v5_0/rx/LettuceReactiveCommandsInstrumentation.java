@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -53,18 +54,20 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   public static class CreateMonoAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static RedisCommand extractCommandName(
-        @Advice.Argument(0) Supplier<RedisCommand> supplier) {
+    public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
     }
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
     // being run until the user subscribes to the Mono publisher
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void monitorSpan(
-        @Advice.Enter RedisCommand command, @Advice.Return(readOnly = false) Mono<?> publisher) {
+    public static <K, V, T> void monitorSpan(
+        @Advice.Enter RedisCommand<K, V, T> command,
+        @Advice.Return(readOnly = false) Mono<T> publisher) {
       boolean finishSpanOnClose = !expectsResponse(command);
-      LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);
+      LettuceMonoDualConsumer<? super Subscription, T> mdc =
+          new LettuceMonoDualConsumer<>(command, finishSpanOnClose);
       publisher = publisher.doOnSubscribe(mdc);
       // register the call back to close the span only if necessary
       if (!finishSpanOnClose) {
@@ -77,15 +80,16 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   public static class CreateFluxAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static RedisCommand extractCommandName(
-        @Advice.Argument(0) Supplier<RedisCommand> supplier) {
+    public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
     }
 
     // if there is an exception thrown, then don't make spans
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void monitorSpan(
-        @Advice.Enter RedisCommand command, @Advice.Return(readOnly = false) Flux<?> publisher) {
+    public static <K, V, T> void monitorSpan(
+        @Advice.Enter RedisCommand<K, V, T> command,
+        @Advice.Return(readOnly = false) Flux<T> publisher) {
 
       boolean expectsResponse = expectsResponse(command);
       LettuceFluxTerminationRunnable handler =

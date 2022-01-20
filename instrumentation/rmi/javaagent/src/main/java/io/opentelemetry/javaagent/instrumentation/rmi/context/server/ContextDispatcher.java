@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.rmi.Remote;
-import java.rmi.server.RemoteCall;
 import sun.rmi.server.Dispatcher;
 import sun.rmi.transport.Target;
 
@@ -41,7 +40,9 @@ public class ContextDispatcher implements Dispatcher {
   }
 
   @Override
-  public void dispatch(Remote obj, RemoteCall call) throws IOException {
+  // Instrumenting deprecated class
+  @SuppressWarnings("deprecation")
+  public void dispatch(Remote obj, java.rmi.server.RemoteCall call) throws IOException {
     ObjectInput in = call.getInputStream();
     int operationId = in.readInt();
     in.readLong(); // skip 8 bytes

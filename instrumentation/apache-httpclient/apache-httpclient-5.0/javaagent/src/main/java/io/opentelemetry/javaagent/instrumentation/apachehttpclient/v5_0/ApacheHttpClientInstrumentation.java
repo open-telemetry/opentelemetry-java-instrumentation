@@ -174,7 +174,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, request, handler);
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
       }
     }
 
@@ -214,7 +214,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, request, handler);
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
       }
     }
 
@@ -294,7 +294,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, fullRequest, handler);
+            new WrappingStatusSettingResponseHandler<>(
+                context, parentContext, fullRequest, handler);
       }
     }
 
@@ -338,7 +339,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, fullRequest, handler);
+            new WrappingStatusSettingResponseHandler<>(
+                context, parentContext, fullRequest, handler);
       }
     }
 

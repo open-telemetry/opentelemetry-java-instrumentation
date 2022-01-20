@@ -23,19 +23,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 public interface AgentListener extends Ordered {
 
   /**
-   * Runs before {@link AgentBuilder} construction, before any instrumentation is added.
-   *
-   * <p>Execute only minimal code because any classes loaded before the agent installation will have
-   * to be retransformed, which takes extra time, and more importantly means that fields can't be
-   * added to those classes - which causes {@link VirtualField} to fall back to the less performant
-   * {@link Cache} implementation for those classes.
-   *
-   * @deprecated Use {@link #beforeAgent(Config, AutoConfiguredOpenTelemetrySdk)}
-   */
-  @Deprecated
-  default void beforeAgent(Config config) {}
-
-  /**
    * Runs before {@link AgentBuilder} construction, before any instrumentation is added. Not called
    * if noop api enabled via {@code otel.javaagent.experimental.use-noop-api}.
    *
@@ -46,15 +33,6 @@ public interface AgentListener extends Ordered {
    */
   default void beforeAgent(
       Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
-
-  /**
-   * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
-   * on an {@link Instrumentation}.
-   *
-   * @deprecated Use {@link #afterAgent(Config, AutoConfiguredOpenTelemetrySdk)}
-   */
-  @Deprecated
-  default void afterAgent(Config config) {}
 
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed

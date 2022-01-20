@@ -18,8 +18,6 @@ import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class ApplicationSpan implements Span {
 
@@ -59,6 +57,7 @@ class ApplicationSpan implements Span {
 
   @Override
   public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
+    @SuppressWarnings("unchecked")
     io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       agentSpan.setAttribute(agentKey, value);
@@ -165,8 +164,6 @@ class ApplicationSpan implements Span {
 
   static class Builder implements SpanBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(Builder.class);
-
     private final io.opentelemetry.api.trace.SpanBuilder agentBuilder;
 
     Builder(io.opentelemetry.api.trace.SpanBuilder agentBuilder) {
@@ -224,6 +221,7 @@ class ApplicationSpan implements Span {
 
     @Override
     public <T> SpanBuilder setAttribute(AttributeKey<T> applicationKey, T value) {
+      @SuppressWarnings("unchecked")
       io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
       if (agentKey != null) {
         agentBuilder.setAttribute(agentKey, value);

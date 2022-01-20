@@ -44,7 +44,9 @@ public class ContextPayload {
     try {
       Object object = oi.readObject();
       if (object instanceof Map) {
-        return new ContextPayload((Map<String, String>) object);
+        @SuppressWarnings("unchecked")
+        Map<String, String> map = (Map<String, String>) object;
+        return new ContextPayload(map);
       }
     } catch (ClassCastException | ClassNotFoundException ex) {
       logger.debug("Error reading object", ex);

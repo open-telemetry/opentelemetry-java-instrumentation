@@ -13,6 +13,8 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:oshi:library"))
 
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+
   library("com.github.oshi:oshi-core:5.3.1")
 
   testImplementation("com.google.guava:guava")

@@ -57,7 +57,7 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
       }
 
       // copy the receive CONSUMER span association
-      VirtualField<ConsumerRecord, Context> singleRecordReceiveContext =
+      VirtualField<ConsumerRecord<?, ?>, Context> singleRecordReceiveContext =
           VirtualField.find(ConsumerRecord.class, Context.class);
       singleRecordReceiveContext.set(result, singleRecordReceiveContext.get(incoming));
     }

@@ -746,6 +746,7 @@ class InstrumenterTest {
   }
 
   @SafeVarargs
+  @SuppressWarnings("varargs")
   private static Instrumenter<Map<String, String>, Map<String, String>> getInstrumenterWithType(
       boolean enableInstrumentation,
       AttributesExtractor<Map<String, String>, Map<String, String>>... attributeExtractors) {

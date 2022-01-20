@@ -82,13 +82,16 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
 
   @Override
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
+    @SuppressWarnings("unchecked")
     Enumeration<String> values = request.getHeaders(name);
     return values == null ? Collections.emptyList() : Collections.list(values);
   }
 
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    return Collections.list(httpServletRequest.getHeaderNames());
+    @SuppressWarnings("unchecked")
+    Enumeration<String> names = httpServletRequest.getHeaderNames();
+    return Collections.list(names);
   }
 
   @Override
