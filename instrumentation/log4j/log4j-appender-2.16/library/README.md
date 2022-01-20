@@ -16,7 +16,7 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-log4j-2.16</artifactId>
+    <artifactId>opentelemetry-log4j-appender-2.16</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -26,7 +26,7 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.16:OPENTELEMETRY_VERSION")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.16:OPENTELEMETRY_VERSION")
 }
 ```
 
@@ -34,7 +34,7 @@ The following demonstrates how you might configure the appender in your `log4j.x
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" packages="io.opentelemetry.instrumentation.log4j.v2_16">
+<Configuration status="WARN" packages="io.opentelemetry.instrumentation.log4j.appender.v2_16">
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout
