@@ -19,14 +19,6 @@ class CallDepthTest {
     assertThat(CallDepth.forClass(String.class).getAndIncrement()).isOne();
     assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isOne();
 
-    assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isEqualTo(2);
-
-    assertThat(CallDepth.forClass(String.class).getAndIncrement()).isZero();
-    assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isZero();
-
-    assertThat(CallDepth.forClass(String.class).getAndIncrement()).isOne();
-    assertThat(CallDepth.forClass(Integer.class).getAndIncrement()).isOne();
-
     assertThat(CallDepth.forClass(String.class).decrementAndGet()).isOne();
     assertThat(CallDepth.forClass(Integer.class).decrementAndGet()).isOne();
 
