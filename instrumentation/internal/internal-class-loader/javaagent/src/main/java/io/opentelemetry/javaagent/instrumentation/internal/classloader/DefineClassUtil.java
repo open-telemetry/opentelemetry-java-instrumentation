@@ -28,7 +28,9 @@ public final class DefineClassUtil {
     }
     // check that the exception is a duplicate class or interface definition
     String message = linkageError.getMessage();
-    if (message == null || !message.contains("attempted duplicate")) {
+    if (message == null
+        || !(message.contains("duplicate interface definition")
+            || message.contains("duplicate class definition"))) {
       throw linkageError;
     }
     return clazz;
