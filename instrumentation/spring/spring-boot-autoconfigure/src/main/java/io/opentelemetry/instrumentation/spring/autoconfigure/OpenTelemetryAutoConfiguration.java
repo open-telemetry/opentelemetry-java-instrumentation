@@ -37,7 +37,7 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   public static class OpenTelemetryBeanConfig {
 
-    @Bean(destroyMethod = "close")
+    @Bean
     @ConditionalOnMissingBean
     public SdkTracerProvider sdkTracerProvider(
         SamplerProperties samplerProperties,
