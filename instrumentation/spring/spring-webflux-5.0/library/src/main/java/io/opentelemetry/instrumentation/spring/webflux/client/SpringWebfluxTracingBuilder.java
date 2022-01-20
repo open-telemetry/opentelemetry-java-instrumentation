@@ -64,9 +64,9 @@ public final class SpringWebfluxTracingBuilder {
   public SpringWebfluxTracing build() {
     SpringWebfluxHttpAttributesExtractor httpAttributesExtractor =
         new SpringWebfluxHttpAttributesExtractor(capturedHttpHeaders);
-    SpringWebfluxNetAttributesGetter attributesAdapter = new SpringWebfluxNetAttributesGetter();
+    SpringWebfluxNetAttributesGetter attributesGetter = new SpringWebfluxNetAttributesGetter();
     NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor =
-        NetClientAttributesExtractor.create(attributesAdapter);
+        NetClientAttributesExtractor.create(attributesGetter);
 
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
@@ -76,7 +76,7 @@ public final class SpringWebfluxTracingBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesAdapter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get());
 

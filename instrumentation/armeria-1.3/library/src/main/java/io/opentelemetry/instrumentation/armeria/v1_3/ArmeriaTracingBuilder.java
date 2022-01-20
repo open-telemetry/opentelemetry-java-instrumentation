@@ -121,10 +121,10 @@ public final class ArmeriaTracingBuilder {
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
-    ArmeriaNetClientAttributesGetter netClientAttributesAdapter =
+    ArmeriaNetClientAttributesGetter netClientAttributesGetter =
         new ArmeriaNetClientAttributesGetter();
     NetClientAttributesExtractor<RequestContext, RequestLog> netClientAttributesExtractor =
-        NetClientAttributesExtractor.create(netClientAttributesAdapter);
+        NetClientAttributesExtractor.create(netClientAttributesGetter);
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
@@ -147,7 +147,7 @@ public final class ArmeriaTracingBuilder {
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     } else {
       clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesAdapter));
+          PeerServiceAttributesExtractor.create(netClientAttributesGetter));
     }
 
     return new ArmeriaTracing(
