@@ -21,13 +21,13 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
 //  }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "akka.request"
+  boolean testCapturedHttpHeaders() {
+    false
   }
 
   @Override
-  boolean testCapturedHttpHeaders() {
-    false
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
   }
 
   @Override
