@@ -30,7 +30,7 @@ jobs:
       - name: copy results back to gh-pages branch
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
       - name: commit updated results
-        uses: EndBug/add-and-commit@v7
+        uses: EndBug/add-and-commit@v8
         with:
           add: 'benchmark-overhead/results'
           cwd: './gh-pages'
