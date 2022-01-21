@@ -11,17 +11,23 @@ import static java.util.Collections.singletonList;
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
-import org.redisson.misc.RPromise;
 
 @AutoValue
 public abstract class RedissonRequest {
+
+  private static final VirtualField<CommandData<?, ?>, CompletionStage<?>> commandDataPromiseField =
+      VirtualField.find(CommandData.class, CompletionStage.class);
+  private static final VirtualField<CommandsData, CompletionStage<?>> commandsDataPromiseField =
+      VirtualField.find(CommandsData.class, CompletionStage.class);
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
@@ -97,13 +103,16 @@ public abstract class RedissonRequest {
     return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
   }
 
+  // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
+  // a backwards-incompatible way from RPromise to CompletableStage - to avoid calling that method
+  // and triggering muzzle we have to get the promise using a VirtualField
   @Nullable
-  public RPromise<?> getPromise() {
+  public CompletionStage<?> getPromise() {
     Object command = getCommand();
     if (command instanceof CommandData) {
-      return ((CommandData<?, ?>) command).getPromise();
+      return commandDataPromiseField.get((CommandData<?, ?>) command);
     } else if (command instanceof CommandsData) {
-      return ((CommandsData) command).getPromise();
+      return commandsDataPromiseField.get((CommandsData) command);
     }
     return null;
   }
