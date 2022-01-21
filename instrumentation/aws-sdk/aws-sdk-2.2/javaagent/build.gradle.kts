@@ -23,8 +23,9 @@ dependencies {
   testImplementation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:+")
-  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
+  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.114")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.17.114")
+  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.17.114")
 }
 
 tasks.withType<Test>().configureEach {
