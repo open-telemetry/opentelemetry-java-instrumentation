@@ -134,7 +134,7 @@ class NetServerAttributesExtractorTest {
     assertThat(endAttributes.build()).isEmpty();
   }
 
-  private NetServerAttributesExtractor<Map<String, String>, Map<String, String>>
+  private static NetServerAttributesExtractor<Map<String, String>, Map<String, String>>
       createTestExtractor() {
     return NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
   }
