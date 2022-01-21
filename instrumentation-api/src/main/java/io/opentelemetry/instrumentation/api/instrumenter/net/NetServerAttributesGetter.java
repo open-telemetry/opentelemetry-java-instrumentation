@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
  * type into the 4 common attributes (transport, peerName, peerPort, peerIp).
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
- * server library/framework. It will be used by the {@link NetServerAttributesExtractor} to obtain the
- * various network attributes in a type-generic way.
+ * server library/framework. It will be used by the {@link NetServerAttributesExtractor} to obtain
+ * the various network attributes in a type-generic way.
  */
 public interface NetServerAttributesGetter<REQUEST> {
 
