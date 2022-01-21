@@ -2,20 +2,19 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-otelJava {
-  // Fails with no error message :crying_cat_face:
-  minJavaVersionSupported.set(JavaVersion.VERSION_1_9)
-  // Works:
-  // minJavaVersionSupported.set(JavaVersion.VERSION_11)
+// We cannot use otelJava { minJavaVersionSupported.set(JavaVersion.VERSION_1_9) } because compiler
+// will fail with -Xlint without providing an error message.
+// We cannot use "--release" javac option because that will forbid calling methods added in jdk 9.
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+  toolchain {
+    languageVersion.set(null as JavaLanguageVersion?)
+  }
 }
 
 tasks {
-  compileJava {
-    with(options) {
-      // Because this module targets Java 9, we trigger this compiler bug which was fixed but not
-      // backported to Java 9 compilation.
-      // https://bugs.openjdk.java.net/browse/JDK-8209058
-      compilerArgs.add("-Xlint:none")
-    }
+  withType<JavaCompile>().configureEach {
+    options.release.set(null as Int?)
   }
 }
