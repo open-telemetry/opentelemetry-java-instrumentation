@@ -18,7 +18,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  latestDepTestLibrary("org.redisson:redisson:3.16.8")
+  latestDepTestLibrary("org.redisson:redisson:3.16.7")
 }
 
 tasks.test {
