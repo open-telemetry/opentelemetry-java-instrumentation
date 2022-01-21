@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.reactor.flux
+import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
@@ -122,6 +126,22 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
           child.onAwait { it }
         }
       }
+    }
+  }
+
+  fun tracedMono(): Unit = runTest {
+    mono(dispatcher) {
+      tracedChild("child")
+    }.awaitSingle()
+  }
+
+  fun tracedFlux() = runTest {
+    flux(dispatcher) {
+      repeat(3) {
+        tracedChild("child_$it")
+        send(it)
+      }
+    }.collect {
     }
   }
 

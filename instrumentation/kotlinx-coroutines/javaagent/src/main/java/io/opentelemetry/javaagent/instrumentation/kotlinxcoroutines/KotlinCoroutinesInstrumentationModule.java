@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.reactor.KotlinCoroutinesFluxInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.reactor.KotlinCoroutinesMonoInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -26,6 +28,9 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new KotlinCoroutinesInstrumentation());
+    return asList(
+        new KotlinCoroutinesInstrumentation(),
+        new KotlinCoroutinesMonoInstrumentation(),
+        new KotlinCoroutinesFluxInstrumentation());
   }
 }
