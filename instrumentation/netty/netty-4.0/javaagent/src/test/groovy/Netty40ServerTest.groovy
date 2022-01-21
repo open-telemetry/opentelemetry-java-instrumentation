@@ -136,9 +136,4 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
     attributes
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
 }

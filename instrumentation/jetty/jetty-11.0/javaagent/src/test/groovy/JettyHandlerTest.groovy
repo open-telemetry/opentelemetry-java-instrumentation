@@ -71,11 +71,6 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HTTP GET"
-  }
-
-  @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR
   }

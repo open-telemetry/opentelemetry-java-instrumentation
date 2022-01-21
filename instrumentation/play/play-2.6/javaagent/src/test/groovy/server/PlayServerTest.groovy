@@ -104,10 +104,4 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     []
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
 }

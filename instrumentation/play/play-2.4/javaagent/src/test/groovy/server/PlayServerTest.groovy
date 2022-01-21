@@ -109,9 +109,4 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
     attributes
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
 }

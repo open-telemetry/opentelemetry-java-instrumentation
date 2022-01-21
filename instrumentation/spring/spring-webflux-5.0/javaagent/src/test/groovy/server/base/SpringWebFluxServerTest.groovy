@@ -43,14 +43,14 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
         return "/**"
       default:
-        return super.expectedServerSpanName(endpoint)
+        return endpoint.resolvePath(address).path
     }
   }
 

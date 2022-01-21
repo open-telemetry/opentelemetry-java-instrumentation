@@ -47,12 +47,6 @@ class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements Li
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    def route = expectedHttpRoute(endpoint)
-    return route == null ? "HTTP GET" : route
-  }
-
-  @Override
   String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
