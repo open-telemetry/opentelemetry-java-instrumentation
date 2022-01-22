@@ -3,18 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.internal;
+package io.opentelemetry.instrumentation.restlet.v1_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
-import ratpack.http.Request;
-import ratpack.http.Response;
+import org.restlet.data.Request;
 
-public final class RatpackNetAttributesExtractor
-    extends NetServerAttributesExtractor<Request, Response> {
+final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
-  @Nullable
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
@@ -27,12 +24,12 @@ public final class RatpackNetAttributesExtractor
 
   @Override
   public Integer peerPort(Request request) {
-    return request.getRemoteAddress().getPort();
+    return request.getClientInfo().getPort();
   }
 
   @Override
   @Nullable
   public String peerIp(Request request) {
-    return null;
+    return request.getClientInfo().getAddress();
   }
 }

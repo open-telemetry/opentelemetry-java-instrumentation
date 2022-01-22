@@ -6,15 +6,14 @@
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.RequestContext;
-import com.linecorp.armeria.common.logging.RequestLog;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class ArmeriaNetServerAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<RequestContext, RequestLog> {
+final class ArmeriaNetServerAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<RequestContext> {
 
   @Override
   public String transport(RequestContext ctx) {

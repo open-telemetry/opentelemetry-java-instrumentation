@@ -6,13 +6,12 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
-import org.apache.dubbo.rpc.Result;
 
-public final class DubboNetServerAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<DubboRequest, Result> {
+public final class DubboNetServerAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<DubboRequest> {
 
   @Override
   @Nullable

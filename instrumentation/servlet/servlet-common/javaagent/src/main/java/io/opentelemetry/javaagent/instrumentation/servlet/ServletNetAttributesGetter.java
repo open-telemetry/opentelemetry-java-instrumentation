@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-public class ServletNetAttributesExtractor<REQUEST, RESPONSE>
-    extends NetServerAttributesExtractor<
-        ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
+public class ServletNetAttributesGetter<REQUEST, RESPONSE>
+    implements NetServerAttributesGetter<ServletRequestContext<REQUEST>> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
-  public ServletNetAttributesExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
+  public ServletNetAttributesGetter(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
   }
 

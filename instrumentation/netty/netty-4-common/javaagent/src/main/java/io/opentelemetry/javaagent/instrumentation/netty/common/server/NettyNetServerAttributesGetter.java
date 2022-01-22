@@ -3,21 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
+package io.opentelemetry.javaagent.instrumentation.netty.common.server;
 
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.netty.channel.socket.DatagramChannel;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
-import org.jboss.netty.channel.socket.DatagramChannel;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 
-final class NettyNetServerAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<HttpRequestAndChannel, HttpResponse> {
+final class NettyNetServerAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<HttpRequestAndChannel> {
 
   @Override
   @Nullable
@@ -28,7 +27,7 @@ final class NettyNetServerAttributesExtractor
   @Override
   @Nullable
   public InetSocketAddress getAddress(HttpRequestAndChannel requestAndChannel) {
-    SocketAddress address = requestAndChannel.channel().getRemoteAddress();
+    SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

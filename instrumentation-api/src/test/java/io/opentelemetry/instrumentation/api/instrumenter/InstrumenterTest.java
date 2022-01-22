@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
@@ -290,7 +291,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(
                 mockHttpServerAttributes,
-                new ConstantNetPeerIpExtractor<>("2.2.2.2"),
+                NetServerAttributesExtractor.create(new ConstantNetPeerIpGetter<>("2.2.2.2")),
                 new AttributesExtractor1(),
                 new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
@@ -765,12 +766,12 @@ class InstrumenterTest {
             LINK_TRACE_ID, LINK_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
   }
 
-  private static final class ConstantNetPeerIpExtractor<REQUEST, RESPONSE>
-      extends NetServerAttributesExtractor<REQUEST, RESPONSE> {
+  private static final class ConstantNetPeerIpGetter<REQUEST>
+      implements NetServerAttributesGetter<REQUEST> {
 
     private final String peerIp;
 
-    private ConstantNetPeerIpExtractor(String peerIp) {
+    private ConstantNetPeerIpGetter(String peerIp) {
       this.peerIp = peerIp;
     }
 

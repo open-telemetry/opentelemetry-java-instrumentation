@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
-import org.apache.coyote.Response;
 
-public class TomcatNetAttributesExtractor extends NetServerAttributesExtractor<Request, Response> {
+public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
   @Override
   @Nullable

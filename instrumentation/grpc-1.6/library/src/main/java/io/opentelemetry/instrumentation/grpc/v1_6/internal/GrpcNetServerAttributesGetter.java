@@ -5,16 +5,15 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
-import io.grpc.Status;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public final class GrpcNetServerAttributesExtractor
-    extends InetSocketAddressNetServerAttributesExtractor<GrpcRequest, Status> {
+public final class GrpcNetServerAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<GrpcRequest> {
   @Override
   @Nullable
   public InetSocketAddress getAddress(GrpcRequest request) {

@@ -17,12 +17,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class InetSocketAddressNetServerAttributesExtractorTest {
+class InetSocketAddressNetServerAttributesGetterTest {
 
-  private final InetSocketAddressNetServerAttributesExtractor<InetSocketAddress, InetSocketAddress>
-      extractor =
-          new InetSocketAddressNetServerAttributesExtractor<
-              InetSocketAddress, InetSocketAddress>() {
+  private final NetServerAttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
+      NetServerAttributesExtractor.create(
+          new InetSocketAddressNetServerAttributesGetter<InetSocketAddress>() {
             @Override
             public InetSocketAddress getAddress(InetSocketAddress request) {
               return request;
@@ -32,7 +31,7 @@ class InetSocketAddressNetServerAttributesExtractorTest {
             public String transport(InetSocketAddress request) {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
-          };
+          });
 
   @Test
   void noInetSocketAddress() {

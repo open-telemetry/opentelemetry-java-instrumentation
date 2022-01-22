@@ -10,7 +10,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -41,7 +42,8 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesExtractor.INSTANCE))
           .addAttributesExtractor(ConstantHttpAttributesExtractor.INSTANCE)
-          .addAttributesExtractor(new ConstantNetAttributesExtractor())
+          .addAttributesExtractor(
+              NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
           .newInstrumenter();
 
   @Benchmark
@@ -126,8 +128,8 @@ public class InstrumenterBenchmark {
     }
   }
 
-  static class ConstantNetAttributesExtractor
-      extends InetSocketAddressNetServerAttributesExtractor<Void, Void> {
+  static class ConstantNetAttributesGetter
+      extends InetSocketAddressNetServerAttributesGetter<Void> {
 
     private static final InetSocketAddress ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);

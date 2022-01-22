@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +48,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
     SpanStatusExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ServletNetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor =
-        new ServletNetAttributesExtractor<>(accessor);
+    ServletNetAttributesGetter<REQUEST, RESPONSE> netAttributesGetter =
+        new ServletNetAttributesGetter<>(accessor);
     ServletErrorCauseExtractor<REQUEST, RESPONSE> errorCauseExtractor =
         new ServletErrorCauseExtractor<>(accessor);
     AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
@@ -60,7 +61,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setSpanStatusExtractor(spanStatusExtractor)
             .setErrorCauseExtractor(errorCauseExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(additionalAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(ServerSpanNaming.get());

@@ -14,8 +14,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.ratpack.internal.RatpackHttpNetAttributesGetter;
-import io.opentelemetry.instrumentation.ratpack.internal.RatpackNetAttributesExtractor;
+import io.opentelemetry.instrumentation.ratpack.internal.RatpackNetAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import ratpack.http.Request;
@@ -71,7 +72,7 @@ public final class RatpackTracingBuilder {
 
   /** Returns a new {@link RatpackTracing} with the configuration of this builder. */
   public RatpackTracing build() {
-    RatpackNetAttributesExtractor netAttributes = new RatpackNetAttributesExtractor();
+    RatpackNetAttributesGetter netAttributes = new RatpackNetAttributesGetter();
     RatpackHttpAttributesExtractor httpAttributes =
         new RatpackHttpAttributesExtractor(capturedHttpHeaders);
 
@@ -79,7 +80,7 @@ public final class RatpackTracingBuilder {
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
-            .addAttributesExtractor(netAttributes)
+            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributes))
             .addAttributesExtractor(httpAttributes)
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())

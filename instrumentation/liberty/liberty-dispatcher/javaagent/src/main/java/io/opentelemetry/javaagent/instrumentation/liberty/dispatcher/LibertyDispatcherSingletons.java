@@ -29,7 +29,7 @@ public final class LibertyDispatcherSingletons {
     SpanStatusExtractor<LibertyRequest, LibertyResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     NetServerAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
-        new LibertyDispatcherNetAttributesExtractor();
+        NetServerAttributesExtractor.create(new LibertyDispatcherNetAttributesGetter());
 
     INSTRUMENTER =
         Instrumenter.<LibertyRequest, LibertyResponse>builder(

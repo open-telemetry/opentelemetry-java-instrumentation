@@ -68,7 +68,7 @@ public final class RestletTracingBuilder {
     SpanStatusExtractor<Request, Response> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
-        new RestletNetAttributesExtractor();
+        NetServerAttributesExtractor.create(new RestletNetAttributesGetter());
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(

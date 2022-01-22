@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 import org.glassfish.grizzly.http.HttpRequestPacket;
-import org.glassfish.grizzly.http.HttpResponsePacket;
 
-final class GrizzlyNetAttributesExtractor
-    extends NetServerAttributesExtractor<HttpRequestPacket, HttpResponsePacket> {
+final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<HttpRequestPacket> {
 
   @Nullable
   @Override

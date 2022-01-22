@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.restlet.v1_0;
+package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
+import org.restlet.Request;
 
-final class RestletNetAttributesExtractor extends NetServerAttributesExtractor<Request, Response> {
+final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
