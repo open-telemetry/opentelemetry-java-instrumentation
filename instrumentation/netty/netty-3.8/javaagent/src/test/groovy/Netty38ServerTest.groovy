@@ -167,9 +167,4 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
     attributes
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
 }

@@ -72,11 +72,6 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
-  @Override
   boolean testException() {
     // justification: grizzly async closes the channel which
     // looks like a ConnectException to the client when this happens

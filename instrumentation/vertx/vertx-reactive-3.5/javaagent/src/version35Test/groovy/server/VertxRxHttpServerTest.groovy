@@ -72,7 +72,7 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     switch (endpoint) {
       case PATH_PARAM:
         return "/path/:id/param"

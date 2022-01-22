@@ -53,11 +53,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
-  @Override
   void stopServer(HttpServer server) {
     server.stop()
   }

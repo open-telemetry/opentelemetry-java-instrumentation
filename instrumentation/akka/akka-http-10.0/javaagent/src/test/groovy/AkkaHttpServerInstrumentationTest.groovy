@@ -26,11 +26,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     []
   }

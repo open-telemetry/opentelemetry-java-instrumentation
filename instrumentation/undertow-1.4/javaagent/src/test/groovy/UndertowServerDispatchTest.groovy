@@ -103,9 +103,4 @@ class UndertowServerDispatchTest extends HttpServerTest<Undertow> implements Age
     attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
     attributes
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
 }

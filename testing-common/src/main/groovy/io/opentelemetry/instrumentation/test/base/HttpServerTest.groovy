@@ -65,12 +65,17 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       singletonList(TEST_RESPONSE_HEADER))
   }
 
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     def route = expectedHttpRoute(endpoint)
-    return route == null ? getContextPath() + "/*" : route
+    return route == null ? "HTTP $method" : route
   }
 
   String expectedHttpRoute(ServerEndpoint endpoint) {
+    // no need to compute route if we're not expecting it
+    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+      return null
+    }
+
     switch (endpoint) {
       case NOT_FOUND:
         return null
@@ -665,7 +670,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     def httpAttributes = this.httpAttributes(endpoint)
     trace.span(index) {
-      name expectedServerSpanName(endpoint)
+      name expectedServerSpanName(endpoint, method)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       if (endpoint.status >= 500) {
         status StatusCode.ERROR
@@ -748,7 +753,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     ServerEndpoint endpoint = INDEXED_CHILD
     def httpAttributes = this.httpAttributes(endpoint)
     trace.span(1) {
-      name expectedServerSpanName(endpoint)
+      name expectedServerSpanName(endpoint, "GET")
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       childOf((SpanData) parent)
       attributes {

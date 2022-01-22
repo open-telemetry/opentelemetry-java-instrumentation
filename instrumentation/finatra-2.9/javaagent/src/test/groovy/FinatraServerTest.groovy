@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
 import com.twitter.util.Duration
@@ -17,6 +15,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static org.awaitility.Awaitility.await
@@ -50,11 +49,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     endpoint != NOT_FOUND
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == NOT_FOUND ? "HTTP GET" : super.expectedServerSpanName(endpoint)
   }
 
   @Override

@@ -113,11 +113,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
     attributes
   }
 
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
   def "test send response"() {
     setup:
     def uri = address.resolve("sendResponse")
