@@ -12,14 +12,19 @@ import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
+import org.redisson.misc.RPromise;
 
 @AutoValue
 public abstract class RedissonRequest {
@@ -103,17 +108,46 @@ public abstract class RedissonRequest {
     return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
   }
 
-  // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
-  // a backwards-incompatible way from RPromise to CompletableStage - to avoid calling that method
-  // and triggering muzzle we have to get the promise using a VirtualField
   @Nullable
   public CompletionStage<?> getPromise() {
     Object command = getCommand();
-    if (command instanceof CommandData) {
-      return commandDataPromiseField.get((CommandData<?, ?>) command);
-    } else if (command instanceof CommandsData) {
-      return commandsDataPromiseField.get((CommandsData) command);
+    if (command instanceof CommandData && COMMAND_DATA_GET_PROMISE != null) {
+      try {
+        return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
+      } catch (Throwable ignored) {
+        return null;
+      }
+    } else if (command instanceof CommandsData && COMMANDS_DATA_GET_PROMISE != null) {
+      try {
+        return (CompletionStage<?>) COMMANDS_DATA_GET_PROMISE.invoke(command);
+      } catch (Throwable ignored) {
+        return null;
+      }
     }
     return null;
+  }
+
+  private static final MethodHandle COMMAND_DATA_GET_PROMISE =
+      findGetPromiseMethod(CommandData.class);
+  private static final MethodHandle COMMANDS_DATA_GET_PROMISE =
+      findGetPromiseMethod(CommandsData.class);
+
+  private static MethodHandle findGetPromiseMethod(Class<?> commandClass) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      // try versions older than 3.16.8
+      return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(RPromise.class));
+    } catch (NoSuchMethodException e) {
+      // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
+      // a backwards-incompatible way from RPromise to CompletableFuture
+      try {
+        return lookup.findVirtual(
+            commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+        return null;
+      }
+    } catch (IllegalAccessException ignored) {
+      return null;
+    }
   }
 }
