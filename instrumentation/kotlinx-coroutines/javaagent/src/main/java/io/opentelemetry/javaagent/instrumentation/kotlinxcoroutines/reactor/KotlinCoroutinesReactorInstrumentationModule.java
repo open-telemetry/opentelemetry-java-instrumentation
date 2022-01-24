@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines;
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.reactor;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -13,10 +13,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule {
+public class KotlinCoroutinesReactorInstrumentationModule extends InstrumentationModule {
 
-  public KotlinCoroutinesInstrumentationModule() {
-    super("kotlinx-coroutines");
+  public KotlinCoroutinesReactorInstrumentationModule() {
+    super("kotlinx-coroutines", "kotlinx-coroutines-reactor");
   }
 
   @Override
@@ -26,6 +26,7 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new KotlinCoroutinesInstrumentation());
+    return asList(
+        new KotlinMonoCoroutineInstrumentation(), new KotlinPublisherCoroutineInstrumentation());
   }
 }
