@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.javaagent.bootstrap.DefineClassContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -93,10 +94,29 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
 
               @Override
               public void visitCode() {
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(DefineClassContext.class),
+                    "enter",
+                    "()V",
+                    false);
                 mv.visitTryCatchBlock(start, end, end, "java/lang/LinkageError");
                 mv.visitLabel(start);
 
                 super.visitCode();
+              }
+
+              @Override
+              public void visitInsn(int opcode) {
+                if (opcode == Opcodes.ARETURN) {
+                  mv.visitMethodInsn(
+                      Opcodes.INVOKESTATIC,
+                      Type.getInternalName(DefineClassContext.class),
+                      "exit",
+                      "()V",
+                      false);
+                }
+                super.visitInsn(opcode);
               }
 
               @Override
@@ -108,6 +128,12 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
                     new Object[] {"java/lang/ClassLoader", "java/lang/String"},
                     1,
                     new Object[] {"java/lang/LinkageError"});
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(DefineClassContext.class),
+                    "exitAndGet",
+                    "()Z",
+                    false);
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
                 mv.visitVarInsn(Opcodes.ALOAD, 1);
                 mv.visitMethodInsn(
@@ -120,7 +146,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
                     Opcodes.INVOKESTATIC,
                     Type.getInternalName(DefineClassUtil.class),
                     "handleLinkageError",
-                    "(Ljava/lang/LinkageError;Ljava/lang/Class;)Ljava/lang/Class;",
+                    "(Ljava/lang/LinkageError;ZLjava/lang/Class;)Ljava/lang/Class;",
                     false);
                 mv.visitInsn(Opcodes.ARETURN);
 

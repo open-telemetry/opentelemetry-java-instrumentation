@@ -14,16 +14,19 @@ public final class DefineClassUtil {
    * ClassLoader.defineClass by DefineClassInstrumentation.
    *
    * @param linkageError LinkageError that happened in defineClass
+   * @param helpersInjected whether helpers were injected during defineClass call
    * @param clazz Class that is being defined if it is already loaded
    * @return give Class if LinkageError was a duplicate class definition error
    */
-  public static Class<?> handleLinkageError(LinkageError linkageError, Class<?> clazz) {
-    // if exception was duplicate class definition we'll have access to the loaded class
-    if (clazz == null) {
-      throw linkageError;
-    }
-    // duplicate class definition throws LinkageError, we can ignore its subclasses
-    if (linkageError.getClass() != LinkageError.class) {
+  public static Class<?> handleLinkageError(
+      LinkageError linkageError, boolean helpersInjected, Class<?> clazz) {
+    // only attempt to recover from duplicate class definition if helpers were injected during
+    // the defineClass call
+    if (!helpersInjected
+        // if exception was duplicate class definition we'll have access to the loaded class
+        || clazz == null
+        // duplicate class definition throws LinkageError, we can ignore its subclasses
+        || linkageError.getClass() != LinkageError.class) {
       throw linkageError;
     }
     // check that the exception is a duplicate class or interface definition
