@@ -15,11 +15,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletionStage;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
-import org.redisson.misc.RPromise;
 
 public class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
@@ -66,7 +66,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      RPromise<?> promise = request.getPromise();
+      CompletionStage<?> promise = request.getPromise();
       if (promise == null || throwable != null) {
         instrumenter().end(context, request, null, throwable);
       } else {
