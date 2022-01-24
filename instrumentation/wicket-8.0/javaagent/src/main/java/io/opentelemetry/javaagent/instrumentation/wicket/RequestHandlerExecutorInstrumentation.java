@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
-import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.server.ServerSpan;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -47,7 +47,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         return;
       }
       if (handler instanceof IPageClassRequestHandler) {
-        ServerSpanNaming.updateServerSpanName(
+        HttpRouteHolder.updateHttpRoute(
             context,
             CONTROLLER,
             WicketServerSpanNaming.SERVER_SPAN_NAME,

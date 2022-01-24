@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf;
 
-import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
 public class JsfServerSpanNaming {
 
-  public static final ServerSpanNameSupplier<FacesContext> SERVER_SPAN_NAME =
+  public static final HttpRouteGetter<FacesContext> SERVER_SPAN_NAME =
       (context, facesContext) -> {
         UIViewRoot uiViewRoot = facesContext.getViewRoot();
         if (uiViewRoot == null) {

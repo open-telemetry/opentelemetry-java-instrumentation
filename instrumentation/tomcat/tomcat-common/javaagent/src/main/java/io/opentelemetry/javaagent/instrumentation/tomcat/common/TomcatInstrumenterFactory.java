@@ -10,12 +10,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
@@ -48,7 +48,7 @@ public final class TomcatInstrumenterFactory {
         .addAttributesExtractor(httpAttributesExtractor)
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractor(additionalAttributeExtractor)
-        .addContextCustomizer(ServerSpanNaming.get())
+        .addContextCustomizer(HttpRouteHolder.get())
         .addContextCustomizer(
             (context, request, attributes) ->
                 new AppServerBridge.Builder()

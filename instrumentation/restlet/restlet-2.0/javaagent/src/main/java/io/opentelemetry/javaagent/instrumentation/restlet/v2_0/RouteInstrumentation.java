@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
-import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -45,8 +45,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
         @Advice.This TemplateRoute route, @Advice.Argument(0) Request request) {
       String pattern = route.getTemplate().getPattern();
 
-      ServerSpanNaming.updateServerSpanName(
-          currentContext(), CONTROLLER, serverSpanName(), pattern);
+      HttpRouteHolder.updateHttpRoute(currentContext(), CONTROLLER, serverSpanName(), pattern);
     }
   }
 }

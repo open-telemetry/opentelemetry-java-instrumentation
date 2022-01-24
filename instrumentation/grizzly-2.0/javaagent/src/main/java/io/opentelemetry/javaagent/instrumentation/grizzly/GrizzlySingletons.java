@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
@@ -34,7 +34,7 @@ public final class GrizzlySingletons {
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
-            .addContextCustomizer(ServerSpanNaming.get())
+            .addContextCustomizer(HttpRouteHolder.get())
             .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

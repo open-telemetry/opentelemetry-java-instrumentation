@@ -12,12 +12,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,7 +64,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(additionalAttributesExtractor)
             .addRequestMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(ServerSpanNaming.get());
+            .addContextCustomizer(HttpRouteHolder.get());
     if (ServletRequestParametersExtractor.enabled()) {
       AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
