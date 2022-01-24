@@ -44,7 +44,7 @@ public class KotlinMonoCoroutineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void enter(
         @Advice.Argument(value = 0, readOnly = false) CoroutineContext coroutineContext,
-        @Advice.Argument(1) MonoSink monoSink) {
+        @Advice.Argument(1) MonoSink<?> monoSink) {
       Context context =
           ContextPropagationOperator.getOpenTelemetryContext(
               monoSink.currentContext(), Java8BytecodeBridge.currentContext());
