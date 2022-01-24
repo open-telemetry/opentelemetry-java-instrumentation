@@ -10,12 +10,16 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
+    extraDependency("io.projectreactor:reactor-core:3.1.10.RELEASE")
+    extraDependency("org.reactivestreams:reactive-streams:1.0.2")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
   pass {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
+    extraDependency("io.projectreactor:reactor-core:3.1.10.RELEASE")
+    extraDependency("org.reactivestreams:reactive-streams:1.0.2")
   }
 }
 dependencies {
