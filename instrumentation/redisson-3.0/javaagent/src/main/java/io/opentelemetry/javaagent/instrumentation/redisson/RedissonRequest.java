@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -28,11 +27,6 @@ import org.redisson.misc.RPromise;
 
 @AutoValue
 public abstract class RedissonRequest {
-
-  private static final VirtualField<CommandData<?, ?>, CompletionStage<?>> commandDataPromiseField =
-      VirtualField.find(CommandData.class, CompletionStage.class);
-  private static final VirtualField<CommandsData, CompletionStage<?>> commandsDataPromiseField =
-      VirtualField.find(CommandsData.class, CompletionStage.class);
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
