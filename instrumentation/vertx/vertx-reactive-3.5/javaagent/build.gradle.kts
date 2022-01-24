@@ -29,6 +29,8 @@ dependencies {
   compileOnly("io.vertx:vertx-web:$vertxVersion")
   compileOnly("io.vertx:vertx-rx-java2:$vertxVersion")
 
+  testCompileOnly("io.vertx:vertx-codegen:$vertxVersion")
+
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))
