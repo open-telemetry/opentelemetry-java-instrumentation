@@ -253,6 +253,33 @@ class KotlinCoroutineInstrumentationTest extends AgentInstrumentationSpecificati
     dispatcher << dispatchersToTest
   }
 
+  def "kotlin traced mono with context propagation operator"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+
+    when:
+    kotlinTest.tracedMonoContextPropagationOperator()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          attributes {
+          }
+        }
+        span("child") {
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+
+    where:
+    dispatcher << dispatchersToTest
+  }
+
   def "kotlin traced flux"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
