@@ -52,7 +52,8 @@ public class KotlinPublisherCoroutineInstrumentation implements TypeInstrumentat
             ContextPropagationOperator.getOpenTelemetryContext(
                 coreSubscriber.currentContext(), Java8BytecodeBridge.currentContext());
         coroutineContext =
-            KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(coroutineContext);
+            KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(
+                coroutineContext, context);
       }
     }
   }

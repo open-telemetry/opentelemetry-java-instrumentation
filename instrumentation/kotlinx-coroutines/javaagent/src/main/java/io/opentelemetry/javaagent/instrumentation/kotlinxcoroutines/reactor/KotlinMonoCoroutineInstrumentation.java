@@ -49,7 +49,7 @@ public class KotlinMonoCoroutineInstrumentation implements TypeInstrumentation {
           ContextPropagationOperator.getOpenTelemetryContext(
               monoSink.currentContext(), Java8BytecodeBridge.currentContext());
       coroutineContext =
-          KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(coroutineContext);
+          KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(coroutineContext, context);
     }
   }
 }

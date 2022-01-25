@@ -13,11 +13,16 @@ public final class KotlinCoroutinesInstrumentationHelper {
 
   public static CoroutineContext addOpenTelemetryContext(CoroutineContext coroutineContext) {
     Context current = Context.current();
+    return addOpenTelemetryContext(coroutineContext, current);
+  }
+
+  public static CoroutineContext addOpenTelemetryContext(
+      CoroutineContext coroutineContext, Context otelContext) {
     Context inCoroutine = ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);
-    if (current == inCoroutine) {
+    if (otelContext == inCoroutine) {
       return coroutineContext;
     }
-    return coroutineContext.plus(ContextExtensionsKt.asContextElement(current));
+    return coroutineContext.plus(ContextExtensionsKt.asContextElement(otelContext));
   }
 
   private KotlinCoroutinesInstrumentationHelper() {}
