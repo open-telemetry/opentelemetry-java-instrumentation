@@ -6,9 +6,7 @@ muzzle {
   pass {
     group.set("org.redisson")
     module.set("redisson")
-    // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
-    // a backwards-incompatible way from RPromise to CompletableStage
-    versions.set("[3.0.0,3.16.8)")
+    versions.set("[3.0.0,)")
   }
 }
 
@@ -17,8 +15,6 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-
-  latestDepTestLibrary("org.redisson:redisson:3.16.7")
 }
 
 tasks.test {

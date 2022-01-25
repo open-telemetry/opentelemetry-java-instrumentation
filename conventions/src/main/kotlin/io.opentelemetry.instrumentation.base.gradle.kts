@@ -78,6 +78,16 @@ configurations {
 
 if (testLatestDeps) {
   afterEvaluate {
+    tasks {
+      withType<JavaCompile>().configureEach {
+        with(options) {
+          // We may use methods that are deprecated in future versions, we check lint on the normal
+          // build and don't need this for testLatestDeps.
+          compilerArgs.add("-Xlint:-deprecation")
+        }
+      }
+    }
+
     if (tasks.names.contains("latestDepTest")) {
       val latestDepTest by tasks.existing
       tasks.named("test").configure {
