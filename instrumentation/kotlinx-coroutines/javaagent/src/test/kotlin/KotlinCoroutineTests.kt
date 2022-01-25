@@ -143,7 +143,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     // clear current context to ensure that ContextPropagationOperator is used for context propagation
     withContext(Context.root().asContextElement()) {
       val mono = mono(dispatcher) {
-        // extract context from reactor and propagate it coroutine
+        // extract context from reactor and propagate it into coroutine
         val reactorContext = coroutineContext[ReactorContext.Key]?.context
         val otelContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
         withContext(otelContext.asContextElement()) {
