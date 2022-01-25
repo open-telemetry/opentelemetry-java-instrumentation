@@ -42,11 +42,13 @@ query($q: String!, $endCursor: String) {
       endCursor
     }
   }
-}' -q '.data.search.edges.[].node.author.login,
+}' --jq '.data.search.edges.[].node.author.login,
        .data.search.edges.[].node.reviews.nodes.[].author.login,
        .data.search.edges.[].node.comments.nodes.[].author.login,
        .data.search.edges.[].node.closingIssuesReferences.nodes.[].author.login')
 
+# this query captures authors of issues which have had PRs in the current range reference the issue
+# but not necessarily through closingIssuesReferences (e.g. addressing just a part of an issue)
 contributors2=$(gh api graphql --paginate -F q="repo:open-telemetry/opentelemetry-java-instrumentation is:pr base:main is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
   search(query: $q, type: ISSUE, first: 100, after: $endCursor) {
@@ -63,10 +65,10 @@ query($q: String!, $endCursor: String) {
     }
   }
 }
-' -q '.data.search.edges.[].node.body' \
+' --jq '.data.search.edges.[].node.body' \
   | grep -oE "#[0-9]{4,}|issues/[0-9]{4,}" \
   | grep -oE "[0-9]{4,}" \
-  | xargs -I{} gh api "repos/{owner}/{repo}/issues/{}" --jq '[.user.login, .html_url]' \
+  | xargs -I{} gh issue view {} --json 'author,url' --jq '[.author.login,.url]' \
   | grep -v '/pull/' \
   | sed 's/^\["//' \
   | sed 's/".*//')
