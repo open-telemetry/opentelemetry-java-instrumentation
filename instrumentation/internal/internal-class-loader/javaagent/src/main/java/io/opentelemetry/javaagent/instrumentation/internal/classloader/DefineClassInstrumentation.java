@@ -75,11 +75,18 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
       MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
       // apply the following transformation to defineClass method
       /*
+      DefineClassContext.enter();
       try {
         // original method body
+        DefineClassContext.exit();
+        return result;
       } catch (LinkageError error) {
+        boolean helpersInjected = DefineClassContext.exitAndGet();
         Class<?> loaded = findLoadedClass(className);
-        return DefineClassUtil.handleLinkageError(error, loaded);
+        return DefineClassUtil.handleLinkageError(error, helpersInjected, loaded);
+      } catch (Throwable throwable) {
+        DefineClassContext.exit();
+        throw throwable;
       }
        */
       if ("defineClass".equals(name)
@@ -91,6 +98,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
             new MethodVisitor(api, mv) {
               Label start = new Label();
               Label end = new Label();
+              Label handler = new Label();
 
               @Override
               public void visitCode() {
@@ -101,6 +109,8 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
                     "()V",
                     false);
                 mv.visitTryCatchBlock(start, end, end, "java/lang/LinkageError");
+                // catch other exceptions
+                mv.visitTryCatchBlock(start, end, handler, null);
                 mv.visitLabel(start);
 
                 super.visitCode();
@@ -121,6 +131,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
 
               @Override
               public void visitMaxs(int maxStack, int maxLocals) {
+                // handle LinkageError
                 mv.visitLabel(end);
                 mv.visitFrame(
                     Opcodes.F_FULL,
@@ -149,6 +160,22 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
                     "(Ljava/lang/LinkageError;ZLjava/lang/Class;)Ljava/lang/Class;",
                     false);
                 mv.visitInsn(Opcodes.ARETURN);
+
+                // handle Throwable
+                mv.visitLabel(handler);
+                mv.visitFrame(
+                    Opcodes.F_FULL,
+                    2,
+                    new Object[] {"java/lang/ClassLoader", "java/lang/String"},
+                    1,
+                    new Object[] {"java/lang/Throwable"});
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(DefineClassContext.class),
+                    "exit",
+                    "()V",
+                    false);
+                mv.visitInsn(Opcodes.ATHROW);
 
                 super.visitMaxs(maxStack, maxLocals);
               }
