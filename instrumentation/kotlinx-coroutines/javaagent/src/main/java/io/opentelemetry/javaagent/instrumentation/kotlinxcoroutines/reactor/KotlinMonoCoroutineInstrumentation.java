@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.reactor;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -25,7 +24,7 @@ import reactor.core.publisher.MonoSink;
 public class KotlinMonoCoroutineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("kotlinx.coroutines.reactor.MonoCoroutine");
+    return named("kotlinx.coroutines.reactor.MonoCoroutine");
   }
 
   @Override

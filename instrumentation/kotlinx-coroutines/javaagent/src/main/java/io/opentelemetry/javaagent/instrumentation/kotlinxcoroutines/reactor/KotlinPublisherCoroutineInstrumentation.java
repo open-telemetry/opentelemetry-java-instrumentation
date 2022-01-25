@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.reactor;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -26,7 +25,7 @@ import reactor.core.CoreSubscriber;
 public class KotlinPublisherCoroutineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("kotlinx.coroutines.reactive.PublisherCoroutine");
+    return named("kotlinx.coroutines.reactive.PublisherCoroutine");
   }
 
   @Override
