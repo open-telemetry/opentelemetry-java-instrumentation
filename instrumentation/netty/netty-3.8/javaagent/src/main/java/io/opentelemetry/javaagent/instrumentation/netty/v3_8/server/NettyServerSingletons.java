@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -36,7 +36,7 @@ final class NettyServerSingletons {
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
-            .addContextCustomizer(ServerSpanNaming.get())
+            .addContextCustomizer(HttpRouteHolder.get())
             .newServerInstrumenter(NettyHeadersGetter.INSTANCE);
   }
 

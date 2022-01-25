@@ -5,11 +5,11 @@
 
 package org.springframework.web.servlet;
 
-import static io.opentelemetry.instrumentation.api.server.ServerSpanNaming.Source.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -35,7 +35,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
   private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
 
-  private final ServerSpanNameSupplier<HttpServletRequest> serverSpanName =
+  private final HttpRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
         Object previousValue = null;
         if (this.parseRequestPath && PATH_ATTRIBUTE != null) {
@@ -82,7 +82,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     } finally {
       if (handlerMappings != null) {
         Context context = Context.current();
-        ServerSpanNaming.updateServerSpanName(
+        HttpRouteHolder.updateHttpRoute(
             context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
       }
     }
