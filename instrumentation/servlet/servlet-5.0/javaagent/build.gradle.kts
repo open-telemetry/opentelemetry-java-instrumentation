@@ -21,6 +21,10 @@ dependencies {
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
+
+  // Tomcat 10.1 requires Java 11
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.+")
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.+")
 }
 
 tasks.withType<Test>().configureEach {
