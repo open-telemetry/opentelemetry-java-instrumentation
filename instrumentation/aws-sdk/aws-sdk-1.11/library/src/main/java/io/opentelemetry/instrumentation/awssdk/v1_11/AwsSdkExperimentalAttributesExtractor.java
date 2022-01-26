@@ -26,12 +26,18 @@ import javax.annotation.Nullable;
 class AwsSdkExperimentalAttributesExtractor
     implements AttributesExtractor<Request<?>, Response<?>> {
   private static final String COMPONENT_NAME = "java-aws-sdk";
-  private static final ClassValue<String> OPERATION_NAME =
+  static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
         @Override
         protected String computeValue(Class<?> type) {
           String ret = type.getSimpleName();
-          ret = ret.substring(0, ret.length() - 7); // remove 'Request'
+          if (!ret.endsWith("Request")) {
+            // Best effort check one parent to support implicit subclasses
+            ret = type.getSuperclass().getSimpleName();
+          }
+          if (ret.endsWith("Request")) {
+            ret = ret.substring(0, ret.length() - 7); // remove 'Request'
+          }
           return ret;
         }
       };
