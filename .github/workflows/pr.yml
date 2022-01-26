@@ -170,6 +170,10 @@ jobs:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
+    # release branches are excluded
+    # because any time a new library version is released to maven central it can fail
+    # which requires unnecessary release branch maintenance, especially for patches
+    if: ${{ !startsWith(github.base_ref, 'v') }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
