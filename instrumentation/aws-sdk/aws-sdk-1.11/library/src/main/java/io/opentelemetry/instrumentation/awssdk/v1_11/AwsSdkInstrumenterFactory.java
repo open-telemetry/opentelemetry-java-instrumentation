@@ -38,7 +38,8 @@ final class AwsSdkInstrumenterFactory {
               rpcAttributesExtractor,
               netAttributesExtractor,
               experimentalAttributesExtractor);
-  private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
+  private static final AwsSdkSpanNameExtractor spanName =
+      new AwsSdkSpanNameExtractor(rpcAttributesExtractor);
 
   static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
