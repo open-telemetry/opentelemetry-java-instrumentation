@@ -199,10 +199,6 @@ jobs:
         run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
 
   muzzle:
-    # release branches are excluded
-    # because any time a new library version is released to maven central it can fail
-    # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.base_ref, 'v') }}
     needs: setup-muzzle-matrix
     runs-on: ubuntu-latest
     strategy:
