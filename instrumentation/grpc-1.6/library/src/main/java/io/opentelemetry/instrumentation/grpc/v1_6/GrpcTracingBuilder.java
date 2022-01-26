@@ -29,6 +29,8 @@ public final class GrpcTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
+  @Nullable private SpanNameExtractor<GrpcRequest> clientSpanNameExtractor;
+  @Nullable private SpanNameExtractor<GrpcRequest> serverSpanNameExtractor;
 
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -49,9 +51,28 @@ public final class GrpcTracingBuilder {
     return this;
   }
 
+  /**
+   * Sets custom client {@link SpanNameExtractor}
+   */
+  public GrpcTracingBuilder setClientSpanNameExtractor(
+      SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor) {
+    this.clientSpanNameExtractor = clientSpanNameExtractor;
+    return this;
+  }
+
+  /**
+   * Sets custom server {@link SpanNameExtractor}
+   */
+  public GrpcTracingBuilder setServerSpanNameExtractor(
+      SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor) {
+    this.serverSpanNameExtractor = serverSpanNameExtractor;
+    return this;
+  }
+
   /** Sets the {@code peer.service} attribute for http client spans. */
-  public void setPeerService(String peerService) {
+  public GrpcTracingBuilder setPeerService(String peerService) {
     this.peerService = peerService;
+    return this;
   }
 
   /**
@@ -67,10 +88,20 @@ public final class GrpcTracingBuilder {
 
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
+    SpanNameExtractor<GrpcRequest> clientSpanNameExtractor = this.clientSpanNameExtractor;
+    if (clientSpanNameExtractor == null) {
+      clientSpanNameExtractor = new GrpcSpanNameExtractor();
+    }
+
+    SpanNameExtractor<GrpcRequest> serverSpanNameExtractor = this.serverSpanNameExtractor;
+    if (serverSpanNameExtractor == null) {
+      serverSpanNameExtractor = new GrpcSpanNameExtractor();
+    }
+
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(
