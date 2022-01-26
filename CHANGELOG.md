@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 1.10.1 - 2022-01-27
+
+- Move reactor context propagation operator instrumentation to separate instrumentation module
+  ([#5188](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5188))
+- Recover from duplicate class definition errors
+  ([#5185](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5185))
+- Update to OTel SDK 1.10.1
+  ([#5218](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5218))
+
 ## Version 1.10.0 - 2022-01-15
 
 ### 🌟 New javaagent instrumentation
