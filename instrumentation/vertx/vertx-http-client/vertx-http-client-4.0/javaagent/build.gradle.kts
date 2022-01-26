@@ -14,9 +14,8 @@ muzzle {
 dependencies {
   library("io.vertx:vertx-core:4.0.0")
 
-  // vertx-codegen and vertx-docgen dependencies are needed for Xlint's annotation checking
+  // vertx-codegen dependency is needed for Xlint's annotation checking
   library("io.vertx:vertx-codegen:4.0.0")
-  testLibrary("io.vertx:vertx-docgen:4.0.0")
 
   implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
