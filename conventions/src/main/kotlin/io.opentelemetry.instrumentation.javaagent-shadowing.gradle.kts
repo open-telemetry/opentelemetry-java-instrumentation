@@ -4,6 +4,8 @@ plugins {
   id("com.github.johnrengelman.shadow")
 }
 
+// NOTE: any modifications below should also be made in
+//       io.opentelemetry.instrumentation.muzzle-check.gradle.kts
 tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles()
   // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
