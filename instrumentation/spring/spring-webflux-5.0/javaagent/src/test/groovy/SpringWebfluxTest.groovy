@@ -91,6 +91,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
           }
         }
         span(1) {
@@ -157,6 +158,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
           }
         }
         span(1) {
@@ -243,6 +245,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
           }
         }
         span(1) {
@@ -307,6 +310,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" "/**"
           }
         }
         span(1) {
@@ -350,6 +354,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" "/echo"
           }
         }
         span(1) {
@@ -398,6 +403,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
           }
         }
         span(1) {
@@ -461,6 +467,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" "/double-greet-redirect"
           }
         }
         span(1) {
@@ -492,6 +499,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.HTTP_ROUTE" "/double-greet"
           }
         }
         span(1) {
@@ -538,6 +546,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_SCHEME" "http"
               "$SemanticAttributes.HTTP_FLAVOR" "1.1"
               "$SemanticAttributes.HTTP_USER_AGENT" String
+              "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
             }
           }
           span(1) {
