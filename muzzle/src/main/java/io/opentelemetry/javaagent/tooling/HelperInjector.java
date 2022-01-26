@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.javaagent.bootstrap.DefineClassContext;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
@@ -195,6 +196,7 @@ public class HelperInjector implements Transformer {
         cl -> {
           try {
             logger.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
+            DefineClassContext.helpersInjected();
 
             Map<String, byte[]> classnameToBytes = getHelperMap();
             Map<String, Class<?>> classes;
