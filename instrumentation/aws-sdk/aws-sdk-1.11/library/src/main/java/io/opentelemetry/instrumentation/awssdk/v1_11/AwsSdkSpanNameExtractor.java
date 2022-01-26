@@ -26,7 +26,7 @@ class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
         s ->
             s.replace("Amazon", "").trim()
                 + '.'
-                + operation.getSimpleName().replace("Request", ""));
+                + AwsSdkExperimentalAttributesExtractor.OPERATION_NAME.get(operation));
   }
 
   static final class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {
