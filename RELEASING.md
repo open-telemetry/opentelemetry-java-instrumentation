@@ -65,3 +65,9 @@ e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
+
+After making the release:
+
+* Merge a PR to `main` with the following change
+  * Change log updates from the patch release
+  * Bump the version in the download link in the root `README.md` file
