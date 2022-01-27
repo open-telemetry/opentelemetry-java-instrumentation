@@ -30,8 +30,8 @@ public final class GrpcTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
-  @Nullable private SpanNameExtractor<GrpcRequest> clientSpanNameExtractor;
-  @Nullable private SpanNameExtractor<GrpcRequest> serverSpanNameExtractor;
+  @Nullable private SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor;
+  @Nullable private SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor;
 
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -89,12 +89,12 @@ public final class GrpcTracingBuilder {
 
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
-    SpanNameExtractor<GrpcRequest> clientSpanNameExtractor = this.clientSpanNameExtractor;
+    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor = this.clientSpanNameExtractor;
     if (clientSpanNameExtractor == null) {
       clientSpanNameExtractor = new GrpcSpanNameExtractor();
     }
 
-    SpanNameExtractor<GrpcRequest> serverSpanNameExtractor = this.serverSpanNameExtractor;
+    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor = this.serverSpanNameExtractor;
     if (serverSpanNameExtractor == null) {
       serverSpanNameExtractor = new GrpcSpanNameExtractor();
     }
