@@ -257,7 +257,7 @@ jobs:
     # it can fail due to test code incompatibility with the new library version,
     # or due to slight changes in emitted telemetry
     needs: [ build, test, smoke-test, examples, muzzle ]
-    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
       - uses: actions/checkout@v2.3.4
 
