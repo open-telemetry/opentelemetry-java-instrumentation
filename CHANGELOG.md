@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 1.10.1 - 2022-01-26
+## Version 1.10.1 - 2022-01-27
 
 - Move reactor context propagation operator instrumentation to separate instrumentation module
   ([#5188](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5188))
