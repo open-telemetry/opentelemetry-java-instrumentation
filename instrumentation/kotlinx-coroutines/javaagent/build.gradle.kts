@@ -10,31 +10,28 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
-    extraDependency("io.projectreactor:reactor-core:3.1.10.RELEASE")
-    extraDependency("org.reactivestreams:reactive-streams:1.0.2")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
   pass {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
-    extraDependency("io.projectreactor:reactor-core:3.1.10.RELEASE")
-    extraDependency("org.reactivestreams:reactive-streams:1.0.2")
   }
 }
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  // Use first version with flow support since we have tests for it.
-  library("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
-  library("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.3.0")
-  implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-kotlin")
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
+
+  // Use first version with flow support since we have tests for it.
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.3.0")
 }
 
 tasks {
