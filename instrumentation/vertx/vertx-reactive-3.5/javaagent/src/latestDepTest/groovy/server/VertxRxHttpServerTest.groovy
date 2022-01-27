@@ -5,10 +5,9 @@
 
 package server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -24,7 +23,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -62,25 +60,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   @Override
   boolean testPathParam() {
     return true
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
-    switch (endpoint) {
-      case PATH_PARAM:
-        return "/path/:id/param"
-      case NOT_FOUND:
-        return "HTTP GET"
-      default:
-        return endpoint.getPath()
-    }
   }
 
   @Override
