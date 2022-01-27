@@ -5,8 +5,6 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry:opentelemetry-exporter-logging")
-
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
