@@ -30,7 +30,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   implementation("io.opentelemetry:opentelemetry-extension-noop-api")
 
-  // Only the logging exporter is included in our slim distribution so we include it here.
   // Other exporters are in javaagent-exporters
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
