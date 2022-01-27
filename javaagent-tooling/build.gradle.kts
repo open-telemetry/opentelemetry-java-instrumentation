@@ -30,6 +30,9 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   implementation("io.opentelemetry:opentelemetry-extension-noop-api")
 
+  // Other exporters are in javaagent-exporters
+  implementation("io.opentelemetry:opentelemetry-exporter-logging")
+
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.slf4j:slf4j-api")
 
