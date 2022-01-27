@@ -43,7 +43,7 @@ class TestServlet2 {
           case EXCEPTION:
             throw new Exception(endpoint.body)
           case INDEXED_CHILD:
-            INDEXED_CHILD.collectSpanAttributes {name -> req.getParameter(name) }
+            INDEXED_CHILD.collectSpanAttributes { name -> req.getParameter(name) }
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
             break

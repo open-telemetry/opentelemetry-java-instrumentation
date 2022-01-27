@@ -101,7 +101,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long } // Optional
+            // Optional
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_ROUTE" route
           }
         }

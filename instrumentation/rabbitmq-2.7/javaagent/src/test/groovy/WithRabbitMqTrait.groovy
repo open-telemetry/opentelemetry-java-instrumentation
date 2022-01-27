@@ -7,10 +7,10 @@ import com.rabbitmq.client.ConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
-
-import java.time.Duration
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
+
+import java.time.Duration
 
 trait WithRabbitMqTrait {
   private static final Logger logger = LoggerFactory.getLogger("io.opentelemetry.testing.rabbitmq-container")

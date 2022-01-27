@@ -30,7 +30,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
   def "Current in non-blocking publisher assembly"() {
     when:
     runWithSpan({
-      return publisherSupplier().transform({ publisher -> traceNonBlocking(publisher, "inner")})
+      return publisherSupplier().transform({ publisher -> traceNonBlocking(publisher, "inner") })
     })
 
     then:
@@ -61,19 +61,23 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
 
     where:
     paramName    | publisherSupplier
-    "basic mono" | { -> Mono.fromCallable({ i ->
-      Span.current().setAttribute("inner", "foo")
-      return 1
-    }) }
-    "basic flux" | { -> Flux.defer({
-      Span.current().setAttribute("inner", "foo")
-      return Flux.just([5,6].toArray())
-    })}
+    "basic mono" | { ->
+      Mono.fromCallable({ i ->
+        Span.current().setAttribute("inner", "foo")
+        return 1
+      })
+    }
+    "basic flux" | { ->
+      Flux.defer({
+        Span.current().setAttribute("inner", "foo")
+        return Flux.just([5, 6].toArray())
+      })
+    }
   }
 
   def "Nested non-blocking"() {
     when:
-    def result =  runWithSpan({
+    def result = runWithSpan({
       Mono.defer({ ->
         Span.current().setAttribute("middle", "foo")
         return Mono.fromCallable({ ->
@@ -82,7 +86,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
         })
           .transform({ i -> traceNonBlocking(i, "inner") })
       })
-        .transform({ m -> traceNonBlocking(m, "middle")})
+        .transform({ m -> traceNonBlocking(m, "middle") })
     })
 
     then:
@@ -128,7 +132,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
     tracingOperator.resetOnEachOperator()
 
     def result1 = Mono.fromCallable({ ->
-      assert !Span.current().getSpanContext().isValid() : "current span is not set"
+      assert !Span.current().getSpanContext().isValid(): "current span is not set"
       return 1
     })
       .transform({ i ->
@@ -136,14 +140,15 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
         def beforeSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("before").startSpan()
 
         return ContextPropagationOperator
-          .runWithContext(i,  Context.root().with(beforeSpan))
+          .runWithContext(i, Context.root().with(beforeSpan))
           .doOnEach({ signal ->
-            assert !Span.current().getSpanContext().isValid() : "current span is not set"
-          })}).block()
+            assert !Span.current().getSpanContext().isValid(): "current span is not set"
+          })
+      }).block()
 
     tracingOperator.registerOnEachOperator()
     def result2 = Mono.fromCallable({ ->
-      assert Span.current().getSpanContext().isValid() : "current span is set"
+      assert Span.current().getSpanContext().isValid(): "current span is set"
       return 2
     })
       .transform({ i ->
@@ -151,13 +156,14 @@ class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrai
         def afterSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("after").startSpan()
 
         return ContextPropagationOperator
-          .runWithContext(i,  Context.root().with(afterSpan))
+          .runWithContext(i, Context.root().with(afterSpan))
           .doOnEach({ signal ->
-            assert Span.current().getSpanContext().isValid() : "current span is set"
+            assert Span.current().getSpanContext().isValid(): "current span is set"
             if (signal.isOnComplete()) {
               Span.current().end()
             }
-          })}).block()
+          })
+      }).block()
 
     then:
     result1 == 1

@@ -38,7 +38,7 @@ class ReactorNettyWithSpanTest extends InstrumentationSpecification implements A
 
     def httpRequest = Mono.defer({ ->
       httpClient.get().uri("http://localhost:${server.httpPort()}/success")
-        .responseSingle ({ resp, content ->
+        .responseSingle({ resp, content ->
           // Make sure to consume content since that's when we close the span.
           content.map { resp }
         })
