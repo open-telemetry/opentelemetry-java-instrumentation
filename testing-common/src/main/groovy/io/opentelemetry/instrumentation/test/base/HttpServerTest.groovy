@@ -705,8 +705,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
           "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
         } else {
-          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
           // Optional
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
         }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
@@ -722,14 +722,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "$SemanticAttributes.HTTP_SERVER_NAME" String
@@ -770,8 +770,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
           "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
         } else {
-          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
           // Optional
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
         }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
@@ -787,14 +787,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
