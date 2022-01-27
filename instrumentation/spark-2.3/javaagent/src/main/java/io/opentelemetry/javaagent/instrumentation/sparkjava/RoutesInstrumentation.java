@@ -10,10 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,12 +38,7 @@ public class RoutesInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
-
-      Span span = Java8BytecodeBridge.currentSpan();
-      if (span != null && routeMatch != null) {
-        // TODO should update SERVER span name/route using ServerSpanNaming
-        span.updateName(routeMatch.getMatchUri());
-      }
+      SparkRouteUpdater.updateHttpRoute(routeMatch);
     }
   }
 }
