@@ -18,6 +18,8 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+
   // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
   // the tests in the event it does. The tests will end up with double spans
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))

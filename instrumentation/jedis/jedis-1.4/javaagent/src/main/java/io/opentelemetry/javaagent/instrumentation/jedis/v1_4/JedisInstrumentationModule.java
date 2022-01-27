@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -30,6 +30,6 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new JedisConnectionInstrumentation());
+    return asList(new JedisConnectionInstrumentation(), new JedisInstrumentation());
   }
 }
