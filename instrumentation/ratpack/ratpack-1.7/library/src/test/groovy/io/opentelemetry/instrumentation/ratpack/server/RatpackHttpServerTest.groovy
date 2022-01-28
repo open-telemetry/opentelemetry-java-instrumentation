@@ -13,7 +13,7 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements Lib
   @Override
   void configure(RatpackServerSpec serverSpec) {
     RatpackTracing tracing = RatpackTracing.builder(openTelemetry)
-      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .captureHttpServerHeaders(capturedHttpHeadersForTesting())
       .build()
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)

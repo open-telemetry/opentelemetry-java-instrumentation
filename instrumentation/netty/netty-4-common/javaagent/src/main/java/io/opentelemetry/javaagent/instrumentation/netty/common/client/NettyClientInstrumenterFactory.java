@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -32,19 +33,18 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter() {
-    NettyHttpClientAttributesExtractor httpClientAttributesExtractor =
-        new NettyHttpClientAttributesExtractor();
-    NettyNetClientAttributesGetter netClientAttributesExtractor =
-        new NettyNetClientAttributesGetter();
+    NettyHttpClientAttributesGetter httpClientAttributesGetter =
+        new NettyHttpClientAttributesGetter();
+    NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            HttpSpanNameExtractor.create(httpClientAttributesExtractor))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesExtractor))
-        .addAttributesExtractor(httpClientAttributesExtractor)
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesExtractor))
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netClientAttributesExtractor))
+            HttpSpanNameExtractor.create(httpClientAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
+        .addAttributesExtractor(HttpClientAttributesExtractor.create(httpClientAttributesGetter))
+        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
         .addRequestMetrics(HttpClientMetrics.get())
         .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }

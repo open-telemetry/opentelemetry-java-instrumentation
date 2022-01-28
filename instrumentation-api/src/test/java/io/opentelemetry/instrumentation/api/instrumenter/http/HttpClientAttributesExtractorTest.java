@@ -22,68 +22,63 @@ import org.junit.jupiter.api.Test;
 
 class HttpClientAttributesExtractorTest {
 
-  static class TestHttpClientAttributesExtractor
-      extends HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> {
-
-    TestHttpClientAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
-      super(capturedHttpHeaders);
-    }
+  static class TestHttpClientAttributesGetter
+      implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected String method(Map<String, String> request) {
+    public String method(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    protected String url(Map<String, String> request) {
+    public String url(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    protected List<String> requestHeader(Map<String, String> request, String name) {
+    public List<String> requestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    protected Long requestContentLength(Map<String, String> request, Map<String, String> response) {
+    public Long requestContentLength(Map<String, String> request, Map<String, String> response) {
       String value = request.get("requestContentLength");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Long requestContentLengthUncompressed(
+    public Long requestContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
       String value = request.get("requestContentLengthUncompressed");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    protected String flavor(Map<String, String> request, Map<String, String> response) {
+    public String flavor(Map<String, String> request, Map<String, String> response) {
       return request.get("flavor");
     }
 
     @Override
-    protected Long responseContentLength(
-        Map<String, String> request, Map<String, String> response) {
+    public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
       String value = response.get("responseContentLength");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Long responseContentLengthUncompressed(
+    public Long responseContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
       String value = response.get("responseContentLengthUncompressed");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected List<String> responseHeader(
+    public List<String> responseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
@@ -107,8 +102,9 @@ class HttpClientAttributesExtractorTest {
     response.put("responseContentLengthUncompressed", "21");
     response.put("header.custom-response-header", "654,321");
 
-    TestHttpClientAttributesExtractor extractor =
-        new TestHttpClientAttributesExtractor(
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(),
             CapturedHttpHeaders.create(
                 singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")));
 
@@ -150,8 +146,9 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "0");
 
-    TestHttpClientAttributesExtractor extractor =
-        new TestHttpClientAttributesExtractor(CapturedHttpHeaders.empty());
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), CapturedHttpHeaders.empty());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, request);

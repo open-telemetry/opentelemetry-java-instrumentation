@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -31,8 +32,8 @@ public final class ReactorNettySingletons {
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
 
   static {
-    ReactorNettyHttpClientAttributesExtractor httpAttributesExtractor =
-        new ReactorNettyHttpClientAttributesExtractor();
+    ReactorNettyHttpClientAttributesGetter httpAttributesGetter =
+        new ReactorNettyHttpClientAttributesGetter();
     ReactorNettyNetClientAttributesGetter netAttributesGetter =
         new ReactorNettyNetClientAttributesGetter();
 
@@ -40,9 +41,9 @@ public final class ReactorNettySingletons {
         Instrumenter.<HttpClientConfig, HttpClientResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())

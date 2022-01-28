@@ -9,8 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
@@ -49,22 +47,18 @@ public final class JettyClientInstrumenterBuilder {
   }
 
   public Instrumenter<Request, Response> build() {
-    HttpClientAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new JettyClientHttpAttributesExtractor(capturedHttpHeaders);
-    SpanNameExtractor<Request> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    JettyClientHttpAttributesGetter httpAttributesExtractor = new JettyClientHttpAttributesGetter();
     JettyHttpClientNetAttributesGetter netAttributesGetter =
         new JettyHttpClientNetAttributesGetter();
-    NetClientAttributesExtractor<Request, Response> attributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
 
     return Instrumenter.<Request, Response>builder(
-            this.openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .setSpanStatusExtractor(spanStatusExtractor)
-        .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(attributesExtractor)
+            this.openTelemetry,
+            INSTRUMENTATION_NAME,
+            HttpSpanNameExtractor.create(httpAttributesExtractor))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
+        .addAttributesExtractor(
+            HttpClientAttributesExtractor.create(httpAttributesExtractor, capturedHttpHeaders))
+        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpClientMetrics.get())
         .newClientInstrumenter(HttpHeaderSetter.INSTANCE);

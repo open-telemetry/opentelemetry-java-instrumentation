@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
@@ -41,7 +42,9 @@ public class InstrumenterBenchmark {
               OpenTelemetry.noop(),
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesExtractor.INSTANCE))
-          .addAttributesExtractor(ConstantHttpAttributesExtractor.INSTANCE)
+          .addAttributesExtractor(
+              HttpClientAttributesExtractor.create(
+                  ConstantHttpAttributesExtractor.INSTANCE, CapturedHttpHeaders.empty()))
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
           .newInstrumenter();
@@ -58,28 +61,21 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  static class ConstantHttpAttributesExtractor extends HttpClientAttributesExtractor<Void, Void> {
-    static final HttpClientAttributesExtractor<Void, Void> INSTANCE =
-        new ConstantHttpAttributesExtractor();
-
-    public ConstantHttpAttributesExtractor() {
-      super(CapturedHttpHeaders.empty());
-    }
+  enum ConstantHttpAttributesExtractor implements HttpClientAttributesGetter<Void, Void> {
+    INSTANCE;
 
     @Override
-    @Nullable
-    protected String method(Void unused) {
+    public String method(Void unused) {
       return "GET";
     }
 
     @Override
-    @Nullable
-    protected String url(Void unused) {
+    public String url(Void unused) {
       return "https://opentelemetry.io/benchmark";
     }
 
     @Override
-    protected List<String> requestHeader(Void unused, String name) {
+    public List<String> requestHeader(Void unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
         return Collections.singletonList("OpenTelemetryBot");
       }
@@ -87,43 +83,39 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    @Nullable
-    protected Long requestContentLength(Void unused, @Nullable Void unused2) {
+    public Long requestContentLength(Void unused, @Nullable Void unused2) {
       return 100L;
     }
 
     @Override
     @Nullable
-    protected Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
+    public Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
       return null;
     }
 
     @Override
-    @Nullable
-    protected String flavor(Void unused, @Nullable Void unused2) {
+    public String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
 
     @Override
-    @Nullable
-    protected Integer statusCode(Void unused, Void unused2) {
+    public Integer statusCode(Void unused, Void unused2) {
       return 200;
     }
 
     @Override
-    @Nullable
-    protected Long responseContentLength(Void unused, Void unused2) {
+    public Long responseContentLength(Void unused, Void unused2) {
       return 100L;
     }
 
     @Override
     @Nullable
-    protected Long responseContentLengthUncompressed(Void unused, Void unused2) {
+    public Long responseContentLengthUncompressed(Void unused, Void unused2) {
       return null;
     }
 
     @Override
-    protected List<String> responseHeader(Void unused, Void unused2, String name) {
+    public List<String> responseHeader(Void unused, Void unused2, String name) {
       return Collections.emptyList();
     }
   }

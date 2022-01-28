@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -24,19 +22,16 @@ public class PlayWsClientSingletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
   static {
-    HttpClientAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new PlayWsClientHttpAttributesExtractor();
-    SpanNameExtractor<? super Request> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super Request, ? super Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    PlayWsClientHttpAttributesGetter httpAttributesGetter = new PlayWsClientHttpAttributesGetter();
     PlayWsClientNetAttributesGetter netAttributesGetter = new PlayWsClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<Request, Response>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())

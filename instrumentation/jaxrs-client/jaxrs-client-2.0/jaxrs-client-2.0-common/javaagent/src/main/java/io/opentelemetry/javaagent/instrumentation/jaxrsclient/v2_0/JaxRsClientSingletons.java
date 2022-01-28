@@ -9,8 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -26,20 +24,15 @@ public class JaxRsClientSingletons {
   private static final Instrumenter<ClientRequestContext, ClientResponseContext> INSTRUMENTER;
 
   static {
-    HttpClientAttributesExtractor<ClientRequestContext, ClientResponseContext>
-        httpAttributesExtractor = new JaxRsClientHttpAttributesExtractor();
-    SpanNameExtractor<? super ClientRequestContext> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super ClientRequestContext, ? super ClientResponseContext>
-        spanStatusExtractor = HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    JaxRsClientHttpAttributesGetter httpAttributesExtractor = new JaxRsClientHttpAttributesGetter();
     JaxRsClientNetAttributesGetter netAttributesGetter = new JaxRsClientNetAttributesGetter();
-    NetClientAttributesExtractor<ClientRequestContext, ClientResponseContext>
-        netClientAttributesExtractor = NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ClientRequestContext, ClientResponseContext>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesExtractor))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .setErrorCauseExtractor(
                 (throwable) -> {
                   if (throwable instanceof ProcessingException) {
@@ -47,8 +40,8 @@ public class JaxRsClientSingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(throwable);
                 })
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netClientAttributesExtractor)
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(ClientRequestContextHeaderSetter.INSTANCE);

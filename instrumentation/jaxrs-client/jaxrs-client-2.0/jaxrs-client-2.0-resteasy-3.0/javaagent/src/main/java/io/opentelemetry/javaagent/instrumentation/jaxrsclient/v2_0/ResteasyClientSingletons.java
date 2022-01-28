@@ -9,8 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -27,20 +25,16 @@ public class ResteasyClientSingletons {
   private static final Instrumenter<ClientInvocation, Response> INSTRUMENTER;
 
   static {
-    HttpClientAttributesExtractor<ClientInvocation, Response> httpAttributesExtractor =
-        new ResteasyClientHttpAttributesExtractor();
-    SpanNameExtractor<? super ClientInvocation> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super ClientInvocation, ? super Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    ResteasyClientHttpAttributesGetter httpAttributesExtractor =
+        new ResteasyClientHttpAttributesGetter();
     ResteasyClientNetAttributesGetter netAttributesGetter = new ResteasyClientNetAttributesGetter();
-    NetClientAttributesExtractor<ClientInvocation, Response> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ClientInvocation, Response>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesExtractor))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
             .setErrorCauseExtractor(
                 (throwable) -> {
                   if (throwable instanceof ProcessingException) {
@@ -48,8 +42,8 @@ public class ResteasyClientSingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(throwable);
                 })
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(ClientInvocationHeaderSetter.INSTANCE);
