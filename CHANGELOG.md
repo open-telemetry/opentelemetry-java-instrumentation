@@ -6,6 +6,8 @@
   ([#5188](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5188))
 - Recover from duplicate class definition errors
   ([#5185](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5185))
+- StringIndexOutOfBoundsException in AWS SDK v1 when using request object subclass
+  ([#5231](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5231))
 - Update to OTel SDK 1.10.1
   ([#5218](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5218))
 
