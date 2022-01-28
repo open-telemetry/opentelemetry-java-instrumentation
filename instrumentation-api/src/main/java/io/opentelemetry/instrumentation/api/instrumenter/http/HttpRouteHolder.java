@@ -50,6 +50,24 @@ public final class HttpRouteHolder {
    * Updates the {@code http.route} attribute in the received {@code context}.
    *
    * <p>If there is a server span in the context, and the context has been customized with a {@link
+   * HttpRouteHolder}, then this method will update the route using the provided {@code httpRoute}
+   * if and only if the last {@link HttpRouteSource} to update the route using this method has
+   * strictly lower priority than the provided {@link HttpRouteSource}, and the pased value is
+   * non-null.
+   *
+   * <p>If there is a server span in the context, and the context has NOT been customized with a
+   * {@link HttpRouteHolder}, then this method will update the route using the provided value if it
+   * is non-null.
+   */
+  public static void updateHttpRoute(
+      Context context, HttpRouteSource source, @Nullable String httpRoute) {
+    updateHttpRoute(context, source, ConstantAdapter.INSTANCE, httpRoute);
+  }
+
+  /**
+   * Updates the {@code http.route} attribute in the received {@code context}.
+   *
+   * <p>If there is a server span in the context, and the context has been customized with a {@link
    * HttpRouteHolder}, then this method will update the route using the provided {@link
    * HttpRouteGetter} if and only if the last {@link HttpRouteSource} to update the route using this
    * method has strictly lower priority than the provided {@link HttpRouteSource}, and the value
@@ -152,6 +170,17 @@ public final class HttpRouteHolder {
     @Nullable
     public String get(Context context, T arg, HttpRouteGetter<T> httpRouteGetter) {
       return httpRouteGetter.get(context, arg);
+    }
+  }
+
+  private static final class ConstantAdapter implements HttpRouteGetter<String> {
+
+    private static final ConstantAdapter INSTANCE = new ConstantAdapter();
+
+    @Nullable
+    @Override
+    public String get(Context context, String route) {
+      return route;
     }
   }
 }
