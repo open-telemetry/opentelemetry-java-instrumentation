@@ -36,6 +36,10 @@ jobs:
           cwd: './gh-pages'
           branch: 'gh-pages'
           message: 'update test result data'
+          author_name: opentelemetry-java-bot
+          author_email: 97938252+opentelemetry-java-bot@users.noreply.github.com
+          committer_name: opentelemetry-java-bot
+          committer_email: 97938252+opentelemetry-java-bot@users.noreply.github.com
 
   issue:
     name: Open issue on failure
