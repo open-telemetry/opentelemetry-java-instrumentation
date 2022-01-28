@@ -5,7 +5,9 @@
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +21,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.reactor.ReactorContext
+import kotlinx.coroutines.reactor.flux
+import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
@@ -122,6 +129,38 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
           child.onAwait { it }
         }
       }
+    }
+  }
+
+  fun tracedMono(): Unit = runTest {
+    mono(dispatcher) {
+      tracedChild("child")
+    }.awaitSingle()
+  }
+
+  fun tracedMonoContextPropagationOperator(): Unit = runTest {
+    val currentContext = Context.current()
+    // clear current context to ensure that ContextPropagationOperator is used for context propagation
+    withContext(Context.root().asContextElement()) {
+      val mono = mono(dispatcher) {
+        // extract context from reactor and propagate it into coroutine
+        val reactorContext = coroutineContext[ReactorContext.Key]?.context
+        val otelContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
+        withContext(otelContext.asContextElement()) {
+          tracedChild("child")
+        }
+      }
+      ContextPropagationOperator.runWithContext(mono, currentContext).awaitSingle()
+    }
+  }
+
+  fun tracedFlux() = runTest {
+    flux(dispatcher) {
+      repeat(3) {
+        tracedChild("child_$it")
+        send(it)
+      }
+    }.collect {
     }
   }
 
