@@ -146,7 +146,6 @@ public final class HttpRouteHolder {
     return name.length() > routeLength;
   }
 
-  // TODO: use that in HttpServerMetrics
   /**
    * Returns the {@code http.route} attribute value that's stored in the passed {@code context}, or
    * null if it was not set before.
