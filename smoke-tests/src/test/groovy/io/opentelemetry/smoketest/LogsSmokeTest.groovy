@@ -6,8 +6,9 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest
-import java.time.Duration
 import spock.lang.IgnoreIf
+
+import java.time.Duration
 
 import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toList

@@ -75,7 +75,7 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
     setup:
     def result = Mono.defer({ ->
       Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
-      def outer = Mono.defer({ -> new TracedWithSpan().mono(Mono.just("Value") )});
+      def outer = Mono.defer({ -> new TracedWithSpan().mono(Mono.just("Value")) });
       return ContextPropagationOperator
         .runWithContext(outer, Context.current().with(span))
         .doFinally({ i -> span.end() })
@@ -108,7 +108,7 @@ class ContextPropagationOperatorInstrumentationTest extends AgentInstrumentation
     setup:
     def result = Flux.defer({ ->
       Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan()
-      def outer = Flux.defer({ -> new TracedWithSpan().flux(Flux.just("Value") )});
+      def outer = Flux.defer({ -> new TracedWithSpan().flux(Flux.just("Value")) });
       return ContextPropagationOperator
         .runWithContext(outer, Context.current().with(span))
         .doFinally({ i -> span.end() })

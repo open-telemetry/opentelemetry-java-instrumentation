@@ -18,63 +18,63 @@ class SqlStatementSanitizerTest extends Specification {
     actualSanitized.getFullStatement() == sanitizedSql
 
     where:
-    originalSql                                                                | sanitizedSql
+    originalSql                                                               | sanitizedSql
     // Numbers
-    "SELECT * FROM TABLE WHERE FIELD=1234"                                     | "SELECT * FROM TABLE WHERE FIELD=?"
-    "SELECT * FROM TABLE WHERE FIELD = 1234"                                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD>=-1234"                                   | "SELECT * FROM TABLE WHERE FIELD>=?"
-    "SELECT * FROM TABLE WHERE FIELD<-1234"                                    | "SELECT * FROM TABLE WHERE FIELD<?"
-    "SELECT * FROM TABLE WHERE FIELD <.1234"                                   | "SELECT * FROM TABLE WHERE FIELD <?"
-    "SELECT 1.2"                                                               | "SELECT ?"
-    "SELECT -1.2"                                                              | "SELECT ?"
-    "SELECT -1.2e-9"                                                           | "SELECT ?"
-    "SELECT 2E+9"                                                              | "SELECT ?"
-    "SELECT +0.2"                                                              | "SELECT ?"
-    "SELECT .2"                                                                | "SELECT ?"
-    "7"                                                                        | "?"
-    ".7"                                                                       | "?"
-    "-7"                                                                       | "?"
-    "+7"                                                                       | "?"
-    "SELECT 0x0af764"                                                          | "SELECT ?"
-    "SELECT 0xdeadBEEF"                                                        | "SELECT ?"
-    "SELECT * FROM \"TABLE\""                                                  | "SELECT * FROM \"TABLE\""
+    "SELECT * FROM TABLE WHERE FIELD=1234"                                    | "SELECT * FROM TABLE WHERE FIELD=?"
+    "SELECT * FROM TABLE WHERE FIELD = 1234"                                  | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD>=-1234"                                  | "SELECT * FROM TABLE WHERE FIELD>=?"
+    "SELECT * FROM TABLE WHERE FIELD<-1234"                                   | "SELECT * FROM TABLE WHERE FIELD<?"
+    "SELECT * FROM TABLE WHERE FIELD <.1234"                                  | "SELECT * FROM TABLE WHERE FIELD <?"
+    "SELECT 1.2"                                                              | "SELECT ?"
+    "SELECT -1.2"                                                             | "SELECT ?"
+    "SELECT -1.2e-9"                                                          | "SELECT ?"
+    "SELECT 2E+9"                                                             | "SELECT ?"
+    "SELECT +0.2"                                                             | "SELECT ?"
+    "SELECT .2"                                                               | "SELECT ?"
+    "7"                                                                       | "?"
+    ".7"                                                                      | "?"
+    "-7"                                                                      | "?"
+    "+7"                                                                      | "?"
+    "SELECT 0x0af764"                                                         | "SELECT ?"
+    "SELECT 0xdeadBEEF"                                                       | "SELECT ?"
+    "SELECT * FROM \"TABLE\""                                                 | "SELECT * FROM \"TABLE\""
 
     // Not numbers but could be confused as such
-    "SELECT A + B"                                                             | "SELECT A + B"
-    "SELECT -- comment"                                                        | "SELECT -- comment"
-    "SELECT * FROM TABLE123"                                                   | "SELECT * FROM TABLE123"
-    "SELECT FIELD2 FROM TABLE_123 WHERE X<>7"                                  | "SELECT FIELD2 FROM TABLE_123 WHERE X<>?"
+    "SELECT A + B"                                                            | "SELECT A + B"
+    "SELECT -- comment"                                                       | "SELECT -- comment"
+    "SELECT * FROM TABLE123"                                                  | "SELECT * FROM TABLE123"
+    "SELECT FIELD2 FROM TABLE_123 WHERE X<>7"                                 | "SELECT FIELD2 FROM TABLE_123 WHERE X<>?"
 
     // Semi-nonsensical almost-numbers to elide or not
-    "SELECT --83--...--8e+76e3E-1"                                             | "SELECT ?"
-    "SELECT DEADBEEF"                                                          | "SELECT DEADBEEF"
-    "SELECT 123-45-6789"                                                       | "SELECT ?"
-    "SELECT 1/2/34"                                                            | "SELECT ?/?/?"
+    "SELECT --83--...--8e+76e3E-1"                                            | "SELECT ?"
+    "SELECT DEADBEEF"                                                         | "SELECT DEADBEEF"
+    "SELECT 123-45-6789"                                                      | "SELECT ?"
+    "SELECT 1/2/34"                                                           | "SELECT ?/?/?"
 
     // Basic ' strings
-    "SELECT * FROM TABLE WHERE FIELD = ''"                                     | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = 'words and spaces'"                     | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = ' an escaped '' quote mark inside'"     | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = '\\\\'"                                 | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = '\"inside doubles\"'"                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = '\"\$\$\$\$\"'"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'"       | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = ''"                                    | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = 'words and spaces'"                    | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = ' an escaped '' quote mark inside'"    | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = '\\\\'"                                | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = '\"inside doubles\"'"                  | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = '\"\$\$\$\$\"'"                        | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'"      | "SELECT * FROM TABLE WHERE FIELD = ?"
 
     // Some databases allow using dollar-quoted strings
-    "SELECT * FROM TABLE WHERE FIELD = \$\$\$\$"                               | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \$\$words and spaces\$\$"               | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \$\$quotes '\" inside\$\$"              | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \$\$\"''\"\$\$"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \$\$\\\\\$\$"                           | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\$\$"                              | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$words and spaces\$\$"              | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$quotes '\" inside\$\$"             | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\"''\"\$\$"                        | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\\\\\$\$"                          | "SELECT * FROM TABLE WHERE FIELD = ?"
 
     // Unicode, including a unicode identifier with a trailing number
-    "SELECT * FROM TABLE\u09137 WHERE FIELD = '\u0194'"                        | "SELECT * FROM TABLE\u09137 WHERE FIELD = ?"
+    "SELECT * FROM TABLE\u09137 WHERE FIELD = '\u0194'"                       | "SELECT * FROM TABLE\u09137 WHERE FIELD = ?"
 
     // whitespace normalization
-    "SELECT    *    \t\r\nFROM  TABLE WHERE FIELD1 = 12344 AND FIELD2 = 5678"  | "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?"
+    "SELECT    *    \t\r\nFROM  TABLE WHERE FIELD1 = 12344 AND FIELD2 = 5678" | "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?"
 
     // hibernate/jpa query language
-    "FROM TABLE WHERE FIELD=1234"                                              | "FROM TABLE WHERE FIELD=?"
+    "FROM TABLE WHERE FIELD=1234"                                             | "FROM TABLE WHERE FIELD=?"
   }
 
   def "normalize couchbase #originalSql"() {

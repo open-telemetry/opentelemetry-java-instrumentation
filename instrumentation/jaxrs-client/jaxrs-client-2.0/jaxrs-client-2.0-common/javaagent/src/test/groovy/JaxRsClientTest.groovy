@@ -42,7 +42,8 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
       def response = request.build(method, body).invoke()
       try {
         response.close()
-      } catch (IOException ignore) {}
+      } catch (IOException ignore) {
+      }
       return response.status
     } catch (ProcessingException exception) {
       throw exception.getCause()

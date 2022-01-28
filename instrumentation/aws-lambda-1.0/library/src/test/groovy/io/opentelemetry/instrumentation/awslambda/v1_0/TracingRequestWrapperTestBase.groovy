@@ -7,10 +7,11 @@ package io.opentelemetry.instrumentation.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
-import java.util.function.BiFunction
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
+
+import java.util.function.BiFunction
 
 class TracingRequestWrapperTestBase extends LibraryInstrumentationSpecification {
 

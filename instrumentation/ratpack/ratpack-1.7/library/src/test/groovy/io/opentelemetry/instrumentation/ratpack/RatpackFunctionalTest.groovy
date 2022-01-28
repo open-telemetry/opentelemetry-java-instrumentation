@@ -18,8 +18,9 @@ import ratpack.test.embed.EmbeddedApp
 class RatpackFunctionalTest extends MainClassApplicationUnderTest {
 
   Registry registry
-  @Lazy InMemorySpanExporter spanExporter = registry.get(SpanExporter) as InMemorySpanExporter
-  EmbeddedApp app =  EmbeddedApp.of { server ->
+  @Lazy
+  InMemorySpanExporter spanExporter = registry.get(SpanExporter) as InMemorySpanExporter
+  EmbeddedApp app = EmbeddedApp.of { server ->
     server.handlers { chain ->
       chain.get("other") { ctx -> ctx.render("hi-other") }
     }

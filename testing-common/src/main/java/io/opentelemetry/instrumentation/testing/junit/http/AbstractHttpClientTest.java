@@ -924,9 +924,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
 
-              // Optional
-              // TODO(anuraaga): Move to test knob rather than always treating
-              // as optional
+              // TODO(anuraaga): Move to test knob rather than always treating as optional
               if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
                 if (uri.getHost().equals("192.0.2.1")) {
                   // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
