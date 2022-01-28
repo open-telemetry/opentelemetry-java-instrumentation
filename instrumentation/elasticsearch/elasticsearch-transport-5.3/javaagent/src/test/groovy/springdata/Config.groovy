@@ -50,7 +50,6 @@ class Config {
       .put("thread_pool.listener.size", 1)
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
-      .put("discovery.type", "single-node")
       .build()
 
     println "ES work dir: $tmpDir"

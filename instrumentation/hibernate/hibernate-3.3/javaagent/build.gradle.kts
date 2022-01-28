@@ -37,7 +37,7 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
 
-  latestDepTestLibrary("org.hibernate:hibernate-core:3.+")
+  latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

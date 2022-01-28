@@ -20,8 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
-  // Jedis 3.0 has API changes that prevent instrumentation from applying
-  latestDepTestLibrary("redis.clients:jedis:2.+")
+  latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
 tasks {
