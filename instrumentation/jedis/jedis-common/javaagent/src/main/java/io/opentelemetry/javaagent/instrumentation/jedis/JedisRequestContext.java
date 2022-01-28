@@ -18,7 +18,7 @@ public final class JedisRequestContext<T> {
 
   private JedisRequestContext() {}
 
-  public static <T> JedisRequestContext<T> start() {
+  public static <T> JedisRequestContext<T> attach() {
     JedisRequestContext<T> requestContext = current();
     // if there already is an active request context don't start a new one
     if (requestContext != null) {
@@ -29,7 +29,7 @@ public final class JedisRequestContext<T> {
     return requestContext;
   }
 
-  public void close() {
+  public void detachAndEnd() {
     contextThreadLocal.remove();
     if (request != null) {
       endSpan(instrumenter, context, request, throwable);
@@ -39,7 +39,7 @@ public final class JedisRequestContext<T> {
   /**
    * Schedule ending of instrumented operation when current {@link JedisRequestContext} is closed.
    */
-  public static <T> void end(
+  public static <T> void endIfNotAttached(
       Instrumenter<T, Void> instrumenter, Context context, T request, Throwable throwable) {
     JedisRequestContext<T> requestContext = current();
     if (requestContext == null || requestContext.request != null) {

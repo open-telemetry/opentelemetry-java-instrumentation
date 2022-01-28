@@ -49,13 +49,13 @@ public class JedisInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JedisRequestContext<JedisRequest> onEnter() {
-      return JedisRequestContext.start();
+      return JedisRequestContext.attach();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Enter JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        requestContext.close();
+        requestContext.detachAndEnd();
       }
     }
   }

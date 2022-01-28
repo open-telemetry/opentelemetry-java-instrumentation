@@ -74,7 +74,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      JedisRequestContext.end(instrumenter(), context, request, throwable);
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 }
