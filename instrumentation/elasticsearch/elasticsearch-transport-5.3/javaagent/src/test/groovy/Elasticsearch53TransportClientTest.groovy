@@ -56,6 +56,7 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     // retry when starting elasticsearch fails with

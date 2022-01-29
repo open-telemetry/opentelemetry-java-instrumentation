@@ -45,6 +45,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = NodeFactory.newNode(settings)
     testNode.start()
