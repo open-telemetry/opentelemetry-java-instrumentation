@@ -41,8 +41,8 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name trask
-          git config user.email trask.stalnaker@gmail.com
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request
         env:
@@ -78,8 +78,8 @@ jobs:
 
       - name: Setup git name
         run: |
-          git config user.name trask
-          git config user.email trask.stalnaker@gmail.com
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request
         env:
