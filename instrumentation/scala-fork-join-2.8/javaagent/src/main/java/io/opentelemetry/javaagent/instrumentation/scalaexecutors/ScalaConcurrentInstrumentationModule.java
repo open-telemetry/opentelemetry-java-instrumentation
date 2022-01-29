@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ScalaConcurrentInstrumentationModule extends InstrumentationModule {
   public ScalaConcurrentInstrumentationModule() {
-    super("scala-executors");
+    super("scala-fork-join", "scala-fork-join-2.8");
   }
 
   @Override
