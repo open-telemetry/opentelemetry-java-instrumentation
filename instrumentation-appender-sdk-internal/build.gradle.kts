@@ -12,4 +12,6 @@ dependencies {
   api(project(":instrumentation-appender-api-internal"))
 
   api("io.opentelemetry:opentelemetry-sdk-logs")
+
+  annotationProcessor(project(":custom-checks"))
 }
