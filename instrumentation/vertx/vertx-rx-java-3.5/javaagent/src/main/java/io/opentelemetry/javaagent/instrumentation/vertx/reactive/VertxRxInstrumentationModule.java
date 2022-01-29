@@ -16,7 +16,7 @@ import java.util.List;
 public class VertxRxInstrumentationModule extends InstrumentationModule {
 
   public VertxRxInstrumentationModule() {
-    super("vertx-reactive", "vertx-reactive-3.5", "vertx");
+    super("vertx-rx-java", "vertx-rx-java-3.5", "vertx");
   }
 
   @Override
