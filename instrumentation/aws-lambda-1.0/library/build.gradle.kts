@@ -16,10 +16,10 @@ dependencies {
   // in public API.
   library("com.amazonaws:aws-lambda-java-events:2.2.1")
 
-  compileOnly("com.fasterxml.jackson.core:jackson-databind")
   compileOnly("commons-io:commons-io:2.2")
   compileOnly("org.slf4j:slf4j-api")
 
+  implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("io.opentelemetry:opentelemetry-extension-aws")
 
   // allows to get the function ARN
