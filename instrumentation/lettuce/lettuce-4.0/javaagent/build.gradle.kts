@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("biz.paluch.redis:lettuce:4.0.Final")
 
-  latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-4.0 module
+  latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 
 tasks.withType<Test>().configureEach {
