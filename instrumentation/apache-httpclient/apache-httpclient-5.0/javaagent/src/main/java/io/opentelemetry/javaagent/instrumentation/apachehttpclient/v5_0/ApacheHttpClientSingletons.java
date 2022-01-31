@@ -22,20 +22,20 @@ public final class ApacheHttpClientSingletons {
   private static final Instrumenter<ClassicHttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    ApacheHttpClientHttpAttributesGetter httpAttributesExtractor =
+    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
         new ApacheHttpClientHttpAttributesGetter();
-    ApacheHttpClientNetAttributesGetter netAttributesExtractor =
+    ApacheHttpClientNetAttributesGetter netAttributesGetter =
         new ApacheHttpClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<ClassicHttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesExtractor))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }

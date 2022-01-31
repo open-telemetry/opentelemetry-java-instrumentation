@@ -50,12 +50,12 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
-    NettyConnectNetAttributesGetter netAttributesExtractor = new NettyConnectNetAttributesGetter();
+    NettyConnectNetAttributesGetter netAttributesGetter = new NettyConnectNetAttributesGetter();
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesExtractor))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(
                 alwaysCreateConnectSpan
@@ -68,12 +68,12 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettySslInstrumenter createSslInstrumenter() {
-    NettySslNetAttributesGetter netAttributesExtractor = new NettySslNetAttributesGetter();
+    NettySslNetAttributesGetter netAttributesGetter = new NettySslNetAttributesGetter();
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesExtractor))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .setTimeExtractor(new NettySslTimeExtractor())
             .newInstrumenter(
                 sslTelemetryEnabled

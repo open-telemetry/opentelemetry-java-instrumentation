@@ -22,7 +22,7 @@ public class GoogleHttpClientSingletons {
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    GoogleHttpClientHttpAttributesGetter httpAttributesExtractor =
+    GoogleHttpClientHttpAttributesGetter httpAttributesGetter =
         new GoogleHttpClientHttpAttributesGetter();
     GoogleHttpClientNetAttributesGetter netAttributesGetter =
         new GoogleHttpClientNetAttributesGetter();
@@ -31,9 +31,9 @@ public class GoogleHttpClientSingletons {
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())

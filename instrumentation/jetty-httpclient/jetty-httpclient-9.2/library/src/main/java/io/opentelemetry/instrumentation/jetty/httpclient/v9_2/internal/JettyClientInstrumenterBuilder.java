@@ -47,17 +47,17 @@ public final class JettyClientInstrumenterBuilder {
   }
 
   public Instrumenter<Request, Response> build() {
-    JettyClientHttpAttributesGetter httpAttributesExtractor = new JettyClientHttpAttributesGetter();
+    JettyClientHttpAttributesGetter httpAttributesGetter = new JettyClientHttpAttributesGetter();
     JettyHttpClientNetAttributesGetter netAttributesGetter =
         new JettyHttpClientNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
             this.openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(httpAttributesExtractor))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
+            HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
-            HttpClientAttributesExtractor.create(httpAttributesExtractor, capturedHttpHeaders))
+            HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpClientMetrics.get())

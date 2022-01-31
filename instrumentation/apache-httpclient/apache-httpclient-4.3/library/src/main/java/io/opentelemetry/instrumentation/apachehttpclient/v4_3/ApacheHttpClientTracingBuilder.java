@@ -63,7 +63,7 @@ public final class ApacheHttpClientTracingBuilder {
    * ApacheHttpClientTracingBuilder}.
    */
   public ApacheHttpClientTracing build() {
-    ApacheHttpClientHttpAttributesGetter httpAttributesExtractor =
+    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
         new ApacheHttpClientHttpAttributesGetter();
     ApacheHttpClientNetAttributesGetter netAttributesGetter =
         new ApacheHttpClientNetAttributesGetter();
@@ -72,10 +72,10 @@ public final class ApacheHttpClientTracingBuilder {
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpAttributesExtractor, capturedHttpHeaders))
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.

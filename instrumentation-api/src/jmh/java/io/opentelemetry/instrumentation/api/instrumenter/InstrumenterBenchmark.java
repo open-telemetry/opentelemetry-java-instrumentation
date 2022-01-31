@@ -41,10 +41,10 @@ public class InstrumenterBenchmark {
       Instrumenter.<Void, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
-              HttpSpanNameExtractor.create(ConstantHttpAttributesExtractor.INSTANCE))
+              HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
               HttpClientAttributesExtractor.create(
-                  ConstantHttpAttributesExtractor.INSTANCE, CapturedHttpHeaders.empty()))
+                  ConstantHttpAttributesGetter.INSTANCE, CapturedHttpHeaders.empty()))
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
           .newInstrumenter();
@@ -61,7 +61,7 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  enum ConstantHttpAttributesExtractor implements HttpClientAttributesGetter<Void, Void> {
+  enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Void, Void> {
     INSTANCE;
 
     @Override

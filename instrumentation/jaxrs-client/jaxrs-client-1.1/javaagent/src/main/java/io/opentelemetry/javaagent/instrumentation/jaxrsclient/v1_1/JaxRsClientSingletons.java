@@ -22,16 +22,16 @@ public class JaxRsClientSingletons {
   private static final Instrumenter<ClientRequest, ClientResponse> INSTRUMENTER;
 
   static {
-    JaxRsClientHttpAttributesGetter httpAttributesExtractor = new JaxRsClientHttpAttributesGetter();
+    JaxRsClientHttpAttributesGetter httpAttributesGetter = new JaxRsClientHttpAttributesGetter();
     JaxRsClientNetAttributesGetter netAttributesGetter = new JaxRsClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())

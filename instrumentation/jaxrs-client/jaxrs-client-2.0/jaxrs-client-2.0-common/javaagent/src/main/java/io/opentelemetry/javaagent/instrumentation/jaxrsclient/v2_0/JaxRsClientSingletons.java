@@ -24,15 +24,15 @@ public class JaxRsClientSingletons {
   private static final Instrumenter<ClientRequestContext, ClientResponseContext> INSTRUMENTER;
 
   static {
-    JaxRsClientHttpAttributesGetter httpAttributesExtractor = new JaxRsClientHttpAttributesGetter();
+    JaxRsClientHttpAttributesGetter httpAttributesGetter = new JaxRsClientHttpAttributesGetter();
     JaxRsClientNetAttributesGetter netAttributesGetter = new JaxRsClientNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<ClientRequestContext, ClientResponseContext>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(
                 (throwable) -> {
                   if (throwable instanceof ProcessingException) {
@@ -40,7 +40,7 @@ public class JaxRsClientSingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(throwable);
                 })
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesExtractor))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
